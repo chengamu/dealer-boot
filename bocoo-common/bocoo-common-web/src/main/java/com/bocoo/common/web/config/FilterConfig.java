@@ -1,8 +1,10 @@
 package com.bocoo.common.web.config;
 
+import com.bocoo.common.core.config.properties.TenantProperties;
 import com.bocoo.common.core.utils.StringUtils;
 import com.bocoo.common.web.config.properties.XssProperties;
 import com.bocoo.common.web.filter.RepeatableFilter;
+import com.bocoo.common.web.filter.TenantContextFilter;
 import com.bocoo.common.web.filter.XssFilter;
 import jakarta.servlet.DispatcherType;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -20,8 +22,21 @@ import java.util.Map;
  * @author Lion Li
  */
 @AutoConfiguration
-@EnableConfigurationProperties(XssProperties.class)
+@EnableConfigurationProperties({XssProperties.class, TenantProperties.class})
 public class FilterConfig {
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    @Bean
+    @ConditionalOnProperty(prefix = "bocoo.tenant", name = "enabled", havingValue = "true")
+    public FilterRegistrationBean tenantContextFilterRegistration(TenantProperties tenantProperties) {
+        FilterRegistrationBean registration = new FilterRegistrationBean();
+        registration.setDispatcherTypes(DispatcherType.REQUEST);
+        registration.setFilter(new TenantContextFilter(tenantProperties));
+        registration.addUrlPatterns("/*");
+        registration.setName("tenantContextFilter");
+        registration.setOrder(FilterRegistrationBean.HIGHEST_PRECEDENCE + 1);
+        return registration;
+    }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     @Bean

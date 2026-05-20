@@ -11,6 +11,7 @@ import store from './store'
 import router from './router'
 import directive from './directive' // directive
 import { getAppTitle } from '@/utils/config'
+import { installLocale } from '@/locales'
 
 // 注册指令
 import plugins from './plugins' // plugins
@@ -76,6 +77,7 @@ app.use(plugins)
 app.use(elementIcons)
 app.use(hiPrintPlugin, '$hiprint', false);
 app.component('svg-icon', SvgIcon)
+installLocale(app)
 
 directive(app)
 

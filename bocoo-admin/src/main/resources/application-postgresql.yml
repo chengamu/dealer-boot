@@ -1,0 +1,9 @@
+spring:
+  datasource:
+    dynamic:
+      datasource:
+        master:
+          driverClassName: org.postgresql.Driver
+          url: ${DB_URL:jdbc:postgresql://localhost:5432/base_boot?stringtype=unspecified}
+          username: ${DB_USERNAME:postgres}
+          password: ${DB_PASSWORD:}

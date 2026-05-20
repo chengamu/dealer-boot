@@ -136,7 +136,7 @@ export const loadView = (view) => {
       res = () => modules[path]();
     }
   }
-  return res;
+  return res || (() => import('@/views/error/404.vue'));
 }
 
 export default usePermissionStore

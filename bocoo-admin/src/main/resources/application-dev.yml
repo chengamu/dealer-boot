@@ -1,36 +1,36 @@
-# MQTT相关配置
+﻿# MQTT鐩稿叧閰嶇疆
 mqtt:
   device:
     load:
-      # 是否启用设备自动加载功能，默认启用  开发环境 禁用~ 不然会导致和服务器冲突；
+      # 鏄惁鍚敤璁惧鑷姩鍔犺浇鍔熻兘锛岄粯璁ゅ惎鐢? 寮€鍙戠幆澧?绂佺敤~ 涓嶇劧浼氬鑷村拰鏈嶅姟鍣ㄥ啿绐侊紱
       enabled: false
-# websocket配置
+# websocket閰嶇疆
 websocket:
   port: 2831
   sendUserid: 1966049982171709442
---- # 数据源配置
+--- # 鏁版嵁婧愰厤缃?
 spring:
   datasource:
     type: com.zaxxer.hikari.HikariDataSource
-    # 动态数据源文档 https://www.kancloud.cn/tracy5546/dynamic-datasource/content
+    # 鍔ㄦ€佹暟鎹簮鏂囨。 https://www.kancloud.cn/tracy5546/dynamic-datasource/content
     dynamic:
-      # 性能分析插件(有性能损耗 不建议生产环境使用)
+      # 鎬ц兘鍒嗘瀽鎻掍欢(鏈夋€ц兘鎹熻€?涓嶅缓璁敓浜х幆澧冧娇鐢?
       p6spy: true
-      # 设置默认的数据源或者数据源组,默认值即为 master
+      # 璁剧疆榛樿鐨勬暟鎹簮鎴栬€呮暟鎹簮缁?榛樿鍊煎嵆涓?master
       primary: master
-      # 严格模式 匹配不到数据源则报错
+      # 涓ユ牸妯″紡 鍖归厤涓嶅埌鏁版嵁婧愬垯鎶ラ敊
       strict: true
       datasource:
-        # 主库数据源
+        # 涓诲簱鏁版嵁婧?
         master:
           type: ${spring.datasource.type}
           driverClassName: com.mysql.cj.jdbc.Driver
-          # jdbc 所有参数配置参考 https://lionli.blog.csdn.net/article/details/122018562
-          # rewriteBatchedStatements=true 批处理优化 大幅提升批量插入更新删除性能(对数据库有性能损耗 使用批量操作应考虑性能问题)
-          url: jdbc:mysql://192.168.120.66:3306/cea?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8&autoReconnect=true&rewriteBatchedStatements=true
-          username: root
-          password: BOCOO5448
-        # mqtt数据源
+          # jdbc 鎵€鏈夊弬鏁伴厤缃弬鑰?https://lionli.blog.csdn.net/article/details/122018562
+          # rewriteBatchedStatements=true 鎵瑰鐞嗕紭鍖?澶у箙鎻愬崌鎵归噺鎻掑叆鏇存柊鍒犻櫎鎬ц兘(瀵规暟鎹簱鏈夋€ц兘鎹熻€?浣跨敤鎵归噺鎿嶄綔搴旇€冭檻鎬ц兘闂)
+          url: ${DB_URL:jdbc:mysql://localhost:3306/base_boot?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&serverTimezone=UTC&autoReconnect=true&rewriteBatchedStatements=true}
+          username: ${DB_USERNAME:root}
+          password: ${DB_PASSWORD:}
+        # mqtt鏁版嵁婧?
 #        mqtt:
 #          lazy: true
 #          type: ${spring.datasource.type}
@@ -38,11 +38,11 @@ spring:
 #          url: jdbc:mysql://192.168.120.67:13306/emqx_mqtt?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8&autoReconnect=true&rewriteBatchedStatements=true
 #          username: root
 #          password: 123456
-#         # tdengine数据源
+#         # tdengine鏁版嵁婧?
 #        tdbd:
 #          lazy: true
 #          type: ${spring.datasource.type}
-#          #原生链接方式需要DLL文件有点麻烦
+#          #鍘熺敓閾炬帴鏂瑰紡闇€瑕丏LL鏂囦欢鏈夌偣楹荤儲
 #          #driverClassName: com.taosdata.jdbc.TSDBDriver
 #          #url: url: jdbc:TAOS://192.168.120.66:6041/sensordb
 #          driverClassName: com.taosdata.jdbc.rs.RestfulDriver
@@ -50,157 +50,157 @@ spring:
 #          username: root
 #          password: bocoo123
       hikari:
-        # 最大连接池数量
+        # 鏈€澶ц繛鎺ユ睜鏁伴噺
         maxPoolSize: 20
-        # 最小空闲线程数量
+        # 鏈€灏忕┖闂茬嚎绋嬫暟閲?
         minIdle: 10
-        # 配置获取连接等待超时的时间
+        # 閰嶇疆鑾峰彇杩炴帴绛夊緟瓒呮椂鐨勬椂闂?
         connectionTimeout: 30000
-        # 校验超时时间
+        # 鏍￠獙瓒呮椂鏃堕棿
         validationTimeout: 5000
-        # 空闲连接存活最大时间，默认10分钟
+        # 绌洪棽杩炴帴瀛樻椿鏈€澶ф椂闂达紝榛樿10鍒嗛挓
         idleTimeout: 600000
-        # 此属性控制池中连接的最长生命周期，值0表示无限生命周期，默认30分钟
+        # 姝ゅ睘鎬ф帶鍒舵睜涓繛鎺ョ殑鏈€闀跨敓鍛藉懆鏈燂紝鍊?琛ㄧず鏃犻檺鐢熷懡鍛ㄦ湡锛岄粯璁?0鍒嗛挓
         maxLifetime: 1800000
-        # 多久检查一次连接的活性
+        # 澶氫箙妫€鏌ヤ竴娆¤繛鎺ョ殑娲绘€?
         keepaliveTime: 30000
 
---- # redis 单机配置(单机与集群只能开启一个另一个需要注释掉)
+--- # redis 鍗曟満閰嶇疆(鍗曟満涓庨泦缇ゅ彧鑳藉紑鍚竴涓彟涓€涓渶瑕佹敞閲婃帀)
 spring.data:
   redis:
-    # 地址 192.168.120.67
-    host: 192.168.120.67
-    # 端口，默认为6379
-    port: 6379
-    # 数据库索引
-    database: 3
-    # 密码(如没有密码请注释掉)
-    password: b055!549cMc6
-    # 连接超时时间
+    # 鍦板潃 192.168.120.67
+    host: ${REDIS_HOST:localhost}
+    # 绔彛锛岄粯璁や负6379
+    port: ${REDIS_PORT:6379}
+    # 鏁版嵁搴撶储寮?
+    database: ${REDIS_DATABASE:0}
+    # 瀵嗙爜(濡傛病鏈夊瘑鐮佽娉ㄩ噴鎺?
+    password: ${REDIS_PASSWORD:}
+    # 杩炴帴瓒呮椂鏃堕棿
     timeout: 10s
-    # 是否开启ssl
+    # 鏄惁寮€鍚痵sl
     ssl.enabled: false
 
 redisson:
-  # redis key前缀
+  # redis key鍓嶇紑
   keyPrefix:
-  # 线程池数量
+  # 绾跨▼姹犳暟閲?
   threads: 4
-  # Netty线程池数量
+  # Netty绾跨▼姹犳暟閲?
   nettyThreads: 8
-  # 单节点配置
+  # 鍗曡妭鐐归厤缃?
   singleServerConfig:
-    # 客户端名称
+    # 瀹㈡埛绔悕绉?
     clientName: ${bocoo.name}
-    # 最小空闲连接数
+    # 鏈€灏忕┖闂茶繛鎺ユ暟
     connectionMinimumIdleSize: 8
-    # 连接池大小
+    # 杩炴帴姹犲ぇ灏?
     connectionPoolSize: 32
-    # 连接空闲超时，单位：毫秒
+    # 杩炴帴绌洪棽瓒呮椂锛屽崟浣嶏細姣
     idleConnectionTimeout: 10000
-    # 命令等待超时，单位：毫秒 18073784154
+    # 鍛戒护绛夊緟瓒呮椂锛屽崟浣嶏細姣 18073784154
     timeout: 3000
-    # 发布和订阅连接池大小
+    # 鍙戝竷鍜岃闃呰繛鎺ユ睜澶у皬
     subscriptionConnectionPoolSize: 50
 
---- # mail 邮件发送
+--- # mail 閭欢鍙戦€?
 mail:
   enabled: false
   host: smtp.163.com
   port: 465
-  # 是否需要用户名密码验证
+  # 鏄惁闇€瑕佺敤鎴峰悕瀵嗙爜楠岃瘉
   auth: true
-  # 发送方，遵循RFC-822标准
+  # 鍙戦€佹柟锛岄伒寰猂FC-822鏍囧噯
   from: xxx@163.com
-  # 用户名（注意：如果使用foxmail邮箱，此处user为qq号）
+  # 鐢ㄦ埛鍚嶏紙娉ㄦ剰锛氬鏋滀娇鐢╢oxmail閭锛屾澶剈ser涓簈q鍙凤級
   user: xxx@163.com
-  # 密码（注意，某些邮箱需要为SMTP服务单独设置密码，详情查看相关帮助）
+  # 瀵嗙爜锛堟敞鎰忥紝鏌愪簺閭闇€瑕佷负SMTP鏈嶅姟鍗曠嫭璁剧疆瀵嗙爜锛岃鎯呮煡鐪嬬浉鍏冲府鍔╋級
   pass: xxxxxxxxxx
-  # 使用 STARTTLS安全连接，STARTTLS是对纯文本通信协议的扩展。
+  # 浣跨敤 STARTTLS瀹夊叏杩炴帴锛孲TARTTLS鏄绾枃鏈€氫俊鍗忚鐨勬墿灞曘€?
   starttlsEnable: true
-  # 使用SSL安全连接
+  # 浣跨敤SSL瀹夊叏杩炴帴
   sslEnable: true
-  # SMTP超时时长，单位毫秒，缺省值不超时
+  # SMTP瓒呮椂鏃堕暱锛屽崟浣嶆绉掞紝缂虹渷鍊间笉瓒呮椂
   timeout: 0
-  # Socket连接超时值，单位毫秒，缺省值不超时
+  # Socket杩炴帴瓒呮椂鍊硷紝鍗曚綅姣锛岀己鐪佸€间笉瓒呮椂
   connectionTimeout: 0
 
---- # sms 短信 支持 阿里云 腾讯云 云片 等等各式各样的短信服务商
-# https://wind.kim/doc/start 文档地址 各个厂商可同时使用
+--- # sms 鐭俊 鏀寔 闃块噷浜?鑵捐浜?浜戠墖 绛夌瓑鍚勫紡鍚勬牱鐨勭煭淇℃湇鍔″晢
+# https://wind.kim/doc/start 鏂囨。鍦板潃 鍚勪釜鍘傚晢鍙悓鏃朵娇鐢?
 sms:
-  # 阿里云 dysmsapi.aliyuncs.com
+  # 闃块噷浜?dysmsapi.aliyuncs.com
   alibaba:
-    #请求地址 默认为 dysmsapi.aliyuncs.com 如无特殊改变可以不用设置
+    #璇锋眰鍦板潃 榛樿涓?dysmsapi.aliyuncs.com 濡傛棤鐗规畩鏀瑰彉鍙互涓嶇敤璁剧疆
     requestUrl: dysmsapi.aliyuncs.com
-    #阿里云的accessKey
+    #闃块噷浜戠殑accessKey
     accessKeyId: xxxxxxx
-    #阿里云的accessKeySecret
+    #闃块噷浜戠殑accessKeySecret
     accessKeySecret: xxxxxxx
-    #短信签名
-    signature: 测试
+    #鐭俊绛惧悕
+    signature: 娴嬭瘯
   tencent:
-    #请求地址默认为 sms.tencentcloudapi.com 如无特殊改变可不用设置
+    #璇锋眰鍦板潃榛樿涓?sms.tencentcloudapi.com 濡傛棤鐗规畩鏀瑰彉鍙笉鐢ㄨ缃?
     requestUrl: sms.tencentcloudapi.com
-    #腾讯云的accessKey
+    #鑵捐浜戠殑accessKey
     accessKeyId: xxxxxxx
-    #腾讯云的accessKeySecret
+    #鑵捐浜戠殑accessKeySecret
     accessKeySecret: xxxxxxx
-    #短信签名
-    signature: 测试
-    #短信sdkAppId
+    #鐭俊绛惧悕
+    signature: 娴嬭瘯
+    #鐭俊sdkAppId
     sdkAppId: appid
-    #地域信息默认为 ap-guangzhou 如无特殊改变可不用设置
+    #鍦板煙淇℃伅榛樿涓?ap-guangzhou 濡傛棤鐗规畩鏀瑰彉鍙笉鐢ㄨ缃?
     territory: ap-guangzhou
-# SpringDoc 配置
+# SpringDoc 閰嶇疆
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
     tags-sorter: alpha
     operations-sorter: alpha
-    display-request-duration: true  # 显示请求耗时
-    filter: true                    # 启用搜索过滤
-    try-it-out-enabled: true        # 启用Try it out功能
-    default-model-expand-depth: 1   # 默认展开模型层级
+    display-request-duration: true  # 鏄剧ず璇锋眰鑰楁椂
+    filter: true                    # 鍚敤鎼滅储杩囨护
+    try-it-out-enabled: true        # 鍚敤Try it out鍔熻兘
+    default-model-expand-depth: 1   # 榛樿灞曞紑妯″瀷灞傜骇
 
   api-docs:
     path: /v3/api-docs
     groups:
       enabled: true
 
-  # 分组配置
+  # 鍒嗙粍閰嶇疆
   group-configs:
-    - group: '系统模块'
-      display-name: '系统管理接口'
+    - group: '绯荤粺妯″潡'
+      display-name: '绯荤粺绠＄悊鎺ュ彛'
       paths-to-match: '/**'
       packages-to-scan: 'com.bocoo.system.controller'
 
-    - group: '代码生成'
-      display-name: 'generator接口'
+    - group: '浠ｇ爜鐢熸垚'
+      display-name: 'generator鎺ュ彛'
       paths-to-match: '/**'
       packages-to-scan: 'com.bocoo.generator.controller'
 
 
 
-# Knife4j 增强配置（优化版）
+# Knife4j 澧炲己閰嶇疆锛堜紭鍖栫増锛?
 knife4j:
   enable: true
-  production: false  # 生产环境建议改为true
+  production: false  # 鐢熶骇鐜寤鸿鏀逛负true
   basic:
     enable: true
     username: bocoo
-    password: bocoo@123  # 建议使用更强密码
+    password: ${KNIFE4J_PASSWORD:change-me-in-env}  # 寤鸿浣跨敤鏇村己瀵嗙爜
   setting:
-    language: zh-CN                # 固定中文配置
-    enable-footer: true            # 启用页脚
-    footer-custom-content: "cmx © 2025"  # 自定义页脚
-    enable-group: true             # 启用分组标签
-    enable-request-cache: true     # 启用请求缓存
-    enable-document-manage: true   # 启用文档管理
-    swagger-model-name: "数据模型"         # 清空模型标题（隐藏数据模型）
-# Actuator 监控端点的配置项
+    language: zh-CN                # 鍥哄畾涓枃閰嶇疆
+    enable-footer: true            # 鍚敤椤佃剼
+    footer-custom-content: "cmx 漏 2025"  # 鑷畾涔夐〉鑴?
+    enable-group: true             # 鍚敤鍒嗙粍鏍囩
+    enable-request-cache: true     # 鍚敤璇锋眰缂撳瓨
+    enable-document-manage: true   # 鍚敤鏂囨。绠＄悊
+    swagger-model-name: "鏁版嵁妯″瀷"         # 娓呯┖妯″瀷鏍囬锛堥殣钘忔暟鎹ā鍨嬶級
+# Actuator 鐩戞帶绔偣鐨勯厤缃」
 management:
   endpoints:
     web:
       exposure:
-        include: health  # 仅开放必要端点
+        include: health  # 浠呭紑鏀惧繀瑕佺鐐?
 

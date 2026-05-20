@@ -10,6 +10,18 @@ bocoo:
   cacheLazy: false
   # 文件路径 示例（ Windows配置D:/uploadPath，Linux配置 /home/uploadPath）
   profile:  D:/work/bocoo-base/bocoo-admin/target/classes/static/profile
+  tenant:
+    enabled: false
+    ignore-urls:
+      - /login
+      - /captchaImage
+      - /register
+    ignore-tables:
+      - sys_config
+      - sys_dict_type
+      - sys_dict_data
+      - sys_logininfor
+      - sys_oper_log
 
 
 captcha:
@@ -91,6 +103,7 @@ spring:
     format:
       date-time: yyyy-MM-dd HH:mm:ss
   jackson:
+    time-zone: UTC
     # 日期格式化
     date-format: yyyy-MM-dd HH:mm:ss
     serialization:
@@ -124,7 +137,7 @@ sa-token:
   # token前缀
   token-prefix: "Bearer"
   # jwt秘钥
-  jwt-secret-key: x7F#q2$Kp9*Lm5@Rn8!Zs6%Yt3&Gv1^Jw4
+  jwt-secret-key: ${SA_TOKEN_JWT_SECRET:change-me-in-env}
 
 # security配置
 security:

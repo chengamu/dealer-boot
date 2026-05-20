@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
 import com.bocoo.common.core.domain.bo.LoginUser;
 import com.bocoo.common.core.exception.ServiceException;
 import com.bocoo.common.core.utils.StringUtils;
+import com.bocoo.common.core.utils.TimeUtils;
 import com.bocoo.common.mybatis.core.domain.BaseEntity;
 import com.bocoo.common.mybatis.core.domain.BaseHistoryEntity;
 import com.bocoo.common.satoken.utils.LoginHelper;
@@ -28,7 +29,7 @@ public class InjectionMetaObjectHandler implements MetaObjectHandler {
         try {
             if (ObjectUtil.isNotNull(metaObject) && metaObject.getOriginalObject() instanceof BaseEntity baseEntity) {
                 LocalDateTime current = ObjectUtil.isNotNull(baseEntity.getCreateTime())
-                        ? baseEntity.getCreateTime() : LocalDateTime.now();
+                        ? baseEntity.getCreateTime() : TimeUtils.utcNow();
                 baseEntity.setCreateTime(current);
                 baseEntity.setUpdateTime(current);
                 if (ObjectUtil.isNull(baseEntity.getCreateBy())) {
@@ -45,7 +46,7 @@ public class InjectionMetaObjectHandler implements MetaObjectHandler {
 
             if (ObjectUtil.isNotNull(metaObject) && metaObject.getOriginalObject() instanceof BaseHistoryEntity baseHistoryEntity) {
                 LocalDateTime current = ObjectUtil.isNotNull(baseHistoryEntity.getCreateTime())
-                        ? baseHistoryEntity.getCreateTime() : LocalDateTime.now();
+                        ? baseHistoryEntity.getCreateTime() : TimeUtils.utcNow();
                 ;
                 baseHistoryEntity.setCreateTime(current);
             }
@@ -59,7 +60,7 @@ public class InjectionMetaObjectHandler implements MetaObjectHandler {
         try {
             if (ObjectUtil.isNotNull(metaObject) && metaObject.getOriginalObject() instanceof BaseEntity baseEntity) {
                 // 更新时间填充(不管为不为空)
-                baseEntity.setUpdateTime(LocalDateTime.now());
+                baseEntity.setUpdateTime(TimeUtils.utcNow());
                 String username = getLoginUsername();
                 // 当前已登录 更新人填充(不管为不为空)
                 if (StringUtils.isNotBlank(username)) {

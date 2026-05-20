@@ -7,12 +7,16 @@ import com.baomidou.mybatisplus.core.incrementer.IdentifierGenerator;
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.OptimisticLockerInnerInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
+import com.baomidou.mybatisplus.extension.plugins.inner.TenantLineInnerInterceptor;
+import com.bocoo.common.core.config.properties.TenantProperties;
 import com.bocoo.common.core.factory.YmlPropertySourceFactory;
 import com.bocoo.common.core.utils.SpringUtils;
 import com.bocoo.common.mybatis.handler.InjectionMetaObjectHandler;
 import com.bocoo.common.mybatis.handler.MybatisExceptionHandler;
 import com.bocoo.common.mybatis.interceptor.PlusDataPermissionInterceptor;
+import com.bocoo.common.mybatis.tenant.TenantDatabaseInterceptor;
 import org.mybatis.spring.annotation.MapperScan;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
@@ -25,11 +29,21 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @EnableTransactionManagement(proxyTargetClass = true)
 @MapperScan("${mybatis-plus.mapperPackage}")
 @PropertySource(value = "classpath:common-mybatis.yml", factory = YmlPropertySourceFactory.class)
+@EnableConfigurationProperties(TenantProperties.class)
 public class MybatisPlusConfig {
+
+    private final TenantProperties tenantProperties;
+
+    public MybatisPlusConfig(TenantProperties tenantProperties) {
+        this.tenantProperties = tenantProperties;
+    }
 
     @Bean
     public MybatisPlusInterceptor mybatisPlusInterceptor() {
         MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
+        if (Boolean.TRUE.equals(tenantProperties.getEnabled())) {
+            interceptor.addInnerInterceptor(tenantLineInnerInterceptor());
+        }
         // 数据权限处理
         interceptor.addInnerInterceptor(dataPermissionInterceptor());
         // 分页插件
@@ -44,6 +58,10 @@ public class MybatisPlusConfig {
      */
     public PlusDataPermissionInterceptor dataPermissionInterceptor() {
         return new PlusDataPermissionInterceptor(SpringUtils.getProperty("mybatis-plus.mapperPackage"));
+    }
+
+    public TenantLineInnerInterceptor tenantLineInnerInterceptor() {
+        return new TenantLineInnerInterceptor(new TenantDatabaseInterceptor(tenantProperties));
     }
 
     /**
