@@ -1,0 +1,25 @@
+# docker compose logs -f bocoo-admin
+services:
+  bocoo-admin:
+    container_name: bocoo-admin
+    restart: always
+    image: openjdk:17
+    network_mode: host
+    volumes:
+      - ./bocoo-admin.jar:/app/bocoo-admin.jar
+      - ./config:/config
+      - ./logs:/logs
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      TZ: Asia/Shanghai
+      SPRING_PROFILES_ACTIVE: dev
+    entrypoint:
+      - java
+      - -Xms1g
+      - -Xmx1g
+      - -XX:ReservedCodeCacheSize=512m
+      - -Dfile.encoding=UTF-8
+      - -Duser.timezone=Asia/Shanghai
+      - -jar
+      - /app/bocoo-admin.jar
+      - --spring.config.location=/config/

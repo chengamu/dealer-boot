@@ -1,0 +1,3 @@
+com.bocoo.common.encrypt.config.EncryptorAutoConfiguration
+com.bocoo.common.encrypt.config.ApiDecryptAutoConfiguration
+

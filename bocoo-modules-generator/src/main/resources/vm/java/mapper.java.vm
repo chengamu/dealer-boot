@@ -1,0 +1,21 @@
+package ${packageName}.mapper;
+
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.core.toolkit.Constants;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.bocoo.common.mybatis.core.mapper.BaseMapperPlus;
+import ${packageName}.domain.entity.${ClassName};
+import ${packageName}.domain.vo.${ClassName}Vo;
+import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
+
+/**
+ * ${functionName} 数据层
+ *
+ * @author ${author}
+ */
+public interface ${ClassName}Mapper extends BaseMapperPlus<${ClassName}, ${ClassName}Vo> {
+
+}

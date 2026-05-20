@@ -1,0 +1,36 @@
+package ${packageName}.domain.bo;
+
+import com.bocoo.common.mybatis.core.domain.BaseEntity;
+import ${packageName}.domain.entity.${ClassName};
+import io.github.linpeilie.annotations.AutoMapper;
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import java.time.LocalDateTime;
+
+/**
+ * ${functionName}业务对象 ${tableName}
+ *
+ * @author ${author}
+ */
+@Data
+@EqualsAndHashCode(callSuper = true)
+@AutoMapper(target = ${ClassName}.class, reverseConvertGenerate = false)
+@Schema(description = "${functionName}业务对象")
+public class ${ClassName}Bo extends BaseEntity {
+
+    #foreach($column in $columns)
+    #if(!$column.isSuperColumn())
+    /**
+     * $column.columnComment
+     */
+    @Schema(description = "$column.columnComment")
+    #if($column.javaType == "Date")
+    private LocalDateTime $column.javaField;
+    #else
+    private $column.javaType $column.javaField;
+    #end
+
+    #end
+    #end
+}

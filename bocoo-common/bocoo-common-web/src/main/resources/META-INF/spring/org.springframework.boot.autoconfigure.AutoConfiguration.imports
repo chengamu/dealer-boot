@@ -1,0 +1,5 @@
+com.bocoo.common.web.config.CaptchaConfig
+com.bocoo.common.web.config.FilterConfig
+com.bocoo.common.web.config.I18nConfig
+com.bocoo.common.web.config.ResourcesConfig
+com.bocoo.common.web.config.UndertowConfig

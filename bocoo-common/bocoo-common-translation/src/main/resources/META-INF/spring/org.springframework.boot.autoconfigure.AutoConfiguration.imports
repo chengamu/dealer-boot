@@ -1,0 +1,5 @@
+com.bocoo.common.translation.config.TranslationConfig
+com.bocoo.common.translation.core.impl.DeptNameTranslationImpl
+com.bocoo.common.translation.core.impl.DictTypeTranslationImpl
+com.bocoo.common.translation.core.impl.OssUrlTranslationImpl
+com.bocoo.common.translation.core.impl.UserNameTranslationImpl

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>bocoo-base</artifactId>
+        <groupId>com.bocoo</groupId>
+        <version>${revision}</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+<!--    mvn deploy -DaltDeploymentRepository=bocoo-release::default::http://192.168.120.66:8081/repository/maven-releases/-->
+    <modules>
+        <module>bocoo-common-bom</module>
+        <module>bocoo-common-core</module>
+        <module>bocoo-common-oss</module>
+        <module>bocoo-common-sms</module>
+        <module>bocoo-common-json</module>
+        <module>bocoo-common-excel</module>
+        <module>bocoo-common-redis</module>
+        <module>bocoo-common-satoken</module>
+        <module>bocoo-common-web</module>
+        <module>bocoo-common-security</module>
+        <module>bocoo-common-mybatis</module>
+        <module>bocoo-common-mail</module>
+        <module>bocoo-common-log</module>
+        <module>bocoo-common-ratelimiter</module>
+        <module>bocoo-common-translation</module>
+        <module>bocoo-common-sensitive</module>
+        <module>bocoo-common-encrypt</module>
+        <module>bocoo-common-idempotent</module>
+        <module>bocoo-common-doc</module>
+        <module>bocoo-common-webSocket</module>
+    </modules>
+
+    <artifactId>bocoo-common</artifactId>
+    <packaging>pom</packaging>
+
+    <description>
+        common 通用模块
+    </description>
+
+</project>

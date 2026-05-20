@@ -1,0 +1,143 @@
+package ${packageName}.controller;
+
+import cn.dev33.satoken.annotation.SaCheckPermission;
+import com.bocoo.common.log.annotation.Log;
+import com.bocoo.common.web.core.BaseController;
+import com.bocoo.common.mybatis.core.page.PageQuery;
+import com.bocoo.common.core.domain.R;
+import com.bocoo.common.mybatis.core.page.TableDataInfo;
+import com.bocoo.common.log.enums.BusinessType;
+import ${packageName}.domain.bo.${ClassName}Bo;
+import ${packageName}.domain.vo.${ClassName}Vo;
+import ${packageName}.service.I${ClassName}Service;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+
+import jakarta.validation.constraints.NotEmpty;
+import java.util.List;
+
+/**
+ * ${functionName} 控制层
+ *
+ * @author ${author}
+ */
+@Validated
+@RequiredArgsConstructor
+@RestController
+@RequestMapping("/${moduleName}/${businessName}")
+@Tag(name = "${functionName}管理", description = "${functionName}管理接口")
+public class ${ClassName}Controller extends BaseController {
+
+    private final I${ClassName}Service ${className}Service;
+
+    /**
+     * 查询${functionName}列表
+     */
+    @SaCheckPermission("${moduleName}:${businessName}:list")
+    @GetMapping("/list")
+    @Operation(summary = "分页查询${functionName}列表", description = "分页查询${functionName}列表,权限：${moduleName}:${businessName}:list")
+    public TableDataInfo<${ClassName}Vo> list(
+            @Parameter(description = "${functionName}查询参数")
+            ${ClassName}Bo bo,
+            @Parameter(description = "分页参数")
+            PageQuery pageQuery) {
+        return ${className}Service.queryPageList(bo, pageQuery);
+    }
+
+    /**
+     * 查询${functionName}列表
+     */
+    @SaCheckPermission("${moduleName}:${businessName}:list")
+    @GetMapping("/alllist")
+    @Operation(summary = "查询${functionName}列表", description = "查询${functionName}列表,权限：${moduleName}:${businessName}:list")
+    public List<${ClassName}Vo> alllist(
+            @Parameter(description = "${functionName}查询参数")
+            ${ClassName}Bo bo) {
+        return ${className}Service.queryList(bo);
+    }
+
+    /**
+     * 获取${functionName}详细信息
+     *
+     * @param ${businessName}Id ${functionName}主键
+     */
+    @SaCheckPermission("${moduleName}:${businessName}:query")
+    @GetMapping("/{${businessName}Id}")
+    @Operation(summary = "获取${functionName}详细信息", description = "根据主键获取${functionName}详细信息,权限：${moduleName}:${businessName}:query")
+    public R<${ClassName}Vo> getInfo(
+            @Parameter(description = "${functionName}主键", required = true)
+            @PathVariable Long ${businessName}Id) {
+        return R.ok(${className}Service.getVoById(${businessName}Id));
+    }
+
+    /**
+     * 新增${functionName}
+     */
+    @SaCheckPermission("${moduleName}:${businessName}:add")
+    @Log(title = "${functionName}", businessType = BusinessType.INSERT)
+    @PostMapping()
+    @Operation(summary = "新增${functionName}", description = "新增${functionName},权限：${moduleName}:${businessName}:add")
+    public R<Void> add(
+            @Parameter(description = "${functionName}信息", required = true)
+            @Validated
+            @RequestBody ${ClassName}Bo bo) {
+        return toAjax(${className}Service.insertByBo(bo));
+    }
+
+    /**
+     * 修改${functionName}
+     */
+    @SaCheckPermission("${moduleName}:${businessName}:edit")
+    @Log(title = "${functionName}", businessType = BusinessType.UPDATE)
+    @PutMapping()
+    @Operation(summary = "修改${functionName}", description = "修改${functionName},权限：${moduleName}:${businessName}:edit")
+    public R<Void> edit(
+            @Parameter(description = "${functionName}信息", required = true)
+            @Validated
+            @RequestBody ${ClassName}Bo bo) {
+        return toAjax(${className}Service.updateByBo(bo));
+    }
+
+    /**
+     * 删除${functionName}
+     *
+     * @param ${businessName}Ids ${functionName}主键串
+     */
+    @SaCheckPermission("${moduleName}:${businessName}:remove")
+    @Log(title = "${functionName}", businessType = BusinessType.DELETE)
+    @DeleteMapping("/{${businessName}Ids}")
+    @Operation(summary = "删除${functionName}", description = "批量删除${functionName},权限：${moduleName}:${businessName}:remove")
+    public R<Void> remove(
+            @Parameter(description = "${functionName}主键数组", required = true)
+            @NotEmpty(message = "主键不能为空")
+            @PathVariable Long[] ${businessName}Ids) {
+        return toAjax(${className}Service.deleteWithValidByIds(List.of(${businessName}Ids), true));
+    }
+
+    #set($hasStatus = false)
+    #foreach($column in $columns)
+        #if($column.javaField == "status")
+            #set($hasStatus = true)
+        #end
+    #end
+    #if($hasStatus)
+    /**
+     * 修改${functionName}状态
+     */
+    @SaCheckPermission("${moduleName}:${businessName}:edit")
+    @Log(title = "修改${functionName}状态", businessType = BusinessType.UPDATE)
+    @PutMapping("/changeStatus/{${businessName}Id}/{status}")
+    @Operation(summary = "修改${functionName}状态", description = "修改${functionName}状态,权限：${moduleName}:${businessName}:edit")
+    public R<Void> changeStatus(
+            @Parameter(description = "${functionName}主键", required = true)
+            @PathVariable Long ${businessName}Id,
+            @Parameter(description = "${functionName}状态", required = true)
+            @PathVariable String status) {
+        return toAjax(${className}Service.updateStatus(${businessName}Id, status));
+    }
+    #end
+}

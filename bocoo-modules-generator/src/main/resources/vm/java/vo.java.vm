@@ -1,0 +1,57 @@
+package ${packageName}.domain.vo;
+
+import com.alibaba.excel.annotation.ExcelIgnoreUnannotated;
+import com.alibaba.excel.annotation.ExcelProperty;
+import com.bocoo.common.mybatis.core.domain.BaseEntity;
+import ${packageName}.domain.entity.${ClassName};
+import io.github.linpeilie.annotations.AutoMapper;
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
+import java.time.LocalDateTime;
+import com.fasterxml.jackson.annotation.JsonFormat;
+
+/**
+ * ${functionName}视图对象 ${tableName}
+ *
+ * @author ${author}
+ */
+@Data
+@ExcelIgnoreUnannotated
+@AutoMapper(target = ${ClassName}.class)
+@Schema(description = "${functionName}视图对象")
+public class ${ClassName}Vo {
+
+    #foreach($column in $columns)
+    #if(!$column.isSuperColumn())
+    /**
+     * $column.columnComment
+     */
+    #set($parentheseIndex=$column.columnComment.indexOf("（"))
+    #if($parentheseIndex != -1)
+    #set($comment=$column.columnComment.substring(0, $parentheseIndex))
+    #else
+    #set($comment=$column.columnComment)
+    #end
+    @ExcelProperty(value = "${comment}")
+    @Schema(description = "$column.columnComment")
+    #if($column.javaType == "Date")
+    private LocalDateTime $column.javaField;
+    #else
+    private $column.javaType $column.javaField;
+    #end
+
+    #end
+    #end
+    
+    @ExcelProperty(value = "创建人")
+    @Schema(description = "创建人")
+    private String createBy;
+
+    /**
+     * 创建时间
+     */
+    @ExcelProperty(value = "创建时间")
+    @Schema(description = "创建时间")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime createTime;
+}

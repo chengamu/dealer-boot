@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bocoo.healthbrain.mapper.HealthbrainDrugMapper">
+    
+    <select id="selectDrugPhaseCount" resultType="com.bocoo.healthbrain.domain.vo.HealthbrainDrugPhaseCountVo">
+        select
+            b.dict_label,
+            count(a.phase) as count
+        from sys_dict_data b
+            left join healthbrain_drug a on a.phase = b.dict_value
+        where b.dict_type = 'brain_drug_phase'
+        group by b.dict_label;
+
+    </select>
+
+</mapper>

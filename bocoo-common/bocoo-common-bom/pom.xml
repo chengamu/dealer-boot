@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.bocoo</groupId>
+    <artifactId>bocoo-common-bom</artifactId>
+    <version>${revision}</version>
+    <packaging>pom</packaging>
+
+    <description>
+        bocoo-common-bom common依赖项
+    </description>
+
+    <properties>
+        <revision>1.0.0</revision>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- 核心模块 -->
+            <dependency>
+                <groupId>com.bocoo</groupId>
+                <artifactId>bocoo-common-core</artifactId>
+                <version>${revision}</version>
+            </dependency>
+
+            <!-- OSS -->
+            <dependency>
+                <groupId>com.bocoo</groupId>
+                <artifactId>bocoo-common-oss</artifactId>
+                <version>${revision}</version>
+            </dependency>
+
+            <!-- 短信模块 -->
+            <dependency>
+                <groupId>com.bocoo</groupId>
+                <artifactId>bocoo-common-sms</artifactId>
+                <version>${revision}</version>
+            </dependency>
+
+            <!-- 序列化模块 -->
+            <dependency>
+                <groupId>com.bocoo</groupId>
+                <artifactId>bocoo-common-json</artifactId>
+                <version>${revision}</version>
+            </dependency>
+
+            <!-- excel -->
+            <dependency>
+                <groupId>com.bocoo</groupId>
+                <artifactId>bocoo-common-excel</artifactId>
+                <version>${revision}</version>
+            </dependency>
+
+            <!-- redis -->
+            <dependency>
+                <groupId>com.bocoo</groupId>
+                <artifactId>bocoo-common-redis</artifactId>
+                <version>${revision}</version>
+            </dependency>
+
+            <!-- satoken -->
+            <dependency>
+                <groupId>com.bocoo</groupId>
+                <artifactId>bocoo-common-satoken</artifactId>
+                <version>${revision}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.bocoo</groupId>
+                <artifactId>bocoo-common-web</artifactId>
+                <version>${revision}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.bocoo</groupId>
+                <artifactId>bocoo-common-security</artifactId>
+                <version>${revision}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.bocoo</groupId>
+                <artifactId>bocoo-common-mybatis</artifactId>
+                <version>${revision}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.bocoo</groupId>
+                <artifactId>bocoo-common-mail</artifactId>
+                <version>${revision}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.bocoo</groupId>
+                <artifactId>bocoo-common-log</artifactId>
+                <version>${revision}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.bocoo</groupId>
+                <artifactId>bocoo-common-translation</artifactId>
+                <version>${revision}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.bocoo</groupId>
+                <artifactId>bocoo-common-ratelimiter</artifactId>
+                <version>${revision}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.bocoo</groupId>
+                <artifactId>bocoo-common-encrypt</artifactId>
+                <version>${revision}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.bocoo</groupId>
+                <artifactId>bocoo-common-sensitive</artifactId>
+                <version>${revision}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.bocoo</groupId>
+                <artifactId>bocoo-common-idempotent</artifactId>
+                <version>${revision}</version>
+            </dependency>
+
+<!--            <dependency>
+                <groupId>com.bocoo</groupId>
+                <artifactId>bocoo-common-job</artifactId>
+                <version>${revision}</version>
+            </dependency>-->
+            <dependency>
+                <groupId>com.bocoo</groupId>
+                <artifactId>bocoo-common-webSocket</artifactId>
+                <version>${revision}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.bocoo</groupId>
+                <artifactId>bocoo-common-doc</artifactId>
+                <version>${revision}</version>
+            </dependency>
+
+        </dependencies>
+    </dependencyManagement>
+
+</project>

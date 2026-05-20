@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bocoo.system.mapper.SysOssMapper">
+
+    <!-- 分页查询OSS文件列表 -->
+    <select id="selectPageOssList" resultType="com.bocoo.system.domain.vo.SysOssVo">
+        SELECT
+            oss_id,
+            file_name,
+            original_name,
+            file_suffix,
+            url,
+            service,
+            dept_id,
+            create_by,
+            create_time,
+            update_by,
+            update_time
+        FROM sys_oss
+        ${ew.customSqlSegment}
+
+    </select>
+
+</mapper>
