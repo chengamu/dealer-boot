@@ -1,0 +1,53 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE/editor files
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.local
+
+# Java/Maven build output
+target/
+*.class
+*.jar
+*.war
+*.nar
+*.ear
+
+# Logs
+logs/
+*.log
+
+# Node/Vite dependencies and build output
+node_modules/
+dist/
+.vite/
+.cache/
+
+# Test and report output
+coverage/
+tests/**/coverage/
+tests/e2e/reports/
+selenium-debug.log
+
+# Package manager debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Local environment overrides
+.env.local
+.env.*.local
+
+# Temporary files
+*.tmp
+*.temp
