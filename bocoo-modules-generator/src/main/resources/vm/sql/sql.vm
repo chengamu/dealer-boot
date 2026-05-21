@@ -1,19 +1,41 @@
--- 菜单 SQL
-insert into sys_menu (menu_id, menu_name, parent_id, order_num, path, component, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, update_by, update_time, remark)
-values(${table.menuIds[0]}, '${functionName}', '${parentMenuId}', '1', '${businessName}', '${moduleName}/${businessName}/index', 0, 0, 'C', '1', '1', '${permissionPrefix}:list', '#', 'admin', sysdate(), '', null, '${functionName}菜单');
+-- Menu SQL (PostgreSQL, tenant-aware, i18n-ready)
+insert into sys_menu (menu_id, tenant_id, menu_name, i18n_key, parent_id, order_num, path, component, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, update_by, update_time, remark)
+values (${table.menuIds[0]}, 0, '${functionName}', '${moduleName}.${businessName}.menu', '${parentMenuId}', '1', '${businessName}', '${moduleName}/${businessName}/index', '1', '0', 'C', '1', '1', '${permissionPrefix}:list', '#', 'admin', now(), '', null, '${functionName} menu')
+on conflict (menu_id) do update set menu_name = excluded.menu_name, i18n_key = excluded.i18n_key, parent_id = excluded.parent_id, path = excluded.path, component = excluded.component, perms = excluded.perms, update_by = 'admin', update_time = now();
 
--- 按钮 SQL
-insert into sys_menu (menu_id, menu_name, parent_id, order_num, path, component, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, update_by, update_time, remark)
-values(${table.menuIds[1]}, '${functionName}查询', ${table.menuIds[0]}, '1',  '#', '', 1, 0, 'F', '0', '0', '${permissionPrefix}:query',        '#', 'admin', sysdate(), '', null, '');
+-- Button SQL
+insert into sys_menu (menu_id, tenant_id, menu_name, i18n_key, parent_id, order_num, path, component, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, update_by, update_time, remark)
+values (${table.menuIds[1]}, 0, '${functionName} Query', '${moduleName}.${businessName}.query', ${table.menuIds[0]}, '1', '#', '', '1', '0', 'F', '0', '0', '${permissionPrefix}:query', '#', 'admin', now(), '', null, '')
+on conflict (menu_id) do update set menu_name = excluded.menu_name, i18n_key = excluded.i18n_key, parent_id = excluded.parent_id, perms = excluded.perms, update_by = 'admin', update_time = now();
 
-insert into sys_menu (menu_id, menu_name, parent_id, order_num, path, component, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, update_by, update_time, remark)
-values(${table.menuIds[2]}, '${functionName}新增', ${table.menuIds[0]}, '2',  '#', '', 1, 0, 'F', '0', '0', '${permissionPrefix}:add',          '#', 'admin', sysdate(), '', null, '');
+insert into sys_menu (menu_id, tenant_id, menu_name, i18n_key, parent_id, order_num, path, component, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, update_by, update_time, remark)
+values (${table.menuIds[2]}, 0, '${functionName} Add', '${moduleName}.${businessName}.add', ${table.menuIds[0]}, '2', '#', '', '1', '0', 'F', '0', '0', '${permissionPrefix}:add', '#', 'admin', now(), '', null, '')
+on conflict (menu_id) do update set menu_name = excluded.menu_name, i18n_key = excluded.i18n_key, parent_id = excluded.parent_id, perms = excluded.perms, update_by = 'admin', update_time = now();
 
-insert into sys_menu (menu_id, menu_name, parent_id, order_num, path, component, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, update_by, update_time, remark)
-values(${table.menuIds[3]}, '${functionName}修改', ${table.menuIds[0]}, '3',  '#', '', 1, 0, 'F', '0', '0', '${permissionPrefix}:edit',         '#', 'admin', sysdate(), '', null, '');
+insert into sys_menu (menu_id, tenant_id, menu_name, i18n_key, parent_id, order_num, path, component, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, update_by, update_time, remark)
+values (${table.menuIds[3]}, 0, '${functionName} Edit', '${moduleName}.${businessName}.edit', ${table.menuIds[0]}, '3', '#', '', '1', '0', 'F', '0', '0', '${permissionPrefix}:edit', '#', 'admin', now(), '', null, '')
+on conflict (menu_id) do update set menu_name = excluded.menu_name, i18n_key = excluded.i18n_key, parent_id = excluded.parent_id, perms = excluded.perms, update_by = 'admin', update_time = now();
 
-insert into sys_menu (menu_id, menu_name, parent_id, order_num, path, component, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, update_by, update_time, remark)
-values(${table.menuIds[4]}, '${functionName}删除', ${table.menuIds[0]}, '4',  '#', '', 1, 0, 'F', '0', '0', '${permissionPrefix}:remove',       '#', 'admin', sysdate(), '', null, '');
+insert into sys_menu (menu_id, tenant_id, menu_name, i18n_key, parent_id, order_num, path, component, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, update_by, update_time, remark)
+values (${table.menuIds[4]}, 0, '${functionName} Delete', '${moduleName}.${businessName}.remove', ${table.menuIds[0]}, '4', '#', '', '1', '0', 'F', '0', '0', '${permissionPrefix}:remove', '#', 'admin', now(), '', null, '')
+on conflict (menu_id) do update set menu_name = excluded.menu_name, i18n_key = excluded.i18n_key, parent_id = excluded.parent_id, perms = excluded.perms, update_by = 'admin', update_time = now();
 
-insert into sys_menu (menu_id, menu_name, parent_id, order_num, path, component, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, update_by, update_time, remark)
-values(${table.menuIds[5]}, '${functionName}导出', ${table.menuIds[0]}, '5',  '#', '', 1, 0, 'F', '0', '0', '${permissionPrefix}:export',       '#', 'admin', sysdate(), '', null, '');
+insert into sys_menu (menu_id, tenant_id, menu_name, i18n_key, parent_id, order_num, path, component, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, update_by, update_time, remark)
+values (${table.menuIds[5]}, 0, '${functionName} Export', '${moduleName}.${businessName}.export', ${table.menuIds[0]}, '5', '#', '', '1', '0', 'F', '0', '0', '${permissionPrefix}:export', '#', 'admin', now(), '', null, '')
+on conflict (menu_id) do update set menu_name = excluded.menu_name, i18n_key = excluded.i18n_key, parent_id = excluded.parent_id, perms = excluded.perms, update_by = 'admin', update_time = now();
+
+-- Menu i18n messages
+insert into sys_i18n_message (message_id, message_key, locale, message_value, create_by, create_time, remark) values
+(${table.menuIds[0]}01, '${moduleName}.${businessName}.menu', 'zh_CN', '${functionName}', 'admin', now(), 'generated menu'),
+(${table.menuIds[0]}02, '${moduleName}.${businessName}.menu', 'en_US', '${ClassName}', 'admin', now(), 'generated menu'),
+(${table.menuIds[1]}01, '${moduleName}.${businessName}.query', 'zh_CN', '${functionName}??', 'admin', now(), 'generated button'),
+(${table.menuIds[1]}02, '${moduleName}.${businessName}.query', 'en_US', '${ClassName} Query', 'admin', now(), 'generated button'),
+(${table.menuIds[2]}01, '${moduleName}.${businessName}.add', 'zh_CN', '${functionName}??', 'admin', now(), 'generated button'),
+(${table.menuIds[2]}02, '${moduleName}.${businessName}.add', 'en_US', '${ClassName} Add', 'admin', now(), 'generated button'),
+(${table.menuIds[3]}01, '${moduleName}.${businessName}.edit', 'zh_CN', '${functionName}??', 'admin', now(), 'generated button'),
+(${table.menuIds[3]}02, '${moduleName}.${businessName}.edit', 'en_US', '${ClassName} Edit', 'admin', now(), 'generated button'),
+(${table.menuIds[4]}01, '${moduleName}.${businessName}.remove', 'zh_CN', '${functionName}??', 'admin', now(), 'generated button'),
+(${table.menuIds[4]}02, '${moduleName}.${businessName}.remove', 'en_US', '${ClassName} Delete', 'admin', now(), 'generated button'),
+(${table.menuIds[5]}01, '${moduleName}.${businessName}.export', 'zh_CN', '${functionName}??', 'admin', now(), 'generated button'),
+(${table.menuIds[5]}02, '${moduleName}.${businessName}.export', 'en_US', '${ClassName} Export', 'admin', now(), 'generated button')
+on conflict (message_key, locale) do update set message_value = excluded.message_value, update_by = 'admin', update_time = now();

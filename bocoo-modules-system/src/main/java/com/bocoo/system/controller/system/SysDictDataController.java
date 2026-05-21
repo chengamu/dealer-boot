@@ -92,7 +92,7 @@ public class SysDictDataController extends BaseController {
     public R<List<SysDictDataVo>> dictType(
             @Parameter(description = "字典类型", required = true)
             @PathVariable String dictType) {
-        List<SysDictDataVo> data = dictTypeService.selectDictDataByType(dictType);
+        List<SysDictDataVo> data = dictTypeService.selectTranslatedDictDataByType(dictType);
         if (ObjectUtil.isNull(data)) {
             data = new ArrayList<>();
         }

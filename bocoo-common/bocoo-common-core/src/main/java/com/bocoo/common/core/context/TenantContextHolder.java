@@ -32,6 +32,23 @@ public final class TenantContextHolder {
         IGNORE.set(Boolean.TRUE.equals(ignore));
     }
 
+    public static void runWithTenant(Long tenantId, Runnable runnable) {
+        Long previousTenantId = TENANT_ID.get();
+        Boolean previousIgnore = IGNORE.get();
+        try {
+            setTenantId(tenantId);
+            setIgnore(false);
+            runnable.run();
+        } finally {
+            if (previousTenantId == null) {
+                TENANT_ID.remove();
+            } else {
+                TENANT_ID.set(previousTenantId);
+            }
+            IGNORE.set(Boolean.TRUE.equals(previousIgnore));
+        }
+    }
+
     public static void clear() {
         TENANT_ID.remove();
         IGNORE.remove();

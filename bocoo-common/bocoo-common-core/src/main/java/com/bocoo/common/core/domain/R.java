@@ -1,6 +1,7 @@
 package com.bocoo.common.core.domain;
 
 import com.bocoo.common.core.constant.HttpStatus;
+import com.bocoo.common.core.utils.MessageUtils;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -56,7 +57,7 @@ public class R<T> implements Serializable {
      * @return 成功响应对象
      */
     public static <T> R<T> ok() {
-        return restResult(null, SUCCESS, "操作成功");
+        return restResult(null, SUCCESS, MessageUtils.message("response.success"));
     }
 
     /**
@@ -67,7 +68,7 @@ public class R<T> implements Serializable {
      * @return 成功响应对象
      */
     public static <T> R<T> ok(T data) {
-        return restResult(data, SUCCESS, "操作成功");
+        return restResult(data, SUCCESS, MessageUtils.message("response.success"));
     }
 
     /**
@@ -100,7 +101,7 @@ public class R<T> implements Serializable {
      * @return 失败响应对象
      */
     public static <T> R<T> fail() {
-        return restResult(null, FAIL, "操作失败");
+        return restResult(null, FAIL, MessageUtils.message("response.fail"));
     }
 
     /**
@@ -122,7 +123,7 @@ public class R<T> implements Serializable {
      * @return 失败响应对象
      */
     public static <T> R<T> fail(T data) {
-        return restResult(data, FAIL, "操作失败");
+        return restResult(data, FAIL, MessageUtils.message("response.fail"));
     }
 
     /**

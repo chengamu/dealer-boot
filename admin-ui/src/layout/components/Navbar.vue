@@ -1,10 +1,36 @@
 <template>
   <div class="navbar">
-    <hamburger id="hamburger-container" :is-active="appStore.sidebar.opened" class="hamburger-container" @toggleClick="toggleSideBar" />
+    <hamburger
+      id="hamburger-container"
+      :is-active="appStore.sidebar.opened"
+      class="hamburger-container"
+      @toggleClick="toggleSideBar"
+    />
     <breadcrumb id="breadcrumb-container" class="breadcrumb-container" v-if="!settingsStore.topNav" />
     <top-nav id="topmenu-container" class="topmenu-container" v-if="settingsStore.topNav" />
 
     <div class="right-menu">
+      <el-dropdown @command="handleLanguage" class="right-menu-item hover-effect language-menu" trigger="click">
+        <div class="language-wrapper">
+          <svg-icon icon-class="language" />
+          <span>{{ currentLanguageLabel }}</span>
+        </div>
+        <template #dropdown>
+          <el-dropdown-menu>
+            <el-dropdown-item
+              v-for="item in languages"
+              :key="item.value"
+              :command="item.value"
+              :disabled="localeStore.language === item.value"
+            >
+              {{ item.label }}
+            </el-dropdown-item>
+          </el-dropdown-menu>
+        </template>
+      </el-dropdown>
+
+      <message-bell class="right-menu-item message-wrapper" />
+
       <div class="avatar-container">
         <el-dropdown @command="handleCommand" class="right-menu-item hover-effect" trigger="click">
           <div class="avatar-wrapper">
@@ -29,21 +55,29 @@
 
 <script setup>
 import { ElMessageBox } from 'element-plus'
+import { computed } from 'vue'
 import Breadcrumb from '@/components/Breadcrumb'
 import TopNav from '@/components/TopNav'
 import Hamburger from '@/components/Hamburger'
-import Screenfull from '@/components/Screenfull'
-import SizeSelect from '@/components/SizeSelect'
-import HeaderSearch from '@/components/HeaderSearch'
-import RuoYiGit from '@/components/RuoYi/Git'
-import RuoYiDoc from '@/components/RuoYi/Doc'
+import MessageBell from '@/shell/MessageBell.vue'
 import useAppStore from '@/store/modules/app'
 import useUserStore from '@/store/modules/user'
 import useSettingsStore from '@/store/modules/settings'
+import useLocaleStore from '@/store/modules/locale'
+
+const emits = defineEmits(['setLayout'])
 
 const appStore = useAppStore()
 const userStore = useUserStore()
 const settingsStore = useSettingsStore()
+const localeStore = useLocaleStore()
+
+const languages = [
+  { value: 'zh_CN', label: '中文' },
+  { value: 'en_US', label: 'English' }
+]
+
+const currentLanguageLabel = computed(() => languages.find(item => item.value === localeStore.language)?.label || '中文')
 
 function toggleSideBar() {
   appStore.toggleSideBar()
@@ -51,14 +85,14 @@ function toggleSideBar() {
 
 function handleCommand(command) {
   switch (command) {
-    case "setLayout":
-      setLayout();
-      break;
-    case "logout":
-      logout();
-      break;
+    case 'setLayout':
+      setLayout()
+      break
+    case 'logout':
+      logout()
+      break
     default:
-      break;
+      break
   }
 }
 
@@ -69,18 +103,23 @@ function logout() {
     type: 'warning'
   }).then(() => {
     userStore.logOut().then(() => {
-      location.href = import.meta.env.VITE_APP_CONTEXT_PATH + 'index';
+      location.href = import.meta.env.VITE_APP_CONTEXT_PATH + 'index'
     })
-  }).catch(() => { });
+  }).catch(() => {})
 }
 
-const emits = defineEmits(['setLayout'])
+function handleLanguage(language) {
+  if (localeStore.language === language) return
+  localeStore.setLanguage(language)
+  location.reload()
+}
+
 function setLayout() {
-  emits('setLayout');
+  emits('setLayout')
 }
 </script>
 
-<style lang='scss' scoped>
+<style lang="scss" scoped>
 .navbar {
   height: 50px;
   overflow: hidden;
@@ -109,11 +148,6 @@ function setLayout() {
     left: 50px;
   }
 
-  .errLog-container {
-    display: inline-block;
-    vertical-align: top;
-  }
-
   .right-menu {
     float: right;
     height: 100%;
@@ -140,6 +174,23 @@ function setLayout() {
           background: rgba(0, 0, 0, 0.025);
         }
       }
+    }
+
+    .language-menu {
+      font-size: 14px;
+
+      .language-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        height: 50px;
+      }
+    }
+
+    .message-wrapper {
+      display: inline-flex;
+      align-items: center;
+      padding: 0 6px;
     }
 
     .avatar-container {

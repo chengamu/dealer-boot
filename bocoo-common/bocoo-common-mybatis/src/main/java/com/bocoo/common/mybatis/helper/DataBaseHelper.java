@@ -14,7 +14,6 @@ public class DataBaseHelper {
 
     public static String findInSet(Object var1, String var2) {
         String var = Convert.toStr(var1);
-        // find_in_set(100 , '0,100,101')
-        return "find_in_set('%s' , %s) <> 0".formatted(var, var2);
+        return "concat(',', %s, ',') like '%%,%s,%%'".formatted(var2, var);
     }
 }

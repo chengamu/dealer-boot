@@ -1,9 +1,8 @@
 package com.bocoo.common.web.filter;
 
 import com.bocoo.common.core.config.properties.TenantProperties;
-import com.bocoo.common.core.constant.TenantConstants;
 import com.bocoo.common.core.context.TenantContextHolder;
-import com.bocoo.common.core.utils.StringUtils;
+import com.bocoo.common.satoken.utils.LoginHelper;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -25,18 +24,18 @@ public class TenantContextFilter implements Filter {
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         try {
-            String tenantId = httpRequest.getHeader(TenantConstants.TENANT_ID_HEADER);
-            if (StringUtils.isBlank(tenantId)) {
-                tenantId = TenantConstants.DEFAULT_TENANT_ID;
+            if (isIgnored(httpRequest.getRequestURI())) {
+                TenantContextHolder.setIgnore(true);
+            } else {
+                TenantContextHolder.setTenantId(LoginHelper.getTenantId());
             }
-            TenantContextHolder.setTenantId(Long.valueOf(tenantId));
             chain.doFilter(request, response);
         } finally {
             TenantContextHolder.clear();
         }
     }
 
-    public TenantProperties getProperties() {
-        return properties;
+    private boolean isIgnored(String uri) {
+        return properties.getIgnoreUrls().stream().anyMatch(uri::startsWith);
     }
 }

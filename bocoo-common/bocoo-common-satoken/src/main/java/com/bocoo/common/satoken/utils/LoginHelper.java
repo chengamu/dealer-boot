@@ -7,6 +7,7 @@ import cn.dev33.satoken.stp.SaLoginModel;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.convert.Convert;
 import cn.hutool.core.util.ObjectUtil;
+import com.bocoo.common.core.constant.TenantConstants;
 import com.bocoo.common.core.constant.UserConstants;
 import com.bocoo.common.core.domain.bo.LoginUser;
 import com.bocoo.common.core.enums.DeviceType;
@@ -149,6 +150,21 @@ public class LoginHelper {
 
     public static boolean isAdmin() {
         return isAdmin(getUserId());
+    }
+
+    public static Long getTenantId() {
+        try {
+            LoginUser loginUser = getLoginUser();
+            return loginUser == null || loginUser.getTenantId() == null
+                ? TenantConstants.PLATFORM_TENANT_ID
+                : loginUser.getTenantId();
+        } catch (Exception ignored) {
+            return TenantConstants.PLATFORM_TENANT_ID;
+        }
+    }
+
+    public static boolean isPlatformTenant() {
+        return TenantConstants.PLATFORM_TENANT_ID.equals(getTenantId());
     }
 
     public static boolean isLogin() {

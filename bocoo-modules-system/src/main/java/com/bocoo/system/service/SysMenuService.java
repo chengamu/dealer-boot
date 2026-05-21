@@ -40,6 +40,7 @@ public class SysMenuService {
     private final SysMenuMapper menuMapper;
     private final SysRoleMapper roleMapper;
     private final SysRoleMenuMapper roleMenuMapper;
+    private final SysI18nMessageService i18nMessageService;
 
     /**
      * 根据用户查询系统菜单列表
@@ -78,6 +79,7 @@ public class SysMenuService {
             List<SysMenu> list = menuMapper.selectMenuListByUserId(wrapper);
             menuList = MapstructUtils.convert(list, SysMenuVo.class);
         }
+        translateMenuVos(menuList);
         return menuList;
     }
 
@@ -128,6 +130,7 @@ public class SysMenuService {
         } else {
             menus = menuMapper.selectMenuTreeByUserId(userId);
         }
+        translateMenus(menus);
         return getChildPerms(menus, 0);
     }
 
@@ -216,7 +219,9 @@ public class SysMenuService {
      * @return 菜单信息
      */
     public SysMenuVo selectMenuById(Long menuId) {
-        return menuMapper.selectVoById(menuId);
+        SysMenuVo menu = menuMapper.selectVoById(menuId);
+        translateMenuVo(menu);
+        return menu;
     }
 
     /**
@@ -314,7 +319,7 @@ public class SysMenuService {
         }
         // 非外链并且是一级目录（类型为目录）
         if (0 == menu.getParentId().intValue() && UserConstants.TYPE_DIR.equals(menu.getMenuType())
-            && UserConstants.NO_FRAME.equals(menu.getIsFrame())) {
+            && !StringUtils.ishttp(menu.getPath())) {
             routerPath = "/" + menu.getPath();
         }
         // 非外链并且是一级目录（类型为菜单）
@@ -419,6 +424,27 @@ public class SysMenuService {
      */
     private boolean hasChild(List<SysMenu> list, SysMenu t) {
         return CollUtil.isNotEmpty(getChildList(list, t));
+    }
+
+    private void translateMenus(List<SysMenu> menus) {
+        if (CollUtil.isEmpty(menus)) {
+            return;
+        }
+        menus.forEach(menu -> menu.setMenuName(i18nMessageService.translate(menu.getI18nKey(), menu.getMenuName())));
+    }
+
+    private void translateMenuVos(List<SysMenuVo> menus) {
+        if (CollUtil.isEmpty(menus)) {
+            return;
+        }
+        menus.forEach(this::translateMenuVo);
+    }
+
+    private void translateMenuVo(SysMenuVo menu) {
+        if (menu == null) {
+            return;
+        }
+        menu.setMenuName(i18nMessageService.translate(menu.getI18nKey(), menu.getMenuName()));
     }
 
     /**

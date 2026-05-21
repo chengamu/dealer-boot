@@ -11,24 +11,35 @@ bocoo:
   # 文件路径 示例（ Windows配置D:/uploadPath，Linux配置 /home/uploadPath）
   profile:  D:/work/bocoo-base/bocoo-admin/target/classes/static/profile
   tenant:
-    enabled: false
+    enabled: true
+    platform-id: 0
     ignore-urls:
       - /login
       - /captchaImage
       - /register
+      - /merchant/applications
     ignore-tables:
+      - sys_tenant
+      - sys_tenant_apply
       - sys_config
+      - sys_i18n_message
       - sys_dict_type
       - sys_dict_data
       - sys_logininfor
       - sys_oper_log
+      - sys_oss
+      - sys_oss_config
+      - gen_table
+      - gen_table_column
 
+websocket:
+  port: ${WEBSOCKET_PORT:2831}
 
 captcha:
   enable: true
   # 页面 <参数设置> 可开启关闭 验证码校验
   # 验证码类型 math 数组计算 char 字符验证
-  type: MATH
+  type: CHAR
   # line 线段干扰 circle 圆圈干扰 shear 扭曲干扰
   category: CIRCLE
   # 数字验证码位数
@@ -86,7 +97,7 @@ spring:
     # 国际化资源文件路径
     basename: i18n/messages
   profiles:
-    active: ${profiles.active}
+    active: ${profiles.active:dev}
   # 文件上传
   servlet:
     multipart:

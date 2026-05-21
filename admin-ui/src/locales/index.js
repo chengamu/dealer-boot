@@ -14,3 +14,9 @@ export function getMessage(path, locale = getLocale()) {
 export function installLocale(app) {
   app.config.globalProperties.$t = getMessage
 }
+
+export function useLocale() {
+  return {
+    t: getMessage
+  }
+}

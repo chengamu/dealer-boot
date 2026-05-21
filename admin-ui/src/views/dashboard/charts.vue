@@ -11,7 +11,7 @@
       </section>
       <section class="base-dashboard__item">
         <span>{{ t('dashboard.tenant') }}</span>
-        <strong>tenant-id</strong>
+        <strong>tenant</strong>
       </section>
       <section class="base-dashboard__item">
         <span>{{ t('dashboard.database') }}</span>

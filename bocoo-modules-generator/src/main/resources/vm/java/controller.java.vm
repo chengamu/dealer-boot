@@ -113,7 +113,7 @@ public class ${ClassName}Controller extends BaseController {
     @Operation(summary = "删除${functionName}", description = "批量删除${functionName},权限：${moduleName}:${businessName}:remove")
     public R<Void> remove(
             @Parameter(description = "${functionName}主键数组", required = true)
-            @NotEmpty(message = "主键不能为空")
+            @NotEmpty(message = "{gen.validation.pk.required}")
             @PathVariable Long[] ${businessName}Ids) {
         return toAjax(${className}Service.deleteWithValidByIds(List.of(${businessName}Ids), true));
     }

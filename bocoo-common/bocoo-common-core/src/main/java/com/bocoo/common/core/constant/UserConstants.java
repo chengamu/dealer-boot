@@ -55,12 +55,12 @@ public interface UserConstants {
     /**
      * 是否菜单外链（是）
      */
-    String YES_FRAME = "1";
+    String YES_FRAME = "0";
 
     /**
      * 是否菜单外链（否）
      */
-    String NO_FRAME = "0";
+    String NO_FRAME = "1";
 
     /**
      * 菜单正常状态
@@ -106,7 +106,7 @@ public interface UserConstants {
      * 用户名长度限制
      */
     int USERNAME_MIN_LENGTH = 2;
-    int USERNAME_MAX_LENGTH = 20;
+    int USERNAME_MAX_LENGTH = 100;
 
     /**
      * 密码长度限制

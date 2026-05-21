@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="Encoding">
+  <component name="Encoding" defaultCharsetForPropertiesFiles="UTF-8">
     <file url="file://$PROJECT_DIR$/bocoo-admin/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/bocoo-admin/src/main/resources" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/bocoo-admin/src/main/webapp/pages/plugin" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/bocoo-admin/src/main/resources/application-dev.yml" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/bocoo-common/bocoo-common-core/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/bocoo-common/bocoo-common-core/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/bocoo-common/bocoo-common-doc/src/main/java" charset="UTF-8" />
@@ -11,7 +11,6 @@
     <file url="file://$PROJECT_DIR$/bocoo-common/bocoo-common-encrypt/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/bocoo-common/bocoo-common-encrypt/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/bocoo-common/bocoo-common-excel/src/main/java" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/bocoo-common/bocoo-common-excel/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/bocoo-common/bocoo-common-idempotent/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/bocoo-common/bocoo-common-idempotent/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/bocoo-common/bocoo-common-json/src/main/java" charset="UTF-8" />
@@ -23,7 +22,6 @@
     <file url="file://$PROJECT_DIR$/bocoo-common/bocoo-common-mybatis/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/bocoo-common/bocoo-common-mybatis/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/bocoo-common/bocoo-common-oss/src/main/java" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/bocoo-common/bocoo-common-oss/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/bocoo-common/bocoo-common-ratelimiter/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/bocoo-common/bocoo-common-ratelimiter/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/bocoo-common/bocoo-common-redis/src/main/java" charset="UTF-8" />
@@ -33,22 +31,16 @@
     <file url="file://$PROJECT_DIR$/bocoo-common/bocoo-common-security/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/bocoo-common/bocoo-common-security/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/bocoo-common/bocoo-common-sensitive/src/main/java" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/bocoo-common/bocoo-common-sensitive/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/bocoo-common/bocoo-common-sms/src/main/java" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/bocoo-common/bocoo-common-sms/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/bocoo-common/bocoo-common-translation/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/bocoo-common/bocoo-common-translation/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/bocoo-common/bocoo-common-web/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/bocoo-common/bocoo-common-web/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/bocoo-common/bocoo-common-webSocket/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/bocoo-common/bocoo-common-webSocket/src/main/resources" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/bocoo-common/src/main/java" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/bocoo-common/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/bocoo-modules-generator/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/bocoo-modules-generator/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/bocoo-modules-system/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/bocoo-modules-system/src/main/resources" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/src/main/java" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/src/main/resources" charset="UTF-8" />
   </component>
 </project>

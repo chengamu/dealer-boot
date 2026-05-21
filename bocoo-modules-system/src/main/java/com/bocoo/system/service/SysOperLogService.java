@@ -7,6 +7,7 @@ import com.bocoo.common.mybatis.core.page.PageQuery;
 import com.bocoo.common.mybatis.core.page.TableDataInfo;
 import com.bocoo.common.core.utils.MapstructUtils;
 import com.bocoo.common.core.utils.StringUtils;
+import com.bocoo.common.core.utils.TimeUtils;
 import com.bocoo.common.core.utils.ip.AddressUtils;
 import com.bocoo.common.log.event.OperLogEvent;
 import com.bocoo.system.domain.bo.SysOperLogBo;
@@ -18,7 +19,6 @@ import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -80,7 +80,7 @@ public class SysOperLogService {
      */
     public void insertOperlog(SysOperLogBo bo) {
         SysOperLog operLog = MapstructUtils.convert(bo, SysOperLog.class);
-        operLog.setOperTime(LocalDateTime.now());
+        operLog.setOperTime(TimeUtils.utcNow());
         operLogMapper.insert(operLog);
     }
 

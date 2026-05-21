@@ -1,5 +1,7 @@
 
 
+import { parseUtc } from '@/utils/datetime'
+
 /**
  * 通用js方法封装处理
  * Copyright (c) 2025 贝基曼巴
@@ -11,20 +13,16 @@ export function parseTime(time, pattern) {
     return null
   }
   const format = pattern || '{y}-{m}-{d} {h}:{i}:{s}'
-  let date
-  if (typeof time === 'object') {
-    date = time
-  } else {
-    if ((typeof time === 'string') && (/^[0-9]+$/.test(time))) {
-      time = parseInt(time)
-    } else if (typeof time === 'string') {
-      time = time.replace(new RegExp(/-/gm), '/').replace('T', ' ').replace(new RegExp(/\.[\d]{3}/gm), '');
-    }
-    if ((typeof time === 'number') && (time.toString().length === 10)) {
-      time = time * 1000
-    }
-    date = new Date(time)
+  let value = time
+  if ((typeof value === 'string') && (/^[0-9]+$/.test(value))) {
+    value = parseInt(value)
   }
+  if ((typeof value === 'number') && (value.toString().length === 10)) {
+    value = value * 1000
+  }
+  const parsed = parseUtc(value)
+  if (!parsed || !parsed.isValid()) return null
+  const date = parsed.local().toDate()
   const formatObj = {
     y: date.getFullYear(),
     m: date.getMonth() + 1,

@@ -50,6 +50,12 @@ public class SysDictDataVo implements Serializable {
     private String dictLabel;
 
     /**
+     * 国际化消息键
+     */
+    @Schema(description = "国际化消息键")
+    private String i18nKey;
+
+    /**
      * 字典键值
      */
     @Schema(description = "字典键值")

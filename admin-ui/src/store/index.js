@@ -1,3 +1,3 @@
-const store = createPinia()
+import { pinia } from '@/stores'
 
-export default store
+export default pinia

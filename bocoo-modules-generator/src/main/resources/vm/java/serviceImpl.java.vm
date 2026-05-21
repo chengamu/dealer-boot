@@ -6,6 +6,7 @@ import com.bocoo.common.core.exception.ServiceException;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bocoo.common.core.utils.MapstructUtils;
+import com.bocoo.common.core.utils.MessageUtils;
 import com.bocoo.common.core.utils.StringUtils;
 import com.bocoo.common.mybatis.core.page.PageQuery;
 import com.bocoo.common.mybatis.core.page.TableDataInfo;
@@ -155,10 +156,10 @@ public class ${ClassName}ServiceImpl extends BaseServiceImpl<${ClassName}Mapper,
     public int updateStatus(Long id, String status) {
         // 参数校验
         if (id == null) {
-            throw new ServiceException("ID不能为空");
+            throw new ServiceException(MessageUtils.message("gen.validation.id.required"));
         }
         if (StringUtils.isEmpty(status)) {
-            throw new ServiceException("状态值不能为空");
+            throw new ServiceException(MessageUtils.message("gen.validation.status.required"));
         }
 
         // 只更新状态字段

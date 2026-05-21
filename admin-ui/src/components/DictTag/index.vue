@@ -13,7 +13,7 @@
           :disable-transitions="true"
           :key="item.value + ''"
           :index="index"
-          :type="item.elTagType === 'primary' ? '' : item.elTagType"
+          :type="tagType(item.elTagType)"
           :class="item.elTagClass"
         >{{ item.label + " " }}</el-tag>
       </template>
@@ -73,6 +73,12 @@ function handleArray(array) {
     return pre + " " + cur;
   });
 }
+
+function tagType(type) {
+  if (type === "primary" || type === "default" || type === "") return undefined;
+  return ["success", "info", "warning", "danger"].includes(type) ? type : undefined;
+}
+
 </script>
 
 <style scoped>

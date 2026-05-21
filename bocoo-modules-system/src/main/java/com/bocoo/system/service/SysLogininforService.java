@@ -10,6 +10,7 @@ import com.bocoo.common.mybatis.core.page.TableDataInfo;
 import com.bocoo.common.core.constant.Constants;
 import com.bocoo.common.core.utils.ServletUtils;
 import com.bocoo.common.core.utils.StringUtils;
+import com.bocoo.common.core.utils.TimeUtils;
 import com.bocoo.common.core.utils.ip.AddressUtils;
 import com.bocoo.common.log.event.LogininforEvent;
 import com.bocoo.system.domain.bo.SysLogininforBo;
@@ -23,7 +24,6 @@ import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -113,7 +113,7 @@ public class SysLogininforService {
      */
     public void insertLogininfor(SysLogininforBo bo) {
         SysLogininfor logininfor = MapstructUtils.convert(bo, SysLogininfor.class);
-        logininfor.setLoginTime(LocalDateTime.now());
+        logininfor.setLoginTime(TimeUtils.utcNow());
         logininforMapper.insert(logininfor);
     }
 

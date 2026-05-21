@@ -8,15 +8,24 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </resultMap>
 
     <select id="selectDbTableColumnsByName" parameterType="String" resultMap="GenTableColumnResult">
-        select column_name,
-        (case when (is_nullable = 'no' <![CDATA[ && ]]> column_key != 'PRI') then '1' else '0' end) as is_required,
-        (case when column_key = 'PRI' then '1' else '0' end) as is_pk,
-        ordinal_position as sort,
-        column_comment,
-        (case when extra = 'auto_increment' then '1' else '0' end) as is_increment,
-        column_type
-        from information_schema.columns where table_schema = (select database()) and table_name = (#{tableName})
-        order by ordinal_position
+        select c.column_name,
+               (case when c.is_nullable = 'NO' and coalesce(pk.is_pk, false) = false then '1' else '0' end) as is_required,
+               (case when coalesce(pk.is_pk, false) then '1' else '0' end) as is_pk,
+               c.ordinal_position as sort,
+               coalesce(col_description(cls.oid, a.attnum), '') as column_comment,
+               (case when c.is_identity = 'YES' or c.column_default like 'nextval(%' then '1' else '0' end) as is_increment,
+               format_type(a.atttypid, a.atttypmod) as column_type
+        from information_schema.columns c
+             join pg_namespace ns on ns.nspname = c.table_schema
+             join pg_class cls on cls.relnamespace = ns.oid and cls.relname = c.table_name
+             join pg_attribute a on a.attrelid = cls.oid and a.attname = c.column_name and a.attnum > 0
+             left join (
+                 select i.indrelid, unnest(i.indkey) as attnum, true as is_pk
+                 from pg_index i
+                 where i.indisprimary
+             ) pk on pk.indrelid = cls.oid and pk.attnum = a.attnum
+        where c.table_schema = 'public' and c.table_name = #{tableName}
+        order by c.ordinal_position
     </select>
 
 </mapper>

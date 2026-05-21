@@ -34,6 +34,9 @@ public class SysUserVo implements Serializable {
     @Schema(description = "用户ID")
     private Long userId;
 
+    @Schema(description = "Tenant ID")
+    private Long tenantId;
+
     /**
      * 部门ID
      */

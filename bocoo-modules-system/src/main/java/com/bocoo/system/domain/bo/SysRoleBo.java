@@ -31,6 +31,9 @@ public class SysRoleBo extends BaseEntity {
     @Schema(description = "角色ID")
     private Long roleId;
 
+    @Schema(description = "Tenant ID")
+    private Long tenantId;
+
     /**
      * 角色名称
      */

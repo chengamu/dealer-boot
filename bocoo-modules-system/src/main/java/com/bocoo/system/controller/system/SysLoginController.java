@@ -113,6 +113,7 @@ public class SysLoginController {
      * @param body 登录信息
      * @return 结果
      */
+    @SaIgnore
     @PostMapping("/emailLogin")
     @Operation(summary = "邮件登录", description = "使用邮箱和邮件验证码进行登录")
     public R<Map<String, Object>> emailLogin(

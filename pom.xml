@@ -108,30 +108,6 @@
     </modules>
 
 
-    <repositories>
-        <repository>
-            <id>nexus</id>
-            <url>http://192.168.120.66:8081/repository/bocoo/</url>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
-
-    <distributionManagement>
-        <repository>
-            <id>nexus</id>
-            <name>maven-release</name>
-            <url>http://192.168.120.66:8081/repository/maven-releases/</url>
-        </repository>
-        <snapshotRepository>
-            <id>nexus</id>
-            <name>maven-snapshots</name>
-            <url>hhttp://192.168.120.66:8081/repository/maven-snapshots/</url>
-        </snapshotRepository>
-    </distributionManagement>
-
-
     <!-- 依赖管理 -->
     <dependencyManagement>
         <dependencies>

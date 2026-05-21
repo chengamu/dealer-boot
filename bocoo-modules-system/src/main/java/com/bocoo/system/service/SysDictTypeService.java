@@ -1,6 +1,7 @@
 package com.bocoo.system.service;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
@@ -44,6 +45,7 @@ public class SysDictTypeService implements DictService {
 
     private final SysDictTypeMapper dictTypeMapper;
     private final SysDictDataMapper dictDataMapper;
+    private final SysDictDataService dictDataService;
 
     public TableDataInfo<SysDictTypeVo> selectPageDictTypeList(SysDictTypeBo dictType, PageQuery pageQuery) {
         LambdaQueryWrapper<SysDictType> lqw = buildQueryWrapper(dictType);
@@ -224,7 +226,7 @@ public class SysDictTypeService implements DictService {
      */
     @Override
     public String getDictLabel(String dictType, String dictValue, String separator) {
-        List<SysDictDataVo> datas = SpringUtils.getAopProxy(this).selectDictDataByType(dictType);
+        List<SysDictDataVo> datas = selectTranslatedDictDataByType(dictType);
         Map<String, String> map = StreamUtils.toMap(datas, SysDictDataVo::getDictValue, SysDictDataVo::getDictLabel);
         if (StringUtils.containsAny(dictValue, separator)) {
             return Arrays.stream(dictValue.split(separator))
@@ -245,7 +247,7 @@ public class SysDictTypeService implements DictService {
      */
     @Override
     public String getDictValue(String dictType, String dictLabel, String separator) {
-        List<SysDictDataVo> datas = SpringUtils.getAopProxy(this).selectDictDataByType(dictType);
+        List<SysDictDataVo> datas = selectTranslatedDictDataByType(dictType);
         Map<String, String> map = StreamUtils.toMap(datas, SysDictDataVo::getDictLabel, SysDictDataVo::getDictValue);
         if (StringUtils.containsAny(dictLabel, separator)) {
             return Arrays.stream(dictLabel.split(separator))
@@ -258,7 +260,17 @@ public class SysDictTypeService implements DictService {
 
     @Override
     public Map<String, String> getAllDictByDictType(String dictType) {
-        List<SysDictDataVo> list = selectDictDataByType(dictType);
+        List<SysDictDataVo> list = selectTranslatedDictDataByType(dictType);
         return StreamUtils.toMap(list, SysDictDataVo::getDictValue, SysDictDataVo::getDictLabel);
+    }
+
+    public List<SysDictDataVo> selectTranslatedDictDataByType(String dictType) {
+        List<SysDictDataVo> dictDatas = SpringUtils.getAopProxy(this).selectDictDataByType(dictType);
+        if (CollUtil.isEmpty(dictDatas)) {
+            return new ArrayList<>();
+        }
+        List<SysDictDataVo> translated = BeanUtil.copyToList(dictDatas, SysDictDataVo.class);
+        dictDataService.translateDictDataList(translated);
+        return translated;
     }
 }

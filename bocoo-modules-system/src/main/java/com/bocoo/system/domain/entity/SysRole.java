@@ -40,6 +40,9 @@ public class SysRole extends BaseEntity {
     @TableId(value = "role_id")
     private Long roleId;
 
+    @Schema(description = "Tenant ID")
+    private Long tenantId;
+
     /**
      * 角色名称
      */

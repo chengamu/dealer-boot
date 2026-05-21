@@ -8,7 +8,6 @@
         <version>${revision}</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-<!--    mvn deploy -DaltDeploymentRepository=bocoo-release::default::http://192.168.120.66:8081/repository/maven-releases/-->
     <modules>
         <module>bocoo-common-bom</module>
         <module>bocoo-common-core</module>

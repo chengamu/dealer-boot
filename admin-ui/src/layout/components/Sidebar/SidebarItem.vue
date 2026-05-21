@@ -4,7 +4,7 @@
       <app-link v-if="onlyOneChild.meta" :to="resolvePath(onlyOneChild.path, onlyOneChild.query)">
         <el-menu-item :index="resolvePath(onlyOneChild.path)" :class="{ 'submenu-title-noDropdown': !isNest }">
           <svg-icon :icon-class="onlyOneChild.meta.icon || (item.meta && item.meta.icon)"/>
-          <template #title><span class="menu-title" :title="hasTitle(onlyOneChild.meta.title)">{{ onlyOneChild.meta.title }}</span></template>
+          <template #title><span class="menu-title" :title="hasTitle(routeTitle(onlyOneChild.meta.title))">{{ routeTitle(onlyOneChild.meta.title) }}</span></template>
         </el-menu-item>
       </app-link>
     </template>
@@ -12,7 +12,7 @@
     <el-sub-menu v-else ref="subMenu" :index="resolvePath(item.path)" popper-append-to-body>
       <template v-if="item.meta" #title>
         <svg-icon :icon-class="item.meta && item.meta.icon" />
-        <span class="menu-title" :title="hasTitle(item.meta.title)">{{ item.meta.title }}</span>
+        <span class="menu-title" :title="hasTitle(routeTitle(item.meta.title))">{{ routeTitle(item.meta.title) }}</span>
       </template>
 
       <sidebar-item
@@ -31,6 +31,10 @@
 import { isExternal } from '@/utils/validate'
 import AppLink from './Link'
 import { getNormalPath } from '@/utils/ruoyi'
+import { getMessage } from '@/locales'
+import useLocaleStore from '@/store/modules/locale'
+
+const localeStore = useLocaleStore()
 
 const props = defineProps({
   // route object
@@ -98,5 +102,12 @@ function hasTitle(title){
   } else {
     return "";
   }
+}
+
+function routeTitle(title) {
+  if (title && title.includes('.')) {
+    return getMessage(title, localeStore.language)
+  }
+  return title
 }
 </script>

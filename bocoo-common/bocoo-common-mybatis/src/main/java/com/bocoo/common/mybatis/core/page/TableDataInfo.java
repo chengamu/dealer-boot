@@ -2,6 +2,7 @@ package com.bocoo.common.mybatis.core.page;
 
 import cn.hutool.http.HttpStatus;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.bocoo.common.core.utils.MessageUtils;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -56,7 +57,7 @@ public class TableDataInfo<T> implements Serializable {
     public static <T> TableDataInfo<T> build(IPage<T> page) {
         TableDataInfo<T> rspData = new TableDataInfo<>();
         rspData.setCode(HttpStatus.HTTP_OK);
-        rspData.setMsg("查询成功");
+        rspData.setMsg(MessageUtils.message("response.query.success"));
         rspData.setRows(page.getRecords());
         rspData.setTotal(page.getTotal());
         return rspData;
@@ -65,7 +66,7 @@ public class TableDataInfo<T> implements Serializable {
     public static <T> TableDataInfo<T> build(List<T> list) {
         TableDataInfo<T> rspData = new TableDataInfo<>();
         rspData.setCode(HttpStatus.HTTP_OK);
-        rspData.setMsg("查询成功");
+        rspData.setMsg(MessageUtils.message("response.query.success"));
         rspData.setRows(list);
         rspData.setTotal(list.size());
         return rspData;
@@ -74,7 +75,7 @@ public class TableDataInfo<T> implements Serializable {
     public static <T> TableDataInfo<T> build() {
         TableDataInfo<T> rspData = new TableDataInfo<>();
         rspData.setCode(HttpStatus.HTTP_OK);
-        rspData.setMsg("查询成功");
+        rspData.setMsg(MessageUtils.message("response.query.success"));
         return rspData;
     }
 

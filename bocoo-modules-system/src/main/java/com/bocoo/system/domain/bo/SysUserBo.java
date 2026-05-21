@@ -35,6 +35,9 @@ public class SysUserBo extends BaseEntity {
     @Schema(description = "用户ID")
     private Long userId;
 
+    @Schema(description = "Tenant ID")
+    private Long tenantId;
+
     /**
      * 部门ID
      */
@@ -47,7 +50,7 @@ public class SysUserBo extends BaseEntity {
     @Schema(description = "用户账号")
     @Xss(message = "用户账号不能包含脚本字符")
     @NotBlank(message = "用户账号不能为空")
-    @Size(min = 0, max = 30, message = "用户账号长度不能超过{max}个字符")
+    @Size(min = 0, max = 100, message = "用户账号长度不能超过{max}个字符")
     private String userName;
 
     /**

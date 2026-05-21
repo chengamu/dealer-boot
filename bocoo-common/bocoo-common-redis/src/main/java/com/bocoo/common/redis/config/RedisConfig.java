@@ -108,9 +108,9 @@ public class RedisConfig {
      *   redis:
      *     cluster:
      *       nodes:
-     *         - 192.168.0.100:6379
-     *         - 192.168.0.101:6379
-     *         - 192.168.0.102:6379
+     *         - redis-node-1:6379
+     *         - redis-node-2:6379
+     *         - redis-node-3:6379
      *     # 密码
      *     password:
      *     # 连接超时时间

@@ -10,10 +10,9 @@ import java.util.List;
 @ConfigurationProperties(prefix = "bocoo.tenant")
 public class TenantProperties {
 
-    /**
-     * Keep disabled until tenant_id columns are added to the target schema.
-     */
     private Boolean enabled = false;
+
+    private Long platformId = 0L;
 
     private List<String> ignoreUrls = new ArrayList<>();
 

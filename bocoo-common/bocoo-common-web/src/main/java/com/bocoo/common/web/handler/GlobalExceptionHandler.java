@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import com.bocoo.common.core.domain.R;
 import com.bocoo.common.core.exception.ServiceException;
 import com.bocoo.common.core.exception.base.BaseException;
+import com.bocoo.common.core.utils.MessageUtils;
 import com.bocoo.common.core.utils.StreamUtils;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -47,7 +48,7 @@ public class GlobalExceptionHandler {
     public R<Void> handleDataTooLongException(DataIntegrityViolationException e, HttpServletRequest request) {
         String requestURI = request.getRequestURI();
         log.error("请求地址'{}'，发生数据完整性违规异常", requestURI, e);
-        return R.fail("文件名或填写内容过长");
+        return R.fail(MessageUtils.message("request.data.too.long"));
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
@@ -83,7 +84,7 @@ public class GlobalExceptionHandler {
     public R<Void> handleMissingPathVariableException(MissingPathVariableException e, HttpServletRequest request) {
         String requestURI = request.getRequestURI();
         log.error("请求路径中缺少必需的路径变量'{}',发生系统异常.", requestURI);
-        return R.fail(String.format("请求路径中缺少必需的路径变量[%s]", e.getVariableName()));
+        return R.fail(MessageUtils.message("request.path.variable.missing", e.getVariableName()));
     }
 
     /**
@@ -93,7 +94,8 @@ public class GlobalExceptionHandler {
     public R<Void> handleMethodArgumentTypeMismatchException(MethodArgumentTypeMismatchException e, HttpServletRequest request) {
         String requestURI = request.getRequestURI();
         log.error("请求参数类型不匹配'{}',发生系统异常.", requestURI);
-        return R.fail(String.format("请求参数类型不匹配，参数[%s]要求类型为：'%s'，但输入值为：'%s'", e.getName(), e.getRequiredType().getName(), e.getValue()));
+        String requiredType = e.getRequiredType() == null ? "" : e.getRequiredType().getName();
+        return R.fail(MessageUtils.message("request.param.type.mismatch", e.getName(), requiredType, e.getValue()));
     }
 
     /**

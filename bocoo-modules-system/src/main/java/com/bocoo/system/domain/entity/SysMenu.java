@@ -43,6 +43,13 @@ public class SysMenu extends BaseEntity {
     private String menuName;
 
     /**
+     * 国际化消息键
+     */
+    @Schema(description = "国际化消息键")
+    @Size(min = 0, max = 128, message = "国际化消息键长度不能超过{max}个字符")
+    private String i18nKey;
+
+    /**
      * 显示顺序
      */
     @Schema(description = "显示顺序")

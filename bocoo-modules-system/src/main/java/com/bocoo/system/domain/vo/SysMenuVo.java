@@ -38,6 +38,12 @@ public class SysMenuVo implements Serializable {
     private String menuName;
 
     /**
+     * 国际化消息键
+     */
+    @Schema(description = "国际化消息键")
+    private String i18nKey;
+
+    /**
      * 父菜单ID
      */
     @Schema(description = "父菜单ID")

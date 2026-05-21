@@ -1,11 +1,10 @@
 package com.bocoo.common.core.utils;
 
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 public class GenerateNoUtil {
 
     private static String generateTimePrefix() {
-        return  LocalDateTime.now().format(DateTimeFormatter.ofPattern("MMdd"));
+        return TimeUtils.utcNow().format(DateTimeFormatter.ofPattern("MMdd"));
     }
 }

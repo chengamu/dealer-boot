@@ -1,160 +1,89 @@
 <template>
   <div class="register">
-    <el-form ref="registerRef" :model="registerForm" :rules="registerRules" class="register-form">
-      <h3 class="title">MES后台管理系统</h3>
-      <el-form-item prop="username">
-        <el-input
-          v-model="registerForm.username"
-          type="text"
-          size="large"
-          auto-complete="off"
-          placeholder="账号"
-        >
+    <el-form ref="registerRef" :model="form" :rules="rules" class="register-form">
+      <h3 class="title">{{ t('register.title') }}</h3>
+      <el-form-item prop="merchantName">
+        <el-input v-model="form.merchantName" size="large" :placeholder="t('register.merchantName')">
+          <template #prefix><svg-icon icon-class="tree" class="el-input__icon input-icon" /></template>
+        </el-input>
+      </el-form-item>
+      <el-form-item prop="contactName">
+        <el-input v-model="form.contactName" size="large" :placeholder="t('register.contactName')">
           <template #prefix><svg-icon icon-class="user" class="el-input__icon input-icon" /></template>
         </el-input>
       </el-form-item>
-      <el-form-item prop="password">
-        <el-input
-          v-model="registerForm.password"
-          type="password"
-          size="large"
-          auto-complete="off"
-          placeholder="密码"
-          @keyup.enter="handleRegister"
-        >
-          <template #prefix><svg-icon icon-class="password" class="el-input__icon input-icon" /></template>
+      <el-form-item prop="email">
+        <el-input v-model="form.email" size="large" :placeholder="t('register.email')">
+          <template #prefix><svg-icon icon-class="email" class="el-input__icon input-icon" /></template>
         </el-input>
       </el-form-item>
-      <el-form-item prop="confirmPassword">
-        <el-input
-          v-model="registerForm.confirmPassword"
-          type="password"
-          size="large"
-          auto-complete="off"
-          placeholder="确认密码"
-          @keyup.enter="handleRegister"
-        >
-          <template #prefix><svg-icon icon-class="password" class="el-input__icon input-icon" /></template>
-        </el-input>
+      <el-form-item prop="country">
+        <el-input v-model="form.country" size="large" :placeholder="t('register.country')" />
       </el-form-item>
-      <el-form-item prop="code" v-if="captchaEnabled">
-        <el-input
-          size="large"
-          v-model="registerForm.code"
-          auto-complete="off"
-          placeholder="验证码"
-          style="width: 63%"
-          @keyup.enter="handleRegister"
-        >
-          <template #prefix><svg-icon icon-class="validCode" class="el-input__icon input-icon" /></template>
-        </el-input>
-        <div class="register-code">
-          <img :src="codeUrl" @click="getCode" class="register-code-img"/>
-        </div>
+      <el-form-item prop="remark">
+        <el-input v-model="form.remark" type="textarea" :rows="3" :placeholder="t('register.remark')" />
       </el-form-item>
       <el-form-item style="width:100%;">
-        <el-button
-          :loading="loading"
-          size="large"
-          type="primary"
-          style="width:100%;"
-          @click.prevent="handleRegister"
-        >
-          <span v-if="!loading">注 册</span>
-          <span v-else>注 册 中...</span>
+        <el-button :loading="loading" size="large" type="primary" style="width:100%;" @click.prevent="handleSubmit">
+          <span v-if="!loading">{{ t('register.submit') }}</span>
+          <span v-else>{{ t('register.submitting') }}</span>
         </el-button>
         <div style="float: right;">
-          <router-link class="link-type" :to="'/login'">使用已有账户登录</router-link>
+          <router-link class="link-type" :to="'/login'">{{ t('register.login') }}</router-link>
         </div>
       </el-form-item>
     </el-form>
-    <!--  底部  -->
     <div class="el-register-footer">
-      <span>Copyright © 2025 贝基曼巴</span>
+      <span>Copyright © 2026 Bocoo</span>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ElMessageBox } from "element-plus";
-import { getCodeImg, register } from "@/api/login";
+import { ElMessageBox } from 'element-plus'
+import { submitMerchantApplication } from '@/api/system/tenant'
+import { useLocale } from '@/locales'
 
-const router = useRouter();
-const { proxy } = getCurrentInstance();
+const router = useRouter()
+const { proxy } = getCurrentInstance()
+const { t } = useLocale()
 
-const registerForm = ref({
-  username: "",
-  password: "",
-  confirmPassword: "",
-  code: "",
-  uuid: "",
-  userType: "sys_user"
-});
+const form = ref({
+  merchantName: '',
+  contactName: '',
+  email: '',
+  country: '',
+  remark: ''
+})
 
-const equalToPassword = (rule, value, callback) => {
-  if (registerForm.value.password !== value) {
-    callback(new Error("两次输入的密码不一致"));
-  } else {
-    callback();
-  }
-};
+const rules = {
+  merchantName: [{ required: true, trigger: 'blur', message: t('register.merchantNameRequired') }],
+  email: [
+    { required: true, trigger: 'blur', message: t('register.emailRequired') },
+    { type: 'email', trigger: 'blur', message: t('register.emailInvalid') }
+  ]
+}
 
-const registerRules = {
-  username: [
-    { required: true, trigger: "blur", message: "请输入您的账号" },
-    { min: 2, max: 20, message: "用户账号长度必须介于 2 和 20 之间", trigger: "blur" }
-  ],
-  password: [
-    { required: true, trigger: "blur", message: "请输入您的密码" },
-    { min: 5, max: 20, message: "用户密码长度必须介于 5 和 20 之间", trigger: "blur" }
-  ],
-  confirmPassword: [
-    { required: true, trigger: "blur", message: "请再次输入您的密码" },
-    { required: true, validator: equalToPassword, trigger: "blur" }
-  ],
-  code: [{ required: true, trigger: "change", message: "请输入验证码" }]
-};
+const loading = ref(false)
 
-const codeUrl = ref("");
-const loading = ref(false);
-const captchaEnabled = ref(true);
-
-function handleRegister() {
+function handleSubmit() {
   proxy.$refs.registerRef.validate(valid => {
-    if (valid) {
-      loading.value = true;
-      register(registerForm.value).then(res => {
-        const username = registerForm.value.username;
-        ElMessageBox.alert("<font color='red'>恭喜你，您的账号 " + username + " 注册成功！</font>", "系统提示", {
-          dangerouslyUseHTMLString: true,
-          type: "success",
-        }).then(() => {
-          router.push("/login");
-        }).catch(() => {});
-      }).catch(() => {
-        loading.value = false;
-        if (captchaEnabled) {
-          getCode();
-        }
-      });
-    }
-  });
+    if (!valid) return
+    loading.value = true
+    submitMerchantApplication(form.value).then(() => {
+      ElMessageBox.alert(t('register.success'), t('common.prompt'), {
+        type: 'success'
+      }).then(() => {
+        router.push('/login')
+      })
+    }).finally(() => {
+      loading.value = false
+    })
+  })
 }
-
-function getCode() {
-  getCodeImg().then(res => {
-    captchaEnabled.value = res.data.captchaEnabled === undefined ? true : res.data.captchaEnabled;
-    if (captchaEnabled.value) {
-      codeUrl.value = "data:image/gif;base64," + res.data.img;
-      registerForm.value.uuid = res.data.uuid;
-    }
-  });
-}
-
-getCode();
 </script>
 
-<style lang='scss' scoped>
+<style lang="scss" scoped>
 .register {
   display: flex;
   justify-content: center;
@@ -164,40 +93,22 @@ getCode();
   background-size: cover;
 }
 .title {
-  margin: 0px auto 30px auto;
+  margin: 0 auto 24px;
   text-align: center;
-  color: #707070;
+  color: #303133;
 }
-
 .register-form {
   border-radius: 6px;
   background: #ffffff;
-  width: 400px;
-  padding: 25px 25px 5px 25px;
+  width: 420px;
+  padding: 25px 25px 8px;
   .el-input {
     height: 40px;
-    input {
-      height: 40px;
-    }
   }
   .input-icon {
     height: 39px;
     width: 14px;
-    margin-left: 0px;
-  }
-}
-.register-tip {
-  font-size: 13px;
-  text-align: center;
-  color: #bfbfbf;
-}
-.register-code {
-  width: 33%;
-  height: 40px;
-  float: right;
-  img {
-    cursor: pointer;
-    vertical-align: middle;
+    margin-left: 0;
   }
 }
 .el-register-footer {
@@ -211,9 +122,5 @@ getCode();
   font-family: Arial;
   font-size: 12px;
   letter-spacing: 1px;
-}
-.register-code-img {
-  height: 40px;
-  padding-left: 12px;
 }
 </style>

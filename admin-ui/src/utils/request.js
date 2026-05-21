@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { ElNotification , ElMessageBox, ElMessage, ElLoading } from 'element-plus'
-import { getLocale, getTenantId, getToken } from '@/utils/auth'
+import { getLocale, getToken } from '@/utils/auth'
+import { getMessage } from '@/locales'
 import errorCode from '@/utils/errorCode'
 import { tansParams, blobValidate } from '@/utils/ruoyi'
 import cache from '@/plugins/cache'
@@ -11,6 +12,7 @@ import { getApiBaseUrl, getContextPath } from '@/utils/config'
 let downloadLoadingInstance;
 // 是否显示重新登录
 export let isRelogin = { show: false };
+const t = (key) => getMessage(key, getLocale())
 
 axios.defaults.headers['Content-Type'] = 'application/json;charset=utf-8'
 // 对应国际化资源文件后缀
@@ -30,7 +32,6 @@ service.interceptors.request.use(config => {
   // 是否需要防止数据重复提交
   const isRepeatSubmit = (config.headers || {}).repeatSubmit === false
   config.headers['Content-Language'] = getLocale()
-  config.headers['tenant-id'] = getTenantId()
   if (getToken() && !isToken) {
     config.headers['Authorization'] = 'Bearer ' + getToken() // 让每个请求携带自定义token 请根据实际情况自行修改
   }
@@ -56,7 +57,7 @@ service.interceptors.request.use(config => {
       const s_time = sessionObj.time;              // 请求时间
       const interval = 1000;                       // 间隔时间(ms)，小于此时间视为重复提交
       if (s_data === requestObj.data && requestObj.time - s_time < interval && s_url === requestObj.url) {
-        const message = '数据正在处理，请勿重复提交';
+        const message = t('request.repeatSubmit');
         console.warn(`[${s_url}]: ` + message)
         return Promise.reject(new Error(message))
       } else {
@@ -82,7 +83,7 @@ service.interceptors.response.use(res => {
     if (code === 401) {
       if (!isRelogin.show) {
         isRelogin.show = true;
-        ElMessageBox.confirm('登录状态已过期，您可以继续留在该页面，或者重新登录', '系统提示', { confirmButtonText: '重新登录', cancelButtonText: '取消', type: 'warning' }).then(() => {
+        ElMessageBox.confirm(t('request.loginExpired'), t('common.systemPrompt'), { confirmButtonText: t('common.relogin'), cancelButtonText: t('common.cancel'), type: 'warning' }).then(() => {
           isRelogin.show = false;
           useUserStore().logOut().then(() => {
             location.href = getContextPath() + 'index';
@@ -91,7 +92,7 @@ service.interceptors.response.use(res => {
         isRelogin.show = false;
       });
     }
-      return Promise.reject('无效的会话，或者会话已过期，请重新登录。')
+      return Promise.reject(t('request.invalidSession'))
     } else if (code === 409){
       ElMessageBox.alert(
         res.data.detailMessage,
@@ -115,11 +116,11 @@ service.interceptors.response.use(res => {
     ('err' + error)
     let { message } = error;
     if (message == "Network Error") {
-      message = "后端接口连接异常";
+      message = t('request.networkError');
     } else if (message.includes("timeout")) {
-      message = "系统接口请求超时";
+      message = t('request.timeout');
     } else if (message.includes("Request failed with status code")) {
-      message = "系统接口" + message.substr(message.length - 3) + "异常";
+      message = t('request.statusError').replace('{code}', message.substr(message.length - 3));
     }
     ElMessage({ message: message, type: 'error', duration: 5 * 1000 })
     return Promise.reject(error)
@@ -128,7 +129,7 @@ service.interceptors.response.use(res => {
 
 // 通用下载方法
 export function download(url, params, filename, config) {
-  downloadLoadingInstance = ElLoading.service({ text: "正在下载数据，请稍候", background: "rgba(0, 0, 0, 0.7)", })
+  downloadLoadingInstance = ElLoading.service({ text: t('download.loading'), background: "rgba(0, 0, 0, 0.7)", })
   return service.post(url, params, {
     transformRequest: [(params) => { return tansParams(params) }],
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -148,7 +149,7 @@ export function download(url, params, filename, config) {
     downloadLoadingInstance.close();
   }).catch((r) => {
     console.error(r)
-    ElMessage.error('下载文件出现错误，请联系管理员！')
+    ElMessage.error(t('download.error'))
     downloadLoadingInstance.close();
   })
 }

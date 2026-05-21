@@ -12,7 +12,7 @@
         @click.middle="!isAffix(tag) ? closeSelectedTag(tag) : ''"
         @contextmenu.prevent="openMenu(tag, $event)"
       >
-        {{ tag.title }}
+        {{ routeTitle(tag.title) }}
         <span v-if="!isAffix(tag)" @click.prevent.stop="closeSelectedTag(tag)">
           <close class="el-icon-close" style="width: 1em; height: 1em;vertical-align: middle;" />
         </span>
@@ -47,6 +47,8 @@ import { getNormalPath } from '@/utils/ruoyi'
 import useTagsViewStore from '@/store/modules/tagsView'
 import useSettingsStore from '@/store/modules/settings'
 import usePermissionStore from '@/store/modules/permission'
+import { getMessage } from '@/locales'
+import useLocaleStore from '@/store/modules/locale'
 
 const visible = ref(false);
 const top = ref(0);
@@ -62,6 +64,7 @@ const router = useRouter();
 const visitedViews = computed(() => useTagsViewStore().visitedViews);
 const routes = computed(() => usePermissionStore().routes);
 const theme = computed(() => useSettingsStore().theme);
+const localeStore = useLocaleStore();
 
 watch(route, () => {
   addTags()
@@ -81,6 +84,12 @@ onMounted(() => {
 
 function isActive(r) {
   return r.path === route.path
+}
+function routeTitle(title) {
+  if (title && title.includes('.')) {
+    return getMessage(title, localeStore.language)
+  }
+  return title
 }
 function activeStyle(tag) {
   if (!isActive(tag)) return {};

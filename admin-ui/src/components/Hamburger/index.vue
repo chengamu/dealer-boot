@@ -1,5 +1,14 @@
 <template>
-  <div style="padding: 0 15px;" @click="toggleClick">
+  <div
+    style="padding: 0 15px;"
+    role="button"
+    tabindex="0"
+    :aria-label="isActive ? '折叠菜单' : '展开菜单'"
+    :title="isActive ? '折叠菜单' : '展开菜单'"
+    @click="toggleClick"
+    @keydown.enter.prevent="toggleClick"
+    @keydown.space.prevent="toggleClick"
+  >
     <svg
       :class="{'is-active':isActive}"
       class="hamburger"

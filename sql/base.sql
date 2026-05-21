@@ -4,7 +4,7 @@
  Source Server         : bocoo66
  Source Server Type    : MySQL
  Source Server Version : 80028 (8.0.28)
- Source Host           : 192.168.120.66:3306
+ Source Host           : sanitized
  Source Schema         : cea
 
  Target Server Type    : MySQL

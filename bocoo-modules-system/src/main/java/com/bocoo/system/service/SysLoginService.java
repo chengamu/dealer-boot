@@ -301,6 +301,7 @@ public class SysLoginService {
     private LoginUser buildLoginUser(SysUserVo user) {
         LoginUser loginUser = new LoginUser();
         loginUser.setUserId(user.getUserId());
+        loginUser.setTenantId(user.getTenantId());
         loginUser.setDeptId(user.getDeptId());
         loginUser.setUsername(user.getUserName());
         loginUser.setUserType(user.getUserType());

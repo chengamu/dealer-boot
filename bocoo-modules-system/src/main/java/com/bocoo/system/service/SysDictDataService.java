@@ -1,5 +1,6 @@
 package com.bocoo.system.service;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -31,10 +32,12 @@ import java.util.List;
 public class SysDictDataService {
 
     private final SysDictDataMapper dictDataMapper;
+    private final SysI18nMessageService i18nMessageService;
 
     public TableDataInfo<SysDictDataVo> selectPageDictDataList(SysDictDataBo dictData, PageQuery pageQuery) {
         LambdaQueryWrapper<SysDictData> lqw = buildQueryWrapper(dictData);
         Page<SysDictDataVo> page = dictDataMapper.selectVoPage(pageQuery.build(), lqw);
+        translateDictDataList(page.getRecords());
         return TableDataInfo.build(page);
     }
 
@@ -46,7 +49,9 @@ public class SysDictDataService {
      */
     public List<SysDictDataVo> selectDictDataList(SysDictDataBo dictData) {
         LambdaQueryWrapper<SysDictData> lqw = buildQueryWrapper(dictData);
-        return dictDataMapper.selectVoList(lqw);
+        List<SysDictDataVo> dictDatas = dictDataMapper.selectVoList(lqw);
+        translateDictDataList(dictDatas);
+        return dictDatas;
     }
 
     private LambdaQueryWrapper<SysDictData> buildQueryWrapper(SysDictDataBo bo) {
@@ -65,7 +70,9 @@ public class SysDictDataService {
      * @return 字典数据
      */
     public SysDictDataVo selectDictDataById(Long dictCode) {
-        return dictDataMapper.selectVoById(dictCode);
+        SysDictDataVo dictData = dictDataMapper.selectVoById(dictCode);
+        translateDictData(dictData);
+        return dictData;
     }
 
     /**
@@ -121,6 +128,20 @@ public class SysDictDataService {
             return false;
         }
         return true;
+    }
+
+    public void translateDictDataList(List<SysDictDataVo> dictDatas) {
+        if (CollUtil.isEmpty(dictDatas)) {
+            return;
+        }
+        dictDatas.forEach(this::translateDictData);
+    }
+
+    public void translateDictData(SysDictDataVo dictData) {
+        if (dictData == null) {
+            return;
+        }
+        dictData.setDictLabel(i18nMessageService.translate(dictData.getI18nKey(), dictData.getDictLabel()));
     }
 
 }

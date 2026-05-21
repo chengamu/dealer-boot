@@ -4,13 +4,13 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.lang.Dict;
 import cn.hutool.core.util.ObjectUtil;
-import com.baomidou.dynamic.datasource.annotation.DS;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.incrementer.IdentifierGenerator;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bocoo.common.core.constant.Constants;
+import com.bocoo.common.core.context.TenantContextHolder;
 import com.bocoo.generator.constant.GenConstants;
 import com.bocoo.common.mybatis.core.page.TableDataInfo;
 import com.bocoo.common.mybatis.core.page.PageQuery;
@@ -41,6 +41,7 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.function.Supplier;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -49,7 +50,6 @@ import java.util.zip.ZipOutputStream;
  *
  * @author Lion Li
  */
-@DS("#header.datasource")
 @Slf4j
 @RequiredArgsConstructor
 @Service
@@ -104,7 +104,7 @@ public class GenTableServiceImpl implements IGenTableService {
 
     @Override
     public TableDataInfo<GenTable> selectPageDbTableList(GenTable genTable, PageQuery pageQuery) {
-        Page<GenTable> page = baseMapper.selectPageDbTableList(pageQuery.build(), genTable);
+        Page<GenTable> page = withoutTenant(() -> baseMapper.selectPageDbTableList(pageQuery.build(), genTable));
         return TableDataInfo.build(page);
     }
 
@@ -116,7 +116,7 @@ public class GenTableServiceImpl implements IGenTableService {
      */
     @Override
     public List<GenTable> selectDbTableListByNames(String[] tableNames) {
-        return baseMapper.selectDbTableListByNames(tableNames);
+        return withoutTenant(() -> baseMapper.selectDbTableListByNames(tableNames));
     }
 
     /**
@@ -178,7 +178,7 @@ public class GenTableServiceImpl implements IGenTableService {
                 int row = baseMapper.insert(table);
                 if (row > 0) {
                     // 保存列信息
-                    List<GenTableColumn> genTableColumns = genTableColumnMapper.selectDbTableColumnsByName(tableName);
+                    List<GenTableColumn> genTableColumns = withoutTenant(() -> genTableColumnMapper.selectDbTableColumnsByName(tableName));
                     List<GenTableColumn> saveColumns = new ArrayList<>();
                     for (GenTableColumn column : genTableColumns) {
                         GenUtils.initColumnField(column, table);
@@ -294,7 +294,7 @@ public class GenTableServiceImpl implements IGenTableService {
         List<GenTableColumn> tableColumns = table.getColumns();
         Map<String, GenTableColumn> tableColumnMap = StreamUtils.toIdentityMap(tableColumns, GenTableColumn::getColumnName);
 
-        List<GenTableColumn> dbTableColumns = genTableColumnMapper.selectDbTableColumnsByName(tableName);
+        List<GenTableColumn> dbTableColumns = withoutTenant(() -> genTableColumnMapper.selectDbTableColumnsByName(tableName));
         if (CollUtil.isEmpty(dbTableColumns)) {
             throw new ServiceException("同步数据失败，原表结构不存在");
         }
@@ -489,6 +489,16 @@ public class GenTableServiceImpl implements IGenTableService {
             return System.getProperty("user.dir") + File.separator + "src" + File.separator + VelocityUtils.getFileName(template, table);
         }
         return genPath + File.separator + VelocityUtils.getFileName(template, table);
+    }
+
+    private <T> T withoutTenant(Supplier<T> supplier) {
+        boolean previousIgnore = TenantContextHolder.isIgnore();
+        try {
+            TenantContextHolder.setIgnore(true);
+            return supplier.get();
+        } finally {
+            TenantContextHolder.setIgnore(previousIgnore);
+        }
     }
 }
 

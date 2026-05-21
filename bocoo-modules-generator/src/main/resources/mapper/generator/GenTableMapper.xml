@@ -15,23 +15,30 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </resultMap>
 
     <select id="selectPageDbTableList" resultMap="GenTableResult">
-        select table_name, table_comment, create_time, update_time
+        select table_name,
+               coalesce(obj_description((quote_ident(table_schema) || '.' || quote_ident(table_name))::regclass, 'pg_class'), '') as table_comment,
+               null::timestamp as create_time,
+               null::timestamp as update_time
         from information_schema.tables
-        where table_schema = (select database())
+        where table_schema = 'public'
         AND table_name NOT LIKE 'xxl_job_%' AND table_name NOT LIKE 'gen_%'
         AND table_name NOT IN (select table_name from gen_table)
         <if test="genTable.tableName != null and genTable.tableName != ''">
             AND lower(table_name) like lower(concat('%', #{genTable.tableName}, '%'))
         </if>
         <if test="genTable.tableComment != null and genTable.tableComment != ''">
-            AND lower(table_comment) like lower(concat('%', #{genTable.tableComment}, '%'))
+            AND lower(coalesce(obj_description((quote_ident(table_schema) || '.' || quote_ident(table_name))::regclass, 'pg_class'), '')) like lower(concat('%', #{genTable.tableComment}, '%'))
         </if>
-        order by create_time desc
+        order by table_name
     </select>
 
     <select id="selectDbTableListByNames" resultMap="GenTableResult">
-        select table_name, table_comment, create_time, update_time from information_schema.tables
-        where table_name NOT LIKE 'xxl_job_%' and table_name NOT LIKE 'gen_%' and table_schema = (select database())
+        select table_name,
+               coalesce(obj_description((quote_ident(table_schema) || '.' || quote_ident(table_name))::regclass, 'pg_class'), '') as table_comment,
+               null::timestamp as create_time,
+               null::timestamp as update_time
+        from information_schema.tables
+        where table_name NOT LIKE 'xxl_job_%' and table_name NOT LIKE 'gen_%' and table_schema = 'public'
         and table_name in
         <foreach collection="array" item="name" open="(" separator="," close=")">
              #{name}
@@ -39,8 +46,12 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </select>
 
     <select id="selectTableByName" parameterType="String" resultMap="GenTableResult">
-        select table_name, table_comment, create_time, update_time from information_schema.tables
-        where table_name NOT LIKE 'xxl_job_%' and table_name NOT LIKE 'gen_%' and table_schema = (select database())
+        select table_name,
+               coalesce(obj_description((quote_ident(table_schema) || '.' || quote_ident(table_name))::regclass, 'pg_class'), '') as table_comment,
+               null::timestamp as create_time,
+               null::timestamp as update_time
+        from information_schema.tables
+        where table_name NOT LIKE 'xxl_job_%' and table_name NOT LIKE 'gen_%' and table_schema = 'public'
         and table_name = #{tableName}
     </select>
 
