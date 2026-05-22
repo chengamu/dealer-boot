@@ -6,6 +6,7 @@ type SettingKey = 'theme' | 'sideTheme' | 'showSettings' | 'topNav' | 'tagsView'
 
 interface DefaultSettings {
   title: string
+  theme: string
   sideTheme: string
   showSettings: boolean
   topNav: boolean
@@ -42,7 +43,7 @@ const storageSetting = readStorageSettings()
 export const useSettingsStore = defineStore('settings', {
   state: () => ({
     title: '',
-    theme: storageSetting.theme || '#409EFF',
+    theme: storageSetting.theme || defaults.theme,
     sideTheme: storageSetting.sideTheme || defaults.sideTheme,
     showSettings: defaults.showSettings,
     topNav: storageSetting.topNav === undefined ? defaults.topNav : storageSetting.topNav,

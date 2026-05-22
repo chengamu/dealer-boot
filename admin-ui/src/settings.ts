@@ -2,6 +2,7 @@ import { getAppTitle } from '@/utils/config'
 
 export interface AppSettings {
   title: string
+  theme: string
   sideTheme: string
   showSettings: boolean
   topNav: boolean
@@ -17,6 +18,11 @@ const settings: AppSettings = {
    * Page title
    */
   title: getAppTitle(),
+
+  /**
+   * Theme color
+   */
+  theme: '#0066FF',
 
   /**
    * Sidebar theme: theme-dark or theme-light
