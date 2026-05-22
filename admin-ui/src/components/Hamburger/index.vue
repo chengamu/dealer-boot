@@ -3,8 +3,8 @@
     style="padding: 0 15px;"
     role="button"
     tabindex="0"
-    :aria-label="isActive ? '折叠菜单' : '展开菜单'"
-    :title="isActive ? '折叠菜单' : '展开菜单'"
+    :aria-label="label"
+    :title="label"
     @click="toggleClick"
     @keydown.enter.prevent="toggleClick"
     @keydown.space.prevent="toggleClick"
@@ -22,15 +22,23 @@
   </div>
 </template>
 
-<script setup>
-defineProps({
+<script setup lang="ts">
+import { getMessage } from '@/locales'
+import useLocaleStore from '@/stores/locale'
+
+const props = defineProps({
   isActive: {
     type: Boolean,
     default: false
   }
 })
 
-const emit = defineEmits()
+const localeStore = useLocaleStore()
+const label = computed(() => getMessage(props.isActive ? 'shell.collapseMenu' : 'shell.expandMenu', localeStore.language))
+
+const emit = defineEmits<{
+  (event: 'toggleClick'): void
+}>()
 const toggleClick = () => {
   emit('toggleClick');
 }

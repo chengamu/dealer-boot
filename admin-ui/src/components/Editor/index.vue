@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div :style="editorLocaleVars">
     <el-upload
         :action="uploadUrl"
         :before-upload="handleBeforeUpload"
@@ -18,7 +18,7 @@
           ref="quillEditorRef"
           v-model:content="content"
           contentType="html"
-          @textChange="(e) => $emit('update:modelValue', content)"
+          @textChange="emit('update:modelValue', content)"
           :options="options"
           :style="styles"
       />
@@ -26,10 +26,49 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { QuillEditor, Quill } from '@vueup/vue-quill';
 import '@vueup/vue-quill/dist/vue-quill.snow.css';
 import { getToken } from "@/utils/auth";
+import type { CSSProperties } from 'vue';
+import type { UploadRawFile } from 'element-plus';
+import { getMessage } from '@/locales'
+import useLocaleStore from '@/stores/locale'
+
+type UploadResponse = {
+  code: number
+  msg?: string
+  data: {
+    url: string
+  }
+}
+
+type ModalProxy = {
+  $modal: {
+    loading: (message: string) => void
+    closeLoading: () => void
+    msgError: (message: string) => void
+  }
+}
+
+type QuillInstance = {
+  selection?: {
+    savedRange?: {
+      index: number
+    }
+  }
+  getSelection?: () => { index: number } | null
+  insertEmbed: (index: number, type: string, value: string) => void
+  setSelection: (index: number) => void
+}
+
+type QuillEditorExpose = {
+  getQuill: () => QuillInstance
+}
+
+type QuillStatic = {
+  format: (name: string, value: boolean) => void
+}
 
 const props = defineProps({
   /* 编辑器的内容 */
@@ -63,13 +102,18 @@ const props = defineProps({
   }
 });
 
-const { proxy } = getCurrentInstance();
+const { proxy } = getCurrentInstance() as unknown as { proxy: ModalProxy };
+const localeStore = useLocaleStore()
+const t = (key: string) => getMessage(key, localeStore.language)
+const emit = defineEmits<{
+  (event: 'update:modelValue', value: string): void
+}>();
 // 上传的图片服务器地址
 const uploadUrl = ref(import.meta.env.VITE_APP_BASE_API + "/system/oss/upload");
 const headers = ref({ Authorization: "Bearer " + getToken() });
-const quillEditorRef = ref();
+const quillEditorRef = ref<QuillEditorExpose | null>(null);
 
-const options = ref({
+const options = computed(() => ({
   theme: "snow",
   bounds: document.body,
   debug: "warn",
@@ -89,23 +133,39 @@ const options = ref({
         ["link", "image", "video"]                       // 链接、图片、视频
       ],
       handlers: {
-        image: function (value) {
+        image: function (value: boolean) {
           if (value) {
             // 调用element图片上传
-            document.querySelector(".editor-img-uploader>.el-upload").click();
+            document.querySelector<HTMLElement>(".editor-img-uploader>.el-upload")?.click();
           } else {
-            Quill.format("image", true);
+            (Quill as unknown as QuillStatic).format("image", true);
           }
         },
       },
     }
   },
-  placeholder: "请输入内容",
+  placeholder: t('editor.placeholder'),
   readOnly: props.readOnly,
-});
+}));
 
-const styles = computed(() => {
-  let style = {};
+const editorLocaleVars = computed<CSSProperties & Record<string, string>>(() => ({
+  '--editor-link-prompt': JSON.stringify(t('editor.linkPrompt')),
+  '--editor-save': JSON.stringify(t('editor.save')),
+  '--editor-video-prompt': JSON.stringify(t('editor.videoPrompt')),
+  '--editor-text': JSON.stringify(t('editor.text')),
+  '--editor-heading-1': JSON.stringify(t('editor.heading1')),
+  '--editor-heading-2': JSON.stringify(t('editor.heading2')),
+  '--editor-heading-3': JSON.stringify(t('editor.heading3')),
+  '--editor-heading-4': JSON.stringify(t('editor.heading4')),
+  '--editor-heading-5': JSON.stringify(t('editor.heading5')),
+  '--editor-heading-6': JSON.stringify(t('editor.heading6')),
+  '--editor-standard-font': JSON.stringify(t('editor.standardFont')),
+  '--editor-serif-font': JSON.stringify(t('editor.serifFont')),
+  '--editor-monospace-font': JSON.stringify(t('editor.monospaceFont'))
+}))
+
+const styles = computed<CSSProperties>(() => {
+  const style: CSSProperties = {};
   if (props.minHeight) {
     style.minHeight = `${props.minHeight}px`;
   }
@@ -123,48 +183,49 @@ watch(() => props.modelValue, (v) => {
 }, { immediate: true });
 
 // 图片上传成功返回图片地址
-function handleUploadSuccess(res, file) {
+function handleUploadSuccess(res: UploadResponse) {
   // 如果上传成功
   if (res.code == 200) {
     // 获取富文本实例
-    let quill = toRaw(quillEditorRef.value).getQuill();
+    const quill = toRaw(quillEditorRef.value)?.getQuill();
+    if (!quill) return
     // 获取光标位置
-    let length = quill.selection.savedRange.index;
+    const length = quill.getSelection?.()?.index ?? quill.selection?.savedRange?.index ?? 0;
     // 插入图片，res为服务器返回的图片链接地址
     quill.insertEmbed(length, "image", res.data.url);
     // 调整光标到最后
     quill.setSelection(length + 1);
     proxy.$modal.closeLoading();
   } else {
-    proxy.$modal.loading(res.msg);
+    proxy.$modal.loading(res.msg || t('upload.imageUploadFailed'));
     proxy.$modal.closeLoading();
   }
 }
 
 // 图片上传前拦截
-function handleBeforeUpload(file) {
+function handleBeforeUpload(file: UploadRawFile) {
   const type = ["image/jpeg", "image/jpg", "image/png", "image/svg"];
   const isJPG = type.includes(file.type);
   //检验文件格式
   if (!isJPG) {
-    proxy.$modal.msgError(`图片格式错误!`);
+    proxy.$modal.msgError(t('upload.invalidImageType').replace('{types}', 'JPG, JPEG, PNG, SVG'));
     return false;
   }
   // 校检文件大小
   if (props.fileSize) {
     const isLt = file.size / 1024 / 1024 < props.fileSize;
     if (!isLt) {
-      proxy.$modal.msgError(`上传文件大小不能超过 ${props.fileSize} MB!`);
+      proxy.$modal.msgError(t('upload.imageTooLarge').replace('{size}', String(props.fileSize)));
       return false;
     }
   }
-  proxy.$modal.loading("正在上传文件，请稍候...");
+  proxy.$modal.loading(t('upload.uploadingImage'));
   return true;
 }
 
 // 图片失败拦截
-function handleUploadError(err) {
-  proxy.$modal.msgError("上传文件失败");
+function handleUploadError() {
+  proxy.$modal.msgError(t('upload.imageUploadFailed'));
 }
 
 </script>
@@ -181,16 +242,16 @@ function handleUploadError(err) {
   display: none;
 }
 .ql-snow .ql-tooltip[data-mode="link"]::before {
-  content: "请输入链接地址:";
+  content: var(--editor-link-prompt, "Enter link URL:");
 }
 .ql-snow .ql-tooltip.ql-editing a.ql-action::after {
   border-right: 0px;
-  content: "保存";
+  content: var(--editor-save, "Save");
   padding-right: 0px;
 }
 
 .ql-snow .ql-tooltip[data-mode="video"]::before {
-  content: "请输入视频地址:";
+  content: var(--editor-video-prompt, "Enter video URL:");
 }
 
 .ql-snow .ql-picker.ql-size .ql-picker-label::before,
@@ -212,43 +273,43 @@ function handleUploadError(err) {
 
 .ql-snow .ql-picker.ql-header .ql-picker-label::before,
 .ql-snow .ql-picker.ql-header .ql-picker-item::before {
-  content: "文本";
+  content: var(--editor-text, "Text");
 }
 .ql-snow .ql-picker.ql-header .ql-picker-label[data-value="1"]::before,
 .ql-snow .ql-picker.ql-header .ql-picker-item[data-value="1"]::before {
-  content: "标题1";
+  content: var(--editor-heading-1, "Heading 1");
 }
 .ql-snow .ql-picker.ql-header .ql-picker-label[data-value="2"]::before,
 .ql-snow .ql-picker.ql-header .ql-picker-item[data-value="2"]::before {
-  content: "标题2";
+  content: var(--editor-heading-2, "Heading 2");
 }
 .ql-snow .ql-picker.ql-header .ql-picker-label[data-value="3"]::before,
 .ql-snow .ql-picker.ql-header .ql-picker-item[data-value="3"]::before {
-  content: "标题3";
+  content: var(--editor-heading-3, "Heading 3");
 }
 .ql-snow .ql-picker.ql-header .ql-picker-label[data-value="4"]::before,
 .ql-snow .ql-picker.ql-header .ql-picker-item[data-value="4"]::before {
-  content: "标题4";
+  content: var(--editor-heading-4, "Heading 4");
 }
 .ql-snow .ql-picker.ql-header .ql-picker-label[data-value="5"]::before,
 .ql-snow .ql-picker.ql-header .ql-picker-item[data-value="5"]::before {
-  content: "标题5";
+  content: var(--editor-heading-5, "Heading 5");
 }
 .ql-snow .ql-picker.ql-header .ql-picker-label[data-value="6"]::before,
 .ql-snow .ql-picker.ql-header .ql-picker-item[data-value="6"]::before {
-  content: "标题6";
+  content: var(--editor-heading-6, "Heading 6");
 }
 
 .ql-snow .ql-picker.ql-font .ql-picker-label::before,
 .ql-snow .ql-picker.ql-font .ql-picker-item::before {
-  content: "标准字体";
+  content: var(--editor-standard-font, "Standard font");
 }
 .ql-snow .ql-picker.ql-font .ql-picker-label[data-value="serif"]::before,
 .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="serif"]::before {
-  content: "衬线字体";
+  content: var(--editor-serif-font, "Serif font");
 }
 .ql-snow .ql-picker.ql-font .ql-picker-label[data-value="monospace"]::before,
 .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="monospace"]::before {
-  content: "等宽字体";
+  content: var(--editor-monospace-font, "Monospace font");
 }
 </style>

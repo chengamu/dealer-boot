@@ -225,7 +225,7 @@ function resetQuery() {
 }
 
 function handleSelectionChange(selection: OperLog[]) {
-  ids.value = selection.map((item) => item.operId)
+  ids.value = selection.map((item) => String(item.operId)).filter(Boolean)
   multiple.value = selection.length === 0
 }
 

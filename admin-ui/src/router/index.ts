@@ -12,26 +12,26 @@ const hiddenLayoutRoutes: RouteRecordRaw[] = [
   {
     path: '/redirect/:path(.*)',
     name: 'Redirect',
-    component: () => import('@/views/redirect/index.vue'),
+    component: () => import('@/pages/redirect/RedirectPage.vue'),
     meta: { hidden: true }
   },
   {
     path: '/user/profile',
     name: 'Profile',
-    component: () => import('@/views/system/user/profile/index.vue'),
-    meta: { title: 'Profile', icon: 'user', hidden: true }
+    component: () => import('@/pages/system/user/UserProfilePage.vue'),
+    meta: { title: 'user.profileTitle', icon: 'user', hidden: true }
   },
   {
     path: '/system/user-auth/role/:userId(\\d+)',
     name: 'AuthRole',
-    component: () => import('@/views/system/user/authRole.vue'),
-    meta: { title: 'Auth Role', activeMenu: '/system/user', hidden: true }
+    component: () => import('@/pages/system/user/UserAuthRolePage.vue'),
+    meta: { title: 'user.authRoleTitle', activeMenu: '/system/user', hidden: true }
   },
   {
     path: '/system/role-auth/user/:roleId(\\d+)',
     name: 'AuthUser',
-    component: () => import('@/views/system/role/authUser.vue'),
-    meta: { title: 'Auth User', activeMenu: '/system/role', hidden: true }
+    component: () => import('@/pages/system/RoleAuthUserPage.vue'),
+    meta: { title: 'role.authUserTitle', activeMenu: '/system/role', hidden: true }
   },
   {
     path: '/system/dict-data/index/:dictId(\\d+)',
@@ -42,29 +42,29 @@ const hiddenLayoutRoutes: RouteRecordRaw[] = [
   {
     path: '/system/oss-config/index',
     name: 'OssConfig',
-    component: () => import('@/views/system/oss/config.vue'),
-    meta: { title: 'Oss Config', activeMenu: '/system/oss', hidden: true }
+    component: () => import('@/pages/system/OssConfigPage.vue'),
+    meta: { title: 'legacy.ossConfigTitle', activeMenu: '/system/oss', hidden: true }
   },
   {
     path: '/tool/gen-edit/index/:tableId(\\d+)',
     name: 'GenEdit',
-    component: () => import('@/views/tool/gen/editTable.vue'),
-    meta: { title: 'Gen Edit', activeMenu: '/tool/gen', hidden: true }
+    component: () => import('@/pages/tool/gen/GenEditPage.vue'),
+    meta: { title: 'gen.genInfo', activeMenu: '/tool/gen', hidden: true }
   }
 ]
 
 const legacyFallbackRoutes: RouteRecordRaw[] = [
   {
     path: '/system/user',
-    name: 'LegacySystemUser',
-    component: () => import('@/views/system/user/index.vue'),
-    meta: { title: '鐢ㄦ埛绠＄悊' }
+    name: 'SystemUser',
+    component: () => import('@/pages/system/user/UserPage.vue'),
+    meta: { title: 'user.userTitle' }
   },
   {
     path: '/system/role',
-    name: 'LegacySystemRole',
-    component: () => import('@/views/system/role/index.vue'),
-    meta: { title: '瑙掕壊绠＄悊' }
+    name: 'SystemRole',
+    component: () => import('@/pages/system/RolePage.vue'),
+    meta: { title: 'role.roleTitle' }
   },
   {
     path: '/system/menu',
@@ -104,15 +104,15 @@ const legacyFallbackRoutes: RouteRecordRaw[] = [
   },
   {
     path: '/system/oss',
-    name: 'LegacySystemOss',
-    component: () => import('@/views/system/oss/index.vue'),
-    meta: { title: '鏂囦欢绠＄悊' }
+    name: 'SystemOss',
+    component: () => import('@/pages/system/OssPage.vue'),
+    meta: { title: 'legacy.ossTitle' }
   },
   {
     path: '/system/tenant/applications',
     name: 'LegacyTenantApplications',
-    component: () => import('@/views/system/tenant/applications.vue'),
-    meta: { title: '鍟嗗瀹℃牳' }
+    component: () => import('@/pages/system/TenantApplicationsPlaceholder.vue'),
+    meta: { title: 'tenant.applicationsTitle' }
   },
   {
     path: '/monitor/online',
@@ -146,9 +146,9 @@ const legacyFallbackRoutes: RouteRecordRaw[] = [
   },
   {
     path: '/tool/gen',
-    name: 'LegacyToolGen',
-    component: () => import('@/views/tool/gen/index.vue'),
-    meta: { title: '浠ｇ爜鐢熸垚' }
+    name: 'ToolGen',
+    component: () => import('@/pages/tool/gen/GenPage.vue'),
+    meta: { title: 'tool.gen' }
   },
   {
     path: '/tool/build',
@@ -173,7 +173,7 @@ const legacyFallbackRoutes: RouteRecordRaw[] = [
 const routes: RouteRecordRaw[] = [
   { path: '/', redirect: '/index' },
   { path: '/login', component: LoginPage, meta: { public: true } },
-  { path: '/register', component: () => import('@/views/register.vue'), meta: { public: true } },
+  { path: '/register', component: MerchantApplyPage, meta: { public: true } },
   { path: '/merchant/apply', component: MerchantApplyPage, meta: { public: true } },
   {
     path: '/',
@@ -183,14 +183,14 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'index',
         name: 'Index',
-        component: () => import('@/views/dashboard/charts.vue'),
+        component: () => import('@/pages/dashboard/DashboardPage.vue'),
         meta: { title: 'dashboard.base', icon: 'dashboard', affix: true }
       },
       ...legacyFallbackRoutes,
       ...hiddenLayoutRoutes
     ]
   },
-  { path: '/:pathMatch(.*)*', name: 'NotFound', component: () => import('@/views/error/404.vue') }
+  { path: '/:pathMatch(.*)*', name: 'NotFound', component: () => import('@/pages/error/Error404Page.vue') }
 ]
 
 export const constantRoutes = routes

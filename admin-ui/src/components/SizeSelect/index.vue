@@ -1,9 +1,14 @@
 <template>
   <div>
     <el-dropdown trigger="click" @command="handleSetSize">
-      <div class="size-icon--style">
+      <button
+        type="button"
+        class="size-icon--style"
+        :aria-label="t('shell.layoutSize')"
+        :title="t('shell.layoutSize')"
+      >
         <svg-icon class-name="size-icon" icon-class="size" />
-      </div>
+      </button>
       <template #dropdown>
         <el-dropdown-menu>
           <el-dropdown-item v-for="item of sizeOptions" :key="item.value" :disabled="size === item.value" :command="item.value">
@@ -15,31 +20,41 @@
   </div>
 </template>
 
-<script setup>
-import useAppStore from "@/store/modules/app";
+<script setup lang="ts">
+import { getMessage } from '@/locales'
+import useAppStore from '@/stores/app'
+import useLocaleStore from '@/stores/locale'
 
-const appStore = useAppStore();
-const size = computed(() => appStore.size);
-const route = useRoute();
-const router = useRouter();
-const { proxy } = getCurrentInstance();
-const sizeOptions = ref([
-  { label: "较大", value: "large" },
-  { label: "默认", value: "default" },
-  { label: "稍小", value: "small" },
-]);
+type AppSize = 'large' | 'default' | 'small'
 
-function handleSetSize(size) {
-  proxy.$modal.loading("正在设置布局大小，请稍候...");
-  appStore.setSize(size);
-  setTimeout("window.location.reload()", 1000);
+const appStore = useAppStore()
+const localeStore = useLocaleStore()
+const size = computed(() => appStore.size)
+const t = (key: string) => getMessage(key, localeStore.language)
+const { proxy } = getCurrentInstance() as unknown as { proxy: { $modal: { loading: (message: string) => void } } }
+const sizeOptions = computed<Array<{ label: string; value: AppSize }>>(() => [
+  { label: t('shell.sizeLarge'), value: 'large' },
+  { label: t('shell.sizeDefault'), value: 'default' },
+  { label: t('shell.sizeSmall'), value: 'small' }
+])
+
+function handleSetSize(size: AppSize) {
+  proxy.$modal.loading(t('shell.settingSize'))
+  appStore.setSize(size)
+  window.setTimeout(() => window.location.reload(), 1000)
 }
 </script>
 
-<style lang='scss' scoped>
+<style lang="scss" scoped>
 .size-icon--style {
+  width: 26px;
+  height: 50px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
   font-size: 18px;
   line-height: 50px;
-  padding-right: 7px;
 }
 </style>

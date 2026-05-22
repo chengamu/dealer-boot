@@ -128,6 +128,10 @@ export default {
     title: '表单构建',
     description: '旧版开源表单构建组件暂不支持 Vue 3 + TypeScript。'
   },
+  tenant: {
+    applicationsTitle: '商家审核',
+    applicationsDisabled: '商家审核界面已按当前计划临时移除，菜单保留，后续重写审批流程。'
+  },
   api: {
     error: '请求失败',
     network: '网络连接失败',

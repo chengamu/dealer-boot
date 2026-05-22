@@ -27,7 +27,7 @@
     "qs": "^6.13.1",
     "vue": "^3.5.13",
     "vue-cropper": "^1.1.4",
-    "vue-i18n": "^10.0.5",
+    "vue-i18n": "^10.0.8",
     "vue-router": "^4.5.0"
   },
   "devDependencies": {
@@ -49,5 +49,10 @@
   "engines": {
     "node": ">=20.19.0",
     "pnpm": ">=9.0.0"
+  },
+  "overrides": {
+    "braces": "3.0.3",
+    "postcss": "8.5.15",
+    "micromatch": "4.0.8"
   }
 }

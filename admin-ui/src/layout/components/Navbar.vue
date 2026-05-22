@@ -10,11 +10,20 @@
     <top-nav id="topmenu-container" class="topmenu-container" v-if="settingsStore.topNav" />
 
     <div class="right-menu">
+      <header-search class="right-menu-item hover-effect" />
+
+      <screenfull class="right-menu-item hover-effect" />
+
       <el-dropdown @command="handleLanguage" class="right-menu-item hover-effect language-menu" trigger="click">
-        <div class="language-wrapper">
+        <button
+          type="button"
+          class="language-wrapper"
+          :aria-label="t('shell.language')"
+          :title="t('shell.language')"
+        >
           <svg-icon icon-class="language" />
           <span>{{ currentLanguageLabel }}</span>
-        </div>
+        </button>
         <template #dropdown>
           <el-dropdown-menu>
             <el-dropdown-item
@@ -31,19 +40,34 @@
 
       <message-bell class="right-menu-item message-wrapper" />
 
+      <button
+        type="button"
+        class="right-menu-item hover-effect navbar-icon-button"
+        :aria-label="t('shell.layoutSettings')"
+        :title="t('shell.layoutSettings')"
+        @click="setLayout"
+      >
+        <svg-icon icon-class="theme" />
+      </button>
+
       <div class="avatar-container">
         <el-dropdown @command="handleCommand" class="right-menu-item hover-effect" trigger="click">
-          <div class="avatar-wrapper">
-            <img :src="userStore.avatar" class="user-avatar" />
+          <button
+            type="button"
+            class="avatar-wrapper"
+            :aria-label="t('shell.userMenu')"
+            :title="t('shell.userMenu')"
+          >
+            <img :src="userStore.avatar" class="user-avatar" alt="" />
             <el-icon><caret-bottom /></el-icon>
-          </div>
+          </button>
           <template #dropdown>
             <el-dropdown-menu>
               <router-link to="/user/profile">
-                <el-dropdown-item>个人中心</el-dropdown-item>
+                <el-dropdown-item>{{ t('shell.profile') }}</el-dropdown-item>
               </router-link>
               <el-dropdown-item divided command="logout">
-                <span>退出登录</span>
+                <span>{{ t('shell.logout') }}</span>
               </el-dropdown-item>
             </el-dropdown-menu>
           </template>
@@ -53,37 +77,43 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ElMessageBox } from 'element-plus'
 import { computed } from 'vue'
-import Breadcrumb from '@/components/Breadcrumb'
-import TopNav from '@/components/TopNav'
-import Hamburger from '@/components/Hamburger'
+import Breadcrumb from '@/components/Breadcrumb/index.vue'
+import TopNav from '@/components/TopNav/index.vue'
+import Hamburger from '@/components/Hamburger/index.vue'
+import HeaderSearch from '@/components/HeaderSearch/index.vue'
+import Screenfull from '@/components/Screenfull/index.vue'
 import MessageBell from '@/shell/MessageBell.vue'
-import useAppStore from '@/store/modules/app'
-import useUserStore from '@/store/modules/user'
-import useSettingsStore from '@/store/modules/settings'
-import useLocaleStore from '@/store/modules/locale'
+import useAppStore from '@/stores/app'
+import useUserStore from '@/stores/user'
+import useSettingsStore from '@/stores/settings'
+import useLocaleStore from '@/stores/locale'
+import { getMessage } from '@/locales'
 
-const emits = defineEmits(['setLayout'])
+const emits = defineEmits<{
+  (e: 'setLayout'): void
+}>()
 
 const appStore = useAppStore()
 const userStore = useUserStore()
 const settingsStore = useSettingsStore()
 const localeStore = useLocaleStore()
+const t = (key: string) => getMessage(key, localeStore.language)
 
 const languages = [
-  { value: 'zh_CN', label: '中文' },
+  { value: 'zh_CN', label: '\u4e2d\u6587' },
   { value: 'en_US', label: 'English' }
 ]
 
-const currentLanguageLabel = computed(() => languages.find(item => item.value === localeStore.language)?.label || '中文')
+const currentLanguageLabel = computed(() => languages.find(item => item.value === localeStore.language)?.label || '\u4e2d\u6587')
 
 function toggleSideBar() {
   appStore.toggleSideBar()
 }
 
-function handleCommand(command) {
+function handleCommand(command: string) {
   switch (command) {
     case 'setLayout':
       setLayout()
@@ -97,9 +127,9 @@ function handleCommand(command) {
 }
 
 function logout() {
-  ElMessageBox.confirm('确定注销并退出系统吗？', '提示', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
+  ElMessageBox.confirm(t('shell.logoutConfirm'), t('common.prompt'), {
+    confirmButtonText: t('common.confirm'),
+    cancelButtonText: t('common.cancel'),
     type: 'warning'
   }).then(() => {
     userStore.logOut().then(() => {
@@ -108,7 +138,7 @@ function logout() {
   }).catch(() => {})
 }
 
-function handleLanguage(language) {
+function handleLanguage(language: 'zh_CN' | 'en_US') {
   if (localeStore.language === language) return
   localeStore.setLanguage(language)
   location.reload()
@@ -184,6 +214,11 @@ function setLayout() {
         align-items: center;
         gap: 6px;
         height: 50px;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: inherit;
+        cursor: pointer;
       }
     }
 
@@ -193,11 +228,20 @@ function setLayout() {
       padding: 0 6px;
     }
 
+    .navbar-icon-button {
+      border: 0;
+      background: transparent;
+      line-height: 50px;
+    }
+
     .avatar-container {
       margin-right: 40px;
 
       .avatar-wrapper {
         margin-top: 5px;
+        padding: 0;
+        border: 0;
+        background: transparent;
         position: relative;
 
         .user-avatar {

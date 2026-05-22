@@ -62,15 +62,3 @@ export interface LoginUser {
   roles?: string[]
   permissions?: string[]
 }
-
-export interface TenantApplication {
-  id: number
-  companyName?: string
-  contactName?: string
-  email?: string
-  phone?: string
-  country?: string
-  status?: string
-  createTime?: string
-  reviewTime?: string
-}

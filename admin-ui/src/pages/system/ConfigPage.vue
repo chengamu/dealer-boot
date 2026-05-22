@@ -107,7 +107,7 @@
       @pagination="getList"
     />
 
-    <el-dialog v-model="open" :title="title" width="500px" append-to-body>
+    <el-dialog v-model="open" :title="title" width="500px" append-to-body destroy-on-close @closed="reset">
       <el-form ref="configRef" :model="form" :rules="rules" label-width="90px">
         <el-form-item :label="t('legacy.configName')" prop="configName">
           <el-input v-model="form.configName" :placeholder="t('legacy.configNamePlaceholder')" />
@@ -166,7 +166,7 @@ const configList = ref<Config[]>([])
 const open = ref(false)
 const loading = ref(true)
 const showSearch = ref(true)
-const ids = ref<number[]>([])
+const ids = ref<Array<number | string>>([])
 const total = ref(0)
 const dateRange = ref<string[]>([])
 const queryRef = ref<FormInstance>()
@@ -234,7 +234,7 @@ function resetQuery() {
 }
 
 function handleSelectionChange(selection: Config[]) {
-  ids.value = selection.map((item) => Number(item.configId)).filter(Boolean)
+  ids.value = selection.map((item) => String(item.configId)).filter(Boolean)
 }
 
 function handleAdd() {
@@ -253,15 +253,20 @@ async function handleUpdate(row?: Config) {
 async function submitForm() {
   const valid = await configRef.value?.validate().catch(() => false)
   if (!valid) return
-  if (form.value.configId) {
-    await updateConfig(form.value)
-    ElMessage.success(t('common.editSuccess'))
-  } else {
-    await addConfig(form.value)
-    ElMessage.success(t('common.addSuccess'))
+  try {
+    if (form.value.configId) {
+      await updateConfig(form.value)
+      ElMessage.success(t('common.editSuccess'))
+    } else {
+      await addConfig(form.value)
+      ElMessage.success(t('common.addSuccess'))
+    }
+    open.value = false
+    reset()
+    await getList()
+  } catch {
+    // Request interceptor already displays the backend error.
   }
-  open.value = false
-  await getList()
 }
 
 async function handleDelete(row?: Config) {

@@ -1,6 +1,6 @@
 <template>
   <div :class="classObj" class="app-wrapper" :style="{ '--current-color': theme }">
-    <div v-if="device === 'mobile' && sidebar.opened" class="drawer-bg" @click="handleClickOutside"/>
+    <div v-if="showDrawerOverlay" class="drawer-bg" @click="handleClickOutside"/>
     <sidebar v-if="!sidebar.hide" class="sidebar-container" />
     <div :class="{ hasTagsView: needTagsView, sidebarHide: sidebar.hide }" class="main-container">
       <div :class="{ 'fixed-header': fixedHeader }">
@@ -13,14 +13,13 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { useWindowSize } from '@vueuse/core'
 import Sidebar from './components/Sidebar/index.vue'
 import { AppMain, Navbar, Settings, TagsView } from './components'
-import defaultSettings from '@/settings'
 
-import useAppStore from '@/store/modules/app'
-import useSettingsStore from '@/store/modules/settings'
+import useAppStore from '@/stores/app'
+import useSettingsStore from '@/stores/settings'
 
 const settingsStore = useSettingsStore()
 const theme = computed(() => settingsStore.theme);
@@ -37,34 +36,33 @@ const classObj = computed(() => ({
   mobile: device.value === 'mobile'
 }))
 
-const { width, height } = useWindowSize();
+const { width } = useWindowSize();
 const WIDTH = 992; // refer to Bootstrap's responsive design
+const isMobileWidth = computed(() => width.value - 1 < WIDTH)
+const showDrawerOverlay = computed(() => device.value === 'mobile' && isMobileWidth.value && sidebar.value.opened)
 
-watchEffect(() => {
-  if (device.value === 'mobile' && sidebar.value.opened) {
-    useAppStore().closeSideBar({ withoutAnimation: false })
-  }
-  if (width.value - 1 < WIDTH) {
+watch(isMobileWidth, (mobile) => {
+  if (mobile) {
     useAppStore().toggleDevice('mobile')
     useAppStore().closeSideBar({ withoutAnimation: true })
   } else {
     useAppStore().toggleDevice('desktop')
   }
-})
+}, { immediate: true })
 
 function handleClickOutside() {
   useAppStore().closeSideBar({ withoutAnimation: false })
 }
 
-const settingRef = ref(null);
+const settingRef = ref<{ openSetting: () => void } | null>(null);
 function setLayout() {
-  settingRef.value.openSetting();
+  settingRef.value?.openSetting();
 }
 </script>
 
 <style lang="scss" scoped>
-  @import "@/assets/styles/mixin.scss";
-  @import "@/assets/styles/variables.module.scss";
+  @use "@/assets/styles/mixin.scss" as *;
+  @use "@/assets/styles/variables.module.scss" as *;
 
 .app-wrapper {
   @include clearfix;

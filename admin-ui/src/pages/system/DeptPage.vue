@@ -70,7 +70,7 @@
       </el-table-column>
     </el-table>
 
-    <el-dialog v-model="open" :title="title" width="600px" append-to-body>
+    <el-dialog v-model="open" :title="title" width="600px" append-to-body destroy-on-close @closed="reset">
       <el-form ref="deptRef" :model="form" :rules="rules" label-width="90px">
         <el-row>
           <el-col v-if="form.parentId !== 0" :span="24">
@@ -245,15 +245,20 @@ async function handleUpdate(row: Dept) {
 async function submitForm() {
   const valid = await deptRef.value?.validate().catch(() => false)
   if (!valid) return
-  if (form.value.deptId) {
-    await updateDept(form.value)
-    ElMessage.success(t('common.editSuccess'))
-  } else {
-    await addDept(form.value)
-    ElMessage.success(t('common.addSuccess'))
+  try {
+    if (form.value.deptId) {
+      await updateDept(form.value)
+      ElMessage.success(t('common.editSuccess'))
+    } else {
+      await addDept(form.value)
+      ElMessage.success(t('common.addSuccess'))
+    }
+    open.value = false
+    reset()
+    await getList()
+  } catch {
+    // Request interceptor already displays the backend error.
   }
-  open.value = false
-  await getList()
 }
 
 async function handleDelete(row: Dept) {

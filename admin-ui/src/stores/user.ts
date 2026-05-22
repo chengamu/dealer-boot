@@ -29,7 +29,7 @@ export const useUserStore = defineStore('user', {
               uuid: usernameOrInfo.uuid
             }
       const res = await login(payload)
-      const token = String(res.token || res.data?.token || res.data || '')
+      const token = String(res.token || (typeof res.data === 'string' ? res.data : res.data?.token) || '')
       if (token) {
         this.token = token
         setToken(token)
@@ -37,9 +37,10 @@ export const useUserStore = defineStore('user', {
     },
     async loadUser() {
       const res = await getInfo()
-      this.user = (res.user || res.data?.user || res.data || {}) as LoginUser
-      this.roles = res.roles || res.data?.roles || []
-      this.permissions = res.permissions || res.data?.permissions || []
+      const data = res.data && 'user' in res.data ? res.data : undefined
+      this.user = res.user || data?.user || (res.data && !('user' in res.data) ? res.data : {}) as LoginUser
+      this.roles = res.roles || data?.roles || []
+      this.permissions = res.permissions || data?.permissions || []
       this.id = String(this.user?.userId || '')
       this.name = this.user?.userName || ''
       this.avatar = this.user?.avatar || defaultAvatar
@@ -68,3 +69,5 @@ export const useUserStore = defineStore('user', {
     }
   }
 })
+
+export default useUserStore

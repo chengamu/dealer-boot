@@ -3,6 +3,7 @@ package com.bocoo.system.controller.system;
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import com.bocoo.common.log.annotation.Log;
 import com.bocoo.common.core.constant.UserConstants;
+import com.bocoo.common.core.utils.MessageUtils;
 import com.bocoo.common.web.core.BaseController;
 import com.bocoo.common.mybatis.core.page.PageQuery;
 import com.bocoo.common.core.domain.R;
@@ -90,9 +91,9 @@ public class SysPostController extends BaseController {
             @Parameter(description = "岗位信息", required = true)
             @Validated @RequestBody SysPostBo post) {
         if (!postService.checkPostNameUnique(post)) {
-            return R.fail("新增岗位'" + post.getPostName() + "'失败，岗位名称已存在");
+            return R.fail(MessageUtils.message("post.add.name.exists", post.getPostName()));
         } else if (!postService.checkPostCodeUnique(post)) {
-            return R.fail("新增岗位'" + post.getPostName() + "'失败，岗位编码已存在");
+            return R.fail(MessageUtils.message("post.add.code.exists", post.getPostName()));
         }
         return toAjax(postService.insertPost(post));
     }
@@ -108,12 +109,12 @@ public class SysPostController extends BaseController {
             @Parameter(description = "岗位信息", required = true)
             @Validated @RequestBody SysPostBo post) {
         if (!postService.checkPostNameUnique(post)) {
-            return R.fail("修改岗位'" + post.getPostName() + "'失败，岗位名称已存在");
+            return R.fail(MessageUtils.message("post.edit.name.exists", post.getPostName()));
         } else if (!postService.checkPostCodeUnique(post)) {
-            return R.fail("修改岗位'" + post.getPostName() + "'失败，岗位编码已存在");
+            return R.fail(MessageUtils.message("post.edit.code.exists", post.getPostName()));
         } else if (UserConstants.POST_DISABLE.equals(post.getStatus())
             && postService.countUserPostById(post.getPostId()) > 0) {
-            return R.fail("该岗位下存在已分配用户，不能禁用!");
+            return R.fail(MessageUtils.message("post.disable.assigned"));
         }
         return toAjax(postService.updatePost(post));
     }

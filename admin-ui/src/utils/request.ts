@@ -16,6 +16,19 @@ const service = axios.create({
   paramsSerializer: (params) => qs.stringify(params, { allowDots: true })
 })
 
+const AUDIT_FIELDS = ['createTime', 'updateTime', 'createBy', 'updateBy', 'createById', 'updateById']
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return Object.prototype.toString.call(value) === '[object Object]'
+}
+
+function sanitizeMutationData(data: unknown) {
+  if (!isPlainObject(data)) return data
+  const payload = { ...data }
+  AUDIT_FIELDS.forEach((field) => delete payload[field])
+  return payload
+}
+
 service.interceptors.request.use((config) => {
   const token = getToken()
   const locale = useLocaleStore().locale
@@ -28,6 +41,11 @@ service.interceptors.request.use((config) => {
   if (config.method?.toUpperCase() === 'GET') {
     config.headers['Cache-Control'] = 'no-cache'
     config.headers.Pragma = 'no-cache'
+  }
+  const method = config.method?.toUpperCase()
+  const contentType = String(config.headers['Content-Type'] || config.headers['content-type'] || '')
+  if ((method === 'POST' || method === 'PUT' || method === 'PATCH') && !contentType.includes('x-www-form-urlencoded')) {
+    config.data = sanitizeMutationData(config.data)
   }
   return config
 })

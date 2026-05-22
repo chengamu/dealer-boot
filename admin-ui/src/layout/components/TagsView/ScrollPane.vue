@@ -9,27 +9,41 @@
   </el-scrollbar>
 </template>
 
-<script setup>
-import useTagsViewStore from '@/store/modules/tagsView'
+<script setup lang="ts">
+import useTagsViewStore, { type TagView } from '@/stores/tagsView'
+
+type ScrollbarInstance = {
+  $el: HTMLElement
+  $refs: {
+    wrapRef: HTMLElement
+  }
+}
+
+type WheelEventWithDelta = WheelEvent & {
+  wheelDelta?: number
+}
 
 const tagAndTagSpacing = ref(4);
-const { proxy } = getCurrentInstance();
+const scrollContainer = ref<ScrollbarInstance | null>(null);
 
-const scrollWrapper = computed(() => proxy.$refs.scrollContainer.$refs.wrapRef);
+const scrollWrapper = computed(() => scrollContainer.value?.$refs.wrapRef || null);
 
 onMounted(() => {
-  scrollWrapper.value.addEventListener('scroll', emitScroll, true)
+  scrollWrapper.value?.addEventListener('scroll', emitScroll, true)
 })
 onBeforeUnmount(() => {
-  scrollWrapper.value.removeEventListener('scroll', emitScroll)
+  scrollWrapper.value?.removeEventListener('scroll', emitScroll)
 })
 
-function handleScroll(e) {
+function handleScroll(e: WheelEventWithDelta) {
   const eventDelta = e.wheelDelta || -e.deltaY * 40
   const $scrollWrapper = scrollWrapper.value;
+  if (!$scrollWrapper) return
   $scrollWrapper.scrollLeft = $scrollWrapper.scrollLeft + eventDelta / 4
 }
-const emits = defineEmits()
+const emits = defineEmits<{
+  (event: 'scroll'): void
+}>()
 const emitScroll = () => {
   emits('scroll')
 }
@@ -37,13 +51,15 @@ const emitScroll = () => {
 const tagsViewStore = useTagsViewStore()
 const visitedViews = computed(() => tagsViewStore.visitedViews);
 
-function moveToTarget(currentTag) {
-  const $container = proxy.$refs.scrollContainer.$el
+function moveToTarget(currentTag: TagView) {
+  const $container = scrollContainer.value?.$el
+  if (!$container) return
   const $containerWidth = $container.offsetWidth
   const $scrollWrapper = scrollWrapper.value;
+  if (!$scrollWrapper) return
 
-  let firstTag = null
-  let lastTag = null
+  let firstTag: TagView | null = null
+  let lastTag: TagView | null = null
 
   // find first tag and last tag
   if (visitedViews.value.length > 0) {
@@ -56,20 +72,13 @@ function moveToTarget(currentTag) {
   } else if (lastTag === currentTag) {
     $scrollWrapper.scrollLeft = $scrollWrapper.scrollWidth - $containerWidth
   } else {
-    const tagListDom = document.getElementsByClassName('tags-view-item');
+    const tagListDom = Array.from(document.getElementsByClassName('tags-view-item')) as HTMLElement[];
     const currentIndex = visitedViews.value.findIndex(item => item === currentTag)
-    let prevTag = null
-    let nextTag = null
-    for (const k in tagListDom) {
-      if (k !== 'length' && Object.hasOwnProperty.call(tagListDom, k)) {
-        if (tagListDom[k].dataset.path === visitedViews.value[currentIndex - 1].path) {
-          prevTag = tagListDom[k];
-        }
-        if (tagListDom[k].dataset.path === visitedViews.value[currentIndex + 1].path) {
-          nextTag = tagListDom[k];
-        }
-      }
-    }
+    const prevPath = visitedViews.value[currentIndex - 1]?.path
+    const nextPath = visitedViews.value[currentIndex + 1]?.path
+    const prevTag = tagListDom.find((tag) => tag.dataset.path === prevPath)
+    const nextTag = tagListDom.find((tag) => tag.dataset.path === nextPath)
+    if (!prevTag || !nextTag) return
 
     // the tag's offsetLeft after of nextTag
     const afterNextTagOffsetLeft = nextTag.offsetLeft + nextTag.offsetWidth + tagAndTagSpacing.value

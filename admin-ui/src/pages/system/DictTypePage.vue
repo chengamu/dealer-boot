@@ -112,7 +112,7 @@
       @pagination="getList"
     />
 
-    <el-dialog v-model="open" :title="title" width="500px" append-to-body>
+    <el-dialog v-model="open" :title="title" width="500px" append-to-body destroy-on-close @closed="reset">
       <el-form ref="dictRef" :model="form" :rules="rules" label-width="90px">
         <el-form-item :label="t('legacy.dictName')" prop="dictName">
           <el-input v-model="form.dictName" :placeholder="t('legacy.dictNamePlaceholder')" />
@@ -169,7 +169,7 @@ const typeList = ref<DictType[]>([])
 const open = ref(false)
 const loading = ref(true)
 const showSearch = ref(true)
-const ids = ref<number[]>([])
+const ids = ref<Array<number | string>>([])
 const total = ref(0)
 const dateRange = ref<string[]>([])
 const queryRef = ref<FormInstance>()
@@ -235,7 +235,7 @@ function resetQuery() {
 }
 
 function handleSelectionChange(selection: DictType[]) {
-  ids.value = selection.map((item) => Number(item.dictId)).filter(Boolean)
+  ids.value = selection.map((item) => String(item.dictId)).filter(Boolean)
 }
 
 function handleAdd() {
@@ -255,15 +255,20 @@ async function handleUpdate(row?: DictType) {
 async function submitForm() {
   const valid = await dictRef.value?.validate().catch(() => false)
   if (!valid) return
-  if (form.value.dictId) {
-    await updateType(form.value)
-    ElMessage.success(t('common.editSuccess'))
-  } else {
-    await addType(form.value)
-    ElMessage.success(t('common.addSuccess'))
+  try {
+    if (form.value.dictId) {
+      await updateType(form.value)
+      ElMessage.success(t('common.editSuccess'))
+    } else {
+      await addType(form.value)
+      ElMessage.success(t('common.addSuccess'))
+    }
+    open.value = false
+    reset()
+    await getList()
+  } catch {
+    // Request interceptor already displays the backend error.
   }
-  open.value = false
-  await getList()
 }
 
 async function handleDelete(row?: DictType) {

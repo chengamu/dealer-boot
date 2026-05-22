@@ -14,7 +14,6 @@ import './styles/main.scss'
 import '@/assets/styles/index.scss'
 import plugins from '@/plugins'
 import directive from '@/directive'
-import { installLegacyUiI18n } from '@/plugins/legacy-ui-i18n'
 import { installLocale } from '@/locales'
 import { getLocaleCookie } from '@/utils/auth'
 import { download } from '@/utils/request'
@@ -66,6 +65,5 @@ app.use(ElementPlus, {
   locale: getLocaleCookie() === 'en_US' ? en : zhCn,
   size: (Cookies.get('size') || 'default') as 'large' | 'default' | 'small'
 })
-installLegacyUiI18n(router)
 
 app.mount('#app')

@@ -1,7 +1,7 @@
 /// <reference types="vite/client" />
 
 declare interface Window {
-  __APP_CONFIG__?: Record<string, string>
+  __APP_CONFIG__?: Record<string, string | boolean | number | undefined>
 }
 
 declare module '*.vue' {
@@ -11,16 +11,3 @@ declare module '*.vue' {
 }
 
 declare module 'virtual:svg-icons-register'
-declare module '@/api/*'
-declare module '@/api/system/*'
-declare module '@/api/system/dict/*'
-declare module '@/api/monitor/*'
-declare module '@/api/tool/*'
-declare module '@/api/**/*.js'
-declare module '@/components/SvgIcon/svgicon'
-declare module '@/directive'
-declare module '@/locales'
-declare module '@/plugins'
-declare module '@/settings'
-declare module '@/utils/dict'
-declare module '@/utils/ruoyi'

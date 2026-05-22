@@ -10,13 +10,13 @@
         <svg-icon
         v-if="item.meta && item.meta.icon && item.meta.icon !== '#'"
         :icon-class="item.meta.icon"/>
-        {{ item.meta.title }}
+        {{ item.meta?.title }}
       </el-menu-item>
     </template>
 
     <!-- 顶部菜单超出数量折叠 -->
     <el-sub-menu :style="{'--theme': theme}" index="more" v-if="topMenus.length > visibleNumber">
-      <template #title>更多菜单</template>
+      <template #title>{{ t('shell.moreMenu') }}</template>
       <template v-for="(item, index) in topMenus">
         <el-menu-item
           :index="item.path"
@@ -25,45 +25,59 @@
         <svg-icon
           v-if="item.meta && item.meta.icon && item.meta.icon !== '#'"
           :icon-class="item.meta.icon"/>
-        {{ item.meta.title }}
+        {{ item.meta?.title }}
         </el-menu-item>
       </template>
     </el-sub-menu>
   </el-menu>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { constantRoutes } from "@/router"
 import { isHttp } from '@/utils/validate'
-import useAppStore from '@/store/modules/app'
-import useSettingsStore from '@/store/modules/settings'
-import usePermissionStore from '@/store/modules/permission'
+import useAppStore from '@/stores/app'
+import useSettingsStore from '@/stores/settings'
+import usePermissionStore from '@/stores/permission'
+import type { RouterVo } from '@/types/api'
+import { getMessage } from '@/locales'
+import useLocaleStore from '@/stores/locale'
+
+type TopMenuRoute = RouterVo & {
+  parentPath?: string
+  children?: TopMenuRoute[]
+}
 
 // 顶部栏初始数
-const visibleNumber = ref(null);
+const visibleNumber = ref(0);
 // 当前激活菜单的 index
-const currentIndex = ref(null);
+const currentIndex = ref('');
 // 隐藏侧边栏路由
 const hideList = ['/index', '/user/profile'];
 
 const appStore = useAppStore()
 const settingsStore = useSettingsStore()
 const permissionStore = usePermissionStore()
+const localeStore = useLocaleStore()
 const route = useRoute();
 const router = useRouter();
+const t = (key: string) => getMessage(key, localeStore.language)
 
 // 主题颜色
 const theme = computed(() => settingsStore.theme);
 // 所有的路由信息
 const routers = computed(() => permissionStore.topbarRouters);
 
+function normalizeMenuPath(path: string) {
+  return path.replace(/\/+/g, '/')
+}
+
 // 顶部显示菜单
-const topMenus = computed(() => {
-  let topMenus = [];
+const topMenus = computed<TopMenuRoute[]>(() => {
+  const topMenus: TopMenuRoute[] = [];
   routers.value.map((menu) => {
     if (menu.hidden !== true) {
       // 兼容顶部栏一级菜单内部跳转
-      if (menu.path === "/") {
+      if (menu.path === "/" && menu.children?.[0]) {
           topMenus.push(menu.children[0]);
       } else {
           topMenus.push(menu);
@@ -74,24 +88,25 @@ const topMenus = computed(() => {
 })
 
 // 设置子路由
-const childrenMenus = computed(() => {
-  let childrenMenus = [];
-  routers.value.map((router) => {
-    for (let item in router.children) {
-      if (router.children[item].parentPath === undefined) {
-        if(router.path === "/") {
-          router.children[item].path = "/" + router.children[item].path;
+const childrenMenus = computed<TopMenuRoute[]>(() => {
+  const childrenMenus: TopMenuRoute[] = [];
+  routers.value.map((menu) => {
+    const children = (menu.children || []) as TopMenuRoute[];
+    for (let item in children) {
+      if (children[item].parentPath === undefined) {
+        if(menu.path === "/") {
+          children[item].path = normalizeMenuPath("/" + children[item].path);
         } else {
-          if(!isHttp(router.children[item].path)) {
-            router.children[item].path = router.path + "/" + router.children[item].path;
+          if(!isHttp(children[item].path)) {
+            children[item].path = normalizeMenuPath(menu.path + "/" + children[item].path);
           }
         }
-        router.children[item].parentPath = router.path;
+        children[item].parentPath = menu.path;
       }
-      childrenMenus.push(router.children[item]);
+      childrenMenus.push(children[item]);
     }
   })
-  return constantRoutes.concat(childrenMenus);
+  return (constantRoutes as unknown as TopMenuRoute[]).concat(childrenMenus);
 })
 
 // 默认激活的菜单
@@ -104,7 +119,7 @@ const activeMenu = computed(() => {
     if (!route.meta.link) {
         appStore.toggleSideBarHide(false);
     }
-  } else if(!route.children) {
+  } else if(!(route as unknown as { children?: unknown }).children) {
     activePath = path;
     appStore.toggleSideBarHide(true);
   }
@@ -114,10 +129,10 @@ const activeMenu = computed(() => {
 
 function setVisibleNumber() {
   const width = document.body.getBoundingClientRect().width / 3;
-  visibleNumber.value = parseInt(width / 85);
+  visibleNumber.value = Math.max(1, Math.floor(width / 85));
 }
 
-function handleSelect(key, keyPath) {
+function handleSelect(key: string) {
   currentIndex.value = key;
   const route = routers.value.find(item => item.path === key);
   if (isHttp(key)) {
@@ -140,8 +155,8 @@ function handleSelect(key, keyPath) {
   }
 }
 
-function activeRoutes(key) {
-  let routes = [];
+function activeRoutes(key: string) {
+  const routes: TopMenuRoute[] = [];
   if (childrenMenus.value && childrenMenus.value.length > 0) {
     childrenMenus.value.map((item) => {
       if (key == item.parentPath || (key == "index" && "" == item.path)) {

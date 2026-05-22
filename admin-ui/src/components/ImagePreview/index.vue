@@ -14,40 +14,32 @@
   </el-image>
 </template>
 
-<script setup>
-
-const props = defineProps({
-  src: {
-    type: String,
-    default: ""
-  },
-  width: {
-    type: [Number, String],
-    default: ""
-  },
-  height: {
-    type: [Number, String],
-    default: ""
-  }
+<script setup lang="ts">
+const props = withDefaults(defineProps<{
+  src?: string
+  width?: number | string
+  height?: number | string
+}>(), {
+  src: '',
+  width: '',
+  height: ''
 });
 
 const realSrc = computed(() => {
   if (!props.src) {
-    return;
+    return '';
   }
-  let real_src = props.src.split(",")[0];
+  const real_src = props.src.split(",")[0];
   return real_src;
 });
 
 const realSrcList = computed(() => {
   if (!props.src) {
-    return;
+    return [];
   }
-  let real_src_list = props.src.split(",");
-  let srcList = [];
-  real_src_list.forEach(item => {
-    return srcList.push(item);
-  });
+  const real_src_list = props.src.split(",");
+  const srcList: string[] = [];
+  real_src_list.forEach((item) => srcList.push(item));
   return srcList;
 });
 

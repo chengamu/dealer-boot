@@ -23,13 +23,13 @@
   </div>
 </template>
 
-<script setup>
-import Logo from './Logo'
-import SidebarItem from './SidebarItem'
+<script setup lang="ts">
+import Logo from './Logo.vue'
+import SidebarItem from './SidebarItem.vue'
 import variables from '@/assets/styles/variables.module.scss'
-import useAppStore from '@/store/modules/app'
-import useSettingsStore from '@/store/modules/settings'
-import usePermissionStore from '@/store/modules/permission'
+import useAppStore from '@/stores/app'
+import useSettingsStore from '@/stores/settings'
+import usePermissionStore from '@/stores/permission'
 
 const route = useRoute();
 const appStore = useAppStore()
@@ -46,7 +46,7 @@ const activeMenu = computed(() => {
   const { meta, path } = route;
   // if set path, the sidebar will highlight the path you set
   if (meta.activeMenu) {
-    return meta.activeMenu;
+    return String(meta.activeMenu);
   }
   return path;
 })

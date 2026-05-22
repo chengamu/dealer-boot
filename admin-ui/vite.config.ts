@@ -41,7 +41,10 @@ export default defineConfig(({ mode }) => {
           manualChunks: {
             vue: ['vue', 'vue-router', 'pinia', 'vue-i18n'],
             element: ['element-plus', '@element-plus/icons-vue'],
-            network: ['axios', 'qs', 'js-cookie']
+            network: ['axios', 'qs', 'js-cookie'],
+            charts: ['echarts/core', 'echarts/charts', 'echarts/components', 'echarts/renderers'],
+            editor: ['@vueup/vue-quill'],
+            media: ['vue-cropper']
           }
         }
       }

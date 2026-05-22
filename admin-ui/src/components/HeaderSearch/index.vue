@@ -1,6 +1,14 @@
 <template>
   <div :class="{ 'show': show }" class="header-search">
-    <svg-icon class-name="search-icon" icon-class="search" @click.stop="click" />
+    <button
+      type="button"
+      class="header-search-button"
+      :aria-label="t('shell.searchMenu')"
+      :title="t('shell.searchMenu')"
+      @click.stop="click"
+    >
+      <svg-icon class-name="search-icon" icon-class="search" />
+    </button>
     <el-select
       ref="headerSearchSelectRef"
       v-model="search"
@@ -8,7 +16,7 @@
       filterable
       default-first-option
       remote
-      placeholder="Search"
+      :placeholder="t('common.search')"
       class="header-search-select"
       @change="change"
     >
@@ -17,20 +25,50 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import Fuse from 'fuse.js'
 import { getNormalPath } from '@/utils/ruoyi'
 import { isHttp } from '@/utils/validate'
-import usePermissionStore from '@/store/modules/permission'
+import usePermissionStore from '@/stores/permission'
+import { getMessage } from '@/locales'
+import useLocaleStore from '@/stores/locale'
+
+type SearchRoute = {
+  path: string
+  query?: string
+  title: string[]
+}
+
+type SearchOption = {
+  item: SearchRoute
+}
+
+type RouteLike = {
+  path: string
+  hidden?: boolean
+  redirect?: string
+  query?: string
+  meta?: {
+    title?: string
+  }
+  children?: RouteLike[]
+}
+
+type HeaderSearchSelect = {
+  focus: () => void
+  blur: () => void
+}
 
 const search = ref('');
-const options = ref([]);
-const searchPool = ref([]);
+const options = ref<SearchOption[]>([]);
+const searchPool = ref<SearchRoute[]>([]);
 const show = ref(false);
-const fuse = ref(undefined);
-const headerSearchSelectRef = ref(null);
+const fuse = ref<Fuse<SearchRoute>>();
+const headerSearchSelectRef = ref<HeaderSearchSelect | null>(null);
 const router = useRouter();
 const routes = computed(() => usePermissionStore().routes);
+const localeStore = useLocaleStore()
+const t = (key: string) => getMessage(key, localeStore.language)
 
 function click() {
   show.value = !show.value
@@ -43,7 +81,7 @@ function close() {
   options.value = []
   show.value = false
 }
-function change(val) {
+function change(val: SearchRoute) {
   const path = val.path;
   const query = val.query;
   if (isHttp(path)) {
@@ -64,7 +102,7 @@ function change(val) {
     show.value = false
   })
 }
-function initFuse(list) {
+function initFuse(list: SearchRoute[]) {
   fuse.value = new Fuse(list, {
     shouldSort: true,
     threshold: 0.4,
@@ -82,14 +120,14 @@ function initFuse(list) {
 }
 // Filter out the routes that can be displayed in the sidebar
 // And generate the internationalized title
-function generateRoutes(routes, basePath = '', prefixTitle = [], query = {}) {
-  let res = []
+function generateRoutes(routes: RouteLike[], basePath = '', prefixTitle: string[] = [], query?: string) {
+  let res: SearchRoute[] = []
 
   for (const r of routes) {
     // skip hidden router
     if (r.hidden) { continue }
     const p = r.path.length > 0 && r.path[0] === '/' ? r.path : '/' + r.path;
-    const data = {
+    const data: SearchRoute = {
       path: !isHttp(r.path) ? getNormalPath(basePath + p) : r.path,
       title: [...prefixTitle]
     }
@@ -118,20 +156,20 @@ function generateRoutes(routes, basePath = '', prefixTitle = [], query = {}) {
   }
   return res
 }
-function querySearch(query) {
+function querySearch(query: string) {
   if (query !== '') {
-    options.value = fuse.value.search(query)
+    options.value = fuse.value?.search(query) || []
   } else {
     options.value = []
   }
 }
 
 onMounted(() => {
-  searchPool.value = generateRoutes(routes.value);
+  searchPool.value = generateRoutes(routes.value as RouteLike[]);
 })
 
 watchEffect(() => {
-  searchPool.value = generateRoutes(routes.value)
+  searchPool.value = generateRoutes(routes.value as RouteLike[])
 })
 
 watch(show, (value) => {
@@ -152,8 +190,18 @@ watch(searchPool, (list) => {
   font-size: 0 !important;
 
   .search-icon {
-    cursor: pointer;
     font-size: 18px;
+    vertical-align: middle;
+  }
+
+  .header-search-button {
+    width: 26px;
+    height: 50px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
     vertical-align: middle;
   }
 

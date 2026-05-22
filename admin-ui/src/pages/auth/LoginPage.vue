@@ -118,7 +118,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import type { FormInstance, FormRules } from 'element-plus'
@@ -129,9 +129,7 @@ import { useUserStore } from '@/stores/user'
 import { useLocaleStore } from '@/stores/locale'
 import type { AppLocale } from '@/i18n'
 import { getCodeImg } from '@/services/auth'
-
-const CAPTCHA_TRUST_KEY = 'dealer.captcha.trust.global'
-const CAPTCHA_TRUST_MS = 7 * 24 * 60 * 60 * 1000
+import { getOverlaySelector, logOverlayState, startOverlayDiagnostics } from '@/utils/overlayDiagnostics'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -142,10 +140,12 @@ const formRef = ref<FormInstance>()
 const localeValue = ref<AppLocale>(localeStore.locale)
 const remember = ref(false)
 const loading = ref(false)
-const captchaRequired = ref(false)
+const captchaRequired = ref(true)
 const form = reactive({ username: '', password: '', code: '', uuid: '' })
 const captcha = reactive({ enabled: false, img: '' })
 const swatches = ['#d9c7aa', '#e8e1d2', '#c8c5ba', '#8995a1']
+let overlayCleanupTimer: number | undefined
+let stopOverlayDiagnostics: (() => void) | undefined
 
 const rules = computed<FormRules>(() => ({
   username: [{ required: true, message: t('login.required'), trigger: 'blur' }],
@@ -161,28 +161,15 @@ async function loadCaptcha() {
   try {
     const response = await getCodeImg()
     const payload = response?.data ?? response
-    captcha.enabled = Boolean(payload?.captchaEnabled ?? payload?.img)
+    captcha.enabled = Boolean(payload?.captchaEnabled ?? payload?.captchaOnOff ?? payload?.img)
     captcha.img = payload?.img ? `data:image/gif;base64,${payload.img}` : ''
     form.uuid = payload?.uuid || ''
     if (!captcha.enabled) form.code = ''
   } catch {
-    captcha.enabled = false
-    form.code = ''
+    captcha.enabled = true
+    captcha.img = ''
     form.uuid = ''
   }
-}
-
-function isCaptchaTrusted() {
-  const expiresAt = Number(localStorage.getItem(CAPTCHA_TRUST_KEY) || 0)
-  return expiresAt > Date.now()
-}
-
-function trustCaptcha() {
-  localStorage.setItem(CAPTCHA_TRUST_KEY, String(Date.now() + CAPTCHA_TRUST_MS))
-}
-
-function clearCaptchaTrust() {
-  localStorage.removeItem(CAPTCHA_TRUST_KEY)
 }
 
 function isCaptchaError(error: unknown) {
@@ -206,13 +193,11 @@ async function loginWithCurrentForm() {
   loading.value = true
   try {
     await userStore.login(form.username, form.password, form.code, form.uuid)
-    trustCaptcha()
     await userStore.loadUser()
     const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/index'
     router.push(redirect)
   } catch (error) {
     if (isCaptchaError(error)) {
-      clearCaptchaTrust()
       await requireCaptcha()
       ElMessage.error((error as Error).message || t('api.error'))
       return
@@ -228,8 +213,36 @@ watch(captchaRequired, async (required) => {
   if (required && !captcha.img) await loadCaptcha()
 })
 
-onMounted(async () => {
-  if (!isCaptchaTrusted()) await requireCaptcha()
+function clearStaleOverlays() {
+  document.body.classList.remove('el-popup-parent--hidden')
+  const overlays = Array.from(document.querySelectorAll(getOverlaySelector()))
+  if (overlays.length > 0) {
+    logOverlayState('cleanup', overlays.map((element) => ({
+      tag: element.tagName.toLowerCase(),
+      id: element.id || undefined,
+      className: element.className || undefined
+    })))
+  }
+  overlays.forEach((element) => element.remove())
+}
+
+onMounted(() => {
+  document.body.classList.add('login-route-active')
+  stopOverlayDiagnostics = startOverlayDiagnostics()
+  clearStaleOverlays()
+  overlayCleanupTimer = window.setInterval(clearStaleOverlays, 100)
+  window.setTimeout(() => {
+    if (overlayCleanupTimer) window.clearInterval(overlayCleanupTimer)
+    overlayCleanupTimer = undefined
+  }, 3000)
+  requireCaptcha()
+})
+
+onUnmounted(() => {
+  document.body.classList.remove('login-route-active')
+  if (overlayCleanupTimer) window.clearInterval(overlayCleanupTimer)
+  stopOverlayDiagnostics?.()
+  stopOverlayDiagnostics = undefined
 })
 </script>
 
@@ -324,6 +337,7 @@ onMounted(async () => {
   position: absolute;
   inset: 0;
   overflow: hidden;
+  pointer-events: none;
 }
 
 .room-scene::before {
@@ -377,6 +391,7 @@ onMounted(async () => {
 .trust-card {
   position: absolute;
   z-index: 3;
+  pointer-events: none;
   border: 1px solid rgba(190, 207, 231, 0.86);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.88);

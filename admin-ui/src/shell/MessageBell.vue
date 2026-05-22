@@ -32,16 +32,22 @@ import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 import { parseTime } from '@/utils/ruoyi'
 
+interface NoticeSummary {
+  noticeId: number | string
+  noticeTitle?: string
+  createTime?: string
+}
+
 const router = useRouter()
 const localeStore = useLocaleStore()
 const loading = ref(false)
-const notices = ref<Record<string, any>[]>([])
+const notices = ref<NoticeSummary[]>([])
 const t = (key: string) => getMessage(key, localeStore.language)
 
 async function loadNotices() {
   loading.value = true
   try {
-    const res = await requestPage<Record<string, any>>({
+    const res = await requestPage<NoticeSummary>({
       url: '/system/notice/list',
       method: 'get',
       params: { pageNum: 1, pageSize: 6 }

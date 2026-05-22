@@ -21,19 +21,20 @@
     </el-upload>
     <!-- 上传提示 -->
     <div class="el-upload__tip" v-if="showTip">
-      请上传
+      {{ t('upload.tipPrefix') }}
       <template v-if="fileSize">
-        大小不超过 <b style="color: #f56c6c">{{ fileSize }}MB</b>
+        {{ t('upload.maxSize') }} <b style="color: #f56c6c">{{ fileSize }}MB</b>
       </template>
+      <span v-if="fileSize && fileType">&nbsp;</span>
       <template v-if="fileType">
-        格式为 <b style="color: #f56c6c">{{ fileType.join("/") }}</b>
+        {{ t('upload.allowedTypes') }} <b style="color: #f56c6c">{{ fileType.join("/") }}</b>
       </template>
-      的文件
+      {{ t('upload.fileSuffix') }}
     </div>
 
     <el-dialog
       v-model="dialogVisible"
-      title="预览"
+      :title="t('common.preview')"
       width="800px"
       append-to-body
     >
@@ -45,12 +46,51 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { getToken } from "@/utils/auth";
 import { listByIds, delOss } from "@/api/system/oss";
+import { getMessage } from "@/locales";
+import { useLocaleStore } from "@/stores/locale";
+import type { PropType } from "vue";
+import type { UploadFile, UploadInstance, UploadRawFile, UploadUserFile } from "element-plus";
+
+type UploadModelValue = string | Record<string, unknown> | unknown[];
+
+type UploadItem = UploadUserFile & {
+  ossId?: number | string
+  url?: string
+}
+
+type UploadResponse = {
+  code: number
+  msg?: string
+  data: {
+    fileName: string
+    url: string
+    ossId: number | string
+  }
+}
+
+type ImageUploadProxy = {
+  $modal: {
+    loading: (message: string) => void
+    closeLoading: () => void
+    msgError: (message: string) => void
+  }
+  $refs: {
+    imageUpload?: UploadInstance
+  }
+}
+
+const localeStore = useLocaleStore();
+const t = (key: string, params?: Record<string, unknown>) => {
+  const message = getMessage(key, localeStore.language);
+  if (!params) return message;
+  return Object.entries(params).reduce((text, [name, value]) => text.replaceAll(`{${name}}`, String(value)), message);
+};
 
 const props = defineProps({
-  modelValue: [String, Object, Array],
+  modelValue: [String, Object, Array] as PropType<UploadModelValue>,
   // 图片数量限制
   limit: {
     type: Number,
@@ -63,7 +103,7 @@ const props = defineProps({
   },
   // 文件类型, 例如['png', 'jpg', 'jpeg']
   fileType: {
-    type: Array,
+    type: Array as PropType<string[]>,
     default: () => ["png", "jpg", "jpeg"],
   },
   // 是否显示提示
@@ -73,16 +113,18 @@ const props = defineProps({
   },
 });
 
-const { proxy } = getCurrentInstance();
-const emit = defineEmits();
+const { proxy } = getCurrentInstance() as unknown as { proxy: ImageUploadProxy };
+const emit = defineEmits<{
+  (event: "update:modelValue", value: string): void
+}>();
 const number = ref(0);
-const uploadList = ref([]);
+const uploadList = ref<UploadItem[]>([]);
 const dialogImageUrl = ref("");
 const dialogVisible = ref(false);
 const baseUrl = import.meta.env.VITE_APP_BASE_API;
 const uploadImgUrl = ref(baseUrl + "/system/oss/upload"); // 上传的图片服务器地址
 const headers = ref({ Authorization: "Bearer " + getToken() });
-const fileList = ref([]);
+const fileList = ref<UploadItem[]>([]);
 const showTip = computed(
   () => props.isShowTip && (props.fileType || props.fileSize)
 );
@@ -90,12 +132,14 @@ const showTip = computed(
 watch(() => props.modelValue, async val => {
   if (val) {
     // 首先将值转为数组
-    let list;
+    let list: UploadItem[] = [];
     if (Array.isArray(val)) {
-      list = val;
+      list = val as UploadItem[];
+    } else if (typeof val === 'object') {
+      list = [val as UploadItem];
     } else {
       await listByIds(val).then(res => {
-        list = res.data;
+        list = res.data as UploadItem[];
       })
     }
     // 然后将数组转为对象数组
@@ -105,7 +149,7 @@ watch(() => props.modelValue, async val => {
         item = { name: item, url: item };
       } else {
         // 此处name使用ossId 防止删除出现重名
-        item = { name: item.ossId, url: item.url, ossId: item.ossId };
+        item = { name: String(item.ossId || ''), url: item.url, ossId: item.ossId };
       }
       return item;
     });
@@ -116,7 +160,7 @@ watch(() => props.modelValue, async val => {
 },{ deep: true, immediate: true });
 
 // 上传前loading加载
-function handleBeforeUpload(file) {
+function handleBeforeUpload(file: UploadRawFile) {
   let isImg = false;
   if (props.fileType.length) {
     let fileExtension = "";
@@ -133,46 +177,46 @@ function handleBeforeUpload(file) {
   }
   if (!isImg) {
     proxy.$modal.msgError(
-      `文件格式不正确, 请上传${props.fileType.join("/")}图片格式文件!`
+      t('upload.invalidImageType', { types: props.fileType.join("/") })
     );
     return false;
   }
   if (props.fileSize) {
     const isLt = file.size / 1024 / 1024 < props.fileSize;
     if (!isLt) {
-      proxy.$modal.msgError(`上传头像图片大小不能超过 ${props.fileSize} MB!`);
+      proxy.$modal.msgError(t('upload.imageTooLarge', { size: props.fileSize }));
       return false;
     }
   }
-  proxy.$modal.loading("正在上传图片，请稍候...");
+  proxy.$modal.loading(t('upload.uploadingImage'));
   number.value++;
 }
 
 // 文件个数超出
 function handleExceed() {
-  proxy.$modal.msgError(`上传文件数量不能超过 ${props.limit} 个!`);
+  proxy.$modal.msgError(t('upload.limitExceeded', { limit: props.limit }));
 }
 
 // 上传成功回调
-function handleUploadSuccess(res, file) {
+function handleUploadSuccess(res: UploadResponse, file: UploadFile) {
   if (res.code === 200) {
     uploadList.value.push({ name: res.data.fileName, url: res.data.url, ossId: res.data.ossId });
     uploadedSuccessfully();
   } else {
     number.value--;
     proxy.$modal.closeLoading();
-    proxy.$modal.msgError(res.msg);
-    proxy.$refs.imageUpload.handleRemove(file);
+    proxy.$modal.msgError(res.msg || t('upload.imageUploadFailed'));
+    proxy.$refs.imageUpload?.handleRemove(file);
     uploadedSuccessfully();
   }
 }
 
 // 删除图片
-function handleDelete(file) {
+function handleDelete(file: UploadFile) {
   const findex = fileList.value.map(f => f.name).indexOf(file.name);
   if (findex > -1 && uploadList.value.length === number.value) {
-    let ossId = fileList.value[findex].ossId;
-    delOss(ossId);
+    const ossId = fileList.value[findex].ossId;
+    if (ossId !== undefined) delOss(ossId);
     fileList.value.splice(findex, 1);
     emit("update:modelValue", listToString(fileList.value));
     return false;
@@ -191,23 +235,22 @@ function uploadedSuccessfully() {
 }
 
 // 上传失败
-function handleUploadError(res) {
-  proxy.$modal.msgError("上传图片失败");
+function handleUploadError() {
+  proxy.$modal.msgError(t('upload.imageUploadFailed'));
   proxy.$modal.closeLoading();
 }
 
 // 预览
-function handlePictureCardPreview(file) {
-  dialogImageUrl.value = file.url;
+function handlePictureCardPreview(file: UploadFile) {
+  dialogImageUrl.value = file.url || "";
   dialogVisible.value = true;
 }
 
 // 对象转成指定字符串分隔
-function listToString(list, separator) {
+function listToString(list: UploadItem[], separator = ",") {
   let strs = "";
-  separator = separator || ",";
   for (let i in list) {
-    if(undefined !== list[i].ossId && list[i].url.indexOf("blob:") !== 0) {
+    if(undefined !== list[i].ossId && (list[i].url || '').indexOf("blob:") !== 0) {
       strs += list[i].ossId + separator;
     }
   }

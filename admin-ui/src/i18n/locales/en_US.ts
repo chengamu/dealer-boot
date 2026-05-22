@@ -128,6 +128,10 @@ export default {
     title: 'Form Builder',
     description: 'The old open-source form builder component does not support Vue 3 + TypeScript yet.'
   },
+  tenant: {
+    applicationsTitle: 'Merchant Audit',
+    applicationsDisabled: 'Merchant audit UI has been removed temporarily. The menu is kept for the future approval workflow rewrite.'
+  },
   api: {
     error: 'Request failed',
     network: 'Network error',

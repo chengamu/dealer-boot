@@ -1,4 +1,5 @@
 import { request } from '@/utils/request'
+import type { TreeOption } from '@/api/system/role'
 
 export interface Menu {
   menuId?: number | string
@@ -41,14 +42,19 @@ export function getMenu(menuId: string | number) {
 }
 
 export function treeselect() {
-  return request({
+  return request<TreeOption[]>({
     url: '/system/menu/treeselect',
     method: 'get'
   })
 }
 
+export interface RoleMenuTreeSelectResponse {
+  menus?: TreeOption[]
+  checkedKeys?: Array<number | string>
+}
+
 export function roleMenuTreeselect(roleId: string | number) {
-  return request({
+  return request<RoleMenuTreeSelectResponse>({
     url: `/system/menu/roleMenuTreeselect/${roleId}`,
     method: 'get'
   })

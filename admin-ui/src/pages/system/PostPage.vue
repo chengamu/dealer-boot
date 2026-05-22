@@ -90,7 +90,7 @@
       @pagination="getList"
     />
 
-    <el-dialog v-model="open" :title="title" width="500px" append-to-body>
+    <el-dialog v-model="open" :title="title" width="500px" append-to-body destroy-on-close @closed="reset">
       <el-form ref="postRef" :model="form" :rules="rules" label-width="90px">
         <el-form-item :label="t('legacy.postName')" prop="postName">
           <el-input v-model="form.postName" :placeholder="t('legacy.postNamePlaceholder')" />
@@ -149,7 +149,7 @@ const postList = ref<Post[]>([])
 const open = ref(false)
 const loading = ref(true)
 const showSearch = ref(true)
-const ids = ref<number[]>([])
+const ids = ref<Array<number | string>>([])
 const total = ref(0)
 const queryRef = ref<FormInstance>()
 const postRef = ref<FormInstance>()
@@ -206,7 +206,7 @@ function resetQuery() {
 }
 
 function handleSelectionChange(selection: Post[]) {
-  ids.value = selection.map((item) => Number(item.postId)).filter(Boolean)
+  ids.value = selection.map((item) => String(item.postId)).filter(Boolean)
 }
 
 function handleAdd() {
@@ -225,15 +225,20 @@ async function handleUpdate(row?: Post) {
 async function submitForm() {
   const valid = await postRef.value?.validate().catch(() => false)
   if (!valid) return
-  if (form.value.postId) {
-    await updatePost(form.value)
-    ElMessage.success(t('common.editSuccess'))
-  } else {
-    await addPost(form.value)
-    ElMessage.success(t('common.addSuccess'))
+  try {
+    if (form.value.postId) {
+      await updatePost(form.value)
+      ElMessage.success(t('common.editSuccess'))
+    } else {
+      await addPost(form.value)
+      ElMessage.success(t('common.addSuccess'))
+    }
+    open.value = false
+    reset()
+    await getList()
+  } catch {
+    // Request interceptor already displays the backend error.
   }
-  open.value = false
-  await getList()
 }
 
 async function handleDelete(row?: Post) {

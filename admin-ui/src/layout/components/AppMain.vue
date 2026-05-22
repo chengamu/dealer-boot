@@ -11,9 +11,9 @@
   </section>
 </template>
 
-<script setup>
-import iframeToggle from "./IframeToggle/index"
-import useTagsViewStore from '@/store/modules/tagsView'
+<script setup lang="ts">
+import IframeToggle from "./IframeToggle/index.vue"
+import useTagsViewStore from '@/stores/tagsView'
 
 const tagsViewStore = useTagsViewStore()
 </script>

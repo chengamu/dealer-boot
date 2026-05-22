@@ -1,27 +1,29 @@
 <template>
-  <transition-group name="fade-transform" mode="out-in">
+  <transition-group name="fade-transform">
     <inner-link
       v-for="(item, index) in tagsViewStore.iframeViews"
+      v-show="route.path === item.path"
       :key="item.path"
       :iframeId="'iframe' + index"
-      v-show="route.path === item.path"
       :src="iframeUrl(item.meta.link, item.query)"
-    ></inner-link>
+    />
   </transition-group>
 </template>
 
-<script setup>
-import InnerLink from "../InnerLink/index";
-import useTagsViewStore from "@/store/modules/tagsView";
+<script setup lang="ts">
+import InnerLink from '../InnerLink/index.vue'
+import useTagsViewStore from '@/stores/tagsView'
 
-const route = useRoute();
-const tagsViewStore = useTagsViewStore();
+const route = useRoute()
+const tagsViewStore = useTagsViewStore()
 
-function iframeUrl(url, query) {
-  if (Object.keys(query).length > 0) {
-    let params = Object.keys(query).map((key) => key + "=" + query[key]).join("&");
-    return url + "?" + params;
+function iframeUrl(url?: unknown, query?: Record<string, unknown>) {
+  const targetUrl = typeof url === 'string' ? url : ''
+  const targetQuery = query || {}
+  if (Object.keys(targetQuery).length > 0) {
+    const params = Object.keys(targetQuery).map((key) => `${key}=${targetQuery[key]}`).join('&')
+    return `${targetUrl}?${params}`
   }
-  return url;
+  return targetUrl
 }
 </script>

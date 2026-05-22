@@ -177,7 +177,7 @@ function resetQuery() {
 }
 
 function handleSelectionChange(selection: LoginInfo[]) {
-  ids.value = selection.map((item) => item.infoId)
+  ids.value = selection.map((item) => String(item.infoId)).filter(Boolean)
   multiple.value = selection.length === 0
   single.value = selection.length !== 1
   selectName.value = selection.map((item) => item.userName).filter(Boolean).join(',')

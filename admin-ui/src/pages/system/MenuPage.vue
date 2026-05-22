@@ -61,7 +61,7 @@
       </el-table-column>
     </el-table>
 
-    <el-dialog v-model="open" :title="title" width="680px" append-to-body>
+    <el-dialog v-model="open" :title="title" width="680px" append-to-body destroy-on-close @closed="reset">
       <el-form ref="menuRef" :model="form" :rules="rules" label-width="110px">
         <el-row>
           <el-col :span="24">
@@ -341,15 +341,20 @@ async function handleUpdate(row: Menu) {
 async function submitForm() {
   const valid = await menuRef.value?.validate().catch(() => false)
   if (!valid) return
-  if (form.value.menuId) {
-    await updateMenu(form.value)
-    ElMessage.success(t('common.editSuccess'))
-  } else {
-    await addMenu(form.value)
-    ElMessage.success(t('common.addSuccess'))
+  try {
+    if (form.value.menuId) {
+      await updateMenu(form.value)
+      ElMessage.success(t('common.editSuccess'))
+    } else {
+      await addMenu(form.value)
+      ElMessage.success(t('common.addSuccess'))
+    }
+    open.value = false
+    reset()
+    await getList()
+  } catch {
+    // Request interceptor already displays the backend error.
   }
-  open.value = false
-  await getList()
 }
 
 async function handleDelete(row: Menu) {

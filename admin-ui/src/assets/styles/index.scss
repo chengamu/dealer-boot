@@ -1,10 +1,8 @@
-@import './variables.module.scss';
-@import './mixin.scss';
-@import './transition.scss';
-@import './element-ui.scss';
-@import './sidebar.scss';
-@import './btn.scss';
-@import './ruoyi.scss';
+@use './transition.scss';
+@use './element-ui.scss';
+@use './sidebar.scss';
+@use './btn.scss';
+@use './ruoyi.scss';
 
 body {
   height: 100%;
@@ -13,6 +11,13 @@ body {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   font-family: Helvetica Neue, Helvetica, PingFang SC, Hiragino Sans GB, Microsoft YaHei, Arial, sans-serif;
+}
+
+body.login-route-active > .el-overlay,
+body.login-route-active > .v-modal,
+body.login-route-active > .el-loading-mask {
+  display: none !important;
+  pointer-events: none !important;
 }
 
 label {

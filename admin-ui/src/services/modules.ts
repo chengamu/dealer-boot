@@ -1,5 +1,5 @@
 import { request, requestData, requestPage } from '@/utils/request'
-import type { PageQuery, TenantApplication } from '@/types/api'
+import type { PageQuery } from '@/types/api'
 
 export interface ModuleColumn {
   prop: string
@@ -259,31 +259,11 @@ export async function deleteModule(config: ModuleConfig, ids: string | number) {
   })
 }
 
-export async function listTenantApplications(params: PageQuery) {
-  return requestPage<TenantApplication>({
-    url: '/system/tenant/applications',
-    method: 'get',
-    params
-  })
-}
-
 export async function submitMerchantApplication(data: Record<string, unknown>) {
   return request({
     url: '/merchant/applications',
     method: 'post',
     headers: { isToken: false },
     data
-  })
-}
-
-export async function approveTenantApplication(id: number) {
-  return request({ url: `/system/tenant/applications/${id}/approve`, method: 'post' })
-}
-
-export async function rejectTenantApplication(id: number, reason: string) {
-  return request({
-    url: `/system/tenant/applications/${id}/reject`,
-    method: 'post',
-    data: { reason }
   })
 }

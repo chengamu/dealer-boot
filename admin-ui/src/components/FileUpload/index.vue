@@ -15,14 +15,15 @@
       ref="fileUpload"
     >
       <!-- 上传按钮 -->
-      <el-button type="primary">选取文件</el-button>
+      <el-button type="primary">{{ t('upload.selectFile') }}</el-button>
     </el-upload>
     <!-- 上传提示 -->
     <div class="el-upload__tip" v-if="showTip">
-      请上传
-      <template v-if="fileSize"> 大小不超过 <b style="color: #f56c6c">{{ fileSize }}MB</b> </template>
-      <template v-if="fileType"> 格式为 <b style="color: #f56c6c">{{ fileType.join("/") }}</b> </template>
-      的文件
+      {{ t('upload.tipPrefix') }}
+      <template v-if="fileSize"> {{ t('upload.maxSize') }} <b style="color: #f56c6c">{{ fileSize }}MB</b> </template>
+      <span v-if="fileSize && fileType">&nbsp;</span>
+      <template v-if="fileType"> {{ t('upload.allowedTypes') }} <b style="color: #f56c6c">{{ fileType.join("/") }}</b> </template>
+      {{ t('upload.fileSuffix') }}
     </div>
     <!-- 文件列表 -->
     <transition-group class="upload-file-list el-upload-list el-upload-list--text" name="el-fade-in-linear" tag="ul">
@@ -31,19 +32,59 @@
           <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
         </el-link>
         <div class="ele-upload-list__item-content-action">
-          <el-link :underline="false" @click="handleDelete(index)" type="danger">删除</el-link>
+          <el-link :underline="false" @click="handleDelete(index)" type="danger">{{ t('common.delete') }}</el-link>
         </div>
       </li>
     </transition-group>
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { getToken } from "@/utils/auth";
 import { listByIds, delOss } from "@/api/system/oss";
+import { getMessage } from "@/locales";
+import { useLocaleStore } from "@/stores/locale";
+import type { PropType } from "vue";
+import type { UploadFile, UploadInstance, UploadRawFile, UploadUserFile } from "element-plus";
+
+type UploadModelValue = string | Record<string, unknown> | unknown[];
+
+type UploadItem = UploadUserFile & {
+  ossId?: number | string
+  originalName?: string
+  url?: string
+}
+
+type UploadResponse = {
+  code: number
+  msg?: string
+  data: {
+    fileName: string
+    url: string
+    ossId: number | string
+  }
+}
+
+type FileUploadProxy = {
+  $modal: {
+    loading: (message: string) => void
+    closeLoading: () => void
+    msgError: (message: string) => void
+  }
+  $refs: {
+    fileUpload?: UploadInstance
+  }
+}
+
+const localeStore = useLocaleStore();
+const t = (key: string, params?: Record<string, unknown>) => {
+  const message = getMessage(key, localeStore.language);
+  if (!params) return message;
+  return Object.entries(params).reduce((text, [name, value]) => text.replaceAll(`{${name}}`, String(value)), message);
+};
 
 const props = defineProps({
-  modelValue: [String, Object, Array],
+  modelValue: [String, Object, Array] as PropType<UploadModelValue>,
   // 数量限制
   limit: {
     type: Number,
@@ -56,7 +97,7 @@ const props = defineProps({
   },
   // 文件类型, 例如['png', 'jpg', 'jpeg']
   fileType: {
-    type: Array,
+    type: Array as PropType<string[]>,
     default: () => ["doc", "xls", "ppt", "txt", "pdf"],
   },
   // 是否显示提示
@@ -66,14 +107,16 @@ const props = defineProps({
   }
 });
 
-const { proxy } = getCurrentInstance();
-const emit = defineEmits();
+const { proxy } = getCurrentInstance() as unknown as { proxy: FileUploadProxy };
+const emit = defineEmits<{
+  (event: "update:modelValue", value: string): void
+}>();
 const number = ref(0);
-const uploadList = ref([]);
+const uploadList = ref<UploadItem[]>([]);
 const baseUrl = import.meta.env.VITE_APP_BASE_API;
 const uploadFileUrl = ref(baseUrl + "/system/oss/upload"); // 上传文件服务器地址
 const headers = ref({ Authorization: "Bearer " + getToken() });
-const fileList = ref([]);
+const fileList = ref<UploadItem[]>([]);
 const showTip = computed(
   () => props.isShowTip && (props.fileType || props.fileSize)
 );
@@ -82,14 +125,15 @@ watch(() => props.modelValue, async val => {
   if (val) {
     let temp = 1;
     // 首先将值转为数组
-    let list;
+    let list: UploadItem[] = [];
     if (Array.isArray(val)) {
-      list = val;
+      list = val as UploadItem[];
+    } else if (typeof val === 'object') {
+      list = [val as UploadItem];
     } else {
       await listByIds(val).then(res => {
         list = res.data.map(oss => {
-          oss = { name: oss.originalName, url: oss.url, ossId: oss.ossId };
-          return oss;
+          return { name: oss.originalName || oss.fileName || '', url: oss.url, ossId: oss.ossId };
         });
       })
     }
@@ -106,14 +150,14 @@ watch(() => props.modelValue, async val => {
 },{ deep: true, immediate: true });
 
 // 上传前校检格式和大小
-function handleBeforeUpload(file) {
+function handleBeforeUpload(file: UploadRawFile) {
   // 校检文件类型
   if (props.fileType.length) {
     const fileName = file.name.split('.');
     const fileExt = fileName[fileName.length - 1];
     const isTypeOk = props.fileType.indexOf(fileExt) >= 0;
     if (!isTypeOk) {
-      proxy.$modal.msgError(`文件格式不正确, 请上传${props.fileType.join("/")}格式文件!`);
+      proxy.$modal.msgError(t('upload.invalidFileType', { types: props.fileType.join("/") }));
       return false;
     }
   }
@@ -121,43 +165,43 @@ function handleBeforeUpload(file) {
   if (props.fileSize) {
     const isLt = file.size / 1024 / 1024 < props.fileSize;
     if (!isLt) {
-      proxy.$modal.msgError(`上传文件大小不能超过 ${props.fileSize} MB!`);
+      proxy.$modal.msgError(t('upload.fileTooLarge', { size: props.fileSize }));
       return false;
     }
   }
-  proxy.$modal.loading("正在上传文件，请稍候...");
+  proxy.$modal.loading(t('upload.uploadingFile'));
   number.value++;
   return true;
 }
 
 // 文件个数超出
 function handleExceed() {
-  proxy.$modal.msgError(`上传文件数量不能超过 ${props.limit} 个!`);
+  proxy.$modal.msgError(t('upload.limitExceeded', { limit: props.limit }));
 }
 
 // 上传失败
-function handleUploadError(err) {
-  proxy.$modal.msgError("上传文件失败");
+function handleUploadError() {
+  proxy.$modal.msgError(t('upload.fileUploadFailed'));
 }
 
 // 上传成功回调
-function handleUploadSuccess(res, file) {
+function handleUploadSuccess(res: UploadResponse, file: UploadFile) {
   if (res.code === 200) {
     uploadList.value.push({ name: res.data.fileName, url: res.data.url, ossId: res.data.ossId });
     uploadedSuccessfully();
   } else {
     number.value--;
     proxy.$modal.closeLoading();
-    proxy.$modal.msgError(res.msg);
-    proxy.$refs.fileUpload.handleRemove(file);
+    proxy.$modal.msgError(res.msg || t('upload.fileUploadFailed'));
+    proxy.$refs.fileUpload?.handleRemove(file);
     uploadedSuccessfully();
   }
 }
 
 // 删除文件
-function handleDelete(index) {
-  let ossId = fileList.value[index].ossId;
-  delOss(ossId);
+function handleDelete(index: number) {
+  const ossId = fileList.value[index].ossId;
+  if (ossId !== undefined) delOss(ossId);
   fileList.value.splice(index, 1);
   emit("update:modelValue", listToString(fileList.value));
 }
@@ -174,7 +218,7 @@ function uploadedSuccessfully() {
 }
 
 // 获取文件名称
-function getFileName(name) {
+function getFileName(name = '') {
   // 如果是url那么取最后的名字 如果不是直接返回
   if (name.lastIndexOf("/") > -1) {
     return name.slice(name.lastIndexOf("/") + 1);
@@ -184,9 +228,8 @@ function getFileName(name) {
 }
 
 // 对象转成指定字符串分隔
-function listToString(list, separator) {
+function listToString(list: UploadItem[], separator = ",") {
   let strs = "";
-  separator = separator || ",";
   for (let i in list) {
     if(list[i].ossId) {
       strs += list[i].ossId + separator;

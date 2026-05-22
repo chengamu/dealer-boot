@@ -21,3 +21,5 @@ export const useLocaleStore = defineStore('locale', {
     }
   }
 })
+
+export default useLocaleStore

@@ -89,7 +89,7 @@
       @pagination="getList"
     />
 
-    <el-dialog v-model="open" :title="title" width="780px" append-to-body>
+    <el-dialog v-model="open" :title="title" width="780px" append-to-body destroy-on-close @closed="reset">
       <el-form ref="noticeRef" :model="form" :rules="rules" label-width="90px">
         <el-row>
           <el-col :span="12">
@@ -160,7 +160,7 @@ const noticeList = ref<Notice[]>([])
 const open = ref(false)
 const loading = ref(true)
 const showSearch = ref(true)
-const ids = ref<number[]>([])
+const ids = ref<Array<number | string>>([])
 const total = ref(0)
 const queryRef = ref<FormInstance>()
 const noticeRef = ref<FormInstance>()
@@ -215,7 +215,7 @@ function resetQuery() {
 }
 
 function handleSelectionChange(selection: Notice[]) {
-  ids.value = selection.map((item) => Number(item.noticeId)).filter(Boolean)
+  ids.value = selection.map((item) => String(item.noticeId)).filter(Boolean)
 }
 
 function handleAdd() {
@@ -234,15 +234,20 @@ async function handleUpdate(row?: Notice) {
 async function submitForm() {
   const valid = await noticeRef.value?.validate().catch(() => false)
   if (!valid) return
-  if (form.value.noticeId) {
-    await updateNotice(form.value)
-    ElMessage.success(t('common.editSuccess'))
-  } else {
-    await addNotice(form.value)
-    ElMessage.success(t('common.addSuccess'))
+  try {
+    if (form.value.noticeId) {
+      await updateNotice(form.value)
+      ElMessage.success(t('common.editSuccess'))
+    } else {
+      await addNotice(form.value)
+      ElMessage.success(t('common.addSuccess'))
+    }
+    open.value = false
+    reset()
+    await getList()
+  } catch {
+    // Request interceptor already displays the backend error.
   }
-  open.value = false
-  await getList()
 }
 
 async function handleDelete(row?: Notice) {

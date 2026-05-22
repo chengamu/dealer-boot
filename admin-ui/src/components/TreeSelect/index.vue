@@ -28,14 +28,36 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import type { PropType } from 'vue'
 
-const { proxy } = getCurrentInstance();
+type TreeValue = string | number
+
+type TreeOption = {
+  [key: string]: unknown
+  children?: TreeOption[]
+}
+
+type TreeObjMap = {
+  value: string
+  label: string
+  children: string
+}
+
+type SelectTreeRef = {
+  getNode: (key: TreeValue) => { data: TreeOption } | undefined
+  setCurrentKey: (key: TreeValue) => void
+  filter: (value: string) => void
+}
+
+type TreeSelectRef = {
+  blur: () => void
+}
 
 const props = defineProps({
   /* 配置项 */
   objMap: {
-    type: Object,
+    type: Object as PropType<TreeObjMap>,
     default: () => {
       return {
         value: 'id', // ID字段名
@@ -58,7 +80,7 @@ const props = defineProps({
   },
   /**当前的数据 */
   options: {
-    type: Array,
+    type: Array as PropType<TreeOption[]>,
     default: () => []
   },
   /**输入框内部的文字 */
@@ -68,25 +90,30 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['update:value']);
+const emit = defineEmits<{
+  (event: 'update:value', value: TreeValue | ''): void
+}>();
+
+const selectTree = ref<SelectTreeRef | null>(null);
+const treeSelect = ref<TreeSelectRef | null>(null);
 
 const valueId = computed({
   get: () => props.value,
-  set: (val) => {
+  set: (val: TreeValue | '') => {
     emit('update:value', val)
   }
 });
 const valueTitle = ref('');
-const defaultExpandedKey = ref([]);
+const defaultExpandedKey = ref<TreeValue[]>([]);
 
 function initHandle() {
   nextTick(() => {
     const selectedValue = valueId.value;
     if(selectedValue !== null && typeof (selectedValue) !== 'undefined') {
-      const node = proxy.$refs.selectTree.getNode(selectedValue)
+      const node = selectTree.value?.getNode(selectedValue)
       if (node) {
-        valueTitle.value = node.data[props.objMap.label]
-        proxy.$refs.selectTree.setCurrentKey(selectedValue) // 设置默认选中
+        valueTitle.value = String(node.data[props.objMap.label] || '')
+        selectTree.value?.setCurrentKey(selectedValue) // 设置默认选中
         defaultExpandedKey.value = [selectedValue] // 设置默认展开
       }
     } else {
@@ -94,19 +121,19 @@ function initHandle() {
     }
   })
 }
-function handleNodeClick(node) {
-  valueTitle.value = node[props.objMap.label]
-  valueId.value = node[props.objMap.value];
+function handleNodeClick(node: TreeOption) {
+  valueTitle.value = String(node[props.objMap.label] || '')
+  valueId.value = node[props.objMap.value] as TreeValue;
   defaultExpandedKey.value = [];
-  proxy.$refs.treeSelect.blur()
+  treeSelect.value?.blur()
   selectFilterData('')
 }
-function selectFilterData(val) {
-  proxy.$refs.selectTree.filter(val)
+function selectFilterData(val: string) {
+  selectTree.value?.filter(val)
 }
-function filterNode(value, data) {
+function filterNode(value: string, data: TreeOption) {
   if (!value) return true
-  return data[props.objMap['label']].indexOf(value) !== -1
+  return String(data[props.objMap.label] || '').indexOf(value) !== -1
 }
 function clearHandle() {
   valueTitle.value = ''
@@ -129,7 +156,8 @@ watch(valueId, () => {
 </script>
 
 <style lang='scss' scoped>
-@import "@/assets/styles/variables.module.scss";
+@use "sass:color";
+@use "@/assets/styles/variables.module.scss" as *;
 .el-scrollbar .el-scrollbar__view .el-select-dropdown__item {
   padding: 0;
   background-color: #fff;
@@ -150,7 +178,7 @@ ul li .el-tree .el-tree-node__content {
 :deep(.el-tree-node__content:active),
 :deep(.is-current > div:first-child),
 :deep(.el-tree-node__content:focus) {
-  background-color: mix(#fff, $--color-primary, 90%);
-  color: $--color-primary;
+  background-color: color.mix(#fff, $color-primary, 90%);
+  color: $color-primary;
 }
 </style>

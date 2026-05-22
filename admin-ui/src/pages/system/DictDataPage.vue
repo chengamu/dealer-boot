@@ -98,7 +98,7 @@
       @pagination="getList"
     />
 
-    <el-dialog v-model="open" :title="title" width="500px" append-to-body>
+    <el-dialog v-model="open" :title="title" width="500px" append-to-body destroy-on-close @closed="reset">
       <el-form ref="dataRef" :model="form" :rules="rules" label-width="90px">
         <el-form-item :label="t('legacy.dictType')">
           <el-input v-model="form.dictType" disabled />
@@ -177,7 +177,7 @@ const typeOptions = ref<DictType[]>([])
 const open = ref(false)
 const loading = ref(true)
 const showSearch = ref(true)
-const ids = ref<number[]>([])
+const ids = ref<Array<number | string>>([])
 const total = ref(0)
 const defaultDictType = ref('')
 const queryRef = ref<FormInstance>()
@@ -267,7 +267,7 @@ function resetQuery() {
 }
 
 function handleSelectionChange(selection: DictData[]) {
-  ids.value = selection.map((item) => Number(item.dictCode)).filter(Boolean)
+  ids.value = selection.map((item) => String(item.dictCode)).filter(Boolean)
 }
 
 function handleAdd() {
@@ -288,16 +288,21 @@ async function handleUpdate(row?: DictData) {
 async function submitForm() {
   const valid = await dataRef.value?.validate().catch(() => false)
   if (!valid) return
-  if (form.value.dictCode) {
-    await updateData(form.value)
-    ElMessage.success(t('common.editSuccess'))
-  } else {
-    await addData(form.value)
-    ElMessage.success(t('common.addSuccess'))
+  try {
+    if (form.value.dictCode) {
+      await updateData(form.value)
+      ElMessage.success(t('common.editSuccess'))
+    } else {
+      await addData(form.value)
+      ElMessage.success(t('common.addSuccess'))
+    }
+    useDictStore().removeDict(`${localeStore.language}:${queryParams.dictType}`)
+    open.value = false
+    reset()
+    await getList()
+  } catch {
+    // Request interceptor already displays the backend error.
   }
-  useDictStore().removeDict(`${localeStore.language}:${queryParams.dictType}`)
-  open.value = false
-  await getList()
 }
 
 async function handleDelete(row?: DictData) {

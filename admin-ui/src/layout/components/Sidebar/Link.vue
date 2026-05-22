@@ -4,18 +4,15 @@
   </component>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { isExternal } from '@/utils/validate'
 
-const props = defineProps({
-  to: {
-    type: [String, Object],
-    required: true
-  }
-})
+const props = defineProps<{
+  to: string | Record<string, unknown>
+}>()
 
 const isExt = computed(() => {
-  return isExternal(props.to)
+  return typeof props.to === 'string' && isExternal(props.to)
 })
 
 const type = computed(() => {
@@ -28,7 +25,7 @@ const type = computed(() => {
 function linkProps() {
   if (isExt.value) {
     return {
-      href: props.to,
+      href: props.to as string,
       target: '_blank',
       rel: 'noopener'
     }

@@ -5,26 +5,26 @@ Date: 2026-05-21
 ## Scope
 
 - Mainline: `admin-ui/src/main.ts` TS application.
-- Functional baseline: legacy `admin-ui/src/views`, legacy JS API wrappers, legacy layout/store behavior.
+- Functional baseline: old feature behavior captured from the former `admin-ui/src/views`, old API wrappers, and old layout/store behavior.
 - Backend contract: current Java controllers. Backend errors are recorded here only; no backend implementation was changed.
 - Skipped by request: tenant application approval/reject flow.
 
 ## Changes Completed
 
-- Added a global legacy UI i18n bridge in the TS entry path:
-  - keeps backend i18n as the source for menus and dictionaries.
-  - translates only legacy hard-coded UI chrome: labels, placeholders, table headers, buttons, dialog text, tooltip/title/aria labels, pagination, upload tips.
-  - does not translate table body business data or tree node business data.
+- Replaced the temporary legacy UI i18n bridge with explicit locale keys in the active TS shell, pages, and shared components.
+  - backend i18n remains the source for menus and dictionaries.
+  - frontend locale files cover interface chrome: labels, placeholders, table headers, buttons, dialog text, tooltip/title/aria labels, pagination, upload tips.
+  - table body business data and tree node business data remain backend/data concerns.
 - Made dictionary cache language-aware so dict refs are reloaded after language switching.
-- Reconnected the TS router to the legacy `layout` shell:
+- Reconnected the TS router to the migrated layout shell:
   - sidebar expand/collapse
   - mobile drawer behavior
   - breadcrumb
   - TagsView
   - settings drawer
   - user profile dropdown
-- Bridged legacy `store/modules/permission.js` to the TS permission store so old layout components and new route generation use the same Pinia store.
-- Kept dynamic `/getRouters` compatibility for `Layout`, `ParentView`, `InnerLink`, `meta.title/icon/noCache/link`, and legacy `src/views/**/*.vue`.
+- Removed the legacy `store/modules` bridge; global shell code now imports Pinia stores from `src/stores`.
+- Kept dynamic `/getRouters` compatibility for `Layout`, `ParentView`, `InnerLink`, and `meta.title/icon/noCache/link`. Backend component paths now resolve through the explicit TS page map.
 - Registered old global components and helpers in the TS entry path:
   - `DictTag`, `Pagination`, `RightToolbar`, `SvgIcon`, `TreeSelect`, upload/editor/image helpers.
   - `useDict`, `download`, `parseTime`, `resetForm`, `handleTree`, `addDateRange`, dictionary label helpers.
@@ -169,22 +169,26 @@ Clearly unused scaffold files were removed after reference checks:
 - `admin-ui/src/router/menu.ts`
 - old generic scaffold pages under `admin-ui/src/pages/dashboard` and `admin-ui/src/pages/modules`.
 
-Old runtime code still has a reason to exist right now:
+Old runtime code cleanup status:
 
-- `admin-ui/src/views/**`: current dynamic routes still load these pages as the functional baseline.
-- `admin-ui/src/api/system|monitor|tool/*.js`: those pages still call the old API wrappers.
-- `admin-ui/src/store/modules/*.js`, `admin-ui/src/utils/*.js`, `admin-ui/src/layout/**`: the restored legacy shell and page runtime still depend on them.
+- `admin-ui/src/views/**` has been removed.
+- `admin-ui/src/api/**/*.js`, `admin-ui/src/store/modules/*.js`, and `admin-ui/src/utils/*.js` have been removed or migrated to TS.
+- `admin-ui/src/layout/**` is included in `vue-tsc` and no longer hidden behind `tsconfig.exclude`.
 
 Engineering status:
 
-- The app entry, route generation, stores bridge, request path, locale bridge, and new auth pages are TS-based.
-- The admin feature pages are not yet fully TS-rewritten or fully componentized. They are currently aligned through a TS shell plus legacy functional pages.
-- Full cleanup of legacy views/APIs/stores should happen module by module after each page is rewritten to TS components and verified against the old feature checklist.
+- The app entry, route generation, stores, request path, explicit locale messages, framework shell, and migrated admin feature pages are TS-based.
+- Tenant application approval/reject UI has been removed by request and replaced with a TS placeholder while keeping the menu route.
+- `admin-ui/src` has no current `any` escape or TS suppression matches in the latest source scan.
+- Auth and locale cookies now set root path, `SameSite=Lax`, and HTTPS-only `Secure` automatically.
+- Vite splits chart, editor, and media dependencies into dedicated chunks so chart/editor code is not pulled into ordinary CRUD pages.
+- Future cleanup should focus on a planned rich-text editor replacement because `@vueup/vue-quill` still depends on Quill 1.x, which has a moderate advisory and no upstream fix.
 
 ## Latest Verification
 
-- `npm run build` passed after cleanup and i18n additions.
-- Remaining build warnings are existing Sass `@import`/global `mix()` deprecation warnings and a Vite large chunk warning.
+- `npm run typecheck` passed after TS strictness cleanup.
+- `npm run build` passed after dependency overrides, cookie hardening, and bundle chunking.
+- `npm audit --registry=https://registry.npmjs.org --audit-level=high` passed. Remaining audit output is Quill 1.x through `@vueup/vue-quill`, rated moderate with no fix available.
 - English/US-timezone route scan passed for:
   - `/system/user`
   - `/system/role`
@@ -212,6 +216,6 @@ Engineering status:
   - run a full manual screen reader pass after UI styling is finalized.
   - focus return after save/cancel should be verified against real dialogs during disposable-data CRUD testing.
 - I18n follow-up:
-  - Extend `legacy-ui-i18n.ts` with any newly discovered old UI phrases during route-by-route testing.
-  - Prefer backend i18n for menus and dictionaries; frontend bridge is only for legacy hard-coded interface chrome.
+  - Add any newly discovered old UI phrases as explicit locale keys in the relevant TS page/component.
+  - Prefer backend i18n for menus and dictionaries; page chrome should use explicit frontend locale keys.
   - If a backend dict item lacks `i18nKey` or a translated message, document that as backend data/config, not a frontend UI translation issue.
