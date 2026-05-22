@@ -1,45 +1,45 @@
-# zjbm-mes-vue
+﻿# Dealer Admin UI
 
-MES 后台管理系统前端，基于 `Vue + Vite + Element Plus` 构建，包含后台管理、数据展示、表单配置和打印等能力。
+Vue 3 + TypeScript + Vite + Element Plus admin frontend for the dealer portal.
 
-## 技术栈
+## Stack
 
 - Vue 3
-- Vite 3
+- TypeScript
+- Vite
 - Element Plus
 - Pinia
 - Vue Router
 - Axios
 - ECharts
-- jsbarcode / qrcode
 
-## 本地开发
+## Local Development
 
 ```bash
 npm install
 npm run dev
 ```
 
-## 构建命令
+The dev server defaults to `http://127.0.0.1:8083` and proxies `VITE_APP_BASE_API` to the backend configured in `vite.config.ts`.
+
+## Build
 
 ```bash
+npm run typecheck
 npm run build
-npm run build:prod
 npm run preview
-npm run generate:config
 ```
 
-## 项目结构
+Runtime settings are loaded from `public/_app.config.js` and copied into `dist/_app.config.js` during build. Change that file after deployment when only API base URL or external monitor links need to change.
 
-- `src/`: 页面、组件、路由、状态管理和业务逻辑
-- `public/`: 静态资源
-- `build/`: 构建脚本和配置生成脚本
-- `bin/`: 启动或辅助脚本
-- `html/`: 额外页面模板
-- `vite/`: Vite 配置扩展
-- `.env.development`: 开发环境配置
-- `.env.production`: 生产环境配置
+## Source Layout
 
-## 说明
-
-建议后续补充模块清单、权限体系、接口约定和部署方式。
+- `src/api`: typed backend API wrappers
+- `src/components`: reusable shared components
+- `src/layout`: admin shell, sidebar, navbar and tags view
+- `src/pages`: TypeScript Vue pages aligned with backend menu components
+- `src/router`: static routes and route guard
+- `src/stores`: Pinia stores
+- `src/utils`: request, auth, dict, datetime and shared helpers
+- `public`: static runtime assets
+- `vite`: Vite plugin helpers

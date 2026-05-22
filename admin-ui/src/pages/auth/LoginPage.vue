@@ -128,8 +128,7 @@ import AuthLocaleSelect from '@/components/AuthVisual/AuthLocaleSelect.vue'
 import { useUserStore } from '@/stores/user'
 import { useLocaleStore } from '@/stores/locale'
 import type { AppLocale } from '@/i18n'
-import { getCodeImg } from '@/services/auth'
-import { getOverlaySelector, logOverlayState, startOverlayDiagnostics } from '@/utils/overlayDiagnostics'
+import { getCodeImg } from '@/api/auth'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -144,8 +143,8 @@ const captchaRequired = ref(true)
 const form = reactive({ username: '', password: '', code: '', uuid: '' })
 const captcha = reactive({ enabled: false, img: '' })
 const swatches = ['#d9c7aa', '#e8e1d2', '#c8c5ba', '#8995a1']
+const overlaySelector = '.el-overlay, .v-modal, .el-loading-mask'
 let overlayCleanupTimer: number | undefined
-let stopOverlayDiagnostics: (() => void) | undefined
 
 const rules = computed<FormRules>(() => ({
   username: [{ required: true, message: t('login.required'), trigger: 'blur' }],
@@ -178,7 +177,8 @@ function isCaptchaError(error: unknown) {
 }
 
 async function submit() {
-  await formRef.value?.validate()
+  const valid = await formRef.value?.validate().catch(() => false)
+  if (!valid) return
   await loginWithCurrentForm()
 }
 
@@ -215,20 +215,12 @@ watch(captchaRequired, async (required) => {
 
 function clearStaleOverlays() {
   document.body.classList.remove('el-popup-parent--hidden')
-  const overlays = Array.from(document.querySelectorAll(getOverlaySelector()))
-  if (overlays.length > 0) {
-    logOverlayState('cleanup', overlays.map((element) => ({
-      tag: element.tagName.toLowerCase(),
-      id: element.id || undefined,
-      className: element.className || undefined
-    })))
-  }
+  const overlays = Array.from(document.querySelectorAll(overlaySelector))
   overlays.forEach((element) => element.remove())
 }
 
 onMounted(() => {
   document.body.classList.add('login-route-active')
-  stopOverlayDiagnostics = startOverlayDiagnostics()
   clearStaleOverlays()
   overlayCleanupTimer = window.setInterval(clearStaleOverlays, 100)
   window.setTimeout(() => {
@@ -241,8 +233,6 @@ onMounted(() => {
 onUnmounted(() => {
   document.body.classList.remove('login-route-active')
   if (overlayCleanupTimer) window.clearInterval(overlayCleanupTimer)
-  stopOverlayDiagnostics?.()
-  stopOverlayDiagnostics = undefined
 })
 </script>
 

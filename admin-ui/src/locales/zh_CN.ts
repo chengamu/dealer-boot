@@ -16,7 +16,13 @@ export default {
     "normal": "正常",
     "disabled": "停用",
     "show": "显示",
-    "hide": "隐藏"
+    "hide": "隐藏",
+    "success": "成功",
+    "announcement": "公告",
+    "closed": "关闭",
+    "grant": "授权",
+    "generateCode": "生成代码",
+    "other": "其它"
   },
   "dashboard": {
     "home": "首页",
@@ -600,6 +606,29 @@ export default {
     "phonenumberRequired": "手机号码不能为空",
     "emailInvalid": "请输入正确的邮箱地址",
     "phonenumberInvalid": "请输入正确的手机号码"
+  },
+  "login": {
+    "title": "欢迎回来",
+    "description": "登录 Dealer 管理后台。",
+    "email": "邮箱 / 用户名",
+    "password": "密码",
+    "code": "验证码",
+    "remember": "记住我",
+    "submit": "登录",
+    "apply": "申请商家账号",
+    "emailPlaceholder": "请输入邮箱或用户名",
+    "passwordPlaceholder": "请输入密码",
+    "codePlaceholder": "请输入验证码",
+    "required": "请填写登录信息"
+  },
+  "apply": {
+    "title": "创建你的商家账号",
+    "intro": "加入全球窗饰经销商网络，和 skyspf 一起拓展业务。",
+    "companyName": "公司名称",
+    "email": "邮箱",
+    "country": "国家",
+    "submit": "提交申请",
+    "success": "申请已提交，请等待平台审核。"
   },
   "register": {
     "title": "商家入驻申请",

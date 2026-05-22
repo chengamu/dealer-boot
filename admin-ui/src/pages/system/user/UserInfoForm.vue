@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <el-form ref="userRef" :model="user" :rules="rules" label-width="90px">
     <el-form-item :label="t('user.nickName')" prop="nickName">
       <el-input v-model="user.nickName" maxlength="30" />
@@ -32,8 +32,8 @@ import { useTagsViewStore, type TagView } from '@/stores/tagsView'
 import { useDict } from '@/utils/dict'
 
 interface DictOption {
-  label: string
-  value: string
+  label?: string
+  value?: string
 }
 
 const props = defineProps<{
@@ -49,7 +49,7 @@ const t = (key: string, params?: Record<string, string | number>) => {
   if (!params) return message
   return Object.entries(params).reduce((text, [name, value]) => text.replaceAll(`{${name}}`, String(value)), message)
 }
-const { sys_user_sex } = useDict('sys_user_sex') as unknown as { sys_user_sex: DictOption[] }
+const { sys_user_sex } = useDict('sys_user_sex')
 const userSexLabelKeys: Record<string, string> = {
   '0': 'user.sexMale',
   '1': 'user.sexFemale',
@@ -70,14 +70,18 @@ const rules = computed<FormRules<SysUser>>(() => ({
 }))
 
 function getUserSexLabel(dict: DictOption) {
-  return userSexLabelKeys[dict.value] ? t(userSexLabelKeys[dict.value]) : dict.label
+  return dict.value && userSexLabelKeys[dict.value] ? t(userSexLabelKeys[dict.value]) : dict.label || ''
 }
 
 async function submit() {
   const valid = await userRef.value?.validate().catch(() => false)
   if (!valid) return
-  await updateUserProfile(props.user)
-  ElMessage.success(t('common.editSuccess'))
+  try {
+    await updateUserProfile(props.user)
+    ElMessage.success(t('common.editSuccess'))
+  } catch {
+    // Request interceptor already displays the backend error.
+  }
 }
 
 function close() {

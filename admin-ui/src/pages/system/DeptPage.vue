@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="app-container">
     <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true">
       <el-form-item :label="t('legacy.deptName')" prop="deptName">
@@ -152,7 +152,7 @@ const t = (key: string, params?: Record<string, string | number>) => {
   if (!params) return message
   return Object.entries(params).reduce((text, [name, value]) => text.replaceAll(`{${name}}`, String(value)), message)
 }
-const { sys_normal_disable } = useDict('sys_normal_disable') as unknown as { sys_normal_disable: DictOption[] }
+const { sys_normal_disable } = useDict('sys_normal_disable')
 
 const deptList = ref<Dept[]>([])
 const open = ref(false)
@@ -233,13 +233,17 @@ async function handleUpdate(row: Dept) {
   reset()
   const deptId = row.deptId
   if (!deptId) return
-  form.value = await getDept(deptId)
-  const rows = await listDeptExcludeChild(deptId)
-  deptOptions.value = handleTree(rows || [], 'deptId') as Dept[]
-  if (!deptOptions.value.length && form.value.parentId) {
-    deptOptions.value.push({ deptId: form.value.parentId, deptName: form.value.parentName, children: [] })
+  try {
+    form.value = await getDept(deptId)
+    const rows = await listDeptExcludeChild(deptId)
+    deptOptions.value = handleTree(rows || [], 'deptId') as Dept[]
+    if (!deptOptions.value.length && form.value.parentId) {
+      deptOptions.value.push({ deptId: form.value.parentId, deptName: form.value.parentName, children: [] })
+    }
+    open.value = true
+  } catch {
+    // Request interceptor already displays the backend error.
   }
-  open.value = true
 }
 
 async function submitForm() {
@@ -263,10 +267,14 @@ async function submitForm() {
 
 async function handleDelete(row: Dept) {
   if (!row.deptId) return
-  await ElMessageBox.confirm(t('legacy.deleteDeptConfirm', { name: row.deptName || '' }), t('common.prompt'), { type: 'warning' })
-  await delDept(row.deptId)
-  ElMessage.success(t('common.deleteSuccess'))
-  await getList()
+  try {
+    await ElMessageBox.confirm(t('legacy.deleteDeptConfirm', { name: row.deptName || '' }), t('common.prompt'), { type: 'warning' })
+    await delDept(row.deptId)
+    ElMessage.success(t('common.deleteSuccess'))
+    await getList()
+  } catch {
+    // User cancelled or the request interceptor already displayed the backend error.
+  }
 }
 
 getList()

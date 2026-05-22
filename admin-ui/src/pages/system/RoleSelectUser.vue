@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <el-dialog v-model="visible" :title="t('role.selectUser')" width="800px" top="5vh" append-to-body>
     <el-form ref="queryRef" :model="queryParams" :inline="true">
       <el-form-item :label="t('user.userName')" prop="userName">
@@ -76,7 +76,7 @@ const t = (key: string, params?: Record<string, string | number>) => {
   if (!params) return message
   return Object.entries(params).reduce((text, [name, value]) => text.replaceAll(`{${name}}`, String(value)), message)
 }
-const { sys_normal_disable } = useDict('sys_normal_disable') as unknown as { sys_normal_disable: DictOption[] }
+const { sys_normal_disable } = useDict('sys_normal_disable')
 
 const userList = ref<RoleUser[]>([])
 const visible = ref(false)
@@ -91,8 +91,12 @@ const queryParams = reactive<RoleUserQuery>({
 
 async function show() {
   queryParams.roleId = props.roleId
-  await getList()
-  visible.value = true
+  try {
+    await getList()
+    visible.value = true
+  } catch {
+    // Request interceptor already displays the backend error.
+  }
 }
 
 function clickRow(row: RoleUser) {
@@ -125,10 +129,14 @@ async function handleSelectUser() {
     ElMessage.error(t('role.selectUserRequired'))
     return
   }
-  const response = await authUserSelectAll({ roleId: queryParams.roleId, userIds: selectedUserIds })
-  ElMessage.success(response.msg || t('common.editSuccess'))
-  visible.value = false
-  emit('ok')
+  try {
+    const response = await authUserSelectAll({ roleId: queryParams.roleId, userIds: selectedUserIds })
+    ElMessage.success(response.msg || t('common.editSuccess'))
+    visible.value = false
+    emit('ok')
+  } catch {
+    // Request interceptor already displays the backend error.
+  }
 }
 
 defineExpose({

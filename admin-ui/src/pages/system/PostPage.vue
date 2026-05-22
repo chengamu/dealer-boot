@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="app-container">
     <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true">
       <el-form-item :label="t('legacy.postCode')" prop="postCode">
@@ -143,7 +143,7 @@ const t = (key: string, params?: Record<string, string | number>) => {
   if (!params) return message
   return Object.entries(params).reduce((text, [name, value]) => text.replaceAll(`{${name}}`, String(value)), message)
 }
-const { sys_normal_disable } = useDict('sys_normal_disable') as unknown as { sys_normal_disable: DictOption[] }
+const { sys_normal_disable } = useDict('sys_normal_disable')
 
 const postList = ref<Post[]>([])
 const open = ref(false)
@@ -218,8 +218,12 @@ async function handleUpdate(row?: Post) {
   reset()
   const postId = row?.postId || ids.value[0]
   if (!postId) return
-  form.value = await getPost(postId)
-  open.value = true
+  try {
+    form.value = await getPost(postId)
+    open.value = true
+  } catch {
+    // Request interceptor already displays the backend error.
+  }
 }
 
 async function submitForm() {
@@ -244,12 +248,16 @@ async function submitForm() {
 async function handleDelete(row?: Post) {
   const postIds = row?.postId || ids.value
   if (!postIds || (Array.isArray(postIds) && !postIds.length)) return
-  await ElMessageBox.confirm(t('legacy.deletePostConfirm', { ids: Array.isArray(postIds) ? postIds.join(',') : postIds }), t('common.prompt'), {
-    type: 'warning'
-  })
-  await delPost(postIds)
-  ElMessage.success(t('common.deleteSuccess'))
-  await getList()
+  try {
+    await ElMessageBox.confirm(t('legacy.deletePostConfirm', { ids: Array.isArray(postIds) ? postIds.join(',') : postIds }), t('common.prompt'), {
+      type: 'warning'
+    })
+    await delPost(postIds)
+    ElMessage.success(t('common.deleteSuccess'))
+    await getList()
+  } catch {
+    // User cancelled or the request interceptor already displayed the backend error.
+  }
 }
 
 function handleExport() {

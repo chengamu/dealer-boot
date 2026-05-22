@@ -161,7 +161,7 @@ import type { FormInstance, FormRules } from 'element-plus'
 import { ElMessage } from 'element-plus'
 import { Connection, Iphone, Location, Lock, Message, Phone, CircleCheckFilled, User } from '@element-plus/icons-vue'
 import AuthLocaleSelect from '@/components/AuthVisual/AuthLocaleSelect.vue'
-import { submitMerchantApplication } from '@/services/modules'
+import { submitMerchantApplication } from '@/api/merchant/application'
 import { useLocaleStore } from '@/stores/locale'
 import type { AppLocale } from '@/i18n'
 
@@ -221,7 +221,8 @@ function changeLocale(locale: AppLocale) {
 }
 
 async function submit() {
-  await formRef.value?.validate()
+  const valid = await formRef.value?.validate().catch(() => false)
+  if (!valid) return
   loading.value = true
   try {
     await submitMerchantApplication({
@@ -230,6 +231,8 @@ async function submit() {
       phone: form.mobilePhone || form.phone
     })
     ElMessage.success(t('apply.success'))
+  } catch {
+    // Request interceptor already displays the backend error.
   } finally {
     loading.value = false
   }

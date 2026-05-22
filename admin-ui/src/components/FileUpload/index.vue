@@ -44,6 +44,8 @@ import { getToken } from "@/utils/auth";
 import { listByIds, delOss } from "@/api/system/oss";
 import { getMessage } from "@/locales";
 import { useLocaleStore } from "@/stores/locale";
+import { runUiAction } from "@/utils/action";
+import { getApiBaseUrl } from "@/utils/config";
 import type { PropType } from "vue";
 import type { UploadFile, UploadInstance, UploadRawFile, UploadUserFile } from "element-plus";
 
@@ -113,7 +115,7 @@ const emit = defineEmits<{
 }>();
 const number = ref(0);
 const uploadList = ref<UploadItem[]>([]);
-const baseUrl = import.meta.env.VITE_APP_BASE_API;
+const baseUrl = getApiBaseUrl();
 const uploadFileUrl = ref(baseUrl + "/system/oss/upload"); // 上传文件服务器地址
 const headers = ref({ Authorization: "Bearer " + getToken() });
 const fileList = ref<UploadItem[]>([]);
@@ -131,11 +133,13 @@ watch(() => props.modelValue, async val => {
     } else if (typeof val === 'object') {
       list = [val as UploadItem];
     } else {
-      await listByIds(val).then(res => {
+      const res = await runUiAction(() => listByIds(val));
+      if (!res) return;
+      {
         list = res.data.map(oss => {
           return { name: oss.originalName || oss.fileName || '', url: oss.url, ossId: oss.ossId };
         });
-      })
+      }
     }
     // 然后将数组转为对象数组
     fileList.value = list.map(item => {
@@ -199,9 +203,9 @@ function handleUploadSuccess(res: UploadResponse, file: UploadFile) {
 }
 
 // 删除文件
-function handleDelete(index: number) {
+async function handleDelete(index: number) {
   const ossId = fileList.value[index].ossId;
-  if (ossId !== undefined) delOss(ossId);
+  if (ossId !== undefined) await runUiAction(() => delOss(ossId));
   fileList.value.splice(index, 1);
   emit("update:modelValue", listToString(fileList.value));
 }

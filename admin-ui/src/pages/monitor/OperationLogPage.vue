@@ -103,7 +103,7 @@
 
     <pagination v-show="total > 0" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" :total="total" @pagination="getList" />
 
-    <el-dialog v-model="open" :title="t('operlog.detailTitle')" width="700px" append-to-body>
+    <el-dialog v-model="open" :title="t('operlog.detailTitle')" width="700px" append-to-body destroy-on-close @closed="resetDetail">
       <el-form :model="form" label-width="100px">
         <el-row>
           <el-col :span="24">
@@ -159,10 +159,7 @@ interface DictOption {
 
 const localeStore = useLocaleStore()
 const t = (key: string) => getMessage(key, localeStore.language)
-const { sys_oper_type, sys_common_status } = useDict('sys_oper_type', 'sys_common_status') as unknown as {
-  sys_oper_type: DictOption[]
-  sys_common_status: DictOption[]
-}
+const { sys_oper_type, sys_common_status } = useDict('sys_oper_type', 'sys_common_status')
 
 const queryRef = ref<FormInstance>()
 const operlogList = ref<OperLog[]>([])
@@ -207,7 +204,7 @@ async function getList() {
 }
 
 function typeFormat(row: Partial<OperLog>) {
-  return sys_oper_type.find((item) => String(item.value) === String(row.businessType))?.label || row.businessType || ''
+  return sys_oper_type.value.find((item) => String(item.value) === String(row.businessType))?.label || row.businessType || ''
 }
 
 function handleQuery() {
@@ -240,27 +237,39 @@ function handleView(row: OperLog) {
   open.value = true
 }
 
+function resetDetail() {
+  form.value = {}
+}
+
 async function handleDelete(row?: OperLog) {
   const operIds = row?.operId || ids.value
-  await ElMessageBox.confirm(t('operlog.deleteConfirm').replace('{ids}', String(operIds)), t('common.prompt'), {
-    confirmButtonText: t('common.confirm'),
-    cancelButtonText: t('common.cancel'),
-    type: 'warning'
-  })
-  await delOperlog(operIds)
-  await getList()
-  ElMessage.success(t('common.deleteSuccess'))
+  try {
+    await ElMessageBox.confirm(t('operlog.deleteConfirm').replace('{ids}', String(operIds)), t('common.prompt'), {
+      confirmButtonText: t('common.confirm'),
+      cancelButtonText: t('common.cancel'),
+      type: 'warning'
+    })
+    await delOperlog(operIds)
+    await getList()
+    ElMessage.success(t('common.deleteSuccess'))
+  } catch {
+    // User cancelled or the request interceptor already displayed the backend error.
+  }
 }
 
 async function handleClean() {
-  await ElMessageBox.confirm(t('operlog.cleanConfirm'), t('common.prompt'), {
-    confirmButtonText: t('common.confirm'),
-    cancelButtonText: t('common.cancel'),
-    type: 'warning'
-  })
-  await cleanOperlog()
-  await getList()
-  ElMessage.success(t('common.clearSuccess'))
+  try {
+    await ElMessageBox.confirm(t('operlog.cleanConfirm'), t('common.prompt'), {
+      confirmButtonText: t('common.confirm'),
+      cancelButtonText: t('common.cancel'),
+      type: 'warning'
+    })
+    await cleanOperlog()
+    await getList()
+    ElMessage.success(t('common.clearSuccess'))
+  } catch {
+    // User cancelled or the request interceptor already displayed the backend error.
+  }
 }
 
 function handleExport() {

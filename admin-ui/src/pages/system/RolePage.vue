@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="app-container">
     <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true" label-width="80px">
       <el-form-item :label="t('role.roleName')" prop="roleName">
@@ -138,7 +138,7 @@
       </template>
     </el-dialog>
 
-    <el-dialog v-model="openDataScope" :title="t('role.assignDataScope')" width="500px" append-to-body>
+    <el-dialog v-model="openDataScope" :title="t('role.assignDataScope')" width="500px" append-to-body destroy-on-close @closed="reset">
       <el-form :model="form" label-width="90px">
         <el-form-item :label="t('role.roleName')">
           <el-input v-model="form.roleName" disabled />
@@ -189,6 +189,7 @@ import { formatUtc } from '@/utils/datetime'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 import { useDict } from '@/utils/dict'
+import { runUiAction } from '@/utils/action'
 
 interface DictOption {
   label: string
@@ -204,7 +205,7 @@ const t = (key: string, params?: Record<string, string | number>) => {
   if (!params) return message
   return Object.entries(params).reduce((text, [name, value]) => text.replaceAll(`{${name}}`, String(value)), message)
 }
-const { sys_normal_disable } = useDict('sys_normal_disable') as unknown as { sys_normal_disable: DictOption[] }
+const { sys_normal_disable } = useDict('sys_normal_disable')
 
 const roleList = ref<Role[]>([])
 const open = ref(false)
@@ -280,10 +281,14 @@ function resetQuery() {
 async function handleDelete(row?: Role) {
   const roleIds = row?.roleId || ids.value
   if (!roleIds || (Array.isArray(roleIds) && !roleIds.length)) return
-  await ElMessageBox.confirm(t('role.deleteRoleConfirm', { ids: Array.isArray(roleIds) ? roleIds.join(',') : roleIds }), t('common.prompt'), { type: 'warning' })
-  await delRole(roleIds)
-  ElMessage.success(t('common.deleteSuccess'))
-  await getList()
+  try {
+    await ElMessageBox.confirm(t('role.deleteRoleConfirm', { ids: Array.isArray(roleIds) ? roleIds.join(',') : roleIds }), t('common.prompt'), { type: 'warning' })
+    await delRole(roleIds)
+    ElMessage.success(t('common.deleteSuccess'))
+    await getList()
+  } catch {
+    // User cancelled or the request interceptor already displayed the backend error.
+  }
 }
 
 function handleExport() {
@@ -346,26 +351,30 @@ function reset() {
 
 async function handleAdd() {
   reset()
-  await getMenuTreeselect()
-  open.value = true
+  await runUiAction(async () => {
+    await getMenuTreeselect()
+    open.value = true
+  })
 }
 
 async function handleUpdate(row?: Role) {
   reset()
   const roleId = row?.roleId || ids.value[0]
   if (!roleId) return
-  const roleMenu = getRoleMenuTreeselect(roleId)
-  const response = await getRole(roleId)
-  form.value = {
-    ...response.data,
-    roleSort: Number(response.data.roleSort)
-  }
-  open.value = true
-  await nextTick()
-  const roleMenuResponse = await roleMenu
-  const checkedKeys = roleMenuResponse.data?.checkedKeys || []
-  checkedKeys.forEach((key: number | string) => {
-    menuRef.value?.setChecked(key, true, false)
+  await runUiAction(async () => {
+    const roleMenu = getRoleMenuTreeselect(roleId)
+    const response = await getRole(roleId)
+    form.value = {
+      ...response.data,
+      roleSort: Number(response.data.roleSort)
+    }
+    open.value = true
+    await nextTick()
+    const roleMenuResponse = await roleMenu
+    const checkedKeys = roleMenuResponse.data?.checkedKeys || []
+    checkedKeys.forEach((key: number | string) => {
+      menuRef.value?.setChecked(key, true, false)
+    })
   })
 }
 
@@ -440,13 +449,16 @@ function dataScopeSelectChange(value: string) {
 async function handleDataScope(row: Role) {
   reset()
   if (!row.roleId) return
-  const deptTree = getDeptTree(row.roleId)
-  const response = await getRole(row.roleId)
-  form.value = response.data
-  openDataScope.value = true
-  await nextTick()
-  const deptTreeResponse = await deptTree
-  deptRef.value?.setCheckedKeys(deptTreeResponse.data?.checkedKeys || [])
+  await runUiAction(async () => {
+    const roleId = row.roleId as number | string
+    const deptTree = getDeptTree(roleId)
+    const response = await getRole(roleId)
+    form.value = response.data
+    openDataScope.value = true
+    await nextTick()
+    const deptTreeResponse = await deptTree
+    deptRef.value?.setCheckedKeys(deptTreeResponse.data?.checkedKeys || [])
+  })
 }
 
 async function submitDataScope() {

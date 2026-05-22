@@ -16,7 +16,13 @@ export default {
     "normal": "Normal",
     "disabled": "Disabled",
     "show": "Show",
-    "hide": "Hide"
+    "hide": "Hide",
+    "success": "Success",
+    "announcement": "Announcement",
+    "closed": "Closed",
+    "grant": "Grant",
+    "generateCode": "Generate Code",
+    "other": "Other"
   },
   "dashboard": {
     "home": "Home",
@@ -600,6 +606,29 @@ export default {
     "phonenumberRequired": "Phone number is required",
     "emailInvalid": "Enter a valid email address",
     "phonenumberInvalid": "Enter a valid phone number"
+  },
+  "login": {
+    "title": "Welcome back",
+    "description": "Sign in to access the dealer admin portal.",
+    "email": "Email / Username",
+    "password": "Password",
+    "code": "Verification Code",
+    "remember": "Remember me",
+    "submit": "Sign in",
+    "apply": "Apply for dealer account",
+    "emailPlaceholder": "Enter email or username",
+    "passwordPlaceholder": "Enter password",
+    "codePlaceholder": "Enter verification code",
+    "required": "Please complete the sign-in information"
+  },
+  "apply": {
+    "title": "Create your dealer account",
+    "intro": "Join the global window covering dealer network and grow with skyspf.",
+    "companyName": "Company Name",
+    "email": "Email",
+    "country": "Country",
+    "submit": "Submit Application",
+    "success": "Application submitted. Please wait for platform approval."
   },
   "register": {
     "title": "Merchant Application",

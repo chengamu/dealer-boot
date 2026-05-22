@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="app-container">
     <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true">
       <el-form-item :label="t('user.userName')" prop="userName">
@@ -90,7 +90,7 @@ const t = (key: string, params?: Record<string, string | number>) => {
   if (!params) return message
   return Object.entries(params).reduce((text, [name, value]) => text.replaceAll(`{${name}}`, String(value)), message)
 }
-const { sys_normal_disable } = useDict('sys_normal_disable') as unknown as { sys_normal_disable: DictOption[] }
+const { sys_normal_disable } = useDict('sys_normal_disable')
 
 const userList = ref<RoleUser[]>([])
 const loading = ref(true)
@@ -140,17 +140,25 @@ function openSelectUser() {
 }
 
 async function cancelAuthUser(row: RoleUser) {
-  await ElMessageBox.confirm(t('role.cancelAuthConfirm', { name: row.userName || '' }), t('common.prompt'), { type: 'warning' })
-  await authUserCancel({ userId: row.userId, roleId: queryParams.roleId })
-  ElMessage.success(t('role.cancelAuthSuccess'))
-  await getList()
+  try {
+    await ElMessageBox.confirm(t('role.cancelAuthConfirm', { name: row.userName || '' }), t('common.prompt'), { type: 'warning' })
+    await authUserCancel({ userId: row.userId, roleId: queryParams.roleId })
+    ElMessage.success(t('role.cancelAuthSuccess'))
+    await getList()
+  } catch {
+    // User cancelled or the request interceptor already displayed the backend error.
+  }
 }
 
 async function cancelAuthUserAll() {
-  await ElMessageBox.confirm(t('role.batchCancelAuthConfirm'), t('common.prompt'), { type: 'warning' })
-  await authUserCancelAll({ roleId: queryParams.roleId, userIds: userIds.value.join(',') })
-  ElMessage.success(t('role.cancelAuthSuccess'))
-  await getList()
+  try {
+    await ElMessageBox.confirm(t('role.batchCancelAuthConfirm'), t('common.prompt'), { type: 'warning' })
+    await authUserCancelAll({ roleId: queryParams.roleId, userIds: userIds.value.join(',') })
+    ElMessage.success(t('role.cancelAuthSuccess'))
+    await getList()
+  } catch {
+    // User cancelled or the request interceptor already displayed the backend error.
+  }
 }
 
 getList()

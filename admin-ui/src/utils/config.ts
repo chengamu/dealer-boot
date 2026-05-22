@@ -41,7 +41,7 @@ export function getApiBaseUrl() {
 }
 
 export function getAppTitle() {
-  return getAppConfig<string>('VITE_APP_TITLE', 'MES后台管理系统')
+  return getAppConfig<string>('VITE_APP_TITLE', 'Dealer Admin Portal')
 }
 
 export function getAppEnv() {
@@ -54,6 +54,10 @@ export function getContextPath() {
 
 export function getMonitorUrl() {
   return getAppConfig<string>('VITE_APP_MONITRO_ADMIN', '/admin/applications')
+}
+
+export function getMonitorAdminUrl() {
+  return getAppConfig<string>('VITE_APP_MONITOR_ADMIN', getMonitorUrl())
 }
 
 export function getXxlJobUrl() {
@@ -78,6 +82,7 @@ export const AppConfig = {
   getAppEnv,
   getContextPath,
   getMonitorUrl,
+  getMonitorAdminUrl,
   getXxlJobUrl,
   isProduction,
   isDevelopment

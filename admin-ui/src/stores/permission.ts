@@ -3,7 +3,7 @@ import type { RouteRecordRaw } from 'vue-router'
 import Layout from '@/layout/index.vue'
 import RouteView from '@/components/RouteView.vue'
 import InnerLink from '@/layout/components/InnerLink/index.vue'
-import { getRouters } from '@/services/auth'
+import { getRouters } from '@/api/auth'
 import type { RouterVo } from '@/types/api'
 
 const migratedViewModules: Record<string, () => Promise<unknown>> = {

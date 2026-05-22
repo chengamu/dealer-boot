@@ -228,10 +228,7 @@ const t = (key: string, params?: Record<string, string | number>) => {
   if (!params) return message
   return Object.entries(params).reduce((text, [name, value]) => text.replaceAll(`{${name}}`, String(value)), message)
 }
-const { sys_show_hide, sys_normal_disable } = useDict('sys_show_hide', 'sys_normal_disable') as unknown as {
-  sys_show_hide: DictOption[]
-  sys_normal_disable: DictOption[]
-}
+const { sys_show_hide, sys_normal_disable } = useDict('sys_show_hide', 'sys_normal_disable')
 
 const menuList = ref<Menu[]>([])
 const open = ref(false)
@@ -316,9 +313,13 @@ function resetQuery() {
 
 async function handleAdd(row?: Menu) {
   reset()
-  await getTreeselect()
-  form.value.parentId = row?.menuId ?? 0
-  open.value = true
+  try {
+    await getTreeselect()
+    form.value.parentId = row?.menuId ?? 0
+    open.value = true
+  } catch {
+    // Request interceptor already displays the backend error.
+  }
 }
 
 function toggleExpandAll() {
@@ -331,11 +332,15 @@ function toggleExpandAll() {
 
 async function handleUpdate(row: Menu) {
   reset()
-  await getTreeselect()
-  if (!row.menuId) return
-  const response = await getMenu(row.menuId)
-  form.value = response.data || {}
-  open.value = true
+  try {
+    await getTreeselect()
+    if (!row.menuId) return
+    const response = await getMenu(row.menuId)
+    form.value = response.data || {}
+    open.value = true
+  } catch {
+    // Request interceptor already displays the backend error.
+  }
 }
 
 async function submitForm() {
@@ -359,10 +364,14 @@ async function submitForm() {
 
 async function handleDelete(row: Menu) {
   if (!row.menuId) return
-  await ElMessageBox.confirm(t('menu.deleteConfirm', { name: row.menuName || '' }), t('common.prompt'), { type: 'warning' })
-  await delMenu(row.menuId)
-  ElMessage.success(t('common.deleteSuccess'))
-  await getList()
+  try {
+    await ElMessageBox.confirm(t('menu.deleteConfirm', { name: row.menuName || '' }), t('common.prompt'), { type: 'warning' })
+    await delMenu(row.menuId)
+    ElMessage.success(t('common.deleteSuccess'))
+    await getList()
+  } catch {
+    // User cancelled or the request interceptor already displayed the backend error.
+  }
 }
 
 getList()

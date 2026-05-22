@@ -151,10 +151,7 @@ const t = (key: string, params?: Record<string, string | number>) => {
   if (!params) return message
   return Object.entries(params).reduce((text, [name, value]) => text.replaceAll(`{${name}}`, String(value)), message)
 }
-const { sys_notice_status, sys_notice_type } = useDict('sys_notice_status', 'sys_notice_type') as unknown as {
-  sys_notice_status: DictOption[]
-  sys_notice_type: DictOption[]
-}
+const { sys_notice_status, sys_notice_type } = useDict('sys_notice_status', 'sys_notice_type')
 
 const noticeList = ref<Notice[]>([])
 const open = ref(false)
@@ -227,8 +224,12 @@ async function handleUpdate(row?: Notice) {
   reset()
   const noticeId = row?.noticeId || ids.value[0]
   if (!noticeId) return
-  form.value = await getNotice(noticeId)
-  open.value = true
+  try {
+    form.value = await getNotice(noticeId)
+    open.value = true
+  } catch {
+    // Request interceptor already displays the backend error.
+  }
 }
 
 async function submitForm() {
@@ -253,12 +254,16 @@ async function submitForm() {
 async function handleDelete(row?: Notice) {
   const noticeIds = row?.noticeId || ids.value
   if (!noticeIds || (Array.isArray(noticeIds) && !noticeIds.length)) return
-  await ElMessageBox.confirm(t('legacy.deleteNoticeConfirm', { ids: Array.isArray(noticeIds) ? noticeIds.join(',') : noticeIds }), t('common.prompt'), {
-    type: 'warning'
-  })
-  await delNotice(noticeIds)
-  ElMessage.success(t('common.deleteSuccess'))
-  await getList()
+  try {
+    await ElMessageBox.confirm(t('legacy.deleteNoticeConfirm', { ids: Array.isArray(noticeIds) ? noticeIds.join(',') : noticeIds }), t('common.prompt'), {
+      type: 'warning'
+    })
+    await delNotice(noticeIds)
+    ElMessage.success(t('common.deleteSuccess'))
+    await getList()
+  } catch {
+    // User cancelled or the request interceptor already displayed the backend error.
+  }
 }
 
 getList()

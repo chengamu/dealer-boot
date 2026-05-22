@@ -102,12 +102,16 @@ function close() {
 }
 
 async function submitForm() {
-  await updateAuthRole({
-    userId: form.value.userId,
-    roleIds: roleIds.value.join(',')
-  })
-  ElMessage.success(t('user.authRoleSuccess'))
-  close()
+  try {
+    await updateAuthRole({
+      userId: form.value.userId,
+      roleIds: roleIds.value.join(',')
+    })
+    ElMessage.success(t('user.authRoleSuccess'))
+    close()
+  } catch {
+    // Request interceptor already displays the backend error.
+  }
 }
 
 async function loadAuthRoles() {

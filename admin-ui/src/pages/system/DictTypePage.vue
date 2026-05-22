@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="app-container">
     <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true" label-width="80px">
       <el-form-item :label="t('legacy.dictName')" prop="dictName">
@@ -163,7 +163,7 @@ const t = (key: string, params?: Record<string, string | number>) => {
   if (!params) return message
   return Object.entries(params).reduce((text, [name, value]) => text.replaceAll(`{${name}}`, String(value)), message)
 }
-const { sys_normal_disable } = useDict('sys_normal_disable') as unknown as { sys_normal_disable: DictOption[] }
+const { sys_normal_disable } = useDict('sys_normal_disable')
 
 const typeList = ref<DictType[]>([])
 const open = ref(false)
@@ -247,9 +247,13 @@ async function handleUpdate(row?: DictType) {
   reset()
   const dictId = row?.dictId || ids.value[0]
   if (!dictId) return
-  const response = await getType(dictId)
-  form.value = response.data
-  open.value = true
+  try {
+    const response = await getType(dictId)
+    form.value = response.data
+    open.value = true
+  } catch {
+    // Request interceptor already displays the backend error.
+  }
 }
 
 async function submitForm() {
@@ -274,12 +278,16 @@ async function submitForm() {
 async function handleDelete(row?: DictType) {
   const dictIds = row?.dictId || ids.value
   if (!dictIds || (Array.isArray(dictIds) && !dictIds.length)) return
-  await ElMessageBox.confirm(t('legacy.deleteDictTypeConfirm', { ids: Array.isArray(dictIds) ? dictIds.join(',') : dictIds }), t('common.prompt'), {
-    type: 'warning'
-  })
-  await delType(dictIds)
-  ElMessage.success(t('common.deleteSuccess'))
-  await getList()
+  try {
+    await ElMessageBox.confirm(t('legacy.deleteDictTypeConfirm', { ids: Array.isArray(dictIds) ? dictIds.join(',') : dictIds }), t('common.prompt'), {
+      type: 'warning'
+    })
+    await delType(dictIds)
+    ElMessage.success(t('common.deleteSuccess'))
+    await getList()
+  } catch {
+    // User cancelled or the request interceptor already displayed the backend error.
+  }
 }
 
 function handleExport() {
@@ -287,9 +295,13 @@ function handleExport() {
 }
 
 async function handleRefreshCache() {
-  await refreshCache()
-  useDictStore().cleanDict()
-  ElMessage.success(t('legacy.refreshDictCacheSuccess'))
+  try {
+    await refreshCache()
+    useDictStore().cleanDict()
+    ElMessage.success(t('legacy.refreshDictCacheSuccess'))
+  } catch {
+    // Request interceptor already displays the backend error.
+  }
 }
 
 getList()

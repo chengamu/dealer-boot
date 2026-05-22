@@ -7,8 +7,9 @@ import { getToken, removeToken } from './auth'
 import { useLocaleStore } from '@/stores/locale'
 import type { ApiResult, PageResult } from '@/types/api'
 import { i18n } from '@/i18n'
+import { getApiBaseUrl } from '@/utils/config'
 
-const baseURL = import.meta.env.VITE_APP_BASE_API || '/dev-api'
+const baseURL = getApiBaseUrl()
 
 const service = axios.create({
   baseURL,

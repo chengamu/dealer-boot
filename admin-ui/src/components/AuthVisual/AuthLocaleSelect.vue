@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <el-select :model-value="modelValue" class="auth-locale-select" size="large" @change="onChange">
     <template #prefix><span class="locale-globe">◎</span></template>
     <el-option label="English" value="en_US" />

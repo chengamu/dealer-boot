@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="app-container">
     <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true" label-width="80px">
       <el-form-item :label="t('legacy.configName')" prop="configName">
@@ -160,7 +160,7 @@ const t = (key: string, params?: Record<string, string | number>) => {
   if (!params) return message
   return Object.entries(params).reduce((text, [name, value]) => text.replaceAll(`{${name}}`, String(value)), message)
 }
-const { sys_yes_no } = useDict('sys_yes_no') as unknown as { sys_yes_no: DictOption[] }
+const { sys_yes_no } = useDict('sys_yes_no')
 
 const configList = ref<Config[]>([])
 const open = ref(false)
@@ -246,8 +246,12 @@ async function handleUpdate(row?: Config) {
   reset()
   const configId = row?.configId || ids.value[0]
   if (!configId) return
-  form.value = await getConfig(configId)
-  open.value = true
+  try {
+    form.value = await getConfig(configId)
+    open.value = true
+  } catch {
+    // Request interceptor already displays the backend error.
+  }
 }
 
 async function submitForm() {
@@ -272,12 +276,16 @@ async function submitForm() {
 async function handleDelete(row?: Config) {
   const configIds = row?.configId || ids.value
   if (!configIds || (Array.isArray(configIds) && !configIds.length)) return
-  await ElMessageBox.confirm(t('legacy.deleteConfigConfirm', { ids: Array.isArray(configIds) ? configIds.join(',') : configIds }), t('common.prompt'), {
-    type: 'warning'
-  })
-  await delConfig(configIds)
-  ElMessage.success(t('common.deleteSuccess'))
-  await getList()
+  try {
+    await ElMessageBox.confirm(t('legacy.deleteConfigConfirm', { ids: Array.isArray(configIds) ? configIds.join(',') : configIds }), t('common.prompt'), {
+      type: 'warning'
+    })
+    await delConfig(configIds)
+    ElMessage.success(t('common.deleteSuccess'))
+    await getList()
+  } catch {
+    // User cancelled or the request interceptor already displayed the backend error.
+  }
 }
 
 function handleExport() {
@@ -285,8 +293,12 @@ function handleExport() {
 }
 
 async function handleRefreshCache() {
-  await refreshCache()
-  ElMessage.success(t('legacy.refreshConfigCacheSuccess'))
+  try {
+    await refreshCache()
+    ElMessage.success(t('legacy.refreshConfigCacheSuccess'))
+  } catch {
+    // Request interceptor already displays the backend error.
+  }
 }
 
 getList()

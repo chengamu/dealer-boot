@@ -163,14 +163,22 @@ async function getCacheNames() {
 }
 
 async function refreshCacheNames() {
-  await getCacheNames()
-  ElMessage.success(t('cache.refreshCacheNamesSuccess'))
+  try {
+    await getCacheNames()
+    ElMessage.success(t('cache.refreshCacheNamesSuccess'))
+  } catch {
+    // Request interceptor already displays the backend error.
+  }
 }
 
 async function handleClearCacheName(row: CacheName) {
-  await clearCacheName(row.cacheName)
-  ElMessage.success(t('cache.clearCacheNameSuccess', { name: row.cacheName }))
-  await getCacheKeys()
+  try {
+    await clearCacheName(row.cacheName)
+    ElMessage.success(t('cache.clearCacheNameSuccess', { name: row.cacheName }))
+    await getCacheKeys()
+  } catch {
+    // Request interceptor already displays the backend error.
+  }
 }
 
 async function getCacheKeys(row?: CacheName) {
@@ -186,15 +194,23 @@ async function getCacheKeys(row?: CacheName) {
 }
 
 async function refreshCacheKeys() {
-  await getCacheKeys()
-  ElMessage.success(t('cache.refreshCacheKeysSuccess'))
+  try {
+    await getCacheKeys()
+    ElMessage.success(t('cache.refreshCacheKeysSuccess'))
+  } catch {
+    // Request interceptor already displays the backend error.
+  }
 }
 
 async function handleClearCacheKey(cacheKey: string) {
   if (!nowCacheName.value) return
-  await clearCacheKey(nowCacheName.value, cacheKey)
-  ElMessage.success(t('cache.clearCacheKeySuccess', { key: cacheKey }))
-  await getCacheKeys()
+  try {
+    await clearCacheKey(nowCacheName.value, cacheKey)
+    ElMessage.success(t('cache.clearCacheKeySuccess', { key: cacheKey }))
+    await getCacheKeys()
+  } catch {
+    // Request interceptor already displays the backend error.
+  }
 }
 
 function nameFormatter(row: CacheName) {
@@ -207,14 +223,22 @@ function keyFormatter(cacheKey: string) {
 
 async function handleCacheValue(cacheKey: string) {
   if (!nowCacheName.value) return
-  cacheForm.value = await getCacheValue(nowCacheName.value, cacheKey)
+  try {
+    cacheForm.value = await getCacheValue(nowCacheName.value, cacheKey)
+  } catch {
+    // Request interceptor already displays the backend error.
+  }
 }
 
 async function handleClearCacheAll() {
-  await clearCacheAll()
-  cacheKeys.value = []
-  cacheForm.value = {}
-  ElMessage.success(t('cache.clearAllSuccess'))
+  try {
+    await clearCacheAll()
+    cacheKeys.value = []
+    cacheForm.value = {}
+    ElMessage.success(t('cache.clearAllSuccess'))
+  } catch {
+    // Request interceptor already displays the backend error.
+  }
 }
 
 onMounted(getCacheNames)

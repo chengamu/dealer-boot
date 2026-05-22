@@ -91,6 +91,7 @@ import useUserStore from '@/stores/user'
 import useSettingsStore from '@/stores/settings'
 import useLocaleStore from '@/stores/locale'
 import { getMessage } from '@/locales'
+import { getContextPath } from '@/utils/config'
 
 const emits = defineEmits<{
   (e: 'setLayout'): void
@@ -133,7 +134,9 @@ function logout() {
     type: 'warning'
   }).then(() => {
     userStore.logOut().then(() => {
-      location.href = import.meta.env.VITE_APP_CONTEXT_PATH + 'index'
+      const contextPath = getContextPath()
+      const basePath = contextPath.endsWith('/') ? contextPath : `${contextPath}/`
+      location.href = `${basePath}index`
     })
   }).catch(() => {})
 }

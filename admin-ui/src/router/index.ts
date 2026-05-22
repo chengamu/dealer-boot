@@ -7,6 +7,7 @@ import { usePermissionStore } from '@/stores/permission'
 import Layout from '@/layout/index.vue'
 import LoginPage from '@/pages/auth/LoginPage.vue'
 import MerchantApplyPage from '@/pages/auth/MerchantApplyPage.vue'
+import { getContextPath } from '@/utils/config'
 
 const hiddenLayoutRoutes: RouteRecordRaw[] = [
   {
@@ -197,7 +198,7 @@ export const constantRoutes = routes
 export const dynamicRoutes: RouteRecordRaw[] = []
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.VITE_APP_CONTEXT_PATH || '/'),
+  history: createWebHistory(getContextPath()),
   routes,
   scrollBehavior: () => ({ top: 0 })
 })

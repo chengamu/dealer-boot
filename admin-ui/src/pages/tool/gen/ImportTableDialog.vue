@@ -37,6 +37,7 @@ import { ElMessage, type FormInstance } from 'element-plus'
 import { importTable, listDbTable, type GenTable, type GenTableQuery } from '@/api/tool/gen'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
+import { runUiAction } from '@/utils/action'
 
 const emit = defineEmits<{
   ok: []
@@ -56,8 +57,10 @@ const queryParams = reactive<GenTableQuery>({
 })
 
 async function show() {
-  await getList()
-  visible.value = true
+  await runUiAction(async () => {
+    await getList()
+    visible.value = true
+  })
 }
 
 function clickRow(row: GenTable) {
@@ -76,7 +79,7 @@ async function getList() {
 
 function handleQuery() {
   queryParams.pageNum = 1
-  getList()
+  runUiAction(getList)
 }
 
 function resetQuery() {
@@ -90,11 +93,15 @@ async function handleImportTable() {
     ElMessage.error(t('gen.selectTableToImport'))
     return
   }
-  const response = await importTable({ tables: tableNames })
-  ElMessage.success(response.msg || t('common.addSuccess'))
-  if (response.code === 200) {
-    visible.value = false
-    emit('ok')
+  try {
+    const response = await importTable({ tables: tableNames })
+    ElMessage.success(response.msg || t('common.addSuccess'))
+    if (response.code === 200) {
+      visible.value = false
+      emit('ok')
+    }
+  } catch {
+    // Request interceptor already displays the backend error.
   }
 }
 

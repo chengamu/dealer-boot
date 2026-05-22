@@ -108,7 +108,7 @@
       @pagination="getList"
     />
 
-    <el-dialog v-model="open" :title="title" width="500px" append-to-body>
+    <el-dialog v-model="open" :title="title" width="500px" append-to-body destroy-on-close @closed="reset">
       <el-form ref="ossRef" :model="form" :rules="rules" label-width="90px">
         <el-form-item :label="t('legacy.fileName')" prop="file">
           <FileUpload v-if="uploadType === 0" v-model="form.file" />
@@ -300,9 +300,16 @@ function handleImage() {
   open.value = true
 }
 
-function submitForm() {
-  open.value = false
-  getList()
+async function submitForm() {
+  const valid = await ossRef.value?.validate().catch(() => false)
+  if (!valid) return
+  try {
+    open.value = false
+    reset()
+    await getList()
+  } catch {
+    // Request interceptor already displays the backend error.
+  }
 }
 
 function handleDownload(row: OssFile) {
@@ -311,23 +318,29 @@ function handleDownload(row: OssFile) {
 
 async function handlePreviewListResource(value: boolean) {
   const action = value ? t('legacy.enable') : t('legacy.disable')
-  await ElMessageBox.confirm(t('legacy.previewListConfirm', { action }), t('common.prompt'), { type: 'warning' })
-  await updateConfigByKey('sys.oss.previewListResource', String(value))
-  ElMessage.success(t('legacy.previewListSuccess', { action }))
-  await getList()
+  try {
+    await ElMessageBox.confirm(t('legacy.previewListConfirm', { action }), t('common.prompt'), { type: 'warning' })
+    await updateConfigByKey('sys.oss.previewListResource', String(value))
+    ElMessage.success(t('legacy.previewListSuccess', { action }))
+    await getList()
+  } catch {
+    // User cancelled or the request interceptor already displayed the backend error.
+  }
 }
 
 async function handleDelete(row?: OssFile) {
   const ossIds = row?.ossId || ids.value
   if (!ossIds || (Array.isArray(ossIds) && !ossIds.length)) return
-  await ElMessageBox.confirm(t('legacy.deleteOssConfirm', { ids: Array.isArray(ossIds) ? ossIds.join(',') : ossIds }), t('common.prompt'), {
-    type: 'warning'
-  })
   loading.value = true
   try {
+    await ElMessageBox.confirm(t('legacy.deleteOssConfirm', { ids: Array.isArray(ossIds) ? ossIds.join(',') : ossIds }), t('common.prompt'), {
+      type: 'warning'
+    })
     await delOss(ossIds)
     ElMessage.success(t('common.deleteSuccess'))
     await getList()
+  } catch {
+    // User cancelled or the request interceptor already displayed the backend error.
   } finally {
     loading.value = false
   }

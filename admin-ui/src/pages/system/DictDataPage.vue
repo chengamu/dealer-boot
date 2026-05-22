@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="app-container">
     <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true">
       <el-form-item :label="t('legacy.dictType')" prop="dictType">
@@ -170,7 +170,7 @@ const t = (key: string, params?: Record<string, string | number>) => {
   if (!params) return message
   return Object.entries(params).reduce((text, [name, value]) => text.replaceAll(`{${name}}`, String(value)), message)
 }
-const { sys_normal_disable } = useDict('sys_normal_disable') as unknown as { sys_normal_disable: DictOption[] }
+const { sys_normal_disable } = useDict('sys_normal_disable')
 
 const dataList = ref<DictData[]>([])
 const typeOptions = ref<DictType[]>([])
@@ -280,9 +280,13 @@ async function handleUpdate(row?: DictData) {
   reset()
   const dictCode = row?.dictCode || ids.value[0]
   if (!dictCode) return
-  const response = await getData(dictCode)
-  form.value = response.data
-  open.value = true
+  try {
+    const response = await getData(dictCode)
+    form.value = response.data
+    open.value = true
+  } catch {
+    // Request interceptor already displays the backend error.
+  }
 }
 
 async function submitForm() {
@@ -308,13 +312,17 @@ async function submitForm() {
 async function handleDelete(row?: DictData) {
   const dictCodes = row?.dictCode || ids.value
   if (!dictCodes || (Array.isArray(dictCodes) && !dictCodes.length)) return
-  await ElMessageBox.confirm(t('legacy.deleteDictDataConfirm', { ids: Array.isArray(dictCodes) ? dictCodes.join(',') : dictCodes }), t('common.prompt'), {
-    type: 'warning'
-  })
-  await delData(dictCodes)
-  useDictStore().removeDict(`${localeStore.language}:${queryParams.dictType}`)
-  ElMessage.success(t('common.deleteSuccess'))
-  await getList()
+  try {
+    await ElMessageBox.confirm(t('legacy.deleteDictDataConfirm', { ids: Array.isArray(dictCodes) ? dictCodes.join(',') : dictCodes }), t('common.prompt'), {
+      type: 'warning'
+    })
+    await delData(dictCodes)
+    useDictStore().removeDict(`${localeStore.language}:${queryParams.dictType}`)
+    ElMessage.success(t('common.deleteSuccess'))
+    await getList()
+  } catch {
+    // User cancelled or the request interceptor already displayed the backend error.
+  }
 }
 
 function handleExport() {

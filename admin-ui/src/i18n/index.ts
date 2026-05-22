@@ -1,6 +1,6 @@
 import { createI18n } from 'vue-i18n'
-import zhCN from './locales/zh_CN'
-import enUS from './locales/en_US'
+import zhCN from '@/locales/zh_CN'
+import enUS from '@/locales/en_US'
 import { getLocaleCookie } from '@/utils/auth'
 
 export type AppLocale = 'zh_CN' | 'en_US'

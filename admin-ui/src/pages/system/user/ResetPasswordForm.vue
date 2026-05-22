@@ -65,8 +65,12 @@ const rules = computed<FormRules<PasswordForm>>(() => ({
 async function submit() {
   const valid = await pwdRef.value?.validate().catch(() => false)
   if (!valid || !user.oldPassword || !user.newPassword) return
-  await updateUserPwd(user.oldPassword, user.newPassword)
-  ElMessage.success(t('common.editSuccess'))
+  try {
+    await updateUserPwd(user.oldPassword, user.newPassword)
+    ElMessage.success(t('common.editSuccess'))
+  } catch {
+    // Request interceptor already displays the backend error.
+  }
 }
 
 function close() {

@@ -167,19 +167,27 @@ async function handleGenTable(row: GenTable = {}) {
     ElMessage.error(t('gen.selectDataToGenerate'))
     return
   }
-  if (row.genType === '1' && row.tableName) {
-    await genCode(row.tableName)
-    ElMessage.success(`${t('gen.generateSuccess')}${row.genPath || ''}`)
-  } else {
-    downloadPlugin.zip(`/tool/gen/batchGenCode?tables=${tbNames}`, 'bm.zip')
+  try {
+    if (row.genType === '1' && row.tableName) {
+      await genCode(row.tableName)
+      ElMessage.success(`${t('gen.generateSuccess')}${row.genPath || ''}`)
+    } else {
+      downloadPlugin.zip(`/tool/gen/batchGenCode?tables=${tbNames}`, 'bm.zip')
+    }
+  } catch {
+    // Request interceptor already displays the backend error.
   }
 }
 
 async function handleSynchDb(row: GenTable) {
   const tableName = row.tableName || ''
-  await ElMessageBox.confirm(t('gen.syncConfirm', { name: tableName }), t('common.prompt'), { type: 'warning' })
-  await synchDb(tableName)
-  ElMessage.success(t('common.syncSuccess'))
+  try {
+    await ElMessageBox.confirm(t('gen.syncConfirm', { name: tableName }), t('common.prompt'), { type: 'warning' })
+    await synchDb(tableName)
+    ElMessage.success(t('common.syncSuccess'))
+  } catch {
+    // User cancelled or the request interceptor already displayed the backend error.
+  }
 }
 
 function openImportTable() {
@@ -194,10 +202,14 @@ function resetQuery() {
 
 async function handlePreview(row: GenTable) {
   if (!row.tableId) return
-  const response = await previewTable(row.tableId)
-  preview.data = response.data || {}
-  preview.open = true
-  preview.activeName = 'domain.java'
+  try {
+    const response = await previewTable(row.tableId)
+    preview.data = response.data || {}
+    preview.open = true
+    preview.activeName = 'domain.java'
+  } catch {
+    // Request interceptor already displays the backend error.
+  }
 }
 
 function previewName(key: string) {
@@ -222,10 +234,14 @@ function handleEditTable(row: GenTable = {}) {
 async function handleDelete(row: GenTable = {}) {
   const tableIds = row.tableId || ids.value
   if (!tableIds || (Array.isArray(tableIds) && !tableIds.length)) return
-  await ElMessageBox.confirm(t('gen.deleteConfirm', { ids: Array.isArray(tableIds) ? tableIds.join(',') : tableIds }), t('common.prompt'), { type: 'warning' })
-  await delTable(tableIds)
-  ElMessage.success(t('common.deleteSuccess'))
-  await getList()
+  try {
+    await ElMessageBox.confirm(t('gen.deleteConfirm', { ids: Array.isArray(tableIds) ? tableIds.join(',') : tableIds }), t('common.prompt'), { type: 'warning' })
+    await delTable(tableIds)
+    ElMessage.success(t('common.deleteSuccess'))
+    await getList()
+  } catch {
+    // User cancelled or the request interceptor already displayed the backend error.
+  }
 }
 
 const time = route.query.t

@@ -111,14 +111,18 @@ function resetQuery() {
 }
 
 async function handleForceLogout(row: OnlineUser) {
-  await ElMessageBox.confirm(t('legacy.forceLogoutConfirm').replace('{name}', row.userName || row.tokenId), t('common.prompt'), {
-    confirmButtonText: t('common.confirm'),
-    cancelButtonText: t('common.cancel'),
-    type: 'warning'
-  })
-  await forceLogout(row.tokenId)
-  await getList()
-  ElMessage.success(t('legacy.forceLogoutSuccess'))
+  try {
+    await ElMessageBox.confirm(t('legacy.forceLogoutConfirm').replace('{name}', row.userName || row.tokenId), t('common.prompt'), {
+      confirmButtonText: t('common.confirm'),
+      cancelButtonText: t('common.cancel'),
+      type: 'warning'
+    })
+    await forceLogout(row.tokenId)
+    await getList()
+    ElMessage.success(t('legacy.forceLogoutSuccess'))
+  } catch {
+    // User cancelled or the request interceptor already displayed the backend error.
+  }
 }
 
 onMounted(getList)

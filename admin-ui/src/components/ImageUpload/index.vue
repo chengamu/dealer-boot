@@ -51,6 +51,8 @@ import { getToken } from "@/utils/auth";
 import { listByIds, delOss } from "@/api/system/oss";
 import { getMessage } from "@/locales";
 import { useLocaleStore } from "@/stores/locale";
+import { runUiAction } from "@/utils/action";
+import { getApiBaseUrl } from "@/utils/config";
 import type { PropType } from "vue";
 import type { UploadFile, UploadInstance, UploadRawFile, UploadUserFile } from "element-plus";
 
@@ -121,7 +123,7 @@ const number = ref(0);
 const uploadList = ref<UploadItem[]>([]);
 const dialogImageUrl = ref("");
 const dialogVisible = ref(false);
-const baseUrl = import.meta.env.VITE_APP_BASE_API;
+const baseUrl = getApiBaseUrl();
 const uploadImgUrl = ref(baseUrl + "/system/oss/upload"); // 上传的图片服务器地址
 const headers = ref({ Authorization: "Bearer " + getToken() });
 const fileList = ref<UploadItem[]>([]);
@@ -138,9 +140,11 @@ watch(() => props.modelValue, async val => {
     } else if (typeof val === 'object') {
       list = [val as UploadItem];
     } else {
-      await listByIds(val).then(res => {
+      const res = await runUiAction(() => listByIds(val));
+      if (!res) return;
+      {
         list = res.data as UploadItem[];
-      })
+      }
     }
     // 然后将数组转为对象数组
     fileList.value = list.map(item => {
@@ -212,11 +216,11 @@ function handleUploadSuccess(res: UploadResponse, file: UploadFile) {
 }
 
 // 删除图片
-function handleDelete(file: UploadFile) {
+async function handleDelete(file: UploadFile) {
   const findex = fileList.value.map(f => f.name).indexOf(file.name);
   if (findex > -1 && uploadList.value.length === number.value) {
     const ossId = fileList.value[findex].ossId;
-    if (ossId !== undefined) delOss(ossId);
+    if (ossId !== undefined) await runUiAction(() => delOss(ossId));
     fileList.value.splice(findex, 1);
     emit("update:modelValue", listToString(fileList.value));
     return false;

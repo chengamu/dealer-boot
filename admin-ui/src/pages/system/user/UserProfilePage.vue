@@ -71,6 +71,7 @@ import { getUserProfile, type SysUser } from '@/api/system/user'
 import { formatUtc } from '@/utils/datetime'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
+import { runUiAction } from '@/utils/action'
 
 const localeStore = useLocaleStore()
 const t = (key: string, params?: Record<string, string | number>) => {
@@ -87,10 +88,12 @@ const state = reactive({
 })
 
 async function getUser() {
-  const response = await getUserProfile()
-  state.user = response.data.user || {}
-  state.roleGroup = response.data.roleGroup || ''
-  state.postGroup = response.data.postGroup || ''
+  await runUiAction(async () => {
+    const response = await getUserProfile()
+    state.user = response.data.user || {}
+    state.roleGroup = response.data.roleGroup || ''
+    state.postGroup = response.data.postGroup || ''
+  })
 }
 
 getUser()

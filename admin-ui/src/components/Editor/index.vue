@@ -34,6 +34,7 @@ import type { CSSProperties } from 'vue';
 import type { UploadRawFile } from 'element-plus';
 import { getMessage } from '@/locales'
 import useLocaleStore from '@/stores/locale'
+import { getApiBaseUrl } from '@/utils/config'
 
 type UploadResponse = {
   code: number
@@ -109,7 +110,7 @@ const emit = defineEmits<{
   (event: 'update:modelValue', value: string): void
 }>();
 // 上传的图片服务器地址
-const uploadUrl = ref(import.meta.env.VITE_APP_BASE_API + "/system/oss/upload");
+const uploadUrl = ref(getApiBaseUrl() + "/system/oss/upload");
 const headers = ref({ Authorization: "Bearer " + getToken() });
 const quillEditorRef = ref<QuillEditorExpose | null>(null);
 

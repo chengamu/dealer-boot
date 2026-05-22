@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="app-container">
     <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true" label-width="90px">
       <el-form-item :label="t('legacy.loginIp')" prop="ipaddr">
@@ -118,7 +118,7 @@ interface DictOption {
 
 const localeStore = useLocaleStore()
 const t = (key: string) => getMessage(key, localeStore.language)
-const { sys_common_status } = useDict('sys_common_status') as unknown as { sys_common_status: DictOption[] }
+const { sys_common_status } = useDict('sys_common_status')
 
 const queryRef = ref<FormInstance>()
 const logininforList = ref<LoginInfo[]>([])
@@ -191,36 +191,48 @@ function handleSortChange(column: { prop?: string; order?: string }) {
 
 async function handleDelete(row?: LoginInfo) {
   const infoIds = row?.infoId || ids.value
-  await ElMessageBox.confirm(t('legacy.deleteLoginInfoConfirm').replace('{ids}', String(infoIds)), t('common.prompt'), {
-    confirmButtonText: t('common.confirm'),
-    cancelButtonText: t('common.cancel'),
-    type: 'warning'
-  })
-  await delLogininfor(infoIds)
-  await getList()
-  ElMessage.success(t('common.deleteSuccess'))
+  try {
+    await ElMessageBox.confirm(t('legacy.deleteLoginInfoConfirm').replace('{ids}', String(infoIds)), t('common.prompt'), {
+      confirmButtonText: t('common.confirm'),
+      cancelButtonText: t('common.cancel'),
+      type: 'warning'
+    })
+    await delLogininfor(infoIds)
+    await getList()
+    ElMessage.success(t('common.deleteSuccess'))
+  } catch {
+    // User cancelled or the request interceptor already displayed the backend error.
+  }
 }
 
 async function handleClean() {
-  await ElMessageBox.confirm(t('legacy.clearLoginInfoConfirm'), t('common.prompt'), {
-    confirmButtonText: t('common.confirm'),
-    cancelButtonText: t('common.cancel'),
-    type: 'warning'
-  })
-  await cleanLogininfor()
-  await getList()
-  ElMessage.success(t('common.clearSuccess'))
+  try {
+    await ElMessageBox.confirm(t('legacy.clearLoginInfoConfirm'), t('common.prompt'), {
+      confirmButtonText: t('common.confirm'),
+      cancelButtonText: t('common.cancel'),
+      type: 'warning'
+    })
+    await cleanLogininfor()
+    await getList()
+    ElMessage.success(t('common.clearSuccess'))
+  } catch {
+    // User cancelled or the request interceptor already displayed the backend error.
+  }
 }
 
 async function handleUnlock() {
   const username = selectName.value
-  await ElMessageBox.confirm(t('legacy.unlockLoginInfoConfirm').replace('{name}', username), t('common.prompt'), {
-    confirmButtonText: t('common.confirm'),
-    cancelButtonText: t('common.cancel'),
-    type: 'warning'
-  })
-  await unlockLogininfor(username)
-  ElMessage.success(t('legacy.unlockLoginInfoSuccess').replace('{name}', username))
+  try {
+    await ElMessageBox.confirm(t('legacy.unlockLoginInfoConfirm').replace('{name}', username), t('common.prompt'), {
+      confirmButtonText: t('common.confirm'),
+      cancelButtonText: t('common.cancel'),
+      type: 'warning'
+    })
+    await unlockLogininfor(username)
+    ElMessage.success(t('legacy.unlockLoginInfoSuccess').replace('{name}', username))
+  } catch {
+    // User cancelled or the request interceptor already displayed the backend error.
+  }
 }
 
 function handleExport() {

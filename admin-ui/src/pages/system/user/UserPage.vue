@@ -203,7 +203,7 @@
       </template>
     </el-dialog>
 
-    <el-dialog v-model="upload.open" :title="upload.title" width="420px" append-to-body>
+    <el-dialog v-model="upload.open" :title="upload.title" width="420px" append-to-body destroy-on-close @closed="resetUpload">
       <el-upload
         ref="uploadRef"
         :limit="1"
@@ -250,10 +250,12 @@ import { formatUtc } from '@/utils/datetime'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 import { useDict } from '@/utils/dict'
+import { runUiAction } from '@/utils/action'
+import { getApiBaseUrl } from '@/utils/config'
 
 interface DictOption {
-  label: string
-  value: string
+  label?: string
+  value?: string
 }
 
 interface ColumnOption {
@@ -269,10 +271,7 @@ const t = (key: string, params?: Record<string, string | number>) => {
   if (!params) return message
   return Object.entries(params).reduce((text, [name, value]) => text.replaceAll(`{${name}}`, String(value)), message)
 }
-const { sys_normal_disable, sys_user_sex } = useDict('sys_normal_disable', 'sys_user_sex') as unknown as {
-  sys_normal_disable: DictOption[]
-  sys_user_sex: DictOption[]
-}
+const { sys_normal_disable, sys_user_sex } = useDict('sys_normal_disable', 'sys_user_sex')
 
 const columnLabelKeys = ['user.userId', 'user.userName', 'user.nickName', 'user.deptName', 'user.phonenumber', 'user.status', 'common.createTime']
 const columns = ref<ColumnOption[]>(columnLabelKeys.map((key, index) => ({ key: index, label: t(key), visible: true })))
@@ -313,7 +312,7 @@ const upload = reactive({
   isUploading: false,
   updateSupport: 0,
   headers: { Authorization: `Bearer ${getToken()}` },
-  url: `${import.meta.env.VITE_APP_BASE_API}/system/user/importData`
+  url: `${getApiBaseUrl()}/system/user/importData`
 })
 
 const single = computed(() => ids.value.length !== 1)
@@ -342,7 +341,7 @@ const rules = computed<FormRules<SysUser>>(() => ({
 }))
 
 function getUserSexLabel(dict: DictOption) {
-  return userSexLabelKeys[dict.value] ? t(userSexLabelKeys[dict.value]) : dict.label
+  return dict.value && userSexLabelKeys[dict.value] ? t(userSexLabelKeys[dict.value]) : dict.label || ''
 }
 
 function withDateRange(query: UserQuery) {
@@ -421,24 +420,28 @@ function handleSelectionChange(selection: SysUser[]) {
 
 async function handleAdd() {
   reset()
-  const response = await getUser()
-  postOptions.value = response.data.posts || []
-  roleOptions.value = response.data.roles || []
-  form.value.password = initPassword.value
-  open.value = true
+  await runUiAction(async () => {
+    const response = await getUser()
+    postOptions.value = response.data.posts || []
+    roleOptions.value = response.data.roles || []
+    form.value.password = initPassword.value
+    open.value = true
+  })
 }
 
 async function handleUpdate(row?: SysUser) {
   reset()
   const userId = row?.userId || ids.value[0]
   if (!userId) return
-  const response = await getUser(userId)
-  form.value = response.data.user || {}
-  postOptions.value = response.data.posts || []
-  roleOptions.value = response.data.roles || []
-  form.value.postIds = response.data.postIds || []
-  form.value.roleIds = response.data.roleIds || []
-  open.value = true
+  await runUiAction(async () => {
+    const response = await getUser(userId)
+    form.value = response.data.user || {}
+    postOptions.value = response.data.posts || []
+    roleOptions.value = response.data.roles || []
+    form.value.postIds = response.data.postIds || []
+    form.value.roleIds = response.data.roleIds || []
+    open.value = true
+  })
 }
 
 function cancel() {
@@ -468,12 +471,16 @@ async function submitForm() {
 async function handleDelete(row?: SysUser) {
   const userIds = row?.userId || ids.value
   if (!userIds || (Array.isArray(userIds) && !userIds.length)) return
-  await ElMessageBox.confirm(t('user.deleteConfirm', { ids: Array.isArray(userIds) ? userIds.join(',') : userIds }), t('common.prompt'), {
-    type: 'warning'
-  })
-  await delUser(userIds)
-  ElMessage.success(t('common.deleteSuccess'))
-  await getList()
+  try {
+    await ElMessageBox.confirm(t('user.deleteConfirm', { ids: Array.isArray(userIds) ? userIds.join(',') : userIds }), t('common.prompt'), {
+      type: 'warning'
+    })
+    await delUser(userIds)
+    ElMessage.success(t('common.deleteSuccess'))
+    await getList()
+  } catch {
+    // User cancelled or the request interceptor already displayed the backend error.
+  }
 }
 
 function handleExport() {
@@ -494,16 +501,20 @@ async function handleStatusChange(row: SysUser) {
 
 async function handleResetPwd(row: SysUser) {
   if (!row.userId) return
-  const result = await ElMessageBox.prompt(t('user.resetPasswordPrompt', { name: row.userName || '' }), t('common.prompt'), {
-    confirmButtonText: t('common.confirm'),
-    cancelButtonText: t('common.cancel'),
-    closeOnClickModal: false,
-    inputPattern: /^.{5,20}$/,
-    inputErrorMessage: t('user.passwordLength')
-  }).catch(() => undefined)
-  if (!result?.value) return
-  await resetUserPwd(row.userId, result.value)
-  ElMessage.success(t('user.resetPasswordSuccess', { password: result.value }))
+  try {
+    const result = await ElMessageBox.prompt(t('user.resetPasswordPrompt', { name: row.userName || '' }), t('common.prompt'), {
+      confirmButtonText: t('common.confirm'),
+      cancelButtonText: t('common.cancel'),
+      closeOnClickModal: false,
+      inputPattern: /^.{5,20}$/,
+      inputErrorMessage: t('user.passwordLength')
+    }).catch(() => undefined)
+    if (!result?.value) return
+    await resetUserPwd(row.userId, result.value)
+    ElMessage.success(t('user.resetPasswordSuccess', { password: result.value }))
+  } catch {
+    // Request interceptor already displays the backend error.
+  }
 }
 
 function handleAuthRole(row: SysUser) {
@@ -513,6 +524,12 @@ function handleAuthRole(row: SysUser) {
 function handleImport() {
   upload.title = t('user.importTitle')
   upload.open = true
+}
+
+function resetUpload() {
+  upload.isUploading = false
+  upload.updateSupport = 0
+  uploadRef.value?.clearFiles()
 }
 
 function importTemplate() {

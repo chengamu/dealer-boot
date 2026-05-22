@@ -95,6 +95,7 @@ import GenInfoForm from './GenInfoForm.vue'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 import { useTagsViewStore, type TagView } from '@/stores/tagsView'
+import { runUiAction } from '@/utils/action'
 
 interface DictTypeOption {
   dictName?: string
@@ -133,9 +134,13 @@ async function submitForm() {
       parentMenuId: info.value.parentMenuId
     }
   }
-  const response = await updateGenTable(genTable)
-  ElMessage.success(response.msg || t('common.editSuccess'))
-  if (response.code === 200) close()
+  try {
+    const response = await updateGenTable(genTable)
+    ElMessage.success(response.msg || t('common.editSuccess'))
+    if (response.code === 200) close()
+  } catch {
+    // Request interceptor already displays the backend error.
+  }
 }
 
 function close() {
@@ -146,13 +151,15 @@ function close() {
 async function loadDetail() {
   const tableId = String(route.params.tableId || '')
   if (!tableId) return
-  const response = await getGenTable(tableId)
-  columns.value = response.data.rows || []
-  info.value = response.data.info || {}
-  info.value.columns = columns.value
-  tables.value = response.data.tables || []
-  const dictResponse = await getDictOptionselect()
-  dictOptions.value = dictResponse.data || []
+  await runUiAction(async () => {
+    const response = await getGenTable(tableId)
+    columns.value = response.data.rows || []
+    info.value = response.data.info || {}
+    info.value.columns = columns.value
+    tables.value = response.data.tables || []
+    const dictResponse = await getDictOptionselect()
+    dictOptions.value = dictResponse.data || []
+  })
 }
 
 loadDetail()

@@ -6,7 +6,8 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import ExternalFrame from '@/components/ExternalFrame.vue'
+import { getXxlJobUrl } from '@/utils/config'
 
 const { t } = useI18n()
-const url = computed(() => window.__APP_CONFIG__?.VITE_APP_XXL_JOB_ADMIN || import.meta.env.VITE_APP_XXL_JOB_ADMIN || '/xxl-job-admin')
+const url = computed(() => getXxlJobUrl())
 </script>

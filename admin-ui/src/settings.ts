@@ -1,3 +1,5 @@
+import { getAppTitle } from '@/utils/config'
+
 export interface AppSettings {
   title: string
   sideTheme: string
@@ -14,7 +16,7 @@ const settings: AppSettings = {
   /**
    * Page title
    */
-  title: import.meta.env.VITE_APP_TITLE,
+  title: getAppTitle(),
 
   /**
    * Sidebar theme: theme-dark or theme-light

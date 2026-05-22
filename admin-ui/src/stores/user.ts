@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { getInfo, login, logout } from '@/services/auth'
+import { getInfo, login, logout } from '@/api/auth'
 import { getToken, removeToken, setToken } from '@/utils/auth'
 import type { LoginUser } from '@/types/api'
 import defaultAvatar from '@/assets/logo/logo.png'

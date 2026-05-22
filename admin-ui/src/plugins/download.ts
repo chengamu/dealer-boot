@@ -4,11 +4,12 @@ import type { LoadingInstance } from 'element-plus/es/components/loading/src/loa
 import { saveAs as fileSaveAs } from 'file-saver'
 import { getMessage } from '@/locales'
 import { getLocale, getToken } from '@/utils/auth'
+import { getApiBaseUrl } from '@/utils/config'
 import errorCode from '@/utils/errorCode'
 import { blobValidate } from '@/utils/ruoyi'
 
 const t = (key: string) => getMessage(key, getLocale())
-const baseURL = import.meta.env.VITE_APP_BASE_API
+const baseURL = getApiBaseUrl()
 let downloadLoadingInstance: LoadingInstance | undefined
 
 const download = {

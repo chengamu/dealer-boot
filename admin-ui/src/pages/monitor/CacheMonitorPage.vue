@@ -48,6 +48,7 @@ import { CanvasRenderer } from 'echarts/renderers'
 import { getCache, type CacheMonitor } from '@/api/monitor/cache'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
+import { runUiAction } from '@/utils/action'
 
 use([TooltipComponent, PieChart, GaugeChart, CanvasRenderer])
 
@@ -147,9 +148,11 @@ function resizeCharts() {
 async function getList() {
   loading.value = true
   try {
-    cache.value = await getCache()
-    await nextTick()
-    renderCharts()
+    await runUiAction(async () => {
+      cache.value = await getCache()
+      await nextTick()
+      renderCharts()
+    })
   } finally {
     loading.value = false
   }

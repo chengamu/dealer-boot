@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="app-container">
     <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true">
       <el-form-item :label="t('legacy.configKey')" prop="configKey">
@@ -148,7 +148,7 @@ const t = (key: string, params?: Record<string, string | number>) => {
   if (!params) return message
   return Object.entries(params).reduce((text, [name, value]) => text.replaceAll(`{${name}}`, String(value)), message)
 }
-const { sys_yes_no } = useDict('sys_yes_no') as unknown as { sys_yes_no: DictOption[] }
+const { sys_yes_no } = useDict('sys_yes_no')
 
 const ossConfigList = ref<OssConfig[]>([])
 const open = ref(false)
@@ -286,6 +286,8 @@ async function submitForm() {
     open.value = false
     reset()
     await getList()
+  } catch {
+    // Request interceptor already displays the backend error.
   } finally {
     buttonLoading.value = false
   }
@@ -308,14 +310,16 @@ async function handleStatusChange(row: OssConfig) {
 async function handleDelete(row?: OssConfig) {
   const ossConfigIds = row?.ossConfigId || ids.value
   if (!ossConfigIds || (Array.isArray(ossConfigIds) && !ossConfigIds.length)) return
-  await ElMessageBox.confirm(t('legacy.deleteOssConfigConfirm', { ids: Array.isArray(ossConfigIds) ? ossConfigIds.join(',') : ossConfigIds }), t('common.prompt'), {
-    type: 'warning'
-  })
   loading.value = true
   try {
+    await ElMessageBox.confirm(t('legacy.deleteOssConfigConfirm', { ids: Array.isArray(ossConfigIds) ? ossConfigIds.join(',') : ossConfigIds }), t('common.prompt'), {
+      type: 'warning'
+    })
     await delOssConfig(ossConfigIds)
     ElMessage.success(t('common.deleteSuccess'))
     await getList()
+  } catch {
+    // User cancelled or the request interceptor already displayed the backend error.
   } finally {
     loading.value = false
   }
