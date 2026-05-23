@@ -47,7 +47,6 @@
 
     <el-table v-loading="loading" :data="roleList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column :label="t('role.roleId')" prop="roleId" width="120" />
       <el-table-column :label="t('role.roleName')" prop="roleName" :show-overflow-tooltip="true" width="150" />
       <el-table-column :label="t('role.roleKey')" prop="roleKey" :show-overflow-tooltip="true" width="150" />
       <el-table-column :label="t('role.roleSort')" prop="roleSort" width="100" />
@@ -56,12 +55,12 @@
           <el-switch v-model="row.status" active-value="1" inactive-value="0" @change="handleStatusChange(row)" />
         </template>
       </el-table-column>
-      <el-table-column :label="t('common.createTime')" align="center" prop="createTime">
+      <el-table-column :label="t('common.createTime')" align="center" prop="createTime" width="170">
         <template #default="{ row }">
           <span>{{ formatUtc(row.createTime) }}</span>
         </template>
       </el-table-column>
-      <el-table-column :label="t('common.operate')" align="center" class-name="small-padding fixed-width">
+      <el-table-column :label="t('common.operate')" align="center" width="172" fixed="right" class-name="small-padding fixed-width">
         <template #default="{ row }">
           <el-tooltip :content="t('common.edit')" placement="top" v-if="row.roleId !== 1">
             <el-button link type="primary" icon="Edit" :aria-label="t('role.editRole')" :title="t('role.editRole')" @click="handleUpdate(row)" v-hasPermi="['system:role:edit']" />

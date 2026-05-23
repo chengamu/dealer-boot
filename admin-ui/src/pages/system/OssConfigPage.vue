@@ -33,21 +33,20 @@
 
     <el-table v-loading="loading" :data="ossConfigList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column v-if="columns[0].visible" :label="t('legacy.primaryKey')" align="center" prop="ossConfigId" />
-      <el-table-column v-if="columns[1].visible" :label="t('legacy.configKey')" align="center" prop="configKey" />
-      <el-table-column v-if="columns[2].visible" :label="t('legacy.endpoint')" align="center" prop="endpoint" width="200" />
-      <el-table-column v-if="columns[3].visible" :label="t('legacy.domain')" align="center" prop="domain" width="200" />
-      <el-table-column v-if="columns[4].visible" :label="t('legacy.bucketName')" align="center" prop="bucketName" />
-      <el-table-column v-if="columns[5].visible" :label="t('legacy.prefix')" align="center" prop="prefix" />
-      <el-table-column v-if="columns[6].visible" :label="t('legacy.region')" align="center" prop="region" />
-      <el-table-column v-if="columns[7].visible" :label="t('legacy.accessPolicy')" align="center" prop="accessPolicy">
+      <el-table-column v-if="columns[0].visible" :label="t('legacy.configKey')" align="center" prop="configKey" />
+      <el-table-column v-if="columns[1].visible" :label="t('legacy.endpoint')" align="center" prop="endpoint" width="200" />
+      <el-table-column v-if="columns[2].visible" :label="t('legacy.domain')" align="center" prop="domain" width="200" />
+      <el-table-column v-if="columns[3].visible" :label="t('legacy.bucketName')" align="center" prop="bucketName" />
+      <el-table-column v-if="columns[4].visible" :label="t('legacy.prefix')" align="center" prop="prefix" />
+      <el-table-column v-if="columns[5].visible" :label="t('legacy.region')" align="center" prop="region" />
+      <el-table-column v-if="columns[6].visible" :label="t('legacy.accessPolicy')" align="center" prop="accessPolicy">
         <template #default="{ row }">
           <el-tag v-if="row.accessPolicy === '0'" type="warning">private</el-tag>
           <el-tag v-if="row.accessPolicy === '1'" type="success">public</el-tag>
           <el-tag v-if="row.accessPolicy === '2'" type="info">custom</el-tag>
         </template>
       </el-table-column>
-      <el-table-column v-if="columns[8].visible" :label="t('legacy.defaultStatus')" align="center" prop="status">
+      <el-table-column v-if="columns[7].visible" :label="t('legacy.defaultStatus')" align="center" prop="status">
         <template #default="{ row }">
           <el-switch v-model="row.status" active-value="1" inactive-value="0" @change="handleStatusChange(row)" />
         </template>
@@ -166,14 +165,13 @@ const queryParams = reactive<OssConfigQuery>({
 })
 const columns = ref([
   { key: 0, visible: true },
-  { key: 1, visible: false },
+  { key: 1, visible: true },
   { key: 2, visible: true },
   { key: 3, visible: true },
   { key: 4, visible: true },
   { key: 5, visible: true },
   { key: 6, visible: true },
-  { key: 7, visible: true },
-  { key: 8, visible: true }
+  { key: 7, visible: true }
 ])
 
 const defaultStatusOptions = computed(() => [

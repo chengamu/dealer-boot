@@ -32,6 +32,7 @@ const fixedHeader = computed(() => settingsStore.fixedHeader);
 const classObj = computed(() => ({
   hideSidebar: !sidebar.value.opened,
   openSidebar: sidebar.value.opened,
+  withTagsView: needTagsView.value,
   withoutAnimation: sidebar.value.withoutAnimation,
   mobile: device.value === 'mobile'
 }))

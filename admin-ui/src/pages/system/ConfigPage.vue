@@ -72,7 +72,6 @@
 
     <el-table v-loading="loading" :data="configList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column :label="t('legacy.configId')" align="center" prop="configId" />
       <el-table-column :label="t('legacy.configName')" align="center" prop="configName" :show-overflow-tooltip="true" />
       <el-table-column :label="t('legacy.configKey')" align="center" prop="configKey" :show-overflow-tooltip="true" />
       <el-table-column :label="t('legacy.configValue')" align="center" prop="configValue" :show-overflow-tooltip="true" />

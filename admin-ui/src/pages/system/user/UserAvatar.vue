@@ -9,8 +9,16 @@
     @keydown.space.prevent="editCropper"
   >
     <img :src="options.img" :title="t('user.uploadAvatar')" class="img-circle img-lg" :alt="t('user.avatar')" />
-    <el-dialog v-model="open" :title="t('user.editAvatar')" width="800px" append-to-body @opened="modalOpened" @close="closeDialog">
-      <el-row>
+    <el-dialog
+      v-model="open"
+      :title="t('user.editAvatar')"
+      width="800px"
+      class="avatar-cropper-dialog"
+      append-to-body
+      @opened="modalOpened"
+      @close="closeDialog"
+    >
+      <el-row class="avatar-cropper-dialog__workspace">
         <el-col :xs="24" :md="12" :style="{ height: '350px' }">
           <vue-cropper
             v-if="visible"
@@ -32,7 +40,7 @@
         </el-col>
       </el-row>
       <br />
-      <el-row :gutter="8">
+      <el-row :gutter="8" class="avatar-cropper-dialog__actions">
         <el-col :lg="4" :md="4">
           <el-upload action="#" :http-request="requestUpload" :show-file-list="false" :before-upload="beforeUpload">
             <el-button>

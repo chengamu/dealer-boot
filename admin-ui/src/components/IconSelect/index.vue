@@ -56,41 +56,46 @@ defineExpose({
 <style lang="scss" scoped>
 .icon-body {
   width: 100%;
-  padding: 10px;
+  padding: 12px;
 
   .icon-search {
     position: relative;
-    margin-bottom: 5px;
+    margin-bottom: 10px;
   }
 
   .icon-list {
-    height: 200px;
+    height: 220px;
     overflow: auto;
 
     .list-container {
       display: flex;
       flex-wrap: wrap;
+      gap: 8px;
 
       .icon-item-wrapper {
         display: flex;
-        width: calc(100% / 3);
-        height: 25px;
+        width: calc((100% - 16px) / 3);
+        height: 34px;
         padding: 0;
         border: 0;
-        line-height: 25px;
+        line-height: 34px;
         cursor: pointer;
         background: transparent;
 
         .icon-item {
           display: flex;
+          align-items: center;
           max-width: 100%;
           height: 100%;
-          padding: 0 5px;
+          padding: 0 8px;
+          border-radius: 8px;
+          color: var(--admin-text, #2f3a4a);
+          transition: background-color 0.2s ease, color 0.2s ease;
 
           &:hover,
           &.active {
-            background: #ececec;
-            border-radius: 5px;
+            background: var(--admin-primary-soft, #eaf2ff);
+            color: var(--admin-primary, #1677ff);
           }
 
           .icon {
@@ -99,7 +104,7 @@ defineExpose({
 
           span {
             display: inline-block;
-            padding-left: 2px;
+            padding-left: 6px;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;

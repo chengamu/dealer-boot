@@ -1,5 +1,5 @@
 <template>
-  <div class="app-container">
+  <div class="app-container user-auth-role-page">
     <h4 class="form-header h4">{{ t('user.basicInfo') }}</h4>
     <el-form :model="form" label-width="90px">
       <el-row>
@@ -31,7 +31,6 @@
         </template>
       </el-table-column>
       <el-table-column type="selection" :reserve-selection="true" width="55" />
-      <el-table-column :label="t('role.roleId')" align="center" prop="roleId" />
       <el-table-column :label="t('role.roleName')" align="center" prop="roleName" />
       <el-table-column :label="t('role.roleKey')" align="center" prop="roleKey" />
       <el-table-column :label="t('common.createTime')" align="center" prop="createTime" width="180">
@@ -43,8 +42,8 @@
 
     <pagination v-show="total > 0" v-model:page="pageNum" v-model:limit="pageSize" :total="total" />
 
-    <el-form label-width="100px">
-      <div style="text-align: center; margin-left: -120px; margin-top: 30px">
+    <el-form class="auth-page-actions" label-width="100px">
+      <div>
         <el-button type="primary" @click="submitForm">{{ t('common.submit') }}</el-button>
         <el-button @click="close">{{ t('common.back') }}</el-button>
       </div>

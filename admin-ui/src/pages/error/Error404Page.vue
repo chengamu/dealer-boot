@@ -11,7 +11,22 @@
         <div class="bullshit__oops">{{ t('error.notFoundTitle') }}</div>
         <div class="bullshit__headline">{{ t('error.notFoundHeadline') }}</div>
         <div class="bullshit__info">{{ t('error.notFoundInfo') }}</div>
-        <router-link to="/index" class="bullshit__return-home">{{ t('error.goHome') }}</router-link>
+        <div class="bullshit__bilingual">
+          <strong>{{ altT('error.notFoundHeadline') }}</strong>
+          <span>{{ altT('error.notFoundInfo') }}</span>
+        </div>
+        <div class="bullshit__actions">
+          <router-link to="/index" class="bullshit__return-home">{{ t('error.goHome') }}</router-link>
+          <button
+            v-for="item in languages"
+            :key="item.value"
+            type="button"
+            :class="{ active: localeStore.language === item.value }"
+            @click="localeStore.setLanguage(item.value)"
+          >
+            {{ item.label }}
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -20,9 +35,15 @@
 <script setup lang="ts" name="Error404Page">
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
+import type { AppLocale } from '@/i18n'
 
 const localeStore = useLocaleStore()
 const t = (key: string) => getMessage(key, localeStore.language)
+const altT = (key: string) => getMessage(key, localeStore.language === 'en_US' ? 'zh_CN' : 'en_US')
+const languages: Array<{ value: AppLocale; label: string }> = [
+  { value: 'zh_CN', label: '中文' },
+  { value: 'en_US', label: 'English' }
+]
 </script>
 
 <style lang="scss" scoped>
@@ -99,8 +120,45 @@ const t = (key: string) => getMessage(key, localeStore.language)
       line-height: 21px;
       color: grey;
       opacity: 0;
-      margin-bottom: 30px;
+      margin-bottom: 14px;
       animation: slideUp 0.5s 0.2s forwards;
+    }
+    &__bilingual {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 24px;
+      color: #606266;
+      font-size: 13px;
+      line-height: 20px;
+      opacity: 0;
+      animation: slideUp 0.5s 0.25s forwards;
+
+      strong {
+        color: #303133;
+      }
+    }
+    &__actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      opacity: 0;
+      animation: slideUp 0.5s 0.3s forwards;
+
+      button {
+        height: 32px;
+        padding: 0 12px;
+        border: 1px solid #dcdfe6;
+        border-radius: 16px;
+        background: #fff;
+        color: #606266;
+        cursor: pointer;
+
+        &.active {
+          border-color: #1482f0;
+          color: #1482f0;
+        }
+      }
     }
     &__return-home {
       display: block;
@@ -115,7 +173,6 @@ const t = (key: string) => getMessage(key, localeStore.language)
       font-size: 14px;
       line-height: 36px;
       cursor: pointer;
-      animation: slideUp 0.5s 0.3s forwards;
     }
   }
 }

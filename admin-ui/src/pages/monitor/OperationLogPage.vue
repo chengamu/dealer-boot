@@ -65,19 +65,16 @@
       @sort-change="handleSortChange"
     >
       <el-table-column type="selection" width="50" align="center" />
-      <el-table-column :label="t('operlog.operId')" align="center" prop="operId" />
-      <el-table-column :label="t('operlog.title')" align="center" prop="title" :show-overflow-tooltip="true" />
-      <el-table-column :label="t('operlog.businessType')" align="center" prop="businessType">
+      <el-table-column :label="t('operlog.title')" align="center" prop="title" min-width="132" :show-overflow-tooltip="true" />
+      <el-table-column :label="t('operlog.businessType')" align="center" prop="businessType" width="116">
         <template #default="scope">
           <dict-tag :options="sys_oper_type" :value="scope.row.businessType" />
         </template>
       </el-table-column>
-      <el-table-column :label="t('operlog.requestMethod')" align="center" prop="requestMethod" />
       <el-table-column :label="t('operlog.operName')" align="center" width="110" prop="operName" :show-overflow-tooltip="true" sortable="custom" :sort-orders="['descending', 'ascending']" />
-      <el-table-column :label="t('operlog.deptName')" align="center" prop="deptName" width="130" :show-overflow-tooltip="true" />
       <el-table-column :label="t('operlog.operIp')" align="center" prop="operIp" width="130" :show-overflow-tooltip="true" />
-      <el-table-column :label="t('operlog.operLocation')" align="center" prop="operLocation" :show-overflow-tooltip="true" />
-      <el-table-column :label="t('operlog.operStatus')" align="center" prop="status">
+      <el-table-column :label="t('operlog.operLocation')" align="center" prop="operLocation" min-width="116" :show-overflow-tooltip="true" />
+      <el-table-column :label="t('operlog.operStatus')" align="center" prop="status" width="126">
         <template #default="scope">
           <dict-tag :options="sys_common_status" :value="scope.row.status" />
         </template>
@@ -92,7 +89,7 @@
           <span>{{ scope.row.costTime }}{{ t('common.milliseconds') }}</span>
         </template>
       </el-table-column>
-      <el-table-column :label="t('common.operate')" align="center" class-name="small-padding fixed-width">
+      <el-table-column :label="t('common.operate')" align="center" width="116" fixed="right" class-name="small-padding fixed-width">
         <template #default="scope">
           <el-button v-hasPermi="['monitor:operlog:query']" link type="primary" icon="View" @click="handleView(scope.row)">
             {{ t('common.detail') }}

@@ -72,7 +72,6 @@
 
     <el-table v-loading="loading" :data="typeList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column :label="t('legacy.dictId')" align="center" prop="dictId" />
       <el-table-column :label="t('legacy.dictName')" align="center" prop="dictName" :show-overflow-tooltip="true" />
       <el-table-column :label="t('legacy.dictType')" align="center" :show-overflow-tooltip="true">
         <template #default="{ row }">

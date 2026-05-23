@@ -74,10 +74,10 @@
 
     <pagination v-show="total > 0" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" :total="total" @pagination="getList" />
 
-    <el-dialog v-model="preview.open" :title="preview.title" width="80%" top="5vh" append-to-body class="scrollbar">
+    <el-dialog v-model="preview.open" :title="preview.title" width="80%" top="5vh" append-to-body class="gen-preview-dialog scrollbar">
       <el-tabs v-model="preview.activeName">
         <el-tab-pane v-for="[key, value] in previewEntries" :key="key" :label="previewName(key)" :name="previewName(key)">
-          <el-link :underline="false" icon="DocumentCopy" v-copyText="value" v-copyText:callback="copyTextSuccess" style="float: right">&nbsp;{{ t('common.copy') }}</el-link>
+          <el-link :underline="false" icon="DocumentCopy" class="gen-preview-dialog__copy" v-copyText="value" v-copyText:callback="copyTextSuccess">&nbsp;{{ t('common.copy') }}</el-link>
           <pre>{{ value }}</pre>
         </el-tab-pane>
       </el-tabs>

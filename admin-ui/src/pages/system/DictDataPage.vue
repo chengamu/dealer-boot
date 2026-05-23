@@ -57,7 +57,6 @@
 
     <el-table v-loading="loading" :data="dataList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column :label="t('legacy.dictCode')" align="center" prop="dictCode" />
       <el-table-column :label="t('legacy.dictLabel')" align="center" prop="dictLabel">
         <template #default="{ row }">
           <span v-if="isPlainLabel(row)">{{ row.dictLabel }}</span>

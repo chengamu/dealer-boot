@@ -144,7 +144,6 @@ function logout() {
 function handleLanguage(language: 'zh_CN' | 'en_US') {
   if (localeStore.language === language) return
   localeStore.setLanguage(language)
-  location.reload()
 }
 
 function setLayout() {

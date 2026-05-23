@@ -36,11 +36,12 @@
       v-model="dialogVisible"
       :title="t('common.preview')"
       width="800px"
+      class="image-upload-preview-dialog"
       append-to-body
     >
       <img
         :src="dialogImageUrl"
-        style="display: block; max-width: 100%; margin: 0 auto"
+        class="image-upload-preview-dialog__image"
       />
     </el-dialog>
   </div>

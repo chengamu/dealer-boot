@@ -1,5 +1,5 @@
 <template>
-  <el-card>
+  <el-card class="gen-edit-page">
     <el-tabs v-model="activeName">
       <el-tab-pane :label="t('gen.basicInfo')" name="basic">
         <basic-info-form ref="basicInfo" :info="info" />
@@ -75,8 +75,8 @@
         <gen-info-form ref="genInfo" :info="info" :tables="tables" />
       </el-tab-pane>
     </el-tabs>
-    <el-form label-width="100px">
-      <div style="text-align: center; margin-left: -100px; margin-top: 10px">
+    <el-form label-width="100px" class="gen-edit-page__actions">
+      <div>
         <el-button type="primary" @click="submitForm">{{ t('common.submit') }}</el-button>
         <el-button @click="close">{{ t('common.back') }}</el-button>
       </div>

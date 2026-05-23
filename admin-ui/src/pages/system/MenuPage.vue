@@ -33,16 +33,16 @@
       :default-expand-all="isExpandAll"
       :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
     >
-      <el-table-column prop="menuName" :label="t('menu.menuName')" :show-overflow-tooltip="true" width="160" />
+      <el-table-column prop="menuName" :label="t('menu.menuName')" :show-overflow-tooltip="true" min-width="190" />
       <el-table-column prop="icon" :label="t('menu.icon')" align="center" width="100">
         <template #default="{ row }">
           <svg-icon v-if="row.icon" :icon-class="row.icon" />
         </template>
       </el-table-column>
-      <el-table-column prop="orderNum" :label="t('menu.orderNum')" width="70" />
-      <el-table-column prop="perms" :label="t('menu.perms')" :show-overflow-tooltip="true" />
-      <el-table-column prop="component" :label="t('menu.component')" :show-overflow-tooltip="true" />
-      <el-table-column prop="status" :label="t('menu.status')" width="90">
+      <el-table-column prop="orderNum" :label="t('menu.orderNum')" width="96" align="center" />
+      <el-table-column prop="perms" :label="t('menu.perms')" min-width="180" :show-overflow-tooltip="true" />
+      <el-table-column prop="component" :label="t('menu.component')" min-width="180" :show-overflow-tooltip="true" />
+      <el-table-column prop="status" :label="t('menu.status')" width="104" align="center">
         <template #default="{ row }">
           <dict-tag :options="sys_normal_disable" :value="row.status" />
         </template>
@@ -52,7 +52,7 @@
           <span>{{ formatUtc(row.createTime) }}</span>
         </template>
       </el-table-column>
-      <el-table-column :label="t('common.operate')" align="center" width="220" class-name="small-padding fixed-width">
+      <el-table-column :label="t('common.operate')" align="center" width="220" fixed="right" class-name="small-padding fixed-width">
         <template #default="{ row }">
           <el-button link type="primary" icon="Edit" @click="handleUpdate(row)" v-hasPermi="['system:menu:edit']">{{ t('common.edit') }}</el-button>
           <el-button link type="primary" icon="Plus" @click="handleAdd(row)" v-hasPermi="['system:menu:add']">{{ t('common.add') }}</el-button>

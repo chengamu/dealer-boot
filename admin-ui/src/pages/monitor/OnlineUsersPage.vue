@@ -31,7 +31,6 @@
           <span>{{ (pageNum - 1) * pageSize + scope.$index + 1 }}</span>
         </template>
       </el-table-column>
-      <el-table-column :label="t('legacy.sessionId')" align="center" prop="tokenId" :show-overflow-tooltip="true" />
       <el-table-column :label="t('legacy.loginName')" align="center" prop="userName" :show-overflow-tooltip="true" />
       <el-table-column :label="t('legacy.dept')" align="center" prop="deptName" :show-overflow-tooltip="true" />
       <el-table-column :label="t('legacy.host')" align="center" prop="ipaddr" :show-overflow-tooltip="true" />

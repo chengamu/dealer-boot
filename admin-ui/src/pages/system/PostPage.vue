@@ -56,7 +56,6 @@
 
     <el-table v-loading="loading" :data="postList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column :label="t('legacy.postId')" align="center" prop="postId" />
       <el-table-column :label="t('legacy.postCode')" align="center" prop="postCode" />
       <el-table-column :label="t('legacy.postName')" align="center" prop="postName" />
       <el-table-column :label="t('legacy.postSort')" align="center" prop="postSort" />

@@ -245,21 +245,30 @@ function listToString(list: UploadItem[], separator = ",") {
 
 <style scoped lang="scss">
 .upload-file-uploader {
-  margin-bottom: 5px;
+  margin-bottom: 8px;
 }
 .upload-file-list .el-upload-list__item {
-  border: 1px solid #e4e7ed;
-  line-height: 2;
-  margin-bottom: 10px;
   position: relative;
+  margin-bottom: 8px;
+  border: 1px solid var(--admin-border-soft, #eef2f7);
+  border-radius: 8px;
+  background: #fbfdff;
+  line-height: 1.8;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+
+  &:hover {
+    border-color: #b8d2ff;
+    background: #f7faff;
+  }
 }
 .upload-file-list .ele-upload-list__item-content {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
   color: inherit;
 }
 .ele-upload-list__item-content-action .el-link {
-  margin-right: 10px;
+  margin-right: 8px;
 }
 </style>

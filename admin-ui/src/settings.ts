@@ -22,7 +22,7 @@ const settings: AppSettings = {
   /**
    * Theme color
    */
-  theme: '#0066FF',
+  theme: '#1677FF',
 
   /**
    * Sidebar theme: theme-dark or theme-light
@@ -42,7 +42,7 @@ const settings: AppSettings = {
   /**
    * Whether to show tags view
    */
-  tagsView: true,
+  tagsView: false,
 
   /**
    * Whether to fix the header

@@ -1,17 +1,16 @@
 <template>
-  <div class="app-container">
-    <el-row :gutter="20">
-      <el-col :span="4" :xs="24">
-        <div class="head-container">
+  <div class="app-container user-page">
+    <el-row :gutter="20" class="user-page__layout">
+      <el-col :span="4" :xs="24" class="user-page__dept">
+        <div class="head-container user-page__dept-search">
           <el-input
             v-model="deptName"
             :placeholder="t('user.deptNamePlaceholder')"
             clearable
             prefix-icon="Search"
-            style="margin-bottom: 20px"
           />
         </div>
-        <div class="head-container">
+        <div class="head-container user-page__dept-tree">
           <el-tree
             ref="deptTreeRef"
             :data="deptOptions"
@@ -22,12 +21,20 @@
             highlight-current
             default-expand-all
             @node-click="handleNodeClick"
-          />
+          >
+            <template #default="{ node }">
+              <span class="user-page__dept-node" :class="{ 'is-root': node.level === 1 }">
+                <el-icon v-if="node.level === 1" class="user-page__dept-node-icon"><Briefcase /></el-icon>
+                <span v-else class="user-page__dept-node-dot" />
+                <span class="user-page__dept-node-label">{{ node.label }}</span>
+              </span>
+            </template>
+          </el-tree>
         </div>
       </el-col>
 
-      <el-col :span="20" :xs="24">
-        <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true" label-width="80px">
+      <el-col :span="20" :xs="24" class="user-page__content">
+        <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true" label-width="96px">
           <el-form-item :label="t('user.userName')" prop="userName">
             <el-input v-model="queryParams.userName" :placeholder="t('user.userNamePlaceholder')" clearable style="width: 240px" @keyup.enter="handleQuery" />
           </el-form-item>
@@ -77,22 +84,21 @@
 
         <el-table v-loading="loading" :data="userList" @selection-change="handleSelectionChange">
           <el-table-column type="selection" width="50" align="center" />
-          <el-table-column v-if="columns[0].visible" :label="t('user.userId')" align="center" prop="userId" />
-          <el-table-column v-if="columns[1].visible" :label="t('user.userName')" align="center" prop="userName" :show-overflow-tooltip="true" />
-          <el-table-column v-if="columns[2].visible" :label="t('user.nickName')" align="center" prop="nickName" :show-overflow-tooltip="true" />
-          <el-table-column v-if="columns[3].visible" :label="t('user.deptName')" align="center" prop="dept.deptName" :show-overflow-tooltip="true" />
-          <el-table-column v-if="columns[4].visible" :label="t('user.phonenumber')" align="center" prop="phonenumber" width="120" />
-          <el-table-column v-if="columns[5].visible" :label="t('user.status')" align="center">
+          <el-table-column v-if="columns[0].visible" :label="t('user.userName')" align="center" prop="userName" min-width="120" :show-overflow-tooltip="true" />
+          <el-table-column v-if="columns[1].visible" :label="t('user.nickName')" align="center" prop="nickName" min-width="120" :show-overflow-tooltip="true" />
+          <el-table-column v-if="columns[2].visible" :label="t('user.deptName')" align="center" prop="dept.deptName" min-width="126" :show-overflow-tooltip="true" />
+          <el-table-column v-if="columns[3].visible" :label="t('user.phonenumber')" align="center" prop="phonenumber" width="132" />
+          <el-table-column v-if="columns[4].visible" :label="t('user.status')" align="center" width="96">
             <template #default="{ row }">
               <el-switch v-model="row.status" active-value="1" inactive-value="0" @change="handleStatusChange(row)" />
             </template>
           </el-table-column>
-          <el-table-column v-if="columns[6].visible" :label="t('common.createTime')" align="center" prop="createTime" width="170">
+          <el-table-column v-if="columns[5].visible" :label="t('common.createTime')" align="center" prop="createTime" width="170">
             <template #default="{ row }">
               <span>{{ formatUtc(row.createTime) }}</span>
             </template>
           </el-table-column>
-          <el-table-column :label="t('common.operate')" align="center" width="170" class-name="small-padding fixed-width">
+          <el-table-column :label="t('common.operate')" align="center" width="172" fixed="right" class-name="small-padding fixed-width">
             <template #default="{ row }">
               <el-tooltip :content="t('common.edit')" placement="top" v-if="row.userId !== 1">
                 <el-button link type="primary" icon="Edit" :aria-label="t('user.editUser')" :title="t('user.editUser')" @click="handleUpdate(row)" v-hasPermi="['system:user:edit']" />
@@ -114,89 +120,121 @@
       </el-col>
     </el-row>
 
-    <el-dialog v-model="open" :title="title" width="600px" append-to-body destroy-on-close @closed="reset">
-      <el-form ref="userRef" :model="form" :rules="rules" label-width="90px">
-        <el-row>
-          <el-col :span="12">
-            <el-form-item :label="t('user.nickName')" prop="nickName">
-              <el-input v-model="form.nickName" :placeholder="t('user.nickNamePlaceholder')" maxlength="30" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item :label="t('user.deptId')" prop="deptId">
-              <el-tree-select
-                v-model="form.deptId"
-                :data="deptOptions"
-                :props="{ value: 'id', label: 'label', children: 'children' }"
-                value-key="id"
-                :placeholder="t('user.deptIdPlaceholder')"
-                check-strictly
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row>
-          <el-col :span="12">
-            <el-form-item :label="t('user.phonenumber')" prop="phonenumber">
-              <el-input v-model="form.phonenumber" :placeholder="t('user.phonenumberPlaceholder')" maxlength="11" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item :label="t('user.email')" prop="email">
-              <el-input v-model="form.email" :placeholder="t('user.emailPlaceholder')" maxlength="50" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row>
-          <el-col :span="12">
-            <el-form-item v-if="form.userId === undefined" :label="t('user.userName')" prop="userName">
-              <el-input v-model="form.userName" :placeholder="t('user.userNamePlaceholder')" maxlength="30" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item v-if="form.userId === undefined" :label="t('user.password')" prop="password">
-              <el-input v-model="form.password" :placeholder="t('user.passwordPlaceholder')" type="password" maxlength="20" show-password />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row>
-          <el-col :span="12">
-            <el-form-item :label="t('user.sex')">
-              <el-select v-model="form.sex" :placeholder="t('common.selectPlaceholder')">
-                <el-option v-for="dict in sys_user_sex" :key="dict.value" :label="getUserSexLabel(dict)" :value="dict.value" />
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item :label="t('user.status')">
-              <el-radio-group v-model="form.status">
-                <el-radio v-for="dict in sys_normal_disable" :key="dict.value" :value="dict.value">{{ dict.label }}</el-radio>
-              </el-radio-group>
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row>
-          <el-col :span="12">
-            <el-form-item :label="t('user.post')">
-              <el-select v-model="form.postIds" multiple :placeholder="t('common.selectPlaceholder')">
-                <el-option v-for="item in postOptions" :key="item.postId" :label="item.postName" :value="item.postId" :disabled="item.status === '0'" />
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item :label="t('user.role')">
-              <el-select v-model="form.roleIds" multiple :placeholder="t('common.selectPlaceholder')">
-                <el-option v-for="item in roleOptions" :key="item.roleId" :label="item.roleName" :value="item.roleId" :disabled="item.status === '0'" />
-              </el-select>
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-form-item :label="t('user.remark')">
-          <el-input v-model="form.remark" type="textarea" :placeholder="t('user.remarkPlaceholder')" />
-        </el-form-item>
+    <el-dialog v-model="open" :title="title" width="720px" class="user-edit-dialog" append-to-body destroy-on-close @closed="reset">
+      <el-form ref="userRef" :model="form" :rules="rules" label-width="112px" class="user-dialog">
+        <div class="user-dialog__intro">
+          <span>{{ form.userId === undefined ? t('common.add') : t('common.edit') }}</span>
+          <p>{{ t('user.dialogIntro') }}</p>
+        </div>
+
+        <section class="user-dialog__section">
+          <div class="user-dialog__section-title">
+            <strong>{{ t('user.dialogBasicInfo') }}</strong>
+            <em>{{ t('user.dialogBasicDesc') }}</em>
+          </div>
+          <el-row :gutter="16">
+            <el-col :span="12" :xs="24">
+              <el-form-item :label="t('user.nickName')" prop="nickName">
+                <el-input v-model="form.nickName" :placeholder="t('user.nickNamePlaceholder')" maxlength="30" />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12" :xs="24">
+              <el-form-item :label="t('user.deptId')" prop="deptId">
+                <el-tree-select
+                  v-model="form.deptId"
+                  :data="deptOptions"
+                  :props="{ value: 'id', label: 'label', children: 'children' }"
+                  value-key="id"
+                  :placeholder="t('user.deptIdPlaceholder')"
+                  check-strictly
+                />
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row :gutter="16">
+            <el-col :span="12" :xs="24">
+              <el-form-item :label="t('user.phonenumber')" prop="phonenumber">
+                <el-input v-model="form.phonenumber" :placeholder="t('user.phonenumberPlaceholder')" maxlength="11" />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12" :xs="24">
+              <el-form-item :label="t('user.email')" prop="email">
+                <el-input v-model="form.email" :placeholder="t('user.emailPlaceholder')" maxlength="50" />
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </section>
+
+        <section v-if="form.userId === undefined" class="user-dialog__section">
+          <div class="user-dialog__section-title">
+            <strong>{{ t('user.dialogAccountSecurity') }}</strong>
+            <em>{{ t('user.dialogAccountDesc') }}</em>
+          </div>
+          <el-row :gutter="16">
+            <el-col :span="12" :xs="24">
+              <el-form-item :label="t('user.userName')" prop="userName">
+                <el-input v-model="form.userName" :placeholder="t('user.userNamePlaceholder')" maxlength="30" />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12" :xs="24">
+              <el-form-item :label="t('user.password')" prop="password">
+                <el-input v-model="form.password" :placeholder="t('user.passwordPlaceholder')" type="password" maxlength="20" show-password />
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </section>
+
+        <section class="user-dialog__section">
+          <div class="user-dialog__section-title">
+            <strong>{{ t('user.dialogPermissionConfig') }}</strong>
+            <em>{{ t('user.dialogPermissionDesc') }}</em>
+          </div>
+          <el-row :gutter="16">
+            <el-col :span="12" :xs="24">
+              <el-form-item :label="t('user.sex')">
+                <el-select v-model="form.sex" :placeholder="t('common.selectPlaceholder')">
+                  <el-option v-for="dict in sys_user_sex" :key="dict.value" :label="getUserSexLabel(dict)" :value="dict.value" />
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :span="12" :xs="24">
+              <el-form-item :label="t('user.status')">
+                <el-radio-group v-model="form.status">
+                  <el-radio v-for="dict in sys_normal_disable" :key="dict.value" :value="dict.value">{{ dict.label }}</el-radio>
+                </el-radio-group>
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row :gutter="16">
+            <el-col :span="12" :xs="24">
+              <el-form-item :label="t('user.post')">
+                <el-select v-model="form.postIds" multiple :placeholder="t('common.selectPlaceholder')">
+                  <el-option v-for="item in postOptions" :key="item.postId" :label="item.postName" :value="item.postId" :disabled="item.status === '0'" />
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :span="12" :xs="24">
+              <el-form-item :label="t('user.role')">
+                <el-select v-model="form.roleIds" multiple :placeholder="t('common.selectPlaceholder')">
+                  <el-option v-for="item in roleOptions" :key="item.roleId" :label="item.roleName" :value="item.roleId" :disabled="item.status === '0'" />
+                </el-select>
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </section>
+
+        <section class="user-dialog__section">
+          <div class="user-dialog__section-title">
+            <strong>{{ t('user.dialogRemarkInfo') }}</strong>
+            <em>{{ t('user.dialogRemarkDesc') }}</em>
+          </div>
+          <el-form-item :label="t('user.remark')">
+            <el-input v-model="form.remark" type="textarea" :placeholder="t('user.remarkPlaceholder')" />
+          </el-form-item>
+        </section>
       </el-form>
       <template #footer>
-        <div class="dialog-footer">
+        <div class="dialog-footer user-dialog__footer">
           <el-button type="primary" @click="submitForm">{{ t('common.confirm') }}</el-button>
           <el-button @click="cancel">{{ t('common.cancel') }}</el-button>
         </div>
@@ -242,6 +280,7 @@
 import { computed, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules, type UploadInstance, type UploadProgressEvent, type UploadRawFile } from 'element-plus'
+import { Briefcase } from '@element-plus/icons-vue'
 import { getToken } from '@/utils/auth'
 import { getConfigKey } from '@/api/system/config'
 import { addUser, changeUserStatus, delUser, deptTreeSelect, getUser, listUser, resetUserPwd, updateUser, type SysUser, type TreeOption, type UserOptionPost, type UserOptionRole, type UserQuery } from '@/api/system/user'
@@ -273,7 +312,7 @@ const t = (key: string, params?: Record<string, string | number>) => {
 }
 const { sys_normal_disable, sys_user_sex } = useDict('sys_normal_disable', 'sys_user_sex')
 
-const columnLabelKeys = ['user.userId', 'user.userName', 'user.nickName', 'user.deptName', 'user.phonenumber', 'user.status', 'common.createTime']
+const columnLabelKeys = ['user.userName', 'user.nickName', 'user.deptName', 'user.phonenumber', 'user.status', 'common.createTime']
 const columns = ref<ColumnOption[]>(columnLabelKeys.map((key, index) => ({ key: index, label: t(key), visible: true })))
 watch(
   () => localeStore.language,

@@ -11,7 +11,7 @@
         <el-button circle icon="Menu" :aria-label="t('common.columnVisibility')" :title="t('common.columnVisibility')" @click="showColumn()" />
       </el-tooltip>
     </el-row>
-    <el-dialog v-model="open" :title="title" append-to-body>
+    <el-dialog v-model="open" :title="title" width="560px" class="column-visibility-dialog" append-to-body>
       <el-transfer
         v-model="value"
         :titles="[t('common.show'), t('common.hide')]"
@@ -51,7 +51,7 @@ const localeStore = useLocaleStore()
 const t = (key: string) => getMessage(key, localeStore.language)
 
 const value = ref<Array<number | string>>([])
-const title = ref(t('common.columnVisibility'))
+const title = computed(() => t('common.columnVisibility'))
 const open = ref(false)
 
 const style = computed(() => {
@@ -86,18 +86,3 @@ props.columns?.forEach((column, index) => {
   }
 })
 </script>
-
-<style lang="scss" scoped>
-:deep(.el-transfer__button) {
-  border-radius: 50%;
-  display: block;
-  margin-left: 0px;
-}
-:deep(.el-transfer__button:first-child) {
-  margin-bottom: 10px;
-}
-
-.my-el-transfer {
-  text-align: center;
-}
-</style>

@@ -74,7 +74,6 @@
       @sort-change="handleSortChange"
     >
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column :label="t('legacy.accessId')" align="center" prop="infoId" />
       <el-table-column :label="t('user.userName')" align="center" prop="userName" :show-overflow-tooltip="true" sortable="custom" :sort-orders="['descending', 'ascending']" />
       <el-table-column :label="t('legacy.loginIp')" align="center" prop="ipaddr" :show-overflow-tooltip="true" />
       <el-table-column :label="t('legacy.loginLocation')" align="center" prop="loginLocation" :show-overflow-tooltip="true" />
