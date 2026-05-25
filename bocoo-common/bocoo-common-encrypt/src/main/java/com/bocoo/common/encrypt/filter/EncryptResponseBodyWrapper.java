@@ -78,8 +78,6 @@ public class EncryptResponseBodyWrapper extends HttpServletResponseWrapper {
         // 设置响应头
         servletResponse.addHeader("Access-Control-Expose-Headers", headerFlag);
         servletResponse.setHeader(headerFlag, encryptPassword);
-        servletResponse.setHeader("Access-Control-Allow-Origin", "*");
-        servletResponse.setHeader("Access-Control-Allow-Methods", "*");
         servletResponse.setCharacterEncoding(StandardCharsets.UTF_8.toString());
 
         // 获取原始内容

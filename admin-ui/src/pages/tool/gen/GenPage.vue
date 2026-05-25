@@ -94,7 +94,7 @@ import { ElMessage, ElMessageBox, type FormInstance } from 'element-plus'
 import downloadPlugin from '@/plugins/download'
 import { delTable, genCode, listTable, previewTable, synchDb, type GenTable, type GenTableQuery } from '@/api/tool/gen'
 import ImportTableDialog from './ImportTableDialog.vue'
-import { formatUtc } from '@/utils/datetime'
+import { formatUtc, withUtcDateRange } from '@/utils/datetime'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 
@@ -136,12 +136,7 @@ const previewEntries = computed(() => Object.entries(preview.data))
 localStorage.setItem('dataName', queryParams.dataName || 'master')
 
 function withDateRange(query: GenTableQuery) {
-  const params = { ...query }
-  if (dateRange.value.length === 2) {
-    params.beginTime = dateRange.value[0]
-    params.endTime = dateRange.value[1]
-  }
-  return params
+  return withUtcDateRange(query, dateRange.value)
 }
 
 async function getList() {

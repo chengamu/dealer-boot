@@ -73,6 +73,7 @@ public class PlusSaTokenDao implements SaTokenDao {
     @Override
     public void delete(String key) {
         RedisUtils.deleteObject(key);
+        CAFFEINE.invalidate(key);
     }
 
     /**
@@ -90,6 +91,7 @@ public class PlusSaTokenDao implements SaTokenDao {
     @Override
     public void updateTimeout(String key, long timeout) {
         RedisUtils.expire(key, Duration.ofSeconds(timeout));
+        CAFFEINE.invalidate(key);
     }
 
 
@@ -135,6 +137,7 @@ public class PlusSaTokenDao implements SaTokenDao {
     @Override
     public void deleteObject(String key) {
         RedisUtils.deleteObject(key);
+        CAFFEINE.invalidate(key);
     }
 
     /**
@@ -152,6 +155,7 @@ public class PlusSaTokenDao implements SaTokenDao {
     @Override
     public void updateObjectTimeout(String key, long timeout) {
         RedisUtils.expire(key, Duration.ofSeconds(timeout));
+        CAFFEINE.invalidate(key);
     }
 
 

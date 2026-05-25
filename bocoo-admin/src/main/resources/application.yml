@@ -148,7 +148,7 @@ sa-token:
   # token前缀
   token-prefix: "Bearer"
   # jwt秘钥
-  jwt-secret-key: ${SA_TOKEN_JWT_SECRET:change-me-in-env}
+  jwt-secret-key: ${SA_TOKEN_JWT_SECRET}
 
 # security配置
 security:
@@ -167,9 +167,6 @@ security:
     - /doc.html/**
     - /webjars/**
     - /*/api-docs/**
-    # actuator 监控配置
-    - /actuator
-    - /actuator/**
     # websocket
     - /websocket/**
     - /ws/**
@@ -269,7 +266,7 @@ device:
 
 # 接口请求密文AES加密密钥，16位字符，前后端需保持一致。用于设备密码加密传输
 crypto:
-  aes-key: NetSDK1234567890
+  aes-key: ${CRYPTO_AES_KEY:}
 
 
 
@@ -319,9 +316,9 @@ management:
   endpoints:
     web:
       exposure:
-        include: '*'
+        include: health
   endpoint:
     health:
-      show-details: ALWAYS
+      show-details: NEVER
     logfile:
       external-file: ./logs/sys-console.log

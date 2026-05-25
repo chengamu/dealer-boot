@@ -31,6 +31,37 @@ export function toUtcPayload(input?: string | number | Date | null) {
   return parsed.isValid() ? parsed.utc().format('YYYY-MM-DDTHH:mm:ss[Z]') : undefined
 }
 
+export function withUtcDateRange<T extends Record<string, unknown>>(
+  query: T,
+  dateRange?: unknown[],
+  beginKey = 'beginTime',
+  endKey = 'endTime'
+) {
+  const params: Record<string, unknown> = { ...query }
+  const range = Array.isArray(dateRange) ? dateRange : []
+  if (range.length === 2) {
+    params[beginKey] = toUtcPayload(range[0] as string | number | Date | null)
+    params[endKey] = toUtcPayload(range[1] as string | number | Date | null)
+  }
+  return params as T & Record<string, unknown>
+}
+
+export function withUtcDateRangeParams<T extends Record<string, unknown>>(
+  query: T,
+  dateRange?: unknown[],
+  beginKey = 'beginTime',
+  endKey = 'endTime'
+) {
+  const existingParams = (query as { params?: Record<string, unknown> }).params
+  const params: T & { params: Record<string, unknown> } = { ...query, params: { ...(existingParams || {}) } }
+  const range = Array.isArray(dateRange) ? dateRange : []
+  if (range.length === 2) {
+    params.params[beginKey] = toUtcPayload(range[0] as string | number | Date | null)
+    params.params[endKey] = toUtcPayload(range[1] as string | number | Date | null)
+  }
+  return params
+}
+
 export function currentTimeZone() {
   return dayjs.tz.guess()
 }

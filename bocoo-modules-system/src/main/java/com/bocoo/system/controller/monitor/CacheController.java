@@ -138,7 +138,7 @@ public class CacheController {
      *
      * @param cacheName 缓存名
      */
-    @SaCheckPermission("monitor:cache:list")
+    @SaCheckPermission("monitor:cache:remove")
     @DeleteMapping("/clearCacheName/{cacheName}")
     @Operation(summary = "清理指定缓存名称", description = "根据缓存名称清理该缓存下的所有数据")
     public R<Void> clearCacheName(
@@ -157,7 +157,7 @@ public class CacheController {
      *
      * @param cacheKey key名
      */
-    @SaCheckPermission("monitor:cache:list")
+    @SaCheckPermission("monitor:cache:remove")
     @DeleteMapping("/clearCacheKey/{cacheName}/{cacheKey}")
     @Operation(summary = "清理指定缓存键", description = "根据缓存名称和键名清理指定的缓存数据")
     public R<Void> clearCacheKey(
@@ -176,11 +176,18 @@ public class CacheController {
     /**
      * 清理全部缓存监控
      */
-    @SaCheckPermission("monitor:cache:list")
+    @SaCheckPermission("monitor:cache:remove")
     @DeleteMapping("/clearCacheAll")
     @Operation(summary = "清理全部缓存", description = "清理系统中的所有缓存数据")
     public R<Void> clearCacheAll() {
-        RedisUtils.deleteKeys("*");
+        CACHES.forEach(cache -> {
+            String cacheName = cache.getCacheName();
+            if (isCacheNames(cacheName)) {
+                CacheUtils.clear(cacheName);
+            } else {
+                RedisUtils.deleteKeys(cacheName + "*");
+            }
+        });
         return R.ok();
     }
 

@@ -13,6 +13,8 @@ services:
     environment:
       TZ: Asia/Shanghai
       SPRING_PROFILES_ACTIVE: dev
+      SA_TOKEN_JWT_SECRET: ${SA_TOKEN_JWT_SECRET:-bocoo-dev-jwt-secret-change-before-prod-2026}
+      CRYPTO_AES_KEY: ${CRYPTO_AES_KEY:-DevCryptoKey2026}
     entrypoint:
       - java
       - -Xms1g

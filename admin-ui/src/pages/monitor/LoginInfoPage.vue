@@ -102,7 +102,7 @@ import type { FormInstance } from 'element-plus'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { cleanLogininfor, delLogininfor, list, unlockLogininfor, type LoginInfo, type LoginInfoQuery } from '@/api/monitor/logininfor'
 import { download } from '@/utils/request'
-import { formatUtc } from '@/utils/datetime'
+import { formatUtc, withUtcDateRangeParams } from '@/utils/datetime'
 import { useDict } from '@/utils/dict'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
@@ -141,13 +141,7 @@ const queryParams = reactive<LoginInfoQuery>({
 })
 
 function withDateRange(params: LoginInfoQuery) {
-  return {
-    ...params,
-    params: {
-      beginTime: dateRange.value[0],
-      endTime: dateRange.value[1]
-    }
-  }
+  return withUtcDateRangeParams(params, dateRange.value)
 }
 
 async function getList() {

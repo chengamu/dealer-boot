@@ -38,6 +38,7 @@
                   :aria-label="t('cache.clearCacheName', { name: row.cacheName })"
                   :title="t('cache.clearCacheName', { name: row.cacheName })"
                   @click.stop="handleClearCacheName(row)"
+                  v-hasPermi="['monitor:cache:remove']"
                 />
               </template>
             </el-table-column>
@@ -81,6 +82,7 @@
                   :aria-label="t('cache.clearCacheKey', { key: row })"
                   :title="t('cache.clearCacheKey', { key: row })"
                   @click.stop="handleClearCacheKey(row)"
+                  v-hasPermi="['monitor:cache:remove']"
                 />
               </template>
             </el-table-column>
@@ -101,6 +103,7 @@
               :aria-label="t('cache.clearAll')"
               :title="t('cache.clearAll')"
               @click="handleClearCacheAll"
+              v-hasPermi="['monitor:cache:remove']"
             >
               {{ t('cache.clearAll') }}
             </el-button>

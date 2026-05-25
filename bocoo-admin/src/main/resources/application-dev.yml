@@ -8,6 +8,14 @@ mqtt:
 websocket:
   port: 2831
   sendUserid: 1966049982171709442
+
+--- # 开发环境安全配置
+sa-token:
+  jwt-secret-key: bocoo-dev-jwt-secret-change-before-prod-2026
+
+crypto:
+  aes-key: DevCryptoKey2026
+
 --- # 数据源配置
 spring:
   datasource:

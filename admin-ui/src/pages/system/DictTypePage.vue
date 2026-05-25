@@ -143,7 +143,7 @@ import { computed, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 import { addType, delType, getType, listType, refreshCache, updateType, type DictType, type DictTypeQuery } from '@/api/system/dict/type'
 import { download } from '@/utils/request'
-import { formatUtc } from '@/utils/datetime'
+import { formatUtc, withUtcDateRange } from '@/utils/datetime'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 import { useDict } from '@/utils/dict'
@@ -188,12 +188,7 @@ const rules = computed<FormRules<DictType>>(() => ({
 }))
 
 function withDateRange(query: DictTypeQuery) {
-  const params = { ...query }
-  if (dateRange.value?.length === 2) {
-    params.beginTime = dateRange.value[0]
-    params.endTime = dateRange.value[1]
-  }
-  return params
+  return withUtcDateRange(query, dateRange.value)
 }
 
 function reset() {

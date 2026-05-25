@@ -131,7 +131,7 @@ import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 import { delOss, listOss, type OssFile, type OssQuery } from '@/api/system/oss'
 import { getConfigKey, updateConfigByKey } from '@/api/system/config'
-import { formatUtc } from '@/utils/datetime'
+import { formatUtc, withUtcDateRangeParams } from '@/utils/datetime'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 import ImagePreview from '@/components/ImagePreview/index.vue'
@@ -187,12 +187,7 @@ const rules = computed<FormRules<UploadForm>>(() => ({
 }))
 
 function withDateRange(query: OssQuery) {
-  const params = { ...query, params: {} as Record<string, string | undefined> }
-  if (dateRange.value?.length === 2) {
-    params.params.beginCreateTime = dateRange.value[0]
-    params.params.endCreateTime = dateRange.value[1]
-  }
-  return params
+  return withUtcDateRangeParams(query, dateRange.value, 'beginCreateTime', 'endCreateTime')
 }
 
 async function getList() {

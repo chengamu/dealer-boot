@@ -911,7 +911,9 @@ VALUES
     (9117, 'sys.menu.log.operlog', 'en_US', 'Operation Logs', 'system', now(), 'Base menu'),
     (9118, 'sys.menu.log.operlog', 'zh_CN', '操作日志', 'system', now(), '基础菜单'),
     (9119, 'sys.menu.log.logininfor', 'en_US', 'Login Logs', 'system', now(), 'Base menu'),
-    (9120, 'sys.menu.log.logininfor', 'zh_CN', '登录日志', 'system', now(), '基础菜单')
+    (9120, 'sys.menu.log.logininfor', 'zh_CN', '登录日志', 'system', now(), '基础菜单'),
+    (9121, 'sys.menu.monitor.cacheList.clear', 'en_US', 'Clear Cache', 'system', now(), 'Base menu'),
+    (9122, 'sys.menu.monitor.cacheList.clear', 'zh_CN', '清理缓存', 'system', now(), '基础菜单')
 ON CONFLICT (message_key, locale) DO UPDATE
 SET message_value = EXCLUDED.message_value,
     update_by = 'system',
@@ -925,6 +927,7 @@ VALUES
     (201, 0, 'Online Users', 'sys.menu.monitor.online', 200, 1, 'online', 'monitor/online/index', '1', '0', 'C', '1', '1', 'monitor:online:list', 'online', 'system', now(), 'Online users'),
     (202, 0, 'Cache Monitor', 'sys.menu.monitor.cache', 200, 2, 'cache', 'monitor/cache/index', '1', '0', 'C', '1', '1', 'monitor:cache:list', 'redis', 'system', now(), 'Cache monitor'),
     (203, 0, 'Cache List', 'sys.menu.monitor.cacheList', 200, 3, 'cacheList', 'monitor/cache/list', '1', '0', 'C', '1', '1', 'monitor:cache:list', 'redis-list', 'system', now(), 'Cache list'),
+    (204, 0, 'Clear Cache', 'sys.menu.monitor.cacheList.clear', 203, 1, '#', '', '1', '0', 'F', '1', '1', 'monitor:cache:remove', '#', 'system', now(), 'Clear cache'),
     (300, 0, 'Code Generator', 'sys.menu.tool.gen', 0, 130, '/gen', 'tool/gen/index', '1', '0', 'C', '1', '1', 'tool:gen:list', 'code', 'system', now(), 'Code generator'),
     (400, 0, 'Logs', 'sys.menu.log', 0, 140, 'log', NULL, '1', '0', 'M', '1', '1', NULL, 'log', 'system', now(), 'Log management'),
     (401, 0, 'Operation Logs', 'sys.menu.log.operlog', 400, 1, 'operlog', 'monitor/operlog/index', '1', '0', 'C', '1', '1', 'monitor:operlog:list', 'form', 'system', now(), 'Operation logs'),

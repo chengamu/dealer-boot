@@ -277,7 +277,7 @@
 </template>
 
 <script setup lang="ts" name="UserPage">
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, h, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules, type UploadInstance, type UploadProgressEvent, type UploadRawFile } from 'element-plus'
 import { Briefcase } from '@element-plus/icons-vue'
@@ -285,7 +285,7 @@ import { getToken } from '@/utils/auth'
 import { getConfigKey } from '@/api/system/config'
 import { addUser, changeUserStatus, delUser, deptTreeSelect, getUser, listUser, resetUserPwd, updateUser, type SysUser, type TreeOption, type UserOptionPost, type UserOptionRole, type UserQuery } from '@/api/system/user'
 import { download } from '@/utils/request'
-import { formatUtc } from '@/utils/datetime'
+import { formatUtc, withUtcDateRange } from '@/utils/datetime'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 import { useDict } from '@/utils/dict'
@@ -384,12 +384,7 @@ function getUserSexLabel(dict: DictOption) {
 }
 
 function withDateRange(query: UserQuery) {
-  const params = { ...query }
-  if (dateRange.value?.length === 2) {
-    params.beginTime = dateRange.value[0]
-    params.endTime = dateRange.value[1]
-  }
-  return params
+  return withUtcDateRange(query, dateRange.value)
 }
 
 function reset() {
@@ -583,9 +578,10 @@ function handleFileSuccess(response: { msg?: string }, file: UploadRawFile) {
   upload.open = false
   upload.isUploading = false
   uploadRef.value?.handleRemove(file)
-  ElMessageBox.alert(`<div style="overflow: auto; overflow-x: hidden; max-height: 70vh; padding: 10px 20px 0;">${response.msg || ''}</div>`, t('user.importResult'), {
-    dangerouslyUseHTMLString: true
-  })
+  ElMessageBox.alert(
+    h('div', { style: 'overflow: auto; overflow-x: hidden; max-height: 70vh; padding: 10px 20px 0; white-space: pre-wrap;' }, response.msg || ''),
+    t('user.importResult')
+  )
   getList()
 }
 

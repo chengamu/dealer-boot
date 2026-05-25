@@ -141,7 +141,7 @@ import type { FormInstance } from 'element-plus'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { cleanOperlog, delOperlog, list, type OperLog, type OperLogQuery } from '@/api/monitor/operlog'
 import { download } from '@/utils/request'
-import { formatUtc } from '@/utils/datetime'
+import { formatUtc, withUtcDateRangeParams } from '@/utils/datetime'
 import { useDict } from '@/utils/dict'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
@@ -180,13 +180,7 @@ const queryParams = reactive<OperLogQuery>({
 })
 
 function withDateRange(params: OperLogQuery) {
-  return {
-    ...params,
-    params: {
-      beginTime: dateRange.value[0],
-      endTime: dateRange.value[1]
-    }
-  }
+  return withUtcDateRangeParams(params, dateRange.value)
 }
 
 async function getList() {

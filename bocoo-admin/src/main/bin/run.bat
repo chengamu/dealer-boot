@@ -5,6 +5,9 @@ chcp 65001
 
 echo Starting bocoo admin application...
 
+if "%SA_TOKEN_JWT_SECRET%"=="" set "SA_TOKEN_JWT_SECRET=bocoo-dev-jwt-secret-change-before-prod-2026"
+if "%CRYPTO_AES_KEY%"=="" set "CRYPTO_AES_KEY=DevCryptoKey2026"
+
 rem Set JAVA_OPTS for better management
 set JAVA_OPTS=-Dfile.encoding=UTF-8 ^
 -Dstdout.encoding=UTF-8 ^

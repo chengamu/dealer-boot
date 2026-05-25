@@ -65,15 +65,14 @@ public class CaffeineCacheDecorator implements Cache {
 
     public boolean evictIfPresent(Object key) {
         boolean b = cache.evictIfPresent(key);
-        if (b) {
-            CAFFEINE.invalidate(getUniqueKey(key));
-        }
+        CAFFEINE.invalidate(getUniqueKey(key));
         return b;
     }
 
     @Override
     public void clear() {
         cache.clear();
+        CAFFEINE.invalidateAll();
     }
 
     public boolean invalidate() {

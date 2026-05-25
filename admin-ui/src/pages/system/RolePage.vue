@@ -184,7 +184,7 @@ import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'elem
 import { addRole, changeRoleStatus, dataScope, delRole, deptTreeSelect, getRole, listRole, updateRole, type Role, type RoleQuery, type TreeOption } from '@/api/system/role'
 import { roleMenuTreeselect, treeselect as menuTreeselect } from '@/api/system/menu'
 import { download } from '@/utils/request'
-import { formatUtc } from '@/utils/datetime'
+import { formatUtc, withUtcDateRange } from '@/utils/datetime'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 import { useDict } from '@/utils/dict'
@@ -247,12 +247,7 @@ const rules = computed<FormRules<Role>>(() => ({
 }))
 
 function withDateRange(query: RoleQuery) {
-  const params = { ...query }
-  if (dateRange.value?.length === 2) {
-    params.beginTime = dateRange.value[0]
-    params.endTime = dateRange.value[1]
-  }
-  return params
+  return withUtcDateRange(query, dateRange.value)
 }
 
 async function getList() {

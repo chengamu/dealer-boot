@@ -18,8 +18,7 @@ public class I18nLocaleResolver implements LocaleResolver {
         String language = httpServletRequest.getHeader("content-language");
         Locale locale = Locale.getDefault();
         if (language != null && language.length() > 0) {
-            String[] split = language.split("_");
-            locale = new Locale(split[0], split[1]);
+            locale = Locale.forLanguageTag(language.replace('_', '-'));
         }
         return locale;
     }
