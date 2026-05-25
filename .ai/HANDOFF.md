@@ -3,6 +3,7 @@
 ## Recent Status Summary
 
 - AI Context Compaction was performed on 2026-05-25.
+- Project-scoped Codex agent `java-architect` was installed on 2026-05-25 under `.codex/agents/java-architect.toml`; source is VoltAgent `awesome-codex-subagents` language specialist config.
 - Git submission preparation checked useful untracked files on 2026-05-25: `.ai/`, `AGENTS.md`, and `docs/ai-context-compaction-template.md` are project context assets to track; `.flattened-pom.xml` files are Maven flatten generated artifacts and should stay ignored.
 - No business code was modified during compaction.
 - No build/test commands were run during compaction.
