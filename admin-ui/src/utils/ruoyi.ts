@@ -1,3 +1,4 @@
+import { i18n } from '@/i18n'
 import { parseUtc } from '@/utils/datetime'
 
 type DictValue = string | number | boolean | null | undefined
@@ -7,6 +8,16 @@ type DictItem = {
   [key: string]: unknown
 }
 type DictData = DictItem[] | Record<string, DictItem>
+
+const WEEKDAY_KEYS = [
+  'datetime.weekdays.sun',
+  'datetime.weekdays.mon',
+  'datetime.weekdays.tue',
+  'datetime.weekdays.wed',
+  'datetime.weekdays.thu',
+  'datetime.weekdays.fri',
+  'datetime.weekdays.sat'
+]
 
 export function parseTime(time?: string | number | Date | null, pattern = '{y}-{m}-{d} {h}:{i}:{s}') {
   if (!time) return null
@@ -34,7 +45,7 @@ export function parseTime(time?: string | number | Date | null, pattern = '{y}-{
   }
 
   return pattern.replace(/{(y|m|d|h|i|s|a)+}/g, (result, key: string) => {
-    if (key === 'a') return ['日', '一', '二', '三', '四', '五', '六'][formatObj[key]]
+    if (key === 'a') return i18n.global.t(WEEKDAY_KEYS[formatObj[key]])
     const item = formatObj[key]
     return result.length > 0 && item < 10 ? `0${item}` : String(item || 0)
   })

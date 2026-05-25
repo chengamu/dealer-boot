@@ -8,6 +8,7 @@ import com.bocoo.common.web.core.BaseController;
 import com.bocoo.common.core.domain.R;
 import com.bocoo.system.domain.bo.SysDeptBo;
 import com.bocoo.common.log.enums.BusinessType;
+import com.bocoo.common.core.utils.MessageUtils;
 import com.bocoo.common.core.utils.StringUtils;
 import com.bocoo.system.domain.vo.SysDeptVo;
 import com.bocoo.system.service.SysDeptService;
@@ -124,9 +125,9 @@ public class SysDeptController extends BaseController {
             return R.fail("修改部门'" + dept.getDeptName() + "'失败，上级部门不能是自己");
         } else if (StringUtils.equals(UserConstants.DEPT_DISABLE, dept.getStatus())) {
             if (deptService.selectNormalChildrenDeptById(deptId) > 0) {
-                return R.fail("该部门包含未停用的子部门!");
+                return R.fail(MessageUtils.message("dept.enabled.children.disable.denied"));
             } else if (deptService.checkDeptExistUser(deptId)) {
-                return R.fail("该部门下存在已分配用户，不能禁用!");
+                return R.fail(MessageUtils.message("dept.assigned.disable.denied"));
             }
         }
         return toAjax(deptService.updateDept(dept));
@@ -145,10 +146,10 @@ public class SysDeptController extends BaseController {
             @Parameter(description = "部门ID", required = true)
             @PathVariable Long deptId) {
         if (deptService.hasChildByDeptId(deptId)) {
-            return R.warn("存在下级部门,不允许删除");
+            return R.warn(MessageUtils.message("dept.children.delete.denied"));
         }
         if (deptService.checkDeptExistUser(deptId)) {
-            return R.warn("部门存在用户,不允许删除");
+            return R.warn(MessageUtils.message("dept.user.delete.denied"));
         }
         deptService.checkDeptDataScope(deptId);
         return toAjax(deptService.deleteDeptById(deptId));

@@ -328,7 +328,7 @@ public class SysLoginService {
         SysUser sysUser = new SysUser();
         sysUser.setUserId(userId);
         sysUser.setLoginIp(ServletUtils.getClientIP());
-        sysUser.setLoginDate(DateUtils.getNowDate());
+        sysUser.setLoginDate(TimeUtils.utcNow());
         sysUser.setUpdateBy(username);
         userMapper.updateById(sysUser);
     }

@@ -129,7 +129,7 @@ public class SysDictTypeService implements DictService {
             SysDictType dictType = dictTypeMapper.selectById(dictId);
             if (dictDataMapper.exists(new LambdaQueryWrapper<SysDictData>()
                 .eq(SysDictData::getDictType, dictType.getDictType()))) {
-                throw new ServiceException(String.format("%1$s已分配,不能删除", dictType.getDictName()));
+                throw ServiceException.ofMessageKey("dict.type.assigned.delete.denied", dictType.getDictName());
             }
             CacheUtils.evict(CacheNames.SYS_DICT, dictType.getDictType());
         }
@@ -178,7 +178,7 @@ public class SysDictTypeService implements DictService {
             // 新增 type 下无 data 数据 返回空防止缓存穿透
             return new ArrayList<>();
         }
-        throw new ServiceException("操作失败");
+        throw ServiceException.ofMessageKey("dict.type.insert.failed");
     }
 
     /**
@@ -200,7 +200,7 @@ public class SysDictTypeService implements DictService {
             CacheUtils.evict(CacheNames.SYS_DICT, oldDict.getDictType());
             return dictDataMapper.selectDictDataByType(dict.getDictType());
         }
-        throw new ServiceException("操作失败");
+        throw ServiceException.ofMessageKey("dict.type.update.failed");
     }
 
     /**

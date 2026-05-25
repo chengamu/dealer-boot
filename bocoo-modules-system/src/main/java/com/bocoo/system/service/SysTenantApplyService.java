@@ -48,7 +48,7 @@ public class SysTenantApplyService {
             .eq(SysTenantApply::getEmail, bo.getEmail())
             .in(SysTenantApply::getStatus, TenantApplyStatus.PENDING.getCode(), TenantApplyStatus.APPROVED.getCode()));
         if (exists) {
-            throw new ServiceException("Merchant application already exists for this email");
+            throw ServiceException.ofMessageKey("tenant.apply.exists");
         }
         SysTenantApply apply = MapstructUtils.convert(bo, SysTenantApply.class);
         apply.setStatus(TenantApplyStatus.PENDING.getCode());
@@ -75,10 +75,10 @@ public class SysTenantApplyService {
         checkPlatformTenant();
         SysTenantApply apply = tenantApplyMapper.selectById(applyId);
         if (apply == null) {
-            throw new ServiceException("Merchant application does not exist");
+            throw ServiceException.ofMessageKey("tenant.apply.notFound");
         }
         if (!TenantApplyStatus.PENDING.getCode().equals(apply.getStatus())) {
-            throw new ServiceException("Only pending merchant applications can be approved");
+            throw ServiceException.ofMessageKey("tenant.apply.approve.pendingOnly");
         }
 
         SysTenant tenant = new SysTenant();
@@ -141,10 +141,10 @@ public class SysTenantApplyService {
         checkPlatformTenant();
         SysTenantApply apply = tenantApplyMapper.selectById(applyId);
         if (apply == null) {
-            throw new ServiceException("Merchant application does not exist");
+            throw ServiceException.ofMessageKey("tenant.apply.notFound");
         }
         if (!TenantApplyStatus.PENDING.getCode().equals(apply.getStatus())) {
-            throw new ServiceException("Only pending merchant applications can be rejected");
+            throw ServiceException.ofMessageKey("tenant.apply.reject.pendingOnly");
         }
         apply.setStatus(TenantApplyStatus.REJECTED.getCode());
         apply.setRejectReason(bo.getRejectReason());
@@ -156,7 +156,7 @@ public class SysTenantApplyService {
 
     private void checkPlatformTenant() {
         if (!LoginHelper.isPlatformTenant()) {
-            throw new ServiceException("Only platform tenant can audit merchant applications");
+            throw ServiceException.ofMessageKey("tenant.apply.audit.platformOnly");
         }
     }
 }

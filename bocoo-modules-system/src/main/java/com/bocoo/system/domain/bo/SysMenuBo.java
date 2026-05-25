@@ -41,36 +41,36 @@ public class SysMenuBo extends BaseEntity {
      * 菜单名称
      */
     @Schema(description = "菜单名称")
-    @NotBlank(message = "菜单名称不能为空")
-    @Size(min = 0, max = 50, message = "菜单名称长度不能超过{max}个字符")
+    @NotBlank(message = "{validation.menu.name.required}")
+    @Size(min = 0, max = 50, message = "{validation.menu.name.max}")
     private String menuName;
 
     /**
      * 国际化消息键
      */
     @Schema(description = "国际化消息键")
-    @Size(min = 0, max = 128, message = "国际化消息键长度不能超过{max}个字符")
+    @Size(min = 0, max = 128, message = "{validation.i18n.key.max}")
     private String i18nKey;
 
     /**
      * 显示顺序
      */
     @Schema(description = "显示顺序")
-    @NotNull(message = "显示顺序不能为空")
+    @NotNull(message = "{validation.sort.required}")
     private Integer orderNum;
 
     /**
      * 路由地址
      */
     @Schema(description = "路由地址")
-    @Size(min = 0, max = 200, message = "路由地址不能超过{max}个字符")
+    @Size(min = 0, max = 200, message = "{validation.menu.path.max}")
     private String path;
 
     /**
      * 组件路径
      */
     @Schema(description = "组件路径")
-    @Size(min = 0, max = 200, message = "组件路径不能超过{max}个字符")
+    @Size(min = 0, max = 200, message = "{validation.menu.component.max}")
     private String component;
 
     /**
@@ -95,7 +95,7 @@ public class SysMenuBo extends BaseEntity {
      * 菜单类型（M目录 C菜单 F按钮）
      */
     @Schema(description = "菜单类型（M目录 C菜单 F按钮）")
-    @NotBlank(message = "菜单类型不能为空")
+    @NotBlank(message = "{validation.menu.type.required}")
     private String menuType;
 
     /**
@@ -115,8 +115,8 @@ public class SysMenuBo extends BaseEntity {
      */
     @Schema(description = "权限标识")
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    @Size(min = 0, max = 100, message = "权限标识长度不能超过{max}个字符")
-    @Pattern(regexp = RegexConstants.PERMISSION_STRING, message = "权限标识必须符合 tool:build:list 格式")
+    @Size(min = 0, max = 100, message = "{validation.menu.permission.max}")
+    @Pattern(regexp = RegexConstants.PERMISSION_STRING, message = "{validation.menu.permission.pattern}")
     private String perms;
 
     /**

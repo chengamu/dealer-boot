@@ -6,6 +6,7 @@ import cn.hutool.core.io.FileUtil;
 import com.bocoo.common.core.config.BocooConfig;
 import com.bocoo.common.core.domain.R;
 import com.bocoo.common.core.exception.file.InvalidExtensionException;
+import com.bocoo.common.core.utils.MessageUtils;
 import com.bocoo.common.core.utils.StringUtils;
 import com.bocoo.common.core.utils.file.FileUploadUtils;
 import com.bocoo.common.core.utils.file.MimeTypeUtils;
@@ -77,7 +78,7 @@ public class SysProfileController extends BaseController {
             @Parameter(description = "用户信息", required = true)
             @Validated @RequestBody SysUserProfileBo profile) {
         if(LoginHelper.getUsername().equals("show")){
-            return R.fail("演示账号禁止修改");
+            return R.fail(MessageUtils.message("demo.account.update.denied"));
         }
         SysUserBo user = BeanUtil.toBean(profile, SysUserBo.class);
         user.setUserId(LoginHelper.getUserId());
@@ -91,7 +92,7 @@ public class SysProfileController extends BaseController {
         if (userService.updateUserProfile(user) > 0) {
             return R.ok();
         }
-        return R.fail("修改个人信息异常，请联系管理员");
+        return R.fail(MessageUtils.message("profile.update.failed"));
     }
 
     /**
@@ -109,20 +110,20 @@ public class SysProfileController extends BaseController {
             @Parameter(description = "新密码", required = true)
             String newPassword) {
         if(LoginHelper.getUsername().equals("show")){
-            return R.fail("演示账号禁止修改");
+            return R.fail(MessageUtils.message("demo.account.update.denied"));
         }
         SysUserVo user = userService.selectUserById(LoginHelper.getUserId());
         String password = user.getPassword();
         if (StringUtils.equals(oldPassword,newPassword)) {
-            return R.fail("新密码不能与旧密码相同");
+            return R.fail(MessageUtils.message("password.same.denied"));
         }
         if (!BCrypt.checkpw(oldPassword, password)) {
-            return R.fail("修改密码失败，旧密码错误");
+            return R.fail(MessageUtils.message("password.old.invalid"));
         }
         if (userService.resetUserPwd(user.getUserId(), BCrypt.hashpw(newPassword)) > 0) {
             return R.ok();
         }
-        return R.fail("修改密码异常，请联系管理员");
+        return R.fail(MessageUtils.message("password.update.failed"));
     }
 
     /**
@@ -141,9 +142,9 @@ public class SysProfileController extends BaseController {
             SysOssVo oss = sysOssService.upload(avatarfile);
             String avatar = oss.getUrl();
             if (userService.updateUserAvatar(LoginHelper.getUsername(), avatar)) {
-                return R.ok(Map.of("imgUrl", avatar));
+                return R.ok(MessageUtils.message("common.upload.success"), Map.of("imgUrl", avatar));
             }
         }
-        return R.fail("上传图片异常，请联系管理员");
+        return R.fail(MessageUtils.message("common.upload.failed"));
     }
 }

@@ -1,7 +1,6 @@
 package com.bocoo.system.domain.vo;
 
 import com.alibaba.excel.annotation.ExcelProperty;
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.bocoo.common.excel.annotation.ExcelDictFormat;
 import com.bocoo.common.excel.convert.ExcelDictConvert;
 import com.bocoo.system.domain.entity.SysDept;
@@ -97,7 +96,6 @@ public class SysDeptVo implements Serializable {
      * 创建时间
      */
     @Schema(description = "创建时间")
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @ExcelProperty(value = "创建时间")
     private LocalDateTime createTime;
 

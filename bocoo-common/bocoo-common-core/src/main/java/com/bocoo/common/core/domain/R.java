@@ -57,7 +57,7 @@ public class R<T> implements Serializable {
      * @return 成功响应对象
      */
     public static <T> R<T> ok() {
-        return restResult(null, SUCCESS, MessageUtils.message("response.success"));
+        return restResult(null, SUCCESS, MessageUtils.message("common.success"));
     }
 
     /**
@@ -68,7 +68,7 @@ public class R<T> implements Serializable {
      * @return 成功响应对象
      */
     public static <T> R<T> ok(T data) {
-        return restResult(data, SUCCESS, MessageUtils.message("response.success"));
+        return restResult(data, SUCCESS, MessageUtils.message("common.success"));
     }
 
     /**
@@ -101,7 +101,7 @@ public class R<T> implements Serializable {
      * @return 失败响应对象
      */
     public static <T> R<T> fail() {
-        return restResult(null, FAIL, MessageUtils.message("response.fail"));
+        return restResult(null, FAIL, MessageUtils.message("common.failed"));
     }
 
     /**
@@ -123,7 +123,7 @@ public class R<T> implements Serializable {
      * @return 失败响应对象
      */
     public static <T> R<T> fail(T data) {
-        return restResult(data, FAIL, MessageUtils.message("response.fail"));
+        return restResult(data, FAIL, MessageUtils.message("common.failed"));
     }
 
     /**

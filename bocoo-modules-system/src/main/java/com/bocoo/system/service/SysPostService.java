@@ -148,7 +148,7 @@ public class SysPostService {
         for (Long postId : postIds) {
             SysPost post = postMapper.selectById(postId);
             if (countUserPostById(postId) > 0) {
-                throw new ServiceException(String.format("%1$s已分配，不能删除!", post.getPostName()));
+                throw ServiceException.ofMessageKey("post.assigned.delete.denied", post.getPostName());
             }
         }
         return postMapper.deleteBatchIds(Arrays.asList(postIds));

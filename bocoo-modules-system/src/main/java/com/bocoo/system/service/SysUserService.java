@@ -237,7 +237,7 @@ public class SysUserService implements UserService {
      */
     public void checkUserAllowed(Long userId) {
         if (ObjectUtil.isNotNull(userId) && LoginHelper.isAdmin(userId)) {
-            throw new ServiceException("不允许操作超级管理员用户");
+            throw ServiceException.ofMessageKey("sys.user.admin.operation.denied");
         }
     }
 
@@ -254,7 +254,7 @@ public class SysUserService implements UserService {
             return;
         }
         if (userMapper.countUserById(userId) == 0) {
-            throw new ServiceException("没有权限访问用户数据！");
+            throw ServiceException.ofMessageKey("sys.user.data.permission.denied");
         }
     }
 

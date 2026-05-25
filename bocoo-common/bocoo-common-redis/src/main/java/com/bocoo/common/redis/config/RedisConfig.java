@@ -1,13 +1,18 @@
 package com.bocoo.common.redis.config;
 
 import cn.hutool.core.util.ObjectUtil;
+import com.bocoo.common.core.utils.TimeUtils;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
-import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import lombok.extern.slf4j.Slf4j;
 import com.bocoo.common.core.utils.SpringUtils;
 import com.bocoo.common.redis.config.properties.RedissonProperties;
@@ -23,8 +28,8 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.task.VirtualThreadTaskExecutor;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.TimeZone;
 
 /**
@@ -45,12 +50,11 @@ public class RedisConfig {
     public RedissonAutoConfigurationCustomizer redissonCustomizer() {
         return config -> {
             JavaTimeModule javaTimeModule = new JavaTimeModule();
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-            javaTimeModule.addSerializer(LocalDateTime.class, new LocalDateTimeSerializer(formatter));
-            javaTimeModule.addDeserializer(LocalDateTime.class, new LocalDateTimeDeserializer(formatter));
+            javaTimeModule.addSerializer(LocalDateTime.class, UtcLocalDateTimeSerializer.INSTANCE);
+            javaTimeModule.addDeserializer(LocalDateTime.class, UtcLocalDateTimeDeserializer.INSTANCE);
             ObjectMapper om = new ObjectMapper();
             om.registerModule(javaTimeModule);
-            om.setTimeZone(TimeZone.getDefault());
+            om.setTimeZone(TimeZone.getTimeZone("UTC"));
             om.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
             // 指定序列化输入的类型，类必须是非final修饰的。序列化时将对象全类名一起保存下来
             om.activateDefaultTyping(LaissezFaireSubTypeValidator.instance, ObjectMapper.DefaultTyping.NON_FINAL);
@@ -97,6 +101,27 @@ public class RedisConfig {
             }
             log.info("初始化 redis 配置");
         };
+    }
+
+    private static final class UtcLocalDateTimeSerializer extends JsonSerializer<LocalDateTime> {
+
+        private static final UtcLocalDateTimeSerializer INSTANCE = new UtcLocalDateTimeSerializer();
+
+        @Override
+        public void serialize(LocalDateTime value, JsonGenerator gen, SerializerProvider serializers)
+            throws IOException {
+            gen.writeString(TimeUtils.formatUtcIso(value));
+        }
+    }
+
+    private static final class UtcLocalDateTimeDeserializer extends JsonDeserializer<LocalDateTime> {
+
+        private static final UtcLocalDateTimeDeserializer INSTANCE = new UtcLocalDateTimeDeserializer();
+
+        @Override
+        public LocalDateTime deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+            return TimeUtils.parseUtcIso(p.getValueAsString());
+        }
     }
 
 

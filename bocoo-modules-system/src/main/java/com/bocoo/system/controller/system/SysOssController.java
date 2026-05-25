@@ -4,6 +4,7 @@ package com.bocoo.system.controller.system;
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.ObjectUtil;
+import com.bocoo.common.core.utils.MessageUtils;
 import com.bocoo.common.core.utils.StringUtils;
 import com.bocoo.common.core.utils.file.MimeTypeUtils;
 import com.bocoo.common.log.annotation.Log;
@@ -73,7 +74,7 @@ public class SysOssController extends BaseController {
     @Operation(summary = "查询OSS对象基于ID串", description = "根据ID串查询OSS对象列表")
     public R<List<SysOssVo>> listByIds(
             @Parameter(description = "OSS对象ID数组", required = true)
-            @NotEmpty(message = "主键不能为空")
+            @NotEmpty(message = "{validation.id.required}")
             @PathVariable Long[] ossIds) {
         List<SysOssVo> list = sysSssService.listByIds(Arrays.asList(ossIds));
         return R.ok(list);
@@ -92,10 +93,10 @@ public class SysOssController extends BaseController {
             @Parameter(description = "上传文件", content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE, schema = @Schema(type = "string", format = "binary")))
             @RequestPart("file") MultipartFile file) {
         if (ObjectUtil.isNull(file)) {
-            throw new ServiceException("上传文件不能为空");
+            throw ServiceException.ofMessageKey("oss.upload.file.required");
         }
         SysOssVo oss = sysSssService.upload(file);
-        return R.ok(Map.of(
+        return R.ok(MessageUtils.message("common.upload.success"), Map.of(
             "url", oss.getUrl(),
             "fileName", oss.getOriginalName(),
             "ossId", oss.getOssId().toString()
@@ -121,10 +122,10 @@ public class SysOssController extends BaseController {
             }
             // 上传文件到OSS并返回访问URL
             SysOssVo oss = sysSssService.upload(avatarfile);
-            return R.ok(Map.of("imgUrl", oss.getUrl()));
+            return R.ok(MessageUtils.message("common.upload.success"), Map.of("imgUrl", oss.getUrl()));
 
         }
-        return R.fail("上传图片异常，请联系管理员");
+        return R.fail(MessageUtils.message("common.upload.failed"));
     }
 
     /**
@@ -153,7 +154,7 @@ public class SysOssController extends BaseController {
     @Operation(summary = "删除OSS对象存储", description = "批量删除OSS对象存储")
     public R<Void> remove(
             @Parameter(description = "OSS对象ID数组", required = true)
-            @NotEmpty(message = "主键不能为空")
+            @NotEmpty(message = "{validation.id.required}")
             @PathVariable Long[] ossIds) {
         return toAjax(sysSssService.deleteWithValidByIds(List.of(ossIds), true));
     }

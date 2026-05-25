@@ -38,23 +38,23 @@ public class SysRoleBo extends BaseEntity {
      * 角色名称
      */
     @Schema(description = "角色名称")
-    @NotBlank(message = "角色名称不能为空")
-    @Size(min = 0, max = 30, message = "角色名称长度不能超过{max}个字符")
+    @NotBlank(message = "{validation.role.name.required}")
+    @Size(min = 0, max = 30, message = "{validation.role.name.max}")
     private String roleName;
 
     /**
      * 角色权限字符串
      */
     @Schema(description = "角色权限字符串")
-    @NotBlank(message = "角色权限字符串不能为空")
-    @Size(min = 0, max = 100, message = "权限字符长度不能超过{max}个字符")
+    @NotBlank(message = "{validation.role.key.required}")
+    @Size(min = 0, max = 100, message = "{validation.role.key.max}")
     private String roleKey;
 
     /**
      * 显示顺序
      */
     @Schema(description = "显示顺序")
-    @NotNull(message = "显示顺序不能为空")
+    @NotNull(message = "{validation.sort.required}")
     private Integer roleSort;
 
     /**

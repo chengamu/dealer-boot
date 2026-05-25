@@ -9,7 +9,7 @@ import lombok.EqualsAndHashCode;
 import java.time.LocalDateTime;
 
 /**
- * ${functionName}业务对象 ${tableName}
+ * ${functionName} business object ${tableName}
  *
  * @author ${author}
  */

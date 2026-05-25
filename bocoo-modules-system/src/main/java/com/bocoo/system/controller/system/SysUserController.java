@@ -11,6 +11,7 @@ import com.bocoo.system.service.SysRoleService;
 import com.bocoo.system.service.SysUserService;
 import com.bocoo.common.core.constant.UserConstants;
 import com.bocoo.common.core.domain.R;
+import com.bocoo.common.core.utils.MessageUtils;
 import com.bocoo.common.core.utils.StreamUtils;
 import com.bocoo.common.core.utils.StringUtils;
 import com.bocoo.common.excel.core.ExcelResult;
@@ -230,7 +231,7 @@ public class SysUserController extends BaseController {
             @Parameter(description = "用户ID数组", required = true)
             @PathVariable Long[] userIds) {
         if (ArrayUtil.contains(userIds, LoginHelper.getUserId())) {
-            return R.fail("当前用户不能删除");
+            return R.fail(MessageUtils.message("user.current.delete.denied"));
         }
         return toAjax(userService.deleteUserByIds(userIds));
     }

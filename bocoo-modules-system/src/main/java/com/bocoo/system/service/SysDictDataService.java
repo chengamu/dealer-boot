@@ -101,7 +101,7 @@ public class SysDictDataService {
         if (row > 0) {
             return dictDataMapper.selectDictDataByType(data.getDictType());
         }
-        throw new ServiceException("操作失败");
+        throw ServiceException.ofMessageKey("dict.data.insert.failed");
     }
 
     /**
@@ -117,7 +117,7 @@ public class SysDictDataService {
         if (row > 0) {
             return dictDataMapper.selectDictDataByType(data.getDictType());
         }
-        throw new ServiceException("操作失败");
+        throw ServiceException.ofMessageKey("dict.data.update.failed");
     }
 
     public boolean checkDictDataUnique(SysDictDataBo dict) {

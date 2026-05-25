@@ -1,4 +1,5 @@
 import type { DirectiveBinding, ObjectDirective } from 'vue'
+import { i18n } from '@/i18n'
 import useUserStore from '@/stores/user'
 
 const hasRole: ObjectDirective<HTMLElement, string[]> = {
@@ -15,7 +16,7 @@ const hasRole: ObjectDirective<HTMLElement, string[]> = {
       return
     }
 
-    throw new Error('请设置角色权限标签值')
+    throw new Error(i18n.global.t('permission.missingRoleValue'))
   }
 }
 

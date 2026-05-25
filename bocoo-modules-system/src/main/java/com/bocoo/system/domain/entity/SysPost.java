@@ -42,8 +42,8 @@ public class SysPost extends BaseEntity {
      */
     @Schema(description = "岗位编码")
     @ExcelProperty(value = "岗位编码")
-    @NotBlank(message = "岗位编码不能为空")
-    @Size(min = 0, max = 64, message = "岗位编码长度不能超过{max}个字符")
+    @NotBlank(message = "{validation.post.code.required}")
+    @Size(min = 0, max = 64, message = "{validation.post.code.max}")
     private String postCode;
 
     /**
@@ -51,8 +51,8 @@ public class SysPost extends BaseEntity {
      */
     @Schema(description = "岗位名称")
     @ExcelProperty(value = "岗位名称")
-    @NotBlank(message = "岗位名称不能为空")
-    @Size(min = 0, max = 50, message = "岗位名称长度不能超过{max}个字符")
+    @NotBlank(message = "{validation.post.name.required}")
+    @Size(min = 0, max = 50, message = "{validation.post.name.max}")
     private String postName;
 
     /**
@@ -60,7 +60,7 @@ public class SysPost extends BaseEntity {
      */
     @Schema(description = "岗位排序")
     @ExcelProperty(value = "岗位排序")
-    @NotNull(message = "显示顺序不能为空")
+    @NotNull(message = "{validation.sort.required}")
     private Integer postSort;
 
     /**

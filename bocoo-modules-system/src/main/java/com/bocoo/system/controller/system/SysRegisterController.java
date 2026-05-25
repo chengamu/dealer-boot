@@ -4,6 +4,7 @@ import cn.dev33.satoken.annotation.SaIgnore;
 import com.bocoo.common.web.core.BaseController;
 import com.bocoo.common.core.domain.R;
 import com.bocoo.common.core.domain.bo.RegisterBody;
+import com.bocoo.common.core.utils.MessageUtils;
 import com.bocoo.system.service.SysConfigService;
 import com.bocoo.system.service.SysRegisterService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -39,7 +40,7 @@ public class SysRegisterController extends BaseController {
             @Parameter(description = "注册用户信息", required = true)
             @Validated @RequestBody RegisterBody user) {
         if (!("true".equals(configService.selectConfigByKey("sys.account.registerUser")))) {
-            return R.fail("当前系统没有开启注册功能！");
+            return R.fail(MessageUtils.message("register.disabled"));
         }
         registerService.register(user);
         return R.ok();

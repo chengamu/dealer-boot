@@ -5,7 +5,7 @@ import io.github.linpeilie.annotations.AutoMapper;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 /**
  * OSS对象存储视图对象 sys_oss
@@ -53,7 +53,7 @@ public class SysOssVo {
      * 创建时间
      */
     @Schema(description = "创建时间")
-    private Date createTime;
+    private LocalDateTime createTime;
 
     /**
      * 上传人

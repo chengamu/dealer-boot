@@ -6,10 +6,12 @@
 
     <resultMap type="com.bocoo.system.domain.vo.SysUserVo" id="SysUserResult">
         <id property="userId" column="user_id"/>
+        <result property="loginDate" column="login_date" typeHandler="com.bocoo.common.mybatis.handler.UtcLocalDateTimeTypeHandler"/>
     </resultMap>
 
     <resultMap type="com.bocoo.system.domain.vo.SysUserExportVo" id="SysUserExportResult">
         <id property="userId" column="user_id"/>
+        <result property="loginDate" column="login_date" typeHandler="com.bocoo.common.mybatis.handler.UtcLocalDateTimeTypeHandler"/>
     </resultMap>
 
     <select id="selectPageUserList" resultMap="SysUserResult">

@@ -21,7 +21,7 @@ import jakarta.validation.constraints.NotEmpty;
 import java.util.List;
 
 /**
- * ${functionName} 控制层
+ * ${functionName} controller
  *
  * @author ${author}
  */
@@ -35,7 +35,7 @@ public class ${ClassName}Controller extends BaseController {
     private final I${ClassName}Service ${className}Service;
 
     /**
-     * 查询${functionName}列表
+     * Query ${functionName} list
      */
     @SaCheckPermission("${moduleName}:${businessName}:list")
     @GetMapping("/list")
@@ -49,7 +49,7 @@ public class ${ClassName}Controller extends BaseController {
     }
 
     /**
-     * 查询${functionName}列表
+     * Query ${functionName} list
      */
     @SaCheckPermission("${moduleName}:${businessName}:list")
     @GetMapping("/alllist")
@@ -61,9 +61,9 @@ public class ${ClassName}Controller extends BaseController {
     }
 
     /**
-     * 获取${functionName}详细信息
+     * Get ${functionName} detail
      *
-     * @param ${businessName}Id ${functionName}主键
+     * @param ${businessName}Id ${functionName} primary key
      */
     @SaCheckPermission("${moduleName}:${businessName}:query")
     @GetMapping("/{${businessName}Id}")
@@ -75,7 +75,7 @@ public class ${ClassName}Controller extends BaseController {
     }
 
     /**
-     * 新增${functionName}
+     * Add ${functionName}
      */
     @SaCheckPermission("${moduleName}:${businessName}:add")
     @Log(title = "${functionName}", businessType = BusinessType.INSERT)
@@ -89,7 +89,7 @@ public class ${ClassName}Controller extends BaseController {
     }
 
     /**
-     * 修改${functionName}
+     * Update ${functionName}
      */
     @SaCheckPermission("${moduleName}:${businessName}:edit")
     @Log(title = "${functionName}", businessType = BusinessType.UPDATE)
@@ -103,9 +103,9 @@ public class ${ClassName}Controller extends BaseController {
     }
 
     /**
-     * 删除${functionName}
+     * Delete ${functionName}
      *
-     * @param ${businessName}Ids ${functionName}主键串
+     * @param ${businessName}Ids ${functionName} primary keys
      */
     @SaCheckPermission("${moduleName}:${businessName}:remove")
     @Log(title = "${functionName}", businessType = BusinessType.DELETE)
@@ -126,7 +126,7 @@ public class ${ClassName}Controller extends BaseController {
     #end
     #if($hasStatus)
     /**
-     * 修改${functionName}状态
+     * Update ${functionName} status
      */
     @SaCheckPermission("${moduleName}:${businessName}:edit")
     @Log(title = "修改${functionName}状态", businessType = BusinessType.UPDATE)

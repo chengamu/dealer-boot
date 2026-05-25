@@ -156,7 +156,7 @@ public class SysOssService implements OssService {
     public void download(Long ossId, HttpServletResponse response) throws IOException {
         SysOssVo sysOss = SpringUtils.getAopProxy(this).getById(ossId);
         if (ObjectUtil.isNull(sysOss)) {
-            throw new ServiceException("文件数据不存在!");
+            throw ServiceException.ofMessageKey("oss.file.notFound");
         }
         FileUtils.setAttachmentResponseHeader(response, sysOss.getOriginalName());
         response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE + "; charset=UTF-8");
@@ -189,7 +189,7 @@ public class SysOssService implements OssService {
         try {
             uploadResult = storage.uploadSuffix(file.getBytes(), suffix, file.getContentType());
         } catch (IOException e) {
-            throw new ServiceException("文件上传失败");
+            throw ServiceException.ofMessageKey("oss.upload.failed");
         }
 
         // 保存文件信息

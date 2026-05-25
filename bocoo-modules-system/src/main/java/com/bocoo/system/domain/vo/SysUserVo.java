@@ -13,7 +13,6 @@ import lombok.Data;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -117,7 +116,7 @@ public class SysUserVo implements Serializable {
      * 最后登录时间
      */
     @Schema(description = "最后登录时间")
-    private Date loginDate;
+    private LocalDateTime loginDate;
 
     /**
      * 备注

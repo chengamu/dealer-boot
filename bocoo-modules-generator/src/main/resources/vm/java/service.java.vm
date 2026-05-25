@@ -11,57 +11,57 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * ${functionName} 服务接口
+ * ${functionName} service interface
  *
  * @author ${author}
  */
 public interface I${ClassName}Service extends IBaseService<${ClassName}, ${ClassName}Vo> {
 
     /**
-     * 查询${functionName}列表（分页）
+     * Query ${functionName} page list
      *
-     * @param bo        查询条件
-     * @param pageQuery 分页参数
-     * @return 分页数据
+     * @param bo        query criteria
+     * @param pageQuery page parameters
+     * @return page data
      */
     TableDataInfo<${ClassName}Vo> queryPageList(${ClassName}Bo bo, PageQuery pageQuery);
 
     /**
-     * 查询${functionName}列表
+     * Query ${functionName} list
      *
-     * @param bo 查询条件
-     * @return ${functionName}列表
+     * @param bo query criteria
+     * @return ${functionName} list
      */
     List<${ClassName}Vo> queryList(${ClassName}Bo bo);
 
     /**
-     * 根据业务对象新增
-     * @param bo 业务对象
-     * @return 是否成功
+     * Insert by business object
+     * @param bo business object
+     * @return whether the operation succeeded
      */
     Boolean insertByBo(${ClassName}Bo bo);
 
     /**
-     * 根据业务对象修改
-     * @param bo 业务对象
-     * @return 是否成功
+     * Update by business object
+     * @param bo business object
+     * @return whether the operation succeeded
      */
     Boolean updateByBo(${ClassName}Bo bo);
 
     /**
-     * 批量删除并校验
-     * @param ids 主键集合
-     * @param isValid 是否校验
-     * @return 是否成功
+     * Delete by ids with optional validation
+     * @param ids primary key collection
+     * @param isValid whether to validate before deleting
+     * @return whether the operation succeeded
      */
     Boolean deleteWithValidByIds(Collection<Long> ids, Boolean isValid);
 
      /**
-     * 修改设备分组状态
+     * Update ${functionName} status
      *
-     * @param id 设备分组主键
-     * @param status 状态值
-     * @return 更新记录数
+     * @param id ${functionName} primary key
+     * @param status status value
+     * @return updated row count
      */
     int updateStatus(Long id, String status);
 

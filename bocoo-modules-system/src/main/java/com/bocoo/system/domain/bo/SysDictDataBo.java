@@ -39,38 +39,38 @@ public class SysDictDataBo extends BaseEntity {
      * 字典标签
      */
     @Schema(description = "字典标签")
-    @NotBlank(message = "字典标签不能为空")
-    @Size(min = 0, max = 100, message = "字典标签长度不能超过{max}个字符")
+    @NotBlank(message = "{validation.dict.label.required}")
+    @Size(min = 0, max = 100, message = "{validation.dict.label.max}")
     private String dictLabel;
 
     /**
      * 国际化消息键
      */
     @Schema(description = "国际化消息键")
-    @Size(min = 0, max = 128, message = "国际化消息键长度不能超过{max}个字符")
+    @Size(min = 0, max = 128, message = "{validation.i18n.key.max}")
     private String i18nKey;
 
     /**
      * 字典键值
      */
     @Schema(description = "字典键值")
-    @NotBlank(message = "字典键值不能为空")
-    @Size(min = 0, max = 100, message = "字典键值长度不能超过{max}个字符")
+    @NotBlank(message = "{validation.dict.value.required}")
+    @Size(min = 0, max = 100, message = "{validation.dict.value.max}")
     private String dictValue;
 
     /**
      * 字典类型
      */
     @Schema(description = "字典类型")
-    @NotBlank(message = "字典类型不能为空")
-    @Size(min = 0, max = 100, message = "字典类型长度不能超过{max}个字符")
+    @NotBlank(message = "{validation.dict.type.required}")
+    @Size(min = 0, max = 100, message = "{validation.dict.type.max}")
     private String dictType;
 
     /**
      * 样式属性（其他样式扩展）
      */
     @Schema(description = "样式属性（其他样式扩展）")
-    @Size(min = 0, max = 100, message = "样式属性长度不能超过{max}个字符")
+    @Size(min = 0, max = 100, message = "{validation.css.class.max}")
     private String cssClass;
 
     /**

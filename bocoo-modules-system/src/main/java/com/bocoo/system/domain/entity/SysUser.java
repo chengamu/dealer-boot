@@ -14,7 +14,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -50,18 +50,18 @@ public class SysUser extends BaseEntity {
      * 用户账号
      */
     @Schema(description = "用户账号")
-    @Xss(message = "用户账号不能包含脚本字符")
-    @NotBlank(message = "用户账号不能为空")
-    @Size(min = 0, max = 100, message = "用户账号长度不能超过{max}个字符")
+    @Xss(message = "{validation.user.username.xss}")
+    @NotBlank(message = "{validation.user.username.required}")
+    @Size(min = 0, max = 100, message = "{validation.user.username.max}")
     private String userName;
 
     /**
      * 用户昵称
      */
     @Schema(description = "用户昵称")
-    @Xss(message = "用户昵称不能包含脚本字符")
-    @NotBlank(message = "用户昵称不能为空")
-    @Size(min = 0, max = 30, message = "用户昵称长度不能超过{max}个字符")
+    @Xss(message = "{validation.user.nickname.xss}")
+    @NotBlank(message = "{validation.user.nickname.required}")
+    @Size(min = 0, max = 30, message = "{validation.user.nickname.max}")
     private String nickName;
 
     /**
@@ -75,8 +75,8 @@ public class SysUser extends BaseEntity {
      */
     @Schema(description = "用户邮箱")
     @Sensitive(strategy = SensitiveStrategy.EMAIL)
-    @Email(message = "邮箱格式不正确")
-    @Size(min = 0, max = 50, message = "邮箱长度不能超过{max}个字符")
+    @Email(message = "{validation.email.invalid}")
+    @Size(min = 0, max = 50, message = "{validation.email.max}")
     private String email;
 
     /**
@@ -132,7 +132,7 @@ public class SysUser extends BaseEntity {
      * 最后登录时间
      */
     @Schema(description = "最后登录时间")
-    private Date loginDate;
+    private LocalDateTime loginDate;
 
     /**
      * 备注

@@ -106,14 +106,14 @@ public class SysOssConfigService {
      */
     private void validEntityBeforeSave(SysOssConfig entity) {
         if (StringUtils.isNotEmpty(entity.getConfigKey()) && !checkConfigKeyUnique(entity)) {
-            throw new ServiceException("操作配置'" + entity.getConfigKey() + "'失败, 配置key已存在!");
+            throw ServiceException.ofMessageKey("oss.config.key.exists", entity.getConfigKey());
         }
     }
 
     public Boolean deleteWithValidByIds(Collection<Long> ids, Boolean isValid) {
         if (isValid) {
             if (CollUtil.containsAny(ids, OssConstant.SYSTEM_DATA_IDS)) {
-                throw new ServiceException("系统内置, 不可删除!");
+                throw ServiceException.ofMessageKey("oss.config.system.delete.denied");
             }
         }
         List<SysOssConfig> list = CollUtil.newArrayList();

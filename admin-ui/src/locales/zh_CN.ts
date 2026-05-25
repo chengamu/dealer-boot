@@ -2,6 +2,10 @@ export default {
   "app": {
     "title": "基础管理底座"
   },
+  "language": {
+    "zhCN": "中文",
+    "enUS": "英文"
+  },
   "dataLabels": {
     "base": "基础",
     "system": "系统管理",
@@ -50,7 +54,108 @@ export default {
     "staticSample": "静态样板",
     "modules": "模块",
     "menus": "菜单",
-    "logs": "日志"
+    "logs": "日志",
+    "activeOrders": "活跃订单",
+    "quotesPending": "待处理报价",
+    "dealersOnline": "在线经销商",
+    "fulfillmentRate": "准时履约率",
+    "recentOrders": "最近订单",
+    "activeUsers": "最近活跃用户",
+    "alerts": "系统告警",
+    "timeline": "活动时间线",
+    "orderHealth": "订单健康度",
+    "lastSevenDays": "最近 7 天",
+    "viewAllOrders": "查看全部订单",
+    "viewAllUsers": "查看全部用户",
+    "viewAllAlerts": "查看全部告警",
+    "viewAllActivity": "查看全部动态",
+    "viewReport": "查看报告",
+    "orderNo": "订单号",
+    "customer": "客户",
+    "status": "状态",
+    "orderDate": "订单日期",
+    "total": "金额",
+    "action": "操作",
+    "view": "查看",
+    "showingOrders": "显示 1 到 5 条，共 20 条订单",
+    "totalOrders": "总计",
+    "fulfillmentProgress": "本周 604 / 624 单准时完成",
+    "systemUser": "系统",
+    "byUser": "由 {name} 操作",
+    "comparison": {
+      "lastSevenDays": "较近 7 天",
+      "yesterday": "较昨天"
+    },
+    "countries": {
+      "unitedStates": "美国",
+      "canada": "加拿大",
+      "germany": "德国",
+      "australia": "澳大利亚",
+      "sweden": "瑞典"
+    },
+    "orderStatus": {
+      "inProduction": "生产中",
+      "submitted": "已提交",
+      "shipped": "已发货",
+      "pendingPayment": "待付款",
+      "delivered": "已交付",
+      "cancelled": "已取消"
+    },
+    "orderDates": {
+      "may28": "2024年5月28日",
+      "may27": "2024年5月27日",
+      "may26": "2024年5月26日",
+      "may25": "2024年5月25日",
+      "may24": "2024年5月24日"
+    },
+    "userRoles": {
+      "admin": "管理员",
+      "manager": "经理",
+      "editor": "编辑",
+      "viewer": "查看者"
+    },
+    "relativeTime": {
+      "twoMinAgo": "2 分钟前",
+      "eightMinAgo": "8 分钟前",
+      "fifteenMinAgo": "15 分钟前",
+      "twentyEightMinAgo": "28 分钟前",
+      "oneHourAgo": "1 小时前",
+      "twoHoursAgo": "2 小时前",
+      "threeHoursAgo": "3 小时前",
+      "sixHoursAgo": "6 小时前",
+      "oneDayAgo": "1 天前"
+    },
+    "alertItems": {
+      "orderBacklog": {
+        "title": "订单积压偏高",
+        "description": "当前有 87 个订单等待生产。"
+      },
+      "quoteBacklog": {
+        "title": "报价审批积压",
+        "description": "当前有 14 个报价等待确认。"
+      },
+      "paymentGateway": {
+        "title": "支付网关通知",
+        "description": "计划维护窗口已确认。"
+      },
+      "systemUpdate": {
+        "title": "系统新版本",
+        "description": "v2.4.0 将在本周发布。"
+      }
+    },
+    "timelineItems": {
+      "orderUpdated": "订单 {orderNo} 更新为{status}",
+      "quoteSent": "报价 {quoteNo} 已发送给 {customer}",
+      "paymentReceived": "订单 {orderNo} 已收到付款",
+      "userAdded": "新增用户 {name}",
+      "fileUploaded": "文件 {fileName} 已上传到 {orderNo}"
+    },
+    "messages": {
+      "selected": "已选择：{title}",
+      "open": "即将打开：{label}",
+      "viewOrder": "查看订单：{orderNo}",
+      "page": "切换到第 {page} 页"
+    }
   },
   "common": {
     "prompt": "提示",
@@ -106,6 +211,21 @@ export default {
     "notice": "通知公告",
     "viewAll": "查看全部",
     "empty": "暂无消息"
+  },
+  "permission": {
+    "missingPermissionValue": "请设置操作权限标签值",
+    "missingRoleValue": "请设置角色权限标签值"
+  },
+  "datetime": {
+    "weekdays": {
+      "sun": "日",
+      "mon": "一",
+      "tue": "二",
+      "wed": "三",
+      "thu": "四",
+      "fri": "五",
+      "sat": "六"
+    }
   },
   "tags": {
     "refreshPage": "刷新页面",

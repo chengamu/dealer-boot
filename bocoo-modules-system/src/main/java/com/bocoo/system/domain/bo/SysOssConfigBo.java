@@ -29,39 +29,39 @@ public class SysOssConfigBo extends BaseEntity {
      * 主建
      */
     @Schema(description = "主建")
-    @NotNull(message = "主建不能为空", groups = {EditGroup.class})
+    @NotNull(message = "{validation.id.required}", groups = {EditGroup.class})
     private Long ossConfigId;
 
     /**
      * 配置key
      */
     @Schema(description = "配置key")
-    @NotBlank(message = "配置key不能为空", groups = {AddGroup.class, EditGroup.class})
-    @Size(min = 2, max = 100, message = "configKey长度必须介于{min}和{max} 之间")
+    @NotBlank(message = "{validation.oss.config.key.required}", groups = {AddGroup.class, EditGroup.class})
+    @Size(min = 2, max = 100, message = "{validation.oss.config.key.size}")
     private String configKey;
 
     /**
      * accessKey
      */
     @Schema(description = "accessKey")
-    @NotBlank(message = "accessKey不能为空", groups = {AddGroup.class, EditGroup.class})
-    @Size(min = 2, max = 100, message = "accessKey长度必须介于{min}和{max} 之间")
+    @NotBlank(message = "{validation.oss.accessKey.required}", groups = {AddGroup.class, EditGroup.class})
+    @Size(min = 2, max = 100, message = "{validation.oss.accessKey.size}")
     private String accessKey;
 
     /**
      * 秘钥
      */
     @Schema(description = "秘钥")
-    @NotBlank(message = "secretKey不能为空", groups = {AddGroup.class, EditGroup.class})
-    @Size(min = 2, max = 100, message = "secretKey长度必须介于{min}和{max} 之间")
+    @NotBlank(message = "{validation.oss.secretKey.required}", groups = {AddGroup.class, EditGroup.class})
+    @Size(min = 2, max = 100, message = "{validation.oss.secretKey.size}")
     private String secretKey;
 
     /**
      * 桶名称
      */
     @Schema(description = "桶名称")
-    @NotBlank(message = "桶名称不能为空", groups = {AddGroup.class, EditGroup.class})
-    @Size(min = 2, max = 100, message = "bucketName长度必须介于{min}和{max}之间")
+    @NotBlank(message = "{validation.oss.bucketName.required}", groups = {AddGroup.class, EditGroup.class})
+    @Size(min = 2, max = 100, message = "{validation.oss.bucketName.size}")
     private String bucketName;
 
     /**
@@ -74,8 +74,8 @@ public class SysOssConfigBo extends BaseEntity {
      * 访问站点
      */
     @Schema(description = "访问站点")
-    @NotBlank(message = "访问站点不能为空", groups = {AddGroup.class, EditGroup.class})
-    @Size(min = 2, max = 100, message = "endpoint长度必须介于{min}和{max}之间")
+    @NotBlank(message = "{validation.oss.endpoint.required}", groups = {AddGroup.class, EditGroup.class})
+    @Size(min = 2, max = 100, message = "{validation.oss.endpoint.size}")
     private String endpoint;
 
     /**
@@ -118,7 +118,7 @@ public class SysOssConfigBo extends BaseEntity {
      * 桶权限类型(0private 1public 2custom)
      */
     @Schema(description = "桶权限类型(0private 1public 2custom)")
-    @NotBlank(message = "桶权限类型不能为空", groups = {AddGroup.class, EditGroup.class})
+    @NotBlank(message = "{validation.oss.accessPolicy.required}", groups = {AddGroup.class, EditGroup.class})
     private String accessPolicy;
 
 }

@@ -7,6 +7,7 @@ import com.bocoo.common.core.domain.bo.EmailLoginBody;
 import com.bocoo.common.core.domain.bo.LoginBody;
 import com.bocoo.common.core.domain.bo.LoginUser;
 import com.bocoo.common.core.domain.bo.SmsLoginBody;
+import com.bocoo.common.core.utils.MessageUtils;
 import com.bocoo.common.satoken.utils.LoginHelper;
 import com.bocoo.system.domain.bo.ThirdClientBo;
 import com.bocoo.system.domain.entity.SysMenu;
@@ -58,7 +59,7 @@ public class SysLoginController {
         // 生成令牌
         String token = loginService.login(loginBody.getUsername(), loginBody.getPassword(), loginBody.getCode(),
                 loginBody.getUuid());
-        return R.ok(Map.of(Constants.TOKEN, token));
+        return R.ok(MessageUtils.message("auth.login.success"), Map.of(Constants.TOKEN, token));
     }
 
 
@@ -80,12 +81,12 @@ public class SysLoginController {
         String secretKey = (String) loginBody.get("secretKey");
 
         if (appKey == null || secretKey == null) {
-            return R.fail("appKey 或 secretKey 不能为空");
+            return R.fail(MessageUtils.message("auth.third.credentials.required"));
         }
 
         // 生成令牌
         String token = loginService.thirdLogin(appKey, secretKey);
-        return R.ok(Map.of(Constants.TOKEN, token));
+        return R.ok(MessageUtils.message("auth.login.success"), Map.of(Constants.TOKEN, token));
     }
 
 
@@ -104,7 +105,7 @@ public class SysLoginController {
             @Validated @RequestBody SmsLoginBody smsLoginBody) {
         // 生成令牌
         String token = loginService.smsLogin(smsLoginBody.getPhonenumber(), smsLoginBody.getSmsCode());
-        return R.ok(Map.of(Constants.TOKEN, token));
+        return R.ok(MessageUtils.message("auth.login.success"), Map.of(Constants.TOKEN, token));
     }
 
     /**
@@ -121,7 +122,7 @@ public class SysLoginController {
             @Validated @RequestBody EmailLoginBody body) {
         // 生成令牌
         String token = loginService.emailLogin(body.getEmail(), body.getEmailCode());
-        return R.ok(Map.of(Constants.TOKEN, token));
+        return R.ok(MessageUtils.message("auth.login.success"), Map.of(Constants.TOKEN, token));
     }
 
     /**
@@ -139,7 +140,7 @@ public class SysLoginController {
         Map<String, Object> ajax = new HashMap<>();
         // 生成令牌
         String token = loginService.xcxLogin(xcxCode);
-        return R.ok(Map.of(Constants.TOKEN, token));
+        return R.ok(MessageUtils.message("auth.login.success"), Map.of(Constants.TOKEN, token));
     }
 
     /**
@@ -150,7 +151,7 @@ public class SysLoginController {
     @Operation(summary = "退出登录", description = "退出当前登录状态")
     public R<Void> logout() {
         loginService.logout();
-        return R.ok("退出成功");
+        return R.ok(MessageUtils.message("common.logout.success"));
     }
 
     /**

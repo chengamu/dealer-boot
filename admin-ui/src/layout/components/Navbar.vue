@@ -32,7 +32,7 @@
               :command="item.value"
               :disabled="localeStore.language === item.value"
             >
-              {{ item.label }}
+              {{ t(item.labelKey) }}
             </el-dropdown-item>
           </el-dropdown-menu>
         </template>
@@ -104,11 +104,11 @@ const localeStore = useLocaleStore()
 const t = (key: string) => getMessage(key, localeStore.language)
 
 const languages = [
-  { value: 'zh_CN', label: '\u4e2d\u6587' },
-  { value: 'en_US', label: 'English' }
+  { value: 'zh_CN', labelKey: 'language.zhCN' },
+  { value: 'en_US', labelKey: 'language.enUS' }
 ]
 
-const currentLanguageLabel = computed(() => languages.find(item => item.value === localeStore.language)?.label || '\u4e2d\u6587')
+const currentLanguageLabel = computed(() => t(languages.find(item => item.value === localeStore.language)?.labelKey || 'language.zhCN'))
 
 function toggleSideBar() {
   appStore.toggleSideBar()

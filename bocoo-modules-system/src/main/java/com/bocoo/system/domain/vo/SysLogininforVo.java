@@ -2,7 +2,6 @@ package com.bocoo.system.domain.vo;
 
 import com.alibaba.excel.annotation.ExcelIgnoreUnannotated;
 import com.alibaba.excel.annotation.ExcelProperty;
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.bocoo.common.excel.annotation.ExcelDictFormat;
 import com.bocoo.common.excel.convert.ExcelDictConvert;
 import com.bocoo.system.domain.entity.SysLogininfor;
@@ -101,7 +100,6 @@ public class SysLogininforVo implements Serializable {
      */
     @Schema(description = "访问时间")
     @ExcelProperty(value = "访问时间")
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime loginTime;
 
 

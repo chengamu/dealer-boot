@@ -41,7 +41,7 @@ public class GlobalExceptionHandler {
                                                        HttpServletRequest request) {
         String requestURI = request.getRequestURI();
         log.error("请求地址'{}',不支持'{}'请求", requestURI, e.getMethod());
-        return R.fail(HttpStatus.HTTP_BAD_METHOD, e.getMessage());
+        return R.fail(HttpStatus.HTTP_BAD_METHOD, MessageUtils.message("request.method.not.supported", e.getMethod()));
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
@@ -55,7 +55,7 @@ public class GlobalExceptionHandler {
     public R<Void> handleIllegalArgumentException(IllegalArgumentException e, HttpServletRequest request) {
         String requestURI = request.getRequestURI();
         log.error("请求地址'{}'，发生不合法参数异常", requestURI, e);
-        return R.fail(e.getMessage());
+        return R.fail(MessageUtils.message("request.illegal.argument"));
     }
 
     /**
@@ -105,7 +105,7 @@ public class GlobalExceptionHandler {
     public R<Void> handleNoHandlerFoundException(NoHandlerFoundException e, HttpServletRequest request) {
         String requestURI = request.getRequestURI();
         log.error("请求地址'{}'不存在.", requestURI);
-        return R.fail(HttpStatus.HTTP_NOT_FOUND, e.getMessage());
+        return R.fail(HttpStatus.HTTP_NOT_FOUND, MessageUtils.message("request.not.found"));
     }
 
     /**
@@ -115,7 +115,7 @@ public class GlobalExceptionHandler {
     public R<Void> handleRuntimeException(RuntimeException e, HttpServletRequest request) {
         String requestURI = request.getRequestURI();
         log.error("请求地址'{}',发生未知异常.", requestURI, e);
-        return R.fail(e.getMessage());
+        return R.fail(MessageUtils.message("system.runtime.error"));
     }
 
     /**
@@ -125,7 +125,7 @@ public class GlobalExceptionHandler {
     public R<Void> handleException(Exception e, HttpServletRequest request) {
         String requestURI = request.getRequestURI();
         log.error("请求地址'{}',发生系统异常.", requestURI, e);
-        return R.fail(e.getMessage());
+        return R.fail(MessageUtils.message("system.error"));
     }
 
     /**

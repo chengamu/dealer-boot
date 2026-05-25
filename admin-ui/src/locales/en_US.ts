@@ -2,6 +2,10 @@ export default {
   "app": {
     "title": "Base Admin Platform"
   },
+  "language": {
+    "zhCN": "Chinese",
+    "enUS": "English"
+  },
   "dataLabels": {
     "base": "Base",
     "system": "System",
@@ -50,7 +54,108 @@ export default {
     "staticSample": "Static Sample",
     "modules": "Modules",
     "menus": "Menus",
-    "logs": "Logs"
+    "logs": "Logs",
+    "activeOrders": "Active Orders",
+    "quotesPending": "Quotes Pending",
+    "dealersOnline": "Dealers Online",
+    "fulfillmentRate": "On-time Fulfillment",
+    "recentOrders": "Recent Orders",
+    "activeUsers": "Recently Active Users",
+    "alerts": "System Alerts",
+    "timeline": "Activity Timeline",
+    "orderHealth": "Order Health",
+    "lastSevenDays": "Last 7 Days",
+    "viewAllOrders": "View all orders",
+    "viewAllUsers": "View all users",
+    "viewAllAlerts": "View all alerts",
+    "viewAllActivity": "View all activity",
+    "viewReport": "View report",
+    "orderNo": "Order No.",
+    "customer": "Customer",
+    "status": "Status",
+    "orderDate": "Order Date",
+    "total": "Total",
+    "action": "Action",
+    "view": "View",
+    "showingOrders": "Showing 1 to 5 of 20 orders",
+    "totalOrders": "Total",
+    "fulfillmentProgress": "604 of 624 orders on time",
+    "systemUser": "System",
+    "byUser": "by {name}",
+    "comparison": {
+      "lastSevenDays": "vs last 7 days",
+      "yesterday": "vs yesterday"
+    },
+    "countries": {
+      "unitedStates": "United States",
+      "canada": "Canada",
+      "germany": "Germany",
+      "australia": "Australia",
+      "sweden": "Sweden"
+    },
+    "orderStatus": {
+      "inProduction": "In Production",
+      "submitted": "Submitted",
+      "shipped": "Shipped",
+      "pendingPayment": "Pending Payment",
+      "delivered": "Delivered",
+      "cancelled": "Cancelled"
+    },
+    "orderDates": {
+      "may28": "May 28, 2024",
+      "may27": "May 27, 2024",
+      "may26": "May 26, 2024",
+      "may25": "May 25, 2024",
+      "may24": "May 24, 2024"
+    },
+    "userRoles": {
+      "admin": "Admin",
+      "manager": "Manager",
+      "editor": "Editor",
+      "viewer": "Viewer"
+    },
+    "relativeTime": {
+      "twoMinAgo": "2 min ago",
+      "eightMinAgo": "8 min ago",
+      "fifteenMinAgo": "15 min ago",
+      "twentyEightMinAgo": "28 min ago",
+      "oneHourAgo": "1 hr ago",
+      "twoHoursAgo": "2 hrs ago",
+      "threeHoursAgo": "3 hrs ago",
+      "sixHoursAgo": "6 hrs ago",
+      "oneDayAgo": "1d ago"
+    },
+    "alertItems": {
+      "orderBacklog": {
+        "title": "High order backlog",
+        "description": "You have 87 orders pending production."
+      },
+      "quoteBacklog": {
+        "title": "Quote approval backlog",
+        "description": "14 quotes are waiting for approval."
+      },
+      "paymentGateway": {
+        "title": "Payment gateway notice",
+        "description": "Scheduled maintenance window has been confirmed."
+      },
+      "systemUpdate": {
+        "title": "New system update",
+        "description": "v2.4.0 will be released this week."
+      }
+    },
+    "timelineItems": {
+      "orderUpdated": "Order {orderNo} status updated to {status}",
+      "quoteSent": "Quote {quoteNo} was sent to {customer}",
+      "paymentReceived": "Payment received for Order {orderNo}",
+      "userAdded": "New user {name} was added",
+      "fileUploaded": "File {fileName} uploaded to {orderNo}"
+    },
+    "messages": {
+      "selected": "Selected: {title}",
+      "open": "Open: {label}",
+      "viewOrder": "View order: {orderNo}",
+      "page": "Page {page}"
+    }
   },
   "common": {
     "prompt": "Prompt",
@@ -106,6 +211,21 @@ export default {
     "notice": "Notice",
     "viewAll": "View all",
     "empty": "No messages"
+  },
+  "permission": {
+    "missingPermissionValue": "Set operation permission directive value",
+    "missingRoleValue": "Set role permission directive value"
+  },
+  "datetime": {
+    "weekdays": {
+      "sun": "Sun",
+      "mon": "Mon",
+      "tue": "Tue",
+      "wed": "Wed",
+      "thu": "Thu",
+      "fri": "Fri",
+      "sat": "Sat"
+    }
   },
   "tags": {
     "refreshPage": "Refresh Page",

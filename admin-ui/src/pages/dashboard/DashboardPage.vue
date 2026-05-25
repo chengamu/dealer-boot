@@ -32,9 +32,9 @@
 
 <script setup lang="ts" name="DashboardPage">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
 import { Bell, DataAnalysis, Document, InfoFilled, ShoppingBag, User, Warning } from '@element-plus/icons-vue'
-import useLocaleStore from '@/stores/locale'
 import DashboardAlertList from './components/DashboardAlertList.vue'
 import DashboardPanel from './components/DashboardPanel.vue'
 import DashboardStatCard from './components/DashboardStatCard.vue'
@@ -44,62 +44,34 @@ import OrderHealthChart from './components/OrderHealthChart.vue'
 import RecentOrdersTable from './components/RecentOrdersTable.vue'
 import type { ActiveUserItem, AlertItem, HealthItem, OrderItem, OrderTableText, StatCardItem, TimelineItem } from './components/types'
 
-const localeStore = useLocaleStore()
-const isZh = computed(() => localeStore.language.startsWith('zh'))
+const { t } = useI18n()
 
-const text = computed(() => isZh.value
-  ? {
-      activeOrders: '活跃订单',
-      quotesPending: '待处理报价',
-      dealersOnline: '在线经销商',
-      fulfillmentRate: '准时履约率',
-      recentOrders: '最近订单',
-      activeUsers: '最近活跃用户',
-      alerts: '系统告警',
-      timeline: '活动时间线',
-      orderHealth: '订单健康度',
-      lastSevenDays: '最近 7 天',
-      viewAllOrders: '查看全部订单',
-      viewAllUsers: '查看全部用户',
-      viewAllAlerts: '查看全部告警',
-      viewAllActivity: '查看全部动态',
-      viewReport: '查看报告',
-      orderNo: '订单号',
-      customer: '客户',
-      status: '状态',
-      orderDate: '订单日期',
-      total: '金额',
-      action: '操作',
-      view: '查看',
-      showingOrders: '显示 1 到 5 条，共 20 条订单',
-      totalOrders: '总计'
-    }
-  : {
-      activeOrders: 'Active Orders',
-      quotesPending: 'Quotes Pending',
-      dealersOnline: 'Dealers Online',
-      fulfillmentRate: 'On-time Fulfillment',
-      recentOrders: 'Recent Orders',
-      activeUsers: 'Recently Active Users',
-      alerts: 'System Alerts',
-      timeline: 'Activity Timeline',
-      orderHealth: 'Order Health',
-      lastSevenDays: 'Last 7 Days',
-      viewAllOrders: 'View all orders',
-      viewAllUsers: 'View all users',
-      viewAllAlerts: 'View all alerts',
-      viewAllActivity: 'View all activity',
-      viewReport: 'View report',
-      orderNo: 'Order No.',
-      customer: 'Customer',
-      status: 'Status',
-      orderDate: 'Order Date',
-      total: 'Total',
-      action: 'Action',
-      view: 'View',
-      showingOrders: 'Showing 1 to 5 of 20 orders',
-      totalOrders: 'Total'
-    })
+const text = computed(() => ({
+  activeOrders: t('dashboard.activeOrders'),
+  quotesPending: t('dashboard.quotesPending'),
+  dealersOnline: t('dashboard.dealersOnline'),
+  fulfillmentRate: t('dashboard.fulfillmentRate'),
+  recentOrders: t('dashboard.recentOrders'),
+  activeUsers: t('dashboard.activeUsers'),
+  alerts: t('dashboard.alerts'),
+  timeline: t('dashboard.timeline'),
+  orderHealth: t('dashboard.orderHealth'),
+  lastSevenDays: t('dashboard.lastSevenDays'),
+  viewAllOrders: t('dashboard.viewAllOrders'),
+  viewAllUsers: t('dashboard.viewAllUsers'),
+  viewAllAlerts: t('dashboard.viewAllAlerts'),
+  viewAllActivity: t('dashboard.viewAllActivity'),
+  viewReport: t('dashboard.viewReport'),
+  orderNo: t('dashboard.orderNo'),
+  customer: t('dashboard.customer'),
+  status: t('dashboard.status'),
+  orderDate: t('dashboard.orderDate'),
+  total: t('dashboard.total'),
+  action: t('dashboard.action'),
+  view: t('dashboard.view'),
+  showingOrders: t('dashboard.showingOrders'),
+  totalOrders: t('dashboard.totalOrders')
+}))
 
 const orderTableText = computed<OrderTableText>(() => ({
   orderNo: text.value.orderNo,
@@ -117,7 +89,7 @@ const statCards = computed<StatCardItem[]>(() => [
     title: text.value.activeOrders,
     value: '1,248',
     trend: '↑ 18.6%',
-    caption: isZh.value ? '较近 7 天' : 'vs last 7 days',
+    caption: t('dashboard.comparison.lastSevenDays'),
     icon: ShoppingBag,
     tone: 'blue',
     sparkline: '2,30 18,24 31,27 44,15 58,20 72,9 86,18 100,7 116,12'
@@ -126,7 +98,7 @@ const statCards = computed<StatCardItem[]>(() => [
     title: text.value.quotesPending,
     value: '342',
     trend: '↑ 9.4%',
-    caption: isZh.value ? '较近 7 天' : 'vs last 7 days',
+    caption: t('dashboard.comparison.lastSevenDays'),
     icon: Document,
     tone: 'teal',
     sparkline: '2,26 16,18 29,23 42,16 55,22 70,12 84,19 98,7 116,14'
@@ -135,7 +107,7 @@ const statCards = computed<StatCardItem[]>(() => [
     title: text.value.dealersOnline,
     value: '128',
     trend: '↑ 12.3%',
-    caption: isZh.value ? '较昨天' : 'vs yesterday',
+    caption: t('dashboard.comparison.yesterday'),
     icon: User,
     tone: 'green',
     sparkline: '2,28 18,20 33,24 48,16 62,21 78,8 94,15 110,10'
@@ -148,63 +120,63 @@ const statCards = computed<StatCardItem[]>(() => [
     icon: DataAnalysis,
     tone: 'orange',
     progress: '96.8%',
-    progressLabel: isZh.value ? '本周 604 / 624 单准时完成' : '604 of 624 orders on time'
+    progressLabel: t('dashboard.fulfillmentProgress')
   }
 ])
 
 const orders = computed<OrderItem[]>(() => [
-  { no: 'O-2024-0532', customer: 'Bright View Homes', country: isZh.value ? '美国' : 'United States', status: isZh.value ? '生产中' : 'In Production', tone: 'blue', date: 'May 28, 2024', total: '$6,245.00' },
-  { no: 'O-2024-0531', customer: 'Maple Leaf Living', country: isZh.value ? '加拿大' : 'Canada', status: isZh.value ? '已提交' : 'Submitted', tone: 'cyan', date: 'May 27, 2024', total: '$3,890.00' },
-  { no: 'O-2024-0530', customer: 'Sunset Blinds GmbH', country: isZh.value ? '德国' : 'Germany', status: isZh.value ? '已发货' : 'Shipped', tone: 'green', date: 'May 26, 2024', total: '$9,780.00' },
-  { no: 'O-2024-0529', customer: 'Coastal Interiors', country: isZh.value ? '澳大利亚' : 'Australia', status: isZh.value ? '待付款' : 'Pending Payment', tone: 'orange', date: 'May 25, 2024', total: '$2,156.00' },
-  { no: 'O-2024-0528', customer: 'Nordic Light AB', country: isZh.value ? '瑞典' : 'Sweden', status: isZh.value ? '已交付' : 'Delivered', tone: 'green', date: 'May 24, 2024', total: '$4,321.00' }
+  { no: 'O-2024-0532', customer: 'Bright View Homes', country: t('dashboard.countries.unitedStates'), status: t('dashboard.orderStatus.inProduction'), tone: 'blue', date: t('dashboard.orderDates.may28'), total: '$6,245.00' },
+  { no: 'O-2024-0531', customer: 'Maple Leaf Living', country: t('dashboard.countries.canada'), status: t('dashboard.orderStatus.submitted'), tone: 'cyan', date: t('dashboard.orderDates.may27'), total: '$3,890.00' },
+  { no: 'O-2024-0530', customer: 'Sunset Blinds GmbH', country: t('dashboard.countries.germany'), status: t('dashboard.orderStatus.shipped'), tone: 'green', date: t('dashboard.orderDates.may26'), total: '$9,780.00' },
+  { no: 'O-2024-0529', customer: 'Coastal Interiors', country: t('dashboard.countries.australia'), status: t('dashboard.orderStatus.pendingPayment'), tone: 'orange', date: t('dashboard.orderDates.may25'), total: '$2,156.00' },
+  { no: 'O-2024-0528', customer: 'Nordic Light AB', country: t('dashboard.countries.sweden'), status: t('dashboard.orderStatus.delivered'), tone: 'green', date: t('dashboard.orderDates.may24'), total: '$4,321.00' }
 ])
 
 const activeUsers = computed<ActiveUserItem[]>(() => [
-  { name: 'Sophia Johnson', location: 'New York, US', role: 'Admin', time: '2 min ago', initials: 'SJ', tone: 'pink' },
-  { name: 'Liam Chen', location: 'Toronto, CA', role: 'Manager', time: '8 min ago', initials: 'LC', tone: 'blue' },
-  { name: 'Emma Williams', location: 'London, UK', role: 'Editor', time: '15 min ago', initials: 'EW', tone: 'purple' },
-  { name: 'Noah Martinez', location: 'Sydney, AU', role: 'Viewer', time: '28 min ago', initials: 'NM', tone: 'orange' },
-  { name: 'Isabella Rossi', location: 'Milan, IT', role: 'Admin', time: '1 hr ago', initials: 'IR', tone: 'green', away: true }
+  { name: 'Sophia Johnson', location: 'New York, US', role: t('dashboard.userRoles.admin'), time: t('dashboard.relativeTime.twoMinAgo'), initials: 'SJ', tone: 'pink' },
+  { name: 'Liam Chen', location: 'Toronto, CA', role: t('dashboard.userRoles.manager'), time: t('dashboard.relativeTime.eightMinAgo'), initials: 'LC', tone: 'blue' },
+  { name: 'Emma Williams', location: 'London, UK', role: t('dashboard.userRoles.editor'), time: t('dashboard.relativeTime.fifteenMinAgo'), initials: 'EW', tone: 'purple' },
+  { name: 'Noah Martinez', location: 'Sydney, AU', role: t('dashboard.userRoles.viewer'), time: t('dashboard.relativeTime.twentyEightMinAgo'), initials: 'NM', tone: 'orange' },
+  { name: 'Isabella Rossi', location: 'Milan, IT', role: t('dashboard.userRoles.admin'), time: t('dashboard.relativeTime.oneHourAgo'), initials: 'IR', tone: 'green', away: true }
 ])
 
 const alerts = computed<AlertItem[]>(() => [
-  { title: isZh.value ? '订单积压偏高' : 'High order backlog', description: isZh.value ? '当前有 87 个订单等待生产。' : 'You have 87 orders pending production.', time: '2h ago', tone: 'danger', icon: Warning },
-  { title: isZh.value ? '报价审批积压' : 'Quote approval backlog', description: isZh.value ? '当前有 14 个报价等待确认。' : '14 quotes are waiting for approval.', time: '3h ago', tone: 'warning', icon: DataAnalysis },
-  { title: isZh.value ? '支付网关通知' : 'Payment gateway notice', description: isZh.value ? '计划维护窗口已确认。' : 'Scheduled maintenance window has been confirmed.', time: '6h ago', tone: 'info', icon: InfoFilled },
-  { title: isZh.value ? '系统新版本' : 'New system update', description: isZh.value ? 'v2.4.0 将在本周发布。' : 'v2.4.0 will be released this week.', time: '1d ago', tone: 'info', icon: Bell }
+  { title: t('dashboard.alertItems.orderBacklog.title'), description: t('dashboard.alertItems.orderBacklog.description'), time: t('dashboard.relativeTime.twoHoursAgo'), tone: 'danger', icon: Warning },
+  { title: t('dashboard.alertItems.quoteBacklog.title'), description: t('dashboard.alertItems.quoteBacklog.description'), time: t('dashboard.relativeTime.threeHoursAgo'), tone: 'warning', icon: DataAnalysis },
+  { title: t('dashboard.alertItems.paymentGateway.title'), description: t('dashboard.alertItems.paymentGateway.description'), time: t('dashboard.relativeTime.sixHoursAgo'), tone: 'info', icon: InfoFilled },
+  { title: t('dashboard.alertItems.systemUpdate.title'), description: t('dashboard.alertItems.systemUpdate.description'), time: t('dashboard.relativeTime.oneDayAgo'), tone: 'info', icon: Bell }
 ])
 
 const timeline = computed<TimelineItem[]>(() => [
-  { title: isZh.value ? '订单 O-2024-0532 更新为生产中' : 'Order O-2024-0532 status updated to In Production', by: 'by Sophia Johnson', time: '2 min ago', color: '#1677ff' },
-  { title: isZh.value ? '报价 Q-2024-0781 已发送给 Bright View Homes' : 'Quote Q-2024-0781 was sent to Bright View Homes', by: 'by Liam Chen', time: '15 min ago', color: '#14b8c4' },
-  { title: isZh.value ? '订单 O-2024-0529 已收到付款' : 'Payment received for Order O-2024-0529', by: 'by System', time: '1 hr ago', color: '#22c55e' },
-  { title: isZh.value ? '新增用户 Emma Williams' : 'New user Emma Williams was added', by: 'by Noah Martinez', time: '2 hrs ago', color: '#7c3aed' },
-  { title: isZh.value ? '文件 Window Specs.pdf 已上传' : 'File Window Specs.pdf uploaded to O-2024-0530', by: 'by Isabella Rossi', time: '3 hrs ago', color: '#f59e0b' }
+  { title: t('dashboard.timelineItems.orderUpdated', { orderNo: 'O-2024-0532', status: t('dashboard.orderStatus.inProduction') }), by: t('dashboard.byUser', { name: 'Sophia Johnson' }), time: t('dashboard.relativeTime.twoMinAgo'), color: '#1677ff' },
+  { title: t('dashboard.timelineItems.quoteSent', { quoteNo: 'Q-2024-0781', customer: 'Bright View Homes' }), by: t('dashboard.byUser', { name: 'Liam Chen' }), time: t('dashboard.relativeTime.fifteenMinAgo'), color: '#14b8c4' },
+  { title: t('dashboard.timelineItems.paymentReceived', { orderNo: 'O-2024-0529' }), by: t('dashboard.byUser', { name: t('dashboard.systemUser') }), time: t('dashboard.relativeTime.oneHourAgo'), color: '#22c55e' },
+  { title: t('dashboard.timelineItems.userAdded', { name: 'Emma Williams' }), by: t('dashboard.byUser', { name: 'Noah Martinez' }), time: t('dashboard.relativeTime.twoHoursAgo'), color: '#7c3aed' },
+  { title: t('dashboard.timelineItems.fileUploaded', { fileName: 'Window Specs.pdf', orderNo: 'O-2024-0530' }), by: t('dashboard.byUser', { name: 'Isabella Rossi' }), time: t('dashboard.relativeTime.threeHoursAgo'), color: '#f59e0b' }
 ])
 
 const healthItems = computed<HealthItem[]>(() => [
-  { label: isZh.value ? '生产中' : 'In Production', value: '482 (38.6%)', color: '#1677ff' },
-  { label: isZh.value ? '已提交' : 'Submitted', value: '286 (22.9%)', color: '#14b8c4' },
-  { label: isZh.value ? '已发货' : 'Shipped', value: '231 (18.5%)', color: '#35c767' },
-  { label: isZh.value ? '待付款' : 'Pending Payment', value: '142 (11.4%)', color: '#f59e0b' },
-  { label: isZh.value ? '已取消' : 'Cancelled', value: '107 (8.6%)', color: '#ff4d4f' }
+  { label: t('dashboard.orderStatus.inProduction'), value: '482 (38.6%)', color: '#1677ff' },
+  { label: t('dashboard.orderStatus.submitted'), value: '286 (22.9%)', color: '#14b8c4' },
+  { label: t('dashboard.orderStatus.shipped'), value: '231 (18.5%)', color: '#35c767' },
+  { label: t('dashboard.orderStatus.pendingPayment'), value: '142 (11.4%)', color: '#f59e0b' },
+  { label: t('dashboard.orderStatus.cancelled'), value: '107 (8.6%)', color: '#ff4d4f' }
 ])
 
 function handleStatSelect(item: StatCardItem) {
-  ElMessage.info(isZh.value ? `已选择：${item.title}` : `Selected: ${item.title}`)
+  ElMessage.info(t('dashboard.messages.selected', { title: item.title }))
 }
 
 function handlePanelAction(label: string) {
-  ElMessage.info(isZh.value ? `即将打开：${label}` : `Open: ${label}`)
+  ElMessage.info(t('dashboard.messages.open', { label }))
 }
 
 function handleOrderView(order: OrderItem) {
-  ElMessage.info(isZh.value ? `查看订单：${order.no}` : `View order: ${order.no}`)
+  ElMessage.info(t('dashboard.messages.viewOrder', { orderNo: order.no }))
 }
 
 function handlePageChange(page: number) {
-  ElMessage.info(isZh.value ? `切换到第 ${page} 页` : `Page ${page}`)
+  ElMessage.info(t('dashboard.messages.page', { page }))
 }
 </script>
 

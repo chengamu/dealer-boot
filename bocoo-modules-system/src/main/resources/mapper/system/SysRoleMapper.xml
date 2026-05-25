@@ -5,6 +5,7 @@
 <mapper namespace="com.bocoo.system.mapper.SysRoleMapper">
 
     <resultMap type="com.bocoo.system.domain.vo.SysRoleVo" id="SysRoleResult">
+        <result property="createTime" column="create_time" typeHandler="com.bocoo.common.mybatis.handler.UtcLocalDateTimeTypeHandler"/>
     </resultMap>
 
     <sql id="selectRoleVo">

@@ -16,6 +16,7 @@ Thumbs.db
 
 # Java/Maven build output
 target/
+.flattened-pom.xml
 *.class
 *.jar
 *.war

@@ -29,8 +29,8 @@ public class SysUserProfileBo extends BaseEntity {
      * 用户昵称
      */
     @Schema(description = "用户昵称")
-    @Xss(message = "用户昵称不能包含脚本字符")
-    @Size(min = 0, max = 30, message = "用户昵称长度不能超过{max}个字符")
+    @Xss(message = "{validation.user.nickname.xss}")
+    @Size(min = 0, max = 30, message = "{validation.user.nickname.max}")
     private String nickName;
 
     /**
@@ -38,15 +38,15 @@ public class SysUserProfileBo extends BaseEntity {
      */
     @Schema(description = "用户邮箱")
     @Sensitive(strategy = SensitiveStrategy.EMAIL)
-    @Email(message = "邮箱格式不正确")
-    @Size(min = 0, max = 50, message = "邮箱长度不能超过{max}个字符")
+    @Email(message = "{validation.email.invalid}")
+    @Size(min = 0, max = 50, message = "{validation.email.max}")
     private String email;
 
     /**
      * 手机号码
      */
     @Schema(description = "手机号码")
-    @Pattern(regexp = RegexConstants.MOBILE, message = "手机号格式不正确")
+    @Pattern(regexp = RegexConstants.MOBILE, message = "{validation.phone.invalid}")
     @Sensitive(strategy = SensitiveStrategy.PHONE)
     private String phonenumber;
 

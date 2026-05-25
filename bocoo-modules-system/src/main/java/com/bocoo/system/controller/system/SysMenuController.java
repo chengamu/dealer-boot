@@ -6,6 +6,7 @@ import com.bocoo.common.log.annotation.Log;
 import com.bocoo.common.core.constant.UserConstants;
 import com.bocoo.common.core.domain.R;
 import com.bocoo.common.log.enums.BusinessType;
+import com.bocoo.common.core.utils.MessageUtils;
 import com.bocoo.common.core.utils.StringUtils;
 import com.bocoo.common.satoken.utils.LoginHelper;
 import com.bocoo.common.web.core.BaseController;
@@ -143,10 +144,10 @@ public class SysMenuController extends BaseController {
             @Parameter(description = "菜单ID", required = true)
             @PathVariable("menuId") Long menuId) {
         if (menuService.hasChildByMenuId(menuId)) {
-            return R.warn("存在子菜单,不允许删除");
+            return R.warn(MessageUtils.message("menu.children.delete.denied"));
         }
         if (menuService.checkMenuExistRole(menuId)) {
-            return R.warn("菜单已分配,不允许删除");
+            return R.warn(MessageUtils.message("menu.assigned.delete.denied"));
         }
         return toAjax(menuService.deleteMenuById(menuId));
     }

@@ -33,17 +33,17 @@ public class SysDictTypeBo extends BaseEntity {
      * 字典名称
      */
     @Schema(description = "字典名称")
-    @NotBlank(message = "字典名称不能为空")
-    @Size(min = 0, max = 100, message = "字典类型名称长度不能超过{max}个字符")
+    @NotBlank(message = "{validation.dict.name.required}")
+    @Size(min = 0, max = 100, message = "{validation.dict.name.max}")
     private String dictName;
 
     /**
      * 字典类型
      */
     @Schema(description = "字典类型")
-    @NotBlank(message = "字典类型不能为空")
-    @Size(min = 0, max = 100, message = "字典类型类型长度不能超过{max}个字符")
-    @Pattern(regexp = RegexConstants.DICTIONARY_TYPE, message = "字典类型必须以字母开头，且只能为（小写字母，数字，下滑线）")
+    @NotBlank(message = "{validation.dict.type.required}")
+    @Size(min = 0, max = 100, message = "{validation.dict.type.max}")
+    @Pattern(regexp = RegexConstants.DICTIONARY_TYPE, message = "{validation.dict.type.pattern}")
     private String dictType;
 
     /**

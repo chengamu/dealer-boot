@@ -201,7 +201,7 @@ public class SysDeptService implements DeptService {
             dept.setDeptId(deptId);
             List<SysDeptVo> depts = this.selectDeptList(MapstructUtils.convert(dept, SysDeptBo.class));
             if (CollUtil.isEmpty(depts)) {
-                throw new ServiceException("没有权限访问部门数据！");
+                throw ServiceException.ofMessageKey("sys.dept.data.permission.denied");
             }
         }
     }
@@ -216,7 +216,7 @@ public class SysDeptService implements DeptService {
         SysDept info = deptMapper.selectById(bo.getParentId());
         // 如果父节点不为正常状态,则不允许新增子节点
         if (!UserConstants.DEPT_NORMAL.equals(info.getStatus())) {
-            throw new ServiceException("部门停用，不允许新增");
+            throw ServiceException.ofMessageKey("sys.dept.parent.disabled.add.denied");
         }
         SysDept dept = MapstructUtils.convert(bo, SysDept.class);
         dept.setAncestors(info.getAncestors() + StringUtils.SEPARATOR + dept.getParentId());

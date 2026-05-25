@@ -64,7 +64,7 @@ public class SysOssConfigController extends BaseController {
     @Operation(summary = "获取对象存储配置详细信息", description = "根据OSS配置ID获取详细信息")
     public R<SysOssConfigVo> getInfo(
             @Parameter(description = "OSS配置ID", required = true)
-            @NotNull(message = "主键不能为空")
+            @NotNull(message = "{validation.id.required}")
             @PathVariable Long ossConfigId) {
         return R.ok(sysOssConfigService.queryById(ossConfigId));
     }
@@ -108,7 +108,7 @@ public class SysOssConfigController extends BaseController {
     @Operation(summary = "删除对象存储配置", description = "批量删除对象存储配置")
     public R<Void> remove(
             @Parameter(description = "OSS配置ID数组", required = true)
-            @NotEmpty(message = "主键不能为空")
+            @NotEmpty(message = "{validation.id.required}")
             @PathVariable Long[] ossConfigIds) {
         return toAjax(sysOssConfigService.deleteWithValidByIds(List.of(ossConfigIds), true));
     }

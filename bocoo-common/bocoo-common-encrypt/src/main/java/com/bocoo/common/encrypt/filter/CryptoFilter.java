@@ -55,7 +55,7 @@ public class CryptoFilter implements Filter {
                     HandlerExceptionResolver exceptionResolver = SpringUtils.getBean("handlerExceptionResolver", HandlerExceptionResolver.class);
                     exceptionResolver.resolveException(
                         servletRequest, servletResponse, null,
-                        new ServiceException("没有访问权限，请联系管理员授权", HttpStatus.FORBIDDEN));
+                        ServiceException.ofMessageKey("api.encrypt.permission.denied").setCode(HttpStatus.FORBIDDEN));
                     return;
                 }
             }

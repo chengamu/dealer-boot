@@ -6,7 +6,7 @@ import ${import};
 import com.bocoo.common.annotation.Excel;
 
 /**
- * ${subTable.functionName}对象 ${subTableName}
+ * ${subTable.functionName} entity ${subTableName}
  *
  * @author ${author}
  * @date ${datetime}
@@ -28,13 +28,12 @@ public class ${subClassName} extends BaseEntity
 #if($parentheseIndex != -1)
     @Excel(name = "${comment}", readConverterExp = "$column.readConverterExp()")
 #elseif($column.javaType == 'Date')
-    @JsonFormat(pattern = "yyyy-MM-dd")
-    @Excel(name = "${comment}", width = 30, dateFormat = "yyyy-MM-dd")
+    @Excel(name = "${comment}")
 #else
     @Excel(name = "${comment}")
 #end
 #end
-    private $column.javaType $column.javaField;
+    private #if($column.javaType == 'Date')LocalDateTime#else$column.javaType#end $column.javaField;
 
 #end
 #end
@@ -45,12 +44,12 @@ public class ${subClassName} extends BaseEntity
 #else
 #set($AttrName=$column.javaField.substring(0,1).toUpperCase() + ${column.javaField.substring(1)})
 #end
-    public void set${AttrName}($column.javaType $column.javaField)
+    public void set${AttrName}(#if($column.javaType == 'Date')LocalDateTime#else$column.javaType#end $column.javaField)
     {
         this.$column.javaField = $column.javaField;
     }
 
-    public $column.javaType get${AttrName}()
+    public #if($column.javaType == 'Date')LocalDateTime#else$column.javaType#end get${AttrName}()
     {
         return $column.javaField;
     }

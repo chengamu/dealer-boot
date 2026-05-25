@@ -1,15 +1,22 @@
 package com.bocoo.common.web.config;
 
+import com.bocoo.common.core.utils.TimeUtils;
 import com.bocoo.common.web.handler.GlobalExceptionHandler;
 import com.bocoo.common.web.interceptor.PlusWebInvokeTimeInterceptor;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.context.annotation.Bean;
+import org.springframework.format.Formatter;
+import org.springframework.format.FormatterRegistry;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+import java.text.ParseException;
+import java.time.LocalDateTime;
+import java.util.Locale;
 
 /**
  * 通用配置
@@ -18,6 +25,11 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  */
 @AutoConfiguration
 public class ResourcesConfig implements WebMvcConfigurer {
+
+    @Override
+    public void addFormatters(FormatterRegistry registry) {
+        registry.addFormatter(new UtcLocalDateTimeFormatter());
+    }
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
@@ -65,4 +77,23 @@ public class ResourcesConfig implements WebMvcConfigurer {
     public GlobalExceptionHandler globalExceptionHandler() {
         return new GlobalExceptionHandler();
     }*/
+
+    private static final class UtcLocalDateTimeFormatter implements Formatter<LocalDateTime> {
+
+        @Override
+        public LocalDateTime parse(String text, Locale locale) throws ParseException {
+            try {
+                return TimeUtils.parseUtcIso(text);
+            } catch (RuntimeException e) {
+                ParseException parseException = new ParseException("Expected ISO-8601 UTC instant", 0);
+                parseException.initCause(e);
+                throw parseException;
+            }
+        }
+
+        @Override
+        public String print(LocalDateTime object, Locale locale) {
+            return TimeUtils.formatUtcIso(object);
+        }
+    }
 }

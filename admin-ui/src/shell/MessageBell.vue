@@ -16,7 +16,7 @@
       <el-scrollbar v-else height="280px">
         <div v-for="notice in notices" :key="notice.noticeId" class="message-item">
           <strong>{{ notice.noticeTitle }}</strong>
-          <span>{{ parseTime(notice.createTime) || '-' }}</span>
+          <span>{{ formatUtc(notice.createTime) }}</span>
         </div>
       </el-scrollbar>
     </div>
@@ -30,7 +30,7 @@ import { Bell } from '@element-plus/icons-vue'
 import { requestPage } from '@/utils/request'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
-import { parseTime } from '@/utils/ruoyi'
+import { formatUtc } from '@/utils/datetime'
 
 interface NoticeSummary {
   noticeId: number | string

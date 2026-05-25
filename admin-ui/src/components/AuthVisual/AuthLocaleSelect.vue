@@ -1,13 +1,20 @@
 ﻿<template>
   <el-select :model-value="modelValue" class="auth-locale-select" size="large" @change="onChange">
     <template #prefix><span class="locale-globe">◎</span></template>
-    <el-option label="English" value="en_US" />
-    <el-option label="中文" value="zh_CN" />
+    <el-option
+      v-for="item in languageOptions"
+      :key="item.value"
+      :label="item.label"
+      :value="item.value"
+    />
   </el-select>
 </template>
 
 <script setup lang="ts">
-import type { AppLocale } from '@/i18n'
+import { computed } from 'vue'
+import { localeOptions, type AppLocale } from '@/i18n'
+import { getMessage } from '@/locales'
+import { useLocaleStore } from '@/stores/locale'
 
 defineProps<{
   modelValue: AppLocale
@@ -17,6 +24,12 @@ const emit = defineEmits<{
   'update:modelValue': [value: AppLocale]
   change: [value: AppLocale]
 }>()
+
+const localeStore = useLocaleStore()
+const languageOptions = computed(() => localeOptions.map(item => ({
+  ...item,
+  label: getMessage(item.labelKey, localeStore.language)
+})))
 
 function onChange(value: AppLocale) {
   emit('update:modelValue', value)

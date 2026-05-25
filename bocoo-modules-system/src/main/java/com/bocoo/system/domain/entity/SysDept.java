@@ -40,15 +40,15 @@ public class SysDept extends BaseEntity {
      * 部门名称
      */
     @Schema(description = "部门名称")
-    @NotBlank(message = "部门名称不能为空")
-    @Size(min = 0, max = 30, message = "部门名称长度不能超过{max}个字符")
+    @NotBlank(message = "{validation.dept.name.required}")
+    @Size(min = 0, max = 30, message = "{validation.dept.name.max}")
     private String deptName;
 
     /**
      * 显示顺序
      */
     @Schema(description = "显示顺序")
-    @NotNull(message = "显示顺序不能为空")
+    @NotNull(message = "{validation.sort.required}")
     private Integer orderNum;
 
     /**
@@ -61,15 +61,15 @@ public class SysDept extends BaseEntity {
      * 联系电话
      */
     @Schema(description = "联系电话")
-    @Size(min = 0, max = 11, message = "联系电话长度不能超过{max}个字符")
+    @Size(min = 0, max = 11, message = "{validation.phone.max}")
     private String phone;
 
     /**
      * 邮箱
      */
     @Schema(description = "邮箱")
-    @Email(message = "邮箱格式不正确")
-    @Size(min = 0, max = 50, message = "邮箱长度不能超过{max}个字符")
+    @Email(message = "{validation.email.invalid}")
+    @Size(min = 0, max = 50, message = "{validation.email.max}")
     private String email;
 
     /**

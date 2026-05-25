@@ -4,8 +4,8 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.convert.Convert;
 import cn.hutool.core.lang.Dict;
 import cn.hutool.core.util.ObjectUtil;
-import com.bocoo.common.core.utils.DateUtils;
 import com.bocoo.common.core.utils.StringUtils;
+import com.bocoo.common.core.utils.TimeUtils;
 import com.bocoo.common.json.utils.JsonUtils;
 import com.bocoo.generator.constant.GenConstants;
 import com.bocoo.generator.domain.GenTable;
@@ -63,7 +63,7 @@ public class VelocityUtils {
         velocityContext.put("basePackage", getPackagePrefix(packageName));
         velocityContext.put("packageName", packageName);
         velocityContext.put("author", genTable.getFunctionAuthor());
-        velocityContext.put("datetime", DateUtils.getDate());
+        velocityContext.put("datetime", TimeUtils.formatUtc(TimeUtils.utcNow(), TimeUtils.UTC_DATE_PATTERN));
         velocityContext.put("pkColumn", genTable.getPkColumn());
         velocityContext.put("importList", getImportList(genTable));
         velocityContext.put("permissionPrefix", getPermissionPrefix(moduleName, businessName));
@@ -229,8 +229,7 @@ public class VelocityUtils {
         }
         for (GenTableColumn column : columns) {
             if (!column.isSuperColumn() && GenConstants.TYPE_DATE.equals(column.getJavaType())) {
-                importList.add("java.util.Date");
-                importList.add("com.fasterxml.jackson.annotation.JsonFormat");
+                importList.add("java.time.LocalDateTime");
             } else if (!column.isSuperColumn() && GenConstants.TYPE_BIGDECIMAL.equals(column.getJavaType())) {
                 importList.add("java.math.BigDecimal");
             }

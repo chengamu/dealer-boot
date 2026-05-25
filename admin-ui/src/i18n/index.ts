@@ -20,6 +20,6 @@ export const i18n = createI18n({
 })
 
 export const localeOptions = [
-  { label: '中文', value: 'zh_CN' },
-  { label: 'English', value: 'en_US' }
+  { labelKey: 'language.zhCN', value: 'zh_CN' },
+  { labelKey: 'language.enUS', value: 'en_US' }
 ] as const

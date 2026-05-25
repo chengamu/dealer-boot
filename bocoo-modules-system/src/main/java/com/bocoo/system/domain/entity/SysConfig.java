@@ -40,8 +40,8 @@ public class SysConfig extends BaseEntity {
      */
     @Schema(description = "参数名称")
     @ExcelProperty(value = "参数名称")
-    @NotBlank(message = "参数名称不能为空")
-    @Size(min = 0, max = 100, message = "参数名称不能超过{max}个字符")
+    @NotBlank(message = "{validation.config.name.required}")
+    @Size(min = 0, max = 100, message = "{validation.config.name.max}")
     private String configName;
 
     /**
@@ -49,8 +49,8 @@ public class SysConfig extends BaseEntity {
      */
     @Schema(description = "参数键名")
     @ExcelProperty(value = "参数键名")
-    @NotBlank(message = "参数键名长度不能为空")
-    @Size(min = 0, max = 100, message = "参数键名长度不能超过{max}个字符")
+    @NotBlank(message = "{validation.config.key.required}")
+    @Size(min = 0, max = 100, message = "{validation.config.key.max}")
     private String configKey;
 
     /**
@@ -58,8 +58,8 @@ public class SysConfig extends BaseEntity {
      */
     @Schema(description = "参数键值")
     @ExcelProperty(value = "参数键值")
-    @NotBlank(message = "参数键值不能为空")
-    @Size(min = 0, max = 1000, message = "参数键值长度不能超过{max}个字符")
+    @NotBlank(message = "{validation.config.value.required}")
+    @Size(min = 0, max = 1000, message = "{validation.config.value.max}")
     private String configValue;
 
     /**

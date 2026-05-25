@@ -168,12 +168,12 @@ public class SysRoleService {
      */
     public void checkRoleAllowed(SysRoleBo role) {
         if (ObjectUtil.isNotNull(role.getRoleId()) && role.isAdmin()) {
-            throw new ServiceException("不允许操作超级管理员角色");
+            throw ServiceException.ofMessageKey("sys.role.admin.operation.denied");
         }
         // 新增不允许使用 管理员标识符
         if (ObjectUtil.isNull(role.getRoleId())
             && StringUtils.equals(role.getRoleKey(), UserConstants.ADMIN_ROLE_KEY)) {
-            throw new ServiceException("不允许使用系统内置管理员角色标识符!");
+            throw ServiceException.ofMessageKey("sys.role.admin.key.use.denied");
         }
         // 修改不允许修改 管理员标识符
         if (ObjectUtil.isNotNull(role.getRoleId())) {
@@ -181,9 +181,9 @@ public class SysRoleService {
             // 如果标识符不相等 判断为修改了管理员标识符
             if (!StringUtils.equals(sysRole.getRoleKey(), role.getRoleKey())) {
                 if (StringUtils.equals(sysRole.getRoleKey(), UserConstants.ADMIN_ROLE_KEY)) {
-                    throw new ServiceException("不允许修改系统内置管理员角色标识符!");
+                    throw ServiceException.ofMessageKey("sys.role.admin.key.update.denied");
                 } else if (StringUtils.equals(role.getRoleKey(), UserConstants.ADMIN_ROLE_KEY)) {
-                    throw new ServiceException("不允许使用系统内置管理员角色标识符!");
+                    throw ServiceException.ofMessageKey("sys.role.admin.key.use.denied");
                 }
             }
         }
@@ -200,7 +200,7 @@ public class SysRoleService {
             role.setRoleId(roleId);
             List<SysRoleVo> roles = this.selectRoleList(role);
             if (CollUtil.isEmpty(roles)) {
-                throw new ServiceException("没有权限访问角色数据！");
+                throw ServiceException.ofMessageKey("sys.role.data.permission.denied");
             }
         }
     }
@@ -259,7 +259,7 @@ public class SysRoleService {
      */
     public int updateRoleStatus(Long roleId, String status) {
         if (UserConstants.ROLE_DISABLE.equals(status) && this.countUserRoleByRoleId(roleId) > 0) {
-            throw new ServiceException("角色已分配，不能禁用!");
+            throw ServiceException.ofMessageKey("sys.role.assigned.disable.denied");
         }
         return roleMapper.update(null,
             new LambdaUpdateWrapper<SysRole>()
@@ -356,7 +356,7 @@ public class SysRoleService {
             checkRoleAllowed(BeanUtil.toBean(role, SysRoleBo.class));
             checkRoleDataScope(roleId);
             if (countUserRoleByRoleId(roleId) > 0) {
-                throw new ServiceException(String.format("%1$s已分配，不能删除!", role.getRoleName()));
+                throw ServiceException.ofMessageKey("sys.role.assigned.delete.denied", role.getRoleName());
             }
         }
         List<Long> ids = Arrays.asList(roleIds);

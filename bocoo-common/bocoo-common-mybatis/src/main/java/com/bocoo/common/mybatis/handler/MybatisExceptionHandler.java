@@ -1,6 +1,7 @@
 package com.bocoo.common.mybatis.handler;
 
 import com.bocoo.common.core.domain.R;
+import com.bocoo.common.core.utils.MessageUtils;
 import lombok.extern.slf4j.Slf4j;
 import com.bocoo.common.core.utils.StringUtils;
 import org.mybatis.spring.MyBatisSystemException;
@@ -29,7 +30,7 @@ public class MybatisExceptionHandler {
     public R<Void> handleDuplicateKeyException(DuplicateKeyException e, HttpServletRequest request) {
         String requestURI = request.getRequestURI();
         log.error("请求地址'{}',数据库中已存在记录'{}'", requestURI, e.getMessage());
-        return R.fail("数据库中已存在该记录，请联系管理员确认");
+        return R.fail(MessageUtils.message("db.record.exists"));
     }
 
     /**
@@ -41,7 +42,7 @@ public class MybatisExceptionHandler {
         String message = e.getMessage();
         if (StringUtils.contains("CannotFindDataSourceException", message)) {
             log.error("请求地址'{}', 未找到数据源", requestURI);
-            return R.fail("未找到数据源，请联系管理员确认");
+            return R.fail(MessageUtils.message("db.datasource.notFound"));
         }
         log.error("请求地址'{}', Mybatis系统异常", requestURI, e);
         return R.fail(message);
@@ -62,10 +63,10 @@ public class MybatisExceptionHandler {
 
         // 针对特定错误进行处理
         if (errorMessage.contains("Unknown column")) {
-            return R.fail("数据库表结构不匹配，缺少必要的字段");
+            return R.fail(MessageUtils.message("db.schema.mismatch"));
         }
 
-        return R.fail("数据库操作异常，请联系管理员");
+        return R.fail(MessageUtils.message("db.operation.error"));
     }
 
 }

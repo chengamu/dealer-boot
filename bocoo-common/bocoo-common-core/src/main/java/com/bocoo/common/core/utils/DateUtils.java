@@ -12,10 +12,16 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 
 /**
  * 时间工具类
+ *
+ * Legacy/local-time helper. Methods that format, parse, or convert through
+ * Date/SimpleDateFormat/DateFormatUtils/ZoneId.systemDefault() depend on the
+ * JVM default time zone and must not be used for persisted business/API time.
+ * Use {@link TimeUtils} for explicit UTC semantics.
  *
  * @author ruoyi
  */
@@ -37,11 +43,16 @@ public class DateUtils extends org.apache.commons.lang3.time.DateUtils {
         "yyyy/MM/dd", "yyyy/MM/dd HH:mm:ss", "yyyy/MM/dd HH:mm", "yyyy/MM",
         "yyyy.MM.dd", "yyyy.MM.dd HH:mm:ss", "yyyy.MM.dd HH:mm", "yyyy.MM"};
 
+    private static final DateTimeFormatter DATE_PATH_FORMATTER = DateTimeFormatter.ofPattern("yyyy/MM/dd");
+
     /**
      * 获取当前Date型日期
      *
+     * Legacy/local helper. Do not use for persisted business/API time.
+     *
      * @return Date() 当前日期
      */
+    @Deprecated(since = "2026-05-25")
     public static Date getNowDate() {
         return new Date();
     }
@@ -49,32 +60,59 @@ public class DateUtils extends org.apache.commons.lang3.time.DateUtils {
     /**
      * 获取当前日期, 默认格式为yyyy-MM-dd
      *
+     * Legacy/local helper. Uses the JVM default time zone.
+     *
      * @return String
      */
+    @Deprecated(since = "2026-05-25")
     public static String getDate() {
         return dateTimeNow(YYYY_MM_DD);
     }
 
+    /**
+     * Legacy/local helper. Uses the JVM default time zone.
+     */
+    @Deprecated(since = "2026-05-25")
     public static String getTime() {
         return dateTimeNow(YYYY_MM_DD_HH_MM_SS);
     }
 
+    /**
+     * Legacy/local helper. Uses the JVM default time zone.
+     */
+    @Deprecated(since = "2026-05-25")
     public static String dateTimeNow() {
         return dateTimeNow(YYYYMMDDHHMMSS);
     }
 
+    /**
+     * Legacy/local helper. Uses the JVM default time zone.
+     */
+    @Deprecated(since = "2026-05-25")
     public static String dateTimeNow(final String format) {
         return parseDateToStr(format, new Date());
     }
 
+    /**
+     * Legacy/local helper. Uses the JVM default time zone.
+     */
+    @Deprecated(since = "2026-05-25")
     public static String dateTime(final Date date) {
         return parseDateToStr(YYYY_MM_DD, date);
     }
 
+    /**
+     * Legacy/local helper. Uses the JVM default time zone.
+     */
+    @Deprecated(since = "2026-05-25")
     public static String parseDateToStr(final String format, final Date date) {
         return new SimpleDateFormat(format).format(date);
     }
 
+    /**
+     * Legacy/local helper. Uses the JVM default time zone.
+     */
+    @Deprecated(since = "2026-05-25")
     public static Date dateTime(final String format, final String ts) {
         try {
             return new SimpleDateFormat(format).parse(ts);
@@ -85,15 +123,19 @@ public class DateUtils extends org.apache.commons.lang3.time.DateUtils {
 
     /**
      * 日期路径 即年/月/日 如2018/08/08
+     *
+     * Upload/OSS file-path helper. Uses UTC day explicitly.
      */
     public static String datePath() {
-        Date now = new Date();
-        return DateFormatUtils.format(now, "yyyy/MM/dd");
+        return TimeUtils.formatUtc(TimeUtils.utcNow(), DATE_PATH_FORMATTER);
     }
 
     /**
      * 日期路径 即年/月/日 如20180808
+     *
+     * Legacy/local helper. Uses the JVM default time zone.
      */
+    @Deprecated(since = "2026-05-25")
     public static String dateTime() {
         Date now = new Date();
         return DateFormatUtils.format(now, "yyyyMMdd");
@@ -101,7 +143,11 @@ public class DateUtils extends org.apache.commons.lang3.time.DateUtils {
 
     /**
      * 日期型字符串转化为日期 格式
+     *
+     * Legacy/local helper. Prefer explicit UTC parsing in {@link TimeUtils}
+     * for business/API time.
      */
+    @Deprecated(since = "2026-05-25")
     public static Date parseDate(Object str) {
         if (str == null) {
             return null;
@@ -151,7 +197,10 @@ public class DateUtils extends org.apache.commons.lang3.time.DateUtils {
 
     /**
      * 增加 LocalDateTime ==> Date
+     *
+     * Legacy/local helper. Uses the JVM default time zone.
      */
+    @Deprecated(since = "2026-05-25")
     public static Date toDate(LocalDateTime temporalAccessor) {
         ZonedDateTime zdt = temporalAccessor.atZone(ZoneId.systemDefault());
         return Date.from(zdt.toInstant());
@@ -159,7 +208,10 @@ public class DateUtils extends org.apache.commons.lang3.time.DateUtils {
 
     /**
      * 增加 LocalDate ==> Date
+     *
+     * Legacy/local helper. Uses the JVM default time zone.
      */
+    @Deprecated(since = "2026-05-25")
     public static Date toDate(LocalDate temporalAccessor) {
         LocalDateTime localDateTime = LocalDateTime.of(temporalAccessor, LocalTime.of(0, 0, 0));
         ZonedDateTime zdt = localDateTime.atZone(ZoneId.systemDefault());

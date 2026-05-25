@@ -17,8 +17,12 @@
         <el-table-column type="selection" width="55" />
         <el-table-column prop="tableName" :label="t('gen.tableName')" :show-overflow-tooltip="true" />
         <el-table-column prop="tableComment" :label="t('gen.tableComment')" :show-overflow-tooltip="true" />
-        <el-table-column prop="createTime" :label="t('common.createTime')" />
-        <el-table-column prop="updateTime" :label="t('common.updateTime')" />
+        <el-table-column prop="createTime" :label="t('common.createTime')">
+          <template #default="{ row }">{{ formatUtc(row.createTime) }}</template>
+        </el-table-column>
+        <el-table-column prop="updateTime" :label="t('common.updateTime')">
+          <template #default="{ row }">{{ formatUtc(row.updateTime) }}</template>
+        </el-table-column>
       </el-table>
       <pagination v-show="total > 0" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" :total="total" @pagination="getList" />
     </el-row>
@@ -38,6 +42,7 @@ import { importTable, listDbTable, type GenTable, type GenTableQuery } from '@/a
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 import { runUiAction } from '@/utils/action'
+import { formatUtc } from '@/utils/datetime'
 
 const emit = defineEmits<{
   ok: []

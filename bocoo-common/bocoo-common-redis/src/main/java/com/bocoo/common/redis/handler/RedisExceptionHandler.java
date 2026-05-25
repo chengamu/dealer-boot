@@ -3,6 +3,7 @@ package com.bocoo.common.redis.handler;
 import cn.hutool.http.HttpStatus;
 import com.baomidou.lock.exception.LockFailureException;
 import com.bocoo.common.core.domain.R;
+import com.bocoo.common.core.utils.MessageUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.client.RedisConnectionException;
@@ -25,7 +26,7 @@ public class RedisExceptionHandler {
     public R<Void> handleLockFailureException(LockFailureException e, HttpServletRequest request) {
         String requestURI = request.getRequestURI();
         log.error("获取锁失败了'{}',发生Lock4j异常.", requestURI, e);
-        return R.fail(HttpStatus.HTTP_UNAVAILABLE, "业务处理中，请稍后再试...");
+        return R.fail(HttpStatus.HTTP_UNAVAILABLE, MessageUtils.message("common.processing.retry"));
     }
 
 

@@ -33,17 +33,18 @@
 </template>
 
 <script setup lang="ts" name="Error404Page">
+import { computed } from 'vue'
+import { localeOptions, type AppLocale } from '@/i18n'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
-import type { AppLocale } from '@/i18n'
 
 const localeStore = useLocaleStore()
 const t = (key: string) => getMessage(key, localeStore.language)
 const altT = (key: string) => getMessage(key, localeStore.language === 'en_US' ? 'zh_CN' : 'en_US')
-const languages: Array<{ value: AppLocale; label: string }> = [
-  { value: 'zh_CN', label: '中文' },
-  { value: 'en_US', label: 'English' }
-]
+const languages = computed<Array<{ value: AppLocale; label: string }>>(() => localeOptions.map(item => ({
+  value: item.value,
+  label: getMessage(item.labelKey, localeStore.language)
+})))
 </script>
 
 <style lang="scss" scoped>

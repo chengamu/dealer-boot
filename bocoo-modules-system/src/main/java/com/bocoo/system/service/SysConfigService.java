@@ -108,7 +108,7 @@ public class SysConfigService implements ConfigService {
         if (row > 0) {
             return config.getConfigValue();
         }
-        throw new ServiceException("操作失败");
+        throw ServiceException.ofMessageKey("config.insert.failed");
     }
 
     /**
@@ -134,7 +134,7 @@ public class SysConfigService implements ConfigService {
         if (row > 0) {
             return config.getConfigValue();
         }
-        throw new ServiceException("操作失败");
+        throw ServiceException.ofMessageKey("config.update.failed");
     }
 
     /**
@@ -146,7 +146,7 @@ public class SysConfigService implements ConfigService {
         for (Long configId : configIds) {
             SysConfig config = configMapper.selectById(configId);
             if (StringUtils.equals(UserConstants.YES, config.getConfigType())) {
-                throw new ServiceException(String.format("内置参数【%1$s】不能删除 ", config.getConfigKey()));
+                throw ServiceException.ofMessageKey("config.builtIn.delete.denied", config.getConfigKey());
             }
             CacheUtils.evict(CacheNames.SYS_CONFIG, config.getConfigKey());
         }

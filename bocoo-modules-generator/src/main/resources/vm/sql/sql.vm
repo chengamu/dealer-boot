@@ -28,14 +28,62 @@ on conflict (menu_id) do update set menu_name = excluded.menu_name, i18n_key = e
 insert into sys_i18n_message (message_id, message_key, locale, message_value, create_by, create_time, remark) values
 (${table.menuIds[0]}01, '${moduleName}.${businessName}.menu', 'zh_CN', '${functionName}', 'admin', now(), 'generated menu'),
 (${table.menuIds[0]}02, '${moduleName}.${businessName}.menu', 'en_US', '${ClassName}', 'admin', now(), 'generated menu'),
-(${table.menuIds[1]}01, '${moduleName}.${businessName}.query', 'zh_CN', '${functionName}??', 'admin', now(), 'generated button'),
+(${table.menuIds[1]}01, '${moduleName}.${businessName}.query', 'zh_CN', '${functionName}查询', 'admin', now(), 'generated button'),
 (${table.menuIds[1]}02, '${moduleName}.${businessName}.query', 'en_US', '${ClassName} Query', 'admin', now(), 'generated button'),
-(${table.menuIds[2]}01, '${moduleName}.${businessName}.add', 'zh_CN', '${functionName}??', 'admin', now(), 'generated button'),
+(${table.menuIds[2]}01, '${moduleName}.${businessName}.add', 'zh_CN', '${functionName}新增', 'admin', now(), 'generated button'),
 (${table.menuIds[2]}02, '${moduleName}.${businessName}.add', 'en_US', '${ClassName} Add', 'admin', now(), 'generated button'),
-(${table.menuIds[3]}01, '${moduleName}.${businessName}.edit', 'zh_CN', '${functionName}??', 'admin', now(), 'generated button'),
+(${table.menuIds[3]}01, '${moduleName}.${businessName}.edit', 'zh_CN', '${functionName}修改', 'admin', now(), 'generated button'),
 (${table.menuIds[3]}02, '${moduleName}.${businessName}.edit', 'en_US', '${ClassName} Edit', 'admin', now(), 'generated button'),
-(${table.menuIds[4]}01, '${moduleName}.${businessName}.remove', 'zh_CN', '${functionName}??', 'admin', now(), 'generated button'),
+(${table.menuIds[4]}01, '${moduleName}.${businessName}.remove', 'zh_CN', '${functionName}删除', 'admin', now(), 'generated button'),
 (${table.menuIds[4]}02, '${moduleName}.${businessName}.remove', 'en_US', '${ClassName} Delete', 'admin', now(), 'generated button'),
-(${table.menuIds[5]}01, '${moduleName}.${businessName}.export', 'zh_CN', '${functionName}??', 'admin', now(), 'generated button'),
+(${table.menuIds[5]}01, '${moduleName}.${businessName}.export', 'zh_CN', '${functionName}导出', 'admin', now(), 'generated button'),
 (${table.menuIds[5]}02, '${moduleName}.${businessName}.export', 'en_US', '${ClassName} Export', 'admin', now(), 'generated button')
 on conflict (message_key, locale) do update set message_value = excluded.message_value, update_by = 'admin', update_time = now();
+
+-- Generated page i18n messages
+insert into sys_i18n_message (message_id, message_key, locale, message_value, create_by, create_time, remark) values
+(${table.menuIds[0]} * 1000 + 1, '${moduleName}.${businessName}.title', 'zh_CN', '${functionName}', 'admin', now(), 'generated page'),
+(${table.menuIds[0]} * 1000 + 2, '${moduleName}.${businessName}.title', 'en_US', '${ClassName}', 'admin', now(), 'generated page'),
+(${table.menuIds[0]} * 1000 + 3, '${moduleName}.${businessName}.addTitle', 'zh_CN', '添加${functionName}', 'admin', now(), 'generated page'),
+(${table.menuIds[0]} * 1000 + 4, '${moduleName}.${businessName}.addTitle', 'en_US', 'Add ${ClassName}', 'admin', now(), 'generated page'),
+(${table.menuIds[0]} * 1000 + 5, '${moduleName}.${businessName}.editTitle', 'zh_CN', '修改${functionName}', 'admin', now(), 'generated page'),
+(${table.menuIds[0]} * 1000 + 6, '${moduleName}.${businessName}.editTitle', 'en_US', 'Edit ${ClassName}', 'admin', now(), 'generated page'),
+(${table.menuIds[0]} * 1000 + 7, '${moduleName}.${businessName}.deleteConfirm', 'zh_CN', '是否确认删除${functionName}编号为"{ids}"的数据项？', 'admin', now(), 'generated page'),
+(${table.menuIds[0]} * 1000 + 8, '${moduleName}.${businessName}.deleteConfirm', 'en_US', 'Delete ${ClassName} IDs "{ids}"?', 'admin', now(), 'generated page'),
+(${table.menuIds[0]} * 1000 + 9, '${moduleName}.${businessName}.subTitle', 'zh_CN', '${functionName}明细', 'admin', now(), 'generated page'),
+(${table.menuIds[0]} * 1000 + 10, '${moduleName}.${businessName}.subTitle', 'en_US', '${ClassName} Details', 'admin', now(), 'generated page'),
+(${table.menuIds[0]} * 1000 + 11, '${moduleName}.${businessName}.selectSubToDelete', 'zh_CN', '请先选择要删除的明细数据', 'admin', now(), 'generated page'),
+(${table.menuIds[0]} * 1000 + 12, '${moduleName}.${businessName}.selectSubToDelete', 'en_US', 'Select detail rows to delete', 'admin', now(), 'generated page'),
+(${table.menuIds[0]} * 1000 + 13, '${moduleName}.${businessName}.topNode', 'zh_CN', '顶级节点', 'admin', now(), 'generated page'),
+(${table.menuIds[0]} * 1000 + 14, '${moduleName}.${businessName}.topNode', 'en_US', 'Root node', 'admin', now(), 'generated page')
+on conflict (message_key, locale) do update set message_value = excluded.message_value, update_by = 'admin', update_time = now();
+
+#foreach($column in $columns)
+#set($parentheseIndex=$column.columnComment.indexOf("（"))
+#if($parentheseIndex != -1)
+#set($comment=$column.columnComment.substring(0, $parentheseIndex))
+#else
+#set($comment=$column.columnComment)
+#end
+
+#if($table.sub)
+#foreach($column in $subTable.columns)
+#set($parentheseIndex=$column.columnComment.indexOf("（"))
+#if($parentheseIndex != -1)
+#set($comment=$column.columnComment.substring(0, $parentheseIndex))
+#else
+#set($comment=$column.columnComment)
+#end
+insert into sys_i18n_message (message_id, message_key, locale, message_value, create_by, create_time, remark) values
+(${table.menuIds[0]} * 1000 + 500 + ${foreach.count} * 2 - 1, '${moduleName}.${businessName}.field.${column.javaField}', 'zh_CN', '${comment}', 'admin', now(), 'generated sub field'),
+(${table.menuIds[0]} * 1000 + 500 + ${foreach.count} * 2, '${moduleName}.${businessName}.field.${column.javaField}', 'en_US', '${column.javaField}', 'admin', now(), 'generated sub field')
+on conflict (message_key, locale) do update set message_value = excluded.message_value, update_by = 'admin', update_time = now();
+
+#end
+#end
+insert into sys_i18n_message (message_id, message_key, locale, message_value, create_by, create_time, remark) values
+(${table.menuIds[0]} * 1000 + 100 + ${foreach.count} * 2 - 1, '${moduleName}.${businessName}.field.${column.javaField}', 'zh_CN', '${comment}', 'admin', now(), 'generated field'),
+(${table.menuIds[0]} * 1000 + 100 + ${foreach.count} * 2, '${moduleName}.${businessName}.field.${column.javaField}', 'en_US', '${column.javaField}', 'admin', now(), 'generated field')
+on conflict (message_key, locale) do update set message_value = excluded.message_value, update_by = 'admin', update_time = now();
+
+#end

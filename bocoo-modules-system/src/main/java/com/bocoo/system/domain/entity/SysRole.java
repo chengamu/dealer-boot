@@ -48,8 +48,8 @@ public class SysRole extends BaseEntity {
      */
     @Schema(description = "角色名称")
     @ExcelProperty(value = "角色名称")
-    @NotBlank(message = "角色名称不能为空")
-    @Size(min = 0, max = 30, message = "角色名称长度不能超过{max}个字符")
+    @NotBlank(message = "{validation.role.name.required}")
+    @Size(min = 0, max = 30, message = "{validation.role.name.max}")
     private String roleName;
 
     /**
@@ -57,8 +57,8 @@ public class SysRole extends BaseEntity {
      */
     @Schema(description = "角色权限")
     @ExcelProperty(value = "角色权限")
-    @NotBlank(message = "权限字符不能为空")
-    @Size(min = 0, max = 100, message = "权限字符长度不能超过{max}个字符")
+    @NotBlank(message = "{validation.role.key.required}")
+    @Size(min = 0, max = 100, message = "{validation.role.key.max}")
     private String roleKey;
 
     /**
@@ -66,7 +66,7 @@ public class SysRole extends BaseEntity {
      */
     @Schema(description = "角色排序")
     @ExcelProperty(value = "角色排序")
-    @NotNull(message = "显示顺序不能为空")
+    @NotNull(message = "{validation.sort.required}")
     private Integer roleSort;
 
     /**
