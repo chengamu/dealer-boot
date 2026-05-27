@@ -19,11 +19,31 @@ public class SysTenantApplyVo implements Serializable {
 
     private String merchantName;
 
+    private String companyName;
+
+    private String contactFirstName;
+
+    private String contactLastName;
+
     private String contactName;
 
     private String email;
 
+    private String officePhone;
+
+    private String mobilePhone;
+
     private String country;
+
+    private String state;
+
+    private String city;
+
+    private String addressLine1;
+
+    private String addressLine2;
+
+    private String postalCode;
 
     private String remark;
 

@@ -38,7 +38,13 @@ export const useUserStore = defineStore('user', {
     async loadUser() {
       const res = await getInfo()
       const data = res.data && 'user' in res.data ? res.data : undefined
-      this.user = res.user || data?.user || (res.data && !('user' in res.data) ? res.data : {}) as LoginUser
+      const user = (res.user || data?.user || (res.data && !('user' in res.data) ? res.data : {}) || {}) as LoginUser
+      this.user = {
+        ...user,
+        tenantId: res.tenantId || data?.tenantId || user.tenantId,
+        tenantType: res.tenantType || data?.tenantType || user.tenantType,
+        merchantId: res.merchantId || data?.merchantId || user.merchantId
+      }
       this.roles = res.roles || data?.roles || []
       this.permissions = res.permissions || data?.permissions || []
       this.id = String(this.user?.userId || '')

@@ -21,10 +21,16 @@ export interface UserInfoResponse {
   user?: LoginUser
   roles?: string[]
   permissions?: string[]
+  tenantId?: number
+  tenantType?: string
+  merchantId?: number
   data?: LoginUser | {
     user?: LoginUser
     roles?: string[]
     permissions?: string[]
+    tenantId?: number
+    tenantType?: string
+    merchantId?: number
   }
 }
 

@@ -22,7 +22,16 @@ public class SysTenantApplyBo extends BaseEntity {
     @Size(max = 100, message = "{tenant.apply.merchantName.max}")
     private String merchantName;
 
-    @Size(max = 50, message = "{tenant.apply.contactName.max}")
+    @Size(max = 100, message = "{tenant.apply.companyName.max}")
+    private String companyName;
+
+    @Size(max = 50, message = "{tenant.apply.contactFirstName.max}")
+    private String contactFirstName;
+
+    @Size(max = 50, message = "{tenant.apply.contactLastName.max}")
+    private String contactLastName;
+
+    @Size(max = 100, message = "{tenant.apply.contactName.max}")
     private String contactName;
 
     @NotBlank(message = "{tenant.apply.email.required}")
@@ -30,8 +39,30 @@ public class SysTenantApplyBo extends BaseEntity {
     @Size(max = 100, message = "{tenant.apply.email.max}")
     private String email;
 
+    @Size(max = 50, message = "{tenant.apply.officePhone.max}")
+    private String officePhone;
+
+    @Size(max = 50, message = "{tenant.apply.mobilePhone.max}")
+    private String mobilePhone;
+
+    @NotBlank(message = "{tenant.apply.country.required}")
     @Size(max = 50, message = "{tenant.apply.country.max}")
     private String country;
+
+    @Size(max = 50, message = "{tenant.apply.state.max}")
+    private String state;
+
+    @Size(max = 50, message = "{tenant.apply.city.max}")
+    private String city;
+
+    @Size(max = 255, message = "{tenant.apply.addressLine.max}")
+    private String addressLine1;
+
+    @Size(max = 255, message = "{tenant.apply.addressLine.max}")
+    private String addressLine2;
+
+    @Size(max = 20, message = "{tenant.apply.postalCode.max}")
+    private String postalCode;
 
     @Size(max = 500, message = "{tenant.apply.remark.max}")
     private String remark;

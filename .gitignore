@@ -52,3 +52,8 @@ pnpm-debug.log*
 # Temporary files
 *.tmp
 *.temp
+
+# Local AI/tooling runtime artifacts
+.ai/runtime-validation/
+.codegraph/
+.cursor/

@@ -96,6 +96,11 @@
             <artifactId>bocoo-common-webSocket</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>com.bocoo</groupId>
+            <artifactId>bocoo-common-mail</artifactId>
+        </dependency>
+
     </dependencies>
 
 </project>

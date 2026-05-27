@@ -48,8 +48,9 @@ public class SysTenantApplyController extends BaseController {
     @SaCheckPermission("system:tenant:application:audit")
     @PostMapping("/system/tenant/applications/{id}/approve")
     @Operation(summary = "Approve merchant application")
-    public R<String> approve(@PathVariable("id") Long id) {
-        return R.ok(tenantApplyService.approve(id));
+    public R<Void> approve(@PathVariable("id") Long id) {
+        tenantApplyService.approve(id);
+        return R.ok();
     }
 
     @SaCheckPermission("system:tenant:application:audit")

@@ -34,7 +34,7 @@ public class FilterConfig {
         registration.setFilter(new TenantContextFilter(tenantProperties));
         registration.addUrlPatterns("/*");
         registration.setName("tenantContextFilter");
-        registration.setOrder(FilterRegistrationBean.HIGHEST_PRECEDENCE + 1);
+        registration.setOrder(FilterRegistrationBean.LOWEST_PRECEDENCE - 100);
         return registration;
     }
 

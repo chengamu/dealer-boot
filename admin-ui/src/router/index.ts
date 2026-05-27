@@ -116,6 +116,18 @@ const legacyFallbackRoutes: RouteRecordRaw[] = [
     meta: { title: 'tenant.applicationsTitle' }
   },
   {
+    path: '/system/merchant/profile',
+    name: 'SystemMerchantProfile',
+    component: () => import('@/pages/system/MerchantProfilePage.vue'),
+    meta: { title: 'merchantProfile.managementTitle' }
+  },
+  {
+    path: '/merchant/profile',
+    name: 'MerchantProfile',
+    component: () => import('@/pages/merchant/MerchantProfilePage.vue'),
+    meta: { title: 'merchantProfile.selfTitle' }
+  },
+  {
     path: '/monitor/online',
     name: 'MonitorOnline',
     component: () => import('@/pages/monitor/OnlineUsersPage.vue'),

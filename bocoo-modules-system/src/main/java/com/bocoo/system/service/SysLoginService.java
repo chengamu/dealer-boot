@@ -8,12 +8,15 @@ import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.bocoo.common.core.constant.CacheConstants;
 import com.bocoo.common.core.constant.Constants;
+import com.bocoo.common.core.context.TenantContextHolder;
 import com.bocoo.common.core.domain.bo.LoginUser;
 import com.bocoo.common.core.domain.bo.XcxLoginUser;
 import com.bocoo.common.core.domain.vo.RoleVO;
 import com.bocoo.common.core.enums.DeviceType;
 import com.bocoo.common.core.enums.LoginType;
+import com.bocoo.common.core.enums.TenantType;
 import com.bocoo.common.core.enums.UserStatus;
+import com.bocoo.common.core.exception.ServiceException;
 import com.bocoo.common.core.exception.user.CaptchaException;
 import com.bocoo.common.core.exception.user.CaptchaExpireException;
 import com.bocoo.common.core.exception.user.UserException;
@@ -22,10 +25,13 @@ import com.bocoo.common.log.event.LogininforEvent;
 import com.bocoo.common.redis.utils.RedisUtils;
 import com.bocoo.common.satoken.utils.LoginHelper;
 import com.bocoo.common.web.config.properties.CaptchaProperties;
+import com.bocoo.system.domain.entity.SysTenant;
 import com.bocoo.system.domain.entity.SysUser;
+import com.bocoo.system.domain.vo.MerchantProfileVo;
 import com.bocoo.system.domain.vo.SysDeptVo;
 import com.bocoo.system.domain.vo.SysRoleVo;
 import com.bocoo.system.domain.vo.SysUserVo;
+import com.bocoo.system.mapper.SysTenantMapper;
 import com.bocoo.system.mapper.SysUserMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -51,6 +57,8 @@ public class SysLoginService {
     private final SysPermissionService permissionService;
     private final SysRoleService roleService;
     private final SysDeptService deptService;
+    private final SysTenantMapper tenantMapper;
+    private final MerchantProfileService merchantProfileService;
 
     @Value("${user.password.maxRetryCount}")
     private Integer maxRetryCount;
@@ -74,7 +82,7 @@ public class SysLoginService {
             validateCaptcha(username, code, uuid);
         }
         // 框架登录不限制从什么表查询 只要最终构建出 LoginUser 即可
-        SysUserVo user = loadUserByUsername(username);
+        SysUserVo user = loadUserByUsernameOrEmail(username);
         checkLogin(LoginType.PASSWORD, username, () -> !BCrypt.checkpw(password, user.getPassword()));
         // 此处可根据登录用户的数据不同 自行创建 loginUser 属性不够用继承扩展就行了
         LoginUser loginUser = buildLoginUser(user);
@@ -96,7 +104,7 @@ public class SysLoginService {
     public String thirdLogin(String username, String password) {
 
         // 框架登录不限制从什么表查询 只要最终构建出 LoginUser 即可
-        SysUserVo user = loadUserByUsername(username);
+        SysUserVo user = loadUserByUsernameOrEmail(username);
 
         // 验证用户登录信息
         checkLogin(LoginType.PASSWORD, username, () -> !BCrypt.checkpw(password, user.getPassword()));
@@ -247,6 +255,18 @@ public class SysLoginService {
 
     private SysUserVo loadUserByUsername(String username) {
         SysUserVo user = userMapper.selectVoOne(new LambdaQueryWrapper<SysUser>().eq(SysUser::getUserName, username));
+        return checkLoadedUser(user, username);
+    }
+
+    private SysUserVo loadUserByUsernameOrEmail(String username) {
+        SysUserVo user = userMapper.selectVoOne(new LambdaQueryWrapper<SysUser>().eq(SysUser::getUserName, username), false);
+        if (ObjectUtil.isNull(user)) {
+            user = userMapper.selectVoOne(new LambdaQueryWrapper<SysUser>().eq(SysUser::getEmail, username), false);
+        }
+        return checkLoadedUser(user, username);
+    }
+
+    private SysUserVo checkLoadedUser(SysUserVo user, String username) {
         if (ObjectUtil.isNull(user)) {
             log.info("登录用户：{} 不存在.", username);
             throw new UserException("user.not.exists", username);
@@ -302,21 +322,41 @@ public class SysLoginService {
         LoginUser loginUser = new LoginUser();
         loginUser.setUserId(user.getUserId());
         loginUser.setTenantId(user.getTenantId());
+        setTenantIdentity(loginUser);
         loginUser.setDeptId(user.getDeptId());
         loginUser.setUsername(user.getUserName());
         loginUser.setUserType(user.getUserType());
-        loginUser.setMenuPermission(permissionService.getMenuPermission(user.getUserId()));
-        loginUser.setRolePermission(permissionService.getRolePermission(user.getUserId()));
+        TenantContextHolder.runWithTenant(user.getTenantId(), () -> {
+            loginUser.setMenuPermission(permissionService.getMenuPermission(user.getUserId()));
+            loginUser.setRolePermission(permissionService.getRolePermission(user.getUserId()));
 
-        SysDeptVo dept = null;
-        if (ObjectUtil.isNotNull(user.getDeptId())) {
-            dept = deptService.selectDeptById(user.getDeptId());
-        }
-        loginUser.setDeptName(ObjectUtil.isNull(dept) ? "" : dept.getDeptName());
-        List<SysRoleVo> roles = roleService.selectRolesByUserId(user.getUserId());
-        loginUser.setRoles(BeanUtil.copyToList(roles, RoleVO.class));
+            SysDeptVo dept = null;
+            if (ObjectUtil.isNotNull(user.getDeptId())) {
+                dept = deptService.selectDeptById(user.getDeptId());
+            }
+            loginUser.setDeptName(ObjectUtil.isNull(dept) ? "" : dept.getDeptName());
+            List<SysRoleVo> roles = roleService.selectRolesByUserId(user.getUserId());
+            loginUser.setRoles(BeanUtil.copyToList(roles, RoleVO.class));
+        });
 
         return loginUser;
+    }
+
+    private void setTenantIdentity(LoginUser loginUser) {
+        if (loginUser.getTenantId() == null) {
+            throw ServiceException.ofMessageKey("tenant.context.missing");
+        }
+        SysTenant tenant = tenantMapper.selectById(loginUser.getTenantId());
+        if (tenant == null) {
+            throw ServiceException.ofMessageKey("tenant.context.missing");
+        }
+        loginUser.setTenantType(tenant.getTenantType());
+        if (TenantType.MERCHANT.getCode().equals(tenant.getTenantType())) {
+            MerchantProfileVo profile = merchantProfileService.selectByTenantId(tenant.getTenantId());
+            if (profile != null) {
+                loginUser.setMerchantId(profile.getMerchantId());
+            }
+        }
     }
 
     /**

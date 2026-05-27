@@ -113,17 +113,17 @@ redisson:
 
 --- # mail 邮件发送
 mail:
-  enabled: false
+  enabled: true
   host: smtp.163.com
   port: 465
   # 是否需要用户名密码验证
   auth: true
   # 发送方，遵循RFC-822标准
-  from: xxx@163.com
+  from: ${MAIL_FROM:xxx@163.com}
   # 用户名（注意：如果使用foxmail邮箱，此处user为qq号）
-  user: xxx@163.com
+  user: ${MAIL_USER:xxx@163.com}
   # 密码（注意，某些邮箱需要为SMTP服务单独设置密码，详情查看相关帮助）
-  pass: xxxxxxxxxx
+  pass: ${MAIL_PASS:xxxxxxxxxx}
   # 使用 STARTTLS安全连接，STARTTLS是对纯文本通信协议的扩展。
   starttlsEnable: true
   # 使用SSL安全连接
@@ -200,7 +200,7 @@ knife4j:
   setting:
     language: zh-CN                # 固定中文配置
     enable-footer: true            # 启用页脚
-    footer-custom-content: "bocoo © 2025"  # 自定义页脚
+    footer-custom-content: "amumu © 2025"  # 自定义页脚
     enable-group: true             # 启用分组标签
     enable-request-cache: true     # 启用请求缓存
     enable-document-manage: true   # 启用文档管理

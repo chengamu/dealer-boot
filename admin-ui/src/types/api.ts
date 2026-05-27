@@ -55,6 +55,8 @@ export interface LoginUser {
   userId?: number
   deptId?: number
   tenantId?: number
+  tenantType?: string
+  merchantId?: number
   userName: string
   nickName?: string
   email?: string

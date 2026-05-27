@@ -12,7 +12,7 @@ public class TenantProperties {
 
     private Boolean enabled = false;
 
-    private Long platformId = 0L;
+    private Long platformId = 1L;
 
     private List<String> ignoreUrls = new ArrayList<>();
 

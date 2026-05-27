@@ -9,9 +9,8 @@ services:
       - ./bocoo-admin.jar:/app/bocoo-admin.jar
       - ./config:/config
       - ./logs:/logs
-      - /etc/localtime:/etc/localtime:ro
     environment:
-      TZ: Asia/Shanghai
+      TZ: UTC
       SPRING_PROFILES_ACTIVE: dev
       SA_TOKEN_JWT_SECRET: ${SA_TOKEN_JWT_SECRET:-bocoo-dev-jwt-secret-change-before-prod-2026}
       CRYPTO_AES_KEY: ${CRYPTO_AES_KEY:-DevCryptoKey2026}
@@ -21,7 +20,7 @@ services:
       - -Xmx1g
       - -XX:ReservedCodeCacheSize=512m
       - -Dfile.encoding=UTF-8
-      - -Duser.timezone=Asia/Shanghai
+      - -Duser.timezone=UTC
       - -jar
       - /app/bocoo-admin.jar
       - --spring.config.location=/config/

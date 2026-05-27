@@ -1,8 +1,9 @@
 -- base-boot PostgreSQL baseline for dealer.
--- Platform/factory tenant is tenant_id = 0.
+-- Platform/factory tenant is tenant_id = 1.
+-- tenant_id = 0 is not a valid business tenant and must not be used as fallback.
 
 CREATE TABLE IF NOT EXISTS sys_tenant (
-    tenant_id bigint PRIMARY KEY,
+    tenant_id bigint PRIMARY KEY CHECK (tenant_id <> 0),
     tenant_name varchar(100) NOT NULL,
     tenant_type varchar(20) NOT NULL,
     contact_name varchar(50),
@@ -21,11 +22,21 @@ CREATE INDEX IF NOT EXISTS idx_sys_tenant_contact_email ON sys_tenant (contact_e
 
 CREATE TABLE IF NOT EXISTS sys_tenant_apply (
     apply_id bigint PRIMARY KEY,
-    tenant_id bigint,
+    tenant_id bigint CHECK (tenant_id IS NULL OR tenant_id <> 0),
     merchant_name varchar(100) NOT NULL,
-    contact_name varchar(50),
+    company_name varchar(100),
+    contact_first_name varchar(50),
+    contact_last_name varchar(50),
+    contact_name varchar(100),
     email varchar(100) NOT NULL,
-    country varchar(50),
+    office_phone varchar(50),
+    mobile_phone varchar(50),
+    country varchar(50) NOT NULL,
+    state varchar(50),
+    city varchar(50),
+    address_line1 varchar(255),
+    address_line2 varchar(255),
+    postal_code varchar(20),
     remark varchar(500),
     status varchar(20) NOT NULL DEFAULT 'PENDING',
     audit_by varchar(64),
@@ -45,9 +56,42 @@ CREATE UNIQUE INDEX IF NOT EXISTS uk_sys_tenant_apply_email_active
 CREATE INDEX IF NOT EXISTS idx_sys_tenant_apply_status_time ON sys_tenant_apply (status, create_time DESC);
 CREATE INDEX IF NOT EXISTS idx_sys_tenant_apply_tenant ON sys_tenant_apply (tenant_id);
 
+CREATE TABLE IF NOT EXISTS merchant_profile (
+    merchant_id bigint PRIMARY KEY,
+    tenant_id bigint NOT NULL CHECK (tenant_id <> 0),
+    merchant_name varchar(100) NOT NULL,
+    company_name varchar(100),
+    contact_first_name varchar(50),
+    contact_last_name varchar(50),
+    contact_name varchar(100),
+    primary_email varchar(100) NOT NULL,
+    office_phone varchar(50),
+    mobile_phone varchar(50),
+    country varchar(50) NOT NULL,
+    state varchar(50),
+    city varchar(50),
+    address_line1 varchar(255),
+    address_line2 varchar(255),
+    postal_code varchar(20),
+    status char(1) NOT NULL DEFAULT '1',
+    audit_status varchar(20) NOT NULL DEFAULT 'APPROVED',
+    audit_by varchar(64),
+    audit_by_id bigint,
+    audit_time timestamptz,
+    remark varchar(500),
+    create_by_id bigint,
+    create_by varchar(64),
+    create_time timestamptz DEFAULT now(),
+    update_by varchar(64),
+    update_time timestamptz
+);
+CREATE UNIQUE INDEX IF NOT EXISTS uk_merchant_profile_tenant ON merchant_profile (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_merchant_profile_primary_email ON merchant_profile (primary_email);
+CREATE INDEX IF NOT EXISTS idx_merchant_profile_status ON merchant_profile (status, audit_status);
+
 CREATE TABLE IF NOT EXISTS sys_dept (
     dept_id bigint PRIMARY KEY,
-    tenant_id bigint NOT NULL DEFAULT 0,
+    tenant_id bigint NOT NULL CHECK (tenant_id <> 0),
     parent_id bigint DEFAULT 0,
     ancestors varchar(500) DEFAULT '',
     dept_name varchar(30) NOT NULL,
@@ -69,7 +113,7 @@ CREATE INDEX IF NOT EXISTS idx_sys_dept_tenant_parent_status ON sys_dept (tenant
 
 CREATE TABLE IF NOT EXISTS sys_user (
     user_id bigint PRIMARY KEY,
-    tenant_id bigint NOT NULL DEFAULT 0,
+    tenant_id bigint NOT NULL CHECK (tenant_id <> 0),
     dept_id bigint,
     user_name varchar(100) NOT NULL,
     nick_name varchar(30) NOT NULL,
@@ -109,7 +153,7 @@ CREATE INDEX IF NOT EXISTS idx_sys_user_login_date ON sys_user (login_date DESC)
 
 CREATE TABLE IF NOT EXISTS sys_role (
     role_id bigint PRIMARY KEY,
-    tenant_id bigint NOT NULL DEFAULT 0,
+    tenant_id bigint NOT NULL CHECK (tenant_id <> 0),
     role_name varchar(30) NOT NULL,
     role_key varchar(100) NOT NULL,
     role_sort integer NOT NULL,
@@ -132,7 +176,7 @@ CREATE INDEX IF NOT EXISTS idx_sys_role_tenant_status ON sys_role (tenant_id, de
 
 CREATE TABLE IF NOT EXISTS sys_menu (
     menu_id bigint PRIMARY KEY,
-    tenant_id bigint NOT NULL DEFAULT 0,
+    tenant_id bigint NOT NULL CHECK (tenant_id <> 0),
     menu_name varchar(50) NOT NULL,
     i18n_key varchar(128),
     parent_id bigint DEFAULT 0,
@@ -160,7 +204,7 @@ CREATE INDEX IF NOT EXISTS idx_sys_menu_perms ON sys_menu (perms) WHERE perms IS
 
 CREATE TABLE IF NOT EXISTS sys_post (
     post_id bigint PRIMARY KEY,
-    tenant_id bigint NOT NULL DEFAULT 0,
+    tenant_id bigint NOT NULL CHECK (tenant_id <> 0),
     post_code varchar(64) NOT NULL,
     post_name varchar(50) NOT NULL,
     post_sort integer NOT NULL,
@@ -179,7 +223,7 @@ CREATE INDEX IF NOT EXISTS idx_sys_post_tenant_status ON sys_post (tenant_id, st
 CREATE TABLE IF NOT EXISTS sys_user_role (
     user_id bigint NOT NULL,
     role_id bigint NOT NULL,
-    tenant_id bigint NOT NULL DEFAULT 0,
+    tenant_id bigint NOT NULL CHECK (tenant_id <> 0),
     PRIMARY KEY (user_id, role_id)
 );
 CREATE INDEX IF NOT EXISTS idx_sys_user_role_role_user ON sys_user_role (role_id, user_id);
@@ -188,7 +232,7 @@ CREATE INDEX IF NOT EXISTS idx_sys_user_role_tenant_user ON sys_user_role (tenan
 CREATE TABLE IF NOT EXISTS sys_user_post (
     user_id bigint NOT NULL,
     post_id bigint NOT NULL,
-    tenant_id bigint NOT NULL DEFAULT 0,
+    tenant_id bigint NOT NULL CHECK (tenant_id <> 0),
     PRIMARY KEY (user_id, post_id)
 );
 CREATE INDEX IF NOT EXISTS idx_sys_user_post_post_user ON sys_user_post (post_id, user_id);
@@ -197,7 +241,7 @@ CREATE INDEX IF NOT EXISTS idx_sys_user_post_tenant_user ON sys_user_post (tenan
 CREATE TABLE IF NOT EXISTS sys_role_menu (
     role_id bigint NOT NULL,
     menu_id bigint NOT NULL,
-    tenant_id bigint NOT NULL DEFAULT 0,
+    tenant_id bigint NOT NULL CHECK (tenant_id <> 0),
     PRIMARY KEY (role_id, menu_id)
 );
 CREATE INDEX IF NOT EXISTS idx_sys_role_menu_menu_role ON sys_role_menu (menu_id, role_id);
@@ -206,7 +250,7 @@ CREATE INDEX IF NOT EXISTS idx_sys_role_menu_tenant_role ON sys_role_menu (tenan
 CREATE TABLE IF NOT EXISTS sys_role_dept (
     role_id bigint NOT NULL,
     dept_id bigint NOT NULL,
-    tenant_id bigint NOT NULL DEFAULT 0,
+    tenant_id bigint NOT NULL CHECK (tenant_id <> 0),
     PRIMARY KEY (role_id, dept_id)
 );
 CREATE INDEX IF NOT EXISTS idx_sys_role_dept_dept_role ON sys_role_dept (dept_id, role_id);
@@ -284,7 +328,7 @@ CREATE INDEX IF NOT EXISTS idx_sys_i18n_message_locale ON sys_i18n_message (loca
 
 CREATE TABLE IF NOT EXISTS sys_notice (
     notice_id bigint PRIMARY KEY,
-    tenant_id bigint NOT NULL DEFAULT 0,
+    tenant_id bigint NOT NULL CHECK (tenant_id <> 0),
     notice_title varchar(50) NOT NULL,
     notice_type char(1) NOT NULL,
     notice_content text,
@@ -429,7 +473,7 @@ CREATE TABLE IF NOT EXISTS gen_table_column (
 CREATE INDEX IF NOT EXISTS idx_gen_table_column_table_sort ON gen_table_column (table_id, sort);
 
 COMMENT ON TABLE sys_tenant IS '租户表';
-COMMENT ON COLUMN sys_tenant.tenant_id IS '租户ID，平台/厂家固定为0';
+COMMENT ON COLUMN sys_tenant.tenant_id IS '租户ID，平台/厂家固定为1，0不是合法业务租户';
 COMMENT ON COLUMN sys_tenant.tenant_name IS '租户名称';
 COMMENT ON COLUMN sys_tenant.tenant_type IS '租户类型：PLATFORM平台/厂家，MERCHANT商家';
 COMMENT ON COLUMN sys_tenant.contact_name IS '联系人姓名';
@@ -447,9 +491,19 @@ COMMENT ON TABLE sys_tenant_apply IS '商家租户申请表';
 COMMENT ON COLUMN sys_tenant_apply.apply_id IS '申请ID';
 COMMENT ON COLUMN sys_tenant_apply.tenant_id IS '审核通过后生成的租户ID';
 COMMENT ON COLUMN sys_tenant_apply.merchant_name IS '商家名称';
+COMMENT ON COLUMN sys_tenant_apply.company_name IS '公司名称';
+COMMENT ON COLUMN sys_tenant_apply.contact_first_name IS '联系人名';
+COMMENT ON COLUMN sys_tenant_apply.contact_last_name IS '联系人姓';
 COMMENT ON COLUMN sys_tenant_apply.contact_name IS '联系人姓名';
 COMMENT ON COLUMN sys_tenant_apply.email IS '登录邮箱/联系邮箱';
+COMMENT ON COLUMN sys_tenant_apply.office_phone IS '办公电话';
+COMMENT ON COLUMN sys_tenant_apply.mobile_phone IS '手机号码';
 COMMENT ON COLUMN sys_tenant_apply.country IS '国家或地区';
+COMMENT ON COLUMN sys_tenant_apply.state IS '州/省';
+COMMENT ON COLUMN sys_tenant_apply.city IS '城市';
+COMMENT ON COLUMN sys_tenant_apply.address_line1 IS '地址行1';
+COMMENT ON COLUMN sys_tenant_apply.address_line2 IS '地址行2';
+COMMENT ON COLUMN sys_tenant_apply.postal_code IS '邮政编码';
 COMMENT ON COLUMN sys_tenant_apply.remark IS '申请备注';
 COMMENT ON COLUMN sys_tenant_apply.status IS '申请状态：PENDING待审核，APPROVED已通过，REJECTED已拒绝';
 COMMENT ON COLUMN sys_tenant_apply.audit_by IS '审核人';
@@ -461,6 +515,35 @@ COMMENT ON COLUMN sys_tenant_apply.create_by IS '创建者';
 COMMENT ON COLUMN sys_tenant_apply.create_time IS '创建时间，UTC timestamptz';
 COMMENT ON COLUMN sys_tenant_apply.update_by IS '更新者';
 COMMENT ON COLUMN sys_tenant_apply.update_time IS '更新时间，UTC timestamptz';
+
+COMMENT ON TABLE merchant_profile IS '商家主体资料表';
+COMMENT ON COLUMN merchant_profile.merchant_id IS '商家ID';
+COMMENT ON COLUMN merchant_profile.tenant_id IS '租户ID，一对一关联sys_tenant';
+COMMENT ON COLUMN merchant_profile.merchant_name IS '商家名称';
+COMMENT ON COLUMN merchant_profile.company_name IS '公司名称';
+COMMENT ON COLUMN merchant_profile.contact_first_name IS '联系人名';
+COMMENT ON COLUMN merchant_profile.contact_last_name IS '联系人姓';
+COMMENT ON COLUMN merchant_profile.contact_name IS '联系人姓名';
+COMMENT ON COLUMN merchant_profile.primary_email IS '主邮箱';
+COMMENT ON COLUMN merchant_profile.office_phone IS '办公电话';
+COMMENT ON COLUMN merchant_profile.mobile_phone IS '手机号码';
+COMMENT ON COLUMN merchant_profile.country IS '国家或地区';
+COMMENT ON COLUMN merchant_profile.state IS '州/省';
+COMMENT ON COLUMN merchant_profile.city IS '城市';
+COMMENT ON COLUMN merchant_profile.address_line1 IS '地址行1';
+COMMENT ON COLUMN merchant_profile.address_line2 IS '地址行2';
+COMMENT ON COLUMN merchant_profile.postal_code IS '邮政编码';
+COMMENT ON COLUMN merchant_profile.status IS '商家状态：1正常，0停用';
+COMMENT ON COLUMN merchant_profile.audit_status IS '审核状态：PENDING待审核，APPROVED已通过，REJECTED已拒绝';
+COMMENT ON COLUMN merchant_profile.audit_by IS '审核人';
+COMMENT ON COLUMN merchant_profile.audit_by_id IS '审核人ID';
+COMMENT ON COLUMN merchant_profile.audit_time IS '审核时间，UTC timestamptz';
+COMMENT ON COLUMN merchant_profile.remark IS '备注';
+COMMENT ON COLUMN merchant_profile.create_by_id IS '创建者ID';
+COMMENT ON COLUMN merchant_profile.create_by IS '创建者';
+COMMENT ON COLUMN merchant_profile.create_time IS '创建时间，UTC timestamptz';
+COMMENT ON COLUMN merchant_profile.update_by IS '更新者';
+COMMENT ON COLUMN merchant_profile.update_time IS '更新时间，UTC timestamptz';
 
 COMMENT ON TABLE sys_dept IS '部门表';
 COMMENT ON COLUMN sys_dept.dept_id IS '部门ID';
@@ -768,27 +851,36 @@ COMMENT ON COLUMN gen_table_column.update_by IS '更新者';
 COMMENT ON COLUMN gen_table_column.update_time IS '更新时间，UTC timestamptz';
 
 INSERT INTO sys_tenant (tenant_id, tenant_name, tenant_type, contact_email, status, create_by, create_time, remark)
-VALUES (0, 'Platform Factory', 'PLATFORM', 'admin@example.com', '1', 'system', now(), 'Factory/platform tenant')
+VALUES (1, 'Platform Factory', 'PLATFORM', 'admin@example.com', '1', 'system', now(), 'Factory/platform tenant')
 ON CONFLICT (tenant_id) DO NOTHING;
+UPDATE sys_tenant
+SET tenant_id = 1
+WHERE tenant_id = 0
+  AND tenant_type = 'PLATFORM'
+  AND NOT EXISTS (SELECT 1 FROM sys_tenant WHERE tenant_id = 1);
 
 INSERT INTO sys_dept (dept_id, tenant_id, parent_id, ancestors, dept_name, order_num, status, del_flag, create_by, create_time)
-VALUES (100, 0, 0, '0', 'Platform', 0, '1', '0', 'system', now())
+VALUES (100, 1, 0, '0', 'Platform', 0, '1', '0', 'system', now())
 ON CONFLICT (dept_id) DO NOTHING;
+UPDATE sys_dept SET tenant_id = 1 WHERE dept_id = 100;
 
 INSERT INTO sys_user (user_id, tenant_id, dept_id, user_name, nick_name, user_type, email, phonenumber, sex, password, status, del_flag, create_by, create_time, remark)
-VALUES (1, 0, 100, 'admin', 'System Admin', 'sys_user', 'admin@example.com', '18888888888', '0',
+VALUES (1, 1, 100, 'admin', 'System Admin', 'sys_user', 'admin@example.com', '18888888888', '0',
         '$2a$10$gkt8GIcTlW28k3a.osOvQus81YBcY9JHr7zLqaaknk4O2x9xX/JMm', '1', '0', 'system', now(), 'Platform administrator')
 ON CONFLICT (user_id) DO NOTHING;
+UPDATE sys_user SET tenant_id = 1 WHERE user_id = 1;
 
 INSERT INTO sys_role (role_id, tenant_id, role_name, role_key, role_sort, data_scope, menu_check_strictly, dept_check_strictly, status, del_flag, create_by, create_time, remark)
 VALUES
-    (1, 0, 'Super Admin', 'admin', 1, '1', true, true, '1', '0', 'system', now(), 'Platform super admin'),
-    (2, 0, 'Merchant Admin', 'merchant_admin', 2, '1', true, true, '1', '0', 'system', now(), 'Default merchant admin role')
+    (1, 1, 'Super Admin', 'admin', 1, '1', true, true, '1', '0', 'system', now(), 'Platform super admin'),
+    (2, 1, 'Merchant Admin', 'merchant_admin', 2, '1', true, true, '1', '0', 'system', now(), 'Default merchant admin role')
 ON CONFLICT (role_id) DO NOTHING;
+UPDATE sys_role SET tenant_id = 1 WHERE role_id IN (1, 2);
 
 INSERT INTO sys_user_role (user_id, role_id, tenant_id)
-VALUES (1, 1, 0)
+VALUES (1, 1, 1)
 ON CONFLICT DO NOTHING;
+UPDATE sys_user_role SET tenant_id = 1 WHERE user_id = 1 AND role_id = 1;
 
 INSERT INTO sys_config (config_id, config_name, config_key, config_value, config_type, create_by, create_time, remark)
 VALUES
@@ -839,6 +931,18 @@ VALUES
     (9020, 'sys.menu.system.merchantAudit.query', 'zh_CN', '商家申请查询', 'system', now(), '基础权限'),
     (9021, 'sys.menu.system.merchantAudit.audit', 'en_US', 'Tenant Application Audit', 'system', now(), 'Base permission'),
     (9022, 'sys.menu.system.merchantAudit.audit', 'zh_CN', '商家申请审核', 'system', now(), '基础权限'),
+    (9037, 'sys.menu.system.merchantProfile', 'en_US', 'Merchant Profile', 'system', now(), 'Base menu'),
+    (9038, 'sys.menu.system.merchantProfile', 'zh_CN', '商家资料', 'system', now(), '基础菜单'),
+    (9039, 'sys.menu.system.merchantProfile.query', 'en_US', 'Merchant Profile Query', 'system', now(), 'Base permission'),
+    (9040, 'sys.menu.system.merchantProfile.query', 'zh_CN', '商家资料查询', 'system', now(), '基础权限'),
+    (9041, 'menu.merchant', 'en_US', 'Merchant', 'system', now(), 'Merchant menu'),
+    (9042, 'menu.merchant', 'zh_CN', '商家中心', 'system', now(), '商家菜单'),
+    (9043, 'menu.merchant.profile', 'en_US', 'Merchant Profile', 'system', now(), 'Merchant menu'),
+    (9044, 'menu.merchant.profile', 'zh_CN', '商家资料', 'system', now(), '商家菜单'),
+    (9045, 'menu.merchant.profile.query', 'en_US', 'Merchant Profile Query', 'system', now(), 'Merchant permission'),
+    (9046, 'menu.merchant.profile.query', 'zh_CN', '商家资料查询', 'system', now(), '商家权限'),
+    (9047, 'menu.merchant.profile.edit', 'en_US', 'Merchant Profile Edit', 'system', now(), 'Merchant permission'),
+    (9048, 'menu.merchant.profile.edit', 'zh_CN', '商家资料编辑', 'system', now(), '商家权限'),
     (9023, 'sys.dict.sys_normal_disable.normal', 'en_US', 'Normal', 'system', now(), 'Base dict'),
     (9024, 'sys.dict.sys_normal_disable.normal', 'zh_CN', '正常', 'system', now(), '基础字典'),
     (9025, 'sys.dict.sys_normal_disable.disabled', 'en_US', 'Disabled', 'system', now(), 'Base dict'),
@@ -865,17 +969,19 @@ UPDATE sys_dict_data SET i18n_key = 'sys.dict.sys_show_hide.hide' WHERE dict_typ
 
 INSERT INTO sys_menu (menu_id, tenant_id, menu_name, i18n_key, parent_id, order_num, path, component, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, remark)
 VALUES
-    (1, 0, 'System', 'sys.menu.system', 0, 100, 'system', NULL, '1', '0', 'M', '1', '1', NULL, 'system', 'system', now(), 'System menu'),
-    (100, 0, 'User', 'sys.menu.system.user', 1, 1, 'user', 'system/user/index', '1', '0', 'C', '1', '1', 'system:user:list', 'user', 'system', now(), 'User management'),
-    (101, 0, 'Role', 'sys.menu.system.role', 1, 2, 'role', 'system/role/index', '1', '0', 'C', '1', '1', 'system:role:list', 'peoples', 'system', now(), 'Role management'),
-    (102, 0, 'Menu', 'sys.menu.system.menu', 1, 3, 'menu', 'system/menu/index', '1', '0', 'C', '1', '1', 'system:menu:list', 'tree-table', 'system', now(), 'Menu management'),
-    (103, 0, 'Dept', 'sys.menu.system.dept', 1, 4, 'dept', 'system/dept/index', '1', '0', 'C', '1', '1', 'system:dept:list', 'tree', 'system', now(), 'Dept management'),
-    (104, 0, 'Post', 'sys.menu.system.post', 1, 5, 'post', 'system/post/index', '1', '0', 'C', '1', '1', 'system:post:list', 'post', 'system', now(), 'Post management'),
-    (105, 0, 'Dict', 'sys.menu.system.dict', 1, 6, 'dict', 'system/dict/index', '1', '0', 'C', '1', '1', 'system:dict:list', 'dict', 'system', now(), 'Dict management'),
-    (106, 0, 'Config', 'sys.menu.system.config', 1, 7, 'config', 'system/config/index', '1', '0', 'C', '1', '1', 'system:config:list', 'edit', 'system', now(), 'Config management'),
-    (107, 0, 'Merchant Audit', 'sys.menu.system.merchantAudit', 1, 8, 'tenantApplication', 'system/tenant/applications', '1', '0', 'C', '1', '1', 'system:tenant:application:list', 'peoples', 'system', now(), 'Merchant tenant audit'),
-    (1001, 0, 'Tenant Application Query', 'sys.menu.system.merchantAudit.query', 107, 1, '#', '', '1', '0', 'F', '1', '1', 'system:tenant:application:query', '#', 'system', now(), ''),
-    (1002, 0, 'Tenant Application Audit', 'sys.menu.system.merchantAudit.audit', 107, 2, '#', '', '1', '0', 'F', '1', '1', 'system:tenant:application:audit', '#', 'system', now(), '')
+    (1, 1, 'System', 'sys.menu.system', 0, 100, 'system', NULL, '1', '0', 'M', '1', '1', NULL, 'system', 'system', now(), 'System menu'),
+    (100, 1, 'User', 'sys.menu.system.user', 1, 1, 'user', 'system/user/index', '1', '0', 'C', '1', '1', 'system:user:list', 'user', 'system', now(), 'User management'),
+    (101, 1, 'Role', 'sys.menu.system.role', 1, 2, 'role', 'system/role/index', '1', '0', 'C', '1', '1', 'system:role:list', 'peoples', 'system', now(), 'Role management'),
+    (102, 1, 'Menu', 'sys.menu.system.menu', 1, 3, 'menu', 'system/menu/index', '1', '0', 'C', '1', '1', 'system:menu:list', 'tree-table', 'system', now(), 'Menu management'),
+    (103, 1, 'Dept', 'sys.menu.system.dept', 1, 4, 'dept', 'system/dept/index', '1', '0', 'C', '1', '1', 'system:dept:list', 'tree', 'system', now(), 'Dept management'),
+    (104, 1, 'Post', 'sys.menu.system.post', 1, 5, 'post', 'system/post/index', '1', '0', 'C', '1', '1', 'system:post:list', 'post', 'system', now(), 'Post management'),
+    (105, 1, 'Dict', 'sys.menu.system.dict', 1, 6, 'dict', 'system/dict/index', '1', '0', 'C', '1', '1', 'system:dict:list', 'dict', 'system', now(), 'Dict management'),
+    (106, 1, 'Config', 'sys.menu.system.config', 1, 7, 'config', 'system/config/index', '1', '0', 'C', '1', '1', 'system:config:list', 'edit', 'system', now(), 'Config management'),
+    (107, 1, 'Merchant Audit', 'sys.menu.system.merchantAudit', 1, 8, 'tenantApplication', 'system/tenant/applications', '1', '0', 'C', '1', '1', 'system:tenant:application:list', 'peoples', 'system', now(), 'Merchant tenant audit'),
+    (108, 1, 'Merchant Profile', 'sys.menu.system.merchantProfile', 1, 9, 'merchantProfile', 'system/merchant/profile', '1', '0', 'C', '1', '1', 'system:merchant:profile:list', 'peoples', 'system', now(), 'Merchant profile management'),
+    (1001, 1, 'Tenant Application Query', 'sys.menu.system.merchantAudit.query', 107, 1, '#', '', '1', '0', 'F', '1', '1', 'system:tenant:application:query', '#', 'system', now(), ''),
+    (1002, 1, 'Tenant Application Audit', 'sys.menu.system.merchantAudit.audit', 107, 2, '#', '', '1', '0', 'F', '1', '1', 'system:tenant:application:audit', '#', 'system', now(), ''),
+    (1003, 1, 'Merchant Profile Query', 'sys.menu.system.merchantProfile.query', 108, 1, '#', '', '1', '0', 'F', '1', '1', 'system:merchant:profile:query', '#', 'system', now(), '')
 ON CONFLICT (menu_id) DO NOTHING;
 
 UPDATE sys_menu SET i18n_key = 'sys.menu.system' WHERE menu_id = 1 AND i18n_key IS NULL;
@@ -887,8 +993,11 @@ UPDATE sys_menu SET i18n_key = 'sys.menu.system.post' WHERE menu_id = 104 AND i1
 UPDATE sys_menu SET i18n_key = 'sys.menu.system.dict' WHERE menu_id = 105 AND i18n_key IS NULL;
 UPDATE sys_menu SET i18n_key = 'sys.menu.system.config' WHERE menu_id = 106 AND i18n_key IS NULL;
 UPDATE sys_menu SET i18n_key = 'sys.menu.system.merchantAudit' WHERE menu_id = 107 AND i18n_key IS NULL;
+UPDATE sys_menu SET i18n_key = 'sys.menu.system.merchantProfile' WHERE menu_id = 108 AND i18n_key IS NULL;
 UPDATE sys_menu SET i18n_key = 'sys.menu.system.merchantAudit.query' WHERE menu_id = 1001 AND i18n_key IS NULL;
 UPDATE sys_menu SET i18n_key = 'sys.menu.system.merchantAudit.audit' WHERE menu_id = 1002 AND i18n_key IS NULL;
+UPDATE sys_menu SET i18n_key = 'sys.menu.system.merchantProfile.query' WHERE menu_id = 1003 AND i18n_key IS NULL;
+UPDATE sys_menu SET tenant_id = 1 WHERE menu_id IN (1, 100, 101, 102, 103, 104, 105, 106, 107, 108, 1001, 1002, 1003);
 
 INSERT INTO sys_i18n_message (message_id, message_key, locale, message_value, create_by, create_time, remark)
 VALUES
@@ -921,17 +1030,17 @@ SET message_value = EXCLUDED.message_value,
 
 INSERT INTO sys_menu (menu_id, tenant_id, menu_name, i18n_key, parent_id, order_num, path, component, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, remark)
 VALUES
-    (120, 0, 'Notice', 'sys.menu.system.notice', 1, 9, 'notice', 'system/notice/index', '1', '0', 'C', '1', '1', 'system:notice:list', 'message', 'system', now(), 'Notice management'),
-    (121, 0, 'File', 'sys.menu.system.oss', 1, 10, 'oss', 'system/oss/index', '1', '0', 'C', '1', '1', 'system:oss:list', 'upload', 'system', now(), 'File management'),
-    (200, 0, 'Monitor', 'sys.menu.monitor', 0, 120, 'monitor', NULL, '1', '0', 'M', '1', '1', NULL, 'monitor', 'system', now(), 'System monitor'),
-    (201, 0, 'Online Users', 'sys.menu.monitor.online', 200, 1, 'online', 'monitor/online/index', '1', '0', 'C', '1', '1', 'monitor:online:list', 'online', 'system', now(), 'Online users'),
-    (202, 0, 'Cache Monitor', 'sys.menu.monitor.cache', 200, 2, 'cache', 'monitor/cache/index', '1', '0', 'C', '1', '1', 'monitor:cache:list', 'redis', 'system', now(), 'Cache monitor'),
-    (203, 0, 'Cache List', 'sys.menu.monitor.cacheList', 200, 3, 'cacheList', 'monitor/cache/list', '1', '0', 'C', '1', '1', 'monitor:cache:list', 'redis-list', 'system', now(), 'Cache list'),
-    (204, 0, 'Clear Cache', 'sys.menu.monitor.cacheList.clear', 203, 1, '#', '', '1', '0', 'F', '1', '1', 'monitor:cache:remove', '#', 'system', now(), 'Clear cache'),
-    (300, 0, 'Code Generator', 'sys.menu.tool.gen', 0, 130, '/gen', 'tool/gen/index', '1', '0', 'C', '1', '1', 'tool:gen:list', 'code', 'system', now(), 'Code generator'),
-    (400, 0, 'Logs', 'sys.menu.log', 0, 140, 'log', NULL, '1', '0', 'M', '1', '1', NULL, 'log', 'system', now(), 'Log management'),
-    (401, 0, 'Operation Logs', 'sys.menu.log.operlog', 400, 1, 'operlog', 'monitor/operlog/index', '1', '0', 'C', '1', '1', 'monitor:operlog:list', 'form', 'system', now(), 'Operation logs'),
-    (402, 0, 'Login Logs', 'sys.menu.log.logininfor', 400, 2, 'logininfor', 'monitor/logininfor/index', '1', '0', 'C', '1', '1', 'monitor:logininfor:list', 'logininfor', 'system', now(), 'Login logs')
+    (120, 1, 'Notice', 'sys.menu.system.notice', 1, 9, 'notice', 'system/notice/index', '1', '0', 'C', '1', '1', 'system:notice:list', 'message', 'system', now(), 'Notice management'),
+    (121, 1, 'File', 'sys.menu.system.oss', 1, 10, 'oss', 'system/oss/index', '1', '0', 'C', '1', '1', 'system:oss:list', 'upload', 'system', now(), 'File management'),
+    (200, 1, 'Monitor', 'sys.menu.monitor', 0, 120, 'monitor', NULL, '1', '0', 'M', '1', '1', NULL, 'monitor', 'system', now(), 'System monitor'),
+    (201, 1, 'Online Users', 'sys.menu.monitor.online', 200, 1, 'online', 'monitor/online/index', '1', '0', 'C', '1', '1', 'monitor:online:list', 'online', 'system', now(), 'Online users'),
+    (202, 1, 'Cache Monitor', 'sys.menu.monitor.cache', 200, 2, 'cache', 'monitor/cache/index', '1', '0', 'C', '1', '1', 'monitor:cache:list', 'redis', 'system', now(), 'Cache monitor'),
+    (203, 1, 'Cache List', 'sys.menu.monitor.cacheList', 200, 3, 'cacheList', 'monitor/cache/list', '1', '0', 'C', '1', '1', 'monitor:cache:list', 'redis-list', 'system', now(), 'Cache list'),
+    (204, 1, 'Clear Cache', 'sys.menu.monitor.cacheList.clear', 203, 1, '#', '', '1', '0', 'F', '1', '1', 'monitor:cache:remove', '#', 'system', now(), 'Clear cache'),
+    (300, 1, 'Code Generator', 'sys.menu.tool.gen', 0, 130, '/gen', 'tool/gen/index', '1', '0', 'C', '1', '1', 'tool:gen:list', 'code', 'system', now(), 'Code generator'),
+    (400, 1, 'Logs', 'sys.menu.log', 0, 140, 'log', NULL, '1', '0', 'M', '1', '1', NULL, 'log', 'system', now(), 'Log management'),
+    (401, 1, 'Operation Logs', 'sys.menu.log.operlog', 400, 1, 'operlog', 'monitor/operlog/index', '1', '0', 'C', '1', '1', 'monitor:operlog:list', 'form', 'system', now(), 'Operation logs'),
+    (402, 1, 'Login Logs', 'sys.menu.log.logininfor', 400, 2, 'logininfor', 'monitor/logininfor/index', '1', '0', 'C', '1', '1', 'monitor:logininfor:list', 'logininfor', 'system', now(), 'Login logs')
 ON CONFLICT (menu_id) DO UPDATE
 SET menu_name = EXCLUDED.menu_name,
     i18n_key = EXCLUDED.i18n_key,
@@ -946,9 +1055,13 @@ SET menu_name = EXCLUDED.menu_name,
     status = EXCLUDED.status,
     perms = EXCLUDED.perms,
     icon = EXCLUDED.icon,
+    tenant_id = EXCLUDED.tenant_id,
     update_by = 'system',
     update_time = now();
+UPDATE sys_menu SET tenant_id = 1 WHERE menu_id IN (120, 121, 200, 201, 202, 203, 204, 300, 400, 401, 402);
 
 INSERT INTO sys_role_menu (role_id, menu_id, tenant_id)
-SELECT 1, menu_id, 0 FROM sys_menu
+SELECT 1, menu_id, 1 FROM sys_menu
+WHERE tenant_id = 1
 ON CONFLICT DO NOTHING;
+UPDATE sys_role_menu SET tenant_id = 1 WHERE role_id = 1;

@@ -16,8 +16,8 @@ Vue 3 + TypeScript + Vite + Element Plus admin frontend for the dealer portal.
 ## Local Development
 
 ```bash
-npm install
-npm run dev
+pnpm install
+pnpm dev
 ```
 
 The dev server defaults to `http://127.0.0.1:8083` and proxies `VITE_APP_BASE_API` to the backend configured in `vite.config.ts`.
@@ -25,9 +25,9 @@ The dev server defaults to `http://127.0.0.1:8083` and proxies `VITE_APP_BASE_AP
 ## Build
 
 ```bash
-npm run typecheck
-npm run build
-npm run preview
+pnpm typecheck
+pnpm build
+pnpm preview
 ```
 
 Runtime settings are loaded from `public/_app.config.js` and copied into `dist/_app.config.js` during build. Change that file after deployment when only API base URL or external monitor links need to change.

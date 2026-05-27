@@ -12,7 +12,7 @@ bocoo:
   profile:  D:/work/bocoo-base/bocoo-admin/target/classes/static/profile
   tenant:
     enabled: true
-    platform-id: 0
+    platform-id: 1
     ignore-urls:
       - /login
       - /captchaImage

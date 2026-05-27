@@ -33,9 +33,19 @@ public class LoginUser implements Serializable {
     private Long deptId;
 
     /**
-     * Tenant ID. Platform/factory tenant is fixed to 0.
+     * 租户ID
      */
     private Long tenantId;
+
+    /**
+     * 租户类型
+     */
+    private String tenantType;
+
+    /**
+     * 商家ID
+     */
+    private Long merchantId;
 
     /**
      * 部门名

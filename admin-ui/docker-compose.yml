@@ -1,0 +1,10 @@
+services:
+  admin-ui:
+    container_name: admin-ui
+    restart: always
+    build:
+      context: .
+      dockerfile: Dockerfile
+    network_mode: host
+    environment:
+      API_PROXY_PASS: ${API_PROXY_PASS:-http://127.0.0.1:8081}

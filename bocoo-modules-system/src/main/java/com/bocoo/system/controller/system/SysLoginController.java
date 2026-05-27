@@ -7,6 +7,7 @@ import com.bocoo.common.core.domain.bo.EmailLoginBody;
 import com.bocoo.common.core.domain.bo.LoginBody;
 import com.bocoo.common.core.domain.bo.LoginUser;
 import com.bocoo.common.core.domain.bo.SmsLoginBody;
+import com.bocoo.common.core.context.TenantContextHolder;
 import com.bocoo.common.core.utils.MessageUtils;
 import com.bocoo.common.satoken.utils.LoginHelper;
 import com.bocoo.system.domain.bo.ThirdClientBo;
@@ -163,13 +164,17 @@ public class SysLoginController {
     @Operation(summary = "获取用户信息", description = "获取当前登录用户的信息")
     public R<Map<String, Object>> getInfo() {
         LoginUser loginUser = LoginHelper.getLoginUser();
-        SysUserVo user = userService.selectUserById(loginUser.getUserId());
-        return R.ok(Map.of(
-                        "user", user,
-                        "roles", loginUser.getRolePermission(),
-                        "permissions", loginUser.getMenuPermission()
-                )
-        );
+        return TenantContextHolder.callWithTenant(loginUser.getTenantId(), () -> {
+            SysUserVo user = userService.selectUserById(loginUser.getUserId());
+            Map<String, Object> info = new HashMap<>();
+            info.put("user", user);
+            info.put("roles", loginUser.getRolePermission());
+            info.put("permissions", loginUser.getMenuPermission());
+            info.put("tenantId", loginUser.getTenantId());
+            info.put("tenantType", loginUser.getTenantType());
+            info.put("merchantId", loginUser.getMerchantId());
+            return R.ok(info);
+        });
     }
 
     /**
@@ -180,8 +185,11 @@ public class SysLoginController {
     @GetMapping("getRouters")
     @Operation(summary = "获取路由信息", description = "获取当前用户的菜单路由信息")
     public R<List<RouterVo>> getRouters() {
-        List<SysMenu> menus = menuService.selectMenuTreeByUserId(LoginHelper.getUserId());
-        List<RouterVo> routerVos = menuService.buildMenus(menus);
-        return R.ok(menuService.resetChildrenName(routerVos));
+        LoginUser loginUser = LoginHelper.getLoginUser();
+        return TenantContextHolder.callWithTenant(loginUser.getTenantId(), () -> {
+            List<SysMenu> menus = menuService.selectMenuTreeByUserId(loginUser.getUserId());
+            List<RouterVo> routerVos = menuService.buildMenus(menus);
+            return R.ok(menuService.resetChildrenName(routerVos));
+        });
     }
 }

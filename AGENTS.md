@@ -16,7 +16,7 @@
 
 ## Pause Rules
 
-以下情况必须暂停，并在暂停前更新 `.ai/CONTEXT.md`、`.ai/TASKS.md`、`.ai/HANDOFF.md`：
+以下情况必须暂停，并在暂停前更新 `.ai/CURRENT.md`，必要时同步 `.ai/MEMORY.md`：
 
 - 功能阶段完成。
 - 准备运行 build/test。
@@ -27,10 +27,10 @@
 
 ## Context Maintenance
 
-- 开始新任务前先查看 `.ai/CONTEXT.md`、`.ai/TASKS.md`、`.ai/HANDOFF.md`、`.ai/DECISIONS.md`、`.ai/BUGS.md`。
-- 做出关键技术判断时更新 `.ai/DECISIONS.md`。
-- 发现风险、遗留问题、不确定项时更新 `.ai/BUGS.md` 或 `.ai/TASKS.md`。
-- 交接或暂停前更新 `.ai/HANDOFF.md`，写清楚已做、未做、验证情况和下一步。
+- 开始新任务前先查看 `AGENTS.md`、`.ai/RULES.md`、`.ai/CONTEXT.md`、`.ai/CURRENT.md`、`.ai/MEMORY.md`。
+- 做出关键技术判断时更新 `.ai/MEMORY.md` 的 Decisions 或 Project Patterns。
+- 发现风险、遗留问题、不确定项时更新 `.ai/CURRENT.md`；长期有效的风险同步到 `.ai/MEMORY.md`。
+- 交接或暂停前更新 `.ai/CURRENT.md`，写清楚已做、未做、验证情况和下一步。
 
 ## Forbidden
 

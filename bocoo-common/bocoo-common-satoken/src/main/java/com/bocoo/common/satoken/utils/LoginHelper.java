@@ -7,10 +7,10 @@ import cn.dev33.satoken.stp.SaLoginModel;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.convert.Convert;
 import cn.hutool.core.util.ObjectUtil;
-import com.bocoo.common.core.constant.TenantConstants;
 import com.bocoo.common.core.constant.UserConstants;
 import com.bocoo.common.core.domain.bo.LoginUser;
 import com.bocoo.common.core.enums.DeviceType;
+import com.bocoo.common.core.enums.TenantType;
 import com.bocoo.common.core.enums.UserType;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -155,16 +155,25 @@ public class LoginHelper {
     public static Long getTenantId() {
         try {
             LoginUser loginUser = getLoginUser();
-            return loginUser == null || loginUser.getTenantId() == null
-                ? TenantConstants.PLATFORM_TENANT_ID
-                : loginUser.getTenantId();
+            return loginUser == null ? null : loginUser.getTenantId();
         } catch (Exception ignored) {
-            return TenantConstants.PLATFORM_TENANT_ID;
+            return null;
         }
     }
 
     public static boolean isPlatformTenant() {
-        return TenantConstants.PLATFORM_TENANT_ID.equals(getTenantId());
+        LoginUser loginUser = getLoginUser();
+        return loginUser != null && TenantType.PLATFORM.getCode().equals(loginUser.getTenantType());
+    }
+
+    public static String getTenantType() {
+        LoginUser loginUser = getLoginUser();
+        return loginUser == null ? null : loginUser.getTenantType();
+    }
+
+    public static Long getMerchantId() {
+        LoginUser loginUser = getLoginUser();
+        return loginUser == null ? null : loginUser.getMerchantId();
     }
 
     public static boolean isLogin() {
