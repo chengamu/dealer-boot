@@ -50,7 +50,7 @@
 1. `code-reviewer` 静态审查
 2. Runtime Validation：build / lint / test / dev runtime
 3. API Validation
-4. Browser Validation：优先使用可用浏览器调试能力
+4. Browser Validation：优先使用 Codex 内置 Browser / Chrome 工具
 5. 汇总 Validation / Risks / Next Step
 6. 判断是否允许 `/archive`
 
@@ -178,35 +178,16 @@ No Fake Runtime Validation
 Browser Validation Tool Selection
 ==================================================
 
-Browser Validation 不绑定单一工具。
+Browser Validation 使用 Codex 当前环境可用的内置浏览器能力。
 
 优先级：
 
-1. 如果当前 Codex 环境提供内置 Browser / Chrome 调试工具，优先使用内置浏览器工具进行页面验证。
-2. 如果 `chrome_devtools MCP server` 已运行，且 `browser-debugger` 可以连接 `http://localhost:3000/mcp`，可以使用 `browser-debugger`。
-3. 如果两者都不可用，不允许伪造浏览器验证；必须在 `.ai/CURRENT.md` 的 Validation 中记录：
+1. 优先使用 Codex 内置 Browser 工具进行页面验证。
+2. 如果需要用户现有登录态、Cookie、扩展或已有 Chrome 标签页，使用 Codex Chrome 工具。
+3. 如果当前环境不支持浏览器工具，不允许伪造浏览器验证；必须在 `.ai/CURRENT.md` 的 Validation 中记录：
    - Browser Validation 未执行
-   - 原因：浏览器调试工具不可用
-   - 剩余风险
-
-==================================================
-browser-debugger Usage
-==================================================
-
-- `browser-debugger` 是可选浏览器验证执行器。
-- 只有在 `chrome_devtools MCP server` 可用时才使用。
-- 不要求为了使用 `browser-debugger` 而启动 MCP 服务，除非用户明确要求。
-- 不要因为安装了 `browser-debugger` agent，就声称已经完成浏览器验证。
-
-如果使用 `browser-debugger`，必须记录：
-
-- 连接的 MCP 服务
-- 验证页面
-- 操作步骤
-- console error
-- network error
-- 实际结果
-- 未验证项
+   - 原因
+   - Remaining Risks
 
 ==================================================
 Browser Validation 必须尽量验证
@@ -228,15 +209,13 @@ Browser Validation 必须尽量验证
 
 必须明确记录：
 
-- 验证了哪些页面
-- 操作步骤
-- 输入数据
-- 预期结果
-- 实际结果
-- console error
-- network error
+- 已验证页面
+- 已验证交互
+- console / network 状态
 - 未验证项
-- 残余风险
+- Remaining Risks
+
+不要保留长 browser trace、长 network dump、长 console output 或完整操作录屏日志。
 
 ==================================================
 No Fake Browser Validation
@@ -249,7 +228,7 @@ No Fake Browser Validation
 - 没有检查 console 却写“无错误”
 - 没有检查 network 却写“接口正常”
 - 没有点击按钮却写“功能正常”
-- `browser-debugger` MCP 不可用时假装验证通过
+- 没做 Browser Validation 却写“验证通过”
 
 ==================================================
 5. Regression Validation
@@ -304,12 +283,11 @@ No Fake Browser Validation
 
 ### Browser Validation
 
-- 使用的浏览器验证工具
 - 已验证页面
 - 已验证交互
 - console / network 状态
-- 未验证页面
-- 未验证原因
+- 未验证项
+- Remaining Risks
 
 ### Regression Validation
 

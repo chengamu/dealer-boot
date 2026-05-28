@@ -113,6 +113,37 @@
 - 已确认代码生成器调整。
 - 已确认权限、菜单、字典同步修改。
 
+### Build/Test/Lint Authorization
+
+`/do` 默认在准备运行 build/test/lint 前需要暂停确认。
+
+但如果用户在本轮指令中已经明确授权，例如：
+
+- “准许 build/test/lint”。
+- “完成后运行 build/test/lint”。
+- “完成整个需求后执行验证并进入 /check”。
+
+则：
+
+1. `/do` 完成 `.ai/CURRENT.md` 中全部未阻塞 Tasks 后，可以连续执行已授权的 build/test/lint。
+2. 执行前仍需简要说明将运行哪些命令。
+3. 不需要再次暂停等待确认。
+4. build/test/lint 完成后，继续进入 `/check`。
+5. 不要在 build/test/lint 和 `/check` 之间制造人工暂停。
+
+如果用户没有明确授权，则：
+
+1. `/do` 完成 Tasks 后必须暂停。
+2. 输出建议运行的 build/test/lint 命令。
+3. 等待用户确认后再执行。
+
+禁止：
+
+- 未授权就运行 build/test/lint。
+- 用户已授权后仍反复暂停确认同一批命令。
+- 没运行却声称 build/test/lint 通过。
+- build/test/lint 失败后继续假装进入成功验收。
+
 ### Mandatory Pause Conditions
 
 只有以下情况必须暂停：
@@ -125,7 +156,7 @@
 - 需要大规模架构重构。
 - i18n / UTC / 时区影响突然扩大。
 - 发现 `.ai/CURRENT.md` 的 Scope 明显不足。
-- 需要运行 build/test/lint。
+- 需要运行 build/test/lint，且用户尚未明确授权。
 - 子 Agent 意见冲突。
 - 发现高风险数据兼容问题。
 - 继续执行会明显扩大需求范围。

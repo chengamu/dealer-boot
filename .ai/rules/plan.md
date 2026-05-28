@@ -80,13 +80,51 @@
 - Requirement：用户请求、背景、目标、Scope、Out of Scope、假设、开放问题
 - Current Implementation Analysis：相关模块、文件、现有模式、可复用工具、约束、子 Agent 结论
 - Design：推荐方案、备选方案、Data/API/Frontend/Backend/i18n/UTC 影响
-- Tasks：小而清晰的任务，包含 Owner、Files、Validation
+- Tasks：小而清晰的任务，包含 Owner、Validation；必要时写 Files
 - Acceptance Criteria：功能、UI、API、权限、i18n、UTC、回归
 - Risks 和 Pause Points
 
 如果开放问题会影响实现，必须暂停问用户；如果不影响第一步，可以记录假设后继续。
 
 输出：需求摘要、影响范围、推荐方案、任务拆分、验收标准、风险和暂停点、是否可进入 `/do`。
+
+### Tasks
+
+Tasks 保持轻量，不引入复杂 Task Schema。每个任务必须可被 `/do` 按 Owner 调度，至少包含任务标题、Owner 和 Validation。
+
+Owner Dispatch Rules：
+
+- `frontend-developer`：前端页面、组件、样式、交互。
+- `typescript-pro`：TypeScript 类型和复杂逻辑。
+- `java-architect`：Java 后端、Service、Mapper、权限、事务、架构影响。
+- `code-reviewer`：最终静态审查和验收。
+- `main`：跨领域协调、规则维护、简单任务。
+
+Executable Tasks：
+
+- `/do` 执行时必须按 Owner 调用对应子 Agent。
+- 不允许忽略 Owner；如需调整 Owner，必须在 `.ai/CURRENT.md` 记录原因。
+- 如果非浏览器 Agent 不可用，必须在 `.ai/CURRENT.md` 记录 fallback，并由主 Agent 对结果负责。
+- 浏览器验证任务使用 Codex 内置 Browser / Chrome 工具。
+- 如果当前环境不支持浏览器工具，必须记录 Browser Validation 未执行、原因和 Remaining Risks。
+
+示例：
+
+- [ ] 调整商家注册页字段
+  - Owner: frontend-developer
+  - Validation: browser (Codex 内置)
+
+- [ ] 调整后端 BO 和校验
+  - Owner: java-architect
+  - Validation: compile + API
+
+- [ ] 检查 TS 类型
+  - Owner: typescript-pro
+  - Validation: vue-tsc
+
+- [ ] 最终验收
+  - Owner: code-reviewer
+  - Validation: runtime + Browser (Codex 内置)
 
 ### Plan Lock / Execution Gate
 

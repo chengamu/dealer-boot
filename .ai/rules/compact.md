@@ -18,6 +18,25 @@
 4. 把可复用经验、重复踩坑、关键决策提炼到 `.ai/MEMORY.md`。
 5. 不删除仍未解决的问题。
 
+### CURRENT Hygiene
+
+`.ai/CURRENT.md` 不保存：
+
+- 长日志
+- 长 reasoning
+- 完整 browser trace
+- 完整 network dump
+- 完整 build/test 输出
+
+`.ai/CURRENT.md` 只保存：
+
+- 摘要
+- 结果
+- 风险
+- 下一步
+
+长输出只记录关键错误和文件位置。
+
 必须保留：
 
 - 当前目标
