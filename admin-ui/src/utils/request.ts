@@ -7,7 +7,7 @@ import { getToken, removeToken } from './auth'
 import { useLocaleStore } from '@/stores/locale'
 import type { ApiResult, PageResult } from '@/types/api'
 import { i18n } from '@/i18n'
-import { getApiBaseUrl } from '@/utils/config'
+import { getApiBaseUrl, getContextPath } from '@/utils/config'
 
 const baseURL = getApiBaseUrl()
 
@@ -18,6 +18,7 @@ const service = axios.create({
 })
 
 const AUDIT_FIELDS = ['createTime', 'updateTime', 'createBy', 'updateBy', 'createById', 'updateById']
+let authRedirecting = false
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return Object.prototype.toString.call(value) === '[object Object]'
@@ -28,6 +29,18 @@ function sanitizeMutationData(data: unknown) {
   const payload = { ...data }
   AUDIT_FIELDS.forEach((field) => delete payload[field])
   return payload
+}
+
+function redirectToLogin(message?: string) {
+  if (authRedirecting) return
+  authRedirecting = true
+  removeToken()
+  if (message) ElMessage.error(message)
+  const current = `${window.location.pathname}${window.location.search}${window.location.hash}`
+  const redirect = current && !current.includes('/login') ? `?redirect=${encodeURIComponent(current)}` : ''
+  const basePath = getContextPath().replace(/\/$/, '')
+  const loginPath = `${basePath || ''}/login`
+  window.location.href = `${loginPath}${redirect}`
 }
 
 service.interceptors.request.use((config) => {
@@ -58,21 +71,24 @@ service.interceptors.response.use(
     const code = data?.code ?? 200
     if (code === 200 || code === 0 || Array.isArray(data?.rows)) return data
     if (code === 401) {
-      removeToken()
-      window.location.href = '/login'
+      redirectToLogin(data?.msg || i18n.global.t('request.invalidSession'))
       return Promise.reject(new Error(data?.msg || 'Unauthorized'))
     }
-    const message = data?.msg || i18n.global.t('api.error')
+    const message = data?.msg || i18n.global.t('errorCode.default')
     ElNotification.error({ title: message })
     return Promise.reject(new Error(message))
   },
   (error) => {
     const t = i18n.global.t
+    if (error.response?.status === 401) {
+      redirectToLogin(error.response?.data?.msg || t('request.invalidSession'))
+      return Promise.reject(error)
+    }
     const message = error.message?.includes('timeout')
-      ? t('api.timeout')
+      ? t('request.timeout')
       : error.message === 'Network Error'
-        ? t('api.network')
-        : error.message || t('api.error')
+        ? t('request.networkError')
+        : error.message || t('errorCode.default')
     ElMessage.error(message)
     return Promise.reject(error)
   }
@@ -110,12 +126,12 @@ export async function download(url: string, params: Record<string, unknown>, fil
     if (data instanceof Blob) {
       const text = await data.text()
       const body = JSON.parse(text)
-      ElMessage.error(body.msg || i18n.global.t('api.error'))
+      ElMessage.error(body.msg || i18n.global.t('errorCode.default'))
       return
     }
     saveAs(new Blob([data as unknown as BlobPart]), filename)
   } catch (error) {
-    ElMessage.error(i18n.global.t('download.error') || i18n.global.t('api.error'))
+    ElMessage.error(i18n.global.t('download.error') || i18n.global.t('errorCode.default'))
     throw error
   } finally {
     loading.close()

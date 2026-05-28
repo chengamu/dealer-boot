@@ -3,17 +3,17 @@
     <section class="hero-panel">
       <div class="brand">
         <div class="sky-logo">skyspf</div>
-        <p>Window Covering Portal</p>
+        <p>{{ t('login.portalName') }}</p>
       </div>
 
       <div class="portal-pill">
         <el-icon><Connection /></el-icon>
-        <span>Window Covering Dealer Portal</span>
+        <span>{{ t('login.dealerPortal') }}</span>
       </div>
 
       <div class="hero-copy">
-        <h1>Sell Smarter.<br />Manage Orders.<br />Deliver Beautiful Spaces.</h1>
-        <p>A global platform to manage quotes, orders, customers, and fulfillment for window coverings.</p>
+        <h1>{{ t('login.heroLine1') }}<br />{{ t('login.heroLine2') }}<br />{{ t('login.heroLine3') }}</h1>
+        <p>{{ t('login.heroDescription') }}</p>
       </div>
 
       <div class="room-scene" aria-hidden="true">
@@ -24,20 +24,20 @@
 
       <article class="float-card order-card">
         <span class="check-dot">✓</span>
-        <strong>New Order</strong>
-        <small>Roller Shade</small>
+        <strong>{{ t('login.newOrder') }}</strong>
+        <small>{{ t('login.orderProduct') }}</small>
       </article>
 
       <article class="float-card chart-card">
-        <strong>Order Overview</strong>
+        <strong>{{ t('login.orderOverview') }}</strong>
         <div class="mini-chart">
           <span v-for="bar in 7" :key="bar" :style="{ height: `${18 + (bar % 4) * 13}px` }" />
         </div>
-        <small>This Month <b>↑ 18.6%</b></small>
+        <small>{{ t('login.thisMonth') }} <b>↑ 18.6%</b></small>
       </article>
 
       <article class="float-card material-card">
-        <strong>Top Fabric Collections</strong>
+        <strong>{{ t('login.topFabricCollections') }}</strong>
         <div class="swatches">
           <i v-for="swatch in swatches" :key="swatch" :style="{ background: swatch }" />
         </div>
@@ -46,8 +46,8 @@
       <article class="trust-card">
         <span><el-icon><Connection /></el-icon></span>
         <div>
-          <strong>Built for window covering professionals</strong>
-          <small>Multi-language support, global access, and enterprise-grade reliability.</small>
+          <strong>{{ t('login.trustTitle') }}</strong>
+          <small>{{ t('login.trustText') }}</small>
         </div>
       </article>
 
@@ -80,7 +80,7 @@
                 <template #prefix><el-icon><CircleCheckFilled /></el-icon></template>
               </el-input>
               <button class="captcha-image" type="button" :aria-label="t('common.refresh')" :title="t('common.refresh')" @click="loadCaptcha">
-                <img v-if="captcha.img" :src="captcha.img" alt="captcha" />
+                <img v-if="captcha.img" :src="captcha.img" :alt="t('login.code')" />
                 <span v-else>{{ t('common.refresh') }}</span>
               </button>
               <button class="captcha-refresh" type="button" :aria-label="t('common.refresh')" :title="t('common.refresh')" @click="loadCaptcha">↻</button>
@@ -97,23 +97,26 @@
           </el-button>
         </el-form>
 
-        <div class="login-divider"><span>or</span></div>
+        <div class="login-divider"><span>{{ t('login.or') }}</span></div>
         <button class="google-button" type="button">
           <b>G</b>
-          <span>Sign in with Google</span>
+          <span>{{ t('login.googleSignIn') }}</span>
         </button>
       </el-card>
 
     </section>
 
     <footer class="auth-footer">
-      <span>© 2024 skyspf. All rights reserved.</span>
+      <span>{{ t('apply.footerCopyright') }}</span>
       <i />
-      <a>Privacy Policy</a>
+      <a @click="openLegal('privacy')">{{ t('apply.privacy') }}</a>
       <i />
-      <a>Terms of Service</a>
+      <a @click="openLegal('terms')">{{ t('apply.terms') }}</a>
     </footer>
 
+    <el-dialog v-model="legalOpen" :title="legalTitle" class="legal-dialog" width="720px">
+      <div class="legal-content">{{ legalContent }}</div>
+    </el-dialog>
   </div>
 </template>
 
@@ -129,6 +132,7 @@ import { useUserStore } from '@/stores/user'
 import { useLocaleStore } from '@/stores/locale'
 import type { AppLocale } from '@/i18n'
 import { getCodeImg } from '@/api/auth'
+import { getPublishedLegalDocument } from '@/api/system/legalDocument'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -140,6 +144,9 @@ const localeValue = ref<AppLocale>(localeStore.locale)
 const remember = ref(false)
 const loading = ref(false)
 const captchaRequired = ref(true)
+const legalOpen = ref(false)
+const legalTitle = ref('')
+const legalContent = ref('')
 const form = reactive({ username: '', password: '', code: '', uuid: '' })
 const captcha = reactive({ enabled: false, img: '' })
 const swatches = ['#d9c7aa', '#e8e1d2', '#c8c5ba', '#8995a1']
@@ -154,6 +161,23 @@ const rules = computed<FormRules>(() => ({
 
 function changeLocale(locale: AppLocale) {
   localeStore.setLocale(locale)
+}
+
+async function openLegal(type: 'privacy' | 'terms') {
+  const titles = {
+    privacy: t('apply.privacy'),
+    terms: t('apply.terms')
+  }
+  legalTitle.value = titles[type]
+  legalContent.value = t(`apply.legalPlaceholder.${type}`)
+  legalOpen.value = true
+  try {
+    const document = await getPublishedLegalDocument(type)
+    legalTitle.value = document.title || titles[type]
+    legalContent.value = document.content || legalContent.value
+  } catch {
+    // Keep the local fallback visible; the request interceptor displays backend errors.
+  }
 }
 
 async function loadCaptcha() {
@@ -665,12 +689,21 @@ onUnmounted(() => {
 
 .auth-footer a {
   color: #5d6f96;
+  cursor: pointer;
 }
 
 .auth-footer i {
   width: 1px;
   height: 14px;
   background: #aebbd0;
+}
+
+.legal-content {
+  max-height: 60vh;
+  overflow: auto;
+  white-space: pre-wrap;
+  color: #334155;
+  line-height: 1.7;
 }
 
 @media (max-width: 1280px) {

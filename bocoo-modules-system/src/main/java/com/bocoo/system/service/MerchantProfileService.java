@@ -37,6 +37,16 @@ public class MerchantProfileService {
         return TenantContextHolder.callWithIgnore(() -> merchantProfileMapper.selectVoById(merchantId));
     }
 
+    public int updateById(MerchantProfileBo bo) {
+        checkPlatformTenant();
+        MerchantProfile profile = TenantContextHolder.callWithIgnore(() -> merchantProfileMapper.selectById(bo.getMerchantId()));
+        if (profile == null) {
+            throw ServiceException.ofMessageKey("merchant.profile.notFound");
+        }
+        applyMerchantEditableFields(profile, bo);
+        return TenantContextHolder.callWithIgnore(() -> merchantProfileMapper.updateById(profile));
+    }
+
     public MerchantProfileVo selectCurrent() {
         checkMerchantTenant();
         return merchantProfileMapper.selectVoOne(new LambdaQueryWrapper<MerchantProfile>()

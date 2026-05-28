@@ -6,6 +6,7 @@ import com.bocoo.common.core.domain.R;
 import com.bocoo.common.mybatis.core.page.PageQuery;
 import com.bocoo.common.mybatis.core.page.TableDataInfo;
 import com.bocoo.common.web.core.BaseController;
+import com.bocoo.system.domain.bo.MerchantEmailCodeBo;
 import com.bocoo.system.domain.bo.SysTenantApplyBo;
 import com.bocoo.system.domain.vo.SysTenantApplyVo;
 import com.bocoo.system.service.SysTenantApplyService;
@@ -22,6 +23,14 @@ import org.springframework.web.bind.annotation.*;
 public class SysTenantApplyController extends BaseController {
 
     private final SysTenantApplyService tenantApplyService;
+
+    @SaIgnore
+    @PostMapping("/merchant/applications/email-code")
+    @Operation(summary = "Send merchant application email verification code")
+    public R<Void> sendEmailCode(@Validated @RequestBody MerchantEmailCodeBo bo) {
+        tenantApplyService.sendEmailCode(bo.getEmail());
+        return R.ok();
+    }
 
     @SaIgnore
     @PostMapping("/merchant/applications")

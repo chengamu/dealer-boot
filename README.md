@@ -54,6 +54,7 @@ AND (d.dept_id IN (105,106))       -- 角色2的权限
 
 
 ## 更新记录
+2026-05-28 体验调整：管理端顶部栏隐藏 Layout Settings 入口，布局配置仍保留在代码中，后续如需开放需重新评估权限和视觉一致性。
 1. 简化代码，去除service 接口，去除一些没必要校验。
 2. 逻辑删除优化：0代表存在 1代表删除。
 3. BaseEntity 优化 Date->LocalDateTime, createBy和updateBy保持String。

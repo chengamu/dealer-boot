@@ -18,7 +18,6 @@
 - typescript-pro：TypeScript 类型、复杂 TS 逻辑、类型安全、组合式函数。
 - java-architect：Java 后端、Spring、接口、Service、Mapper、架构影响分析。
 - code-reviewer：`/check` 阶段通用代码审查、质量检查、回归风险检查、验收确认。
-- browser-debugger：历史可选浏览器验证执行器；Browser Validation 当前以 `.ai/rules/check.md` 为准，优先使用 Codex 内置 Browser / Chrome 工具，不保留 MCP 依赖。
 
 ### Dispatch Rules
 

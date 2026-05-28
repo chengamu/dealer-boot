@@ -70,4 +70,9 @@ public class SysTenantApplyBo extends BaseEntity {
     private String status;
 
     private String rejectReason;
+
+    @Size(max = 4, message = "{tenant.apply.verificationCode.invalid}")
+    private String verificationCode;
+
+    private Boolean termsAccepted;
 }

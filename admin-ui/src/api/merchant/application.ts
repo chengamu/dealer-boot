@@ -24,6 +24,8 @@ export interface MerchantApplication {
   auditTime?: string
   rejectReason?: string
   createTime?: string
+  verificationCode?: string
+  termsAccepted?: boolean
 }
 
 export interface MerchantApplicationQuery extends PageQuery {
@@ -35,6 +37,19 @@ export interface MerchantApplicationQuery extends PageQuery {
 }
 
 export type MerchantApplicationPayload = Omit<MerchantApplication, 'applyId' | 'tenantId' | 'status' | 'auditBy' | 'auditTime' | 'createTime'>
+
+export interface MerchantEmailCodePayload {
+  email: string
+}
+
+export function sendMerchantApplicationEmailCode(data: MerchantEmailCodePayload) {
+  return request({
+    url: '/merchant/applications/email-code',
+    method: 'post',
+    headers: { isToken: false },
+    data
+  })
+}
 
 export function submitMerchantApplication(data: MerchantApplicationPayload) {
   return request({

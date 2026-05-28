@@ -40,16 +40,6 @@
 
       <message-bell class="right-menu-item message-wrapper" />
 
-      <button
-        type="button"
-        class="right-menu-item hover-effect navbar-icon-button"
-        :aria-label="t('shell.layoutSettings')"
-        :title="t('shell.layoutSettings')"
-        @click="setLayout"
-      >
-        <svg-icon icon-class="theme" />
-      </button>
-
       <div class="avatar-container">
         <el-dropdown @command="handleCommand" class="right-menu-item hover-effect" trigger="click">
           <button
@@ -90,17 +80,17 @@ import useAppStore from '@/stores/app'
 import useUserStore from '@/stores/user'
 import useSettingsStore from '@/stores/settings'
 import useLocaleStore from '@/stores/locale'
+import usePermissionStore from '@/stores/permission'
 import { getMessage } from '@/locales'
 import { getContextPath } from '@/utils/config'
-
-const emits = defineEmits<{
-  (e: 'setLayout'): void
-}>()
+import { getToken } from '@/utils/auth'
+import { registerDynamicRoutes, resetDynamicRoutes } from '@/router'
 
 const appStore = useAppStore()
 const userStore = useUserStore()
 const settingsStore = useSettingsStore()
 const localeStore = useLocaleStore()
+const permissionStore = usePermissionStore()
 const t = (key: string) => getMessage(key, localeStore.language)
 
 const languages = [
@@ -116,9 +106,6 @@ function toggleSideBar() {
 
 function handleCommand(command: string) {
   switch (command) {
-    case 'setLayout':
-      setLayout()
-      break
     case 'logout':
       logout()
       break
@@ -141,13 +128,14 @@ function logout() {
   }).catch(() => {})
 }
 
-function handleLanguage(language: 'zh_CN' | 'en_US') {
+async function handleLanguage(language: 'zh_CN' | 'en_US') {
   if (localeStore.language === language) return
   localeStore.setLanguage(language)
-}
-
-function setLayout() {
-  emits('setLayout')
+  if (!getToken()) return
+  permissionStore.reset()
+  resetDynamicRoutes()
+  const accessRoutes = await permissionStore.generateRoutes()
+  registerDynamicRoutes(accessRoutes)
 }
 </script>
 

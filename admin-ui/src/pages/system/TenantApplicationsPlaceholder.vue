@@ -175,7 +175,7 @@ async function handleApprove(row: MerchantApplication) {
 
 function openReject(row: MerchantApplication) {
   rejectingId.value = row.applyId
-  rejectReason.value = ''
+  rejectReason.value = t('tenant.rejectDefaultReason')
   rejectOpen.value = true
 }
 

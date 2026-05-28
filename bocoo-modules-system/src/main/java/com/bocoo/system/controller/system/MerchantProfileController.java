@@ -53,4 +53,12 @@ public class MerchantProfileController extends BaseController {
     public R<MerchantProfileVo> get(@PathVariable("merchantId") Long merchantId) {
         return R.ok(merchantProfileService.selectById(merchantId));
     }
+
+    @SaCheckPermission("system:merchant:profile:edit")
+    @Log(title = "Merchant profile", businessType = BusinessType.UPDATE)
+    @PutMapping
+    @Operation(summary = "Update merchant profile editable fields")
+    public R<Void> update(@Validated @RequestBody MerchantProfileBo bo) {
+        return toAjax(merchantProfileService.updateById(bo));
+    }
 }

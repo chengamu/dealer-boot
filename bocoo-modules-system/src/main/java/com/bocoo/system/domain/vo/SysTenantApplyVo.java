@@ -29,6 +29,8 @@ public class SysTenantApplyVo implements Serializable {
 
     private String email;
 
+    private String applyLocale;
+
     private String officePhone;
 
     private String mobilePhone;

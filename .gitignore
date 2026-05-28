@@ -55,5 +55,7 @@ pnpm-debug.log*
 
 # Local AI/tooling runtime artifacts
 .ai/runtime-validation/
+.ai/tmp/
+.ai/artifacts/
 .codegraph/
 .cursor/

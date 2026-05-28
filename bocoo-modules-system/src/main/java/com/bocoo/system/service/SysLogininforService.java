@@ -49,8 +49,8 @@ public class SysLogininforService {
     @EventListener
     public void recordLogininfor(LogininforEvent logininforEvent) {
         HttpServletRequest request = logininforEvent.getRequest();
-        final UserAgent userAgent = UserAgentUtil.parse(request.getHeader("User-Agent"));
-        final String ip = ServletUtils.getClientIP(request);
+        final UserAgent userAgent = UserAgentUtil.parse(logininforEvent.getUserAgent());
+        final String ip = StringUtils.defaultIfBlank(logininforEvent.getIpaddr(), ServletUtils.getClientIP(request));
 
         String address = AddressUtils.getRealAddressByIP(ip);
         StringBuilder s = new StringBuilder();

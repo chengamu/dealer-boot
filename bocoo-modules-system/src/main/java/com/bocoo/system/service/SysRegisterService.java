@@ -95,7 +95,10 @@ public class SysRegisterService {
         logininforEvent.setUsername(username);
         logininforEvent.setStatus(status);
         logininforEvent.setMessage(message);
-        logininforEvent.setRequest(ServletUtils.getRequest());
+        var request = ServletUtils.getRequest();
+        logininforEvent.setRequest(request);
+        logininforEvent.setIpaddr(ServletUtils.getClientIP(request));
+        logininforEvent.setUserAgent(request.getHeader("User-Agent"));
         SpringUtils.context().publishEvent(logininforEvent);
     }
 

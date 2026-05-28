@@ -18,9 +18,12 @@ bocoo:
       - /captchaImage
       - /register
       - /merchant/applications
+      - /merchant/applications/email-code
+      - /legal/documents/
     ignore-tables:
       - sys_tenant
       - sys_tenant_apply
+      - sys_legal_document
       - sys_config
       - sys_i18n_message
       - sys_dict_type

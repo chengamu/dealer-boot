@@ -695,13 +695,16 @@
     }
 
     .el-form-item__label {
+      width: auto !important;
+      max-width: none;
       height: var(--admin-control-height);
       line-height: var(--admin-control-height);
       color: var(--admin-title);
-      font-size: var(--admin-font-size-base);
+      font-family: system-ui, sans-serif;
+      font-size: 12px;
       font-weight: 500;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      overflow: visible;
+      text-overflow: clip;
       white-space: nowrap;
     }
 

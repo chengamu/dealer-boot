@@ -1,6 +1,8 @@
 package com.bocoo.system.service;
 
 import cn.dev33.satoken.secure.BCrypt;
+import cn.hutool.core.util.RandomUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -17,10 +19,12 @@ import com.bocoo.common.core.utils.TimeUtils;
 import com.bocoo.common.mail.utils.MailUtils;
 import com.bocoo.common.mybatis.core.page.PageQuery;
 import com.bocoo.common.mybatis.core.page.TableDataInfo;
+import com.bocoo.common.redis.utils.RedisUtils;
 import com.bocoo.common.satoken.utils.LoginHelper;
 import com.bocoo.system.domain.bo.MerchantProfileBo;
 import com.bocoo.system.domain.bo.SysTenantApplyBo;
 import com.bocoo.system.domain.entity.SysMenu;
+import com.bocoo.system.domain.entity.SysDept;
 import com.bocoo.system.domain.entity.SysRole;
 import com.bocoo.system.domain.entity.SysRoleMenu;
 import com.bocoo.system.domain.entity.SysTenant;
@@ -28,6 +32,7 @@ import com.bocoo.system.domain.entity.SysTenantApply;
 import com.bocoo.system.domain.entity.SysUser;
 import com.bocoo.system.domain.entity.SysUserRole;
 import com.bocoo.system.mapper.SysMenuMapper;
+import com.bocoo.system.mapper.SysDeptMapper;
 import com.bocoo.system.domain.vo.SysTenantApplyVo;
 import com.bocoo.system.mapper.SysRoleMapper;
 import com.bocoo.system.mapper.SysRoleMenuMapper;
@@ -38,12 +43,14 @@ import com.bocoo.system.mapper.SysUserRoleMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.time.Duration;
 import java.util.List;
-import java.util.UUID;
+import java.util.Locale;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -51,11 +58,18 @@ import java.util.UUID;
 public class SysTenantApplyService {
 
     private static final String MERCHANT_ADMIN_ROLE_KEY = "merchant_admin";
+    private static final String MERCHANT_DEPT_NAME = "商家";
+    private static final String PASSWORD_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%";
+    private static final Duration EMAIL_CODE_TTL = Duration.ofMinutes(10);
+    private static final Duration EMAIL_CODE_COOLDOWN = Duration.ofSeconds(60);
+    private static final String EMAIL_CODE_KEY_PREFIX = "merchant_apply:email_code:";
+    private static final String EMAIL_CODE_COOLDOWN_PREFIX = "merchant_apply:email_code_cooldown:";
 
     private final SysTenantApplyMapper tenantApplyMapper;
     private final SysTenantMapper tenantMapper;
     private final SysUserService userService;
     private final MerchantProfileService merchantProfileService;
+    private final SysDeptMapper deptMapper;
     private final SysRoleMapper roleMapper;
     private final SysMenuMapper menuMapper;
     private final SysRoleMenuMapper roleMenuMapper;
@@ -65,15 +79,43 @@ public class SysTenantApplyService {
     @Value("${mail.enabled:false}")
     private Boolean mailEnabled;
 
-    public void submit(SysTenantApplyBo bo) {
-        boolean exists = tenantApplyMapper.exists(new LambdaQueryWrapper<SysTenantApply>()
-            .eq(SysTenantApply::getEmail, bo.getEmail())
-            .in(SysTenantApply::getStatus, TenantApplyStatus.PENDING.getCode(), TenantApplyStatus.APPROVED.getCode()));
-        if (exists) {
-            throw ServiceException.ofMessageKey("tenant.apply.exists");
+    public void sendEmailCode(String email) {
+        String normalizedEmail = normalizeEmail(email);
+        checkApplyEmailAvailable(normalizedEmail);
+        checkUserEmailAvailable(normalizedEmail);
+        String cooldownKey = EMAIL_CODE_COOLDOWN_PREFIX + normalizedEmail;
+        if (!RedisUtils.setObjectIfAbsent(cooldownKey, "1", EMAIL_CODE_COOLDOWN)) {
+            throw ServiceException.ofMessageKey("tenant.apply.emailCode.cooldown");
         }
-        checkUserEmailAvailable(bo.getEmail());
+        if (!Boolean.TRUE.equals(mailEnabled)) {
+            RedisUtils.deleteObject(cooldownKey);
+            throw ServiceException.ofMessageKey("tenant.apply.emailCode.mailDisabled");
+        }
+        String code = RandomUtil.randomNumbers(4);
+        try {
+            String subject = MessageUtils.message("tenant.apply.emailCode.subject");
+            String content = buildEmailCodeHtml(code);
+            MailUtils.sendHtml(normalizedEmail, subject, content);
+            RedisUtils.setCacheObject(EMAIL_CODE_KEY_PREFIX + normalizedEmail, code, EMAIL_CODE_TTL);
+        } catch (Exception ex) {
+            RedisUtils.deleteObject(cooldownKey);
+            log.warn("Merchant application email verification code failed. email={}, reason={}",
+                normalizedEmail, ex.getMessage());
+            throw ServiceException.ofMessageKey("tenant.apply.emailCode.sendFailed");
+        }
+    }
+
+    public void submit(SysTenantApplyBo bo) {
+        if (!Boolean.TRUE.equals(bo.getTermsAccepted())) {
+            throw ServiceException.ofMessageKey("tenant.apply.terms.required");
+        }
+        String normalizedEmail = normalizeEmail(bo.getEmail());
+        bo.setEmail(normalizedEmail);
+        checkEmailCode(normalizedEmail, bo.getVerificationCode());
+        checkApplyEmailAvailable(normalizedEmail);
+        checkUserEmailAvailable(normalizedEmail);
         SysTenantApply apply = MapstructUtils.convert(bo, SysTenantApply.class);
+        apply.setApplyLocale(resolveCurrentLocale());
         sanitizePublicSubmitApply(apply);
         apply.setStatus(TenantApplyStatus.PENDING.getCode());
         tenantApplyMapper.insert(apply);
@@ -118,11 +160,13 @@ public class SysTenantApplyService {
         tenant.setStatus(UserStatus.OK.getCode());
         tenantMapper.insert(tenant);
 
-        String tempPassword = "Tmp@" + UUID.randomUUID().toString().replace("-", "").substring(0, 12);
+        String tempPassword = RandomUtil.randomString(PASSWORD_CHARS, 12);
         SysTenantApply finalApply = apply;
         TenantContextHolder.runWithTenant(tenant.getTenantId(), () -> {
+            Long deptId = ensureMerchantDept(finalApply);
             com.bocoo.system.domain.bo.SysUserBo user = new com.bocoo.system.domain.bo.SysUserBo();
             user.setTenantId(tenant.getTenantId());
+            user.setDeptId(deptId);
             user.setUserName(finalApply.getEmail());
             user.setEmail(finalApply.getEmail());
             user.setNickName(finalApply.getMerchantName());
@@ -164,6 +208,7 @@ public class SysTenantApplyService {
         apply.setAuditById(LoginHelper.getUserId());
         apply.setAuditTime(TimeUtils.utcNow());
         tenantApplyMapper.updateById(apply);
+        sendRejectedMail(apply);
     }
 
     private void checkPlatformTenant() {
@@ -178,6 +223,47 @@ public class SysTenantApplyService {
         if (exists) {
             throw ServiceException.ofMessageKey("tenant.apply.email.used");
         }
+    }
+
+    private void checkApplyEmailAvailable(String email) {
+        boolean exists = tenantApplyMapper.exists(new LambdaQueryWrapper<SysTenantApply>()
+            .eq(SysTenantApply::getEmail, email)
+            .in(SysTenantApply::getStatus, TenantApplyStatus.PENDING.getCode(), TenantApplyStatus.APPROVED.getCode()));
+        if (exists) {
+            throw ServiceException.ofMessageKey("tenant.apply.exists");
+        }
+    }
+
+    private void checkEmailCode(String email, String inputCode) {
+        if (StrUtil.isBlank(inputCode)) {
+            throw ServiceException.ofMessageKey("tenant.apply.emailCode.required");
+        }
+        String key = EMAIL_CODE_KEY_PREFIX + email;
+        String cachedCode = RedisUtils.getCacheObject(key);
+        if (!inputCode.equals(cachedCode)) {
+            throw ServiceException.ofMessageKey("tenant.apply.emailCode.invalid");
+        }
+        RedisUtils.deleteObject(key);
+    }
+
+    private String normalizeEmail(String email) {
+        return email == null ? "" : email.trim().toLowerCase();
+    }
+
+    private String resolveCurrentLocale() {
+        Locale locale = LocaleContextHolder.getLocale();
+        if (locale != null && "zh".equalsIgnoreCase(locale.getLanguage())) {
+            return "zh_CN";
+        }
+        return "en_US";
+    }
+
+    private Locale resolveApplyLocale(SysTenantApply apply) {
+        String applyLocale = apply.getApplyLocale();
+        if ("zh_CN".equalsIgnoreCase(applyLocale)) {
+            return Locale.SIMPLIFIED_CHINESE;
+        }
+        return Locale.US;
     }
 
     private void sanitizePublicSubmitApply(SysTenantApply apply) {
@@ -273,6 +359,37 @@ public class SysTenantApplyService {
         return List.of(parent.getMenuId(), profile.getMenuId(), query.getMenuId(), edit.getMenuId());
     }
 
+    private Long ensureMerchantDept(SysTenantApply apply) {
+        SysDept dept = deptMapper.selectOne(new LambdaQueryWrapper<SysDept>()
+            .eq(SysDept::getDeptName, MERCHANT_DEPT_NAME), false);
+        if (dept != null) {
+            return dept.getDeptId();
+        }
+        dept = new SysDept();
+        dept.setParentId(0L);
+        dept.setAncestors("0");
+        dept.setDeptName(MERCHANT_DEPT_NAME);
+        dept.setOrderNum(1);
+        dept.setLeader(resolveContactName(apply));
+        dept.setPhone(normalizeDeptPhone(StrUtil.blankToDefault(apply.getOfficePhone(), apply.getMobilePhone())));
+        dept.setEmail(apply.getEmail());
+        dept.setStatus(UserConstants.DEPT_NORMAL);
+        dept.setDelFlag(UserConstants.NOT_DELETED);
+        deptMapper.insert(dept);
+        return dept.getDeptId();
+    }
+
+    private String normalizeDeptPhone(String phone) {
+        if (StrUtil.isBlank(phone)) {
+            return null;
+        }
+        String digits = phone.replaceAll("\\D", "");
+        if (StrUtil.isBlank(digits)) {
+            return null;
+        }
+        return StrUtil.subPre(digits, 11);
+    }
+
     private SysMenu selectOrCreateMenu(Long parentId, String menuName, String i18nKey, String path,
                                       String menuType, String perms, Integer orderNum) {
         LambdaQueryWrapper<SysMenu> wrapper = new LambdaQueryWrapper<SysMenu>()
@@ -313,12 +430,82 @@ public class SysTenantApplyService {
             return;
         }
         try {
-            String subject = MessageUtils.message("tenant.apply.mail.subject");
-            String content = MessageUtils.message("tenant.apply.mail.content", apply.getEmail(), tempPassword);
-            MailUtils.sendText(apply.getEmail(), subject, content);
+            Locale locale = resolveApplyLocale(apply);
+            String subject = MessageUtils.message(locale, "tenant.apply.mail.subject");
+            String content = buildInitialPasswordHtml(apply, tempPassword, locale);
+            MailUtils.sendHtml(apply.getEmail(), subject, content);
         } catch (Exception ex) {
             log.warn("Merchant initial password email failed. applyId={}, email={}, reason={}",
                 apply.getApplyId(), apply.getEmail(), ex.getMessage());
         }
+    }
+
+    private void sendRejectedMail(SysTenantApply apply) {
+        if (!Boolean.TRUE.equals(mailEnabled)) {
+            log.warn("Merchant rejection email skipped because mail is disabled. applyId={}, email={}",
+                apply.getApplyId(), apply.getEmail());
+            return;
+        }
+        try {
+            Locale locale = resolveApplyLocale(apply);
+            String subject = MessageUtils.message(locale, "tenant.apply.reject.mail.subject");
+            String content = buildRejectedHtml(apply, locale);
+            MailUtils.sendHtml(apply.getEmail(), subject, content);
+        } catch (Exception ex) {
+            log.warn("Merchant rejection email failed. applyId={}, email={}, reason={}",
+                apply.getApplyId(), apply.getEmail(), ex.getMessage());
+        }
+    }
+
+    private String buildEmailCodeHtml(String code) {
+        return """
+            <div style="font-family:Arial,sans-serif;background:#f4f7fb;padding:28px;">
+              <div style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:12px;padding:28px;border:1px solid #dbe5f2;">
+                <h2 style="margin:0 0 12px;color:#06184a;">skyspf</h2>
+                <p style="margin:0 0 16px;color:#334155;">%s</p>
+                <div style="font-size:32px;letter-spacing:8px;font-weight:700;color:#075cff;background:#eef6ff;padding:16px 20px;border-radius:10px;text-align:center;">%s</div>
+                <p style="margin:18px 0 0;color:#64748b;font-size:13px;">%s</p>
+              </div>
+            </div>
+            """.formatted(
+            MessageUtils.message("tenant.apply.emailCode.body"),
+            code,
+            MessageUtils.message("tenant.apply.emailCode.expireHint"));
+    }
+
+    private String buildInitialPasswordHtml(SysTenantApply apply, String tempPassword, Locale locale) {
+        return buildMailShell(
+            MessageUtils.message(locale, "tenant.apply.mail.heading"),
+            MessageUtils.message(locale, "tenant.apply.mail.body", apply.getMerchantName()),
+            MessageUtils.message(locale, "tenant.apply.mail.accountLabel") + ": " + apply.getEmail(),
+            MessageUtils.message(locale, "tenant.apply.mail.passwordLabel") + ": " + tempPassword,
+            MessageUtils.message(locale, "tenant.apply.mail.footer"));
+    }
+
+    private String buildRejectedHtml(SysTenantApply apply, Locale locale) {
+        String reason = StrUtil.blankToDefault(apply.getRejectReason(), MessageUtils.message(locale, "tenant.apply.reject.defaultReason"));
+        return buildMailShell(
+            MessageUtils.message(locale, "tenant.apply.reject.mail.heading"),
+            MessageUtils.message(locale, "tenant.apply.reject.mail.body", apply.getMerchantName()),
+            MessageUtils.message(locale, "tenant.apply.reject.mail.reasonLabel"),
+            reason,
+            MessageUtils.message(locale, "tenant.apply.reject.mail.footer"));
+    }
+
+    private String buildMailShell(String heading, String body, String label, String value, String footer) {
+        return """
+            <div style="font-family:Arial,sans-serif;background:#f4f7fb;padding:28px;">
+              <div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:12px;padding:30px;border:1px solid #dbe5f2;">
+                <div style="font-size:24px;font-weight:700;color:#06184a;margin-bottom:18px;">skyspf</div>
+                <h2 style="margin:0 0 12px;color:#06184a;">%s</h2>
+                <p style="margin:0 0 20px;color:#334155;line-height:1.6;">%s</p>
+                <div style="background:#eef6ff;border-radius:10px;padding:16px 18px;color:#001b5d;line-height:1.8;">
+                  <strong>%s</strong><br/>
+                  <span>%s</span>
+                </div>
+                <p style="margin:18px 0 0;color:#64748b;font-size:13px;line-height:1.6;">%s</p>
+              </div>
+            </div>
+            """.formatted(heading, body, label, value, footer);
     }
 }

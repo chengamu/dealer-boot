@@ -1,6 +1,8 @@
 package com.bocoo.system.controller.system;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
+import cn.dev33.satoken.annotation.SaIgnore;
+import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.bocoo.common.log.annotation.Log;
 import com.bocoo.common.web.core.BaseController;
@@ -35,6 +37,8 @@ import java.util.List;
 @RequestMapping("/system/dict/data")
 @Tag(name = "数据字典管理", description = "数据字典信息管理接口")
 public class SysDictDataController extends BaseController {
+
+    private static final String PUBLIC_COUNTRY_DICT = "sys_country";
 
     private final SysDictDataService dictDataService;
     private final SysDictTypeService dictTypeService;
@@ -87,11 +91,15 @@ public class SysDictDataController extends BaseController {
      *
      * @param dictType 字典类型
      */
+    @SaIgnore
     @GetMapping(value = "/type/{dictType}")
     @Operation(summary = "根据字典类型查询字典数据信息", description = "根据字典类型查询字典数据信息")
     public R<List<SysDictDataVo>> dictType(
             @Parameter(description = "字典类型", required = true)
             @PathVariable String dictType) {
+        if (!PUBLIC_COUNTRY_DICT.equals(dictType)) {
+            StpUtil.checkLogin();
+        }
         List<SysDictDataVo> data = dictTypeService.selectTranslatedDictDataByType(dictType);
         if (ObjectUtil.isNull(data)) {
             data = new ArrayList<>();

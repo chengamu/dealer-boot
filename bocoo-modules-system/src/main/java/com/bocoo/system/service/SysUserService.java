@@ -16,6 +16,7 @@ import com.bocoo.system.domain.entity.SysUserRole;
 import com.bocoo.system.mapper.*;
 import com.bocoo.common.core.constant.CacheNames;
 import com.bocoo.common.core.constant.UserConstants;
+import com.bocoo.common.core.context.TenantContextHolder;
 import com.bocoo.common.core.exception.ServiceException;
 import com.bocoo.common.core.service.UserService;
 import com.bocoo.common.core.utils.MapstructUtils;
@@ -224,9 +225,9 @@ public class SysUserService implements UserService {
      * @param user 用户信息
      */
     public boolean checkEmailUnique(SysUserBo user) {
-        boolean exist = userMapper.exists(new LambdaQueryWrapper<SysUser>()
+        boolean exist = TenantContextHolder.callWithIgnore(() -> userMapper.exists(new LambdaQueryWrapper<SysUser>()
             .eq(SysUser::getEmail, user.getEmail())
-            .ne(ObjectUtil.isNotNull(user.getUserId()), SysUser::getUserId, user.getUserId()));
+            .ne(ObjectUtil.isNotNull(user.getUserId()), SysUser::getUserId, user.getUserId())));
         return !exist;
     }
 

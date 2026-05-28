@@ -112,14 +112,22 @@ const legacyFallbackRoutes: RouteRecordRaw[] = [
   {
     path: '/system/tenant/applications',
     name: 'LegacyTenantApplications',
+    alias: ['/system/tenantApplication', '/merchantManagement/tenantApplication'],
     component: () => import('@/pages/system/TenantApplicationsPlaceholder.vue'),
     meta: { title: 'tenant.applicationsTitle' }
   },
   {
     path: '/system/merchant/profile',
     name: 'SystemMerchantProfile',
+    alias: ['/system/merchantProfile', '/merchantManagement/merchantProfile'],
     component: () => import('@/pages/system/MerchantProfilePage.vue'),
     meta: { title: 'merchantProfile.managementTitle' }
+  },
+  {
+    path: '/system/legal/document',
+    name: 'SystemLegalDocument',
+    component: () => import('@/pages/system/LegalDocumentPage.vue'),
+    meta: { title: 'legal.managementTitle' }
   },
   {
     path: '/merchant/profile',
@@ -142,6 +150,7 @@ const legacyFallbackRoutes: RouteRecordRaw[] = [
   {
     path: '/monitor/cache/list',
     name: 'MonitorCacheList',
+    alias: '/monitor/cacheList',
     component: () => import('@/pages/monitor/CacheListPage.vue'),
     meta: { title: 'cache.listTitle' }
   },
@@ -216,28 +225,49 @@ const router = createRouter({
 })
 
 let dynamicRoutesLoaded = false
+const dynamicRouteNames = new Set<string>()
+
+export function resetDynamicRoutes() {
+  dynamicRouteNames.forEach((name) => {
+    if (router.hasRoute(name)) router.removeRoute(name)
+  })
+  dynamicRouteNames.clear()
+  dynamicRoutesLoaded = false
+}
+
+export function registerDynamicRoutes(routesToRegister: RouteRecordRaw[]) {
+  routesToRegister.forEach((route) => {
+    const alreadyRegistered = router.resolve(route.path).matched.some((matched) => matched.path === route.path)
+    if (!alreadyRegistered) {
+      router.addRoute('Root', route)
+      if (route.name && typeof route.name === 'string') dynamicRouteNames.add(route.name)
+    }
+  })
+  dynamicRoutesLoaded = true
+}
 
 router.beforeEach(async (to) => {
   NProgress.start()
   const userStore = useUserStore()
   const permissionStore = usePermissionStore()
+  const token = getToken()
+  if (to.path === '/login' && token) {
+    const redirect = typeof to.query.redirect === 'string' ? to.query.redirect : '/index'
+    return redirect
+  }
   if (to.meta.public) return true
-  if (!getToken()) return `/login?redirect=${encodeURIComponent(to.fullPath)}`
+  if (!token) return `/login?redirect=${encodeURIComponent(to.fullPath)}`
   try {
     if (!userStore.user) await userStore.loadUser()
     if (!dynamicRoutesLoaded) {
       const accessRoutes = await permissionStore.generateRoutes()
-      accessRoutes.forEach((route) => {
-        const alreadyRegistered = router.resolve(route.path).matched.some((matched) => matched.path === route.path)
-        if (!alreadyRegistered) router.addRoute('Root', route)
-      })
-      dynamicRoutesLoaded = true
+      registerDynamicRoutes(accessRoutes)
       return { ...to, replace: true }
     }
   } catch (error) {
     await userStore.logout()
     permissionStore.reset()
-    dynamicRoutesLoaded = false
+    resetDynamicRoutes()
     ElMessage.error(error instanceof Error ? error.message : 'Unable to load user profile')
     return '/login'
   }

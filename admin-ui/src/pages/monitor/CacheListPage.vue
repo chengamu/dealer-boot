@@ -189,8 +189,15 @@ async function getCacheKeys(row?: CacheName) {
   if (!cacheName) return
   subLoading.value = true
   try {
+    if (cacheName !== nowCacheName.value) {
+      cacheKeys.value = []
+      cacheForm.value = {}
+    }
     cacheKeys.value = await listCacheKey(cacheName)
     nowCacheName.value = cacheName
+    if (!cacheKeys.value.includes(cacheForm.value.cacheKey || '')) {
+      cacheForm.value = {}
+    }
   } finally {
     subLoading.value = false
   }

@@ -55,10 +55,4 @@ public class SysOss extends BaseEntity {
     @Schema(description = "服务商")
     private String service;
 
-
-    /**
-     * 部门
-     */
-    @Schema(description = "部门ID")
-    private Long deptId;
 }

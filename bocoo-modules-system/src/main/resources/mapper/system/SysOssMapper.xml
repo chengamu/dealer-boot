@@ -17,7 +17,6 @@
             file_suffix,
             url,
             service,
-            dept_id,
             create_by,
             create_time,
             update_by,

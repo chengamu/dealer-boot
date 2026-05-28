@@ -1,98 +1,59 @@
-﻿## 6. /plan
+## 6. /plan
 
-根据用户需求制定计划，不直接写代码。
+`/plan` 根据用户需求制定计划，不直接写代码。
 
-执行时：
+执行时读取默认上下文；必要时用 codegraph 定位影响范围，并读取真实源文件确认；必要时咨询匹配的子 Agent。计划写入 `.ai/CURRENT.md`。
 
-1. 读取默认上下文文件。
-2. 必要时使用 codegraph 分析影响范围，并读取真实源文件确认。
-3. 必要时咨询匹配的子 Agent；不确定时先由主 Agent 分析。
-4. 把计划写入 `.ai/CURRENT.md`。
+## Clarification Gate
 
-### Clarification Gate
+生成详细计划前，先判断需求是否足够明确：
 
-`/plan` 不是总是直接输出计划。在生成详细计划前，必须先判断需求是否已经足够明确。
-
-优先判断：
-
-- 用户目标是否明确。
-- Scope 是否明确。
+- 目标和 Scope 是否明确。
 - 是否存在多个明显实现方向。
-- 是否涉及数据库结构。
-- 是否涉及架构调整。
-- 是否涉及权限模型。
-- 是否涉及 i18n / UTC / 时间语义。
-- 是否涉及异步/同步策略。
-- 是否涉及性能或大数据量。
-- 是否涉及兼容旧行为。
+- 是否涉及数据库结构、架构调整、权限模型、i18n、UTC / 时间语义。
+- 是否涉及异步/同步策略、性能、大数据量、兼容旧行为。
 - 是否缺少关键输入条件。
 
-如果需求已经足够明确，可以直接进入完整 `/plan`。
+如果需求明确，可以直接进入完整 `/plan`。
 
-如果需求不明确，不要直接生成完整计划，先输出：
+如果需求不明确，先说明当前理解、缺失信息、风险点和最多 3～5 个关键问题，等待用户确认。
 
-- 当前理解。
-- 缺失信息。
-- 风险点。
-- 最多 3～5 个关键问题。
+禁止为了推进流程而猜测关键业务逻辑、数据库结构、权限策略、导出、分页、筛选、异步等规则。
 
-等用户确认后再继续完整 `/plan`。
+允许对不影响第一步实现的小问题做临时假设，但必须写入 `.ai/CURRENT.md` 的 Assumptions。
 
-禁止：不要为了推进流程而猜测关键业务逻辑；不要默认数据库结构、权限策略、导出、分页、筛选、异步等业务规则；不要因为存在类似功能就直接复制方案。
+## Fast Path
 
-允许：对不影响第一步实现的小问题做临时假设，但必须在 `.ai/CURRENT.md` 的 Assumptions 中明确写出。
+如果用户需求已经包含明确目标、范围、参考实现和约束，可以跳过 Clarification Gate，直接生成计划。
 
-### Fast Path
+## Plan Revision
 
-如果用户需求已经包含明确目标、明确范围、明确参考实现和明确约束，则允许跳过 Clarification Gate，直接生成完整计划。
+执行过程中如出现以下情况，必须回到 `/plan` 并更新 `.ai/CURRENT.md`：
 
-例如：“在订单列表增加导出 Excel 按钮，导出当前筛选结果，格式参考用户列表导出，不需要异步任务。” 这种需求可以直接 `/plan`。
-
-### Plan Revision
-
-如果执行过程中出现以下任一情况：
-
-- Scope 变化。
-- 需求变化。
-- 任务顺序变化。
-- 发现原方案不可行。
+- Scope、需求或任务顺序变化。
+- 原方案不可行。
 - 出现新的技术约束。
 - 出现新的数据库 / i18n / UTC / 权限影响。
 
-则必须回到 `/plan`，更新 `.ai/CURRENT.md`，并记录：
+必须记录原方案、修改原因、新方案、影响范围，以及 Acceptance Criteria / Risks 是否变化。
 
-- 原方案。
-- 修改原因。
-- 新方案。
-- 影响范围。
-- Acceptance Criteria 是否变化。
-- Risks 是否变化。
+禁止不更新 CURRENT 就改变计划、重排 Tasks 或扩大 Scope。
 
-禁止：
+## Current Plan Content
 
-- 不更新 `.ai/CURRENT.md` 就擅自改变计划。
-- 不记录原因就重排 Tasks。
-- 不更新 Acceptance 就扩大 Scope。
+`.ai/CURRENT.md` 的计划只保留足够执行的信息：
 
-`.ai/CURRENT.md` 计划至少包含：
+- Requirement：目标、Scope、Out of Scope、Assumptions、Open Questions。
+- Current Implementation Analysis：相关模块、文件、现有模式、约束。
+- Design：推荐方案和关键影响。
+- Tasks：小而清晰，包含标题、Owner、Validation；必要时写 Files。
+- Acceptance Criteria、Risks、Pause Points、Next Step。
 
-- Status：Planning
-- Requirement：用户请求、背景、目标、Scope、Out of Scope、假设、开放问题
-- Current Implementation Analysis：相关模块、文件、现有模式、可复用工具、约束、子 Agent 结论
-- Design：推荐方案、备选方案、Data/API/Frontend/Backend/i18n/UTC 影响
-- Tasks：小而清晰的任务，包含 Owner、Validation；必要时写 Files
-- Acceptance Criteria：功能、UI、API、权限、i18n、UTC、回归
-- Risks 和 Pause Points
+## Tasks
 
-如果开放问题会影响实现，必须暂停问用户；如果不影响第一步，可以记录假设后继续。
+Tasks 必须可被 `/do` 按 Owner 调度。
 
-输出：需求摘要、影响范围、推荐方案、任务拆分、验收标准、风险和暂停点、是否可进入 `/do`。
-
-### Tasks
-
-Tasks 保持轻量，不引入复杂 Task Schema。每个任务必须可被 `/do` 按 Owner 调度，至少包含任务标题、Owner 和 Validation。
-
-Owner Dispatch Rules：
+Owner：
 
 - `frontend-developer`：前端页面、组件、样式、交互。
 - `typescript-pro`：TypeScript 类型和复杂逻辑。
@@ -100,44 +61,21 @@ Owner Dispatch Rules：
 - `code-reviewer`：最终静态审查和验收。
 - `main`：跨领域协调、规则维护、简单任务。
 
-Executable Tasks：
+规则：
 
-- `/do` 执行时必须按 Owner 调用对应子 Agent。
-- 不允许忽略 Owner；如需调整 Owner，必须在 `.ai/CURRENT.md` 记录原因。
-- 如果非浏览器 Agent 不可用，必须在 `.ai/CURRENT.md` 记录 fallback，并由主 Agent 对结果负责。
-- 浏览器验证任务使用 Codex 内置 Browser / Chrome 工具。
-- 如果当前环境不支持浏览器工具，必须记录 Browser Validation 未执行、原因和 Remaining Risks。
+- `/do` 必须按 Owner 调用对应执行人。
+- 不允许忽略 Owner；调整 Owner 必须记录原因。
+- 非浏览器 Agent 不可用时记录 fallback。
+- 浏览器验证使用 Codex 内置 Browser / Chrome；不可用时记录未执行原因和 Remaining Risks。
 
-示例：
+## Execution Gate
 
-- [ ] 调整商家注册页字段
-  - Owner: frontend-developer
-  - Validation: browser (Codex 内置)
+`/plan` 后如 `.ai/CURRENT.md` 的 Next Step、Pause Points、Open Questions 或 Risks 中存在以下情况，必须等待用户确认，不能直接进入 `/do`：
 
-- [ ] 调整后端 BO 和校验
-  - Owner: java-architect
-  - Validation: compile + API
-
-- [ ] 检查 TS 类型
-  - Owner: typescript-pro
-  - Validation: vue-tsc
-
-- [ ] 最终验收
-  - Owner: code-reviewer
-  - Validation: runtime + Browser (Codex 内置)
-
-### Plan Lock / Execution Gate
-
-`/plan` 完成后，如果 `.ai/CURRENT.md` 的 Next Step、Pause Points、Open Questions、Risks 中出现以下任一情况，必须等待用户确认，不能直接进入 `/do`：
-
-- 写明“等待用户确认”。
-- 需要确认业务规则。
-- 需要确认平台租户 ID、默认租户、系统租户、初始化数据。
+- 写明等待用户确认。
+- 需要确认业务规则、任务顺序或第一步策略。
 - 涉及 SQL、baseline、migration、初始化数据。
-- 涉及数据库结构或租户上下文。
-- 涉及权限模型、角色、菜单、按钮权限。
-- 涉及 i18n / UTC / 时区影响不明确。
-- 涉及任务顺序存在争议。
-- 涉及“第一步建议先做 XXX”。
+- 涉及数据库结构、租户上下文、权限模型、角色、菜单、按钮权限。
+- i18n / UTC / 时区影响不明确。
 
-如果这些门禁存在，`/plan` 输出必须明确列出阻塞项和需要用户确认的问题；确认前不得修改代码。
+确认前不得修改代码。

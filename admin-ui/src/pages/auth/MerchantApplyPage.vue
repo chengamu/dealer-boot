@@ -74,6 +74,15 @@
                 </el-input>
                 <small>{{ t('apply.emailHelp') }}</small>
               </el-form-item>
+              <el-form-item :label="t('apply.verificationCode')" prop="verificationCode">
+                <div class="code-row">
+                  <el-input v-model="form.verificationCode" maxlength="4" :placeholder="t('apply.verificationCodePlaceholder')" />
+                  <el-button :disabled="codeCooldown > 0" :loading="codeLoading" @click="sendCode">
+                    {{ codeCooldown > 0 ? t('apply.resendIn', { seconds: codeCooldown }) : t('apply.sendCode') }}
+                  </el-button>
+                </div>
+                <small>{{ t('apply.verificationCodeHelp') }}</small>
+              </el-form-item>
               <el-form-item :label="t('apply.remark')">
                 <el-input v-model="form.remark" type="textarea" :rows="3" :placeholder="t('apply.remarkPlaceholder')" />
               </el-form-item>
@@ -84,7 +93,16 @@
             <h2><el-icon><Location /></el-icon>{{ t('apply.addressSection') }}</h2>
             <div class="grid address-grid">
               <el-form-item :label="t('apply.country')" prop="country">
-                <el-input v-model="form.country" :placeholder="t('apply.countryPlaceholder')" />
+                <el-select
+                  v-model="form.country"
+                  filterable
+                  clearable
+                  default-first-option
+                  :filter-method="filterCountry"
+                  :placeholder="t('apply.countryPlaceholder')"
+                >
+                  <el-option v-for="item in filteredCountries" :key="item.value" :label="item.label" :value="item.value" />
+                </el-select>
               </el-form-item>
               <el-form-item :label="t('apply.state')">
                 <el-input v-model="form.state" :placeholder="t('apply.statePlaceholder')" />
@@ -106,7 +124,12 @@
 
           <footer class="form-footer">
             <el-button size="large" @click="router.push('/login')">{{ t('common.back') }}</el-button>
-            <span>{{ t('apply.requiredHint') }}</span>
+            <el-checkbox v-model="form.termsAccepted" class="terms-checkbox">
+              <span>{{ t('apply.termsAgreePrefix') }}</span>
+              <button type="button" class="link-button" @click.stop.prevent="openLegal('terms')">{{ t('apply.terms') }}</button>
+              <span>{{ t('apply.and') }}</span>
+              <button type="button" class="link-button" @click.stop.prevent="openLegal('privacy')">{{ t('apply.privacy') }}</button>
+            </el-checkbox>
             <el-button :loading="loading" type="primary" size="large" @click="submit">{{ t('apply.submit') }}</el-button>
           </footer>
         </el-form>
@@ -116,23 +139,31 @@
     <footer class="apply-footer">
       <span>{{ t('apply.footerCopyright') }}</span>
       <i />
-      <a>{{ t('apply.privacy') }}</a>
+      <a @click="openLegal('privacy')">{{ t('apply.privacy') }}</a>
       <i />
-      <a>{{ t('apply.terms') }}</a>
+      <a @click="openLegal('terms')">{{ t('apply.terms') }}</a>
+      <i />
+      <a @click="openLegal('cookie')">{{ t('apply.cookiePolicy') }}</a>
     </footer>
+
+    <el-dialog v-model="legalOpen" :title="legalTitle" class="legal-dialog" width="720px">
+      <div class="legal-content">{{ legalContent }}</div>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref } from 'vue'
+import { computed, onBeforeUnmount, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import type { FormInstance, FormRules } from 'element-plus'
 import { ElMessage } from 'element-plus'
 import { CircleCheckFilled, Connection, Iphone, Location, Message, Phone, User } from '@element-plus/icons-vue'
 import AuthLocaleSelect from '@/components/AuthVisual/AuthLocaleSelect.vue'
-import { submitMerchantApplication } from '@/api/merchant/application'
+import { sendMerchantApplicationEmailCode, submitMerchantApplication } from '@/api/merchant/application'
+import { getPublishedLegalDocument } from '@/api/system/legalDocument'
 import { useLocaleStore } from '@/stores/locale'
+import { useDict } from '@/utils/dict'
 import type { AppLocale } from '@/i18n'
 
 const { t } = useI18n()
@@ -141,6 +172,19 @@ const localeStore = useLocaleStore()
 const localeValue = ref<AppLocale>(localeStore.locale)
 const formRef = ref<FormInstance>()
 const loading = ref(false)
+const codeLoading = ref(false)
+const codeCooldown = ref(0)
+const legalOpen = ref(false)
+const legalTitle = ref('')
+const legalContent = ref('')
+const countryKeyword = ref('')
+let cooldownTimer: number | undefined
+const { sys_country } = useDict('sys_country')
+const filteredCountries = computed(() => {
+  const keyword = countryKeyword.value.trim().toLowerCase()
+  if (!keyword) return sys_country.value
+  return sys_country.value.filter((item) => [item.label, item.value].some((value) => String(value || '').toLowerCase().includes(keyword)))
+})
 const form = reactive({
   merchantName: '',
   companyName: '',
@@ -150,6 +194,8 @@ const form = reactive({
   mobilePhone: '',
   email: '',
   country: '',
+  verificationCode: '',
+  termsAccepted: false,
   state: '',
   city: '',
   addressLine1: '',
@@ -163,6 +209,7 @@ const rules = computed<FormRules>(() => ({
   contactLastName: [{ required: true, message: t('apply.lastNameRequired'), trigger: 'blur' }],
   merchantName: [{ required: true, message: t('apply.merchantNameRequired'), trigger: 'blur' }],
   email: [{ required: true, type: 'email', message: t('apply.emailRequired'), trigger: 'blur' }],
+  verificationCode: [{ required: true, message: t('apply.verificationCodeRequired'), trigger: 'blur' }],
   country: [{ required: true, message: t('apply.countryRequired'), trigger: 'blur' }]
 }))
 
@@ -170,9 +217,62 @@ function changeLocale(locale: AppLocale) {
   localeStore.setLocale(locale)
 }
 
+function filterCountry(keyword: string) {
+  countryKeyword.value = keyword
+}
+
+async function sendCode() {
+  const validEmail = await formRef.value?.validateField('email').then(() => true).catch(() => false)
+  if (!validEmail || codeCooldown.value > 0) return
+  codeLoading.value = true
+  try {
+    await sendMerchantApplicationEmailCode({ email: form.email })
+    ElMessage.success(t('apply.verificationCodeSent'))
+    startCooldown()
+  } catch {
+    // Request interceptor already displays the backend error.
+  } finally {
+    codeLoading.value = false
+  }
+}
+
+function startCooldown() {
+  codeCooldown.value = 60
+  if (cooldownTimer) window.clearInterval(cooldownTimer)
+  cooldownTimer = window.setInterval(() => {
+    codeCooldown.value -= 1
+    if (codeCooldown.value <= 0 && cooldownTimer) {
+      window.clearInterval(cooldownTimer)
+      cooldownTimer = undefined
+    }
+  }, 1000)
+}
+
+async function openLegal(type: 'privacy' | 'terms' | 'cookie') {
+  const titles = {
+    privacy: t('apply.privacy'),
+    terms: t('apply.terms'),
+    cookie: t('apply.cookiePolicy')
+  }
+  legalTitle.value = titles[type]
+  legalContent.value = t(`apply.legalPlaceholder.${type}`)
+  legalOpen.value = true
+  try {
+    const document = await getPublishedLegalDocument(type)
+    legalTitle.value = document.title || titles[type]
+    legalContent.value = document.content || legalContent.value
+  } catch {
+    // Request interceptor already displays the backend error; keep the local fallback visible.
+  }
+}
+
 async function submit() {
   const valid = await formRef.value?.validate().catch(() => false)
   if (!valid) return
+  if (!form.termsAccepted) {
+    ElMessage.warning(t('apply.termsRequired'))
+    return
+  }
   loading.value = true
   try {
     await submitMerchantApplication({
@@ -187,6 +287,10 @@ async function submit() {
     loading.value = false
   }
 }
+
+onBeforeUnmount(() => {
+  if (cooldownTimer) window.clearInterval(cooldownTimer)
+})
 </script>
 
 <style scoped lang="scss">
@@ -194,7 +298,7 @@ async function submit() {
   position: relative;
   box-sizing: border-box;
   display: grid;
-  grid-template-columns: 470px minmax(0, 1fr);
+  grid-template-columns: 420px minmax(0, 1fr);
   min-height: 100vh;
   padding: 18px 18px 52px;
   overflow: hidden;
@@ -211,7 +315,7 @@ async function submit() {
 }
 
 .apply-side {
-  padding: 44px 48px;
+  padding: 42px 48px;
   border-radius: 16px 0 0 16px;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.94) 0 40%, rgba(255, 255, 255, 0.45) 100%),
@@ -333,7 +437,7 @@ h1 {
 }
 
 .application-card {
-  height: calc(100vh - 152px);
+  height: calc(100vh - 132px);
   max-width: 100%;
   overflow: hidden;
   border: 1px solid rgba(218, 228, 242, 0.92);
@@ -344,11 +448,11 @@ h1 {
 .application-card :deep(.el-card__body) {
   height: 100%;
   overflow: auto;
-  padding: 24px 28px 18px;
+  padding: 18px 24px 14px;
 }
 
 .form-section {
-  padding: 10px 0 18px;
+  padding: 8px 0 12px;
   border-bottom: 1px solid #e5edf8;
 }
 
@@ -360,14 +464,14 @@ h2 {
   display: flex;
   gap: 10px;
   align-items: center;
-  margin: 0 0 16px;
+  margin: 0 0 12px;
   color: #06184a;
   font-size: 17px;
 }
 
 .grid {
   display: grid;
-  gap: 8px 22px;
+  gap: 4px 18px;
 }
 
 .four {
@@ -402,15 +506,23 @@ h2 {
 
 .form-footer {
   display: grid;
-  grid-template-columns: 120px 1fr 190px;
+  grid-template-columns: 120px minmax(0, 1fr) 190px;
   gap: 18px;
   align-items: center;
   padding-top: 16px;
 }
 
-.form-footer span {
-  color: #7181a3;
-  text-align: center;
+.terms-checkbox {
+  justify-self: center;
+  min-width: 0;
+}
+
+.link-button {
+  padding: 0 2px;
+  border: 0;
+  background: transparent;
+  color: #075cff;
+  cursor: pointer;
 }
 
 .apply-footer {
@@ -429,12 +541,32 @@ h2 {
 
 .apply-footer a {
   color: #5d6f96;
+  cursor: pointer;
 }
 
 .apply-footer i {
   width: 1px;
   height: 14px;
   background: #aebbd0;
+}
+
+.code-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 132px;
+  gap: 10px;
+  width: 100%;
+}
+
+.address-grid :deep(.el-select) {
+  width: 100%;
+}
+
+.legal-content {
+  max-height: 60vh;
+  overflow: auto;
+  white-space: pre-wrap;
+  color: #334155;
+  line-height: 1.7;
 }
 
 @media (max-width: 1180px) {

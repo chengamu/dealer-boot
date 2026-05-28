@@ -30,6 +30,7 @@ const migratedViewModules: Record<string, () => Promise<unknown>> = {
   'system/oss/config': () => import('@/pages/system/OssConfigPage.vue'),
   'system/tenant/applications': () => import('@/pages/system/TenantApplicationsPlaceholder.vue'),
   'system/merchant/profile': () => import('@/pages/system/MerchantProfilePage.vue'),
+  'system/legal/document': () => import('@/pages/system/LegalDocumentPage.vue'),
   'merchant/Profile': () => import('@/pages/merchant/MerchantProfilePage.vue'),
   'merchant/profile': () => import('@/pages/merchant/MerchantProfilePage.vue'),
   'tool/gen/index': () => import('@/pages/tool/gen/GenPage.vue'),

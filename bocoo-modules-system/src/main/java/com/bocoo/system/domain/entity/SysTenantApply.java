@@ -32,6 +32,8 @@ public class SysTenantApply extends BaseEntity {
 
     private String email;
 
+    private String applyLocale;
+
     private String officePhone;
 
     private String mobilePhone;

@@ -1,5 +1,5 @@
 <template>
-  <el-popover width="360" placement="bottom" trigger="click" @show="loadNotices">
+  <el-popover width="380" placement="bottom-end" trigger="click" popper-class="message-popover" @show="loadNotices">
     <template #reference>
       <el-badge :is-dot="notices.length > 0">
         <button class="icon-button" type="button" :aria-label="t('message.title')" :title="t('message.title')">
@@ -7,12 +7,12 @@
         </button>
       </el-badge>
     </template>
-    <div class="message-panel">
+    <div class="message-panel" v-loading="loading">
       <div class="message-head">
         <strong>{{ t('message.notice') }}</strong>
         <el-button link type="primary" @click="router.push('/system/notice')">{{ t('message.viewAll') }}</el-button>
       </div>
-      <el-empty v-if="!loading && notices.length === 0" :image-size="80" :description="t('message.empty')" />
+      <el-empty v-if="!loading && notices.length === 0" :image-size="72" :description="t('message.empty')" />
       <el-scrollbar v-else height="280px">
         <div v-for="notice in notices" :key="notice.noticeId" class="message-item">
           <strong>{{ notice.noticeTitle }}</strong>
@@ -75,22 +75,45 @@ async function loadNotices() {
   background: rgba(0, 0, 0, 0.025);
 }
 
+:deep(.el-badge__content.is-fixed) {
+  top: 10px;
+  right: 10px;
+}
+
+.message-panel {
+  min-height: 180px;
+}
+
 .message-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 8px;
+  padding-bottom: 12px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid #e8eef7;
+  color: #001b5d;
 }
 
 .message-item {
   display: grid;
   gap: 5px;
-  padding: 12px 2px;
-  border-bottom: 1px solid #ebeef5;
+  padding: 12px 4px;
+  border-bottom: 1px solid #edf2f8;
+  color: #001b5d;
+}
+
+.message-item:hover {
+  background: #f6f9ff;
 }
 
 .message-item span {
-  color: #909399;
+  color: #64748b;
   font-size: 12px;
+}
+
+:global(.message-popover.el-popper) {
+  border: 1px solid #dbe5f2;
+  border-radius: 10px;
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.14);
 }
 </style>

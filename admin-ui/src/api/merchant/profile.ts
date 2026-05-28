@@ -51,6 +51,14 @@ export function getMerchantProfile(merchantId: number | string) {
   })
 }
 
+export function updateMerchantProfile(data: MerchantProfile) {
+  return request({
+    url: '/system/merchant/profile',
+    method: 'put',
+    data
+  })
+}
+
 export function getCurrentMerchantProfile() {
   return request<MerchantProfile>({
     url: '/system/merchant/profile/current',

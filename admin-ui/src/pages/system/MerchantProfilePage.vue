@@ -20,16 +20,19 @@
       <el-table-column :label="t('merchantProfile.country')" prop="country" width="120" />
       <el-table-column :label="t('merchantProfile.status')" prop="status" width="110">
         <template #default="{ row }">
-          <el-tag :type="row.status === '1' ? 'success' : 'info'">{{ row.status === '1' ? t('common.normal') : t('common.disabled') }}</el-tag>
+          <dict-tag :options="sys_normal_disable" :value="row.status" />
         </template>
       </el-table-column>
       <el-table-column :label="t('common.createTime')" width="180">
         <template #default="{ row }">{{ formatUtc(row.createTime) }}</template>
       </el-table-column>
-      <el-table-column :label="t('common.operate')" width="120" fixed="right">
+      <el-table-column :label="t('common.operate')" width="180" fixed="right">
         <template #default="{ row }">
           <el-button link type="primary" icon="View" @click="openDetail(row.merchantId)" v-hasPermi="['system:merchant:profile:query']">
             {{ t('common.detail') }}
+          </el-button>
+          <el-button link type="primary" icon="Edit" @click="openEdit(row.merchantId)" v-hasPermi="['system:merchant:profile:edit']">
+            {{ t('common.edit') }}
           </el-button>
         </template>
       </el-table-column>
@@ -40,25 +43,52 @@
     <el-drawer v-model="detailOpen" :title="t('merchantProfile.detailTitle')" size="520px">
       <MerchantProfileDescriptions v-if="detail" :profile="detail" />
     </el-drawer>
+
+    <el-drawer v-model="editOpen" :title="t('merchantProfile.editTitle')" size="560px">
+      <el-alert :title="t('merchantProfile.lockedHint')" type="info" show-icon :closable="false" class="mb16" />
+      <el-form :model="editForm" label-width="120px">
+        <el-form-item :label="t('merchantProfile.merchantName')"><el-input v-model="editForm.merchantName" disabled /></el-form-item>
+        <el-form-item :label="t('merchantProfile.companyName')"><el-input v-model="editForm.companyName" disabled /></el-form-item>
+        <el-form-item :label="t('merchantProfile.primaryEmail')"><el-input v-model="editForm.primaryEmail" disabled /></el-form-item>
+        <el-form-item :label="t('apply.firstName')"><el-input v-model="editForm.contactFirstName" /></el-form-item>
+        <el-form-item :label="t('apply.lastName')"><el-input v-model="editForm.contactLastName" /></el-form-item>
+        <el-form-item :label="t('merchantProfile.officePhone')"><el-input v-model="editForm.officePhone" /></el-form-item>
+        <el-form-item :label="t('merchantProfile.mobilePhone')"><el-input v-model="editForm.mobilePhone" /></el-form-item>
+        <el-form-item :label="t('apply.state')"><el-input v-model="editForm.state" /></el-form-item>
+        <el-form-item :label="t('apply.city')"><el-input v-model="editForm.city" /></el-form-item>
+        <el-form-item :label="t('apply.addressLine1')"><el-input v-model="editForm.addressLine1" /></el-form-item>
+        <el-form-item :label="t('apply.addressLine2')"><el-input v-model="editForm.addressLine2" /></el-form-item>
+        <el-form-item :label="t('apply.postalCode')"><el-input v-model="editForm.postalCode" /></el-form-item>
+        <el-form-item :label="t('merchantProfile.remark')"><el-input v-model="editForm.remark" type="textarea" :rows="3" /></el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="editOpen = false">{{ t('common.cancel') }}</el-button>
+        <el-button type="primary" @click="submitEdit">{{ t('common.confirm') }}</el-button>
+      </template>
+    </el-drawer>
   </div>
 </template>
 
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
-import type { FormInstance } from 'element-plus'
+import { ElMessage, type FormInstance } from 'element-plus'
 import { useI18n } from 'vue-i18n'
-import { getMerchantProfile, listMerchantProfiles, type MerchantProfile, type MerchantProfileQuery } from '@/api/merchant/profile'
+import { getMerchantProfile, listMerchantProfiles, updateMerchantProfile, type MerchantProfile, type MerchantProfileQuery } from '@/api/merchant/profile'
 import { formatUtc } from '@/utils/datetime'
+import { useDict } from '@/utils/dict'
 import MerchantProfileDescriptions from '@/pages/merchant/MerchantProfileDescriptions.vue'
 
 const { t } = useI18n()
+const { sys_normal_disable } = useDict('sys_normal_disable')
 const queryRef = ref<FormInstance>()
 const rows = ref<MerchantProfile[]>([])
 const detail = ref<MerchantProfile>()
 const loading = ref(false)
 const detailOpen = ref(false)
+const editOpen = ref(false)
 const total = ref(0)
 const queryParams = reactive<MerchantProfileQuery>({ pageNum: 1, pageSize: 10 })
+const editForm = reactive<MerchantProfile>({})
 
 async function getList() {
   loading.value = true
@@ -86,6 +116,33 @@ async function openDetail(merchantId?: number) {
   const response = await getMerchantProfile(merchantId)
   detail.value = response.data
   detailOpen.value = true
+}
+
+async function openEdit(merchantId?: number) {
+  if (!merchantId) return
+  const response = await getMerchantProfile(merchantId)
+  Object.assign(editForm, response.data)
+  editOpen.value = true
+}
+
+async function submitEdit() {
+  await updateMerchantProfile({
+    merchantId: editForm.merchantId,
+    contactFirstName: editForm.contactFirstName,
+    contactLastName: editForm.contactLastName,
+    contactName: [editForm.contactFirstName, editForm.contactLastName].filter(Boolean).join(' '),
+    officePhone: editForm.officePhone,
+    mobilePhone: editForm.mobilePhone,
+    state: editForm.state,
+    city: editForm.city,
+    addressLine1: editForm.addressLine1,
+    addressLine2: editForm.addressLine2,
+    postalCode: editForm.postalCode,
+    remark: editForm.remark
+  })
+  ElMessage.success(t('common.editSuccess'))
+  editOpen.value = false
+  await getList()
 }
 
 getList()

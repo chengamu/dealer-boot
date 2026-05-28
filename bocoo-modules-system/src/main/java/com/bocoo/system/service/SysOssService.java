@@ -20,7 +20,6 @@ import com.bocoo.common.oss.core.OssClient;
 import com.bocoo.common.oss.entity.UploadResult;
 import com.bocoo.common.oss.enumd.AccessPolicyType;
 import com.bocoo.common.oss.factory.OssFactory;
-import com.bocoo.common.satoken.utils.LoginHelper;
 import com.bocoo.system.domain.entity.SysOss;
 import com.bocoo.system.domain.bo.SysOssBo;
 import com.bocoo.system.domain.vo.SysOssVo;
@@ -228,7 +227,6 @@ public class SysOssService implements OssService {
         oss.setFileName(uploadResult.getFilename());
         oss.setOriginalName(originalfileName);
         oss.setService(configKey);
-        oss.setDeptId(LoginHelper.getLoginUser().getDeptId());
 
         ossMapper.insert(oss);
         SysOssVo sysOssVo = MapstructUtils.convert(oss, SysOssVo.class);

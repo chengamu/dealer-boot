@@ -1,5 +1,6 @@
 package com.bocoo.common.web.handler;
 
+import cn.dev33.satoken.exception.NotLoginException;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.http.HttpStatus;
 import jakarta.servlet.http.HttpServletRequest;
@@ -56,6 +57,16 @@ public class GlobalExceptionHandler {
         String requestURI = request.getRequestURI();
         log.error("请求地址'{}'，发生不合法参数异常", requestURI, e);
         return R.fail(MessageUtils.message("request.illegal.argument"));
+    }
+
+    /**
+     * 认证失败
+     */
+    @ExceptionHandler(NotLoginException.class)
+    public R<Void> handleNotLoginException(NotLoginException e, HttpServletRequest request) {
+        String requestURI = request.getRequestURI();
+        log.error("请求地址'{}',认证失败'{}',无法访问系统资源", requestURI, e.getMessage());
+        return R.fail(HttpStatus.HTTP_UNAUTHORIZED, MessageUtils.message("auth.unauthorized"));
     }
 
     /**
