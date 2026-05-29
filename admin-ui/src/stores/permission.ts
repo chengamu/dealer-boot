@@ -33,6 +33,12 @@ const migratedViewModules: Record<string, () => Promise<unknown>> = {
   'system/legal/document': () => import('@/pages/system/LegalDocumentPage.vue'),
   'merchant/Profile': () => import('@/pages/merchant/MerchantProfilePage.vue'),
   'merchant/profile': () => import('@/pages/merchant/MerchantProfilePage.vue'),
+  'dealer/dashboard': () => import('@/pages/dealer-portal/DealerPortalPage.vue'),
+  'dealer/quotes/create': () => import('@/pages/dealer-portal/DealerPortalPage.vue'),
+  'dealer/checkout': () => import('@/pages/dealer-portal/DealerPortalPage.vue'),
+  'dealer/dealers': () => import('@/pages/dealer-portal/DealerPortalPage.vue'),
+  'dealer/orders/detail': () => import('@/pages/dealer-portal/DealerPortalPage.vue'),
+  'dealer/pricing': () => import('@/pages/dealer-portal/DealerPortalPage.vue'),
   'tool/gen/index': () => import('@/pages/tool/gen/GenPage.vue'),
   'tool/gen/editTable': () => import('@/pages/tool/gen/GenEditPage.vue'),
   'tool/build/index': () => import('@/pages/tool/FormBuildPage.vue')

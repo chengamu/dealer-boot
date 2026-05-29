@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__codegraph__codegraph_files",
+      "Bash(Get-ChildItem -Recurse -File -Path \"D:\\\\work\\\\base-boot\\\\admin-ui\\\\src\\\\utils\")",
+      "Bash(Select-Object FullName)",
+      "Bash(Get-ChildItem *)",
+      "mcp__codegraph__codegraph_explore"
+    ]
+  }
+}

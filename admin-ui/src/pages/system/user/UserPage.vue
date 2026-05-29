@@ -23,10 +23,14 @@
             @node-click="handleNodeClick"
           >
             <template #default="{ node }">
-              <span class="user-page__dept-node" :class="{ 'is-root': node.level === 1 }">
-                <el-icon v-if="node.level === 1" class="user-page__dept-node-icon"><Briefcase /></el-icon>
-                <span v-else class="user-page__dept-node-dot" />
-                <span class="user-page__dept-node-label">{{ node.label }}</span>
+              <span class="user-page__dept-card" :class="`is-${getDeptTone(node.level)}`">
+                <span class="user-page__dept-card-icon">
+                  <el-icon><Briefcase /></el-icon>
+                </span>
+                <span class="user-page__dept-card-main">
+                  <strong>{{ node.label }}</strong>
+                  <small>{{ getDeptSubtitle(node.level) }}</small>
+                </span>
               </span>
             </template>
           </el-tree>
@@ -82,36 +86,54 @@
           <right-toolbar v-model:showSearch="showSearch" :columns="columns" @queryTable="getList" />
         </el-row>
 
-        <el-table v-loading="loading" :data="userList" @selection-change="handleSelectionChange">
+        <el-table v-loading="loading" :data="userList" class="user-rich-table" @selection-change="handleSelectionChange">
           <el-table-column type="selection" width="50" align="center" />
-          <el-table-column v-if="columns[0].visible" :label="t('user.userName')" align="center" prop="userName" min-width="120" :show-overflow-tooltip="true" />
-          <el-table-column v-if="columns[1].visible" :label="t('user.nickName')" align="center" prop="nickName" min-width="120" :show-overflow-tooltip="true" />
-          <el-table-column v-if="columns[2].visible" :label="t('user.deptName')" align="center" prop="dept.deptName" min-width="126" :show-overflow-tooltip="true" />
-          <el-table-column v-if="columns[3].visible" :label="t('user.phonenumber')" align="center" prop="phonenumber" width="132" />
-          <el-table-column v-if="columns[4].visible" :label="t('user.status')" align="center" width="96">
+          <el-table-column v-if="columns[0].visible" :label="t('user.userName')" min-width="240">
             <template #default="{ row }">
-              <el-switch v-model="row.status" active-value="1" inactive-value="0" @change="handleStatusChange(row)" />
+              <div class="user-rich-cell">
+                <span class="user-rich-avatar" :class="`is-${getAvatarTone(row)}`">{{ getInitials(row) }}</span>
+                <span class="user-rich-main">
+                  <strong>{{ getDisplayName(row) }}</strong>
+                  <small>{{ getUserSubtitle(row) }}</small>
+                </span>
+              </div>
             </template>
           </el-table-column>
-          <el-table-column v-if="columns[5].visible" :label="t('common.createTime')" align="center" prop="createTime" width="170">
+          <el-table-column v-if="columns[1].visible" :label="t('user.deptName')" align="center" prop="dept.deptName" min-width="150" :show-overflow-tooltip="true">
+            <template #default="{ row }">
+              <span class="user-org-pill">{{ row.dept?.deptName || '-' }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column v-if="columns[2].visible" :label="t('user.phonenumber')" align="center" prop="phonenumber" width="142" />
+          <el-table-column v-if="columns[3].visible" :label="t('user.status')" align="center" width="126">
+            <template #default="{ row }">
+              <button type="button" class="user-status-pill" :class="`is-${getStatusTone(row)}`" @click="toggleUserStatus(row)">
+                <i />
+                <span>{{ getStatusLabel(row) }}</span>
+              </button>
+            </template>
+          </el-table-column>
+          <el-table-column v-if="columns[4].visible" :label="t('common.createTime')" align="center" prop="createTime" width="170">
             <template #default="{ row }">
               <span>{{ formatUtc(row.createTime) }}</span>
             </template>
           </el-table-column>
-          <el-table-column :label="t('common.operate')" align="center" width="172" fixed="right" class-name="small-padding fixed-width">
+          <el-table-column :label="t('common.operate')" align="center" width="96" fixed="right" class-name="small-padding fixed-width">
             <template #default="{ row }">
-              <el-tooltip :content="t('common.edit')" placement="top" v-if="row.userId !== 1">
-                <el-button link type="primary" icon="Edit" :aria-label="t('user.editUser')" :title="t('user.editUser')" @click="handleUpdate(row)" v-hasPermi="['system:user:edit']" />
-              </el-tooltip>
-              <el-tooltip :content="t('common.delete')" placement="top" v-if="row.userId !== 1">
-                <el-button link type="primary" icon="Delete" :aria-label="t('user.deleteUser')" :title="t('user.deleteUser')" @click="handleDelete(row)" v-hasPermi="['system:user:remove']" />
-              </el-tooltip>
-              <el-tooltip :content="t('user.resetPassword')" placement="top" v-if="row.userId !== 1">
-                <el-button link type="primary" icon="Key" :aria-label="t('user.resetUserPassword')" :title="t('user.resetUserPassword')" @click="handleResetPwd(row)" v-hasPermi="['system:user:resetPwd']" />
-              </el-tooltip>
-              <el-tooltip :content="t('user.assignRole')" placement="top" v-if="row.userId !== 1">
-                <el-button link type="primary" icon="CircleCheck" :aria-label="t('user.assignUserRole')" :title="t('user.assignUserRole')" @click="handleAuthRole(row)" v-hasPermi="['system:user:edit']" />
-              </el-tooltip>
+              <el-dropdown v-if="row.userId !== 1" trigger="click" popper-class="user-action-menu">
+                <el-button class="user-actions-button" :aria-label="t('common.operate')" :title="t('common.operate')">
+                  <el-icon><MoreFilled /></el-icon>
+                </el-button>
+                <template #dropdown>
+                  <el-dropdown-menu>
+                    <el-dropdown-item @click="handleUpdate(row)" v-hasPermi="['system:user:edit']">{{ t('common.edit') }}</el-dropdown-item>
+                    <el-dropdown-item @click="handleResetPwd(row)" v-hasPermi="['system:user:resetPwd']">{{ t('user.resetPassword') }}</el-dropdown-item>
+                    <el-dropdown-item @click="handleAuthRole(row)" v-hasPermi="['system:user:edit']">{{ t('user.assignRole') }}</el-dropdown-item>
+                    <el-dropdown-item class="is-danger" @click="handleDelete(row)" v-hasPermi="['system:user:remove']">{{ t('common.delete') }}</el-dropdown-item>
+                  </el-dropdown-menu>
+                </template>
+              </el-dropdown>
+              <span v-else class="user-actions-placeholder">-</span>
             </template>
           </el-table-column>
         </el-table>
@@ -280,7 +302,7 @@
 import { computed, h, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules, type UploadInstance, type UploadProgressEvent, type UploadRawFile } from 'element-plus'
-import { Briefcase } from '@element-plus/icons-vue'
+import { Briefcase, MoreFilled } from '@element-plus/icons-vue'
 import { getToken } from '@/utils/auth'
 import { getConfigKey } from '@/api/system/config'
 import { addUser, changeUserStatus, delUser, deptTreeSelect, getUser, listUser, resetUserPwd, updateUser, type SysUser, type TreeOption, type UserOptionPost, type UserOptionRole, type UserQuery } from '@/api/system/user'
@@ -312,7 +334,7 @@ const t = (key: string, params?: Record<string, string | number>) => {
 }
 const { sys_normal_disable, sys_user_sex } = useDict('sys_normal_disable', 'sys_user_sex')
 
-const columnLabelKeys = ['user.userName', 'user.nickName', 'user.deptName', 'user.phonenumber', 'user.status', 'common.createTime']
+const columnLabelKeys = ['user.userName', 'user.deptName', 'user.phonenumber', 'user.status', 'common.createTime']
 const columns = ref<ColumnOption[]>(columnLabelKeys.map((key, index) => ({ key: index, label: t(key), visible: true })))
 watch(
   () => localeStore.language,
@@ -381,6 +403,50 @@ const rules = computed<FormRules<SysUser>>(() => ({
 
 function getUserSexLabel(dict: DictOption) {
   return dict.value && userSexLabelKeys[dict.value] ? t(userSexLabelKeys[dict.value]) : dict.label || ''
+}
+
+function getDisplayName(row: SysUser) {
+  return row.nickName || row.userName || '-'
+}
+
+function getUserSubtitle(row: SysUser) {
+  return row.email || row.userName || row.phonenumber || '-'
+}
+
+function getInitials(row: SysUser) {
+  const source = getDisplayName(row).trim()
+  if (!source || source === '-') return 'U'
+  const words = source.split(/\s+/).filter(Boolean)
+  if (words.length > 1) return `${words[0][0]}${words[1][0]}`.toUpperCase()
+  return source.slice(0, 2).toUpperCase()
+}
+
+function getAvatarTone(row: SysUser) {
+  const tones = ['blue', 'teal', 'purple', 'orange', 'green']
+  const seed = String(row.userId || row.userName || row.nickName || '').split('').reduce((sum, char) => sum + char.charCodeAt(0), 0)
+  return tones[seed % tones.length]
+}
+
+function getStatusLabel(row: SysUser) {
+  return sys_normal_disable.value.find((item) => String(item.value) === String(row.status))?.label || row.status || '-'
+}
+
+function getStatusTone(row: SysUser) {
+  return String(row.status) === '1' ? 'active' : 'inactive'
+}
+
+function getDeptTone(level: number) {
+  const tones = ['blue', 'green', 'purple', 'orange', 'teal']
+  return tones[(Math.max(level, 1) - 1) % tones.length]
+}
+
+function getDeptSubtitle(level: number) {
+  return level === 1 ? t('user.deptCardRootDesc') : t('user.deptCardChildDesc')
+}
+
+function toggleUserStatus(row: SysUser) {
+  row.status = String(row.status) === '1' ? '0' : '1'
+  handleStatusChange(row)
 }
 
 function withDateRange(query: UserQuery) {
@@ -595,3 +661,244 @@ getConfigKey('sys.user.initPassword').then((response) => {
   initPassword.value = response.msg || ''
 })
 </script>
+
+<style scoped>
+.user-rich-table :deep(.el-table__row) {
+  --el-table-row-hover-bg-color: #f8fbff;
+}
+
+.user-rich-table :deep(td.el-table__cell) {
+  height: 64px;
+}
+
+.user-rich-cell {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  gap: 12px;
+}
+
+.user-rich-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  border-radius: 50%;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: 0 6px 14px rgba(15, 35, 80, 0.14);
+}
+
+.user-rich-avatar.is-blue {
+  background: linear-gradient(135deg, #7dd3fc, #1677ff);
+}
+
+.user-rich-avatar.is-teal {
+  background: linear-gradient(135deg, #5eead4, #14b8a6);
+}
+
+.user-rich-avatar.is-purple {
+  background: linear-gradient(135deg, #c4b5fd, #7c3aed);
+}
+
+.user-rich-avatar.is-orange {
+  background: linear-gradient(135deg, #fdba74, #f97316);
+}
+
+.user-rich-avatar.is-green {
+  background: linear-gradient(135deg, #86efac, #22c55e);
+}
+
+.user-rich-main {
+  display: grid;
+  min-width: 0;
+  text-align: left;
+}
+
+.user-rich-main strong {
+  overflow: hidden;
+  color: #07143d;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-rich-main small {
+  overflow: hidden;
+  color: #6b7895;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.45;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-org-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 100%;
+  min-height: 26px;
+  padding: 4px 10px;
+  border-radius: 7px;
+  background: #eef6ff;
+  color: #1e4f9a;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.user-status-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 76px;
+  height: 28px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 7px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.user-status-pill i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.user-status-pill.is-active {
+  background: #e8f8ee;
+  color: #159947;
+}
+
+.user-status-pill.is-active i {
+  background: #22c55e;
+}
+
+.user-status-pill.is-inactive {
+  background: #fff1f1;
+  color: #e5484d;
+}
+
+.user-status-pill.is-inactive i {
+  background: #ff4d4f;
+}
+
+.user-actions-button {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-color: #e1e8f2;
+  border-radius: 9px;
+  color: #53627c;
+  background: #ffffff;
+}
+
+.user-actions-button:hover,
+.user-actions-button:focus {
+  border-color: #b8d2ff;
+  color: #1677ff;
+  background: #f7faff;
+}
+
+.user-actions-placeholder {
+  color: #a0a8b5;
+}
+
+:global(.user-action-menu .el-dropdown-menu) {
+  padding: 6px;
+}
+
+:global(.user-action-menu .el-dropdown-menu__item) {
+  min-width: 128px;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+:global(.user-action-menu .el-dropdown-menu__item.is-danger) {
+  color: #ff4d4f;
+}
+
+:global(.user-action-menu .el-dropdown-menu__item.is-danger:hover) {
+  background: #fff1f1;
+  color: #e5484d;
+}
+
+.user-page__dept-card {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  align-items: center;
+  width: 100%;
+  gap: 12px;
+}
+
+.user-page__dept-card-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: #eaf2ff;
+  color: #1677ff;
+}
+
+.user-page__dept-card-icon .el-icon {
+  font-size: 18px;
+}
+
+.user-page__dept-card-main {
+  display: grid;
+  min-width: 0;
+  text-align: left;
+}
+
+.user-page__dept-card-main strong {
+  overflow: hidden;
+  color: #07143d;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-page__dept-card-main small {
+  overflow: hidden;
+  margin-top: 3px;
+  color: #6b7895;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-page__dept-card.is-green .user-page__dept-card-icon {
+  background: #e7f9eb;
+  color: #16b345;
+}
+
+.user-page__dept-card.is-purple .user-page__dept-card-icon {
+  background: #f1eaff;
+  color: #7c3aed;
+}
+
+.user-page__dept-card.is-orange .user-page__dept-card-icon {
+  background: #fff0df;
+  color: #f97316;
+}
+
+.user-page__dept-card.is-teal .user-page__dept-card-icon {
+  background: #dff9f7;
+  color: #13b8b5;
+}
+</style>

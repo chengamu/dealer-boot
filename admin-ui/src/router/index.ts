@@ -180,6 +180,42 @@ const legacyFallbackRoutes: RouteRecordRaw[] = [
     meta: { title: 'toolBuild.title' }
   },
   {
+    path: '/dealer/dashboard',
+    name: 'DealerDashboard',
+    component: () => import('@/pages/dealer-portal/DealerPortalPage.vue'),
+    meta: { title: 'dealerPortal.dashboard', icon: 'dashboard', dealerPage: 'dashboard' }
+  },
+  {
+    path: '/dealer/quotes/create',
+    name: 'DealerCreateQuote',
+    component: () => import('@/pages/dealer-portal/DealerPortalPage.vue'),
+    meta: { title: 'dealerPortal.createQuote', icon: 'form', dealerPage: 'createQuote' }
+  },
+  {
+    path: '/dealer/checkout',
+    name: 'DealerCheckout',
+    component: () => import('@/pages/dealer-portal/DealerPortalPage.vue'),
+    meta: { title: 'dealerPortal.checkout', icon: 'shopping', dealerPage: 'checkout' }
+  },
+  {
+    path: '/dealer/dealers',
+    name: 'DealerManagement',
+    component: () => import('@/pages/dealer-portal/DealerPortalPage.vue'),
+    meta: { title: 'dealerPortal.dealerManagement', icon: 'peoples', dealerPage: 'dealerManagement' }
+  },
+  {
+    path: '/dealer/orders/detail',
+    name: 'DealerOrderDetail',
+    component: () => import('@/pages/dealer-portal/DealerPortalPage.vue'),
+    meta: { title: 'dealerPortal.orderDetail', icon: 'list', dealerPage: 'orderDetail' }
+  },
+  {
+    path: '/dealer/pricing',
+    name: 'DealerPricing',
+    component: () => import('@/pages/dealer-portal/DealerPortalPage.vue'),
+    meta: { title: 'dealerPortal.pricing', icon: 'money', dealerPage: 'pricing' }
+  },
+  {
     path: '/monitor/admin',
     name: 'MonitorAdmin',
     component: () => import('@/pages/monitor/AdminMonitorPage.vue'),
