@@ -100,10 +100,7 @@ public class SysLogininforController extends BaseController {
     public R<Void> unlock(
             @Parameter(description = "用户名", required = true)
             @PathVariable("userName") String userName) {
-        String loginName = CacheConstants.PWD_ERR_CNT_KEY + userName;
-        if (RedisUtils.hasKey(loginName)) {
-            RedisUtils.deleteObject(loginName);
-        }
+        RedisUtils.deleteKeys(CacheConstants.PWD_ERR_CNT_KEY + userName + "*");
         return R.ok();
     }
 

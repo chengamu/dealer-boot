@@ -7,6 +7,7 @@ import { usePermissionStore } from '@/stores/permission'
 import Layout from '@/layout/index.vue'
 import LoginPage from '@/pages/auth/LoginPage.vue'
 import MerchantApplyPage from '@/pages/auth/MerchantApplyPage.vue'
+import LegalDocumentViewPage from '@/pages/auth/LegalDocumentViewPage.vue'
 import { getContextPath } from '@/utils/config'
 
 const hiddenLayoutRoutes: RouteRecordRaw[] = [
@@ -197,6 +198,7 @@ const routes: RouteRecordRaw[] = [
   { path: '/login', component: LoginPage, meta: { public: true } },
   { path: '/register', component: MerchantApplyPage, meta: { public: true } },
   { path: '/merchant/apply', component: MerchantApplyPage, meta: { public: true } },
+  { path: '/legal/:type(privacy|terms|cookie)', component: LegalDocumentViewPage, meta: { public: true } },
   {
     path: '/',
     name: 'Root',

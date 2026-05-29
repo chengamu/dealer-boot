@@ -1669,7 +1669,7 @@ SET name_en = EXCLUDED.name_en,
 INSERT INTO sys_language (language_id, language_code, name_en, name_native, status, sort, create_by, create_time)
 VALUES
     (220001, 'en_US', 'English (United States)', 'English', '1', 1, 'system', now()),
-    (220002, 'zh_CN', 'Chinese (Simplified)', '????', '1', 2, 'system', now())
+    (220002, 'zh_CN', 'Chinese (Simplified)', '简体中文', '1', 2, 'system', now())
 ON CONFLICT (language_code) DO UPDATE
 SET name_en = EXCLUDED.name_en,
     name_native = EXCLUDED.name_native,

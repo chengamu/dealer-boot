@@ -44,6 +44,7 @@ public class SysLegalDocumentService {
     }
 
     public SysLegalDocumentVo selectPublished(String documentType) {
+        documentType = normalizeDocumentType(documentType);
         String locale = normalizeLocale(LocaleContextHolder.getLocale());
         SysLegalDocument document = selectPublishedByLocale(documentType, locale);
         if (document == null && !"en_US".equals(locale)) {
@@ -104,5 +105,12 @@ public class SysLegalDocumentService {
             return "zh_CN";
         }
         return "en_US";
+    }
+
+    private String normalizeDocumentType(String documentType) {
+        if ("privacy".equals(documentType) || "terms".equals(documentType) || "cookie".equals(documentType)) {
+            return documentType;
+        }
+        throw ServiceException.ofMessageKey("legal.document.notFound");
     }
 }

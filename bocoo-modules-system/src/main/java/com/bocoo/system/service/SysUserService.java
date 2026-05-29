@@ -25,6 +25,7 @@ import com.bocoo.common.core.utils.StringUtils;
 import com.bocoo.common.mybatis.core.page.PageQuery;
 import com.bocoo.common.mybatis.core.page.TableDataInfo;
 import com.bocoo.common.mybatis.helper.DataBaseHelper;
+import com.bocoo.common.mybatis.helper.DataPermissionHelper;
 import com.bocoo.common.satoken.utils.LoginHelper;
 import com.bocoo.system.domain.bo.SysUserBo;
 import com.bocoo.system.domain.vo.SysPostVo;
@@ -41,6 +42,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 /**
  * 用户 业务层处理
@@ -60,7 +62,8 @@ public class SysUserService implements UserService {
     private final SysUserPostMapper userPostMapper;
 
     public TableDataInfo<SysUserVo> selectPageUserList(SysUserBo user, PageQuery pageQuery) {
-        Page<SysUserVo> page = userMapper.selectPageUserList(pageQuery.build(), this.buildQueryWrapper(user));
+        Page<SysUserVo> page = callWithPlatformBypass(() ->
+            userMapper.selectPageUserList(pageQuery.build(), this.buildQueryWrapper(user)));
         return TableDataInfo.build(page);
     }
 
@@ -72,7 +75,7 @@ public class SysUserService implements UserService {
      * @return 用户信息集合信息
      */
     public List<SysUserVo> selectUserList(SysUserBo user) {
-        return userMapper.selectUserList(this.buildQueryWrapper(user));
+        return callWithPlatformBypass(() -> userMapper.selectUserList(this.buildQueryWrapper(user)));
     }
 
     private Wrapper<SysUser> buildQueryWrapper(SysUserBo user) {
@@ -254,9 +257,17 @@ public class SysUserService implements UserService {
         if (LoginHelper.isAdmin()) {
             return;
         }
-        if (userMapper.countUserById(userId) == 0) {
+        Long count = callWithPlatformBypass(() -> userMapper.countUserById(userId));
+        if (count == 0) {
             throw ServiceException.ofMessageKey("sys.user.data.permission.denied");
         }
+    }
+
+    private <T> T callWithPlatformBypass(Supplier<T> supplier) {
+        if (!LoginHelper.isPlatformTenant()) {
+            return supplier.get();
+        }
+        return TenantContextHolder.callWithIgnore(() -> DataPermissionHelper.ignore(supplier));
     }
 
     /**

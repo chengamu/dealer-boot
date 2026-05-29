@@ -109,14 +109,12 @@
     <footer class="auth-footer">
       <span>{{ t('apply.footerCopyright') }}</span>
       <i />
-      <a @click="openLegal('privacy')">{{ t('apply.privacy') }}</a>
+      <button type="button" @click="openLegal('privacy')">{{ t('apply.privacy') }}</button>
       <i />
-      <a @click="openLegal('terms')">{{ t('apply.terms') }}</a>
+      <button type="button" @click="openLegal('terms')">{{ t('apply.terms') }}</button>
+      <i />
+      <button type="button" @click="openLegal('cookie')">{{ t('apply.cookiePolicy') }}</button>
     </footer>
-
-    <el-dialog v-model="legalOpen" :title="legalTitle" class="legal-dialog" width="720px">
-      <div class="legal-content">{{ legalContent }}</div>
-    </el-dialog>
   </div>
 </template>
 
@@ -132,7 +130,6 @@ import { useUserStore } from '@/stores/user'
 import { useLocaleStore } from '@/stores/locale'
 import type { AppLocale } from '@/i18n'
 import { getCodeImg } from '@/api/auth'
-import { getPublishedLegalDocument } from '@/api/system/legalDocument'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -144,9 +141,6 @@ const localeValue = ref<AppLocale>(localeStore.locale)
 const remember = ref(false)
 const loading = ref(false)
 const captchaRequired = ref(true)
-const legalOpen = ref(false)
-const legalTitle = ref('')
-const legalContent = ref('')
 const form = reactive({ username: '', password: '', code: '', uuid: '' })
 const captcha = reactive({ enabled: false, img: '' })
 const swatches = ['#d9c7aa', '#e8e1d2', '#c8c5ba', '#8995a1']
@@ -163,21 +157,8 @@ function changeLocale(locale: AppLocale) {
   localeStore.setLocale(locale)
 }
 
-async function openLegal(type: 'privacy' | 'terms') {
-  const titles = {
-    privacy: t('apply.privacy'),
-    terms: t('apply.terms')
-  }
-  legalTitle.value = titles[type]
-  legalContent.value = t(`apply.legalPlaceholder.${type}`)
-  legalOpen.value = true
-  try {
-    const document = await getPublishedLegalDocument(type)
-    legalTitle.value = document.title || titles[type]
-    legalContent.value = document.content || legalContent.value
-  } catch {
-    // Keep the local fallback visible; the request interceptor displays backend errors.
-  }
+function openLegal(type: 'privacy' | 'terms' | 'cookie') {
+  router.push(`/legal/${type}`)
 }
 
 async function loadCaptcha() {
@@ -687,8 +668,12 @@ onUnmounted(() => {
   font-size: 12px;
 }
 
-.auth-footer a {
+.auth-footer button {
+  padding: 0;
+  border: 0;
   color: #5d6f96;
+  font: inherit;
+  background: transparent;
   cursor: pointer;
 }
 
@@ -696,14 +681,6 @@ onUnmounted(() => {
   width: 1px;
   height: 14px;
   background: #aebbd0;
-}
-
-.legal-content {
-  max-height: 60vh;
-  overflow: auto;
-  white-space: pre-wrap;
-  color: #334155;
-  line-height: 1.7;
 }
 
 @media (max-width: 1280px) {

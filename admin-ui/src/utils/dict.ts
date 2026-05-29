@@ -13,6 +13,11 @@ export interface DictOption {
 }
 
 const frontendDictLabelKeys: Record<string, Record<string, string>> = {
+  sys_user_sex: {
+    '0': 'dict.sys_user_sex.0',
+    '1': 'dict.sys_user_sex.1',
+    '2': 'dict.sys_user_sex.2'
+  },
   sys_normal_disable: {
     '1': 'dataLabels.normal',
     '0': 'dataLabels.disabled'
@@ -31,7 +36,7 @@ const frontendDictLabelKeys: Record<string, Record<string, string>> = {
   },
   sys_notice_type: {
     '1': 'message.notice',
-    '2': 'dataLabels.announcement'
+    '2': 'dataLabels.systemAnnouncement'
   },
   sys_notice_status: {
     '0': 'dataLabels.normal',
@@ -51,11 +56,22 @@ const frontendDictLabelKeys: Record<string, Record<string, string>> = {
   }
 }
 
+const fallbackDictValues: Record<string, string[]> = {
+  sys_notice_type: ['1', '2'],
+  sys_notice_status: ['0', '1']
+}
+
 function resolveDictLabel(dictType: string, item: DictOption, locale: string) {
+  const frontendKey = item.value ? frontendDictLabelKeys[dictType]?.[item.value] : undefined
+  if (frontendKey) {
+    const translated = getMessage(frontendKey, locale)
+    if (translated && translated !== frontendKey) {
+      return translated
+    }
+  }
   if (item.label) {
     return item.label
   }
-  const frontendKey = item.value ? frontendDictLabelKeys[dictType]?.[item.value] : undefined
   return frontendKey ? getMessage(frontendKey, locale) : item.label
 }
 
@@ -74,7 +90,14 @@ export function useDict<T extends string>(...args: T[]): Record<T, Ref<DictOptio
     }
 
     getDicts(dictType).then((resp) => {
-      res.value[dictType] = (resp.data || []).map((item) => ({
+      const items = [...(resp.data || [])]
+      const fallbackValues = fallbackDictValues[dictType] || []
+      fallbackValues.forEach((value) => {
+        if (!items.some((item) => item.dictValue === value)) {
+          items.push({ dictValue: value, dictLabel: '' })
+        }
+      })
+      res.value[dictType] = items.map((item) => ({
         label: resolveDictLabel(dictType, {
           label: item.dictLabel,
           value: item.dictValue

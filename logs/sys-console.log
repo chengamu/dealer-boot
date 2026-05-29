@@ -1,6 +1,181 @@
-2026-05-23 15:45:05 [SpringApplicationShutdownHook] INFO  c.b.c.core.config.ThreadPoolConfig - ====关闭后台任务任务线程池====
-2026-05-23 15:45:05 [SpringApplicationShutdownHook] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource start closing ....
-2026-05-23 15:45:05 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - master - Shutdown initiated...
-2026-05-23 15:45:05 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - master - Shutdown completed.
-2026-05-23 15:45:05 [SpringApplicationShutdownHook] INFO  c.b.d.d.d.DefaultDataSourceDestroyer - dynamic-datasource close the datasource named [master] success,
-2026-05-23 15:45:05 [SpringApplicationShutdownHook] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource all closed success,bye
+2026-05-29 10:16:24 [background-preinit] INFO  o.h.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2026-05-29 10:16:24 [main] INFO  com.bocoo.BocooApplication - Starting BocooApplication using Java 17.0.4 with PID 18788 (D:\work\base-boot\bocoo-admin\target\classes started by Administrator in D:\work\base-boot)
+2026-05-29 10:16:24 [main] INFO  com.bocoo.BocooApplication - The following 1 profile is active: "dev"
+2026-05-29 10:16:31 [main] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-18081"]
+2026-05-29 10:16:31 [main] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+2026-05-29 10:16:31 [main] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.28]
+2026-05-29 10:16:31 [main] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-05-29 10:16:33 [main] INFO  c.b.common.redis.config.RedisConfig - 初始化 redis 配置
+2026-05-29 10:16:33 [main] INFO  org.redisson.Version - Redisson 3.29.0
+2026-05-29 10:16:33 [redisson-netty-1-4] INFO  o.r.connection.ConnectionsHolder - 1 connections initialized for 127.0.0.1/127.0.0.1:6379
+2026-05-29 10:16:33 [redisson-netty-1-3] INFO  o.r.connection.ConnectionsHolder - 8 connections initialized for 127.0.0.1/127.0.0.1:6379
+2026-05-29 10:16:34 [main] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource detect P6SPY plugin and enabled it
+2026-05-29 10:16:34 [main] INFO  com.zaxxer.hikari.HikariDataSource - master - Starting...
+2026-05-29 10:16:34 [main] INFO  com.zaxxer.hikari.pool.HikariPool - master - Added connection org.postgresql.jdbc.PgConnection@1e6f7c25
+2026-05-29 10:16:34 [main] INFO  com.zaxxer.hikari.HikariDataSource - master - Start completed.
+2026-05-29 10:16:34 [main] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource - add a datasource named [master] success
+2026-05-29 10:16:34 [main] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource initial loaded [1] datasource,primary datasource named [master]
+2026-05-29 10:16:36 [main] WARN  o.s.b.w.s.c.AnnotationConfigServletWebServerApplicationContext - Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'sysLogininforController' defined in file [D:\work\base-boot\bocoo-modules-system\target\classes\com\bocoo\system\controller\monitor\SysLogininforController.class]: Unsatisfied dependency expressed through constructor parameter 0: Error creating bean with name 'sysLogininforService' defined in file [D:\work\base-boot\bocoo-modules-system\target\classes\com\bocoo\system\service\SysLogininforService.class]: Unsatisfied dependency expressed through constructor parameter 0: Error creating bean with name 'sysLogininforMapper' defined in file [D:\work\base-boot\bocoo-modules-system\target\classes\com\bocoo\system\mapper\SysLogininforMapper.class]: Unsatisfied dependency expressed through bean property 'sqlSessionFactory': Error creating bean with name 'sqlSessionFactory' defined in class path resource [com/baomidou/mybatisplus/autoconfigure/MybatisPlusAutoConfiguration.class]: Failed to instantiate [org.apache.ibatis.session.SqlSessionFactory]: Factory method 'sqlSessionFactory' threw exception with message: Failed to parse mapping resource: 'URL [jar:file:/D:/repository/com/bocoo/bocoo-modules-generator/1.0.0/bocoo-modules-generator-1.0.0.jar!/mapper/generator/GenTableColumnMapper.xml]'
+2026-05-29 10:16:36 [main] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource start closing ....
+2026-05-29 10:16:36 [main] INFO  com.zaxxer.hikari.HikariDataSource - master - Shutdown initiated...
+2026-05-29 10:16:36 [main] INFO  com.zaxxer.hikari.HikariDataSource - master - Shutdown completed.
+2026-05-29 10:16:36 [main] INFO  c.b.d.d.d.DefaultDataSourceDestroyer - dynamic-datasource close the datasource named [master] success,
+2026-05-29 10:16:36 [main] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource all closed success,bye
+2026-05-29 10:16:36 [main] INFO  o.a.catalina.core.StandardService - Stopping service [Tomcat]
+2026-05-29 10:16:36 [main] ERROR o.s.boot.SpringApplication - Application run failed
+org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'sysLogininforController' defined in file [D:\work\base-boot\bocoo-modules-system\target\classes\com\bocoo\system\controller\monitor\SysLogininforController.class]: Unsatisfied dependency expressed through constructor parameter 0: Error creating bean with name 'sysLogininforService' defined in file [D:\work\base-boot\bocoo-modules-system\target\classes\com\bocoo\system\service\SysLogininforService.class]: Unsatisfied dependency expressed through constructor parameter 0: Error creating bean with name 'sysLogininforMapper' defined in file [D:\work\base-boot\bocoo-modules-system\target\classes\com\bocoo\system\mapper\SysLogininforMapper.class]: Unsatisfied dependency expressed through bean property 'sqlSessionFactory': Error creating bean with name 'sqlSessionFactory' defined in class path resource [com/baomidou/mybatisplus/autoconfigure/MybatisPlusAutoConfiguration.class]: Failed to instantiate [org.apache.ibatis.session.SqlSessionFactory]: Factory method 'sqlSessionFactory' threw exception with message: Failed to parse mapping resource: 'URL [jar:file:/D:/repository/com/bocoo/bocoo-modules-generator/1.0.0/bocoo-modules-generator-1.0.0.jar!/mapper/generator/GenTableColumnMapper.xml]'
+	at org.springframework.beans.factory.support.ConstructorResolver.createArgumentArray(ConstructorResolver.java:795)
+	at org.springframework.beans.factory.support.ConstructorResolver.autowireConstructor(ConstructorResolver.java:237)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.autowireConstructor(AbstractAutowireCapableBeanFactory.java:1375)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBeanInstance(AbstractAutowireCapableBeanFactory.java:1212)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:562)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:522)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:337)
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:234)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:335)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:200)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.preInstantiateSingletons(DefaultListableBeanFactory.java:975)
+	at org.springframework.context.support.AbstractApplicationContext.finishBeanFactoryInitialization(AbstractApplicationContext.java:971)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:625)
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.refresh(ServletWebServerApplicationContext.java:146)
+	at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:754)
+	at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:456)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:335)
+	at com.bocoo.BocooApplication.main(BocooApplication.java:21)
+Caused by: org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'sysLogininforService' defined in file [D:\work\base-boot\bocoo-modules-system\target\classes\com\bocoo\system\service\SysLogininforService.class]: Unsatisfied dependency expressed through constructor parameter 0: Error creating bean with name 'sysLogininforMapper' defined in file [D:\work\base-boot\bocoo-modules-system\target\classes\com\bocoo\system\mapper\SysLogininforMapper.class]: Unsatisfied dependency expressed through bean property 'sqlSessionFactory': Error creating bean with name 'sqlSessionFactory' defined in class path resource [com/baomidou/mybatisplus/autoconfigure/MybatisPlusAutoConfiguration.class]: Failed to instantiate [org.apache.ibatis.session.SqlSessionFactory]: Factory method 'sqlSessionFactory' threw exception with message: Failed to parse mapping resource: 'URL [jar:file:/D:/repository/com/bocoo/bocoo-modules-generator/1.0.0/bocoo-modules-generator-1.0.0.jar!/mapper/generator/GenTableColumnMapper.xml]'
+	at org.springframework.beans.factory.support.ConstructorResolver.createArgumentArray(ConstructorResolver.java:795)
+	at org.springframework.beans.factory.support.ConstructorResolver.autowireConstructor(ConstructorResolver.java:237)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.autowireConstructor(AbstractAutowireCapableBeanFactory.java:1375)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBeanInstance(AbstractAutowireCapableBeanFactory.java:1212)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:562)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:522)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:337)
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:234)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:335)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:200)
+	at org.springframework.beans.factory.config.DependencyDescriptor.resolveCandidate(DependencyDescriptor.java:254)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.doResolveDependency(DefaultListableBeanFactory.java:1443)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.resolveDependency(DefaultListableBeanFactory.java:1353)
+	at org.springframework.beans.factory.support.ConstructorResolver.resolveAutowiredArgument(ConstructorResolver.java:904)
+	at org.springframework.beans.factory.support.ConstructorResolver.createArgumentArray(ConstructorResolver.java:782)
+	... 17 common frames omitted
+Caused by: org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'sysLogininforMapper' defined in file [D:\work\base-boot\bocoo-modules-system\target\classes\com\bocoo\system\mapper\SysLogininforMapper.class]: Unsatisfied dependency expressed through bean property 'sqlSessionFactory': Error creating bean with name 'sqlSessionFactory' defined in class path resource [com/baomidou/mybatisplus/autoconfigure/MybatisPlusAutoConfiguration.class]: Failed to instantiate [org.apache.ibatis.session.SqlSessionFactory]: Factory method 'sqlSessionFactory' threw exception with message: Failed to parse mapping resource: 'URL [jar:file:/D:/repository/com/bocoo/bocoo-modules-generator/1.0.0/bocoo-modules-generator-1.0.0.jar!/mapper/generator/GenTableColumnMapper.xml]'
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.autowireByType(AbstractAutowireCapableBeanFactory.java:1536)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.populateBean(AbstractAutowireCapableBeanFactory.java:1430)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:599)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:522)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:337)
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:234)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:335)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:200)
+	at org.springframework.beans.factory.config.DependencyDescriptor.resolveCandidate(DependencyDescriptor.java:254)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.doResolveDependency(DefaultListableBeanFactory.java:1443)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.resolveDependency(DefaultListableBeanFactory.java:1353)
+	at org.springframework.beans.factory.support.ConstructorResolver.resolveAutowiredArgument(ConstructorResolver.java:904)
+	at org.springframework.beans.factory.support.ConstructorResolver.createArgumentArray(ConstructorResolver.java:782)
+	... 31 common frames omitted
+Caused by: org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'sqlSessionFactory' defined in class path resource [com/baomidou/mybatisplus/autoconfigure/MybatisPlusAutoConfiguration.class]: Failed to instantiate [org.apache.ibatis.session.SqlSessionFactory]: Factory method 'sqlSessionFactory' threw exception with message: Failed to parse mapping resource: 'URL [jar:file:/D:/repository/com/bocoo/bocoo-modules-generator/1.0.0/bocoo-modules-generator-1.0.0.jar!/mapper/generator/GenTableColumnMapper.xml]'
+	at org.springframework.beans.factory.support.ConstructorResolver.instantiate(ConstructorResolver.java:648)
+	at org.springframework.beans.factory.support.ConstructorResolver.instantiateUsingFactoryMethod(ConstructorResolver.java:636)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.instantiateUsingFactoryMethod(AbstractAutowireCapableBeanFactory.java:1355)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBeanInstance(AbstractAutowireCapableBeanFactory.java:1185)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:562)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:522)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:337)
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:234)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:335)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:200)
+	at org.springframework.beans.factory.config.DependencyDescriptor.resolveCandidate(DependencyDescriptor.java:254)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.doResolveDependency(DefaultListableBeanFactory.java:1443)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.resolveDependency(DefaultListableBeanFactory.java:1353)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.autowireByType(AbstractAutowireCapableBeanFactory.java:1521)
+	... 43 common frames omitted
+Caused by: org.springframework.beans.BeanInstantiationException: Failed to instantiate [org.apache.ibatis.session.SqlSessionFactory]: Factory method 'sqlSessionFactory' threw exception with message: Failed to parse mapping resource: 'URL [jar:file:/D:/repository/com/bocoo/bocoo-modules-generator/1.0.0/bocoo-modules-generator-1.0.0.jar!/mapper/generator/GenTableColumnMapper.xml]'
+	at org.springframework.beans.factory.support.SimpleInstantiationStrategy.instantiate(SimpleInstantiationStrategy.java:178)
+	at org.springframework.beans.factory.support.ConstructorResolver.instantiate(ConstructorResolver.java:644)
+	... 56 common frames omitted
+Caused by: java.io.IOException: Failed to parse mapping resource: 'URL [jar:file:/D:/repository/com/bocoo/bocoo-modules-generator/1.0.0/bocoo-modules-generator-1.0.0.jar!/mapper/generator/GenTableColumnMapper.xml]'
+	at com.baomidou.mybatisplus.extension.spring.MybatisSqlSessionFactoryBean.buildSqlSessionFactory(MybatisSqlSessionFactoryBean.java:680)
+	at com.baomidou.mybatisplus.extension.spring.MybatisSqlSessionFactoryBean.afterPropertiesSet(MybatisSqlSessionFactoryBean.java:553)
+	at com.baomidou.mybatisplus.extension.spring.MybatisSqlSessionFactoryBean.getObject(MybatisSqlSessionFactoryBean.java:711)
+	at com.baomidou.mybatisplus.autoconfigure.MybatisPlusAutoConfiguration.sqlSessionFactory(MybatisPlusAutoConfiguration.java:224)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at org.springframework.beans.factory.support.SimpleInstantiationStrategy.instantiate(SimpleInstantiationStrategy.java:146)
+	... 57 common frames omitted
+Caused by: org.apache.ibatis.builder.BuilderException: Error parsing Mapper XML. The XML location is 'URL [jar:file:/D:/repository/com/bocoo/bocoo-modules-generator/1.0.0/bocoo-modules-generator-1.0.0.jar!/mapper/generator/GenTableColumnMapper.xml]'. Cause: java.lang.IllegalArgumentException: Result Maps collection already contains value for com.bocoo.generator.mapper.GenTableColumnMapper.GenTableColumnResult
+	at com.baomidou.mybatisplus.core.MybatisXMLMapperBuilder.configurationElement(MybatisXMLMapperBuilder.java:129)
+	at com.baomidou.mybatisplus.core.MybatisXMLMapperBuilder.parse(MybatisXMLMapperBuilder.java:102)
+	at com.baomidou.mybatisplus.extension.spring.MybatisSqlSessionFactoryBean.buildSqlSessionFactory(MybatisSqlSessionFactoryBean.java:678)
+	... 65 common frames omitted
+Caused by: java.lang.IllegalArgumentException: Result Maps collection already contains value for com.bocoo.generator.mapper.GenTableColumnMapper.GenTableColumnResult
+	at com.baomidou.mybatisplus.core.MybatisConfiguration$StrictMap.put(MybatisConfiguration.java:448)
+	at com.baomidou.mybatisplus.core.MybatisConfiguration$StrictMap.put(MybatisConfiguration.java:403)
+	at com.baomidou.mybatisplus.core.MybatisConfiguration.addResultMap(MybatisConfiguration.java:274)
+	at org.apache.ibatis.builder.MapperBuilderAssistant.addResultMap(MapperBuilderAssistant.java:181)
+	at org.apache.ibatis.builder.ResultMapResolver.resolve(ResultMapResolver.java:48)
+	at com.baomidou.mybatisplus.core.MybatisXMLMapperBuilder.resultMapElement(MybatisXMLMapperBuilder.java:252)
+	at com.baomidou.mybatisplus.core.MybatisXMLMapperBuilder.resultMapElement(MybatisXMLMapperBuilder.java:218)
+	at com.baomidou.mybatisplus.core.MybatisXMLMapperBuilder.resultMapElements(MybatisXMLMapperBuilder.java:210)
+	at com.baomidou.mybatisplus.core.MybatisXMLMapperBuilder.configurationElement(MybatisXMLMapperBuilder.java:125)
+	... 67 common frames omitted
+2026-05-29 10:17:09 [background-preinit] INFO  o.h.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2026-05-29 10:17:09 [main] INFO  com.bocoo.BocooApplication - Starting BocooApplication using Java 17.0.4 with PID 8896 (D:\work\base-boot\bocoo-admin\target\classes started by Administrator in D:\work\base-boot)
+2026-05-29 10:17:09 [main] INFO  com.bocoo.BocooApplication - The following 1 profile is active: "dev"
+2026-05-29 10:17:15 [main] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-18081"]
+2026-05-29 10:17:15 [main] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+2026-05-29 10:17:15 [main] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.28]
+2026-05-29 10:17:15 [main] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-05-29 10:17:17 [main] INFO  c.b.common.redis.config.RedisConfig - 初始化 redis 配置
+2026-05-29 10:17:17 [main] INFO  org.redisson.Version - Redisson 3.29.0
+2026-05-29 10:17:17 [redisson-netty-1-4] INFO  o.r.connection.ConnectionsHolder - 1 connections initialized for 127.0.0.1/127.0.0.1:6379
+2026-05-29 10:17:17 [redisson-netty-1-3] INFO  o.r.connection.ConnectionsHolder - 8 connections initialized for 127.0.0.1/127.0.0.1:6379
+2026-05-29 10:17:18 [main] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource detect P6SPY plugin and enabled it
+2026-05-29 10:17:18 [main] INFO  com.zaxxer.hikari.HikariDataSource - master - Starting...
+2026-05-29 10:17:18 [main] INFO  com.zaxxer.hikari.pool.HikariPool - master - Added connection org.postgresql.jdbc.PgConnection@7f33ad20
+2026-05-29 10:17:18 [main] INFO  com.zaxxer.hikari.HikariDataSource - master - Start completed.
+2026-05-29 10:17:18 [main] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource - add a datasource named [master] success
+2026-05-29 10:17:18 [main] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource initial loaded [1] datasource,primary datasource named [master]
+2026-05-29 10:17:23 [main] INFO  c.b.common.json.config.JacksonConfig - 初始化 jackson 配置
+2026-05-29 10:17:25 [main] INFO  c.b.c.w.s.ServerEndpointExporter - [34mNetty WebSocket started on port: 2832 with context path(s): '/ws' .[0m
+2026-05-29 10:17:25 [main] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-18081"]
+2026-05-29 10:17:25 [main] INFO  com.bocoo.BocooApplication - Started BocooApplication in 17.342 seconds (process running for 18.14)
+2026-05-29 10:17:26 [main] INFO  c.b.s.runner.SystemApplicationRunner - 初始化OSS配置成功
+2026-05-29 10:17:26 [main] INFO  c.b.s.runner.SystemApplicationRunner - 加载参数缓存数据成功
+2026-05-29 10:17:26 [main] INFO  c.b.s.runner.SystemApplicationRunner - 加载字典缓存数据成功
+2026-05-29 10:18:07 [http-nio-18081-exec-1] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-05-29 10:18:07 [http-nio-18081-exec-1] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /captchaImage],无参数
+2026-05-29 10:18:08 [http-nio-18081-exec-1] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /captchaImage],耗时:[840]毫秒
+2026-05-29 10:18:08 [http-nio-18081-exec-2] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[POST /login],参数类型[json],参数:[{"username":"merchant.check.1779955734386@example.com","password":"CodexTemp12!","code":"2KiH","uuid":"79737f0f0d524767a57b599c7dc7b03c"}]
+2026-05-29 10:18:10 [schedule-pool-1] INFO  c.b.s.service.SysLogininforService - [127.0.0.1]内网IP[merchant.check.1779955734386@example.com][Success][登录成功]
+2026-05-29 10:18:10 [http-nio-18081-exec-2] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[POST /login],耗时:[1320]毫秒
+2026-05-29 10:18:10 [http-nio-18081-exec-3] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /system/merchant/profile/current],无参数
+2026-05-29 10:18:10 [http-nio-18081-exec-3] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /system/merchant/profile/current],耗时:[16]毫秒
+2026-05-29 10:18:10 [http-nio-18081-exec-4] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[PUT /system/merchant/profile/current],参数类型[json],参数:[{"merchantName":"LOCKED_NAME_SHOULD_NOT_SAVE","companyName":"LOCKED_COMPANY_SHOULD_NOT_SAVE","primaryEmail":"locked@example.invalid","country":"ZZ","status":"0","auditStatus":"REJECTED","contactFirstName":"Runtime","contactLastName":"Validation","contactName":"Injected Contact","officePhone":"+1-555-0100","mobilePhone":"+1-555-0101","state":"Runtime State","city":"Runtime City","addressLine1":"Runtime Address 1","addressLine2":"Runtime Address 2","postalCode":"90001","remark":"Runtime validation remark"}]
+2026-05-29 10:18:10 [http-nio-18081-exec-4] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[PUT /system/merchant/profile/current],耗时:[96]毫秒
+2026-05-29 10:18:10 [http-nio-18081-exec-5] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /system/merchant/profile/current],无参数
+2026-05-29 10:18:10 [http-nio-18081-exec-5] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /system/merchant/profile/current],耗时:[12]毫秒
+2026-05-29 10:18:10 [http-nio-18081-exec-6] ERROR c.b.c.s.h.SaTokenExceptionHandler - 请求地址'/system/merchant/profile/list',权限码校验失败'无此权限：system:merchant:profile:list'
+2026-05-29 10:25:50 [http-nio-18081-exec-3] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /captchaImage],无参数
+2026-05-29 10:25:50 [http-nio-18081-exec-3] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /captchaImage],耗时:[10]毫秒
+2026-05-29 10:25:51 [http-nio-18081-exec-4] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[POST /login],参数类型[json],参数:[{"username":"merchant.check.1779955734386@example.com","password":"CodexTemp12!","code":"1zei","uuid":"b430f0299caa498ab00f80853ca8eb4c"}]
+2026-05-29 10:25:51 [schedule-pool-2] INFO  c.b.s.service.SysLogininforService - [127.0.0.1]内网IP[merchant.check.1779955734386@example.com][Success][登录成功]
+2026-05-29 10:25:51 [http-nio-18081-exec-4] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[POST /login],耗时:[146]毫秒
+2026-05-29 10:26:21 [http-nio-18081-exec-2] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /captchaImage],无参数
+2026-05-29 10:26:21 [http-nio-18081-exec-2] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /captchaImage],耗时:[10]毫秒
+2026-05-29 10:28:48 [http-nio-18081-exec-7] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /getInfo],无参数
+2026-05-29 10:28:48 [http-nio-18081-exec-7] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /getInfo],耗时:[103]毫秒
+2026-05-29 10:28:48 [http-nio-18081-exec-1] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /getRouters],无参数
+2026-05-29 10:28:48 [http-nio-18081-exec-1] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /getRouters],耗时:[39]毫秒
+2026-05-29 10:28:49 [http-nio-18081-exec-9] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /system/merchant/profile/current],无参数
+2026-05-29 10:28:49 [http-nio-18081-exec-9] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /system/merchant/profile/current],耗时:[14]毫秒
+2026-05-29 10:31:35 [http-nio-18081-exec-8] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[PUT /system/merchant/profile/current],参数类型[json],参数:[{"contactFirstName":"brbrowser","contactLastName":"Ownervalidation","contactName":"brbrowser Ownervalidation","officePhone":"+1-212-555-01005550200","mobilePhone":"+1-646-555-01995550201","state":"CAbs","city":"Los Angelesbrowsercity","addressLine1":"200 Runtime Rdbrowseraddress1","addressLine2":"Floor 3browseraddress2","postalCode":"9000191000","remark":"Full /check validationbrowservalidationremark"}]
+2026-05-29 10:31:35 [http-nio-18081-exec-8] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[PUT /system/merchant/profile/current],耗时:[18]毫秒
+2026-05-29 10:31:35 [http-nio-18081-exec-10] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /system/merchant/profile/current],无参数
+2026-05-29 10:31:35 [http-nio-18081-exec-10] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /system/merchant/profile/current],耗时:[8]毫秒
+2026-05-29 10:32:55 [http-nio-18081-exec-3] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[PUT /system/merchant/profile/current],参数类型[json],参数:[{"contactFirstName":"browser","contactLastName":"validation","contactName":"browser validation","officePhone":"5550200","mobilePhone":"5550201","state":"bs","city":"browsercity","addressLine1":"browseraddress1","addressLine2":"browseraddress2","postalCode":"91000","remark":"browservalidationremark"}]
+2026-05-29 10:32:55 [http-nio-18081-exec-3] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[PUT /system/merchant/profile/current],耗时:[17]毫秒
+2026-05-29 10:32:55 [http-nio-18081-exec-4] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /system/merchant/profile/current],无参数
+2026-05-29 10:32:55 [http-nio-18081-exec-4] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /system/merchant/profile/current],耗时:[7]毫秒

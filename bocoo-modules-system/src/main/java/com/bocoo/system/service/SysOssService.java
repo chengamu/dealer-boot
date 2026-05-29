@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bocoo.common.core.constant.CacheNames;
+import com.bocoo.common.core.service.ConfigService;
 import com.bocoo.common.mybatis.core.page.PageQuery;
 import com.bocoo.common.mybatis.core.page.TableDataInfo;
 import com.bocoo.common.core.service.OssService;
@@ -20,6 +21,7 @@ import com.bocoo.common.oss.core.OssClient;
 import com.bocoo.common.oss.entity.UploadResult;
 import com.bocoo.common.oss.enumd.AccessPolicyType;
 import com.bocoo.common.oss.factory.OssFactory;
+import com.bocoo.common.oss.constant.OssConstant;
 import com.bocoo.system.domain.entity.SysOss;
 import com.bocoo.system.domain.bo.SysOssBo;
 import com.bocoo.system.domain.vo.SysOssVo;
@@ -51,6 +53,7 @@ import java.util.*;
 public class SysOssService implements OssService {
 
     private final SysOssMapper ossMapper;
+    private final ConfigService configService;
 
     /**
      * 分页查询OSS文件列表
@@ -262,9 +265,13 @@ public class SysOssService implements OssService {
     private SysOssVo matchingUrl(SysOssVo oss) {
         OssClient storage = OssFactory.instance(oss.getService());
         // 仅修改桶类型为 private 的URL，临时URL时长为120s
-        if (AccessPolicyType.PRIVATE == storage.getAccessPolicy()) {
+        if (AccessPolicyType.PRIVATE == storage.getAccessPolicy() && isPreviewListResource()) {
             oss.setUrl(storage.getPrivateUrl(oss.getFileName(), 120));
         }
         return oss;
+    }
+
+    private boolean isPreviewListResource() {
+        return Convert.toBool(configService.getConfigValue(OssConstant.PEREVIEW_LIST_RESOURCE_KEY), true);
     }
 }

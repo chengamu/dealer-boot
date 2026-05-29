@@ -292,6 +292,7 @@
   "dataLabels.role": "Role",
   "dataLabels.show": "Show",
   "dataLabels.success": "Success",
+  "dataLabels.systemAnnouncement": "System Announcement",
   "dataLabels.system": "System",
   "dataLabels.user": "User",
   "datetime.weekdays.fri": "Fri",

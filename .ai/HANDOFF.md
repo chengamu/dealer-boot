@@ -6,11 +6,11 @@ No active task.
 
 ## Recently Completed
 
-- Archived i18n follow-up, `/thirdLogin`, and deprecated cleanup.
+- Archived browser comments follow-up.
 - Final status: Accepted with Risks.
-- `/thirdLogin` is retained and validated as a platform-level login path. Runtime API returned `tenantId=1`, `tenantType=PLATFORM`.
-- Backend runtime convention is `D:\work\base-boot\bocoo-admin\target\dist`.
-- Deprecated i18n cleanup completed: old TS locale, old properties, and `SysI18nMessage*` remain deleted; dictionary API/frontend `i18nKey` residue was removed.
+- Staged task files plus user-requested `AGENTS.md`; `.idea/*`, `logs/*`, `.ai/CURRENT.md`, and archive records remain unstaged unless explicitly requested.
+- Implemented public legal pages, login footer legal routes, merchant apply remark width, message bell UI, password lock defaults/unlock cleanup, role edit no-kick behavior, OSS preview config handling, platform user-query bypass, and dictionary/i18n seed fixes.
+- Local Vite smoke on `http://127.0.0.1:8083` passed for legal pages and merchant apply remark width; Vite server was stopped afterward.
 
 ## Next Step
 
@@ -18,19 +18,15 @@ No active task.
 
 ## Unresolved Risks
 
-- `i18n:translate` DeepSeek provider path still needs real validation when there is an actual missing key; latest run skipped provider call because no keys were missing.
-- Other `@SaIgnore` login endpoints (`/smsLogin`, `/emailLogin`, `/xcxLogin`) should be reviewed before reuse under tenant-aware login.
-- `/thirdLogin` is a password-style appKey/secretKey login endpoint, not full OAuth/SSO.
+- Live DB may still need an operational data cleanup if deployed data already contains corrupted dictionary or standard-language labels.
+- Browser smoke used frontend fallback legal content because local backend `127.0.0.1:8081` was not running.
 - Existing unrelated working tree changes remain outside this archive.
 
 ## Key Files
 
-- `.ai/archive/i18n-single-source-2026-05-29.md`
-- `.ai/archive/i18n-followup-thirdlogin-cleanup-2026-05-29.md`
-- `.ai/artifacts/i18n-validation-20260529.md`
-- `.ai/requirements/20260529-i18n-modernization.md`
+- `.ai/archive/browser-comments-followup-2026-05-29.md`
 - `.ai/MEMORY.md`
 
 ## Requirement Source
 
-- User asked to execute `/archive` after confirming the follow-up and cleanup work could be archived.
+- User asked to execute `.ai/rules/archive.md` after staging the task files and adding `AGENTS.md`.

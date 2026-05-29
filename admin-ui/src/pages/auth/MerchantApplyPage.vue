@@ -83,7 +83,7 @@
                 </div>
                 <small>{{ t('apply.verificationCodeHelp') }}</small>
               </el-form-item>
-              <el-form-item :label="t('apply.remark')">
+              <el-form-item :label="t('apply.remark')" class="account-grid__wide">
                 <el-input v-model="form.remark" type="textarea" :rows="3" :placeholder="t('apply.remarkPlaceholder')" />
               </el-form-item>
             </div>
@@ -501,6 +501,10 @@ h2 {
 
 .account-grid {
   grid-template-columns: 1fr 1fr;
+}
+
+.account-grid__wide {
+  grid-column: 1 / -1;
 }
 
 .address-grid {

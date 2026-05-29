@@ -18,6 +18,10 @@
 
 ## Lessons
 
+- Browser smoke for this repo should prefer the current checkout on `127.0.0.1:8083` when a shared `192.168.*:8083` target is blocked or may not reflect local files.
+- Known frontend dictionary types should prefer i18n keys over raw backend labels; otherwise English seed values such as `Unknown` can leak into zh UI.
+- Legal document content should stay on existing `sys_legal_document` admin maintenance/API once present; do not reintroduce TXT/file-based runtime content.
+- PostgreSQL seed is the active database path; deprecated MySQL seed files are not repaired unless the user explicitly asks.
 - PowerShell 读取中文文档优先使用 `Get-Content -Raw -Encoding UTF8`。
 - codegraph 适合快速定位结构和符号，但最终结论必须读取真实源文件确认。
 - 准备运行 build/test/lint 前必须说明并按 `.ai/rules/do.md` 的授权规则执行。
@@ -81,3 +85,4 @@
 - 2026-05-28：归档“商家注册/审核运行时 follow-up”。Final Status：Accepted with Risks。完成公开申请页邮箱验证码、Terms/Privacy、国家下拉、法务文档维护、商家管理路由、公开字典白名单、登录态跳转、DEV `8081/8083` Runtime/API/Browser 验证，并修复异步登录日志读取已回收 request 的异常。剩余风险：正式生产仍需单独迁移/回滚方案；提交前需过滤本地日志、IDE 与验证产物；国家跨语言 alias 搜索为后续增强。
 - 2026-05-29：归档“mapper XML 发布包/模块 jar 打包复核”。Final Status：Accepted with Risks。确认重新 `package/install` 后模块 jar 和 `bocoo-admin/target/dist/bocoo-admin.jar` 内嵌模块 jar 均包含 mapper XML；无需改 POM。剩余风险：后续不要用 stale module jar 判断发布包内容。
 - 2026-05-29：归档“i18n follow-up / thirdLogin / deprecated cleanup”。Final Status：Accepted with Risks。完成 DeepSeek translate 脚本空缺失验证、`bocoo-admin/target/dist` 运行约定、`/thirdLogin` 平台租户登录验证、废弃 i18n 文件/代码保留删除、字典 `i18nKey` 残留清理。剩余风险：DeepSeek 实际 provider 调用需等真实缺失 key 验证；其他 `@SaIgnore` 登录入口需后续复核。
+- 2026-05-29：归档“browser comments follow-up”。Final Status：Accepted with Risks。完成法律页路由、商户申请备注布局、消息面板、密码锁定默认值、角色编辑不踢人、OSS 预览开关、平台用户查询 bypass、字典 i18n 优先和 PostgreSQL `简体中文` seed 修复。剩余风险：live DB 若已有坏数据仍需运维清理；本地 browser smoke 使用前端 fallback 法务内容。
