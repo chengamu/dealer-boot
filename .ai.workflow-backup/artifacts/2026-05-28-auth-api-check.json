@@ -1,0 +1,28 @@
+﻿{
+    "captcha":  {
+                    "code":  200,
+                    "redisCodeReadable":  true,
+                    "uuidPresent":  true
+                },
+    "getInfo":  {
+                    "tenantType":  null,
+                    "tenantId":  null,
+                    "code":  401,
+                    "merchantId":  null
+                },
+    "getRouters":  {
+                       "code":  401,
+                       "containsTenantApplication":  false,
+                       "containsMerchantManagement":  false
+                   },
+    "sexAuthenticated":  {
+                             "code":  401,
+                             "labels":  [
+                                            null
+                                        ]
+                         },
+    "emailCode":  {
+                      "code":  200,
+                      "msg":  "操作成功"
+                  }
+}

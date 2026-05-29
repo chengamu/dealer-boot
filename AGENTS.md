@@ -86,3 +86,26 @@
 - 文件引用使用绝对路径。
 - 不输出完整日志，只摘要关键结果。
 - 没有把握的结论写 TODO，不要猜。
+
+## AMU Workflow
+
+本项目可使用 `amu-workflow` Skill。
+
+默认是普通对话模式，不自动进入工作流。
+
+只有用户明确输入以下命令时，才启用工作流：
+
+- `/plan`
+- `/do`
+- `/archive`
+- `使用 amu-workflow`
+
+普通聊天、方案讨论、临时问答不得更新 `.ai/CURRENT.md`、`.ai/TASKS.md`、`.ai/HANDOFF.md` 或 `.ai/archive/`。
+
+以后需要流程时，再让 Codex 用 Skill 初始化 .ai：
+
+使用 amu-workflow Skill 初始化当前项目工作流
+
+或者：
+
+使用 amu-workflow 执行 /plan

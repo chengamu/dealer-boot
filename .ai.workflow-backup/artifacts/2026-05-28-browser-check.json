@@ -1,0 +1,36 @@
+{
+  "apply": {
+    "url": "http://127.0.0.1:8083/merchant/apply",
+    "hasCreateTitle": false,
+    "hasEmailCode": false,
+    "hasTerms": false,
+    "countryComboboxCount": 0
+  },
+  "login": {
+    "url": "http://127.0.0.1:8083/login",
+    "hasLoginCopy": false,
+    "hasGoogle": true
+  },
+  "loginRedirect": {
+    "url": "http://127.0.0.1:8083/index",
+    "redirectedFromLogin": true
+  },
+  "tenantRoute": {
+    "url": "http://127.0.0.1:8083/system/tenant/applications",
+    "is404": false,
+    "isLogin": false,
+    "hasPageText": true
+  },
+  "profileRoute": {
+    "url": "http://127.0.0.1:8083/system/merchant/profile",
+    "is404": false,
+    "isLogin": false,
+    "hasPageText": true
+  },
+  "consoleErrorCount": 0,
+  "consoleErrors": [],
+  "screenshots": [
+    ".ai/artifacts/2026-05-28-browser-merchant-apply.png",
+    ".ai/artifacts/2026-05-28-browser-merchant-profile.png"
+  ]
+}
