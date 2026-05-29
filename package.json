@@ -1,0 +1,12 @@
+{
+  "name": "bocoo-base-workspace",
+  "private": true,
+  "packageManager": "pnpm@11.1.3",
+  "scripts": {
+    "i18n:check": "node i18n/scripts/check.ts",
+    "i18n:translate": "node i18n/scripts/translate.ts",
+    "i18n:validate": "node i18n/scripts/validate.ts",
+    "i18n:sync": "node i18n/scripts/sync.ts",
+    "i18n": "pnpm i18n:translate && pnpm i18n:validate && pnpm i18n:sync"
+  }
+}

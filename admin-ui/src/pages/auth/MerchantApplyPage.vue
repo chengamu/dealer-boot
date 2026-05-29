@@ -101,7 +101,7 @@
                   :filter-method="filterCountry"
                   :placeholder="t('apply.countryPlaceholder')"
                 >
-                  <el-option v-for="item in filteredCountries" :key="item.value" :label="item.label" :value="item.value" />
+                  <el-option v-for="item in filteredCountries" :key="item.countryCode" :label="countryLabel(item)" :value="item.countryCode" />
                 </el-select>
               </el-form-item>
               <el-form-item :label="t('apply.state')">
@@ -153,7 +153,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, reactive, ref } from 'vue'
+import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import type { FormInstance, FormRules } from 'element-plus'
@@ -161,9 +161,9 @@ import { ElMessage } from 'element-plus'
 import { CircleCheckFilled, Connection, Iphone, Location, Message, Phone, User } from '@element-plus/icons-vue'
 import AuthLocaleSelect from '@/components/AuthVisual/AuthLocaleSelect.vue'
 import { sendMerchantApplicationEmailCode, submitMerchantApplication } from '@/api/merchant/application'
+import { listCountries, type StandardCountry } from '@/api/system/standard'
 import { getPublishedLegalDocument } from '@/api/system/legalDocument'
 import { useLocaleStore } from '@/stores/locale'
-import { useDict } from '@/utils/dict'
 import type { AppLocale } from '@/i18n'
 
 const { t } = useI18n()
@@ -178,12 +178,12 @@ const legalOpen = ref(false)
 const legalTitle = ref('')
 const legalContent = ref('')
 const countryKeyword = ref('')
+const countries = ref<StandardCountry[]>([])
 let cooldownTimer: number | undefined
-const { sys_country } = useDict('sys_country')
 const filteredCountries = computed(() => {
   const keyword = countryKeyword.value.trim().toLowerCase()
-  if (!keyword) return sys_country.value
-  return sys_country.value.filter((item) => [item.label, item.value].some((value) => String(value || '').toLowerCase().includes(keyword)))
+  if (!keyword) return countries.value
+  return countries.value.filter((item) => [item.countryCode, item.name, item.nameEn, item.nameZh].some((value) => String(value || '').toLowerCase().includes(keyword)))
 })
 const form = reactive({
   merchantName: '',
@@ -219,6 +219,15 @@ function changeLocale(locale: AppLocale) {
 
 function filterCountry(keyword: string) {
   countryKeyword.value = keyword
+}
+
+function countryLabel(country: StandardCountry) {
+  return `${country.countryCode} - ${country.name}`
+}
+
+async function loadCountries() {
+  const response = await listCountries()
+  countries.value = response.data || []
 }
 
 async function sendCode() {
@@ -291,6 +300,12 @@ async function submit() {
 onBeforeUnmount(() => {
   if (cooldownTimer) window.clearInterval(cooldownTimer)
 })
+
+watch(() => localeStore.language, () => {
+  loadCountries()
+})
+
+loadCountries()
 </script>
 
 <style scoped lang="scss">

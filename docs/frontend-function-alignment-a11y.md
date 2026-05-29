@@ -12,8 +12,9 @@ Date: 2026-05-21
 ## Changes Completed
 
 - Replaced the temporary legacy UI i18n bridge with explicit locale keys in the active TS shell, pages, and shared components.
-  - backend i18n remains the source for menus and dictionaries.
-  - frontend locale files cover interface chrome: labels, placeholders, table headers, buttons, dialog text, tooltip/title/aria labels, pagination, upload tips.
+  - Superseded i18n direction as of 2026-05-29: single-source JSON under `i18n/locales/` is the target for system UI text and dictionary labels.
+  - backend `sys_i18n_message` is deprecated; menus and dictionaries resolve labels through single-source JSON.
+  - frontend runtime JSON should cover interface chrome: labels, placeholders, table headers, buttons, dialog text, tooltip/title/aria labels, pagination, upload tips.
   - table body business data and tree node business data remain backend/data concerns.
 - Made dictionary cache language-aware so dict refs are reloaded after language switching.
 - Reconnected the TS router to the migrated layout shell:
@@ -216,6 +217,6 @@ Engineering status:
   - run a full manual screen reader pass after UI styling is finalized.
   - focus return after save/cancel should be verified against real dialogs during disposable-data CRUD testing.
 - I18n follow-up:
-  - Add any newly discovered old UI phrases as explicit locale keys in the relevant TS page/component.
-  - Prefer backend i18n for menus and dictionaries; page chrome should use explicit frontend locale keys.
-  - If a backend dict item lacks `i18nKey` or a translated message, document that as backend data/config, not a frontend UI translation issue.
+  - Add newly discovered system UI phrases to `i18n/locales/en_US.json`, then use the i18n translate/validate/sync flow.
+  - Keep menus and dictionaries on single-source JSON keys; do not add new `sys_i18n_message` dependencies.
+  - If a dictionary item lacks a `dict.<dictType>.<value>` JSON entry, document it as source JSON coverage debt, not a page-level translation issue.

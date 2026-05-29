@@ -6,6 +6,7 @@ import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.bocoo.common.core.config.properties.TenantProperties;
 import com.bocoo.common.core.constant.CacheConstants;
 import com.bocoo.common.core.constant.Constants;
 import com.bocoo.common.core.context.TenantContextHolder;
@@ -59,6 +60,7 @@ public class SysLoginService {
     private final SysDeptService deptService;
     private final SysTenantMapper tenantMapper;
     private final MerchantProfileService merchantProfileService;
+    private final TenantProperties tenantProperties;
 
     @Value("${user.password.maxRetryCount}")
     private Integer maxRetryCount;
@@ -102,24 +104,25 @@ public class SysLoginService {
      * @return 登录成功后生成的token值
      */
     public String thirdLogin(String username, String password) {
+        return TenantContextHolder.callWithTenant(tenantProperties.getPlatformId(), () -> {
+            // 框架登录不限制从什么表查询 只要最终构建出 LoginUser 即可
+            SysUserVo user = loadUserByUsernameOrEmail(username);
 
-        // 框架登录不限制从什么表查询 只要最终构建出 LoginUser 即可
-        SysUserVo user = loadUserByUsernameOrEmail(username);
+            // 验证用户登录信息
+            checkLogin(LoginType.PASSWORD, username, () -> !BCrypt.checkpw(password, user.getPassword()));
 
-        // 验证用户登录信息
-        checkLogin(LoginType.PASSWORD, username, () -> !BCrypt.checkpw(password, user.getPassword()));
+            // 此处可根据登录用户的数据不同 自行创建 loginUser 属性不够用继承扩展就行了
+            LoginUser loginUser = buildLoginUser(user);
 
-        // 此处可根据登录用户的数据不同 自行创建 loginUser 属性不够用继承扩展就行了
-        LoginUser loginUser = buildLoginUser(user);
+            // 生成token
+            LoginHelper.loginByDevice(loginUser, DeviceType.PC);
 
-        // 生成token
-        LoginHelper.loginByDevice(loginUser, DeviceType.PC);
+            // 记录登录成功信息
+            recordLogininfor(username, Constants.LOGIN_SUCCESS, MessageUtils.message("user.login.success"));
+            recordLoginInfo(user.getUserId(), username);
 
-        // 记录登录成功信息
-        recordLogininfor(username, Constants.LOGIN_SUCCESS, MessageUtils.message("user.login.success"));
-        recordLoginInfo(user.getUserId(), username);
-
-        return StpUtil.getTokenValue();
+            return StpUtil.getTokenValue();
+        });
     }
 
 

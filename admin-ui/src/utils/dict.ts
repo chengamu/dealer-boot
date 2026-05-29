@@ -10,7 +10,6 @@ export interface DictOption {
   elTagType?: string
   elTagClass?: string
   status?: string
-  i18nKey?: string
 }
 
 const frontendDictLabelKeys: Record<string, Record<string, string>> = {
@@ -53,9 +52,8 @@ const frontendDictLabelKeys: Record<string, Record<string, string>> = {
 }
 
 function resolveDictLabel(dictType: string, item: DictOption, locale: string) {
-  if (item.i18nKey) {
-    const translated = getMessage(item.i18nKey, locale)
-    if (translated !== item.i18nKey) return translated
+  if (item.label) {
+    return item.label
   }
   const frontendKey = item.value ? frontendDictLabelKeys[dictType]?.[item.value] : undefined
   return frontendKey ? getMessage(frontendKey, locale) : item.label
@@ -79,14 +77,12 @@ export function useDict<T extends string>(...args: T[]): Record<T, Ref<DictOptio
       res.value[dictType] = (resp.data || []).map((item) => ({
         label: resolveDictLabel(dictType, {
           label: item.dictLabel,
-          value: item.dictValue,
-          i18nKey: item.i18nKey
+          value: item.dictValue
         }, localeStore.language),
         value: item.dictValue,
         elTagType: item.listClass,
         elTagClass: item.cssClass,
-        status: item.status,
-        i18nKey: item.i18nKey
+        status: item.status
       }))
       dictStore.setDict(cacheKey, res.value[dictType])
     })

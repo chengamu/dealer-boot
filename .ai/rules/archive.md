@@ -1,66 +1,81 @@
-## 10. /archive
+# 归档规则
 
-`/archive` 是 Spec Finalization，用于当前任务完成、取消、阻塞或延期后归档当前任务。
+`/archive = learn + archive + final compact`
 
-目标是形成可追溯的最终工程结论、验收状态、风险记录、Follow-up 和 Lessons；不是简单清理 `.ai/CURRENT.md`。
+Archive（归档）是当前任务的最终收口命令。它不会删除长期需求文件。
 
-## Final Status
+## 执行流程
 
-归档前必须生成 Final Status：
+1. 读取 CURRENT / TASKS。
+2. 检查 Archive Gate（归档门）。
+3. 加载 `learn.md`。
+4. 将经验提炼到 MEMORY / playbooks。
+5. 生成 archive 归档记录。
+6. 更新 HANDOFF。
+7. 加载 `compact.md` 做 final compact（最终压缩）。
+8. 将 CURRENT / TASKS 清理到轻量状态。
 
-- Accepted
-- Accepted with Risks
-- Partial
-- Blocked
-- Cancelled
-- Deferred
+## Archive Gate：归档门
 
-禁止未验证却写 Accepted；有高风险未验证项时不能写 Accepted。
+- 不能存在 `in_progress` 任务。
+- blocked 任务必须明确记录。
+- 未验证内容必须标记为 `Not Run`。
+- 高风险未解决问题不能归档为 `Accepted`。
 
-## Closure Gate
-
-只有以下条件全部满足，才允许 `Final Status = Accepted`：
-
-- Acceptance Criteria 已满足。
-- Runtime / API / Browser / Regression Validation 已完成，或明确说明不适用。
-- 没有高风险 blocker。
-
-否则使用 Accepted with Risks、Partial、Blocked、Cancelled 或 Deferred。
-
-## Archive Summary
-
-归档摘要必须包含：
-
-- Feature
-- Final Status
-- Scope / Out of Scope
-- Completed / Not Completed
-- Validation Summary
-- Remaining Risks
-- Follow-up
-- Lessons
-- Key Decisions
-- Files Modified
-
-如果存在 Deferred 项、未完成验证、技术债、后续优化、性能问题或浏览器兼容问题，必须写入 Follow-up。
-
-## Hygiene
-
-- 不修改业务代码。
-- 不清空 `.ai/RULES.md`、`.ai/CONTEXT.md`、`.ai/MEMORY.md`。
-- 从 `.ai/CURRENT.md` 提取摘要追加到 `.ai/MEMORY.md` 的 Archive。
-- `.ai/MEMORY.md` 只保留摘要，不写长日志、browser trace、network dump、console output、build output 或子 Agent 长篇过程。
-- 可复用经验写入 Lessons 或 Project Patterns。
-- 未解决风险写入 Known Risks。
-- MEMORY 较大时保留最近 3～5 个任务短摘要，旧归档移动到 `.ai/archive/YYYY-MM.md`。
-- 不把未验证事项写成已验证。
-- 不删除 `.ai/archive/` 冷历史。
-- archive 后 `.ai/CURRENT.md` 恢复最小状态：
+## 归档模板
 
 ```md
-# Current
+# Archive: <feature>
 
-## Status
+## Feature：功能
 
-No active task.
+## Requirement Source：需求来源
+
+## Final Status：最终状态
+
+Allowed values：允许值
+- Accepted：已接受
+- Accepted with Risks：带风险接受
+- Partial：部分完成
+- Blocked：阻塞
+- Cancelled：取消
+- Deferred：延期
+
+## Scope：范围
+
+## Out of Scope：不做范围
+
+## Completed：已完成
+
+## Not Completed：未完成
+
+## Validation Summary：验证摘要
+
+## Remaining Risks：剩余风险
+
+## Lessons from Learn：经验提炼
+
+## Key Decisions：关键决策
+
+## Files Modified：修改文件
+
+## Artifacts：产物
+
+## Follow-up：后续事项
 ```
+
+## 最终状态规则
+
+只有 Acceptance Criteria（验收标准）已满足、验证已完成或明确不适用、且没有高风险 blocker 时，才能使用 `Accepted`。
+
+否则使用 `Accepted with Risks`、`Partial`、`Blocked`、`Cancelled` 或 `Deferred`。
+
+## 归档后
+
+- CURRENT 保持最小状态。
+- TASKS 清理已完成任务细节。
+- HANDOFF 写入交接摘要。
+- requirements 保留。
+- DECISIONS 保留。
+- MEMORY 和 playbooks 只保留可复用摘要。
+- 完整日志、trace、长验证输出不进入 MEMORY。

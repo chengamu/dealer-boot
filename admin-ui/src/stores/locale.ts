@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { i18n, type AppLocale } from '@/i18n'
+import { setI18nLanguage, type AppLocale } from '@/i18n'
 import { getLocaleCookie, setLocaleCookie } from '@/utils/auth'
 
 export const useLocaleStore = defineStore('locale', {
@@ -10,14 +10,13 @@ export const useLocaleStore = defineStore('locale', {
     language: (state) => state.locale
   },
   actions: {
-    setLocale(locale: AppLocale) {
+    async setLocale(locale: AppLocale) {
       this.locale = locale
-      i18n.global.locale.value = locale
-      document.documentElement.lang = locale === 'zh_CN' ? 'zh-CN' : 'en'
+      await setI18nLanguage(locale)
       setLocaleCookie(locale)
     },
-    setLanguage(locale: AppLocale) {
-      this.setLocale(locale)
+    async setLanguage(locale: AppLocale) {
+      await this.setLocale(locale)
     }
   }
 })

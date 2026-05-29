@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.bocoo.common.core.constant.Constants;
 import com.bocoo.common.core.constant.UserConstants;
+import com.bocoo.common.core.service.I18nService;
 import com.bocoo.common.core.utils.MapstructUtils;
 import com.bocoo.system.domain.bo.SysMenuBo;
 import com.bocoo.system.domain.entity.SysMenu;
@@ -24,6 +25,7 @@ import com.bocoo.system.mapper.SysMenuMapper;
 import com.bocoo.system.mapper.SysRoleMapper;
 import com.bocoo.system.mapper.SysRoleMenuMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.NoSuchMessageException;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -40,7 +42,7 @@ public class SysMenuService {
     private final SysMenuMapper menuMapper;
     private final SysRoleMapper roleMapper;
     private final SysRoleMenuMapper roleMenuMapper;
-    private final SysI18nMessageService i18nMessageService;
+    private final I18nService i18nService;
 
     /**
      * 根据用户查询系统菜单列表
@@ -430,7 +432,7 @@ public class SysMenuService {
         if (CollUtil.isEmpty(menus)) {
             return;
         }
-        menus.forEach(menu -> menu.setMenuName(i18nMessageService.translate(menu.getI18nKey(), menu.getMenuName())));
+        menus.forEach(menu -> menu.setMenuName(translateMenuName(menu.getI18nKey(), menu.getMenuName())));
     }
 
     private void translateMenuVos(List<SysMenuVo> menus) {
@@ -444,7 +446,18 @@ public class SysMenuService {
         if (menu == null) {
             return;
         }
-        menu.setMenuName(i18nMessageService.translate(menu.getI18nKey(), menu.getMenuName()));
+        menu.setMenuName(translateMenuName(menu.getI18nKey(), menu.getMenuName()));
+    }
+
+    private String translateMenuName(String i18nKey, String fallback) {
+        if (StringUtils.isBlank(i18nKey)) {
+            return fallback;
+        }
+        try {
+            return i18nService.get(i18nKey);
+        } catch (NoSuchMessageException ignored) {
+            return fallback;
+        }
     }
 
     /**

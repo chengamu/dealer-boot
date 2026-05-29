@@ -38,6 +38,7 @@ Project-scoped Codex agents are installed in `.codex/agents/`:
 - Use backend `/getRouters` and `/getInfo` as the source for routes and permissions.
 - Keep export/download behavior as `POST + x-www-form-urlencoded + blob`.
 - Verify Chinese and English UI text, including table headers, placeholders, confirmation text, and toast messages.
+- For new UI text, use the single-source JSON flow: add English to `i18n/locales/en_US.json`, then translate/validate/sync.
 - Verify UTC rendering in a non-China timezone when the page displays backend date-time values.
 - Verify icon-only buttons have `aria-label` or `title`.
 - Verify modal focus enters the dialog and returns to the trigger after cancel/save when testing with disposable data.
@@ -81,7 +82,7 @@ Before deleting any legacy file or removing it from `tsconfig.exclude`:
 - `system/role` and hidden `system/role-auth/user/:roleId` now use TS pages and a TS API wrapper. The role page preserves query/reset, CRUD, export, status switch, menu permission tree, data scope tree, and authorization user navigation. The authorization user page preserves assigned-user query, batch cancel, single cancel, close, and select-user dialog. Legacy role Vue pages and JS API file have been removed after route, typecheck, build, and browser smoke verification.
 - `system/user`, hidden `system/user-auth/role/:userId`, and `/user/profile` now use TS pages and a TS API wrapper. The user page preserves department tree filtering, query/reset, column visibility, pagination, CRUD, status switch, reset password, role assignment navigation, import/template/export, and UTC date rendering. Profile is split into typed avatar, user-info, and password forms. Legacy user Vue pages and JS API file have been removed after route and typecheck verification.
 - `layout/components/TagsView/index.vue` now uses explicit i18n keys for the context menu instead of hardcoded Chinese labels.
-- Backend dictionary data still returns Chinese labels for `sys_user_sex` in the English profile form (`男`, `女`, `未知`). This should be fixed by adding backend dict i18n keys/translations, not by hardcoding business dictionary labels in the page.
+- Backend dictionary data still returns Chinese labels for `sys_user_sex` in the English profile form (`男`, `女`, `未知`). Under the new i18n target, this should be fixed by adding `dict.<dictType>.<value>` entries to the single-source JSON and migrating dictionary label resolution, not by hardcoding business dictionary labels in the page.
 - `tool/gen`, hidden `tool/gen-edit/index/:tableId`, and their import/basic/generation child forms now use TS pages and a TS API wrapper. The generator keeps datasource header behavior, query/reset, import, preview/copy, edit tabs, sync, delete, and zip/custom generation entry points. Legacy generator Vue pages and JS API file have been removed after route, typecheck, and build verification.
 - Framework routes `redirect`, dashboard, 404, and public register now resolve to TS pages under `src/pages`. Their old `src/views` files have been removed after route, typecheck, and build verification.
 - `src/views` has been removed. The tenant application menu is still present, but it resolves to a TS placeholder page because approval/reject UI is intentionally deferred for a future rewrite.

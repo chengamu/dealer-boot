@@ -19,7 +19,6 @@ export interface DictData {
   isDefault?: string
   status?: string
   remark?: string
-  i18nKey?: string
   createTime?: string
 }
 

@@ -113,11 +113,29 @@ async function submit() {
   if (!valid) return
   saving.value = true
   try {
-    await updateCurrentMerchantProfile(form.value)
+    await updateCurrentMerchantProfile(buildEditablePayload())
     ElMessage.success(t('common.editSuccess'))
     await loadProfile()
   } finally {
     saving.value = false
+  }
+}
+
+function buildEditablePayload(): MerchantProfile {
+  const contactFirstName = form.value.contactFirstName?.trim() || ''
+  const contactLastName = form.value.contactLastName?.trim() || ''
+  return {
+    contactFirstName,
+    contactLastName,
+    contactName: [contactFirstName, contactLastName].filter(Boolean).join(' '),
+    officePhone: form.value.officePhone,
+    mobilePhone: form.value.mobilePhone,
+    state: form.value.state,
+    city: form.value.city,
+    addressLine1: form.value.addressLine1,
+    addressLine2: form.value.addressLine2,
+    postalCode: form.value.postalCode,
+    remark: form.value.remark
   }
 }
 

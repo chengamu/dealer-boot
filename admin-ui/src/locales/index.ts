@@ -1,28 +1,24 @@
 import type { App } from 'vue'
-import type { AppLocale } from '@/i18n'
-import zhCN from './zh_CN'
-import enUS from './en_US'
+import { getCachedLocaleMessage, normalizeLocale, type AppLocale } from '@/i18n'
 import { getLocale } from '@/utils/auth'
 
-interface MessageTree {
-  [key: string]: string | MessageTree
-}
+function resolveMessage(messages: Record<string, unknown> | undefined, path: string): string | undefined {
+  const flatValue = messages?.[path]
+  if (typeof flatValue === 'string') return flatValue
 
-const messages: Record<AppLocale, MessageTree> = {
-  zh_CN: zhCN,
-  en_US: enUS
-}
-
-function normalizeLocale(locale: string): AppLocale {
-  return locale === 'en_US' ? 'en_US' : 'zh_CN'
+  let current: unknown = messages
+  for (const segment of path.split('.')) {
+    if (!current || typeof current !== 'object') return undefined
+    current = (current as Record<string, unknown>)[segment]
+  }
+  return typeof current === 'string' ? current : undefined
 }
 
 export function getMessage(path: string, locale: string = getLocale()) {
   const currentLocale = normalizeLocale(locale)
-  const message = path.split('.').reduce<string | MessageTree | undefined>((value, key) => {
-    return value && typeof value === 'object' ? value[key] : undefined
-  }, messages[currentLocale])
-  return typeof message === 'string' ? message : path
+  return resolveMessage(getCachedLocaleMessage(currentLocale), path)
+    ?? resolveMessage(getCachedLocaleMessage('en_US'), path)
+    ?? path
 }
 
 export function installLocale(app: App) {

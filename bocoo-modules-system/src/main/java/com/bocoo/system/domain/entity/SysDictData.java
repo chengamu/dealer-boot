@@ -50,13 +50,6 @@ public class SysDictData extends BaseEntity {
     private String dictLabel;
 
     /**
-     * 国际化消息键
-     */
-    @Schema(description = "国际化消息键")
-    @Size(min = 0, max = 128, message = "{validation.i18n.key.max}")
-    private String i18nKey;
-
-    /**
      * 字典键值
      */
     @Schema(description = "字典键值")

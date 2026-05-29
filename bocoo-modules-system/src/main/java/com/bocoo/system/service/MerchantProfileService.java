@@ -89,7 +89,7 @@ public class MerchantProfileService {
     private void applyMerchantEditableFields(MerchantProfile profile, MerchantProfileBo bo) {
         profile.setContactFirstName(bo.getContactFirstName());
         profile.setContactLastName(bo.getContactLastName());
-        profile.setContactName(bo.getContactName());
+        profile.setContactName(resolveContactName(bo));
         profile.setOfficePhone(bo.getOfficePhone());
         profile.setMobilePhone(bo.getMobilePhone());
         profile.setState(bo.getState());
@@ -98,6 +98,18 @@ public class MerchantProfileService {
         profile.setAddressLine2(bo.getAddressLine2());
         profile.setPostalCode(bo.getPostalCode());
         profile.setRemark(bo.getRemark());
+    }
+
+    private String resolveContactName(MerchantProfileBo bo) {
+        String firstName = StringUtils.trimToEmpty(bo.getContactFirstName());
+        String lastName = StringUtils.trimToEmpty(bo.getContactLastName());
+        if (StringUtils.isBlank(firstName)) {
+            return lastName;
+        }
+        if (StringUtils.isBlank(lastName)) {
+            return firstName;
+        }
+        return firstName + " " + lastName;
     }
 
     private Long getCurrentTenantId() {

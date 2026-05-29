@@ -15,19 +15,23 @@ bocoo:
     platform-id: 1
     ignore-urls:
       - /login
+      - /thirdLogin
       - /captchaImage
       - /register
       - /merchant/applications
       - /merchant/applications/email-code
       - /legal/documents/
+      - /system/standard/
     ignore-tables:
       - sys_tenant
       - sys_tenant_apply
       - sys_legal_document
       - sys_config
-      - sys_i18n_message
       - sys_dict_type
       - sys_dict_data
+      - sys_country
+      - sys_currency
+      - sys_language
       - sys_logininfor
       - sys_oper_log
       - sys_oss

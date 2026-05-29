@@ -48,7 +48,6 @@ export interface DictData {
   listClass?: string
   isDefault?: string
   status?: string
-  i18nKey?: string
 }
 
 export interface LoginUser {

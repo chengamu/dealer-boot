@@ -1,30 +1,28 @@
-## Tooling Rules
+# 工具与子 Agent 规则
 
-本文件保存 CodeGraph 和 Sub-Agent 详细规则。默认不读取；只有需要使用 codegraph 或子 Agent 时才按需读取。
+只有 `/plan` 或 `/do` 需要子 Agent 或 CodeGraph 支持时，才加载本文件。
 
-## CodeGraph Usage
+## CodeGraph
 
-- 项目已安装 codegraph。
-- 分析代码结构、调用关系、影响范围时，优先使用 codegraph。
-- codegraph 结果只作为定位依据，最终修改前必须读取真实源文件确认。
-- 如果 codegraph 结果和真实源文件不一致，以真实源文件为准，并在 `.ai/MEMORY.md` 记录该风险。
-- 不把 codegraph 能实时查询到的大量调用关系、文件树、符号图复制进 `.ai` 文件。
+- CodeGraph 用于定位代码结构、符号、关系和影响范围。
+- 编辑前，最终行为判断仍必须读取真实源文件确认。
+- 不把大量调用图、文件树、符号图复制进 `.ai` 文件。
+- CodeGraph 结果过期或与真实文件冲突时，以真实文件为准，并记录风险。
 
-## Sub-Agent Usage
+## 子 Agent
 
-### Available Sub Agents
+- `/plan` 可以咨询子 Agent 做方案分析，但不能执行代码。
+- `/do` 按 Task Owner（任务负责人 / 子 Agent 角色）调度子 Agent。
+- `/check` 内部阶段可用时必须使用 `code-reviewer` 角色做审查。
+- 子 Agent 不能扩大 Scope（任务边界）。
+- 子 Agent 不能重排 Tasks。
+- 子 Agent 不能绕过 Pause Points（暂停点）。
+- 子 Agent 输出必须压缩摘要写入 CURRENT / TASKS，不能完整粘贴。
 
-- frontend-developer：前端页面、组件、交互、样式、接口接入。
-- typescript-pro：TypeScript 类型、复杂 TS 逻辑、类型安全、组合式函数。
-- java-architect：Java 后端、Spring、接口、Service、Mapper、架构影响分析。
-- code-reviewer：`/check` 阶段通用代码审查、质量检查、回归风险检查、验收确认。
+## Owner 映射
 
-### Dispatch Rules
-
-- 主 Agent 负责统一流程、上下文、状态更新和最终结果。
-- 子 Agent 只负责专业分析或专业执行，不直接扩大任务范围。
-- 不要为了调用而调用子 Agent；只有当前任务确实匹配其专业范围时才调用。
-- 子 Agent 结论需要压缩后写入 `.ai/CURRENT.md`，不要粘贴长篇过程。
-- 子 Agent 不能绕过 `AGENTS.md`、`.ai/RULES.md`、命令详情规则、i18n、UTC、minimal diff、暂停规则。
-- 如果多个子 Agent 意见冲突，主 Agent 记录冲突点并暂停，不要强行猜测。
-- 子 Agent 不能擅自升级依赖、修改数据库结构、修改 migration 或扩大 Scope。
+- `main`：工作流协调、文档、简单修改。
+- `frontend-developer`：Vue 页面、组件、样式、交互。
+- `typescript-pro`：TypeScript 类型、复杂前端逻辑、API 类型。
+- `java-architect`：Java 后端、Service、Mapper、事务、权限、架构。
+- `code-reviewer`：审查、验证、风险检查、验收标准检查。

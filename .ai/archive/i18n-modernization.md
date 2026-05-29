@@ -4,11 +4,15 @@
 
 This archive preserves the migration history that was removed from active context during AI Context Compaction on 2026-05-25.
 
+## Superseded By
+
+As of 2026-05-29, the active i18n direction is single-source JSON under `i18n/locales/`, build-time AI completion, and frontend/backend runtime static JSON. The TS locale, properties, and `sys_i18n_message` model below is historical context, not the current target architecture.
+
 ## Completed Frontend i18n Work
 
 - Frontend i18n was standardized on `vue-i18n`.
 - Frontend i18n entry remains `admin-ui/src/i18n/index.ts`.
-- Locale resources remain `admin-ui/src/locales/zh_CN.ts` and `admin-ui/src/locales/en_US.ts`.
+- Historical locale resources were `admin-ui/src/locales/zh_CN.ts` and `admin-ui/src/locales/en_US.ts`; current source is `i18n/locales/*.json`.
 - Language state remains controlled by `admin-ui/src/stores/locale.ts`, with `Content-Language` sent by the request layer.
 - Element Plus locale remains controlled by `admin-ui/src/App.vue`.
 - Hardcoded frontend language labels were replaced with shared `language.*` keys in locale option paths, auth language selection, error page language controls, and navbar language dropdown.
@@ -18,7 +22,7 @@ This archive preserves the migration history that was removed from active contex
 
 ## Completed Backend i18n Work
 
-- Spring MessageSource uses `bocoo-admin/src/main/resources/i18n/messages*.properties`.
+- Historical Spring MessageSource used `bocoo-admin/src/main/resources/i18n/messages*.properties`; current runtime reads synced JSON resources.
 - Backend locale is resolved from `content-language` through `I18nLocaleResolver`.
 - `ServiceException` was extended to support `messageKey + args` through `ofMessageKey(...)` / `setMessageKey(...)` while preserving legacy plain-message constructors.
 - `GlobalExceptionHandler` common framework/system handlers now return stable i18n messages rather than exposing raw framework exception text.
@@ -42,7 +46,7 @@ This archive preserves the migration history that was removed from active contex
 - Dynamic response/error messages that include usernames, object names, file-extension arrays, import summaries, or upstream/external messages need a parameterized-message strategy before migration.
 - Remaining legacy `ServiceException` / `BaseException` pass-through paths should be migrated only after that strategy is chosen.
 - Generator validation annotations, Swagger/OpenAPI text, `@Log(title)`, `@ExcelProperty`, SQL fallback labels, and Java comments need classification before further changes.
-- `SysI18nMessageService` runtime cache invalidation/refresh behavior still needs confirmation if DB i18n messages are edited at runtime.
+- DB i18n editing is no longer the target path because `sys_i18n_message` is deprecated in favor of static JSON resources.
 
 ## Historical Verification Notes
 

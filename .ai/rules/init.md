@@ -1,16 +1,36 @@
-﻿## 5. /init
+# 初始化规则
 
-用于老项目初始化，只扫描，不修改业务代码。
+`/init` 用于初始化项目上下文。它是内部维护流程，不是日常主命令。
 
-执行时：
+## 范围
 
-1. 阅读 `AGENTS.md` 和 `.ai` 现有文件。
-2. 使用 codegraph 辅助理解项目结构。
-3. 读取真实项目文件确认技术栈和命令，例如 README、package lock、pom/build 文件、Docker/CI、application 配置、env 示例。
-4. 识别技术栈、主要目录、启动/构建/测试/lint 命令。
-5. 总结前端、后端、API、权限、i18n、时间处理规范。
-6. 稳定事实写入 `.ai/CONTEXT.md`。
-7. 未知项、风险、关键发现写入 `.ai/MEMORY.md`。
-8. 更新 `.ai/CURRENT.md`，说明初始化状态和下一步。
+- 扫描项目结构。
+- 从真实项目文件确认稳定技术栈和命令。
+- 创建或确认轻量 `.ai` 结构。
+- 只更新稳定事实和 TODO。
 
-禁止：修改业务代码、新增或升级依赖、运行会修改环境/数据库/生成大量文件的命令、猜测不存在的框架能力、复制详细调用图。
+## 需要确认的文件 / 目录
+
+- `.ai/RULES.md`
+- `.ai/CONTEXT.md`
+- `.ai/CURRENT.md`
+- `.ai/TASKS.md`
+- `.ai/HANDOFF.md`
+- `.ai/DECISIONS.md`
+- `.ai/MEMORY.md`
+- `.ai/requirements/`
+- `.ai/rules/`
+- `.ai/playbooks/`
+- `.ai/archive/`
+- `.ai/tmp/`
+- `.ai/artifacts/`
+
+## 规则
+
+- 不修改业务代码。
+- 不新增或升级依赖。
+- 不运行会修改环境、数据库或生成大量文件的命令。
+- 需要时用 CodeGraph 辅助理解结构。
+- 最终事实必须从真实项目文件确认。
+- 不确定内容写 TODO。
+- 不把详细调用图或完整文件树复制进 `.ai`。

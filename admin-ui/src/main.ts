@@ -7,7 +7,7 @@ import 'virtual:svg-icons-register'
 import App from './App.vue'
 import router from './router'
 import { pinia } from './stores'
-import { i18n } from './i18n'
+import { i18n, setupI18n } from './i18n'
 import './styles/main.scss'
 import '@/assets/styles/index.scss'
 import plugins from '@/plugins'
@@ -28,38 +28,44 @@ import Pagination from '@/components/Pagination/index.vue'
 import RightToolbar from '@/components/RightToolbar/index.vue'
 import TreeSelect from '@/components/TreeSelect/index.vue'
 
-const app = createApp(App)
+async function bootstrap() {
+  await setupI18n()
 
-app.config.globalProperties.useDict = useDict
-app.config.globalProperties.getConfigKey = getConfigKey
-app.config.globalProperties.updateConfigByKey = updateConfigByKey
-app.config.globalProperties.download = download
-app.config.globalProperties.parseTime = parseTime
-app.config.globalProperties.resetForm = resetForm
-app.config.globalProperties.handleTree = handleTree
-app.config.globalProperties.addDateRange = addDateRange
-app.config.globalProperties.selectDictLabel = selectDictLabel
-app.config.globalProperties.selectDictLabels = selectDictLabels
+  const app = createApp(App)
 
-app.component('DictTag', DictTag)
-app.component('Editor', Editor)
-app.component('FileUpload', FileUpload)
-app.component('ImagePreview', ImagePreview)
-app.component('ImageUpload', ImageUpload)
-app.component('Pagination', Pagination)
-app.component('RightToolbar', RightToolbar)
-app.component('SvgIcon', SvgIcon)
-app.component('TreeSelect', TreeSelect)
+  app.config.globalProperties.useDict = useDict
+  app.config.globalProperties.getConfigKey = getConfigKey
+  app.config.globalProperties.updateConfigByKey = updateConfigByKey
+  app.config.globalProperties.download = download
+  app.config.globalProperties.parseTime = parseTime
+  app.config.globalProperties.resetForm = resetForm
+  app.config.globalProperties.handleTree = handleTree
+  app.config.globalProperties.addDateRange = addDateRange
+  app.config.globalProperties.selectDictLabel = selectDictLabel
+  app.config.globalProperties.selectDictLabels = selectDictLabels
 
-app.use(pinia)
-app.use(i18n)
-app.use(router)
-app.use(plugins)
-app.use(elementIcons)
-installLocale(app)
-directive(app)
-app.use(ElementPlus, {
-  size: (Cookies.get('size') || 'default') as 'large' | 'default' | 'small'
-})
+  app.component('DictTag', DictTag)
+  app.component('Editor', Editor)
+  app.component('FileUpload', FileUpload)
+  app.component('ImagePreview', ImagePreview)
+  app.component('ImageUpload', ImageUpload)
+  app.component('Pagination', Pagination)
+  app.component('RightToolbar', RightToolbar)
+  app.component('SvgIcon', SvgIcon)
+  app.component('TreeSelect', TreeSelect)
 
-app.mount('#app')
+  app.use(pinia)
+  app.use(i18n)
+  app.use(router)
+  app.use(plugins)
+  app.use(elementIcons)
+  installLocale(app)
+  directive(app)
+  app.use(ElementPlus, {
+    size: (Cookies.get('size') || 'default') as 'large' | 'default' | 'small'
+  })
+
+  app.mount('#app')
+}
+
+void bootstrap()

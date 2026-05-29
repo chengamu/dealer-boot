@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bocoo.common.core.constant.CacheNames;
+import com.bocoo.common.core.service.I18nService;
 import com.bocoo.common.core.utils.MapstructUtils;
 import com.bocoo.common.mybatis.core.page.PageQuery;
 import com.bocoo.system.domain.bo.SysDictDataBo;
@@ -17,6 +18,7 @@ import com.bocoo.common.redis.utils.CacheUtils;
 import com.bocoo.system.domain.vo.SysDictDataVo;
 import com.bocoo.system.mapper.SysDictDataMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.NoSuchMessageException;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.stereotype.Service;
 
@@ -32,7 +34,7 @@ import java.util.List;
 public class SysDictDataService {
 
     private final SysDictDataMapper dictDataMapper;
-    private final SysI18nMessageService i18nMessageService;
+    private final I18nService i18nService;
 
     public TableDataInfo<SysDictDataVo> selectPageDictDataList(SysDictDataBo dictData, PageQuery pageQuery) {
         LambdaQueryWrapper<SysDictData> lqw = buildQueryWrapper(dictData);
@@ -141,7 +143,16 @@ public class SysDictDataService {
         if (dictData == null) {
             return;
         }
-        dictData.setDictLabel(i18nMessageService.translate(dictData.getI18nKey(), dictData.getDictLabel()));
+        String key = buildDictI18nKey(dictData.getDictType(), dictData.getDictValue());
+        try {
+            dictData.setDictLabel(i18nService.get(key));
+        } catch (NoSuchMessageException ignored) {
+            dictData.setDictLabel(StringUtils.blankToDefault(dictData.getDictLabel(), dictData.getDictValue()));
+        }
+    }
+
+    public String buildDictI18nKey(String dictType, String dictValue) {
+        return "dict." + dictType + "." + dictValue;
     }
 
 }

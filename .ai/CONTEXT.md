@@ -67,7 +67,7 @@
 - Vite 配置位于 `admin-ui/vite.config.ts`。
 - API 请求层在 `admin-ui/src/utils/request.ts`，请求会发送 `Content-Language`。
 - 时间展示和绝对时间提交优先使用 `admin-ui/src/utils/datetime.ts` 中的 `formatUtc()`、`toUtcPayload()`、`withUtcDateRange()`、`withUtcDateRangeParams()`。
-- 新增可见文案必须进入 `admin-ui/src/locales/zh_CN.ts` 和 `admin-ui/src/locales/en_US.ts`，不要在页面局部硬编码。
+- i18n 目标模型为单源 JSON：新增可见文案默认只写 `i18n/locales/en_US.json`，`zh_CN.json` 由构建期 AI 补全并人工校对；运行时资源由 `i18n:sync` 同步到前后端。
 
 ## Backend Conventions
 
@@ -90,8 +90,8 @@
 - 多租户表通常包含 `tenant_id bigint NOT NULL DEFAULT 0`；平台/厂家租户约定为 `tenant_id = 0`。
 - 租户隔离由 MyBatis-Plus `TenantLineInnerInterceptor` 注入 `tenant_id` 条件；忽略表和忽略 URL 来自 `bocoo.tenant` 配置，改动前必须分析影响范围。
 - 数据权限使用 `@DataPermission` / `@DataColumn`，常见按部门列和用户列拼接过滤条件；新增列表查询前先确认是否需要数据权限注解。
-- 字典使用 `sys_dict_type` / `sys_dict_data`，字典数据支持 `i18n_key`；菜单和字典等可见配置优先联动 `sys_i18n_message`。
-- i18n message 使用 `sys_i18n_message(message_key, locale, message_value)`，现有唯一约束模式为 `(message_key, locale)`。
+- 字典使用 `sys_dict_type` / `sys_dict_data`；系统字典翻译由 `dict.<dictType>.<value>` JSON key 自动生成，旧 `i18n_key` 不再作为翻译来源。
+- `sys_i18n_message(message_key, locale, message_value)` 是废弃 DB i18n 表；新功能不得依赖。
 - 索引命名风格以 `idx_<table>_<columns>` 和 `uk_<table>_<columns>` 为主；PostgreSQL SQL 可使用 partial index，但新增索引前必须说明查询场景。
 - 建表 SQL 风格以 `CREATE TABLE IF NOT EXISTS`、`CREATE INDEX IF NOT EXISTS`、`COMMENT ON`、`ON CONFLICT` 为代表；不要把完整 SQL 复制进 `.ai` 文件。
 - 涉及建表、改表、索引、唯一约束、初始化数据、菜单权限、字典或 i18n message 时，必须先在 `.ai/CURRENT.md` 分析影响范围并暂停确认。
@@ -99,21 +99,22 @@
 
 ## API Conventions
 
-- 后端统一响应和异常消息应优先走 i18n message key。
+- 后端统一响应和异常消息应优先走稳定 `messageKey`，目标由 JSON `I18nService` 翻译；过渡期兼容现有 `MessageUtils`。
 - 请求 locale 通过 `content-language` 请求头解析。
 - 绝对时间 API 契约以 ISO-8601 UTC `Z` 为目标；旧无时区字符串不应作为新代码契约。
 - 修改 API DTO、响应字段、权限标识或时间格式前，需要在 CURRENT.md 分析影响范围。
 
 ## i18n Rules
 
-- 前端 i18n 入口：`admin-ui/src/i18n/index.ts`。
-- 前端 locale 文件：`admin-ui/src/locales/zh_CN.ts`、`admin-ui/src/locales/en_US.ts`。
+- 前端 i18n 入口：`admin-ui/src/i18n/index.ts`，目标运行时从 `admin-ui/public/i18n/{locale}.json` lazy load。
+- 单源 i18n 文件：`i18n/locales/en_US.json`、`i18n/locales/zh_CN.json`；前后端运行时 JSON 均由 `i18n:sync` 生成。
 - 前端语言切换通过 `admin-ui/src/stores/locale.ts` 的 `setLocale` / `setLanguage`。
-- 后端 message 文件：`bocoo-admin/src/main/resources/i18n/messages*.properties`。
+- 后端目标 message 文件：`bocoo-admin/src/main/resources/i18n/{locale}.json`；不再维护 `messages*.properties`。
 - 后端 locale resolver：`bocoo-common/bocoo-common-web/src/main/java/com/bocoo/common/web/core/I18nLocaleResolver.java`。
-- 菜单、字典等数据库配置项优先使用后端 `i18n_key` / `sys_i18n_message`。
-- 后端菜单和字典运行时由 `SysI18nMessageService` 按当前请求 locale 查询 `sys_i18n_message`，未命中时回退到原始名称/标签。
-- i18n 现代化已完成前端静态 locale、后端 MessageSource、菜单/字典 DB i18n 等主链路。代码生成 SQL 会写入菜单、按钮、页面和字段的 `sys_i18n_message` key；当前真实代码中，后端会用 `SysI18nMessageService` 翻译菜单/字典，生成页面模板自身仍调用前端 `getMessage()`，而 `getMessage()` 只读取本地 `zh_CN.ts` / `en_US.ts`，未发现前端运行时加载 `sys_i18n_message` 的 API/loader。该边界与 `.ai/archive/i18n-modernization.md` 中 Generator 相关 deferred 项一致。
+- 系统字典翻译目标 key 为 `dict.<dictType>.<value>`，存放在单源 JSON；页面优先使用字典 API 返回的 `label`。
+- 国家、币种、语言是独立标准数据，不作为普通字典翻译项。
+- `sys_i18n_message` 和 `SysI18nMessageService` 已废弃；新代码统一使用 JSON `I18nService`。
+- AI 只用于开发/构建期补翻译，不参与用户登录、下单、接口返回或页面渲染。
 
 ## Time / UTC Rules
 
@@ -137,9 +138,12 @@
 - `bocoo-admin/src/main/resources/application-dev.yml`
 - `admin-ui/package.json`
 - `admin-ui/vite.config.ts`
+- `i18n/locales/en_US.json`（目标单源主语言，待实施）
+- `i18n/locales/zh_CN.json`（目标 AI 补全目标语言，待实施）
 - `admin-ui/src/i18n/index.ts`
 - `admin-ui/src/utils/request.ts`
 - `admin-ui/src/utils/datetime.ts`
+- `.ai/requirements/20260529-i18n-modernization.md`
 
 ## CodeGraph Notes
 

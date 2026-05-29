@@ -1,92 +1,102 @@
-## 7. /do
+# 执行规则
 
-按 `.ai/CURRENT.md` 执行当前需求。默认连续推进未阻塞 Tasks，不因完成单个小任务而人工暂停。
+`/do` 是主执行命令。
 
-## Execution Gate
+它吸收 Superpowers 的执行思想：
 
-`/do` 开始前必须检查 `.ai/CURRENT.md`：
+- 任务可以按 Owner（任务负责人 / 子 Agent 角色）分配给子 Agent。
+- DO 阶段应连续执行。
+- 每个 Agent 都有明确边界。
+- Agent 不能扩大 Scope（任务边界）。
+- 上下文或文件增长过大时自动触发 Compact（上下文压缩）。
+- 可复用经验通过 Playbook（排错手册）和 Archive（归档）沉淀。
 
-- Status / Next Step 是否允许执行。
-- Open Questions、Pause Points、Blockers 是否存在。
-- Tasks 是否有明确顺序。
-- 第一项未完成任务是否被阻塞。
+## 执行模式
 
-存在阻塞时必须暂停，不允许绕过、重排或进入代码修改。
+- `/do next`：执行下一个 pending（待执行）任务，并自动 check（检查）。
+- `/do phase`：执行当前阶段所有未阻塞任务，每个任务后自动 check。
+- `/do all`：执行所有未阻塞任务，每个任务后自动 check，直到完成或暂停。
 
-## Task Order
+## 执行流程
 
-- 默认执行第一个未完成且未阻塞的 Task。
-- 第一个未完成 Task 被阻塞时，不能自动跳到后面的任务。
-- 需要调整任务顺序时，必须回到 `/plan` 更新 `.ai/CURRENT.md`。
-- 子 Agent 也不能绕过任务顺序。
+1. 读取 `.ai/CURRENT.md` 和 `.ai/TASKS.md`。
+2. 找到第一个 `pending` 或 `in_progress` 任务。
+3. 按 Owner 调度。
+4. 在 Task Scope（任务边界）内执行。
+5. 记录 Short Notes（简短记录），不写长过程。
+6. 自动加载 `check.md`。
+7. check 通过 -> 标记任务完成并继续。
+8. check 失败 -> 更新 blocker（阻塞项）/ Short Notes，然后回到 `/do` 修复。
+9. do/check 循环重复或上下文增长 -> 加载 `compact.md`。
+10. 所有任务完成 -> 将 CURRENT 的 Next Step 更新为 `Ready for /archive`。
 
-## Owner Dispatch
+## do/check 循环
 
-- 按 Task Owner 选择主 Agent 或对应子 Agent。
-- 不允许忽略 Owner。
-- 如需调整 Owner，必须在 `.ai/CURRENT.md` 记录原因。
-- 子 Agent 不能扩大 Scope、升级依赖、修改数据库结构或绕过 i18n / UTC / minimal diff。
+```text
+执行任务
+  -> 检查任务
+    -> 通过：标记 done，继续下一个任务
+    -> 失败：更新 blocker / Short Notes，回到 /do 修复
+    -> 重复失败或出现风险：暂停
+```
 
-## Execution Loop
+## Agent 边界
 
-每个 Task 执行时：
+- Agent 只能处理分配给自己的 Task Scope。
+- Agent 只能修改 Task Files 中列出的文件；如需触碰其他文件，必须记录原因并保持在 Scope 内。
+- Agent 不能重排任务。
+- Agent 不能扩大功能范围。
+- Agent 不能静默改变架构决策。
+- Agent 不能绕过 Pause Points（暂停点）。
+- Agent 输出必须压缩摘要写入 TASKS / CURRENT，不能完整粘贴。
+- 如果 Owner 不合理，回到 `/plan` 修正；不要静默更改 Owner。
 
-1. Inspect：读取相关源文件、类似实现、公共组件/工具、API、i18n、时间工具、权限逻辑和配置；codegraph 只作定位。
-2. Micro-plan：说明本次小改动、影响文件和验证方式。
-3. Modify：只做当前 Task 所需最小修改。
-4. Self-check：检查 Scope、Out of Scope、i18n、UTC、权限、API 兼容、测试需要和 minimal diff。
-5. Update CURRENT：记录完成内容、验证结果、风险和下一步。
+## Playbook 加载
 
-## Artifact Hygiene
+`/do` 阶段只在具体问题匹配时加载 Playbook（可复用排错手册）：
 
-- `/do` 的临时过程文件、codegraph 输出、子 Agent 过程产物放 `.ai/tmp/`。
-- 需要保留的验证摘要、截图、报告放 `.ai/artifacts/`。
-- 文件名带日期和用途，例如 `.ai/tmp/2026-05-28-codegraph-sync.log`。
-- 不在 `.ai` 根目录生成临时文件、日志、截图、JSON、TXT、trace 或 dump。
-- `.ai/CURRENT.md` 只记录摘要和相对路径，不保存完整输出。
+- Maven / jar / compile / runtime -> `.ai/playbooks/java-build.md`
+- Vue / TS / frontend build -> `.ai/playbooks/frontend-build.md`
+- i18n -> `.ai/playbooks/i18n.md`
+- UTC / timezone / date -> `.ai/playbooks/utc.md`
+- generator -> `.ai/playbooks/generator.md`
+- tenant / permission -> `.ai/playbooks/tenant.md`
 
-## Continuous Execution
+## build/test/lint 授权
 
-当以下条件满足时，`/do` 应连续执行当前需求 Tasks：
+`/do` 运行 build/test/lint 前需要用户授权。
 
-- 用户已确认进入 `/do`。
-- 阻塞项已解除。
-- 必要业务规则、数据库和权限确认已完成。
-- `.ai/CURRENT.md` 中没有 active Pause Point。
+如果用户本轮已经授权，`/do` 可以在所有未阻塞任务完成后运行已授权命令；执行前仍要简要说明命令，然后继续进入 check。
 
-禁止每完成一个小任务、每更新 CURRENT、每修改一个文件就暂停。
+如果没有授权，必须暂停，并列出建议命令。
 
-## Build/Test/Lint Authorization
+未实际运行且成功，不得声称 build/test/lint 通过。
 
-默认在准备运行 build/test/lint 前暂停确认。
+## 强制暂停条件
 
-如果用户本轮已明确授权，例如“准许 build/test/lint”“完成后运行 build/test/lint”“完成整个需求后执行验证并进入 /check”，则：
+以下情况必须暂停：
 
-- 完成全部未阻塞 Tasks 后，可以连续执行已授权命令。
-- 执行前仍需简要说明将运行哪些命令。
-- 不需要再次暂停确认。
-- build/test/lint 完成后继续进入 `/check`。
-- 不在 build/test/lint 和 `/check` 之间制造人工暂停。
+- 需要新增依赖或升级依赖。
+- 数据库结构、baseline 或 migration 未确认。
+- 权限模型、租户模型、角色、菜单策略不清楚。
+- i18n / UTC / 时区影响扩大。
+- 需要 build/test/lint 但用户未授权。
+- 子 Agent 结论冲突。
+- 继续执行会扩大 Scope。
+- 当前任务被 blocked。
+- 需求与 requirement source 冲突。
 
-未明确授权时，完成 Tasks 后暂停，给出建议命令并等待确认。
+## 产物归类
 
-禁止未授权运行；禁止没运行却声称通过；失败后不得假装成功验收。
+- 临时文件放 `.ai/tmp/`。
+- 报告、截图、验证摘要放 `.ai/artifacts/`。
+- 不在 `.ai` 根目录创建散乱的 log / tmp / json / txt / dump / trace 文件。
+- 不把完整日志粘贴进 CURRENT 或 TASKS。
 
-## Mandatory Pause Conditions
+## 生成文件卫生
 
-只有以下情况必须暂停：
-
-- 新阻塞项或业务规则冲突。
-- 需要新增或升级依赖。
-- 数据库结构新增/重构或 migration 未确认。
-- 需要大规模架构重构。
-- i18n / UTC / 时区影响突然扩大。
-- `.ai/CURRENT.md` Scope 明显不足。
-- 需要运行 build/test/lint 且用户尚未明确授权。
-- 子 Agent 意见冲突。
-- 高风险数据兼容问题。
-- 继续执行会明显扩大需求范围。
-
-## Next Stage
-
-全部 Tasks 完成后，根据验证授权进入 build/test/lint，然后进入 `/check`；未授权时暂停等待确认。
+- `.ai` 根目录必须保持干净。
+- 临时文件必须进入 `.ai/tmp/`。
+- 验证报告、截图、日志摘要必须进入 `.ai/artifacts/`。
+- 不留下无引用产物。
+- compact/archive 时，摘要化有用产物，清理或标记无用临时文件。

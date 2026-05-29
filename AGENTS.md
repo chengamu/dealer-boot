@@ -46,22 +46,26 @@
 
 ## Frontend i18n Rules
 
-- 前端主 i18n 使用 `vue-i18n`，入口是 `admin-ui/src/i18n/index.ts`。
-- 文案资源在 `admin-ui/src/locales/zh_CN.ts` 和 `admin-ui/src/locales/en_US.ts`。
-- 新增可见文案必须同时补齐中文和英文 key。
+- 前端主 i18n 使用 `vue-i18n`，入口仍以 `admin-ui/src/i18n/index.ts` 为运行入口。
+- i18n 目标模型是单源 JSON：`i18n/locales/en_US.json` 是唯一人工主语言，`i18n/locales/zh_CN.json` 由构建期 AI 补全并人工校对。
+- `admin-ui/public/i18n/*.json` 是由 `i18n:sync` 生成的前端运行时资源，不手动维护。
+- 新增可见文案默认只写 `i18n/locales/en_US.json`；中文由 `i18n:translate` 补全，人工修正后提交。
 - 页面、组件、弹窗、表格列、按钮、placeholder、toast、空状态、错误提示、aria-label/title 都应使用 i18n key。
 - 语言切换必须通过 `admin-ui/src/stores/locale.ts` 的 `setLocale` / `setLanguage`，不要刷新页面来切换语言。
 - 请求层必须继续发送 `Content-Language` 请求头，后端依赖它解析 locale。
 - Element Plus locale 由 `admin-ui/src/App.vue` 的 `el-config-provider` 统一控制。
-- 菜单、字典等数据库配置项优先使用后端 `i18n_key` / `sys_i18n_message`，不要在页面局部硬编码翻译。
+- 字典翻译使用自动 key：`dict.<dictType>.<value>`，存放在单源 JSON；页面优先使用字典 API 返回的 `label`，不要在页面局部拼接或硬编码翻译。
+- 国家、币种、语言属于独立标准数据，不走普通字典 i18n。
 
 ## Backend i18n Rules
 
-- Spring message 文件在 `bocoo-admin/src/main/resources/i18n/messages*.properties`。
+- 后端目标模型是运行时读取 `bocoo-admin/src/main/resources/i18n/*.json`，这些文件由 `i18n:sync` 从 `i18n/locales/*.json` 同步。
+- 不再维护 `messages*.properties`；后端运行时资源来自同步后的 JSON。
 - 后端 locale 通过 `bocoo-common/bocoo-common-web/.../I18nLocaleResolver.java` 从 `content-language` 请求头解析。
-- 错误消息优先使用 `MessageUtils.message(...)` 或 Bean Validation messageSource。
-- 菜单和字典 API 返回多语言时，使用 `SysI18nMessageService` 根据 `i18nKey` 和当前 locale 翻译。
-- 新增菜单、字典、权限相关文案时，PGSQL 初始化数据需同步 `sys_i18n_message`；不确定是否要改数据库时先暂停。
+- 后端错误消息应走统一 JSON `I18nService`；`MessageUtils.message(...)` 底层必须兼容 JSON，减少业务代码改动。
+- 菜单和字典不依赖 `sys_i18n_message`；字典 key 由规则自动生成，菜单保留 `i18n_key` 作为 JSON key/fallback。
+- `sys_i18n_message` 已废弃，不再作为运行时或新功能翻译源。
+- AI 翻译只允许在开发/构建期脚本中使用，运行时不得调用 AI。
 
 ## UTC / Timezone Rules
 

@@ -63,7 +63,6 @@
           <el-tag v-else :type="row.listClass === 'primary' ? '' : row.listClass" :class="row.cssClass">{{ row.dictLabel }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column :label="t('legacy.i18nKey')" align="center" prop="i18nKey" :show-overflow-tooltip="true" />
       <el-table-column :label="t('legacy.dictValue')" align="center" prop="dictValue" />
       <el-table-column :label="t('legacy.dictSort')" align="center" prop="dictSort" />
       <el-table-column :label="t('user.status')" align="center" prop="status">
@@ -104,9 +103,6 @@
         </el-form-item>
         <el-form-item :label="t('legacy.dictLabel')" prop="dictLabel">
           <el-input v-model="form.dictLabel" :placeholder="t('legacy.dictLabelPlaceholder')" />
-        </el-form-item>
-        <el-form-item :label="t('legacy.i18nKey')" prop="i18nKey">
-          <el-input v-model="form.i18nKey" :placeholder="t('legacy.i18nKeyPlaceholder')" />
         </el-form-item>
         <el-form-item :label="t('legacy.dictValue')" prop="dictValue">
           <el-input v-model="form.dictValue" :placeholder="t('legacy.dictValuePlaceholder')" />
@@ -211,7 +207,6 @@ function isPlainLabel(row: DictData) {
 function reset() {
   form.value = {
     dictLabel: undefined,
-    i18nKey: undefined,
     dictValue: undefined,
     cssClass: undefined,
     listClass: 'default',
