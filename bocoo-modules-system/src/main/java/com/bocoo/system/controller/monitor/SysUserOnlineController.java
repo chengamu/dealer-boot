@@ -38,8 +38,6 @@ import java.util.List;
 @Tag(name = "在线用户监控", description = "在线用户监控管理接口")
 public class SysUserOnlineController extends BaseController {
 
-    private static final int ONLINE_TOKEN_SCAN_LIMIT = 1000;
-
     /**
      * 获取在线用户监控列表
      *
@@ -55,7 +53,7 @@ public class SysUserOnlineController extends BaseController {
             @Parameter(description = "用户名")
             String userName) {
         // 获取所有未过期的 token
-        List<String> keys = StpUtil.searchTokenValue("", 0, ONLINE_TOKEN_SCAN_LIMIT, false);
+        List<String> keys = StpUtil.searchTokenValue("", 0, CacheConstants.ONLINE_TOKEN_SCAN_LIMIT, false);
         List<UserOnlineVO> userOnlineDTOList = new ArrayList<>();
         for (String key : keys) {
             String token = StringUtils.substringAfterLast(key, ":");

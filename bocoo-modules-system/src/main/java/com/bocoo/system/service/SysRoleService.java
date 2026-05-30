@@ -11,6 +11,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.bocoo.common.core.constant.CacheConstants;
 import com.bocoo.common.core.constant.UserConstants;
 import com.bocoo.common.core.domain.bo.LoginUser;
 import com.bocoo.common.core.exception.ServiceException;
@@ -46,8 +47,6 @@ import java.util.*;
 @Slf4j
 @Service
 public class SysRoleService {
-
-    private static final int ONLINE_TOKEN_SCAN_LIMIT = 1000;
 
     private final SysRoleMapper roleMapper;
     private final SysRoleMenuMapper roleMenuMapper;
@@ -435,7 +434,7 @@ public class SysRoleService {
         if (num == 0) {
             return;
         }
-        List<String> keys = StpUtil.searchTokenValue("", 0, ONLINE_TOKEN_SCAN_LIMIT, false);
+        List<String> keys = StpUtil.searchTokenValue("", 0, CacheConstants.ONLINE_TOKEN_SCAN_LIMIT, false);
         if (CollUtil.isEmpty(keys)) {
             return;
         }

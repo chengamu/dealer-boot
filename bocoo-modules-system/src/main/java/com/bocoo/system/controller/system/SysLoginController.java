@@ -177,13 +177,10 @@ public class SysLoginController {
 
     private Map<String, Object> buildLoginResponse(String token) {
         LoginUser loginUser = LoginHelper.getLoginUser();
-        return TenantContextHolder.callWithTenant(loginUser.getTenantId(), () -> {
-            SysUserVo user = userService.selectUserById(loginUser.getUserId());
-            return Map.of(
-                Constants.TOKEN, token,
-                "forcePasswordChange", "1".equals(user.getForcePasswordChange())
-            );
-        });
+        return Map.of(
+            Constants.TOKEN, token,
+            "forcePasswordChange", "1".equals(loginUser.getForcePasswordChange())
+        );
     }
 
     /**

@@ -11,12 +11,12 @@ export const useUserStore = defineStore('user', {
     id: '',
     name: '',
     avatar: defaultAvatar,
-    forcePasswordChange: false,
     roles: [] as string[],
     permissions: [] as string[]
   }),
   getters: {
-    displayName: (state) => state.user?.nickName || state.user?.userName || state.name || 'admin'
+    displayName: (state) => state.user?.nickName || state.user?.userName || state.name || 'admin',
+    forcePasswordChange: (state) => state.user?.forcePasswordChange === true || state.user?.forcePasswordChange === '1'
   },
   actions: {
     async login(usernameOrInfo: string | { username: string; password: string; code?: string; uuid?: string }, password?: string, code?: string, uuid?: string) {
@@ -47,7 +47,6 @@ export const useUserStore = defineStore('user', {
         merchantId: res.merchantId || data?.merchantId || user.merchantId,
         forcePasswordChange: res.forcePasswordChange ?? data?.forcePasswordChange ?? user.forcePasswordChange
       }
-      this.forcePasswordChange = this.user.forcePasswordChange === true || this.user.forcePasswordChange === '1'
       this.roles = res.roles || data?.roles || []
       this.permissions = res.permissions || data?.permissions || []
       this.id = String(this.user?.userId || '')
@@ -68,7 +67,6 @@ export const useUserStore = defineStore('user', {
         this.id = ''
         this.name = ''
         this.avatar = defaultAvatar
-        this.forcePasswordChange = false
         this.roles = []
         this.permissions = []
         removeToken()

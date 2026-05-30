@@ -140,3 +140,32 @@ addAllowedOrigins(config, corsProperties.getAllowedOriginPatterns(), true);
 ## 四、总结
 
 本次 diff 整体质量很高，大量安全加固直接覆盖了之前审查报告（`CODE_REVIEW_BUSINESS.md`）中列出的大部分问题。5 个风险全部为中/低级别，**无阻塞性问题**，建议修复风险 1、2 后合入。
+
+---
+
+## 五、代码质量 / 复用 / 效率审查（simplify 技能）
+
+### 已修复的问题
+
+| # | 类别 | 文件 | 问题 | 修复 |
+|---|------|------|------|------|
+| 1 | 效率-HIGH | `SysLoginController.java:178` | `buildLoginResponse()` 每次登录做一次冗余的 `selectUserById` DB 查询，但 `LoginUser` 对象已携带 `forcePasswordChange` 字段 | 改为直接读 `loginUser.getForcePasswordChange()`，省去 DB 往返 |
+| 2 | 效率-HIGH | `admin-ui/src/i18n/index.ts:86` | `setupI18n()` 将 fallback 和当前语言包改为串行加载（旧代码用 `Promise.all` 并行），启动延长约一倍 | 恢复 `Promise.all` 并行加载，保留新的 fallback 安全逻辑 |
+| 3 | 复用-MED | `SysUserOnlineController.java` + `SysRoleService.java` | `ONLINE_TOKEN_SCAN_LIMIT = 1000` 在两个类中重复定义 | 移至 `CacheConstants.ONLINE_TOKEN_SCAN_LIMIT`，两处引用统一 |
+| 4 | 质量-MED | `admin-ui/src/stores/user.ts` | `forcePasswordChange` 同时存在于 `state`（boolean）和 `user` 对象（raw value），需手动同步 | 改为 getter，从 `user.forcePasswordChange` 派生，删除 `state` 中的冗余字段和手动同步代码 |
+
+### 未修复（建议后续处理）
+
+| # | 类别 | 文件 | 问题 | 建议 |
+|---|------|------|------|------|
+| 5 | 复用 | 4 个 Vue 组件 | `Editor/index.vue`、`FileUpload/index.vue`、`ImageUpload/index.vue`、`UserPage.vue` 各自实现相同的 FormData 上传逻辑 | 抽取 `@/utils/upload.ts` 共享 `uploadFile(options, url)` |
+| 6 | 复用 | `SysLogininforService.java` + `SysOperLogService.java` | `cleanLogininfor()` 和 `cleanOperLog()` 批量删除逻辑完全相同（仅 Mapper/ID列不同） | 抽取泛型 `batchDeleteByLimit` 工具方法 |
+| 7 | 质量 | `SysLoginService.java` 等多处 | `forcePasswordChange` 用字面量 `"1"` / `"0"` 比较，缺少常量 | 定义 `FORCE_YES` / `FORCE_NO` 常量 |
+| 8 | 效率-MED | `XssFilter.java` | 移除 GET/DELETE 跳过逻辑后，所有读请求都经过 XSS wrapper（GET 参数本来不应该有 XSS — 这是输出层的问题） | 评估是否恢复 GET/DELETE 的 method 级别跳过（保留 query param sanitization） |
+
+### 正向确认
+
+- `buildLoginResponse` 重构为独立方法减少 5 个登录端点的重复，方向正确
+- `requestPage<T>` 替换 `as unknown as` 类型断言，消除 10+ 处不安全转换
+- 4 个上传组件从 `:headers` 改为 `:http-request`，消除了 token 在 DOM 中的暴露
+- 所有新增的 `@RateLimiter`、`@RepeatSubmit`、文件魔数校验等安全措施都是合理的

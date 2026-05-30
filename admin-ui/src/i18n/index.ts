@@ -85,11 +85,16 @@ export async function setI18nLanguage(locale: AppLocale) {
 
 export async function setupI18n(locale: AppLocale = normalizeLocale(getLocaleCookie())) {
   const currentLocale = normalizeLocale(locale)
-  await ensureFallbackMessages()
-  if (currentLocale === fallbackLocale) {
-    applyI18nLanguage(fallbackLocale)
+  const [fallbackMessages, currentMessages] = await Promise.all([
+    ensureFallbackMessages(),
+    currentLocale === fallbackLocale ? Promise.resolve() : loadLocaleMessagesSafely(currentLocale)
+  ])
+  if (currentMessages) {
+    applyI18nLanguage(currentLocale)
     return
   }
-  const messages = await loadLocaleMessagesSafely(currentLocale)
-  applyI18nLanguage(messages ? currentLocale : fallbackLocale)
+  if (!fallbackMessages) {
+    setEmptyLocaleMessages(fallbackLocale)
+  }
+  applyI18nLanguage(fallbackLocale)
 }

@@ -51,4 +51,9 @@ public interface CacheConstants {
      * 登录账户密码错误次数 redis key
      */
     String PWD_ERR_CNT_KEY = "pwd_err_cnt:";
+
+    /**
+     * 在线用户 token 扫描上限
+     */
+    int ONLINE_TOKEN_SCAN_LIMIT = 1000;
 }
