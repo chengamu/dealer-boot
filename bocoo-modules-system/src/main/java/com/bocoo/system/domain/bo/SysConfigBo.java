@@ -1,6 +1,6 @@
 package com.bocoo.system.domain.bo;
 
-import com.bocoo.common.mybatis.core.domain.BaseEntity;
+import com.bocoo.common.mybatis.core.domain.BaseBo;
 import com.bocoo.system.domain.entity.SysConfig;
 import io.github.linpeilie.annotations.AutoMapper;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -19,7 +19,7 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 @AutoMapper(target = SysConfig.class, reverseConvertGenerate = false)
 @Schema(description = "参数配置业务对象")
-public class SysConfigBo extends BaseEntity {
+public class SysConfigBo extends BaseBo {
 
     /**
      * 参数主键

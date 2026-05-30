@@ -1,7 +1,7 @@
 package com.bocoo.system.domain.bo;
 
 import com.bocoo.common.core.constant.RegexConstants;
-import com.bocoo.common.mybatis.core.domain.BaseEntity;
+import com.bocoo.common.mybatis.core.domain.BaseBo;
 import com.bocoo.system.domain.entity.SysDictType;
 import io.github.linpeilie.annotations.AutoMapper;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -21,7 +21,7 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 @AutoMapper(target = SysDictType.class, reverseConvertGenerate = false)
 @Schema(description = "字典类型业务对象")
-public class SysDictTypeBo extends BaseEntity {
+public class SysDictTypeBo extends BaseBo {
 
     /**
      * 字典主键

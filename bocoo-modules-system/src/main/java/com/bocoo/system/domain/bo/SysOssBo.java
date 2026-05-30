@@ -1,6 +1,6 @@
 package com.bocoo.system.domain.bo;
 
-import com.bocoo.common.mybatis.core.domain.BaseEntity;
+import com.bocoo.common.mybatis.core.domain.BaseBo;
 import com.bocoo.system.domain.entity.SysOss;
 import io.github.linpeilie.annotations.AutoMapper;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -16,7 +16,7 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 @AutoMapper(target = SysOss.class, reverseConvertGenerate = false)
 @Schema(description = "OSS对象存储业务对象")
-public class SysOssBo extends BaseEntity {
+public class SysOssBo extends BaseBo {
 
     /**
      * ossId
@@ -41,6 +41,12 @@ public class SysOssBo extends BaseEntity {
      */
     @Schema(description = "文件后缀名")
     private String fileSuffix;
+
+    /**
+     * 创建者
+     */
+    @Schema(description = "创建者")
+    private String createBy;
 
     /**
      * URL地址

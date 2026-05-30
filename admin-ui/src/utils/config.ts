@@ -64,6 +64,10 @@ export function getXxlJobUrl() {
   return getAppConfig<string>('VITE_APP_XXL_JOB_ADMIN', '/xxl-job-admin')
 }
 
+export function getGoogleClientId() {
+  return getAppConfig<string>('VITE_APP_GOOGLE_CLIENT_ID', '')
+}
+
 export function isProduction() {
   return getAppEnv() === 'production'
 }
@@ -84,6 +88,7 @@ export const AppConfig = {
   getMonitorUrl,
   getMonitorAdminUrl,
   getXxlJobUrl,
+  getGoogleClientId,
   isProduction,
   isDevelopment
 }

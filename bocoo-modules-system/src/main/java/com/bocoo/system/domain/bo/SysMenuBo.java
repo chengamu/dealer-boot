@@ -2,7 +2,7 @@ package com.bocoo.system.domain.bo;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.bocoo.common.core.constant.RegexConstants;
-import com.bocoo.common.mybatis.core.domain.BaseEntity;
+import com.bocoo.common.mybatis.core.domain.BaseBo;
 import com.bocoo.system.domain.entity.SysMenu;
 import io.github.linpeilie.annotations.AutoMapper;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -23,7 +23,7 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 @AutoMapper(target = SysMenu.class, reverseConvertGenerate = false)
 @Schema(description = "菜单权限业务对象")
-public class SysMenuBo extends BaseEntity {
+public class SysMenuBo extends BaseBo {
 
     /**
      * 菜单ID

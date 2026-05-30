@@ -1,7 +1,7 @@
 package com.bocoo.system.domain.bo;
 
 import com.bocoo.common.core.xss.Xss;
-import com.bocoo.common.mybatis.core.domain.BaseEntity;
+import com.bocoo.common.mybatis.core.domain.BaseBo;
 import com.bocoo.system.domain.entity.SysNotice;
 import io.github.linpeilie.annotations.AutoMapper;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -20,7 +20,7 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 @AutoMapper(target = SysNotice.class, reverseConvertGenerate = false)
 @Schema(description = "通知公告业务对象")
-public class SysNoticeBo extends BaseEntity {
+public class SysNoticeBo extends BaseBo {
 
     /**
      * 公告ID
@@ -42,6 +42,12 @@ public class SysNoticeBo extends BaseEntity {
      */
     @Schema(description = "公告类型（1通知 2公告）")
     private String noticeType;
+
+    /**
+     * 创建者
+     */
+    @Schema(description = "创建者")
+    private String createBy;
 
     /**
      * 公告内容

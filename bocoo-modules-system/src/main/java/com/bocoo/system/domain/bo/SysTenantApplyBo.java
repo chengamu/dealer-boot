@@ -1,6 +1,6 @@
 package com.bocoo.system.domain.bo;
 
-import com.bocoo.common.mybatis.core.domain.BaseEntity;
+import com.bocoo.common.mybatis.core.domain.BaseBo;
 import com.bocoo.system.domain.entity.SysTenantApply;
 import io.github.linpeilie.annotations.AutoMapper;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -14,7 +14,7 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 @AutoMapper(target = SysTenantApply.class, reverseConvertGenerate = false)
 @Schema(description = "Tenant application request")
-public class SysTenantApplyBo extends BaseEntity {
+public class SysTenantApplyBo extends BaseBo {
 
     private Long applyId;
 

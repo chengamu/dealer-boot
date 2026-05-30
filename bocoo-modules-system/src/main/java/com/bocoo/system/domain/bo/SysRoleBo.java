@@ -1,7 +1,7 @@
 package com.bocoo.system.domain.bo;
 
 import com.bocoo.common.core.constant.UserConstants;
-import com.bocoo.common.mybatis.core.domain.BaseEntity;
+import com.bocoo.common.mybatis.core.domain.BaseBo;
 import com.bocoo.system.domain.entity.SysRole;
 import io.github.linpeilie.annotations.AutoMapper;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -23,7 +23,7 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode(callSuper = true)
 @AutoMapper(target = SysRole.class, reverseConvertGenerate = false)
 @Schema(description = "角色信息业务对象")
-public class SysRoleBo extends BaseEntity {
+public class SysRoleBo extends BaseBo {
 
     /**
      * 角色ID

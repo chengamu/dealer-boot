@@ -154,7 +154,7 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import type { FormInstance, FormRules } from 'element-plus'
 import { ElMessage } from 'element-plus'
@@ -168,6 +168,7 @@ import type { AppLocale } from '@/i18n'
 
 const { t } = useI18n()
 const router = useRouter()
+const route = useRoute()
 const localeStore = useLocaleStore()
 const localeValue = ref<AppLocale>(localeStore.locale)
 const formRef = ref<FormInstance>()
@@ -192,7 +193,7 @@ const form = reactive({
   contactLastName: '',
   officePhone: '',
   mobilePhone: '',
-  email: '',
+  email: typeof route.query.email === 'string' ? route.query.email : '',
   country: '',
   verificationCode: '',
   termsAccepted: false,

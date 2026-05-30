@@ -1,6 +1,6 @@
 package com.bocoo.system.domain.bo;
 
-import com.bocoo.common.mybatis.core.domain.BaseEntity;
+import com.bocoo.common.mybatis.core.domain.BaseBo;
 import com.bocoo.system.domain.entity.SysPost;
 import io.github.linpeilie.annotations.AutoMapper;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -20,7 +20,7 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 @AutoMapper(target = SysPost.class, reverseConvertGenerate = false)
 @Schema(description = "岗位信息业务对象")
-public class SysPostBo extends BaseEntity {
+public class SysPostBo extends BaseBo {
 
     /**
      * 岗位ID

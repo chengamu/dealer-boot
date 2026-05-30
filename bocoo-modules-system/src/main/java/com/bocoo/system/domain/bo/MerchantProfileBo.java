@@ -1,6 +1,6 @@
 package com.bocoo.system.domain.bo;
 
-import com.bocoo.common.mybatis.core.domain.BaseEntity;
+import com.bocoo.common.mybatis.core.domain.BaseBo;
 import com.bocoo.system.domain.entity.MerchantProfile;
 import io.github.linpeilie.annotations.AutoMapper;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -13,7 +13,7 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 @AutoMapper(target = MerchantProfile.class, reverseConvertGenerate = false)
 @Schema(description = "Merchant profile business object")
-public class MerchantProfileBo extends BaseEntity {
+public class MerchantProfileBo extends BaseBo {
 
     private Long merchantId;
 

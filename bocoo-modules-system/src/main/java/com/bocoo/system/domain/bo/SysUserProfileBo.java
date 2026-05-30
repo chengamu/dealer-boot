@@ -2,7 +2,7 @@ package com.bocoo.system.domain.bo;
 
 import com.bocoo.common.core.constant.RegexConstants;
 import com.bocoo.common.core.xss.Xss;
-import com.bocoo.common.mybatis.core.domain.BaseEntity;
+import com.bocoo.common.mybatis.core.domain.BaseBo;
 import com.bocoo.common.sensitive.annotation.Sensitive;
 import com.bocoo.common.sensitive.core.SensitiveStrategy;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -23,7 +23,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @Schema(description = "个人信息业务对象")
-public class SysUserProfileBo extends BaseEntity {
+public class SysUserProfileBo extends BaseBo {
 
     /**
      * 用户昵称

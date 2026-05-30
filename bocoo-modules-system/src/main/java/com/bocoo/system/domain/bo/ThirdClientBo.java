@@ -1,7 +1,7 @@
 package com.bocoo.system.domain.bo;
 
 
-import com.bocoo.common.mybatis.core.domain.BaseEntity;
+import com.bocoo.common.mybatis.core.domain.BaseBo;
 import com.bocoo.system.domain.entity.SysConfig;
 import com.bocoo.system.domain.entity.ThirdClient;
 import io.github.linpeilie.annotations.AutoMapper;
@@ -19,7 +19,7 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 @AutoMapper(target = ThirdClient.class, reverseConvertGenerate = false)
 @Schema(description = "第三方应用业务对象")
-public class ThirdClientBo extends BaseEntity {
+public class ThirdClientBo extends BaseBo {
 
     @Schema(description = "主键ID")
     private Long id;

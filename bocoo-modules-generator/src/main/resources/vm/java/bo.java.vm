@@ -1,6 +1,6 @@
 package ${packageName}.domain.bo;
 
-import com.bocoo.common.mybatis.core.domain.BaseEntity;
+import com.bocoo.common.mybatis.core.domain.BaseBo;
 import ${packageName}.domain.entity.${ClassName};
 import io.github.linpeilie.annotations.AutoMapper;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 @EqualsAndHashCode(callSuper = true)
 @AutoMapper(target = ${ClassName}.class, reverseConvertGenerate = false)
 @Schema(description = "${functionName}业务对象")
-public class ${ClassName}Bo extends BaseEntity {
+public class ${ClassName}Bo extends BaseBo {
 
     #foreach($column in $columns)
     #if(!$column.isSuperColumn())

@@ -12,6 +12,7 @@
 - 支付表和服务必须区分 `payer_tenant_id` 与 `payee_tenant_id`；旧系统单一 `tenant_id` 语义不能直接照搬。
 - 真实支付渠道未完成 sandbox / 商户配置 / webhook 验签前，不实现真实下单、退款、转账或 webhook 成功流，也不能把非 Mock / Wallet 渠道伪造成成功。
 - `pay_channel.config` 查询默认脱敏；写入 API、前端页面和菜单应晚于权限与脱敏策略。
+- Google 登录第一版不自动创建系统用户、不新增绑定表；Google ID token 校验通过后优先匹配现有启用用户邮箱，未匹配时按 `sys_tenant_apply.email` 返回申请状态提示，租户和权限仍走现有登录用户构建流程。`REJECTED` 申请允许重新提交，旧记录保留，新申请插入新的 `PENDING` 记录。
 
 ## Project Patterns
 
@@ -22,10 +23,12 @@
 - `SysProfileController.updatePwd()` 当前已校验旧密码；后续不要重复安排该项修复。
 - `sys_menu.perms` 运行时按 `distinct + Set` 进入 Sa-Token 权限字符串集合；重复值不必默认修数据，先判断是否是菜单页和按钮共享权限。
 - 本项目 Spring Boot 可运行 dist 产物路径是 `bocoo-admin/target/dist/bocoo-admin.jar`。
+- 登录页第三方登录按钮优先使用 Google Identity Services 官方渲染；自定义按钮必须使用官方彩色 `G` 和品牌规范，不使用单色字母伪 Logo。
 
 ## Known Risks / TODO
 
 - PayPal / Stripe / 支付宝 / 微信真实支付联调需要 sandbox 或生产商户配置、证书或 webhook secret、以及公网 webhook 地址。
+- Google 登录需要 Google OAuth Web Client ID；本地开发可配 localhost origin，生产域名和同源代理拓扑确定后再配置正式 origin。
 - PayPal webhook 验签是支付迁移强制验收项；旧代码虽有 `verifyWebhookSignature` 方法，但主流程未强制调用，不能原样迁移。
 - Cookie/CSRF 认证架构和生产 CORS 域名收紧等待正式域名与部署拓扑。
 - `@vueup/vue-quill -> quill@1.3.7` 仍有 moderate advisory；没有 `quill@1.3.8` 发布版，Quill 2.x 迁移需单独评估。

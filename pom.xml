@@ -8,14 +8,14 @@
     <groupId>com.bocoo</groupId>
     <artifactId>bocoo-base</artifactId>
     <version>${revision}</version>
-    <description>bocoo-base绠＄悊绯荤粺</description>
+    <description>bocoo-base管理系统</description>
     <packaging>pom</packaging>
 
     <profiles>
         <profile>
             <id>local</id>
             <properties>
-                <!-- 鐜鏍囪瘑锛岄渶瑕佷笌閰嶇疆鏂囦欢鐨勫悕绉扮浉瀵瑰簲 -->
+                <!-- 环境标识，需要与配置文件名称对应 -->
                 <profiles.active>local</profiles.active>
                 <logging.level>info</logging.level>
             </properties>
@@ -23,12 +23,12 @@
         <profile>
             <id>dev</id>
             <properties>
-                <!-- 鐜鏍囪瘑锛岄渶瑕佷笌閰嶇疆鏂囦欢鐨勫悕绉扮浉瀵瑰簲 -->
+                <!-- 环境标识，需要与配置文件名称对应 -->
                 <profiles.active>dev</profiles.active>
                 <logging.level>info</logging.level>
             </properties>
             <activation>
-                <!-- 榛樿鐜 -->
+                <!-- 默认环境 -->
                 <activeByDefault>true</activeByDefault>
             </activation>
         </profile>
@@ -49,14 +49,14 @@
         <lombok.version>1.18.32</lombok.version>
         <bouncycastle.version>1.84</bouncycastle.version>
 
-        <!-- 妗嗘灦鐗堟湰閰嶇疆3.2.6 鍗囩骇鍒?.2.9 -->
+        <!-- 框架版本配置 -->
         <spring-boot.version>3.2.12</spring-boot.version>
         <mybatis.version>3.5.16</mybatis.version>
         <mybatis-plus.version>3.5.6</mybatis-plus.version>
 
         <knife4j.version>4.4.0</knife4j.version>
         <spring-boot-admin.version>3.2.3</spring-boot-admin.version>
-        <!-- 宸ュ叿绫荤増鏈厤缃?-->
+        <!-- 工具类版本配置 -->
         <hutool.version>5.8.46</hutool.version>
         <poi.version>5.5.1</poi.version>
         <easyexcel.version>3.3.4</easyexcel.version>
@@ -69,7 +69,7 @@
         <ip2region.version>2.7.0</ip2region.version>
         <annotation.version>1.3.2</annotation.version>
         <commons.io.version>2.22.0</commons.io.version>
-        <!-- 涓棿浠朵笌鏈嶅姟閰嶇疆 -->
+        <!-- 中间件与服务配置 -->
         <satoken.version>1.37.0</satoken.version>
         <p6spy.version>3.9.1</p6spy.version>
         <redisson.version>3.52.0</redisson.version>
@@ -79,14 +79,14 @@
         <mapstruct-plus.version>1.3.6</mapstruct-plus.version>
         <mapstruct-plus.lombok.version>0.2.0</mapstruct-plus.lombok.version>
 
-        <!-- 鎻掍欢鐗堟湰 -->
+        <!-- 插件版本配置 -->
         <maven-jar-plugin.version>3.2.2</maven-jar-plugin.version>
         <maven-war-plugin.version>3.2.2</maven-war-plugin.version>
         <maven-compiler-plugin.verison>3.11.0</maven-compiler-plugin.verison>
         <maven-surefire-plugin.version>3.1.2</maven-surefire-plugin.version>
         <flatten-maven-plugin.version>1.3.0</flatten-maven-plugin.version>
 
-        <!-- 绗笁鏂规湇鍔￠厤缃?-->
+        <!-- 第三方服务配置 -->
         <aws-java-sdk-s3.version>1.12.540</aws-java-sdk-s3.version>
         <sms4j.version>2.2.0</sms4j.version>
         <alipay-sdk-java.version>4.40.771.ALL</alipay-sdk-java.version>

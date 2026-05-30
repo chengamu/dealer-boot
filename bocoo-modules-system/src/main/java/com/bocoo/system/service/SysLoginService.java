@@ -9,9 +9,11 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.bocoo.common.core.config.properties.TenantProperties;
 import com.bocoo.common.core.constant.CacheConstants;
 import com.bocoo.common.core.constant.Constants;
+import com.bocoo.common.core.constant.UserConstants;
 import com.bocoo.common.core.context.TenantContextHolder;
 import com.bocoo.common.core.domain.bo.LoginUser;
 import com.bocoo.common.core.domain.bo.XcxLoginUser;
+import com.bocoo.common.core.enums.TenantApplyStatus;
 import com.bocoo.common.core.domain.vo.RoleVO;
 import com.bocoo.common.core.enums.DeviceType;
 import com.bocoo.common.core.enums.LoginType;
@@ -27,20 +29,39 @@ import com.bocoo.common.redis.utils.RedisUtils;
 import com.bocoo.common.satoken.utils.LoginHelper;
 import com.bocoo.common.web.config.properties.CaptchaProperties;
 import com.bocoo.system.domain.entity.SysTenant;
+import com.bocoo.system.domain.entity.SysTenantApply;
 import com.bocoo.system.domain.entity.SysUser;
 import com.bocoo.system.domain.vo.MerchantProfileVo;
 import com.bocoo.system.domain.vo.SysDeptVo;
 import com.bocoo.system.domain.vo.SysRoleVo;
 import com.bocoo.system.domain.vo.SysUserVo;
+import com.bocoo.system.mapper.SysTenantApplyMapper;
 import com.bocoo.system.mapper.SysTenantMapper;
 import com.bocoo.system.mapper.SysUserMapper;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.math.BigInteger;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
+import java.security.KeyFactory;
+import java.security.Signature;
+import java.security.interfaces.RSAPublicKey;
+import java.security.spec.RSAPublicKeySpec;
 import java.time.Duration;
+import java.time.Instant;
+import java.util.Base64;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.function.Supplier;
 
 /**
@@ -59,12 +80,24 @@ public class SysLoginService {
     private final SysRoleService roleService;
     private final SysDeptService deptService;
     private final SysTenantMapper tenantMapper;
+    private final SysTenantApplyMapper tenantApplyMapper;
     private final MerchantProfileService merchantProfileService;
     private final TenantProperties tenantProperties;
 
+    private static final String GOOGLE_CERTS_URL = "https://www.googleapis.com/oauth2/v3/certs";
+    private static final String GOOGLE_ISSUER = "accounts.google.com";
+    private static final String GOOGLE_ISSUER_HTTPS = "https://accounts.google.com";
+    private static final String GOOGLE_ALGORITHM = "RS256";
+    private static final Duration GOOGLE_KEY_CACHE_TTL = Duration.ofHours(6);
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final HttpClient HTTP_CLIENT = HttpClient.newBuilder()
+        .connectTimeout(Duration.ofSeconds(5))
+        .build();
     private static final int DEFAULT_MAX_RETRY_COUNT = 5;
     private static final int DEFAULT_GLOBAL_MAX_RETRY_COUNT = 20;
     private static final int DEFAULT_LOCK_TIME = 10;
+    private volatile Map<String, RSAPublicKey> googlePublicKeys = Map.of();
+    private volatile Instant googlePublicKeysExpireAt = Instant.EPOCH;
 
     @Value("${user.password.maxRetryCount:5}")
     private Integer maxRetryCount;
@@ -74,6 +107,12 @@ public class SysLoginService {
 
     @Value("${user.password.lockTime:10}")
     private Integer lockTime;
+
+    @Value("${auth.google.client-id:}")
+    private String googleClientId;
+
+    @Value("${auth.google.allow-unhosted-email:false}")
+    private Boolean googleAllowUnhostedEmail;
 
     /**
      * 登录验证
@@ -130,6 +169,24 @@ public class SysLoginService {
 
             return StpUtil.getTokenValue();
         });
+    }
+
+    public Map<String, Object> googleLogin(String credential) {
+        GoogleUser googleUser = verifyGoogleCredential(credential);
+        SysUserVo user = findUserByEmail(googleUser.email());
+        if (ObjectUtil.isNotNull(user)) {
+            user = checkLoadedUser(user, googleUser.email());
+            LoginUser loginUser = buildLoginUser(user);
+            LoginHelper.loginByDevice(loginUser, DeviceType.PC);
+            recordLogininfor(user.getUserName(), Constants.LOGIN_SUCCESS, MessageUtils.message("user.login.success"));
+            recordLoginInfo(user.getUserId(), user.getUserName());
+            Map<String, Object> result = new HashMap<>();
+            result.put("login", true);
+            result.put(Constants.TOKEN, StpUtil.getTokenValue());
+            result.put("forcePasswordChange", UserConstants.FORCE_PASSWORD_CHANGE_YES.equals(user.getForcePasswordChange()));
+            return result;
+        }
+        return buildGoogleApplyStatus(googleUser.email());
     }
 
 
@@ -325,6 +382,39 @@ public class SysLoginService {
         return user;
     }
 
+    private SysUserVo findUserByEmail(String email) {
+        return TenantContextHolder.callWithIgnore(() -> userMapper.selectVoOne(new LambdaQueryWrapper<SysUser>()
+            .eq(SysUser::getEmail, email), false));
+    }
+
+    private Map<String, Object> buildGoogleApplyStatus(String email) {
+        SysTenantApply apply = selectLatestApplyByEmail(email);
+        String status = "APPLY_REQUIRED";
+        Map<String, Object> result = new HashMap<>();
+        result.put("login", false);
+        result.put("email", email);
+        if (apply != null) {
+            if (TenantApplyStatus.PENDING.getCode().equals(apply.getStatus())) {
+                status = "APPLY_PENDING";
+            } else if (TenantApplyStatus.REJECTED.getCode().equals(apply.getStatus())) {
+                status = "APPLY_REJECTED";
+                result.put("rejectReason", apply.getRejectReason());
+            } else if (TenantApplyStatus.APPROVED.getCode().equals(apply.getStatus())) {
+                status = "APPLY_APPROVED_BUT_USER_MISSING";
+            }
+            result.put("applyId", apply.getApplyId());
+        }
+        result.put("status", status);
+        return result;
+    }
+
+    private SysTenantApply selectLatestApplyByEmail(String email) {
+        return TenantContextHolder.callWithIgnore(() -> tenantApplyMapper.selectOne(new LambdaQueryWrapper<SysTenantApply>()
+            .eq(SysTenantApply::getEmail, email)
+            .orderByDesc(SysTenantApply::getCreateTime)
+            .last("LIMIT 1"), false));
+    }
+
     private SysUserVo loadUserByOpenid(String openid) {
         // 使用 openid 查询绑定用户 如未绑定用户 则根据业务自行处理 例如 创建默认用户
         // todo 自行实现 userService.selectUserByOpenid(openid);
@@ -461,5 +551,126 @@ public class SysLoginService {
     private int resolveLockTime() {
         int value = ObjectUtil.defaultIfNull(lockTime, DEFAULT_LOCK_TIME);
         return value > 0 ? value : DEFAULT_LOCK_TIME;
+    }
+
+    private GoogleUser verifyGoogleCredential(String credential) {
+        if (StringUtils.isBlank(googleClientId)) {
+            throw ServiceException.ofMessageKey("auth.google.notConfigured");
+        }
+        try {
+            String[] segments = credential.split("\\.");
+            if (segments.length != 3) {
+                throw ServiceException.ofMessageKey("auth.google.invalidToken");
+            }
+            JsonNode header = decodeJwtJson(segments[0]);
+            JsonNode payload = decodeJwtJson(segments[1]);
+            String algorithm = header.path("alg").asText();
+            String keyId = header.path("kid").asText();
+            if (!GOOGLE_ALGORITHM.equals(algorithm) || StringUtils.isBlank(keyId)) {
+                throw ServiceException.ofMessageKey("auth.google.invalidToken");
+            }
+            RSAPublicKey publicKey = getGooglePublicKey(keyId);
+            verifyGoogleSignature(publicKey, segments);
+            validateGoogleClaims(payload);
+            String email = payload.path("email").asText("").trim().toLowerCase(Locale.ROOT);
+            boolean emailVerified = payload.path("email_verified").asBoolean(false);
+            String hostedDomain = payload.path("hd").asText("");
+            if (StringUtils.isBlank(email) || !emailVerified || !isTrustedGoogleEmail(email, hostedDomain)) {
+                throw ServiceException.ofMessageKey("auth.google.emailUntrusted");
+            }
+            return new GoogleUser(email);
+        } catch (ServiceException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            log.warn("Google login token verification failed: {}", ex.getMessage());
+            throw ServiceException.ofMessageKey("auth.google.invalidToken");
+        }
+    }
+
+    private JsonNode decodeJwtJson(String segment) throws Exception {
+        return OBJECT_MAPPER.readTree(Base64.getUrlDecoder().decode(segment));
+    }
+
+    private void verifyGoogleSignature(RSAPublicKey publicKey, String[] segments) throws Exception {
+        Signature verifier = Signature.getInstance("SHA256withRSA");
+        verifier.initVerify(publicKey);
+        verifier.update((segments[0] + "." + segments[1]).getBytes(StandardCharsets.US_ASCII));
+        if (!verifier.verify(Base64.getUrlDecoder().decode(segments[2]))) {
+            throw ServiceException.ofMessageKey("auth.google.invalidToken");
+        }
+    }
+
+    private void validateGoogleClaims(JsonNode payload) {
+        String audience = payload.path("aud").asText();
+        String issuer = payload.path("iss").asText();
+        long expiresAt = payload.path("exp").asLong(0);
+        if (!googleClientId.equals(audience)) {
+            throw ServiceException.ofMessageKey("auth.google.invalidAudience");
+        }
+        if (!GOOGLE_ISSUER.equals(issuer) && !GOOGLE_ISSUER_HTTPS.equals(issuer)) {
+            throw ServiceException.ofMessageKey("auth.google.invalidToken");
+        }
+        if (expiresAt <= Instant.now().getEpochSecond()) {
+            throw ServiceException.ofMessageKey("auth.google.expiredToken");
+        }
+    }
+
+    private boolean isTrustedGoogleEmail(String email, String hostedDomain) {
+        if (email.endsWith("@gmail.com") || StringUtils.isNotBlank(hostedDomain)) {
+            return true;
+        }
+        return Boolean.TRUE.equals(googleAllowUnhostedEmail);
+    }
+
+    private RSAPublicKey getGooglePublicKey(String keyId) throws Exception {
+        Map<String, RSAPublicKey> keys = googlePublicKeys;
+        if (keys.containsKey(keyId) && Instant.now().isBefore(googlePublicKeysExpireAt)) {
+            return keys.get(keyId);
+        }
+        synchronized (this) {
+            keys = googlePublicKeys;
+            if (keys.containsKey(keyId) && Instant.now().isBefore(googlePublicKeysExpireAt)) {
+                return keys.get(keyId);
+            }
+            googlePublicKeys = fetchGooglePublicKeys();
+            googlePublicKeysExpireAt = Instant.now().plus(GOOGLE_KEY_CACHE_TTL);
+            RSAPublicKey publicKey = googlePublicKeys.get(keyId);
+            if (publicKey == null) {
+                throw ServiceException.ofMessageKey("auth.google.invalidToken");
+            }
+            return publicKey;
+        }
+    }
+
+    private Map<String, RSAPublicKey> fetchGooglePublicKeys() throws Exception {
+        HttpRequest request = HttpRequest.newBuilder(URI.create(GOOGLE_CERTS_URL))
+            .GET()
+            .timeout(Duration.ofSeconds(10))
+            .build();
+        HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
+        if (response.statusCode() != 200) {
+            throw ServiceException.ofMessageKey("auth.google.keyFetchFailed");
+        }
+        JsonNode keys = OBJECT_MAPPER.readTree(response.body()).path("keys");
+        Map<String, RSAPublicKey> publicKeys = new HashMap<>();
+        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+        for (JsonNode key : keys) {
+            String kid = key.path("kid").asText();
+            String n = key.path("n").asText();
+            String e = key.path("e").asText();
+            if (StringUtils.isBlank(kid) || StringUtils.isBlank(n) || StringUtils.isBlank(e)) {
+                continue;
+            }
+            BigInteger modulus = new BigInteger(1, Base64.getUrlDecoder().decode(n));
+            BigInteger exponent = new BigInteger(1, Base64.getUrlDecoder().decode(e));
+            publicKeys.put(kid, (RSAPublicKey) keyFactory.generatePublic(new RSAPublicKeySpec(modulus, exponent)));
+        }
+        if (publicKeys.isEmpty()) {
+            throw ServiceException.ofMessageKey("auth.google.keyFetchFailed");
+        }
+        return publicKeys;
+    }
+
+    private record GoogleUser(String email) {
     }
 }

@@ -1,6 +1,6 @@
 package com.bocoo.system.domain.bo;
 
-import com.bocoo.common.mybatis.core.domain.BaseEntity;
+import com.bocoo.common.mybatis.core.domain.BaseBo;
 import com.bocoo.system.domain.entity.SysLegalDocument;
 import io.github.linpeilie.annotations.AutoMapper;
 import jakarta.validation.constraints.NotBlank;
@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @AutoMapper(target = SysLegalDocument.class, reverseConvertGenerate = false)
-public class SysLegalDocumentBo extends BaseEntity {
+public class SysLegalDocumentBo extends BaseBo {
 
     private Long documentId;
 

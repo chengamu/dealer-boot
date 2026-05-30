@@ -1,6 +1,6 @@
 package com.bocoo.system.domain.bo;
 
-import com.bocoo.common.mybatis.core.domain.BaseEntity;
+import com.bocoo.common.mybatis.core.domain.BaseBo;
 import com.bocoo.system.domain.entity.SysDictData;
 import io.github.linpeilie.annotations.AutoMapper;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -21,7 +21,7 @@ import java.time.LocalDateTime;
 @EqualsAndHashCode(callSuper = true)
 @AutoMapper(target = SysDictData.class, reverseConvertGenerate = false)
 @Schema(description = "字典数据业务对象")
-public class SysDictDataBo extends BaseEntity {
+public class SysDictDataBo extends BaseBo {
 
     /**
      * 字典编码

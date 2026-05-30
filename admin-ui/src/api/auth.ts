@@ -16,6 +16,28 @@ export interface LoginResponse {
   data?: string | { token?: string; forcePasswordChange?: boolean }
 }
 
+export interface GoogleLoginPayload {
+  credential: string
+}
+
+export interface GoogleLoginResult {
+  login?: boolean
+  token?: string
+  forcePasswordChange?: boolean
+  status?: string
+  email?: string
+  applyId?: number
+  rejectReason?: string
+}
+
+export interface GoogleLoginResponse {
+  code?: number
+  msg?: string
+  token?: string
+  forcePasswordChange?: boolean
+  data?: GoogleLoginResult
+}
+
 export interface UserInfoResponse {
   code?: number
   msg?: string
@@ -59,6 +81,15 @@ export async function login(data: LoginPayload) {
     headers: { isToken: false },
     data
   })) as unknown as LoginResponse
+}
+
+export async function googleLogin(data: GoogleLoginPayload) {
+  return (await service.request({
+    url: '/googleLogin',
+    method: 'post',
+    headers: { isToken: false },
+    data
+  })) as unknown as GoogleLoginResponse
 }
 
 export async function logout() {

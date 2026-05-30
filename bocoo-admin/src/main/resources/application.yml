@@ -16,6 +16,7 @@ bocoo:
     ignore-urls:
       - /login
       - /thirdLogin
+      - /googleLogin
       - /captchaImage
       - /register
       - /merchant/applications
@@ -143,10 +144,12 @@ web:
       - http://localhost:5173
       - http://localhost:8080
       - http://localhost:8081
+      - http://localhost:8083
       - http://127.0.0.1:3000
       - http://127.0.0.1:5173
       - http://127.0.0.1:8080
       - http://127.0.0.1:8081
+      - http://127.0.0.1:8083
     allowed-headers:
       - "*"
     allowed-methods:
@@ -156,6 +159,11 @@ web:
       - DELETE
       - OPTIONS
     max-age: 1800
+
+auth:
+  google:
+    client-id: ${GOOGLE_CLIENT_ID:}
+    allow-unhosted-email: false
 
 # Sa-Token配置
 sa-token:

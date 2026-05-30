@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { getInfo, login, logout } from '@/api/auth'
+import { getInfo, googleLogin, login, logout } from '@/api/auth'
 import { getToken, removeToken, setToken } from '@/utils/auth'
 import type { LoginUser } from '@/types/api'
 import defaultAvatar from '@/assets/logo/logo.png'
@@ -34,6 +34,21 @@ export const useUserStore = defineStore('user', {
       if (token) {
         this.token = token
         setToken(token)
+      }
+    },
+    async loginWithGoogle(credential: string) {
+      const res = await googleLogin({ credential })
+      const data = res.data || {}
+      const token = String(res.token || data.token || '')
+      if (token) {
+        this.token = token
+        setToken(token)
+      }
+      return {
+        ...data,
+        login: Boolean(data.login ?? token),
+        token: token || data.token,
+        forcePasswordChange: res.forcePasswordChange ?? data.forcePasswordChange
       }
     },
     async loadUser() {

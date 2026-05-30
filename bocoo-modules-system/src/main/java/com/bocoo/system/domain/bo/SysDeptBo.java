@@ -1,7 +1,7 @@
 package com.bocoo.system.domain.bo;
 
 import com.bocoo.common.core.xss.Xss;
-import com.bocoo.common.mybatis.core.domain.BaseEntity;
+import com.bocoo.common.mybatis.core.domain.BaseBo;
 import com.bocoo.system.domain.entity.SysDept;
 import io.github.linpeilie.annotations.AutoMapper;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -24,7 +24,7 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode(callSuper = true)
 @AutoMapper(target = SysDept.class)  // 双向转换
 @Schema(description = "部门业务对象")
-public class SysDeptBo extends BaseEntity {
+public class SysDeptBo extends BaseBo {
 
     /**
      * 部门id

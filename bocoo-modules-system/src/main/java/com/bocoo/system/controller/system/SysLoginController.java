@@ -13,6 +13,7 @@ import com.bocoo.common.core.utils.MessageUtils;
 import com.bocoo.common.ratelimiter.annotation.RateLimiter;
 import com.bocoo.common.ratelimiter.enums.LimitType;
 import com.bocoo.common.satoken.utils.LoginHelper;
+import com.bocoo.system.domain.bo.GoogleLoginBody;
 import com.bocoo.system.domain.bo.ThirdLoginBody;
 import com.bocoo.system.domain.entity.SysMenu;
 import com.bocoo.system.domain.vo.RouterVo;
@@ -84,6 +85,25 @@ public class SysLoginController {
         // 生成令牌
         String token = loginService.thirdLogin(loginBody.getAppKey(), loginBody.getSecretKey());
         return R.ok(MessageUtils.message("auth.login.success"), buildLoginResponse(token));
+    }
+
+    /**
+     * Google 登录接口
+     *
+     * @param loginBody Google 登录信息
+     * @return 登录令牌或下一步申请状态
+     */
+    @SaIgnore
+    @RateLimiter(count = 10, time = 60, limitType = LimitType.IP)
+    @PostMapping("/googleLogin")
+    @Operation(summary = "Google 登录", description = "使用 Google Identity Services ID token 进行登录")
+    public R<Map<String, Object>> googleLogin(
+            @Parameter(description = "Google 登录信息", required = true)
+            @Validated @RequestBody GoogleLoginBody loginBody) {
+        Map<String, Object> result = loginService.googleLogin(loginBody.getCredential());
+        boolean loggedIn = Boolean.TRUE.equals(result.get("login"));
+        String messageKey = loggedIn ? "auth.login.success" : "auth.google.nextStep";
+        return R.ok(MessageUtils.message(messageKey), result);
     }
 
 

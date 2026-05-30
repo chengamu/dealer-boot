@@ -1,6 +1,6 @@
 package com.bocoo.system.domain.bo;
 
-import com.bocoo.common.mybatis.core.domain.BaseEntity;
+import com.bocoo.common.mybatis.core.domain.BaseBo;
 import com.bocoo.common.core.validate.AddGroup;
 import com.bocoo.common.core.validate.EditGroup;
 import com.bocoo.system.domain.entity.SysOssConfig;
@@ -23,7 +23,7 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 @AutoMapper(target = SysOssConfig.class, reverseConvertGenerate = false)
 @Schema(description = "对象存储配置业务对象")
-public class SysOssConfigBo extends BaseEntity {
+public class SysOssConfigBo extends BaseBo {
 
     /**
      * 主建

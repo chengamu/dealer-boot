@@ -6,17 +6,30 @@ No active task.
 
 ## Current Phase：当前阶段
 
-Payment module migration archived.
+`20260530-healthbrain-drug-review-remediation` 已归档。
 
 ## Last Archive：最近归档
 
-- `.ai/archive/20260530-pay-module-migration.md`
+- `.ai/archive/20260530-healthbrain-drug-google-login.md`
+
+## Validation Summary：验证摘要
+
+- `pnpm i18n:sync`：passed。
+- `codegraph sync`：passed，already up to date。
+- `mvn -pl bocoo-admin -am -DskipTests compile`：passed。
+- `mvn -pl bocoo-admin -am -DskipTests package`：passed。
+- `pnpm --dir admin-ui typecheck`：passed。
+- `pnpm --dir admin-ui build`：passed。
+- Browser smoke：passed。
+- Local Google login CORS validation：passed。
+- 用户确认真实 Google 登录全流程通过。
 
 ## Remaining Risks / TODO：剩余风险 / TODO
 
-- 真实 PayPal / Stripe / 支付宝 / 微信支付和 webhook 联调已延期，见 `.ai/changes/20260530-paypal-pay-module-migration/real-payment-todo.md`。
-- 支付管理前端页面、菜单 SQL、角色权限初始化、渠道配置写入 API 后续再做。
-- Nginx 同源代理 compose 计划仍保留在 `.ai/requirements/20260530-nginx-same-origin-compose.md`。
+- Google 生产 `Authorized JavaScript origins` 等待正式域名或 Nginx 同源代理拓扑确定后配置。
+- Cookie/CSRF 与生产 CORS 收紧仍作为部署拓扑 TODO。
+- 如后续需要 Google 账号绑定能力，应单独设计绑定表，不塞进第一版邮箱匹配流程。
+- 真实支付渠道与 webhook 联调仍按支付归档中的 TODO 暂缓。
 
 ## Next Step：下一步
 

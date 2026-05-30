@@ -32,6 +32,8 @@ pnpm preview
 
 Runtime settings are loaded from `public/_app.config.js` and copied into `dist/_app.config.js` during build. Change that file after deployment when only API base URL or external monitor links need to change.
 
+Google login is controlled by runtime config. Set `VITE_APP_GOOGLE_CLIENT_ID` in `public/_app.config.js` or the generated `dist/_app.config.js`; leave it empty to hide the Google login button. The backend must use the same Web Client ID through `GOOGLE_CLIENT_ID`.
+
 ## Docker / Nginx Deployment
 
 Production Docker Compose deployment should prefer same-origin Nginx proxy:

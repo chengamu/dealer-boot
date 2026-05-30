@@ -2,7 +2,7 @@ package com.bocoo.system.domain.bo;
 
 import com.bocoo.common.core.constant.UserConstants;
 import com.bocoo.common.core.xss.Xss;
-import com.bocoo.common.mybatis.core.domain.BaseEntity;
+import com.bocoo.common.mybatis.core.domain.BaseBo;
 import com.bocoo.system.domain.entity.SysDept;
 import com.bocoo.system.domain.entity.SysRole;
 import com.bocoo.system.domain.entity.SysUser;
@@ -28,7 +28,7 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 @AutoMapper(target = SysUser.class, reverseConvertGenerate = false)
 @Schema(description = "用户信息业务对象")
-public class SysUserBo extends BaseEntity {
+public class SysUserBo extends BaseBo {
     /**
      * 用户ID
      */
@@ -132,6 +132,12 @@ public class SysUserBo extends BaseEntity {
      */
     @Schema(description = "备注")
     private String remark;
+
+    @Schema(description = "创建者")
+    private String createBy;
+
+    @Schema(description = "更新者")
+    private String updateBy;
 
 
     @Schema(description = "附件1")

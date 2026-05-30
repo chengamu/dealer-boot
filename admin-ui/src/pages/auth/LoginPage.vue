@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="auth-page">
     <CurtainIntro />
 
@@ -99,11 +99,10 @@
           </el-button>
         </el-form>
 
-        <div class="login-divider"><span>{{ t('login.or') }}</span></div>
-        <button class="google-button" type="button">
-          <b>G</b>
-          <span>{{ t('login.googleSignIn') }}</span>
-        </button>
+        <template v-if="googleClientId">
+          <div class="login-divider"><span>{{ t('login.or') }}</span></div>
+          <div ref="googleButtonRef" class="google-button-host" :class="{ 'is-loading': googleLoading }" />
+        </template>
       </el-card>
 
     </section>
@@ -121,11 +120,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import type { FormInstance, FormRules } from 'element-plus'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { Connection, Lock, Message, CircleCheckFilled } from '@element-plus/icons-vue'
 import CurtainIntro from '@/components/AuthVisual/CurtainIntro.vue'
 import AuthLocaleSelect from '@/components/AuthVisual/AuthLocaleSelect.vue'
@@ -133,6 +132,26 @@ import { useUserStore } from '@/stores/user'
 import { useLocaleStore } from '@/stores/locale'
 import type { AppLocale } from '@/i18n'
 import { getCodeImg } from '@/api/auth'
+import { getGoogleClientId } from '@/utils/config'
+
+type GoogleCredentialResponse = {
+  credential?: string
+}
+
+type GoogleAccountsId = {
+  initialize: (config: { client_id: string; callback: (response: GoogleCredentialResponse) => void }) => void
+  renderButton: (parent: HTMLElement, options: Record<string, string | number | boolean>) => void
+}
+
+declare global {
+  interface Window {
+    google?: {
+      accounts?: {
+        id?: GoogleAccountsId
+      }
+    }
+  }
+}
 
 const { t } = useI18n()
 const router = useRouter()
@@ -143,12 +162,16 @@ const formRef = ref<FormInstance>()
 const localeValue = ref<AppLocale>(localeStore.locale)
 const remember = ref(false)
 const loading = ref(false)
+const googleLoading = ref(false)
 const captchaRequired = ref(true)
+const googleButtonRef = ref<HTMLElement>()
+const googleClientId = getGoogleClientId()
 const form = reactive({ username: '', password: '', code: '', uuid: '' })
 const captcha = reactive({ enabled: false, img: '' })
 const swatches = ['#d9c7aa', '#e8e1d2', '#c8c5ba', '#8995a1']
 const overlaySelector = '.el-overlay, .v-modal, .el-loading-mask'
 let overlayCleanupTimer: number | undefined
+let googleScriptPromise: Promise<void> | undefined
 
 const rules = computed<FormRules>(() => ({
   username: [{ required: true, message: t('login.required'), trigger: 'blur' }],
@@ -217,8 +240,109 @@ async function loginWithCurrentForm() {
   }
 }
 
+function loadGoogleIdentityScript() {
+  if (window.google?.accounts?.id) return Promise.resolve()
+  if (!googleScriptPromise) {
+    googleScriptPromise = new Promise((resolve, reject) => {
+      const existing = document.getElementById('google-identity-services') as HTMLScriptElement | null
+      if (existing) {
+        existing.addEventListener('load', () => resolve(), { once: true })
+        existing.addEventListener('error', () => reject(new Error('Google Identity Services load failed')), { once: true })
+        return
+      }
+      const script = document.createElement('script')
+      script.id = 'google-identity-services'
+      script.src = 'https://accounts.google.com/gsi/client'
+      script.async = true
+      script.defer = true
+      script.onload = () => resolve()
+      script.onerror = () => reject(new Error('Google Identity Services load failed'))
+      document.head.appendChild(script)
+    })
+  }
+  return googleScriptPromise
+}
+
+async function renderGoogleButton() {
+  if (!googleClientId || !googleButtonRef.value) return
+  await loadGoogleIdentityScript()
+  await nextTick()
+  const container = googleButtonRef.value
+  const googleIdentity = window.google?.accounts?.id
+  if (!googleIdentity) return
+  container.innerHTML = ''
+  googleIdentity.initialize({
+    client_id: googleClientId,
+    callback: (response) => {
+      void handleGoogleCredential(response)
+    }
+  })
+  googleIdentity.renderButton(container, {
+    type: 'standard',
+    theme: 'outline',
+    size: 'large',
+    text: 'continue_with',
+    shape: 'rectangular',
+    logo_alignment: 'left',
+    width: Math.min(Math.max(container.clientWidth || 360, 240), 400),
+    locale: localeValue.value.replace('_', '-')
+  })
+}
+
+async function handleGoogleCredential(response: GoogleCredentialResponse) {
+  if (!response.credential) return
+  googleLoading.value = true
+  try {
+    const result = await userStore.loginWithGoogle(response.credential)
+    if (result.login) {
+      await userStore.loadUser()
+      const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/index'
+      router.push(redirect)
+      return
+    }
+    await handleGoogleApplyStatus(result)
+  } catch (error) {
+    ElMessage.error((error as Error).message || t('login.googleSignInFailed'))
+  } finally {
+    googleLoading.value = false
+  }
+}
+
+async function handleGoogleApplyStatus(result: { status?: string; email?: string; rejectReason?: string }) {
+  const email = result.email || ''
+  if (result.status === 'APPLY_REQUIRED') {
+    ElMessage.info(t('login.googleApplyRequired'))
+    router.push({ path: '/merchant/apply', query: { email, source: 'google' } })
+    return
+  }
+  if (result.status === 'APPLY_PENDING') {
+    ElMessage.warning(t('login.googleApplyPending'))
+    return
+  }
+  if (result.status === 'APPLY_REJECTED') {
+    const message = result.rejectReason ? `${t('login.googleApplyRejected')} ${result.rejectReason}` : t('login.googleApplyRejected')
+    await ElMessageBox.confirm(message, t('login.googleApplyRejectedTitle'), {
+      confirmButtonText: t('login.googleApplyRejectedAction'),
+      cancelButtonText: t('common.cancel'),
+      type: 'warning'
+    }).then(() => {
+      router.push({ path: '/merchant/apply', query: { email, source: 'google' } })
+    }).catch(() => undefined)
+    return
+  }
+  if (result.status === 'APPLY_APPROVED_BUT_USER_MISSING') {
+    ElMessage.warning(t('login.googleApplyApprovedMissing'))
+    return
+  }
+  ElMessage.warning(t('login.googleSignInFailed'))
+}
+
 watch(captchaRequired, async (required) => {
   if (required && !captcha.img) await loadCaptcha()
+})
+
+watch(localeValue, () => {
+  void renderGoogleButton()
 })
 
 function clearStaleOverlays() {
@@ -236,6 +360,7 @@ onMounted(() => {
     overlayCleanupTimer = undefined
   }, 3000)
   requireCaptcha()
+  void renderGoogleButton()
 })
 
 onUnmounted(() => {
@@ -635,26 +760,18 @@ onUnmounted(() => {
   background: #d7e0ef;
 }
 
-.google-button {
-  display: flex;
+.google-button-host {
+  position: relative;
+  display: grid;
   width: 100%;
   height: 52px;
   align-items: center;
   justify-content: center;
-  gap: 16px;
-  cursor: default;
-  border: 1px solid #d7e2f0;
-  border-radius: 8px;
-  color: #06184a;
-  font-size: 16px;
-  font-weight: 700;
-  background: #fff;
 }
 
-.google-button b {
-  color: #ea4335;
-  font-size: 24px;
-  font-weight: 800;
+.google-button-host.is-loading {
+  opacity: 0.72;
+  pointer-events: none;
 }
 
 .auth-footer {
@@ -750,7 +867,7 @@ onUnmounted(() => {
     margin: 22px 0;
   }
 
-  .google-button {
+  .google-button-host {
     height: 48px;
   }
 
@@ -964,7 +1081,7 @@ onUnmounted(() => {
   }
 
   .submit,
-  .google-button {
+  .google-button-host {
     height: 46px;
   }
 
