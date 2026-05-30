@@ -164,6 +164,7 @@ auth:
   google:
     client-id: ${GOOGLE_CLIENT_ID:}
     allow-unhosted-email: false
+    certs-url: https://www.googleapis.com/oauth2/v3/certs
 
 # Sa-Token配置
 sa-token:

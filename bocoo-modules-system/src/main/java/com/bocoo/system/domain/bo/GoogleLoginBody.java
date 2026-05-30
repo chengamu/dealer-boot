@@ -3,8 +3,10 @@ package com.bocoo.system.domain.bo;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
 @Schema(description = "Google 登录对象")
 public class GoogleLoginBody {
 

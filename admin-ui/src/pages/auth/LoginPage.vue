@@ -134,25 +134,6 @@ import type { AppLocale } from '@/i18n'
 import { getCodeImg } from '@/api/auth'
 import { getGoogleClientId } from '@/utils/config'
 
-type GoogleCredentialResponse = {
-  credential?: string
-}
-
-type GoogleAccountsId = {
-  initialize: (config: { client_id: string; callback: (response: GoogleCredentialResponse) => void }) => void
-  renderButton: (parent: HTMLElement, options: Record<string, string | number | boolean>) => void
-}
-
-declare global {
-  interface Window {
-    google?: {
-      accounts?: {
-        id?: GoogleAccountsId
-      }
-    }
-  }
-}
-
 const { t } = useI18n()
 const router = useRouter()
 const route = useRoute()

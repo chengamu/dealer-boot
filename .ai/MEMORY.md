@@ -24,6 +24,7 @@
 - `sys_menu.perms` 运行时按 `distinct + Set` 进入 Sa-Token 权限字符串集合；重复值不必默认修数据，先判断是否是菜单页和按钮共享权限。
 - 本项目 Spring Boot 可运行 dist 产物路径是 `bocoo-admin/target/dist/bocoo-admin.jar`。
 - 登录页第三方登录按钮优先使用 Google Identity Services 官方渲染；自定义按钮必须使用官方彩色 `G` 和品牌规范，不使用单色字母伪 Logo。
+- 第三方登录 token 校验应独立成 provider auth service，只返回已验证身份；登录编排仍由登录服务负责用户匹配、租户、角色和权限构建。
 
 ## Known Risks / TODO
 

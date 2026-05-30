@@ -15,6 +15,7 @@ No active tasks.
 
 ## Archived
 
+- 2026-05-30 Google login hardening archived in `.ai/archive/20260530-google-login-hardening.md`.
 - 2026-05-30 Healthbrain drug remediation and Google login batch archived in `.ai/archive/20260530-healthbrain-drug-google-login.md`.
 - 2026-05-30 payment module migration archived in `.ai/archive/20260530-pay-module-migration.md`.
 - 2026-05-30 security and business remediation batch archived in `.ai/archive/20260530-security-business-remediation.md`.
