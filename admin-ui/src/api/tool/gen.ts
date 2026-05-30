@@ -1,4 +1,4 @@
-import { request } from '@/utils/request'
+import { request, requestPage } from '@/utils/request'
 import type { PageQuery } from '@/types/api'
 
 function datasourceHeader() {
@@ -63,21 +63,21 @@ export interface GenTableDetail {
 }
 
 export function listTable(query?: GenTableQuery) {
-  return request({
+  return requestPage<GenTable>({
     headers: datasourceHeader(),
     url: '/tool/gen/list',
     method: 'get',
     params: query
-  }) as unknown as Promise<{ rows?: GenTable[]; total?: number }>
+  })
 }
 
 export function listDbTable(query?: GenTableQuery) {
-  return request({
+  return requestPage<GenTable>({
     headers: datasourceHeader(),
     url: '/tool/gen/db/list',
     method: 'get',
     params: query
-  }) as unknown as Promise<{ rows?: GenTable[]; total?: number }>
+  })
 }
 
 export function getGenTable(tableId: number | string) {

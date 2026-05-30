@@ -5,6 +5,8 @@ import cn.dev33.satoken.annotation.SaIgnore;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.bocoo.common.log.annotation.Log;
+import com.bocoo.common.ratelimiter.annotation.RateLimiter;
+import com.bocoo.common.ratelimiter.enums.LimitType;
 import com.bocoo.common.web.core.BaseController;
 import com.bocoo.common.mybatis.core.page.PageQuery;
 import com.bocoo.common.core.domain.R;
@@ -92,6 +94,7 @@ public class SysDictDataController extends BaseController {
      * @param dictType 字典类型
      */
     @SaIgnore
+    @RateLimiter(count = 60, time = 60, limitType = LimitType.IP)
     @GetMapping(value = "/type/{dictType}")
     @Operation(summary = "根据字典类型查询字典数据信息", description = "根据字典类型查询字典数据信息")
     public R<List<SysDictDataVo>> dictType(

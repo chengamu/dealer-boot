@@ -99,9 +99,9 @@
               </div>
             </template>
           </el-table-column>
-          <el-table-column v-if="columns[1].visible" :label="t('user.deptName')" align="center" prop="dept.deptName" min-width="150" :show-overflow-tooltip="true">
+          <el-table-column v-if="columns[1].visible" :label="t('user.deptName')" align="center" prop="deptName" min-width="150" :show-overflow-tooltip="true">
             <template #default="{ row }">
-              <span class="user-org-pill">{{ row.dept?.deptName || '-' }}</span>
+              <span class="user-org-pill">{{ row.deptName || '-' }}</span>
             </template>
           </el-table-column>
           <el-table-column v-if="columns[2].visible" :label="t('user.phonenumber')" align="center" prop="phonenumber" width="142" />
@@ -257,7 +257,7 @@
       </el-form>
       <template #footer>
         <div class="dialog-footer user-dialog__footer">
-          <el-button type="primary" @click="submitForm">{{ t('common.confirm') }}</el-button>
+          <el-button type="primary" :loading="submitLoading" @click="submitForm">{{ t('common.confirm') }}</el-button>
           <el-button @click="cancel">{{ t('common.cancel') }}</el-button>
         </div>
       </template>
@@ -268,8 +268,8 @@
         ref="uploadRef"
         :limit="1"
         accept=".xlsx, .xls"
-        :headers="upload.headers"
         :action="`${upload.url}?updateSupport=${upload.updateSupport}`"
+        :http-request="uploadUserImport"
         :disabled="upload.isUploading"
         :on-progress="handleFileUploadProgress"
         :on-success="handleFileSuccess"
@@ -290,7 +290,7 @@
       </el-upload>
       <template #footer>
         <div class="dialog-footer">
-          <el-button type="primary" @click="submitFileForm">{{ t('common.confirm') }}</el-button>
+          <el-button type="primary" :loading="upload.isUploading" @click="submitFileForm">{{ t('common.confirm') }}</el-button>
           <el-button @click="upload.open = false">{{ t('common.cancel') }}</el-button>
         </div>
       </template>
@@ -301,12 +301,11 @@
 <script setup lang="ts" name="UserPage">
 import { computed, h, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox, type FormInstance, type FormRules, type UploadInstance, type UploadProgressEvent, type UploadRawFile } from 'element-plus'
+import { ElMessage, ElMessageBox, type FormInstance, type FormRules, type UploadInstance, type UploadProgressEvent, type UploadRawFile, type UploadRequestOptions } from 'element-plus'
 import { Briefcase, MoreFilled } from '@element-plus/icons-vue'
-import { getToken } from '@/utils/auth'
 import { getConfigKey } from '@/api/system/config'
 import { addUser, changeUserStatus, delUser, deptTreeSelect, getUser, listUser, resetUserPwd, updateUser, type SysUser, type TreeOption, type UserOptionPost, type UserOptionRole, type UserQuery } from '@/api/system/user'
-import { download } from '@/utils/request'
+import { download, request } from '@/utils/request'
 import { formatUtc, withUtcDateRange } from '@/utils/datetime'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
@@ -348,6 +347,7 @@ watch(
 const userList = ref<SysUser[]>([])
 const open = ref(false)
 const loading = ref(true)
+const submitLoading = ref(false)
 const showSearch = ref(true)
 const ids = ref<Array<number | string>>([])
 const total = ref(0)
@@ -372,7 +372,6 @@ const upload = reactive({
   title: '',
   isUploading: false,
   updateSupport: 0,
-  headers: { Authorization: `Bearer ${getToken()}` },
   url: `${getApiBaseUrl()}/system/user/importData`
 })
 
@@ -398,7 +397,7 @@ const rules = computed<FormRules<SysUser>>(() => ({
     { required: true, message: t('user.emailRequired'), trigger: 'blur' },
     { type: 'email', message: t('user.emailInvalid'), trigger: ['blur', 'change'] }
   ],
-  phonenumber: [{ pattern: /^1[3|4|5|6|7|8|9][0-9]\d{8}$/, message: t('user.phonenumberInvalid'), trigger: 'blur' }]
+  phonenumber: [{ pattern: /^1[3-9][0-9]\d{8}$/, message: t('user.phonenumberInvalid'), trigger: 'blur' }]
 }))
 
 function getUserSexLabel(dict: DictOption) {
@@ -550,8 +549,10 @@ function cancel() {
 }
 
 async function submitForm() {
+  if (submitLoading.value) return
   const valid = await userRef.value?.validate().catch(() => false)
   if (!valid) return
+  submitLoading.value = true
   try {
     if (form.value.userId !== undefined) {
       await updateUser(form.value)
@@ -565,6 +566,8 @@ async function submitForm() {
     await getList()
   } catch {
     // Request interceptor already displays the backend error.
+  } finally {
+    submitLoading.value = false
   }
 }
 
@@ -638,6 +641,21 @@ function importTemplate() {
 
 function handleFileUploadProgress(_event: UploadProgressEvent) {
   upload.isUploading = true
+}
+
+async function uploadUserImport(options: UploadRequestOptions) {
+  upload.isUploading = true
+  const formData = new FormData()
+  formData.append(options.filename, options.file)
+  try {
+    return await request<{ msg?: string }>({
+      url: `${upload.url}?updateSupport=${upload.updateSupport}`,
+      method: 'post',
+      data: formData
+    })
+  } finally {
+    upload.isUploading = false
+  }
 }
 
 function handleFileSuccess(response: { msg?: string }, file: UploadRawFile) {

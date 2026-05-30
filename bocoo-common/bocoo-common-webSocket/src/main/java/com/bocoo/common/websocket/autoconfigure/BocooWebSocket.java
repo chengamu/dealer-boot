@@ -55,6 +55,17 @@ public class BocooWebSocket {
      */
     private static final AtomicInteger onlineCount = new AtomicInteger(0);
 
+    private static String maskToken(String token) {
+        if (token == null || token.isBlank()) {
+            return "<empty>";
+        }
+        int length = token.length();
+        if (length <= 8) {
+            return "***";
+        }
+        return token.substring(0, 4) + "..." + token.substring(length - 4);
+    }
+
     /**
      * WebSocket握手前处理方法
      * <p>
@@ -80,14 +91,14 @@ public class BocooWebSocket {
 
             LoginUser loginUser = getLoginUser(token);
             if (loginUser == null) {
-                log.error("用户认证失败, token:{}", token);
+                log.error("用户认证失败, token:{}", maskToken(token));
                 session.close();
                 return;
             }
 
             // 检查TOKEN是否已存在连接
             if (tokenSessionMap.containsKey(token)) {
-                log.warn("TOKEN {} 已存在活动连接，拒绝新的连接请求", token);
+                log.warn("TOKEN {} 已存在活动连接，拒绝新的连接请求", maskToken(token));
                 // 发送明确的拒绝消息
                 try {
                     session.sendText("{\"type\":\"error\",\"message\":\"该账户已在其他地方登录，拒绝重复连接\"}");
@@ -102,7 +113,7 @@ public class BocooWebSocket {
             session.setAttribute("token", token);
             session.setAttribute("authenticated", true);
 
-            log.info("用户认证成功: userId={}, token={}", loginUser.getUserId(), token);
+            log.info("用户认证成功: userId={}, token={}", loginUser.getUserId(), maskToken(token));
         } catch (Exception e) {
             log.error("连接认证错误:{}", e.getMessage(), e);
             session.close();
@@ -131,7 +142,7 @@ public class BocooWebSocket {
 
         // 再次检查TOKEN是否已存在连接（双重检查，防止并发问题）
         if (tokenSessionMap.containsKey(token)) {
-            log.warn("TOKEN {} 已存在活动连接，拒绝新的连接请求", token);
+            log.warn("TOKEN {} 已存在活动连接，拒绝新的连接请求", maskToken(token));
             try {
                 session.sendText("{\"type\":\"error\",\"message\":\"该账户已在其他地方登录，拒绝重复连接\"}");
             } catch (Exception e) {
@@ -146,7 +157,7 @@ public class BocooWebSocket {
         addUserSession(userId, session);
         onlineCount.incrementAndGet();
         log.info("用户{}:加入webSocket！sessionid:{}, token:{}, 当前在线人数：{}",
-                userId, session.id(), token, getOnlineNumber());
+                userId, session.id(), maskToken(token), getOnlineNumber());
     }
 
     /**
@@ -169,7 +180,7 @@ public class BocooWebSocket {
             removeUserSession(userId, session);
             onlineCount.decrementAndGet();
             log.info("用户{}:断开连接,sessionId:{}, token:{},当前在线客户端数:{}",
-                    userId, session.id(), token, getOnlineNumber());
+                    userId, session.id(), maskToken(token), getOnlineNumber());
         } else {
             log.warn("未认证连接断开, sessionId:{}", session.id());
         }
@@ -195,7 +206,7 @@ public class BocooWebSocket {
                 tokenSessionMap.remove(token);
                 removeUserSession(userId, session);
                 onlineCount.decrementAndGet();
-                log.info("用户{}:异常断开连接,sessionId:{}, token:{}", userId, session.id(), token);
+                log.info("用户{}:异常断开连接,sessionId:{}, token:{}", userId, session.id(), maskToken(token));
             } else {
                 log.warn("未认证连接出现错误, sessionId:{}", session.id());
             }
@@ -350,14 +361,14 @@ public class BocooWebSocket {
     public boolean sendToToken(String token, String message) {
         Session session = tokenSessionMap.get(token);
         if (session == null) {
-            log.warn("TOKEN {} 不在线，无法发送消息", token);
+            log.warn("TOKEN {} 不在线，无法发送消息", maskToken(token));
             return false;
         }
 
         if (session.channel().isActive()) {
             return sendMessage(session, message);
         } else {
-            log.warn("TOKEN {} 的会话已失效，无法发送消息", token);
+            log.warn("TOKEN {} 的会话已失效，无法发送消息", maskToken(token));
             // 清理失效的会话
             String userId = session.getAttribute("userId");
             if (userId != null) {
@@ -478,12 +489,12 @@ public class BocooWebSocket {
         try {
             LoginUser loginUser = LoginHelper.getLoginUser(token);
             if (!ObjectUtil.isNotNull(loginUser)) {
-                log.warn("Token无效或已过期, token={}", token);
+                log.warn("Token无效或已过期, token={}", maskToken(token));
                 return null;
             }
             return loginUser;
         } catch (Exception e) {
-            log.error("获取用户信息失败, token={}", token, e);
+            log.error("获取用户信息失败, token={}", maskToken(token), e);
             return null;
         }
     }
@@ -522,7 +533,7 @@ public class BocooWebSocket {
             session.setAttribute("userId", loginUser.getUserId().toString());
             return true;
         } catch (Exception e) {
-            log.error("验证用户身份时发生错误, token={}", token, e);
+            log.error("验证用户身份时发生错误, token={}", maskToken(token), e);
             try {
                 session.close();
             } catch (Exception closeException) {

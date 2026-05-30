@@ -1,9 +1,11 @@
 package com.bocoo.common.web.config;
 
 import com.bocoo.common.core.utils.TimeUtils;
+import com.bocoo.common.web.config.properties.CorsProperties;
 import com.bocoo.common.web.handler.GlobalExceptionHandler;
 import com.bocoo.common.web.interceptor.PlusWebInvokeTimeInterceptor;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.format.Formatter;
 import org.springframework.format.FormatterRegistry;
@@ -17,6 +19,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import java.text.ParseException;
 import java.time.LocalDateTime;
 import java.util.Locale;
+import java.util.List;
 
 /**
  * 通用配置
@@ -24,7 +27,14 @@ import java.util.Locale;
  * @author Lion Li
  */
 @AutoConfiguration
+@EnableConfigurationProperties(CorsProperties.class)
 public class ResourcesConfig implements WebMvcConfigurer {
+
+    private final CorsProperties corsProperties;
+
+    public ResourcesConfig(CorsProperties corsProperties) {
+        this.corsProperties = corsProperties;
+    }
 
     @Override
     public void addFormatters(FormatterRegistry registry) {
@@ -53,20 +63,34 @@ public class ResourcesConfig implements WebMvcConfigurer {
     @Bean
     public CorsFilter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowCredentials(true);
-        // 设置访问源地址
-        config.addAllowedOriginPattern("*");
+        config.setAllowCredentials(Boolean.TRUE.equals(corsProperties.getAllowCredentials()));
+        addAllowedOrigins(config, corsProperties.getAllowedOrigins(), false);
+        addAllowedOrigins(config, corsProperties.getAllowedOriginPatterns(), true);
         // 设置访问源请求头
-        config.addAllowedHeader("*");
+        corsProperties.getAllowedHeaders().forEach(config::addAllowedHeader);
         // 设置访问源请求方法
-        config.addAllowedMethod("*");
+        corsProperties.getAllowedMethods().forEach(config::addAllowedMethod);
         // 有效期 1800秒
-        config.setMaxAge(1800L);
+        config.setMaxAge(corsProperties.getMaxAge());
         // 添加映射路径，拦截一切请求
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         // 返回新的CorsFilter
         return new CorsFilter(source);
+    }
+
+    private void addAllowedOrigins(CorsConfiguration config, List<String> origins, boolean pattern) {
+        boolean allowCredentials = Boolean.TRUE.equals(corsProperties.getAllowCredentials());
+        for (String origin : origins) {
+            if (allowCredentials && "*".equals(origin)) {
+                throw new IllegalStateException("CORS wildcard origin is not allowed when credentials are enabled");
+            }
+            if (pattern) {
+                config.addAllowedOriginPattern(origin);
+            } else {
+                config.addAllowedOrigin(origin);
+            }
+        }
     }
 
     /**

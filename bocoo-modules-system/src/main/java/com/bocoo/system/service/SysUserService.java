@@ -393,9 +393,14 @@ public class SysUserService implements UserService {
      * @return 结果
      */
     public int resetUserPwd(Long userId, String password) {
+        return resetUserPwd(userId, password, "1");
+    }
+
+    public int resetUserPwd(Long userId, String password, String forcePasswordChange) {
         return userMapper.update(null,
             new LambdaUpdateWrapper<SysUser>()
                 .set(SysUser::getPassword, password)
+                .set(SysUser::getForcePasswordChange, forcePasswordChange)
                 .eq(SysUser::getUserId, userId));
     }
 

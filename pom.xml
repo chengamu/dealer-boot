@@ -8,14 +8,14 @@
     <groupId>com.bocoo</groupId>
     <artifactId>bocoo-base</artifactId>
     <version>${revision}</version>
-    <description>bocoo-base管理系统</description>
+    <description>bocoo-base绠＄悊绯荤粺</description>
     <packaging>pom</packaging>
 
     <profiles>
         <profile>
             <id>local</id>
             <properties>
-                <!-- 环境标识，需要与配置文件的名称相对应 -->
+                <!-- 鐜鏍囪瘑锛岄渶瑕佷笌閰嶇疆鏂囦欢鐨勫悕绉扮浉瀵瑰簲 -->
                 <profiles.active>local</profiles.active>
                 <logging.level>info</logging.level>
             </properties>
@@ -23,12 +23,12 @@
         <profile>
             <id>dev</id>
             <properties>
-                <!-- 环境标识，需要与配置文件的名称相对应 -->
+                <!-- 鐜鏍囪瘑锛岄渶瑕佷笌閰嶇疆鏂囦欢鐨勫悕绉扮浉瀵瑰簲 -->
                 <profiles.active>dev</profiles.active>
                 <logging.level>info</logging.level>
             </properties>
             <activation>
-                <!-- 默认环境 -->
+                <!-- 榛樿鐜 -->
                 <activeByDefault>true</activeByDefault>
             </activation>
         </profile>
@@ -47,47 +47,46 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>17</java.version>
         <lombok.version>1.18.32</lombok.version>
-        <bouncycastle.version>1.80</bouncycastle.version>
+        <bouncycastle.version>1.84</bouncycastle.version>
 
-        <!-- 框架版本配置3.2.6 升级到3.2.9 -->
-        <spring-boot.version>3.2.9</spring-boot.version>
+        <!-- 妗嗘灦鐗堟湰閰嶇疆3.2.6 鍗囩骇鍒?.2.9 -->
+        <spring-boot.version>3.2.12</spring-boot.version>
         <mybatis.version>3.5.16</mybatis.version>
         <mybatis-plus.version>3.5.6</mybatis-plus.version>
 
         <knife4j.version>4.4.0</knife4j.version>
         <spring-boot-admin.version>3.2.3</spring-boot-admin.version>
-        <!--    &lt;!&ndash; 安全漏洞 强制版本覆盖&ndash;&gt;
-            <commonscompress.version>1.26.0</commonscompress.version>
-            <ionjava.version>1.5.1</ionjava.version>
-            <undertowcore.version>2.3.10.Final</undertowcore.version>-->
-        <!-- 工具类版本配置 -->
-        <hutool.version>5.8.27</hutool.version>
-        <poi.version>5.4.0</poi.version>
+        <!-- 宸ュ叿绫荤増鏈厤缃?-->
+        <hutool.version>5.8.46</hutool.version>
+        <poi.version>5.5.1</poi.version>
         <easyexcel.version>3.3.4</easyexcel.version>
+        <commonscompress.version>1.28.0</commonscompress.version>
+        <ionjava.version>1.5.1</ionjava.version>
+        <undertowcore.version>2.3.24.Final</undertowcore.version>
 
         <velocity.version>2.3</velocity.version>
-        <okhttp.version>4.10.0</okhttp.version>
+        <okhttp.version>4.12.0</okhttp.version>
         <ip2region.version>2.7.0</ip2region.version>
         <annotation.version>1.3.2</annotation.version>
-        <commons.io.version>2.19.0</commons.io.version>
-        <!-- 中间件与服务配置 -->
+        <commons.io.version>2.22.0</commons.io.version>
+        <!-- 涓棿浠朵笌鏈嶅姟閰嶇疆 -->
         <satoken.version>1.37.0</satoken.version>
         <p6spy.version>3.9.1</p6spy.version>
-        <redisson.version>3.29.0</redisson.version>
+        <redisson.version>3.52.0</redisson.version>
         <lock4j.version>2.2.7</lock4j.version>
         <dynamic-ds.version>4.3.1</dynamic-ds.version>
         <alibaba-ttl.version>2.14.2</alibaba-ttl.version>
         <mapstruct-plus.version>1.3.6</mapstruct-plus.version>
         <mapstruct-plus.lombok.version>0.2.0</mapstruct-plus.lombok.version>
 
-        <!-- 插件版本 -->
+        <!-- 鎻掍欢鐗堟湰 -->
         <maven-jar-plugin.version>3.2.2</maven-jar-plugin.version>
         <maven-war-plugin.version>3.2.2</maven-war-plugin.version>
         <maven-compiler-plugin.verison>3.11.0</maven-compiler-plugin.verison>
         <maven-surefire-plugin.version>3.1.2</maven-surefire-plugin.version>
         <flatten-maven-plugin.version>1.3.0</flatten-maven-plugin.version>
 
-        <!-- 第三方服务配置 -->
+        <!-- 绗笁鏂规湇鍔￠厤缃?-->
         <aws-java-sdk-s3.version>1.12.540</aws-java-sdk-s3.version>
         <sms4j.version>2.2.0</sms4j.version>
 
@@ -108,77 +107,74 @@
     </modules>
 
 
-    <!-- 依赖管理 -->
+    <!-- 渚濊禆绠＄悊 -->
     <dependencyManagement>
         <dependencies>
 
-            <!--            &lt;!&ndash; Apache Commons Compress 安全版本升级 &ndash;&gt;
-                        <dependency>
-                            <groupId>org.apache.commons</groupId>
-                            <artifactId>commons-compress</artifactId>
-                            <version>${commonscompress.version}</version>
-                        </dependency>
-                        &lt;!&ndash; Amazon Ion Java 安全版本升级，修复 CVE-2024-21634 &ndash;&gt;
-                        <dependency>
-                            <groupId>software.amazon.ion</groupId>
-                            <artifactId>ion-java</artifactId>
-                            <version>${ionjava.version}</version>
-                        </dependency>
-                        &lt;!&ndash; Undertow Core 安全版本升级，修复 CVE-2024-6162, CVE-2024-5971, CVE-2024-7885 &ndash;&gt;
-                        <dependency>
-                            <groupId>io.undertow</groupId>
-                            <artifactId>undertow-core</artifactId>
-                            <version>${undertowcore.version}</version>
-                        </dependency>-->
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-compress</artifactId>
+                <version>${commonscompress.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>software.amazon.ion</groupId>
+                <artifactId>ion-java</artifactId>
+                <version>${ionjava.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.undertow</groupId>
+                <artifactId>undertow-core</artifactId>
+                <version>${undertowcore.version}</version>
+            </dependency>
 
 
-            <!-- 基础依赖,基础框架都从Bom里面添加哈-->
+            <!-- 鍩虹渚濊禆,鍩虹妗嗘灦閮戒粠Bom閲岄潰娣诲姞鍝?-->
             <dependency>
                 <groupId>com.bocoo</groupId>
                 <artifactId>bocoo-common-bom</artifactId>
                 <version>${revision}</version>
                 <type>pom</type>
-                <!-- 表示该依赖项仅在编译时用于导入，不参与运行时。常用于 Maven 或 Gradle 等构建工具中，限定依赖的作用范围。-->
+                <!-- 琛ㄧず璇ヤ緷璧栭」浠呭湪缂栬瘧鏃剁敤浜庡鍏ワ紝涓嶅弬涓庤繍琛屾椂銆傚父鐢ㄤ簬 Maven 鎴?Gradle 绛夋瀯寤哄伐鍏蜂腑锛岄檺瀹氫緷璧栫殑浣滅敤鑼冨洿銆?-->
                 <scope>import</scope>
             </dependency>
-            <!-- 引入Spring Boot依赖管理 -->
+            <!-- 寮曞叆Spring Boot渚濊禆绠＄悊 -->
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-dependencies</artifactId>
                 <version>${spring-boot.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
-                <!-- 说明：导入Spring Boot依赖管理信息，统一管理项目中使用的依赖版本 -->
+                <!-- 璇存槑锛氬鍏pring Boot渚濊禆绠＄悊淇℃伅锛岀粺涓€绠＄悊椤圭洰涓娇鐢ㄧ殑渚濊禆鐗堟湰 -->
             </dependency>
-            <!-- 引入Hutool依赖管理 -->
-            <!--Hutool 是一个 Java 工具类库，主要用于简化 Java 开发中的常见操作，提供了一系列实用工具类，
-            涵盖字符串处理、日期时间操作、文件处理、HTTP 请求、加密解密、数据转换等常用功能。它旨在减少模板代码，提高开发效率。-->
+            <!-- 寮曞叆Hutool渚濊禆绠＄悊 -->
+            <!--Hutool 鏄竴涓?Java 宸ュ叿绫诲簱锛屼富瑕佺敤浜庣畝鍖?Java 寮€鍙戜腑鐨勫父瑙佹搷浣滐紝鎻愪緵浜嗕竴绯诲垪瀹炵敤宸ュ叿绫伙紝
+            娑电洊瀛楃涓插鐞嗐€佹棩鏈熸椂闂存搷浣溿€佹枃浠跺鐞嗐€丠TTP 璇锋眰銆佸姞瀵嗚В瀵嗐€佹暟鎹浆鎹㈢瓑甯哥敤鍔熻兘銆傚畠鏃ㄥ湪鍑忓皯妯℃澘浠ｇ爜锛屾彁楂樺紑鍙戞晥鐜囥€?-->
             <dependency>
                 <groupId>cn.hutool</groupId>
                 <artifactId>hutool-bom</artifactId>
                 <version>${hutool.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
-                <!-- 说明：导入Hutool依赖管理信息，提供一系列实用工具类 -->
+                <!-- 璇存槑锛氬鍏utool渚濊禆绠＄悊淇℃伅锛屾彁渚涗竴绯诲垪瀹炵敤宸ュ叿绫?-->
             </dependency>
 
 
-            <!-- 核心工具库 -->
-            <!-- 引入 Knife4j OpenAPI3 依赖，用于增强 Swagger 自动生成的 API 文档的样式和功能 -->
+            <!-- 鏍稿績宸ュ叿搴?-->
+            <!-- 寮曞叆 Knife4j OpenAPI3 渚濊禆锛岀敤浜庡寮?Swagger 鑷姩鐢熸垚鐨?API 鏂囨。鐨勬牱寮忓拰鍔熻兘 -->
             <dependency>
                 <groupId>com.github.xiaoymin</groupId>
                 <artifactId>knife4j-openapi3-jakarta-spring-boot-starter</artifactId>
                 <version>${knife4j.version}</version>
             </dependency>
 
-            <!-- 添加 javax.annotation API 依赖 -->
+            <!-- 娣诲姞 javax.annotation API 渚濊禆 -->
             <dependency>
                 <groupId>javax.annotation</groupId>
                 <artifactId>javax.annotation-api</artifactId>
                 <version>${annotation.version}</version>
             </dependency>
 
-            <!-- 引入 Lombok 依赖，用于简化 Java 代码，减少 boilerplate 代码的编写 -->
+            <!-- 寮曞叆 Lombok 渚濊禆锛岀敤浜庣畝鍖?Java 浠ｇ爜锛屽噺灏?boilerplate 浠ｇ爜鐨勭紪鍐?-->
             <dependency>
                 <groupId>org.projectlombok</groupId>
                 <artifactId>lombok</artifactId>
@@ -188,33 +184,33 @@
 
 
 
-            <!-- 引入 Apache POI 依赖，用于读写 Microsoft Office 格式的文件，这里主要用于处理 Excel 文件 -->
+            <!-- 寮曞叆 Apache POI 渚濊禆锛岀敤浜庤鍐?Microsoft Office 鏍煎紡鐨勬枃浠讹紝杩欓噷涓昏鐢ㄤ簬澶勭悊 Excel 鏂囦欢 -->
             <dependency>
                 <groupId>org.apache.poi</groupId>
                 <artifactId>poi</artifactId>
                 <version>${poi.version}</version>
             </dependency>
-            <!-- Apache POI库，用于读写Microsoft Office格式的文件，这里使用的是OOXML版本 -->
+            <!-- Apache POI搴擄紝鐢ㄤ簬璇诲啓Microsoft Office鏍煎紡鐨勬枃浠讹紝杩欓噷浣跨敤鐨勬槸OOXML鐗堟湰 -->
             <dependency>
                 <groupId>org.apache.poi</groupId>
                 <artifactId>poi-ooxml</artifactId>
                 <version>${poi.version}</version>
             </dependency>
 
-            <!-- io常用工具类 -->
+            <!-- io甯哥敤宸ュ叿绫?-->
             <dependency>
                 <groupId>commons-io</groupId>
                 <artifactId>commons-io</artifactId>
                 <version>${commons.io.version}</version>
             </dependency>
 
-            <!-- Alibaba的EasyExcel库，简化Excel操作，这里配置了排除项以避免特定依赖冲突 -->
+            <!-- Alibaba鐨凟asyExcel搴擄紝绠€鍖朎xcel鎿嶄綔锛岃繖閲岄厤缃簡鎺掗櫎椤逛互閬垮厤鐗瑰畾渚濊禆鍐茬獊 -->
             <dependency>
                 <groupId>com.alibaba</groupId>
                 <artifactId>easyexcel</artifactId>
                 <version>${easyexcel.version}</version>
                 <exclusions>
-                    <!-- 排除与Apache POI相关的依赖，防止版本冲突 -->
+                    <!-- 鎺掗櫎涓嶢pache POI鐩稿叧鐨勪緷璧栵紝闃叉鐗堟湰鍐茬獊 -->
                     <exclusion>
                         <groupId>org.apache.poi</groupId>
                         <artifactId>poi-ooxml-schemas</artifactId>
@@ -222,7 +218,7 @@
                 </exclusions>
             </dependency>
 
-            <!-- Apache Velocity模板引擎，用于生成动态内容，如报告、邮件模板等 -->
+            <!-- Apache Velocity妯℃澘寮曟搸锛岀敤浜庣敓鎴愬姩鎬佸唴瀹癸紝濡傛姤鍛娿€侀偖浠舵ā鏉跨瓑 -->
             <dependency>
                 <groupId>org.apache.velocity</groupId>
                 <artifactId>velocity-engine-core</artifactId>
@@ -230,21 +226,21 @@
             </dependency>
 
 
-            <!-- 权限与数据源 -->
-            <!-- Sa-Token 是一个轻量级的 Java 权限认证框架，提供权限认证、权限拦截、跨域认证、账号封禁、接口签名、请求限流、IP 限制、验证码对比、Session 管理等多种功能 -->
-            <!-- 引入 Sa-Token Spring Boot 3.x 版本的依赖 -->
+            <!-- 鏉冮檺涓庢暟鎹簮 -->
+            <!-- Sa-Token 鏄竴涓交閲忕骇鐨?Java 鏉冮檺璁よ瘉妗嗘灦锛屾彁渚涙潈闄愯璇併€佹潈闄愭嫤鎴€佽法鍩熻璇併€佽处鍙峰皝绂併€佹帴鍙ｇ鍚嶃€佽姹傞檺娴併€両P 闄愬埗銆侀獙璇佺爜瀵规瘮銆丼ession 绠＄悊绛夊绉嶅姛鑳?-->
+            <!-- 寮曞叆 Sa-Token Spring Boot 3.x 鐗堟湰鐨勪緷璧?-->
             <dependency>
                 <groupId>cn.dev33</groupId>
                 <artifactId>sa-token-spring-boot3-starter</artifactId>
                 <version>${satoken.version}</version>
             </dependency>
 
-            <!-- 引入 Sa-Token JWT 支持，用于处理 JSON Web Token -->
+            <!-- 寮曞叆 Sa-Token JWT 鏀寔锛岀敤浜庡鐞?JSON Web Token -->
             <dependency>
                 <groupId>cn.dev33</groupId>
                 <artifactId>sa-token-jwt</artifactId>
                 <version>${satoken.version}</version>
-                <!-- 排除 Hutool 工具库，以避免潜在的版本冲突 -->
+                <!-- 鎺掗櫎 Hutool 宸ュ叿搴擄紝浠ラ伩鍏嶆綔鍦ㄧ殑鐗堟湰鍐茬獊 -->
                 <exclusions>
                     <exclusion>
                         <groupId>cn.hutool</groupId>
@@ -253,15 +249,15 @@
                 </exclusions>
             </dependency>
 
-            <!-- 引入 Sa-Token 核心功能，不依赖于任何框架 -->
+            <!-- 寮曞叆 Sa-Token 鏍稿績鍔熻兘锛屼笉渚濊禆浜庝换浣曟鏋?-->
             <dependency>
                 <groupId>cn.dev33</groupId>
                 <artifactId>sa-token-core</artifactId>
                 <version>${satoken.version}</version>
             </dependency>
 
-            <!-- 引入 MyBatis-Plus 动态数据源 Spring Boot 3.x 版本的依赖 -->
-            <!-- 该依赖允许应用程序在运行时动态切换数据源，支持读写分离、主从切换等 -->
+            <!-- 寮曞叆 MyBatis-Plus 鍔ㄦ€佹暟鎹簮 Spring Boot 3.x 鐗堟湰鐨勪緷璧?-->
+            <!-- 璇ヤ緷璧栧厑璁稿簲鐢ㄧ▼搴忓湪杩愯鏃跺姩鎬佸垏鎹㈡暟鎹簮锛屾敮鎸佽鍐欏垎绂汇€佷富浠庡垏鎹㈢瓑 -->
             <dependency>
                 <groupId>com.baomidou</groupId>
                 <artifactId>dynamic-datasource-spring-boot3-starter</artifactId>
@@ -269,29 +265,29 @@
             </dependency>
 
 
-            <!-- 数据库与ORM -->
-            <!-- MyBatis 依赖 -->
+            <!-- 鏁版嵁搴撲笌ORM -->
+            <!-- MyBatis 渚濊禆 -->
             <dependency>
                 <groupId>org.mybatis</groupId>
                 <artifactId>mybatis</artifactId>
                 <version>${mybatis.version}</version>
             </dependency>
 
-            <!-- MyBatis-Plus Spring Boot 3.x 版本依赖 -->
+            <!-- MyBatis-Plus Spring Boot 3.x 鐗堟湰渚濊禆 -->
             <dependency>
                 <groupId>com.baomidou</groupId>
                 <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
                 <version>${mybatis-plus.version}</version>
             </dependency>
 
-            <!-- MyBatis-Plus 注解依赖 -->
+            <!-- MyBatis-Plus 娉ㄨВ渚濊禆 -->
             <dependency>
                 <groupId>com.baomidou</groupId>
                 <artifactId>mybatis-plus-annotation</artifactId>
                 <version>${mybatis-plus.version}</version>
             </dependency>
 
-            <!-- P6Spy 依赖，用于数据库操作监控和跟踪 -->
+            <!-- P6Spy 渚濊禆锛岀敤浜庢暟鎹簱鎿嶄綔鐩戞帶鍜岃窡韪?-->
             <dependency>
                 <groupId>p6spy</groupId>
                 <artifactId>p6spy</artifactId>
@@ -299,22 +295,22 @@
             </dependency>
 
 
-            <!-- 第三方服务 -->
-            <!-- OkHttp3依赖项，用于构建和发送HTTP请求 -->
+            <!-- 绗笁鏂规湇鍔?-->
+            <!-- OkHttp3渚濊禆椤癸紝鐢ㄤ簬鏋勫缓鍜屽彂閫丠TTP璇锋眰 -->
             <dependency>
                 <groupId>com.squareup.okhttp3</groupId>
                 <artifactId>okhttp</artifactId>
                 <version>${okhttp.version}</version>
             </dependency>
 
-            <!-- AWS SDK for Java (S3)依赖项，用于与Amazon S3存储服务进行交互 -->
+            <!-- AWS SDK for Java (S3)渚濊禆椤癸紝鐢ㄤ簬涓嶢mazon S3瀛樺偍鏈嶅姟杩涜浜や簰 -->
             <dependency>
                 <groupId>com.amazonaws</groupId>
                 <artifactId>aws-java-sdk-s3</artifactId>
                 <version>${aws-java-sdk-s3.version}</version>
             </dependency>
 
-            <!-- sms4j Spring Boot启动器依赖项，用于集成短信发送功能 -->
+            <!-- sms4j Spring Boot鍚姩鍣ㄤ緷璧栭」锛岀敤浜庨泦鎴愮煭淇″彂閫佸姛鑳?-->
             <dependency>
                 <groupId>org.dromara.sms4j</groupId>
                 <artifactId>sms4j-spring-boot-starter</artifactId>
@@ -322,7 +318,7 @@
             </dependency>
 
 
-            <!-- 监控与管理 -->
+            <!-- 鐩戞帶涓庣鐞?-->
             <!--    <dependency>
                     <groupId>de.codecentric</groupId>
                     <artifactId>spring-boot-admin-starter-server</artifactId>
@@ -374,13 +370,13 @@
             </dependency>
 
 
-            <!-- 添加mapstruct-plus的Spring Boot启动器依赖 -->
+            <!-- 娣诲姞mapstruct-plus鐨凷pring Boot鍚姩鍣ㄤ緷璧?-->
             <dependency>
-                <!-- 指定依赖的组ID -->
+                <!-- 鎸囧畾渚濊禆鐨勭粍ID -->
                 <groupId>io.github.linpeilie</groupId>
-                <!-- 指定依赖的工件ID -->
+                <!-- 鎸囧畾渚濊禆鐨勫伐浠禝D -->
                 <artifactId>mapstruct-plus-spring-boot-starter</artifactId>
-                <!-- 使用变量引用依赖的版本 -->
+                <!-- 浣跨敤鍙橀噺寮曠敤渚濊禆鐨勭増鏈?-->
                 <version>${mapstruct-plus.version}</version>
             </dependency>
 
@@ -462,7 +458,7 @@
                     </systemPropertyVariables>
                 </configuration>
             </plugin>
-            <!-- 单元测试使用 -->
+            <!-- 鍗曞厓娴嬭瘯浣跨敤 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
@@ -474,3 +470,4 @@
         </plugins>
     </build>
 </project>
+

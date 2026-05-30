@@ -118,6 +118,7 @@ public class SysOssConfigController extends BaseController {
      */
     @SaCheckPermission("system:oss:edit")
     @Log(title = "对象存储状态修改", businessType = BusinessType.UPDATE)
+    @RepeatSubmit()
     @PutMapping("/changeStatus")
     @Operation(summary = "修改对象存储配置状态", description = "修改对象存储配置状态")
     public R<Void> changeStatus(

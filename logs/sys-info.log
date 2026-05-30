@@ -1,80 +1,64 @@
-2026-05-29 10:16:24 [background-preinit] INFO  o.h.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
-2026-05-29 10:16:24 [main] INFO  com.bocoo.BocooApplication - Starting BocooApplication using Java 17.0.4 with PID 18788 (D:\work\base-boot\bocoo-admin\target\classes started by Administrator in D:\work\base-boot)
-2026-05-29 10:16:24 [main] INFO  com.bocoo.BocooApplication - The following 1 profile is active: "dev"
-2026-05-29 10:16:31 [main] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-18081"]
-2026-05-29 10:16:31 [main] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
-2026-05-29 10:16:31 [main] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.28]
-2026-05-29 10:16:31 [main] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
-2026-05-29 10:16:33 [main] INFO  c.b.common.redis.config.RedisConfig - ³õÊ¼»¯ redis ÅäÖÃ
-2026-05-29 10:16:33 [main] INFO  org.redisson.Version - Redisson 3.29.0
-2026-05-29 10:16:33 [redisson-netty-1-4] INFO  o.r.connection.ConnectionsHolder - 1 connections initialized for 127.0.0.1/127.0.0.1:6379
-2026-05-29 10:16:33 [redisson-netty-1-3] INFO  o.r.connection.ConnectionsHolder - 8 connections initialized for 127.0.0.1/127.0.0.1:6379
-2026-05-29 10:16:34 [main] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource detect P6SPY plugin and enabled it
-2026-05-29 10:16:34 [main] INFO  com.zaxxer.hikari.HikariDataSource - master - Starting...
-2026-05-29 10:16:34 [main] INFO  com.zaxxer.hikari.pool.HikariPool - master - Added connection org.postgresql.jdbc.PgConnection@1e6f7c25
-2026-05-29 10:16:34 [main] INFO  com.zaxxer.hikari.HikariDataSource - master - Start completed.
-2026-05-29 10:16:34 [main] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource - add a datasource named [master] success
-2026-05-29 10:16:34 [main] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource initial loaded [1] datasource,primary datasource named [master]
-2026-05-29 10:16:36 [main] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource start closing ....
-2026-05-29 10:16:36 [main] INFO  com.zaxxer.hikari.HikariDataSource - master - Shutdown initiated...
-2026-05-29 10:16:36 [main] INFO  com.zaxxer.hikari.HikariDataSource - master - Shutdown completed.
-2026-05-29 10:16:36 [main] INFO  c.b.d.d.d.DefaultDataSourceDestroyer - dynamic-datasource close the datasource named [master] success,
-2026-05-29 10:16:36 [main] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource all closed success,bye
-2026-05-29 10:16:36 [main] INFO  o.a.catalina.core.StandardService - Stopping service [Tomcat]
-2026-05-29 10:17:09 [background-preinit] INFO  o.h.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
-2026-05-29 10:17:09 [main] INFO  com.bocoo.BocooApplication - Starting BocooApplication using Java 17.0.4 with PID 8896 (D:\work\base-boot\bocoo-admin\target\classes started by Administrator in D:\work\base-boot)
-2026-05-29 10:17:09 [main] INFO  com.bocoo.BocooApplication - The following 1 profile is active: "dev"
-2026-05-29 10:17:15 [main] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-18081"]
-2026-05-29 10:17:15 [main] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
-2026-05-29 10:17:15 [main] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.28]
-2026-05-29 10:17:15 [main] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
-2026-05-29 10:17:17 [main] INFO  c.b.common.redis.config.RedisConfig - ³õÊ¼»¯ redis ÅäÖÃ
-2026-05-29 10:17:17 [main] INFO  org.redisson.Version - Redisson 3.29.0
-2026-05-29 10:17:17 [redisson-netty-1-4] INFO  o.r.connection.ConnectionsHolder - 1 connections initialized for 127.0.0.1/127.0.0.1:6379
-2026-05-29 10:17:17 [redisson-netty-1-3] INFO  o.r.connection.ConnectionsHolder - 8 connections initialized for 127.0.0.1/127.0.0.1:6379
-2026-05-29 10:17:18 [main] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource detect P6SPY plugin and enabled it
-2026-05-29 10:17:18 [main] INFO  com.zaxxer.hikari.HikariDataSource - master - Starting...
-2026-05-29 10:17:18 [main] INFO  com.zaxxer.hikari.pool.HikariPool - master - Added connection org.postgresql.jdbc.PgConnection@7f33ad20
-2026-05-29 10:17:18 [main] INFO  com.zaxxer.hikari.HikariDataSource - master - Start completed.
-2026-05-29 10:17:18 [main] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource - add a datasource named [master] success
-2026-05-29 10:17:18 [main] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource initial loaded [1] datasource,primary datasource named [master]
-2026-05-29 10:17:23 [main] INFO  c.b.common.json.config.JacksonConfig - ³õÊ¼»¯ jackson ÅäÖÃ
-2026-05-29 10:17:25 [main] INFO  c.b.c.w.s.ServerEndpointExporter - [34mNetty WebSocket started on port: 2832 with context path(s): '/ws' .[0m
-2026-05-29 10:17:25 [main] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-18081"]
-2026-05-29 10:17:25 [main] INFO  com.bocoo.BocooApplication - Started BocooApplication in 17.342 seconds (process running for 18.14)
-2026-05-29 10:17:26 [main] INFO  c.b.s.runner.SystemApplicationRunner - ³õÊ¼»¯OSSÅäÖÃ³É¹¦
-2026-05-29 10:17:26 [main] INFO  c.b.s.runner.SystemApplicationRunner - ¼ÓÔØ²ÎÊı»º´æÊı¾İ³É¹¦
-2026-05-29 10:17:26 [main] INFO  c.b.s.runner.SystemApplicationRunner - ¼ÓÔØ×Öµä»º´æÊı¾İ³É¹¦
-2026-05-29 10:18:07 [http-nio-18081-exec-1] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
-2026-05-29 10:18:07 [http-nio-18081-exec-1] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]¿ªÊ¼ÇëÇó => URL[GET /captchaImage],ÎŞ²ÎÊı
-2026-05-29 10:18:08 [http-nio-18081-exec-1] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]½áÊøÇëÇó => URL[GET /captchaImage],ºÄÊ±:[840]ºÁÃë
-2026-05-29 10:18:08 [http-nio-18081-exec-2] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]¿ªÊ¼ÇëÇó => URL[POST /login],²ÎÊıÀàĞÍ[json],²ÎÊı:[{"username":"merchant.check.1779955734386@example.com","password":"CodexTemp12!","code":"2KiH","uuid":"79737f0f0d524767a57b599c7dc7b03c"}]
-2026-05-29 10:18:10 [schedule-pool-1] INFO  c.b.s.service.SysLogininforService - [127.0.0.1]ÄÚÍøIP[merchant.check.1779955734386@example.com][Success][µÇÂ¼³É¹¦]
-2026-05-29 10:18:10 [http-nio-18081-exec-2] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]½áÊøÇëÇó => URL[POST /login],ºÄÊ±:[1320]ºÁÃë
-2026-05-29 10:18:10 [http-nio-18081-exec-3] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]¿ªÊ¼ÇëÇó => URL[GET /system/merchant/profile/current],ÎŞ²ÎÊı
-2026-05-29 10:18:10 [http-nio-18081-exec-3] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]½áÊøÇëÇó => URL[GET /system/merchant/profile/current],ºÄÊ±:[16]ºÁÃë
-2026-05-29 10:18:10 [http-nio-18081-exec-4] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]¿ªÊ¼ÇëÇó => URL[PUT /system/merchant/profile/current],²ÎÊıÀàĞÍ[json],²ÎÊı:[{"merchantName":"LOCKED_NAME_SHOULD_NOT_SAVE","companyName":"LOCKED_COMPANY_SHOULD_NOT_SAVE","primaryEmail":"locked@example.invalid","country":"ZZ","status":"0","auditStatus":"REJECTED","contactFirstName":"Runtime","contactLastName":"Validation","contactName":"Injected Contact","officePhone":"+1-555-0100","mobilePhone":"+1-555-0101","state":"Runtime State","city":"Runtime City","addressLine1":"Runtime Address 1","addressLine2":"Runtime Address 2","postalCode":"90001","remark":"Runtime validation remark"}]
-2026-05-29 10:18:10 [http-nio-18081-exec-4] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]½áÊøÇëÇó => URL[PUT /system/merchant/profile/current],ºÄÊ±:[96]ºÁÃë
-2026-05-29 10:18:10 [http-nio-18081-exec-5] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]¿ªÊ¼ÇëÇó => URL[GET /system/merchant/profile/current],ÎŞ²ÎÊı
-2026-05-29 10:18:10 [http-nio-18081-exec-5] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]½áÊøÇëÇó => URL[GET /system/merchant/profile/current],ºÄÊ±:[12]ºÁÃë
-2026-05-29 10:25:50 [http-nio-18081-exec-3] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]¿ªÊ¼ÇëÇó => URL[GET /captchaImage],ÎŞ²ÎÊı
-2026-05-29 10:25:50 [http-nio-18081-exec-3] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]½áÊøÇëÇó => URL[GET /captchaImage],ºÄÊ±:[10]ºÁÃë
-2026-05-29 10:25:51 [http-nio-18081-exec-4] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]¿ªÊ¼ÇëÇó => URL[POST /login],²ÎÊıÀàĞÍ[json],²ÎÊı:[{"username":"merchant.check.1779955734386@example.com","password":"CodexTemp12!","code":"1zei","uuid":"b430f0299caa498ab00f80853ca8eb4c"}]
-2026-05-29 10:25:51 [schedule-pool-2] INFO  c.b.s.service.SysLogininforService - [127.0.0.1]ÄÚÍøIP[merchant.check.1779955734386@example.com][Success][µÇÂ¼³É¹¦]
-2026-05-29 10:25:51 [http-nio-18081-exec-4] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]½áÊøÇëÇó => URL[POST /login],ºÄÊ±:[146]ºÁÃë
-2026-05-29 10:26:21 [http-nio-18081-exec-2] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]¿ªÊ¼ÇëÇó => URL[GET /captchaImage],ÎŞ²ÎÊı
-2026-05-29 10:26:21 [http-nio-18081-exec-2] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]½áÊøÇëÇó => URL[GET /captchaImage],ºÄÊ±:[10]ºÁÃë
-2026-05-29 10:28:48 [http-nio-18081-exec-7] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]¿ªÊ¼ÇëÇó => URL[GET /getInfo],ÎŞ²ÎÊı
-2026-05-29 10:28:48 [http-nio-18081-exec-7] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]½áÊøÇëÇó => URL[GET /getInfo],ºÄÊ±:[103]ºÁÃë
-2026-05-29 10:28:48 [http-nio-18081-exec-1] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]¿ªÊ¼ÇëÇó => URL[GET /getRouters],ÎŞ²ÎÊı
-2026-05-29 10:28:48 [http-nio-18081-exec-1] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]½áÊøÇëÇó => URL[GET /getRouters],ºÄÊ±:[39]ºÁÃë
-2026-05-29 10:28:49 [http-nio-18081-exec-9] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]¿ªÊ¼ÇëÇó => URL[GET /system/merchant/profile/current],ÎŞ²ÎÊı
-2026-05-29 10:28:49 [http-nio-18081-exec-9] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]½áÊøÇëÇó => URL[GET /system/merchant/profile/current],ºÄÊ±:[14]ºÁÃë
-2026-05-29 10:31:35 [http-nio-18081-exec-8] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]¿ªÊ¼ÇëÇó => URL[PUT /system/merchant/profile/current],²ÎÊıÀàĞÍ[json],²ÎÊı:[{"contactFirstName":"brbrowser","contactLastName":"Ownervalidation","contactName":"brbrowser Ownervalidation","officePhone":"+1-212-555-01005550200","mobilePhone":"+1-646-555-01995550201","state":"CAbs","city":"Los Angelesbrowsercity","addressLine1":"200 Runtime Rdbrowseraddress1","addressLine2":"Floor 3browseraddress2","postalCode":"9000191000","remark":"Full /check validationbrowservalidationremark"}]
-2026-05-29 10:31:35 [http-nio-18081-exec-8] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]½áÊøÇëÇó => URL[PUT /system/merchant/profile/current],ºÄÊ±:[18]ºÁÃë
-2026-05-29 10:31:35 [http-nio-18081-exec-10] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]¿ªÊ¼ÇëÇó => URL[GET /system/merchant/profile/current],ÎŞ²ÎÊı
-2026-05-29 10:31:35 [http-nio-18081-exec-10] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]½áÊøÇëÇó => URL[GET /system/merchant/profile/current],ºÄÊ±:[8]ºÁÃë
-2026-05-29 10:32:55 [http-nio-18081-exec-3] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]¿ªÊ¼ÇëÇó => URL[PUT /system/merchant/profile/current],²ÎÊıÀàĞÍ[json],²ÎÊı:[{"contactFirstName":"browser","contactLastName":"validation","contactName":"browser validation","officePhone":"5550200","mobilePhone":"5550201","state":"bs","city":"browsercity","addressLine1":"browseraddress1","addressLine2":"browseraddress2","postalCode":"91000","remark":"browservalidationremark"}]
-2026-05-29 10:32:55 [http-nio-18081-exec-3] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]½áÊøÇëÇó => URL[PUT /system/merchant/profile/current],ºÄÊ±:[17]ºÁÃë
-2026-05-29 10:32:55 [http-nio-18081-exec-4] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]¿ªÊ¼ÇëÇó => URL[GET /system/merchant/profile/current],ÎŞ²ÎÊı
-2026-05-29 10:32:55 [http-nio-18081-exec-4] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]½áÊøÇëÇó => URL[GET /system/merchant/profile/current],ºÄÊ±:[7]ºÁÃë
+2026-05-30 09:07:10 [background-preinit] INFO  o.h.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2026-05-30 09:07:10 [com.bocoo.BocooApplication.main()] INFO  com.bocoo.BocooApplication - Starting BocooApplication using Java 17.0.4 with PID 20816 (D:\work\base-boot\bocoo-admin\target\classes started by Administrator in D:\work\base-boot)
+2026-05-30 09:07:10 [com.bocoo.BocooApplication.main()] INFO  com.bocoo.BocooApplication - The following 1 profile is active: "dev"
+2026-05-30 09:07:13 [com.bocoo.BocooApplication.main()] INFO  c.b.c.web.i18n.JsonMessageSource - Loaded JSON i18n locales: [en_US, zh_CN]
+2026-05-30 09:07:14 [com.bocoo.BocooApplication.main()] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8081"]
+2026-05-30 09:07:14 [com.bocoo.BocooApplication.main()] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+2026-05-30 09:07:14 [com.bocoo.BocooApplication.main()] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.33]
+2026-05-30 09:07:14 [com.bocoo.BocooApplication.main()] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-05-30 09:07:15 [com.bocoo.BocooApplication.main()] INFO  c.b.common.redis.config.RedisConfig - ³õÊ¼»¯ redis ÅäÖÃ
+2026-05-30 09:07:15 [com.bocoo.BocooApplication.main()] INFO  org.redisson.Version - Redisson 3.52.0
+2026-05-30 09:07:15 [redisson-netty-1-4] INFO  o.r.connection.ConnectionsHolder - 1 connections initialized for 127.0.0.1/127.0.0.1:6379
+2026-05-30 09:07:15 [redisson-netty-1-3] INFO  o.r.connection.ConnectionsHolder - 8 connections initialized for 127.0.0.1/127.0.0.1:6379
+2026-05-30 09:07:15 [com.bocoo.BocooApplication.main()] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource detect P6SPY plugin and enabled it
+2026-05-30 09:07:15 [com.bocoo.BocooApplication.main()] INFO  com.zaxxer.hikari.HikariDataSource - master - Starting...
+2026-05-30 09:07:16 [com.bocoo.BocooApplication.main()] INFO  com.zaxxer.hikari.pool.HikariPool - master - Added connection org.postgresql.jdbc.PgConnection@5621dc93
+2026-05-30 09:07:16 [com.bocoo.BocooApplication.main()] INFO  com.zaxxer.hikari.HikariDataSource - master - Start completed.
+2026-05-30 09:07:16 [com.bocoo.BocooApplication.main()] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource - add a datasource named [master] success
+2026-05-30 09:07:16 [com.bocoo.BocooApplication.main()] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource initial loaded [1] datasource,primary datasource named [master]
+2026-05-30 09:07:19 [com.bocoo.BocooApplication.main()] INFO  c.b.common.json.config.JacksonConfig - ³õÊ¼»¯ jackson ÅäÖÃ
+2026-05-30 09:07:21 [com.bocoo.BocooApplication.main()] INFO  c.b.c.w.s.ServerEndpointExporter - [34mNetty WebSocket started on port: 2831 with context path(s): '/ws' .[0m
+2026-05-30 09:07:21 [com.bocoo.BocooApplication.main()] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8081"]
+2026-05-30 09:07:21 [com.bocoo.BocooApplication.main()] INFO  com.bocoo.BocooApplication - Started BocooApplication in 11.118 seconds (process running for 19.617)
+2026-05-30 09:07:21 [com.bocoo.BocooApplication.main()] INFO  c.b.s.runner.SystemApplicationRunner - ³õÊ¼»¯OSSÅäÖÃ³É¹¦
+2026-05-30 09:07:21 [com.bocoo.BocooApplication.main()] INFO  c.b.s.runner.SystemApplicationRunner - ¼ÓÔØ²ÎÊı»º´æÊı¾İ³É¹¦
+2026-05-30 09:07:21 [com.bocoo.BocooApplication.main()] INFO  c.b.s.runner.SystemApplicationRunner - ¼ÓÔØ×Öµä»º´æÊı¾İ³É¹¦
+2026-05-30 09:07:25 [http-nio-8081-exec-1] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-05-30 09:07:25 [http-nio-8081-exec-1] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]¿ªÊ¼ÇëÇó => URL[GET /captchaImage],ÎŞ²ÎÊı
+2026-05-30 09:07:26 [http-nio-8081-exec-1] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]½áÊøÇëÇó => URL[GET /captchaImage],ºÄÊ±:[550]ºÁÃë
+2026-05-30 09:07:26 [http-nio-8081-exec-2] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]¿ªÊ¼ÇëÇó => URL[GET /system/dict/data/type/sys_oper_type],ÎŞ²ÎÊı
+2026-05-30 09:07:26 [http-nio-8081-exec-2] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]½áÊøÇëÇó => URL[GET /system/dict/data/type/sys_oper_type],ºÄÊ±:[24]ºÁÃë
+2026-05-30 09:14:12 [background-preinit] INFO  o.h.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2026-05-30 09:14:12 [com.bocoo.BocooApplication.main()] INFO  com.bocoo.BocooApplication - Starting BocooApplication using Java 17.0.4 with PID 17204 (D:\work\base-boot\bocoo-admin\target\classes started by Administrator in D:\work\base-boot)
+2026-05-30 09:14:12 [com.bocoo.BocooApplication.main()] INFO  com.bocoo.BocooApplication - The following 1 profile is active: "dev"
+2026-05-30 09:14:15 [com.bocoo.BocooApplication.main()] INFO  c.b.c.web.i18n.JsonMessageSource - Loaded JSON i18n locales: [en_US, zh_CN]
+2026-05-30 09:14:16 [com.bocoo.BocooApplication.main()] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8081"]
+2026-05-30 09:14:16 [com.bocoo.BocooApplication.main()] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+2026-05-30 09:14:16 [com.bocoo.BocooApplication.main()] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.33]
+2026-05-30 09:14:16 [com.bocoo.BocooApplication.main()] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-05-30 09:14:17 [com.bocoo.BocooApplication.main()] INFO  c.b.common.redis.config.RedisConfig - ³õÊ¼»¯ redis ÅäÖÃ
+2026-05-30 09:14:17 [com.bocoo.BocooApplication.main()] INFO  org.redisson.Version - Redisson 3.52.0
+2026-05-30 09:14:17 [redisson-netty-1-4] INFO  o.r.connection.ConnectionsHolder - 1 connections initialized for 127.0.0.1/127.0.0.1:6379
+2026-05-30 09:14:17 [redisson-netty-1-3] INFO  o.r.connection.ConnectionsHolder - 8 connections initialized for 127.0.0.1/127.0.0.1:6379
+2026-05-30 09:14:17 [com.bocoo.BocooApplication.main()] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource detect P6SPY plugin and enabled it
+2026-05-30 09:14:17 [com.bocoo.BocooApplication.main()] INFO  com.zaxxer.hikari.HikariDataSource - master - Starting...
+2026-05-30 09:14:18 [com.bocoo.BocooApplication.main()] INFO  com.zaxxer.hikari.pool.HikariPool - master - Added connection org.postgresql.jdbc.PgConnection@3bdc90d1
+2026-05-30 09:14:18 [com.bocoo.BocooApplication.main()] INFO  com.zaxxer.hikari.HikariDataSource - master - Start completed.
+2026-05-30 09:14:18 [com.bocoo.BocooApplication.main()] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource - add a datasource named [master] success
+2026-05-30 09:14:18 [com.bocoo.BocooApplication.main()] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource initial loaded [1] datasource,primary datasource named [master]
+2026-05-30 09:14:21 [com.bocoo.BocooApplication.main()] INFO  c.b.common.json.config.JacksonConfig - ³õÊ¼»¯ jackson ÅäÖÃ
+2026-05-30 09:14:22 [com.bocoo.BocooApplication.main()] INFO  c.b.c.w.s.ServerEndpointExporter - [34mNetty WebSocket started on port: 2831 with context path(s): '/ws' .[0m
+2026-05-30 09:14:22 [com.bocoo.BocooApplication.main()] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8081"]
+2026-05-30 09:14:22 [com.bocoo.BocooApplication.main()] INFO  com.bocoo.BocooApplication - Started BocooApplication in 10.65 seconds (process running for 14.01)
+2026-05-30 09:14:22 [com.bocoo.BocooApplication.main()] INFO  c.b.s.runner.SystemApplicationRunner - ³õÊ¼»¯OSSÅäÖÃ³É¹¦
+2026-05-30 09:14:22 [com.bocoo.BocooApplication.main()] INFO  c.b.s.runner.SystemApplicationRunner - ¼ÓÔØ²ÎÊı»º´æÊı¾İ³É¹¦
+2026-05-30 09:14:22 [com.bocoo.BocooApplication.main()] INFO  c.b.s.runner.SystemApplicationRunner - ¼ÓÔØ×Öµä»º´æÊı¾İ³É¹¦
+2026-05-30 09:14:27 [http-nio-8081-exec-1] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-05-30 09:14:27 [http-nio-8081-exec-1] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]¿ªÊ¼ÇëÇó => URL[GET /getInfo],ÎŞ²ÎÊı
+2026-05-30 09:14:28 [http-nio-8081-exec-1] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]½áÊøÇëÇó => URL[GET /getInfo],ºÄÊ±:[1363]ºÁÃë
+2026-05-30 09:14:29 [http-nio-8081-exec-2] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]¿ªÊ¼ÇëÇó => URL[GET /getRouters],ÎŞ²ÎÊı
+2026-05-30 09:14:29 [http-nio-8081-exec-2] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]½áÊøÇëÇó => URL[GET /getRouters],ºÄÊ±:[31]ºÁÃë
+2026-05-30 09:14:29 [http-nio-8081-exec-3] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]¿ªÊ¼ÇëÇó => URL[GET /system/dict/data/type/sys_oper_type],ÎŞ²ÎÊı
+2026-05-30 09:14:29 [http-nio-8081-exec-3] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]½áÊøÇëÇó => URL[GET /system/dict/data/type/sys_oper_type],ºÄÊ±:[42]ºÁÃë
+2026-05-30 09:14:29 [http-nio-8081-exec-4] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]¿ªÊ¼ÇëÇó => URL[GET /monitor/operlog/list],²ÎÊıÀàĞÍ[param],²ÎÊı:[{"pageNum":["1"],"pageSize":["1"]}]
+2026-05-30 09:14:29 [http-nio-8081-exec-4] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]½áÊøÇëÇó => URL[GET /monitor/operlog/list],ºÄÊ±:[72]ºÁÃë

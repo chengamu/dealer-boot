@@ -112,7 +112,7 @@ public class SysRoleController extends BaseController {
      * 修改保存角色
      */
     @SaCheckPermission("system:role:edit")
-    @Log(title = "角色管理", businessType = BusinessType.UPDATE)
+    @Log(title = "角色管理", businessType = BusinessType.SENSITIVE_OPERATION)
     @PutMapping
     @Operation(summary = "修改保存角色", description = "修改角色信息")
     public R<Void> edit(
@@ -136,7 +136,7 @@ public class SysRoleController extends BaseController {
      * 修改保存数据权限
      */
     @SaCheckPermission("system:role:edit")
-    @Log(title = "角色管理", businessType = BusinessType.UPDATE)
+    @Log(title = "角色管理", businessType = BusinessType.SENSITIVE_OPERATION)
     @PutMapping("/dataScope")
     @Operation(summary = "修改保存数据权限", description = "修改角色的数据权限")
     public R<Void> dataScope(
@@ -151,7 +151,7 @@ public class SysRoleController extends BaseController {
      * 状态修改
      */
     @SaCheckPermission("system:role:edit")
-    @Log(title = "角色管理", businessType = BusinessType.UPDATE)
+    @Log(title = "角色管理", businessType = BusinessType.SENSITIVE_OPERATION)
     @PutMapping("/changeStatus")
     @Operation(summary = "状态修改", description = "修改角色状态")
     public R<Void> changeStatus(
@@ -219,7 +219,7 @@ public class SysRoleController extends BaseController {
      * 取消授权用户
      */
     @SaCheckPermission("system:role:edit")
-    @Log(title = "角色管理", businessType = BusinessType.GRANT)
+    @Log(title = "角色管理", businessType = BusinessType.SENSITIVE_OPERATION)
     @PutMapping("/authUser/cancel")
     @Operation(summary = "取消授权用户", description = "取消用户的角色授权")
     public R<Void> cancelAuthUser(
@@ -235,7 +235,7 @@ public class SysRoleController extends BaseController {
      * @param userIds 用户ID串
      */
     @SaCheckPermission("system:role:edit")
-    @Log(title = "角色管理", businessType = BusinessType.GRANT)
+    @Log(title = "角色管理", businessType = BusinessType.SENSITIVE_OPERATION)
     @PutMapping("/authUser/cancelAll")
     @Operation(summary = "批量取消授权用户", description = "批量取消用户的角色授权")
     public R<Void> cancelAuthUserAll(
@@ -253,7 +253,7 @@ public class SysRoleController extends BaseController {
      * @param userIds 用户ID串
      */
     @SaCheckPermission("system:role:edit")
-    @Log(title = "角色管理", businessType = BusinessType.GRANT)
+    @Log(title = "角色管理", businessType = BusinessType.SENSITIVE_OPERATION)
     @PutMapping("/authUser/selectAll")
     @Operation(summary = "批量选择用户授权", description = "批量给用户授予角色")
     public R<Void> selectAuthUserAll(

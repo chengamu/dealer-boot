@@ -19,6 +19,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -31,10 +32,13 @@ import java.util.List;
  * @author CMX
  */
 @RequiredArgsConstructor
+@Slf4j
 @RestController
 @RequestMapping("/monitor/online")
 @Tag(name = "在线用户监控", description = "在线用户监控管理接口")
 public class SysUserOnlineController extends BaseController {
+
+    private static final int ONLINE_TOKEN_SCAN_LIMIT = 1000;
 
     /**
      * 获取在线用户监控列表
@@ -51,7 +55,7 @@ public class SysUserOnlineController extends BaseController {
             @Parameter(description = "用户名")
             String userName) {
         // 获取所有未过期的 token
-        List<String> keys = StpUtil.searchTokenValue("", 0, -1, false);
+        List<String> keys = StpUtil.searchTokenValue("", 0, ONLINE_TOKEN_SCAN_LIMIT, false);
         List<UserOnlineVO> userOnlineDTOList = new ArrayList<>();
         for (String key : keys) {
             String token = StringUtils.substringAfterLast(key, ":");
@@ -87,7 +91,7 @@ public class SysUserOnlineController extends BaseController {
      * @param tokenId token值
      */
     @SaCheckPermission("monitor:online:forceLogout")
-    @Log(title = "在线用户", businessType = BusinessType.FORCE)
+    @Log(title = "在线用户", businessType = BusinessType.SENSITIVE_OPERATION)
     @DeleteMapping("/{tokenId}")
     @Operation(summary = "强退用户", description = "强制用户下线")
     public R<Void> forceLogout(
@@ -96,6 +100,7 @@ public class SysUserOnlineController extends BaseController {
         try {
             StpUtil.kickoutByTokenValue(tokenId);
         } catch (NotLoginException ignored) {
+            log.debug("Skip force logout because token is not logged in.");
         }
         return R.ok();
     }

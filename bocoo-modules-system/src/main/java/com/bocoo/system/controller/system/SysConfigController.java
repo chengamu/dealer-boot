@@ -134,7 +134,7 @@ public class SysConfigController extends BaseController {
     @Operation(summary = "根据参数键名修改参数配置", description = "根据参数键名修改参数配置")
     public R<Void> updateByKey(
             @Parameter(description = "参数配置信息", required = true)
-            @RequestBody SysConfigBo config) {
+            @Validated @RequestBody SysConfigBo config) {
         configService.updateConfig(config);
         return R.ok();
     }

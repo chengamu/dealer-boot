@@ -64,7 +64,7 @@ server:
   # undertow 配置
   undertow:
     # HTTP post内容的最大大小。当值为-1时，默认值为大小是无限的
-    max-http-post-size: -1
+    max-http-post-size: 20MB
     # 以下的配置会影响buffer,这些buffer会用于服务器连接的IO操作,有点类似netty的池化内存管理
     # 每块buffer的空间大小,越小的空间被利用越充分
     buffer-size: 512
@@ -133,6 +133,28 @@ spring:
       # 允许对象忽略json中不存在的属性
       fail_on_unknown_properties: false
 
+web:
+  cors:
+    allow-credentials: true
+    allowed-origin-patterns:
+      - http://localhost:3000
+      - http://localhost:5173
+      - http://localhost:8080
+      - http://localhost:8081
+      - http://127.0.0.1:3000
+      - http://127.0.0.1:5173
+      - http://127.0.0.1:8080
+      - http://127.0.0.1:8081
+    allowed-headers:
+      - "*"
+    allowed-methods:
+      - GET
+      - POST
+      - PUT
+      - DELETE
+      - OPTIONS
+    max-age: 1800
+
 # Sa-Token配置
 sa-token:
   # token名称 (同时也是cookie名称)
@@ -148,6 +170,8 @@ sa-token:
   is-concurrent: true
   # 在多人登录同一账号时，是否共用一个token (为true时所有登录共用一个token, 为false时每次登录新建一个token)
   is-share: false
+  # 同一账号最大并发 token 数，超过后由 Sa-Token 淘汰旧 token
+  max-login-count: 5
   # 是否尝试从header里读取token
   is-read-header: true
   # 是否尝试从cookie里读取token

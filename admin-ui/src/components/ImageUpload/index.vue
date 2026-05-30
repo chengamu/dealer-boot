@@ -12,7 +12,7 @@
       ref="imageUpload"
       :before-remove="handleDelete"
       :show-file-list="true"
-      :headers="headers"
+      :http-request="uploadImage"
       :file-list="fileList"
       :on-preview="handlePictureCardPreview"
       :class="{ hide: fileList.length >= limit }"
@@ -48,14 +48,14 @@
 </template>
 
 <script setup lang="ts">
-import { getToken } from "@/utils/auth";
 import { listByIds, delOss } from "@/api/system/oss";
 import { getMessage } from "@/locales";
 import { useLocaleStore } from "@/stores/locale";
 import { runUiAction } from "@/utils/action";
 import { getApiBaseUrl } from "@/utils/config";
+import service from "@/utils/request";
 import type { PropType } from "vue";
-import type { UploadFile, UploadInstance, UploadRawFile, UploadUserFile } from "element-plus";
+import type { UploadFile, UploadInstance, UploadRawFile, UploadRequestOptions, UploadUserFile } from "element-plus";
 
 type UploadModelValue = string | Record<string, unknown> | unknown[];
 
@@ -126,7 +126,6 @@ const dialogImageUrl = ref("");
 const dialogVisible = ref(false);
 const baseUrl = getApiBaseUrl();
 const uploadImgUrl = ref(baseUrl + "/system/oss/upload"); // 上传的图片服务器地址
-const headers = ref({ Authorization: "Bearer " + getToken() });
 const fileList = ref<UploadItem[]>([]);
 const showTip = computed(
   () => props.isShowTip && (props.fileType || props.fileSize)
@@ -198,6 +197,12 @@ function handleBeforeUpload(file: UploadRawFile) {
 }
 
 // 文件个数超出
+function uploadImage(options: UploadRequestOptions) {
+  const formData = new FormData();
+  formData.append(options.filename, options.file);
+  return service.post(uploadImgUrl.value, formData) as unknown as Promise<UploadResponse>;
+}
+
 function handleExceed() {
   proxy.$modal.msgError(t('upload.limitExceeded', { limit: props.limit }));
 }

@@ -52,7 +52,9 @@ const frontendDictLabelKeys: Record<string, Record<string, string>> = {
     '6': 'common.import',
     '7': 'legacy.forceLogout',
     '8': 'dataLabels.generateCode',
-    '9': 'common.clear'
+    '9': 'common.clear',
+    '10': 'dataLabels.crossTenantQuery',
+    '11': 'dataLabels.sensitiveOperation'
   }
 }
 

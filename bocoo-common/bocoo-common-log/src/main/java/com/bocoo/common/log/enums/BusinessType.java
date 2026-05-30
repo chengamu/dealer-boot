@@ -55,4 +55,14 @@ public enum BusinessType {
      * 清空数据
      */
     CLEAN,
+
+    /**
+     * Cross-tenant query
+     */
+    CROSS_TENANT_QUERY,
+
+    /**
+     * Sensitive operation
+     */
+    SENSITIVE_OPERATION,
 }

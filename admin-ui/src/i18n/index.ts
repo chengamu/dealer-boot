@@ -46,17 +46,50 @@ export async function loadLocaleMessages(locale: AppLocale) {
   return messages
 }
 
-export async function setI18nLanguage(locale: AppLocale) {
-  await loadLocaleMessages(locale)
+function setEmptyLocaleMessages(locale: AppLocale) {
+  const messages: LocaleMessages = {}
+  loadedMessages[locale] = messages
+  i18n.global.setLocaleMessage(locale, messages)
+  return messages
+}
+
+async function loadLocaleMessagesSafely(locale: AppLocale) {
+  try {
+    return await loadLocaleMessages(locale)
+  } catch (error) {
+    console.warn(error)
+    return undefined
+  }
+}
+
+async function ensureFallbackMessages() {
+  const messages = await loadLocaleMessagesSafely(fallbackLocale)
+  return messages || loadedMessages[fallbackLocale] || setEmptyLocaleMessages(fallbackLocale)
+}
+
+function applyI18nLanguage(locale: AppLocale) {
   i18n.global.locale.value = locale
   document.documentElement.lang = locale === 'zh_CN' ? 'zh-CN' : 'en'
 }
 
+export async function setI18nLanguage(locale: AppLocale) {
+  const currentLocale = normalizeLocale(locale)
+  const messages = await loadLocaleMessagesSafely(currentLocale)
+  if (messages) {
+    applyI18nLanguage(currentLocale)
+    return
+  }
+  await ensureFallbackMessages()
+  applyI18nLanguage(fallbackLocale)
+}
+
 export async function setupI18n(locale: AppLocale = normalizeLocale(getLocaleCookie())) {
   const currentLocale = normalizeLocale(locale)
-  await Promise.all([
-    loadLocaleMessages(fallbackLocale),
-    currentLocale === fallbackLocale ? Promise.resolve() : loadLocaleMessages(currentLocale)
-  ])
-  await setI18nLanguage(currentLocale)
+  await ensureFallbackMessages()
+  if (currentLocale === fallbackLocale) {
+    applyI18nLanguage(fallbackLocale)
+    return
+  }
+  const messages = await loadLocaleMessagesSafely(currentLocale)
+  applyI18nLanguage(messages ? currentLocale : fallbackLocale)
 }

@@ -49,6 +49,7 @@ public class SysDeptController extends BaseController {
     }
 
 
+    @Log(title = "Cross-tenant dept query", businessType = BusinessType.CROSS_TENANT_QUERY)
     @GetMapping("/allList")
     @Operation(summary = "获取部门列表", description = "获取部门列表")
     public R<List<SysDeptVo>> allList(

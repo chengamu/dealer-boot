@@ -11,6 +11,7 @@ export const useUserStore = defineStore('user', {
     id: '',
     name: '',
     avatar: defaultAvatar,
+    forcePasswordChange: false,
     roles: [] as string[],
     permissions: [] as string[]
   }),
@@ -43,8 +44,10 @@ export const useUserStore = defineStore('user', {
         ...user,
         tenantId: res.tenantId || data?.tenantId || user.tenantId,
         tenantType: res.tenantType || data?.tenantType || user.tenantType,
-        merchantId: res.merchantId || data?.merchantId || user.merchantId
+        merchantId: res.merchantId || data?.merchantId || user.merchantId,
+        forcePasswordChange: res.forcePasswordChange ?? data?.forcePasswordChange ?? user.forcePasswordChange
       }
+      this.forcePasswordChange = this.user.forcePasswordChange === true || this.user.forcePasswordChange === '1'
       this.roles = res.roles || data?.roles || []
       this.permissions = res.permissions || data?.permissions || []
       this.id = String(this.user?.userId || '')
@@ -65,6 +68,7 @@ export const useUserStore = defineStore('user', {
         this.id = ''
         this.name = ''
         this.avatar = defaultAvatar
+        this.forcePasswordChange = false
         this.roles = []
         this.permissions = []
         removeToken()

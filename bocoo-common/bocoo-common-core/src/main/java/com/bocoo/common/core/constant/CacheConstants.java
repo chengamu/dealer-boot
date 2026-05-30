@@ -18,6 +18,16 @@ public interface CacheConstants {
     String CAPTCHA_CODE_KEY = "captcha_codes:";
 
     /**
+     * SMS login captcha redis key
+     */
+    String SMS_LOGIN_CODE_KEY = "captcha_codes:sms_login:";
+
+    /**
+     * Email login captcha redis key
+     */
+    String EMAIL_LOGIN_CODE_KEY = "captcha_codes:email_login:";
+
+    /**
      * 参数管理 cache key
      */
     String SYS_CONFIG_KEY = "sys_config:";

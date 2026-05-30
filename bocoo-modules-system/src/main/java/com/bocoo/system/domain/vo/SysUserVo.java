@@ -1,7 +1,6 @@
 package com.bocoo.system.domain.vo;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.bocoo.common.sensitive.annotation.Sensitive;
 import com.bocoo.common.sensitive.core.SensitiveStrategy;
 import com.bocoo.common.translation.annotation.Translation;
@@ -91,8 +90,10 @@ public class SysUserVo implements Serializable {
      */
     @Schema(description = "密码")
     @JsonIgnore
-    @JsonProperty
     private String password;
+
+    @Schema(description = "Force password change on next login")
+    private String forcePasswordChange;
 
     /**
      * 帐号状态（0正常 1停用）

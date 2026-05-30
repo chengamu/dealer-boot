@@ -38,6 +38,8 @@ import java.util.Map;
 @Service
 public class SysLogininforService {
 
+    private static final int CLEAN_BATCH_SIZE = 1000;
+
     private final SysLogininforMapper logininforMapper;
 
     /**
@@ -148,6 +150,17 @@ public class SysLogininforService {
      * 清空系统登录日志
      */
     public void cleanLogininfor() {
-        logininforMapper.delete(new LambdaQueryWrapper<>());
+        List<Long> ids;
+        do {
+            ids = logininforMapper.selectObjs(new LambdaQueryWrapper<SysLogininfor>()
+                .select(SysLogininfor::getInfoId)
+                .last("limit " + CLEAN_BATCH_SIZE))
+                .stream()
+                .map(obj -> Long.valueOf(String.valueOf(obj)))
+                .toList();
+            if (!ids.isEmpty()) {
+                logininforMapper.deleteBatchIds(ids);
+            }
+        } while (ids.size() == CLEAN_BATCH_SIZE);
     }
 }

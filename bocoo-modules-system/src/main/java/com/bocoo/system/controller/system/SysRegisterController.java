@@ -5,6 +5,9 @@ import com.bocoo.common.web.core.BaseController;
 import com.bocoo.common.core.domain.R;
 import com.bocoo.common.core.domain.bo.RegisterBody;
 import com.bocoo.common.core.utils.MessageUtils;
+import com.bocoo.common.idempotent.annotation.RepeatSubmit;
+import com.bocoo.common.ratelimiter.annotation.RateLimiter;
+import com.bocoo.common.ratelimiter.enums.LimitType;
 import com.bocoo.system.service.SysConfigService;
 import com.bocoo.system.service.SysRegisterService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -35,6 +38,8 @@ public class SysRegisterController extends BaseController {
      */
     @SaIgnore
     @PostMapping("/register")
+    @RateLimiter(count = 5, time = 60, limitType = LimitType.IP)
+    @RepeatSubmit()
     @Operation(summary = "用户注册", description = "用户注册接口")
     public R<Void> register(
             @Parameter(description = "注册用户信息", required = true)

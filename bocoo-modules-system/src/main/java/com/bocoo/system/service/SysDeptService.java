@@ -29,6 +29,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -230,6 +231,7 @@ public class SysDeptService implements DeptService {
      * @return 结果
      */
     @CacheEvict(cacheNames = CacheNames.SYS_DEPT, key = "#bo.deptId")
+    @Transactional(rollbackFor = Exception.class)
     public int updateDept(SysDeptBo bo) {
         SysDept dept = MapstructUtils.convert(bo, SysDept.class);
         SysDept newParentDept = deptMapper.selectById(dept.getParentId());

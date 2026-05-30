@@ -68,7 +68,7 @@ public class SysOperlogController extends BaseController {
      * 批量删除操作日志记录
      * @param operIds 日志ids
      */
-    @Log(title = "操作日志", businessType = BusinessType.DELETE)
+    @Log(title = "操作日志", businessType = BusinessType.SENSITIVE_OPERATION)
     @SaCheckPermission("monitor:operlog:remove")
     @DeleteMapping("/{operIds}")
     @Operation(summary = "批量删除操作日志记录", description = "批量删除操作日志记录")
@@ -81,7 +81,7 @@ public class SysOperlogController extends BaseController {
     /**
      * 清理操作日志记录
      */
-    @Log(title = "操作日志", businessType = BusinessType.CLEAN)
+    @Log(title = "操作日志", businessType = BusinessType.SENSITIVE_OPERATION)
     @SaCheckPermission("monitor:operlog:remove")
     @DeleteMapping("/clean")
     @Operation(summary = "清理操作日志记录", description = "清理操作日志记录")

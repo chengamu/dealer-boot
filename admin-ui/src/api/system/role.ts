@@ -1,4 +1,4 @@
-import { request } from '@/utils/request'
+import { request, requestPage } from '@/utils/request'
 import type { PageQuery } from '@/types/api'
 
 export interface RoleQuery extends PageQuery {
@@ -52,11 +52,11 @@ export interface DeptTreeSelectResponse {
 }
 
 export function listRole(query?: RoleQuery) {
-  return request({
+  return requestPage<Role>({
     url: '/system/role/list',
     method: 'get',
     params: query
-  }) as unknown as Promise<{ rows?: Role[]; total?: number }>
+  })
 }
 
 export function getRole(roleId: number | string) {
@@ -109,19 +109,19 @@ export function delRole(roleId: number | string | Array<number | string>) {
 }
 
 export function allocatedUserList(query?: RoleUserQuery) {
-  return request({
+  return requestPage<RoleUser>({
     url: '/system/role/authUser/allocatedList',
     method: 'get',
     params: query
-  }) as unknown as Promise<{ rows?: RoleUser[]; total?: number }>
+  })
 }
 
 export function unallocatedUserList(query?: RoleUserQuery) {
-  return request({
+  return requestPage<RoleUser>({
     url: '/system/role/authUser/unallocatedList',
     method: 'get',
     params: query
-  }) as unknown as Promise<{ rows?: RoleUser[]; total?: number }>
+  })
 }
 
 export function authUserCancel(data: { userId?: number | string; roleId?: number | string }) {

@@ -88,6 +88,11 @@
 
         <dependency>
             <groupId>com.bocoo</groupId>
+            <artifactId>bocoo-common-ratelimiter</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.bocoo</groupId>
             <artifactId>bocoo-common-doc</artifactId>
         </dependency>
 

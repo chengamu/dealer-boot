@@ -1,4 +1,4 @@
-import { request } from '@/utils/request'
+import { request, requestPage } from '@/utils/request'
 import type { PageQuery } from '@/types/api'
 
 function parseStrEmpty(value?: number | string) {
@@ -20,6 +20,7 @@ export interface SysUser {
   userName?: string
   nickName?: string
   password?: string
+  forcePasswordChange?: boolean | string
   phonenumber?: string
   email?: string
   sex?: string
@@ -28,9 +29,7 @@ export interface SysUser {
   postIds?: Array<number | string>
   roleIds?: Array<number | string>
   createTime?: string
-  dept?: {
-    deptName?: string
-  }
+  deptName?: string
 }
 
 export interface UserOptionRole {
@@ -69,11 +68,11 @@ export interface TreeOption {
 }
 
 export function listUser(query?: UserQuery) {
-  return request({
+  return requestPage<SysUser>({
     url: '/system/user/list',
     method: 'get',
     params: query
-  }) as unknown as Promise<{ rows?: SysUser[]; total?: number }>
+  })
 }
 
 export function getUser(userId?: number | string) {

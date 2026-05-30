@@ -1,4 +1,4 @@
-import { request } from '@/utils/request'
+import { request, requestPage } from '@/utils/request'
 import type { PageQuery } from '@/types/api'
 
 export interface OssQuery extends PageQuery {
@@ -26,11 +26,11 @@ export interface OssFile {
 }
 
 export function listOss(query?: OssQuery) {
-  return request({
+  return requestPage<OssFile>({
     url: '/system/oss/list',
     method: 'get',
     params: query
-  }) as unknown as Promise<{ rows?: OssFile[]; total?: number }>
+  })
 }
 
 export function listByIds(ossId: number | string | Array<number | string>) {

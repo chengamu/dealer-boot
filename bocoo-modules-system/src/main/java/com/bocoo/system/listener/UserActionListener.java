@@ -29,6 +29,8 @@ import java.time.Duration;
 @Slf4j
 public class UserActionListener implements SaTokenListener {
 
+    private static final Duration MAX_ONLINE_TOKEN_TTL = Duration.ofDays(30);
+
     private final SaTokenConfig tokenConfig;
 
     /**
@@ -50,14 +52,19 @@ public class UserActionListener implements SaTokenListener {
             dto.setTokenId(tokenValue);
             dto.setUserName(user.getUsername());
             dto.setDeptName(user.getDeptName());
-            if(tokenConfig.getTimeout() == -1) {
-                RedisUtils.setCacheObject(CacheConstants.ONLINE_TOKEN_KEY + tokenValue, dto);
-            } else {
-                RedisUtils.setCacheObject(CacheConstants.ONLINE_TOKEN_KEY + tokenValue, dto, Duration.ofSeconds(tokenConfig.getTimeout()));
-            }
+            RedisUtils.setCacheObject(CacheConstants.ONLINE_TOKEN_KEY + tokenValue, dto, resolveOnlineTokenTtl());
         } else if (userType == UserType.APP_USER) {
             // app端 自行根据业务编写
         }
+    }
+
+    private Duration resolveOnlineTokenTtl() {
+        long timeout = tokenConfig.getTimeout();
+        if (timeout <= 0) {
+            return MAX_ONLINE_TOKEN_TTL;
+        }
+        Duration configuredTtl = Duration.ofSeconds(timeout);
+        return configuredTtl.compareTo(MAX_ONLINE_TOKEN_TTL) > 0 ? MAX_ONLINE_TOKEN_TTL : configuredTtl;
     }
 
     /**
@@ -66,7 +73,7 @@ public class UserActionListener implements SaTokenListener {
     @Override
     public void doLogout(String loginType, Object loginId, String tokenValue) {
         RedisUtils.deleteObject(CacheConstants.ONLINE_TOKEN_KEY + tokenValue);
-        log.info("user doLogout, userId:{}, token:{}", loginId, tokenValue);
+        log.info("user doLogout, userId:{}", loginId);
     }
 
     /**
@@ -75,7 +82,7 @@ public class UserActionListener implements SaTokenListener {
     @Override
     public void doKickout(String loginType, Object loginId, String tokenValue) {
         RedisUtils.deleteObject(CacheConstants.ONLINE_TOKEN_KEY + tokenValue);
-        log.info("user doLogoutByLoginId, userId:{}, token:{}", loginId, tokenValue);
+        log.info("user doLogoutByLoginId, userId:{}", loginId);
     }
 
     /**
@@ -84,7 +91,7 @@ public class UserActionListener implements SaTokenListener {
     @Override
     public void doReplaced(String loginType, Object loginId, String tokenValue) {
         RedisUtils.deleteObject(CacheConstants.ONLINE_TOKEN_KEY + tokenValue);
-        log.info("user doReplaced, userId:{}, token:{}", loginId, tokenValue);
+        log.info("user doReplaced, userId:{}", loginId);
     }
 
     /**

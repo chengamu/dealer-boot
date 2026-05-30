@@ -13,8 +13,10 @@ import com.bocoo.common.mybatis.core.page.TableDataInfo;
 import com.bocoo.common.core.service.OssService;
 import com.bocoo.common.core.exception.ServiceException;
 import com.bocoo.common.core.utils.MapstructUtils;
+import com.bocoo.common.core.utils.MessageUtils;
 import com.bocoo.common.core.utils.StreamUtils;
 import com.bocoo.common.core.utils.StringUtils;
+import com.bocoo.common.core.utils.file.FileUploadUtils;
 import com.bocoo.common.core.utils.file.FileUtils;
 import com.bocoo.common.core.utils.SpringUtils;
 import com.bocoo.common.oss.core.OssClient;
@@ -52,6 +54,10 @@ import java.util.*;
 @Service
 public class SysOssService implements OssService {
 
+    private static final String[] ALLOWED_UPLOAD_EXTENSIONS = {
+        "bmp", "gif", "jpg", "jpeg", "png", "pdf", "doc", "docx", "xls", "xlsx"
+    };
+
     private final SysOssMapper ossMapper;
     private final ConfigService configService;
 
@@ -80,9 +86,17 @@ public class SysOssService implements OssService {
      * @return 返回OSS文件VO列表
      */
     public List<SysOssVo> listByIds(Collection<Long> ossIds) {
+        if (ossIds == null || ossIds.isEmpty()) {
+            return List.of();
+        }
+        List<SysOssVo> rawList = ossMapper.selectVoBatchIds(ossIds);
+        Map<Long, SysOssVo> voMap = new HashMap<>(rawList.size());
+        for (SysOssVo vo : rawList) {
+            voMap.put(vo.getOssId(), vo);
+        }
         List<SysOssVo> list = new ArrayList<>();
         for (Long id : ossIds) {
-            SysOssVo vo = SpringUtils.getAopProxy(this).getById(id);
+            SysOssVo vo = voMap.get(id);
             if (ObjectUtil.isNotNull(vo)) {
                 try {
                     list.add(this.matchingUrl(vo));
@@ -103,16 +117,8 @@ public class SysOssService implements OssService {
      */
     public String selectUrlByIds(String ossIds) {
         List<String> list = new ArrayList<>();
-        for (Long id : StringUtils.splitTo(ossIds, Convert::toLong)) {
-            SysOssVo vo = SpringUtils.getAopProxy(this).getById(id);
-            if (ObjectUtil.isNotNull(vo)) {
-                try {
-                    list.add(this.matchingUrl(vo).getUrl());
-                } catch (Exception ignored) {
-                    // 如果oss异常无法连接则将数据直接返回
-                    list.add(vo.getUrl());
-                }
-            }
+        for (SysOssVo vo : listByIds(StringUtils.splitTo(ossIds, Convert::toLong))) {
+            list.add(vo.getUrl());
         }
         return String.join(StringUtils.SEPARATOR, list);
     }
@@ -180,16 +186,15 @@ public class SysOssService implements OssService {
      */
     public SysOssVo upload(MultipartFile file) {
         String originalfileName = file.getOriginalFilename();
-        String suffix = null;
-
-        if (originalfileName != null && originalfileName.lastIndexOf(".") > 0) {
-            suffix = originalfileName.substring(originalfileName.lastIndexOf("."));
-        }
+        String extension = validateUploadFile(file);
+        String suffix = "." + extension;
 
         OssClient storage = OssFactory.instance();
         UploadResult uploadResult;
         try {
-            uploadResult = storage.uploadSuffix(file.getBytes(), suffix, file.getContentType());
+            byte[] bytes = file.getBytes();
+            validateFileSignature(extension, bytes);
+            uploadResult = storage.uploadSuffix(bytes, suffix, file.getContentType());
         } catch (IOException e) {
             throw ServiceException.ofMessageKey("oss.upload.failed");
         }
@@ -273,5 +278,78 @@ public class SysOssService implements OssService {
 
     private boolean isPreviewListResource() {
         return Convert.toBool(configService.getConfigValue(OssConstant.PEREVIEW_LIST_RESOURCE_KEY), true);
+    }
+
+    private String validateUploadFile(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw ServiceException.ofMessageKey("oss.upload.file.required");
+        }
+        if (StringUtils.isBlank(file.getOriginalFilename())) {
+            throwInvalidFileType();
+        }
+        try {
+            FileUploadUtils.assertAllowed(file, ALLOWED_UPLOAD_EXTENSIONS);
+        } catch (Exception e) {
+            throw new ServiceException(e.getMessage());
+        }
+        String extension = FileUploadUtils.getExtension(file).toLowerCase(Locale.ROOT);
+        validateContentType(extension, file.getContentType());
+        return extension;
+    }
+
+    private void validateContentType(String extension, String contentType) {
+        if (StringUtils.isBlank(contentType) || "application/octet-stream".equalsIgnoreCase(contentType)) {
+            return;
+        }
+        String normalized = contentType.toLowerCase(Locale.ROOT);
+        boolean valid = switch (extension) {
+            case "bmp", "gif", "jpg", "jpeg", "png" -> normalized.startsWith("image/");
+            case "pdf" -> "application/pdf".equals(normalized);
+            case "doc" -> "application/msword".equals(normalized);
+            case "xls" -> "application/vnd.ms-excel".equals(normalized);
+            case "docx" -> "application/vnd.openxmlformats-officedocument.wordprocessingml.document".equals(normalized)
+                || "application/zip".equals(normalized);
+            case "xlsx" -> "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet".equals(normalized)
+                || "application/zip".equals(normalized);
+            default -> false;
+        };
+        if (!valid) {
+            throwInvalidFileType();
+        }
+    }
+
+    private void validateFileSignature(String extension, byte[] bytes) {
+        boolean valid = switch (extension) {
+            case "png" -> startsWith(bytes, 0x89, 0x50, 0x4E, 0x47);
+            case "jpg", "jpeg" -> startsWith(bytes, 0xFF, 0xD8, 0xFF);
+            case "gif" -> startsWith(bytes, 'G', 'I', 'F', '8');
+            case "bmp" -> startsWith(bytes, 'B', 'M');
+            case "pdf" -> startsWith(bytes, '%', 'P', 'D', 'F');
+            case "doc", "xls" -> startsWith(bytes, 0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1);
+            case "docx", "xlsx" -> startsWith(bytes, 0x50, 0x4B, 0x03, 0x04)
+                || startsWith(bytes, 0x50, 0x4B, 0x05, 0x06)
+                || startsWith(bytes, 0x50, 0x4B, 0x07, 0x08);
+            default -> false;
+        };
+        if (!valid) {
+            throwInvalidFileType();
+        }
+    }
+
+    private boolean startsWith(byte[] bytes, int... signature) {
+        if (bytes == null || bytes.length < signature.length) {
+            return false;
+        }
+        for (int i = 0; i < signature.length; i++) {
+            if ((bytes[i] & 0xFF) != signature[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void throwInvalidFileType() {
+        throw new ServiceException(MessageUtils.message("upload.invalidFileType",
+            Map.of("types", String.join(", ", ALLOWED_UPLOAD_EXTENSIONS))));
     }
 }

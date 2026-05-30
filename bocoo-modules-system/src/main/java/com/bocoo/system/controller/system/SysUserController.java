@@ -2,6 +2,7 @@ package com.bocoo.system.controller.system;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import cn.dev33.satoken.secure.BCrypt;
+import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.lang.tree.Tree;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.ObjectUtil;
@@ -16,10 +17,13 @@ import com.bocoo.common.core.utils.StreamUtils;
 import com.bocoo.common.core.utils.StringUtils;
 import com.bocoo.common.excel.core.ExcelResult;
 import com.bocoo.common.excel.utils.ExcelUtil;
+import com.bocoo.common.idempotent.annotation.RepeatSubmit;
 import com.bocoo.common.log.annotation.Log;
 import com.bocoo.common.log.enums.BusinessType;
 import com.bocoo.common.mybatis.core.page.PageQuery;
 import com.bocoo.common.mybatis.core.page.TableDataInfo;
+import com.bocoo.common.ratelimiter.annotation.RateLimiter;
+import com.bocoo.common.ratelimiter.enums.LimitType;
 import com.bocoo.common.satoken.utils.LoginHelper;
 import com.bocoo.common.web.core.BaseController;
 import com.bocoo.system.domain.bo.SysDeptBo;
@@ -38,7 +42,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -58,7 +61,6 @@ import java.util.Map;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/system/user")
-@Slf4j
 @Tag(name = "用户管理", description = "用户信息管理接口")
 public class SysUserController extends BaseController {
 
@@ -81,6 +83,7 @@ public class SysUserController extends BaseController {
         return userService.selectPageUserList(user, pageQuery);
     }
 
+    @Log(title = "Cross-tenant user query", businessType = BusinessType.CROSS_TENANT_QUERY)
     @GetMapping("/allList")
     @Operation(summary = "获取用户列表", description = "获取用户列表")
     public List<SysUserVo> allList(
@@ -89,6 +92,7 @@ public class SysUserController extends BaseController {
         return userService.selectUserList(bo);
     }
 
+    @Log(title = "Cross-tenant dept tree query", businessType = BusinessType.CROSS_TENANT_QUERY)
     @GetMapping("/allDeptTree")
     @Operation(summary = "获取部门树列表", description = "获取部门树形结构列表")
     public R<List<Tree<Long>>> allDeptTree(
@@ -125,12 +129,18 @@ public class SysUserController extends BaseController {
     @Log(title = "用户管理", businessType = BusinessType.IMPORT)
     @SaCheckPermission("system:user:import")
     @PostMapping(value = "/importData", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @RateLimiter(count = 10, time = 60, limitType = LimitType.IP)
+    @RepeatSubmit()
     @Operation(summary = "导入用户数据", description = "从Excel文件导入用户数据")
     public R<Void> importData(
             @Parameter(description = "导入文件", content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE, schema = @Schema(type = "string", format = "binary")))
             @RequestPart("file") MultipartFile file,
             @Parameter(description = "是否更新已存在数据")
             boolean updateSupport) throws Exception {
+        if (ObjectUtil.isNull(file) || file.isEmpty()
+            || !StringUtils.equalsAnyIgnoreCase(FileUtil.extName(file.getOriginalFilename()), "xls", "xlsx")) {
+            return R.fail(MessageUtils.message("upload.invalidFileType", Map.of("types", "xls/xlsx")));
+        }
         ExcelResult<SysUserImportVo> result = ExcelUtil.importExcel(file.getInputStream(), SysUserImportVo.class, new SysUserImportListener(updateSupport));
         return R.ok(result.getAnalysis());
     }
@@ -199,7 +209,7 @@ public class SysUserController extends BaseController {
      * 修改用户
      */
     @SaCheckPermission("system:user:edit")
-    @Log(title = "用户管理", businessType = BusinessType.UPDATE)
+    @Log(title = "用户管理", businessType = BusinessType.SENSITIVE_OPERATION)
     @PutMapping
     @Operation(summary = "修改用户", description = "修改用户信息")
     public R<Void> edit(
@@ -240,7 +250,7 @@ public class SysUserController extends BaseController {
      * 重置密码
      */
     @SaCheckPermission("system:user:resetPwd")
-    @Log(title = "用户管理", businessType = BusinessType.UPDATE)
+    @Log(title = "用户管理", businessType = BusinessType.SENSITIVE_OPERATION)
     @PutMapping("/resetPwd")
     @Operation(summary = "重置密码", description = "重置用户密码")
     public R<Void> resetPwd(
@@ -249,8 +259,6 @@ public class SysUserController extends BaseController {
         userService.checkUserAllowed(user.getUserId());
         userService.checkUserDataScope(user.getUserId());
         String hashpw = BCrypt.hashpw(user.getPassword());
-        log.info("user.getPassword：{}",user.getPassword());
-        log.info("hashpw:{}", hashpw);
         user.setPassword(hashpw);
         return toAjax(userService.resetUserPwd(user.getUserId(), user.getPassword()));
     }
@@ -259,7 +267,7 @@ public class SysUserController extends BaseController {
      * 状态修改
      */
     @SaCheckPermission("system:user:edit")
-    @Log(title = "用户管理", businessType = BusinessType.UPDATE)
+    @Log(title = "用户管理", businessType = BusinessType.SENSITIVE_OPERATION)
     @PutMapping("/changeStatus")
     @Operation(summary = "状态修改", description = "修改用户状态")
     public R<Void> changeStatus(
@@ -296,7 +304,7 @@ public class SysUserController extends BaseController {
      * @param roleIds 角色ID串
      */
     @SaCheckPermission("system:user:edit")
-    @Log(title = "用户管理", businessType = BusinessType.GRANT)
+    @Log(title = "用户管理", businessType = BusinessType.SENSITIVE_OPERATION)
     @PutMapping("/authRole")
     @Operation(summary = "用户授权角色", description = "给用户授予角色权限")
     public R<Void> insertAuthRole(

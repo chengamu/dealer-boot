@@ -62,6 +62,8 @@ public class LoginUser implements Serializable {
      */
     private String userType;
 
+    private String forcePasswordChange;
+
     /**
      * 登录时间
      */

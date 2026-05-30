@@ -1,4 +1,4 @@
-import { request } from '@/utils/request'
+import { request, requestPage } from '@/utils/request'
 import type { PageQuery } from '@/types/api'
 
 export interface OssConfigQuery extends PageQuery {
@@ -24,11 +24,11 @@ export interface OssConfig {
 }
 
 export function listOssConfig(query?: OssConfigQuery) {
-  return request({
+  return requestPage<OssConfig>({
     url: '/system/oss/config/list',
     method: 'get',
     params: query
-  }) as unknown as Promise<{ rows?: OssConfig[]; total?: number }>
+  })
 }
 
 export function getOssConfig(ossConfigId: number | string | Array<number | string>) {

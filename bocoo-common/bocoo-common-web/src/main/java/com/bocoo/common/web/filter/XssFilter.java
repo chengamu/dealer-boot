@@ -1,7 +1,6 @@
 package com.bocoo.common.web.filter;
 
 import com.bocoo.common.core.utils.StringUtils;
-import org.springframework.http.HttpMethod;
 
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
@@ -47,9 +46,7 @@ public class XssFilter implements Filter {
 
     private boolean handleExcludeURL(HttpServletRequest request, HttpServletResponse response) {
         String url = request.getServletPath();
-        String method = request.getMethod();
-        // GET DELETE 不过滤
-        if (method == null || HttpMethod.GET.matches(method) || HttpMethod.DELETE.matches(method)) {
+        if (StringUtils.isEmpty(url)) {
             return true;
         }
         return StringUtils.matches(url, excludes);

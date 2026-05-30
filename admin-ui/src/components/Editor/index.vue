@@ -8,7 +8,7 @@
         class="editor-img-uploader"
         name="file"
         :show-file-list="false"
-        :headers="headers"
+        :http-request="uploadImage"
         ref="uploadRef"
         v-if="type == 'url'"
     >
@@ -29,12 +29,12 @@
 <script setup lang="ts">
 import { QuillEditor, Quill } from '@vueup/vue-quill';
 import '@vueup/vue-quill/dist/vue-quill.snow.css';
-import { getToken } from "@/utils/auth";
 import type { CSSProperties } from 'vue';
-import type { UploadRawFile } from 'element-plus';
+import type { UploadRawFile, UploadRequestOptions } from 'element-plus';
 import { getMessage } from '@/locales'
 import useLocaleStore from '@/stores/locale'
 import { getApiBaseUrl } from '@/utils/config'
+import service from '@/utils/request'
 
 type UploadResponse = {
   code: number
@@ -111,7 +111,6 @@ const emit = defineEmits<{
 }>();
 // 上传的图片服务器地址
 const uploadUrl = ref(getApiBaseUrl() + "/system/oss/upload");
-const headers = ref({ Authorization: "Bearer " + getToken() });
 const quillEditorRef = ref<QuillEditorExpose | null>(null);
 
 const options = computed(() => ({
@@ -184,6 +183,12 @@ watch(() => props.modelValue, (v) => {
 }, { immediate: true });
 
 // 图片上传成功返回图片地址
+function uploadImage(options: UploadRequestOptions) {
+  const formData = new FormData();
+  formData.append(options.filename, options.file);
+  return service.post(uploadUrl.value, formData) as unknown as Promise<UploadResponse>;
+}
+
 function handleUploadSuccess(res: UploadResponse) {
   // 如果上传成功
   if (res.code == 200) {

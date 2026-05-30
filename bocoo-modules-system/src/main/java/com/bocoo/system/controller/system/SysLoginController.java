@@ -9,8 +9,10 @@ import com.bocoo.common.core.domain.bo.LoginUser;
 import com.bocoo.common.core.domain.bo.SmsLoginBody;
 import com.bocoo.common.core.context.TenantContextHolder;
 import com.bocoo.common.core.utils.MessageUtils;
+import com.bocoo.common.ratelimiter.annotation.RateLimiter;
+import com.bocoo.common.ratelimiter.enums.LimitType;
 import com.bocoo.common.satoken.utils.LoginHelper;
-import com.bocoo.system.domain.bo.ThirdClientBo;
+import com.bocoo.system.domain.bo.ThirdLoginBody;
 import com.bocoo.system.domain.entity.SysMenu;
 import com.bocoo.system.domain.vo.RouterVo;
 import com.bocoo.system.domain.vo.SysUserVo;
@@ -19,7 +21,6 @@ import com.bocoo.system.service.SysMenuService;
 import com.bocoo.system.service.SysUserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
@@ -52,6 +53,7 @@ public class SysLoginController {
      * @return 结果
      */
     @SaIgnore
+    @RateLimiter(count = 10, time = 60, limitType = LimitType.IP)
     @PostMapping("/login")
     @Operation(summary = "账号密码登录", description = "使用用户名和密码进行登录")
     public R<Map<String, Object>> login(
@@ -60,7 +62,7 @@ public class SysLoginController {
         // 生成令牌
         String token = loginService.login(loginBody.getUsername(), loginBody.getPassword(), loginBody.getCode(),
                 loginBody.getUuid());
-        return R.ok(MessageUtils.message("auth.login.success"), Map.of(Constants.TOKEN, token));
+        return R.ok(MessageUtils.message("auth.login.success"), buildLoginResponse(token));
     }
 
 
@@ -72,22 +74,15 @@ public class SysLoginController {
      * @return 包含访问令牌的响应结果，令牌存储在Constants.TOKEN键下
      */
     @SaIgnore
+    @RateLimiter(count = 10, time = 60, limitType = LimitType.IP)
     @PostMapping("/thirdLogin")
     @Operation(summary = "第三方登录", description = "使用appKey和secretKey进行登录")
     public R<Map<String, Object>> thirdLogin(
             @Parameter(description = "登录信息", required = true)
-            @Validated @RequestBody Map<String, Object> loginBody) {
-
-        String appKey = (String) loginBody.get("appKey");
-        String secretKey = (String) loginBody.get("secretKey");
-
-        if (appKey == null || secretKey == null) {
-            return R.fail(MessageUtils.message("auth.third.credentials.required"));
-        }
-
+            @Validated @RequestBody ThirdLoginBody loginBody) {
         // 生成令牌
-        String token = loginService.thirdLogin(appKey, secretKey);
-        return R.ok(MessageUtils.message("auth.login.success"), Map.of(Constants.TOKEN, token));
+        String token = loginService.thirdLogin(loginBody.getAppKey(), loginBody.getSecretKey());
+        return R.ok(MessageUtils.message("auth.login.success"), buildLoginResponse(token));
     }
 
 
@@ -99,6 +94,7 @@ public class SysLoginController {
      * @return 结果
      */
     @SaIgnore
+    @RateLimiter(count = 10, time = 60, limitType = LimitType.IP)
     @PostMapping("/smsLogin")
     @Operation(summary = "短信登录", description = "使用手机号和短信验证码进行登录")
     public R<Map<String, Object>> smsLogin(
@@ -106,7 +102,7 @@ public class SysLoginController {
             @Validated @RequestBody SmsLoginBody smsLoginBody) {
         // 生成令牌
         String token = loginService.smsLogin(smsLoginBody.getPhonenumber(), smsLoginBody.getSmsCode());
-        return R.ok(MessageUtils.message("auth.login.success"), Map.of(Constants.TOKEN, token));
+        return R.ok(MessageUtils.message("auth.login.success"), buildLoginResponse(token));
     }
 
     /**
@@ -116,6 +112,7 @@ public class SysLoginController {
      * @return 结果
      */
     @SaIgnore
+    @RateLimiter(count = 10, time = 60, limitType = LimitType.IP)
     @PostMapping("/emailLogin")
     @Operation(summary = "邮件登录", description = "使用邮箱和邮件验证码进行登录")
     public R<Map<String, Object>> emailLogin(
@@ -123,7 +120,7 @@ public class SysLoginController {
             @Validated @RequestBody EmailLoginBody body) {
         // 生成令牌
         String token = loginService.emailLogin(body.getEmail(), body.getEmailCode());
-        return R.ok(MessageUtils.message("auth.login.success"), Map.of(Constants.TOKEN, token));
+        return R.ok(MessageUtils.message("auth.login.success"), buildLoginResponse(token));
     }
 
     /**
@@ -133,15 +130,15 @@ public class SysLoginController {
      * @return 结果
      */
     @SaIgnore
+    @RateLimiter(count = 10, time = 60, limitType = LimitType.IP)
     @PostMapping("/xcxLogin")
     @Operation(summary = "小程序登录", description = "使用小程序code进行登录")
     public R<Map<String, Object>> xcxLogin(
             @Parameter(description = "小程序code", required = true)
             @NotBlank(message = "{xcx.code.not.blank}") String xcxCode) {
-        Map<String, Object> ajax = new HashMap<>();
         // 生成令牌
         String token = loginService.xcxLogin(xcxCode);
-        return R.ok(MessageUtils.message("auth.login.success"), Map.of(Constants.TOKEN, token));
+        return R.ok(MessageUtils.message("auth.login.success"), buildLoginResponse(token));
     }
 
     /**
@@ -173,7 +170,19 @@ public class SysLoginController {
             info.put("tenantId", loginUser.getTenantId());
             info.put("tenantType", loginUser.getTenantType());
             info.put("merchantId", loginUser.getMerchantId());
+            info.put("forcePasswordChange", "1".equals(user.getForcePasswordChange()));
             return R.ok(info);
+        });
+    }
+
+    private Map<String, Object> buildLoginResponse(String token) {
+        LoginUser loginUser = LoginHelper.getLoginUser();
+        return TenantContextHolder.callWithTenant(loginUser.getTenantId(), () -> {
+            SysUserVo user = userService.selectUserById(loginUser.getUserId());
+            return Map.of(
+                Constants.TOKEN, token,
+                "forcePasswordChange", "1".equals(user.getForcePasswordChange())
+            );
         });
     }
 

@@ -124,6 +124,7 @@ CREATE TABLE IF NOT EXISTS sys_user (
     sex char(1) DEFAULT '0',
     avatar varchar(500),
     password varchar(100),
+    force_password_change char(1) DEFAULT '0',
     status char(1) DEFAULT '1',
     del_flag char(1) DEFAULT '0',
     login_ip varchar(128),
@@ -143,6 +144,7 @@ CREATE TABLE IF NOT EXISTS sys_user (
     oss_id3 varchar(64),
     oss_id4 varchar(64)
 );
+ALTER TABLE sys_user ADD COLUMN IF NOT EXISTS force_password_change char(1) DEFAULT '0';
 
 CREATE UNIQUE INDEX IF NOT EXISTS uk_sys_user_tenant_username ON sys_user (tenant_id, user_name);
 CREATE UNIQUE INDEX IF NOT EXISTS uk_sys_user_email ON sys_user (email) WHERE email IS NOT NULL;
@@ -202,6 +204,7 @@ CREATE TABLE IF NOT EXISTS sys_menu (
 CREATE INDEX IF NOT EXISTS idx_sys_menu_tenant_parent_order ON sys_menu (tenant_id, parent_id, order_num);
 CREATE INDEX IF NOT EXISTS idx_sys_menu_tenant_status_type ON sys_menu (tenant_id, status, menu_type, order_num);
 CREATE INDEX IF NOT EXISTS idx_sys_menu_perms ON sys_menu (perms) WHERE perms IS NOT NULL AND perms <> '';
+CREATE UNIQUE INDEX IF NOT EXISTS uk_sys_menu_tenant_parent_name ON sys_menu (tenant_id, parent_id, menu_name);
 
 CREATE TABLE IF NOT EXISTS sys_post (
     post_id bigint PRIMARY KEY,
@@ -613,6 +616,7 @@ COMMENT ON COLUMN sys_user.phonenumber IS '手机号码';
 COMMENT ON COLUMN sys_user.sex IS '性别';
 COMMENT ON COLUMN sys_user.avatar IS '头像地址';
 COMMENT ON COLUMN sys_user.password IS '密码哈希';
+COMMENT ON COLUMN sys_user.force_password_change IS '是否强制下次登录修改密码：1是，0否';
 COMMENT ON COLUMN sys_user.status IS '账号状态：1正常，0停用';
 COMMENT ON COLUMN sys_user.del_flag IS '删除标志：0存在，2删除';
 COMMENT ON COLUMN sys_user.login_ip IS '最后登录IP';
@@ -1060,6 +1064,15 @@ VALUES
     (19005, 'User gender', 'sys_user_sex', '1', 'system', now(), 'User gender')
 ON CONFLICT (dict_id) DO NOTHING;
 
+INSERT INTO sys_dict_type (dict_id, dict_name, dict_type, status, create_by, create_time, remark)
+VALUES
+    (19006, 'Operation type', 'sys_oper_type', '1', 'system', now(), 'Operation log business type')
+ON CONFLICT (dict_type) DO UPDATE
+SET dict_name = EXCLUDED.dict_name,
+    status = EXCLUDED.status,
+    update_by = 'system',
+    update_time = now();
+
 INSERT INTO sys_dict_data (dict_code, dict_sort, dict_label, dict_value, dict_type, list_class, is_default, status, create_by, create_time)
 VALUES
     (19024, 1, 'Male', '0', 'sys_user_sex', 'primary', 'Y', '1', 'system', now()),
@@ -1075,6 +1088,34 @@ SET dict_sort = EXCLUDED.dict_sort,
     status = EXCLUDED.status,
     update_by = 'system',
     update_time = now();
+
+INSERT INTO sys_dict_data (dict_code, dict_sort, dict_label, dict_value, dict_type, list_class, is_default, status, create_by, create_time)
+SELECT 19027, 10, 'Cross-tenant Query', '10', 'sys_oper_type', 'warning', 'N', '1', 'system', now()
+WHERE NOT EXISTS (
+    SELECT 1 FROM sys_dict_data WHERE dict_type = 'sys_oper_type' AND dict_value = '10'
+);
+UPDATE sys_dict_data
+SET dict_sort = 10,
+    dict_label = 'Cross-tenant Query',
+    list_class = 'warning',
+    status = '1',
+    update_by = 'system',
+    update_time = now()
+WHERE dict_type = 'sys_oper_type' AND dict_value = '10';
+
+INSERT INTO sys_dict_data (dict_code, dict_sort, dict_label, dict_value, dict_type, list_class, is_default, status, create_by, create_time)
+SELECT 19028, 11, 'Sensitive Operation', '11', 'sys_oper_type', 'danger', 'N', '1', 'system', now()
+WHERE NOT EXISTS (
+    SELECT 1 FROM sys_dict_data WHERE dict_type = 'sys_oper_type' AND dict_value = '11'
+);
+UPDATE sys_dict_data
+SET dict_sort = 11,
+    dict_label = 'Sensitive Operation',
+    list_class = 'danger',
+    status = '1',
+    update_by = 'system',
+    update_time = now()
+WHERE dict_type = 'sys_oper_type' AND dict_value = '11';
 
 
 INSERT INTO sys_legal_document (document_id, document_type, locale, title, content, version, status, published_time, create_by, create_time, remark)

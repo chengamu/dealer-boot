@@ -2,6 +2,7 @@ package com.bocoo.system.service;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
+import com.baomidou.lock.annotation.Lock4j;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -146,13 +147,18 @@ public class SysOssConfigService {
     /**
      * 启用禁用状态
      */
+    @Lock4j(keys = {"'oss-config-status'"})
     @Transactional(rollbackFor = Exception.class)
     public int updateOssConfigStatus(SysOssConfigBo bo) {
         SysOssConfig sysOssConfig = MapstructUtils.convert(bo, SysOssConfig.class);
-        int row = ossConfigMapper.update(null, new LambdaUpdateWrapper<SysOssConfig>()
-            .set(SysOssConfig::getStatus, "0"));
+        int row = 0;
+        if ("1".equals(sysOssConfig.getStatus())) {
+            row += ossConfigMapper.update(null, new LambdaUpdateWrapper<SysOssConfig>()
+                .set(SysOssConfig::getStatus, "0")
+                .ne(SysOssConfig::getOssConfigId, sysOssConfig.getOssConfigId()));
+        }
         row += ossConfigMapper.updateById(sysOssConfig);
-        if (row > 0) {
+        if (row > 0 && "1".equals(sysOssConfig.getStatus())) {
             RedisUtils.setCacheObject(OssConstant.DEFAULT_CONFIG_KEY, sysOssConfig.getConfigKey());
         }
         return row;

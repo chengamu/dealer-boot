@@ -24,6 +24,7 @@ import { updateUserPwd } from '@/api/system/user'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 import { useTagsViewStore, type TagView } from '@/stores/tagsView'
+import { useUserStore } from '@/stores/user'
 
 interface PasswordForm {
   oldPassword?: string
@@ -35,6 +36,7 @@ const route = useRoute()
 const router = useRouter()
 const tagsViewStore = useTagsViewStore()
 const localeStore = useLocaleStore()
+const userStore = useUserStore()
 const t = (key: string, params?: Record<string, string | number>) => {
   const message = getMessage(key, localeStore.language)
   if (!params) return message
@@ -67,7 +69,11 @@ async function submit() {
   if (!valid || !user.oldPassword || !user.newPassword) return
   try {
     await updateUserPwd(user.oldPassword, user.newPassword)
+    await userStore.loadUser()
     ElMessage.success(t('common.editSuccess'))
+    if (route.query.forcePasswordChange) {
+      router.replace('/index')
+    }
   } catch {
     // Request interceptor already displays the backend error.
   }

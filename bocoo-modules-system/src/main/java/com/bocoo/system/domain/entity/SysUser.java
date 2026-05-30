@@ -109,6 +109,9 @@ public class SysUser extends BaseEntity {
     )
     private String password;
 
+    @Schema(description = "Force password change on next login")
+    private String forcePasswordChange;
+
     /**
      * 帐号状态（0正常 1停用）
      */

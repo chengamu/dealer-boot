@@ -62,30 +62,30 @@ public class MybatisEncryptInterceptor implements Interceptor {
      *
      * @param sourceObject 待加密对象
      */
-    private void encryptHandler(Object sourceObject) {
+    private Object encryptHandler(Object sourceObject) {
         if (ObjectUtil.isNull(sourceObject)) {
-            return;
+            return null;
         }
         if (sourceObject instanceof Map<?, ?> map) {
-            new HashSet<>(map.values()).forEach(this::encryptHandler);
-            return;
+            encryptMap(map);
+            return map;
         }
         if (sourceObject instanceof List<?> list) {
             if(CollUtil.isEmpty(list)) {
-                return;
+                return list;
             }
             // 判断第一个元素是否含有注解。如果没有直接返回，提高效率
             Object firstItem = list.get(0);
             if (ObjectUtil.isNull(firstItem) || CollUtil.isEmpty(encryptorManager.getFieldCache(firstItem.getClass()))) {
-                return;
+                return list;
             }
             list.forEach(this::encryptHandler);
-            return;
+            return list;
         }
         // 不在缓存中的类,就是没有加密注解的类(当然也有可能是typeAliasesPackage写错)
         Set<Field> fields = encryptorManager.getFieldCache(sourceObject.getClass());
         if(ObjectUtil.isNull(fields)){
-            return;
+            return sourceObject;
         }
         try {
             for (Field field : fields) {
@@ -93,6 +93,15 @@ public class MybatisEncryptInterceptor implements Interceptor {
             }
         } catch (Exception e) {
             log.error("处理加密字段时出错", e);
+        }
+        return sourceObject;
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private void encryptMap(Map<?, ?> map) {
+        Map writableMap = map;
+        for (Map.Entry<?, ?> entry : new ArrayList<>(map.entrySet())) {
+            writableMap.put(entry.getKey(), encryptHandler(entry.getValue()));
         }
     }
 

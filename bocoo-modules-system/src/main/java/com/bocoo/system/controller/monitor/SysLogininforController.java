@@ -72,7 +72,7 @@ public class SysLogininforController extends BaseController {
      * @param infoIds 日志ids
      */
     @SaCheckPermission("monitor:logininfor:remove")
-    @Log(title = "登录日志", businessType = BusinessType.DELETE)
+    @Log(title = "登录日志", businessType = BusinessType.SENSITIVE_OPERATION)
     @DeleteMapping("/{infoIds}")
     @Operation(summary = "批量删除登录日志", description = "批量删除登录日志")
     public R<Void> remove(
@@ -85,7 +85,7 @@ public class SysLogininforController extends BaseController {
      * 清理系统访问记录
      */
     @SaCheckPermission("monitor:logininfor:remove")
-    @Log(title = "登录日志", businessType = BusinessType.CLEAN)
+    @Log(title = "登录日志", businessType = BusinessType.SENSITIVE_OPERATION)
     @DeleteMapping("/clean")
     @Operation(summary = "清理系统访问记录", description = "清理系统访问记录")
     public R<Void> clean() {
@@ -94,7 +94,7 @@ public class SysLogininforController extends BaseController {
     }
 
     @SaCheckPermission("monitor:logininfor:unlock")
-    @Log(title = "账户解锁", businessType = BusinessType.OTHER)
+    @Log(title = "账户解锁", businessType = BusinessType.SENSITIVE_OPERATION)
     @GetMapping("/unlock/{userName}")
     @Operation(summary = "账户解锁", description = "根据用户名解锁账户")
     public R<Void> unlock(

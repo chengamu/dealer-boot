@@ -1,4 +1,4 @@
-import { request } from '@/utils/request'
+import { request, requestPage } from '@/utils/request'
 import type { PageQuery } from '@/types/api'
 
 export interface MerchantApplication {
@@ -61,11 +61,11 @@ export function submitMerchantApplication(data: MerchantApplicationPayload) {
 }
 
 export function listMerchantApplications(query?: MerchantApplicationQuery) {
-  return request({
+  return requestPage<MerchantApplication>({
     url: '/system/tenant/applications',
     method: 'get',
     params: query
-  }) as unknown as Promise<{ rows?: MerchantApplication[]; total?: number }>
+  })
 }
 
 export function getMerchantApplication(applyId: number | string) {

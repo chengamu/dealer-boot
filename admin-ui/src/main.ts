@@ -68,4 +68,6 @@ async function bootstrap() {
   app.mount('#app')
 }
 
-void bootstrap()
+void bootstrap().catch((error) => {
+  console.error('Failed to bootstrap application', error)
+})

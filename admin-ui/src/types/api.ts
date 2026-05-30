@@ -60,6 +60,7 @@ export interface LoginUser {
   nickName?: string
   email?: string
   avatar?: string
+  forcePasswordChange?: boolean | string
   roles?: string[]
   permissions?: string[]
 }

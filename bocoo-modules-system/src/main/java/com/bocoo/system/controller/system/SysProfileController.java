@@ -120,7 +120,7 @@ public class SysProfileController extends BaseController {
         if (!BCrypt.checkpw(oldPassword, password)) {
             return R.fail(MessageUtils.message("password.old.invalid"));
         }
-        if (userService.resetUserPwd(user.getUserId(), BCrypt.hashpw(newPassword)) > 0) {
+        if (userService.resetUserPwd(user.getUserId(), BCrypt.hashpw(newPassword), "0") > 0) {
             return R.ok();
         }
         return R.fail(MessageUtils.message("password.update.failed"));

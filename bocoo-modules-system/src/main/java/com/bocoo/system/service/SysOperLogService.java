@@ -32,6 +32,8 @@ import java.util.Map;
 @Service
 public class SysOperLogService {
 
+    private static final int CLEAN_BATCH_SIZE = 1000;
+
     private final SysOperLogMapper operLogMapper;
 
     /**
@@ -134,6 +136,17 @@ public class SysOperLogService {
      * 清空操作日志
      */
     public void cleanOperLog() {
-        operLogMapper.delete(new LambdaQueryWrapper<>());
+        List<Long> ids;
+        do {
+            ids = operLogMapper.selectObjs(new LambdaQueryWrapper<SysOperLog>()
+                .select(SysOperLog::getOperId)
+                .last("limit " + CLEAN_BATCH_SIZE))
+                .stream()
+                .map(obj -> Long.valueOf(String.valueOf(obj)))
+                .toList();
+            if (!ids.isEmpty()) {
+                operLogMapper.deleteBatchIds(ids);
+            }
+        } while (ids.size() == CLEAN_BATCH_SIZE);
     }
 }

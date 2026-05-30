@@ -9,8 +9,12 @@ import com.bocoo.common.satoken.core.dao.PlusSaTokenDao;
 import com.bocoo.common.satoken.core.service.SaPermissionImpl;
 import com.bocoo.common.satoken.handler.SaTokenExceptionHandler;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.ApplicationRunner;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.PropertySource;
+
+import java.util.Arrays;
 
 /**
  * sa-token 配置
@@ -20,6 +24,8 @@ import org.springframework.context.annotation.PropertySource;
 @AutoConfiguration
 @PropertySource(value = "classpath:common-satoken.yml", factory = YmlPropertySourceFactory.class)
 public class SaTokenConfig {
+
+    private static final String DEV_JWT_SECRET = "bocoo-dev-jwt-secret-change-before-prod-2026";
 
     @Bean
     public StpLogic getStpLogicJwt() {
@@ -43,5 +49,24 @@ public class SaTokenConfig {
         return new PlusSaTokenDao();
     }
 
+    @Bean
+    public ApplicationRunner jwtSecretValidator(
+        @Value("${sa-token.jwt-secret-key:}") String jwtSecretKey,
+        @Value("${spring.profiles.active:}") String activeProfiles) {
+        return args -> {
+            String secret = jwtSecretKey == null ? "" : jwtSecretKey.trim();
+            if (secret.isEmpty() || secret.startsWith("${")) {
+                throw new IllegalStateException("sa-token.jwt-secret-key must be configured");
+            }
+            boolean devProfile = Arrays.stream(activeProfiles.split(","))
+                .anyMatch(profile -> "dev".equalsIgnoreCase(profile.trim()));
+            if (!devProfile && DEV_JWT_SECRET.equals(secret)) {
+                throw new IllegalStateException("Development JWT secret must not be used outside dev profile");
+            }
+            if (secret.length() < 32) {
+                throw new IllegalStateException("sa-token.jwt-secret-key must be at least 32 characters");
+            }
+        };
+    }
 
 }

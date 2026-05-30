@@ -2,3 +2,9 @@ allowBuilds:
   '@parcel/watcher': true
   esbuild: true
   vue-demi: true
+overrides:
+  braces: 3.0.3
+  css-what: 5.0.1
+  micromatch: 4.0.8
+  nth-check: 2.0.1
+  postcss: 8.5.15

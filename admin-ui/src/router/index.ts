@@ -297,6 +297,9 @@ router.beforeEach(async (to) => {
   if (!token) return `/login?redirect=${encodeURIComponent(to.fullPath)}`
   try {
     if (!userStore.user) await userStore.loadUser()
+    if (userStore.forcePasswordChange && to.path !== '/user/profile') {
+      return { path: '/user/profile', query: { forcePasswordChange: '1' }, replace: true }
+    }
     if (!dynamicRoutesLoaded) {
       const accessRoutes = await permissionStore.generateRoutes()
       registerDynamicRoutes(accessRoutes)

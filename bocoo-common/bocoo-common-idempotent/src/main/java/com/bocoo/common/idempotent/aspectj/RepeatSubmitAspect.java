@@ -54,6 +54,9 @@ public class RepeatSubmitAspect {
 
         // 唯一值（没有消息头则使用请求地址）
         String submitKey = StringUtils.trimToEmpty(request.getHeader(SaManager.getConfig().getTokenName()));
+        if (StringUtils.isBlank(submitKey)) {
+            submitKey = ServletUtils.getClientIP(request);
+        }
 
         submitKey = SecureUtil.md5(submitKey + ":" + nowParams);
         // 唯一标识（指定key + url + 消息头）

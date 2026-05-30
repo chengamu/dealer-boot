@@ -11,6 +11,8 @@ import com.bocoo.common.core.domain.R;
 import com.bocoo.common.core.utils.SpringUtils;
 import com.bocoo.common.core.utils.StringUtils;
 import com.bocoo.common.core.utils.reflect.ReflectUtils;
+import com.bocoo.common.ratelimiter.annotation.RateLimiter;
+import com.bocoo.common.ratelimiter.enums.LimitType;
 import com.bocoo.common.redis.utils.RedisUtils;
 import com.bocoo.common.web.config.properties.CaptchaProperties;
 import com.bocoo.common.web.enums.CaptchaType;
@@ -56,13 +58,14 @@ public class CaptchaController {
      * @param phonenumber 用户手机号
      */
     @GetMapping("/captchaSms")
+    @RateLimiter(count = 5, time = 60, limitType = LimitType.IP)
     @Operation(summary = "获取短信验证码", description = "发送短信验证码到指定手机号")
     public R<Void> smsCaptcha(
             @Parameter(description = "用户手机号", required = true)
             @NotBlank(message = "{user.phonenumber.not.blank}")
             String phonenumber) {
-        String key = CacheConstants.CAPTCHA_CODE_KEY + phonenumber;
-        String code = RandomUtil.randomNumbers(4);
+        String key = CacheConstants.SMS_LOGIN_CODE_KEY + phonenumber;
+        String code = RandomUtil.randomNumbers(6);
         RedisUtils.setCacheObject(key, code, Duration.ofMinutes(Constants.CAPTCHA_EXPIRATION));
         // 验证码模板id 自行处理 (查数据库或写死均可)
         String templateId = "";
@@ -81,6 +84,7 @@ public class CaptchaController {
      * 生成验证码
      */
     @GetMapping("/captchaImage")
+    @RateLimiter(count = 20, time = 60, limitType = LimitType.IP)
     @Operation(summary = "生成图形验证码", description = "生成图形验证码并返回base64图像")
     public R<Map<String, Object>> getCode() {
         boolean captchaEnabled = captchaProperties.getEnable();

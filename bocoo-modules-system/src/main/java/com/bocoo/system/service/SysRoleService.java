@@ -31,6 +31,7 @@ import com.bocoo.system.mapper.SysRoleMapper;
 import com.bocoo.system.mapper.SysRoleMenuMapper;
 import com.bocoo.system.mapper.SysUserRoleMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,8 +43,11 @@ import java.util.*;
  * @author Lion Li
  */
 @RequiredArgsConstructor
+@Slf4j
 @Service
 public class SysRoleService {
+
+    private static final int ONLINE_TOKEN_SCAN_LIMIT = 1000;
 
     private final SysRoleMapper roleMapper;
     private final SysRoleMenuMapper roleMenuMapper;
@@ -431,7 +435,7 @@ public class SysRoleService {
         if (num == 0) {
             return;
         }
-        List<String> keys = StpUtil.searchTokenValue("", 0, -1, false);
+        List<String> keys = StpUtil.searchTokenValue("", 0, ONLINE_TOKEN_SCAN_LIMIT, false);
         if (CollUtil.isEmpty(keys)) {
             return;
         }
@@ -447,6 +451,7 @@ public class SysRoleService {
                 try {
                     StpUtil.logoutByTokenValue(token);
                 } catch (NotLoginException ignored) {
+                    log.debug("Skip role online-user cleanup because token is not logged in.");
                 }
             }
         });

@@ -190,10 +190,12 @@ public class SysLoginService {
             LoginUser loginUser = LoginHelper.getLoginUser();
             recordLogininfor(loginUser.getUsername(), Constants.LOGOUT, MessageUtils.message("user.logout.success"));
         } catch (NotLoginException ignored) {
+            log.debug("Skip logout audit because current request is not logged in.");
         } finally {
             try {
                 StpUtil.logout();
             } catch (NotLoginException ignored) {
+                log.debug("Skip logout because current request is not logged in.");
             }
         }
     }
@@ -221,7 +223,7 @@ public class SysLoginService {
      * 校验短信验证码
      */
     private boolean validateSmsCode(String phonenumber, String smsCode) {
-        String code = RedisUtils.getCacheObject(CacheConstants.CAPTCHA_CODE_KEY + phonenumber);
+        String code = RedisUtils.getCacheObject(CacheConstants.SMS_LOGIN_CODE_KEY + phonenumber);
         if (StringUtils.isBlank(code)) {
             recordLogininfor(phonenumber, Constants.LOGIN_FAIL, MessageUtils.message("user.jcaptcha.expire"));
             throw new CaptchaExpireException();
@@ -233,7 +235,7 @@ public class SysLoginService {
      * 校验邮箱验证码
      */
     private boolean validateEmailCode(String email, String emailCode) {
-        String code = RedisUtils.getCacheObject(CacheConstants.CAPTCHA_CODE_KEY + email);
+        String code = RedisUtils.getCacheObject(CacheConstants.EMAIL_LOGIN_CODE_KEY + email);
         if (StringUtils.isBlank(code)) {
             recordLogininfor(email, Constants.LOGIN_FAIL, MessageUtils.message("user.jcaptcha.expire"));
             throw new CaptchaExpireException();
@@ -268,19 +270,27 @@ public class SysLoginService {
     }
 
     private SysUserVo loadUserByUsernameOrEmail(String username) {
-        SysUserVo user = userMapper.selectVoOne(new LambdaQueryWrapper<SysUser>().eq(SysUser::getUserName, username), false);
-        if (ObjectUtil.isNull(user)) {
-            user = userMapper.selectVoOne(new LambdaQueryWrapper<SysUser>().eq(SysUser::getEmail, username), false);
+        List<SysUserVo> users = userMapper.selectVoList(new LambdaQueryWrapper<SysUser>()
+            .and(w -> w.eq(SysUser::getUserName, username).or().eq(SysUser::getEmail, username)));
+        if (users != null) {
+            for (SysUserVo user : users) {
+                if (StringUtils.equals(user.getUserName(), username)) {
+                    return checkLoadedUser(user, username);
+                }
+            }
+            if (!users.isEmpty()) {
+                return checkLoadedUser(users.get(0), username);
+            }
         }
-        return checkLoadedUser(user, username);
+        return checkLoadedUser(null, username);
     }
 
     private SysUserVo checkLoadedUser(SysUserVo user, String username) {
         if (ObjectUtil.isNull(user)) {
-            log.info("登录用户：{} 不存在.", username);
+            log.info("登录用户不存在.");
             throw new UserException("user.not.exists", username);
         } else if (UserStatus.DISABLE.getCode().equals(user.getStatus())) {
-            log.info("登录用户：{} 已被停用.", username);
+            log.info("登录用户已被停用.");
             throw new UserException("user.blocked", username);
         }
         return user;
@@ -289,10 +299,10 @@ public class SysLoginService {
     private SysUserVo loadUserByPhonenumber(String phonenumber) {
         SysUserVo user = userMapper.selectVoOne(new LambdaQueryWrapper<SysUser>().eq(SysUser::getPhonenumber, phonenumber));
         if (ObjectUtil.isNull(user)) {
-            log.info("登录用户：{} 不存在.", phonenumber);
+            log.info("手机号登录用户不存在.");
             throw new UserException("user.not.exists", phonenumber);
         } else if (UserStatus.DISABLE.getCode().equals(user.getStatus())) {
-            log.info("登录用户：{} 已被停用.", phonenumber);
+            log.info("手机号登录用户已被停用.");
             throw new UserException("user.blocked", phonenumber);
         }
         return user;
@@ -301,10 +311,10 @@ public class SysLoginService {
     private SysUserVo loadUserByEmail(String email) {
         SysUserVo user = userMapper.selectVoOne(new LambdaQueryWrapper<SysUser>().eq(SysUser::getEmail, email));
         if (ObjectUtil.isNull(user)) {
-            log.info("登录用户：{} 不存在.", email);
+            log.info("邮箱登录用户不存在.");
             throw new UserException("user.not.exists", email);
         } else if (UserStatus.DISABLE.getCode().equals(user.getStatus())) {
-            log.info("登录用户：{} 已被停用.", email);
+            log.info("邮箱登录用户已被停用.");
             throw new UserException("user.blocked", email);
         }
         return user;
@@ -315,10 +325,10 @@ public class SysLoginService {
         // todo 自行实现 userService.selectUserByOpenid(openid);
         SysUserVo user = new SysUserVo();
         if (ObjectUtil.isNull(user)) {
-            log.info("登录用户：{} 不存在.", openid);
+            log.info("openid 登录用户不存在.");
             // todo 用户不存在 业务逻辑自行实现
         } else if (UserStatus.DISABLE.getCode().equals(user.getStatus())) {
-            log.info("登录用户：{} 已被停用.", openid);
+            log.info("openid 登录用户已被停用.");
             // todo 用户已被停用 业务逻辑自行实现
         }
         return user;
@@ -335,6 +345,7 @@ public class SysLoginService {
         loginUser.setDeptId(user.getDeptId());
         loginUser.setUsername(user.getUserName());
         loginUser.setUserType(user.getUserType());
+        loginUser.setForcePasswordChange(user.getForcePasswordChange());
         TenantContextHolder.runWithTenant(user.getTenantId(), () -> {
             loginUser.setMenuPermission(permissionService.getMenuPermission(user.getUserId()));
             loginUser.setRolePermission(permissionService.getRolePermission(user.getUserId()));
@@ -386,8 +397,7 @@ public class SysLoginService {
      * 登录校验
      */
     private void checkLogin(LoginType loginType, String username, Supplier<Boolean> supplier) {
-        String clientIP = ServletUtils.getClientIP();
-        String errorKey = CacheConstants.PWD_ERR_CNT_KEY + username+":"+clientIP;
+        String errorKey = CacheConstants.PWD_ERR_CNT_KEY + loginType.name().toLowerCase() + ":" + username;
         String loginFail = Constants.LOGIN_FAIL;
         int maxRetry = resolveMaxRetryCount();
         int lockMinutes = resolveLockTime();

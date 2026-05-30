@@ -7,6 +7,7 @@ import cn.hutool.core.util.ObjectUtil;
 import com.bocoo.common.core.utils.MessageUtils;
 import com.bocoo.common.core.utils.StringUtils;
 import com.bocoo.common.core.utils.file.MimeTypeUtils;
+import com.bocoo.common.idempotent.annotation.RepeatSubmit;
 import com.bocoo.common.log.annotation.Log;
 import com.bocoo.common.web.core.BaseController;
 import com.bocoo.common.mybatis.core.page.PageQuery;
@@ -15,6 +16,8 @@ import com.bocoo.common.mybatis.core.page.TableDataInfo;
 import com.bocoo.common.core.validate.QueryGroup;
 import com.bocoo.common.log.enums.BusinessType;
 import com.bocoo.common.core.exception.ServiceException;
+import com.bocoo.common.ratelimiter.annotation.RateLimiter;
+import com.bocoo.common.ratelimiter.enums.LimitType;
 import com.bocoo.system.domain.bo.SysOssBo;
 import com.bocoo.system.domain.vo.SysOssVo;
 import com.bocoo.system.service.SysOssService;
@@ -88,6 +91,8 @@ public class SysOssController extends BaseController {
     @SaCheckPermission("system:oss:upload")
     @Log(title = "OSS对象存储", businessType = BusinessType.INSERT)
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @RateLimiter(count = 20, time = 60, limitType = LimitType.IP)
+    @RepeatSubmit()
     @Operation(summary = "上传OSS对象存储", description = "上传文件到OSS对象存储")
     public R<Map<String, String>> upload(
             @Parameter(description = "上传文件", content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE, schema = @Schema(type = "string", format = "binary")))
@@ -112,6 +117,8 @@ public class SysOssController extends BaseController {
     @SaCheckPermission("system:oss:upload")
     @Log(title = "图片上传", businessType = BusinessType.UPDATE)
     @PostMapping(value = "/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @RateLimiter(count = 20, time = 60, limitType = LimitType.IP)
+    @RepeatSubmit()
     public R<Map<String, Object>> avatar(@RequestPart("avatarfile") MultipartFile avatarfile) {
         // 检查上传文件是否为空
         if (!avatarfile.isEmpty()) {

@@ -4,6 +4,7 @@ import cn.dev33.satoken.secure.BCrypt;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.core.util.ObjectUtil;
+import com.baomidou.lock.annotation.Lock4j;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bocoo.common.core.constant.UserConstants;
@@ -45,6 +46,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
@@ -62,8 +65,14 @@ public class SysTenantApplyService {
     private static final String PASSWORD_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%";
     private static final Duration EMAIL_CODE_TTL = Duration.ofMinutes(10);
     private static final Duration EMAIL_CODE_COOLDOWN = Duration.ofSeconds(60);
+    private static final Duration EMAIL_CODE_ERROR_LOCK = Duration.ofMinutes(10);
+    private static final Duration EMAIL_CODE_DAILY_WINDOW = Duration.ofHours(26);
+    private static final int EMAIL_CODE_DAILY_LIMIT = 5;
+    private static final int EMAIL_CODE_ERROR_LIMIT = 5;
     private static final String EMAIL_CODE_KEY_PREFIX = "merchant_apply:email_code:";
     private static final String EMAIL_CODE_COOLDOWN_PREFIX = "merchant_apply:email_code_cooldown:";
+    private static final String EMAIL_CODE_DAILY_PREFIX = "merchant_apply:email_code_daily:";
+    private static final String EMAIL_CODE_ERROR_PREFIX = "merchant_apply:email_code_error:";
 
     private final SysTenantApplyMapper tenantApplyMapper;
     private final SysTenantMapper tenantMapper;
@@ -81,17 +90,20 @@ public class SysTenantApplyService {
 
     public void sendEmailCode(String email) {
         String normalizedEmail = normalizeEmail(email);
-        checkApplyEmailAvailable(normalizedEmail);
-        checkUserEmailAvailable(normalizedEmail);
         String cooldownKey = EMAIL_CODE_COOLDOWN_PREFIX + normalizedEmail;
         if (!RedisUtils.setObjectIfAbsent(cooldownKey, "1", EMAIL_CODE_COOLDOWN)) {
             throw ServiceException.ofMessageKey("tenant.apply.emailCode.cooldown");
+        }
+        enforceDailyEmailCodeLimit(normalizedEmail);
+        if (!isEmailAvailableForPublicApply(normalizedEmail)) {
+            log.info("Merchant application email verification code request accepted without sending. email={}", normalizedEmail);
+            return;
         }
         if (!Boolean.TRUE.equals(mailEnabled)) {
             RedisUtils.deleteObject(cooldownKey);
             throw ServiceException.ofMessageKey("tenant.apply.emailCode.mailDisabled");
         }
-        String code = RandomUtil.randomNumbers(4);
+        String code = RandomUtil.randomNumbers(6);
         try {
             String subject = MessageUtils.message("tenant.apply.emailCode.subject");
             String content = buildEmailCodeHtml(code);
@@ -112,8 +124,7 @@ public class SysTenantApplyService {
         String normalizedEmail = normalizeEmail(bo.getEmail());
         bo.setEmail(normalizedEmail);
         checkEmailCode(normalizedEmail, bo.getVerificationCode());
-        checkApplyEmailAvailable(normalizedEmail);
-        checkUserEmailAvailable(normalizedEmail);
+        checkPublicApplyEmailAvailable(normalizedEmail);
         SysTenantApply apply = MapstructUtils.convert(bo, SysTenantApply.class);
         apply.setApplyLocale(resolveCurrentLocale());
         sanitizePublicSubmitApply(apply);
@@ -139,6 +150,7 @@ public class SysTenantApplyService {
         return tenantApplyMapper.selectVoById(applyId);
     }
 
+    @Lock4j(keys = {"#applyId"})
     @Transactional(rollbackFor = Exception.class)
     public void approve(Long applyId) {
         checkPlatformTenant();
@@ -171,6 +183,7 @@ public class SysTenantApplyService {
             user.setEmail(finalApply.getEmail());
             user.setNickName(finalApply.getMerchantName());
             user.setPassword(BCrypt.hashpw(tempPassword));
+            user.setForcePasswordChange("1");
             user.setUserType(UserType.SYS_USER.getUserType());
             user.setStatus(UserStatus.OK.getCode());
             userService.registerUser(user);
@@ -190,9 +203,11 @@ public class SysTenantApplyService {
         apply.setAuditById(LoginHelper.getUserId());
         apply.setAuditTime(TimeUtils.utcNow());
         tenantApplyMapper.updateById(apply);
-        sendInitialPasswordMail(apply, tempPassword);
+        runAfterCommit(() -> sendInitialPasswordMail(apply, tempPassword));
     }
 
+    @Lock4j(keys = {"#applyId"})
+    @Transactional(rollbackFor = Exception.class)
     public void reject(Long applyId, SysTenantApplyBo bo) {
         checkPlatformTenant();
         SysTenantApply apply = tenantApplyMapper.selectById(applyId);
@@ -208,7 +223,20 @@ public class SysTenantApplyService {
         apply.setAuditById(LoginHelper.getUserId());
         apply.setAuditTime(TimeUtils.utcNow());
         tenantApplyMapper.updateById(apply);
-        sendRejectedMail(apply);
+        runAfterCommit(() -> sendRejectedMail(apply));
+    }
+
+    private void runAfterCommit(Runnable action) {
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+            action.run();
+            return;
+        }
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                action.run();
+            }
+        });
     }
 
     private void checkPlatformTenant() {
@@ -234,6 +262,35 @@ public class SysTenantApplyService {
         }
     }
 
+    private boolean isEmailAvailableForPublicApply(String email) {
+        boolean userExists = TenantContextHolder.callWithIgnore(() -> userMapper.exists(new LambdaQueryWrapper<SysUser>()
+            .eq(SysUser::getEmail, email)));
+        if (userExists) {
+            return false;
+        }
+        return !tenantApplyMapper.exists(new LambdaQueryWrapper<SysTenantApply>()
+            .eq(SysTenantApply::getEmail, email)
+            .in(SysTenantApply::getStatus, TenantApplyStatus.PENDING.getCode(), TenantApplyStatus.APPROVED.getCode()));
+    }
+
+    private void checkPublicApplyEmailAvailable(String email) {
+        if (!isEmailAvailableForPublicApply(email)) {
+            throw ServiceException.ofMessageKey("tenant.apply.submit.unavailable");
+        }
+    }
+
+    private void enforceDailyEmailCodeLimit(String email) {
+        String day = TimeUtils.formatUtc(TimeUtils.utcNow(), TimeUtils.UTC_DATE_FORMATTER);
+        String key = EMAIL_CODE_DAILY_PREFIX + day + ":" + email;
+        long count = RedisUtils.incrAtomicValue(key);
+        if (count == 1) {
+            RedisUtils.expire(key, EMAIL_CODE_DAILY_WINDOW);
+        }
+        if (count > EMAIL_CODE_DAILY_LIMIT) {
+            throw ServiceException.ofMessageKey("tenant.apply.emailCode.dailyLimit");
+        }
+    }
+
     private void checkEmailCode(String email, String inputCode) {
         if (StrUtil.isBlank(inputCode)) {
             throw ServiceException.ofMessageKey("tenant.apply.emailCode.required");
@@ -241,9 +298,22 @@ public class SysTenantApplyService {
         String key = EMAIL_CODE_KEY_PREFIX + email;
         String cachedCode = RedisUtils.getCacheObject(key);
         if (!inputCode.equals(cachedCode)) {
+            recordEmailCodeFailure(email);
             throw ServiceException.ofMessageKey("tenant.apply.emailCode.invalid");
         }
+        RedisUtils.deleteObject(EMAIL_CODE_ERROR_PREFIX + email);
         RedisUtils.deleteObject(key);
+    }
+
+    private void recordEmailCodeFailure(String email) {
+        String key = EMAIL_CODE_ERROR_PREFIX + email;
+        long count = RedisUtils.incrAtomicValue(key);
+        if (count == 1) {
+            RedisUtils.expire(key, EMAIL_CODE_ERROR_LOCK);
+        }
+        if (count >= EMAIL_CODE_ERROR_LIMIT) {
+            throw ServiceException.ofMessageKey("tenant.apply.emailCode.retryLimit");
+        }
     }
 
     private String normalizeEmail(String email) {

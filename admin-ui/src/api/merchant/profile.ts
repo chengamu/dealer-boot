@@ -1,4 +1,4 @@
-import { request } from '@/utils/request'
+import { request, requestPage } from '@/utils/request'
 import type { PageQuery } from '@/types/api'
 
 export interface MerchantProfile {
@@ -37,11 +37,11 @@ export interface MerchantProfileQuery extends PageQuery {
 }
 
 export function listMerchantProfiles(query?: MerchantProfileQuery) {
-  return request({
+  return requestPage<MerchantProfile>({
     url: '/system/merchant/profile/list',
     method: 'get',
     params: query
-  }) as unknown as Promise<{ rows?: MerchantProfile[]; total?: number }>
+  })
 }
 
 export function getMerchantProfile(merchantId: number | string) {

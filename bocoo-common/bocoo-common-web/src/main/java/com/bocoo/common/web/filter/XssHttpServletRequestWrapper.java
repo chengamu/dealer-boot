@@ -29,6 +29,12 @@ public class XssHttpServletRequestWrapper extends HttpServletRequestWrapper {
     }
 
     @Override
+    public String getParameter(String name) {
+        String value = super.getParameter(name);
+        return value == null ? null : HtmlUtil.cleanHtmlTag(value).trim();
+    }
+
+    @Override
     public String[] getParameterValues(String name) {
         String[] values = super.getParameterValues(name);
         if (values != null) {

@@ -12,7 +12,8 @@ export interface LoginResponse {
   code?: number
   msg?: string
   token?: string
-  data?: string | { token?: string }
+  forcePasswordChange?: boolean
+  data?: string | { token?: string; forcePasswordChange?: boolean }
 }
 
 export interface UserInfoResponse {
@@ -24,6 +25,7 @@ export interface UserInfoResponse {
   tenantId?: number
   tenantType?: string
   merchantId?: number
+  forcePasswordChange?: boolean
   data?: LoginUser | {
     user?: LoginUser
     roles?: string[]
@@ -31,6 +33,7 @@ export interface UserInfoResponse {
     tenantId?: number
     tenantType?: string
     merchantId?: number
+    forcePasswordChange?: boolean
   }
 }
 
