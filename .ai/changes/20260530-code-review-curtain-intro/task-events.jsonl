@@ -1,0 +1,10 @@
+{"ts":"2026-05-30T10:36:12+08:00","event":"task_created","task":"C1","owner":"main","wave":0,"summary":"创建新版 CODE_REVIEW 风险收敛与 Curtain Reveal 计划。"}
+{"ts":"2026-05-30T10:40:00+08:00","event":"task_done","task":"C1","owner":"main","wave":0,"summary":"确认本批不改 DB、不升级依赖、不切认证架构。"}
+{"ts":"2026-05-30T10:43:00+08:00","event":"task_done","task":"B1","owner":"java-architect","wave":1,"summary":"修复登录锁定、邮箱验证码配额、username/email 确定排序、CORS 默认值和字典限流。"}
+{"ts":"2026-05-30T10:44:00+08:00","event":"task_done","task":"F1","owner":"frontend-developer","wave":1,"summary":"新增并接入登录页 Curtain Reveal 组件。"}
+{"ts":"2026-05-30T10:45:00+08:00","event":"task_done","task":"Q1","owner":"main","wave":1,"summary":"完成 forcePasswordChange 常量化；上传复用因组件行为不同暂不强抽象。"}
+{"ts":"2026-05-30T10:46:00+08:00","event":"barrier_passed","wave":1,"summary":"未修改 SQL、pom、package.json 或归档目录；安全修复和前端动画文件边界符合计划。"}
+{"ts":"2026-05-30T10:47:00+08:00","event":"task_done","task":"I1","owner":"main","wave":2,"summary":"完成解锁 key、CORS 默认值和 Curtain Reveal 登录页接入对齐。"}
+{"ts":"2026-05-30T10:48:00+08:00","event":"task_done","task":"R1","owner":"code-reviewer","wave":3,"summary":"静态复审未发现本批新增越界修改；运行时 API smoke 需 Redis。"}
+{"ts":"2026-05-30T10:55:00+08:00","event":"task_done","task":"V1","owner":"main","wave":4,"summary":"编译、typecheck、build 和动画浏览器验证通过；后端 runtime smoke 初次因本机 Redis 未启动被阻塞。"}
+{"ts":"2026-05-30T11:08:00+08:00","event":"task_done","task":"V1","owner":"main","wave":4,"summary":"Redis 可用后已补齐 DEV 后端 unauth/authenticated API smoke，且未输出验证码、口令或 Token。"}

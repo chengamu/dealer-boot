@@ -101,6 +101,9 @@ public class SysLogininforController extends BaseController {
             @Parameter(description = "用户名", required = true)
             @PathVariable("userName") String userName) {
         RedisUtils.deleteKeys(CacheConstants.PWD_ERR_CNT_KEY + userName + "*");
+        RedisUtils.deleteKeys(CacheConstants.PWD_ERR_CNT_KEY + "*:" + userName);
+        RedisUtils.deleteKeys(CacheConstants.PWD_ERR_CNT_KEY + "*:" + userName + ":*");
+        RedisUtils.deleteKeys(CacheConstants.PWD_ERR_CNT_GLOBAL_KEY + "*:" + userName);
         return R.ok();
     }
 

@@ -115,6 +115,12 @@ public interface UserConstants {
     int PASSWORD_MAX_LENGTH = 20;
 
     /**
+     * 首次登录强制改密
+     */
+    String FORCE_PASSWORD_CHANGE_YES = "1";
+    String FORCE_PASSWORD_CHANGE_NO = "0";
+
+    /**
      * 管理员ID
      */
     Long ADMIN_ID = 1L;

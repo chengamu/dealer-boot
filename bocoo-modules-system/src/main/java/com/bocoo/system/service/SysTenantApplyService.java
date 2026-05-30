@@ -94,11 +94,11 @@ public class SysTenantApplyService {
         if (!RedisUtils.setObjectIfAbsent(cooldownKey, "1", EMAIL_CODE_COOLDOWN)) {
             throw ServiceException.ofMessageKey("tenant.apply.emailCode.cooldown");
         }
-        enforceDailyEmailCodeLimit(normalizedEmail);
         if (!isEmailAvailableForPublicApply(normalizedEmail)) {
             log.info("Merchant application email verification code request accepted without sending. email={}", normalizedEmail);
             return;
         }
+        enforceDailyEmailCodeLimit(normalizedEmail);
         if (!Boolean.TRUE.equals(mailEnabled)) {
             RedisUtils.deleteObject(cooldownKey);
             throw ServiceException.ofMessageKey("tenant.apply.emailCode.mailDisabled");
@@ -183,7 +183,7 @@ public class SysTenantApplyService {
             user.setEmail(finalApply.getEmail());
             user.setNickName(finalApply.getMerchantName());
             user.setPassword(BCrypt.hashpw(tempPassword));
-            user.setForcePasswordChange("1");
+            user.setForcePasswordChange(UserConstants.FORCE_PASSWORD_CHANGE_YES);
             user.setUserType(UserType.SYS_USER.getUserType());
             user.setStatus(UserStatus.OK.getCode());
             userService.registerUser(user);

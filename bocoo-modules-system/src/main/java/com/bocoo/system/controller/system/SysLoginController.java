@@ -2,6 +2,7 @@ package com.bocoo.system.controller.system;
 
 import cn.dev33.satoken.annotation.SaIgnore;
 import com.bocoo.common.core.constant.Constants;
+import com.bocoo.common.core.constant.UserConstants;
 import com.bocoo.common.core.domain.R;
 import com.bocoo.common.core.domain.bo.EmailLoginBody;
 import com.bocoo.common.core.domain.bo.LoginBody;
@@ -170,7 +171,7 @@ public class SysLoginController {
             info.put("tenantId", loginUser.getTenantId());
             info.put("tenantType", loginUser.getTenantType());
             info.put("merchantId", loginUser.getMerchantId());
-            info.put("forcePasswordChange", "1".equals(user.getForcePasswordChange()));
+            info.put("forcePasswordChange", UserConstants.FORCE_PASSWORD_CHANGE_YES.equals(user.getForcePasswordChange()));
             return R.ok(info);
         });
     }
@@ -179,7 +180,7 @@ public class SysLoginController {
         LoginUser loginUser = LoginHelper.getLoginUser();
         return Map.of(
             Constants.TOKEN, token,
-            "forcePasswordChange", "1".equals(loginUser.getForcePasswordChange())
+            "forcePasswordChange", UserConstants.FORCE_PASSWORD_CHANGE_YES.equals(loginUser.getForcePasswordChange())
         );
     }
 

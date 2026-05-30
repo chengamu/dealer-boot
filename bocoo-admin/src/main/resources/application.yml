@@ -91,6 +91,8 @@ user:
   password:
     # 密码最大错误次数
     maxRetryCount: 5
+    # 密码全局最大错误次数（防止单账号暴力破解，需高于单 IP 最大错误次数）
+    globalMaxRetryCount: 20
     # 密码锁定时间（默认10分钟）
     lockTime: 10
 

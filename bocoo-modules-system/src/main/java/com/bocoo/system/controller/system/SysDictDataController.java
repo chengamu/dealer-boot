@@ -94,7 +94,7 @@ public class SysDictDataController extends BaseController {
      * @param dictType 字典类型
      */
     @SaIgnore
-    @RateLimiter(count = 60, time = 60, limitType = LimitType.IP)
+    @RateLimiter(count = 180, time = 60, limitType = LimitType.IP)
     @GetMapping(value = "/type/{dictType}")
     @Operation(summary = "根据字典类型查询字典数据信息", description = "根据字典类型查询字典数据信息")
     public R<List<SysDictDataVo>> dictType(

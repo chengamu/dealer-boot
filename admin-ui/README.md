@@ -32,6 +32,18 @@ pnpm preview
 
 Runtime settings are loaded from `public/_app.config.js` and copied into `dist/_app.config.js` during build. Change that file after deployment when only API base URL or external monitor links need to change.
 
+## Docker / Nginx Deployment
+
+Production Docker Compose deployment should prefer same-origin Nginx proxy:
+
+- Keep `VITE_APP_BASE_API` as `/dev-api` in `public/_app.config.js`.
+- Serve frontend static files from the Nginx container.
+- Proxy `/dev-api/*` to the backend through `API_PROXY_PASS`.
+- In Docker Compose, `API_PROXY_PASS` should use the backend service name, for example `http://bocoo-admin:8081`.
+- Do not put Docker Compose service names in browser-facing frontend config.
+
+See `../docs/deployment-nginx-same-origin.md` for the full deployment note and CORS guidance.
+
 ## Source Layout
 
 - `src/api`: typed backend API wrappers

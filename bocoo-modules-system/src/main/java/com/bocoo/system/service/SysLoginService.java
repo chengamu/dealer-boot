@@ -63,10 +63,14 @@ public class SysLoginService {
     private final TenantProperties tenantProperties;
 
     private static final int DEFAULT_MAX_RETRY_COUNT = 5;
+    private static final int DEFAULT_GLOBAL_MAX_RETRY_COUNT = 20;
     private static final int DEFAULT_LOCK_TIME = 10;
 
     @Value("${user.password.maxRetryCount:5}")
     private Integer maxRetryCount;
+
+    @Value("${user.password.globalMaxRetryCount:20}")
+    private Integer globalMaxRetryCount;
 
     @Value("${user.password.lockTime:10}")
     private Integer lockTime;
@@ -271,7 +275,8 @@ public class SysLoginService {
 
     private SysUserVo loadUserByUsernameOrEmail(String username) {
         List<SysUserVo> users = userMapper.selectVoList(new LambdaQueryWrapper<SysUser>()
-            .and(w -> w.eq(SysUser::getUserName, username).or().eq(SysUser::getEmail, username)));
+            .and(w -> w.eq(SysUser::getUserName, username).or().eq(SysUser::getEmail, username))
+            .orderByAsc(SysUser::getUserId));
         if (users != null) {
             for (SysUserVo user : users) {
                 if (StringUtils.equals(user.getUserName(), username)) {
@@ -397,14 +402,22 @@ public class SysLoginService {
      * 登录校验
      */
     private void checkLogin(LoginType loginType, String username, Supplier<Boolean> supplier) {
-        String errorKey = CacheConstants.PWD_ERR_CNT_KEY + loginType.name().toLowerCase() + ":" + username;
+        String loginTypeKey = loginType.name().toLowerCase() + ":" + username;
+        String errorKey = CacheConstants.PWD_ERR_CNT_KEY + loginTypeKey + ":" + ServletUtils.getClientIP();
+        String globalErrorKey = CacheConstants.PWD_ERR_CNT_GLOBAL_KEY + loginTypeKey;
         String loginFail = Constants.LOGIN_FAIL;
         int maxRetry = resolveMaxRetryCount();
+        int globalMaxRetry = resolveGlobalMaxRetryCount(maxRetry);
         int lockMinutes = resolveLockTime();
 
         // 获取用户登录错误次数，默认为0 (可自定义限制策略 例如: key + username + ip)
         int errorNumber = ObjectUtil.defaultIfNull(RedisUtils.getCacheObject(errorKey), 0);
+        int globalErrorNumber = ObjectUtil.defaultIfNull(RedisUtils.getCacheObject(globalErrorKey), 0);
         // 锁定时间内登录 则踢出
+        if (globalErrorNumber >= globalMaxRetry) {
+            recordLogininfor(username, loginFail, MessageUtils.message(loginType.getRetryLimitExceed(), globalMaxRetry, lockMinutes));
+            throw new UserException(loginType.getRetryLimitExceed(), globalMaxRetry, lockMinutes);
+        }
         if (errorNumber >= maxRetry) {
             recordLogininfor(username, loginFail, MessageUtils.message(loginType.getRetryLimitExceed(), maxRetry, lockMinutes));
             throw new UserException(loginType.getRetryLimitExceed(), maxRetry, lockMinutes);
@@ -413,9 +426,14 @@ public class SysLoginService {
         if (supplier.get()) {
             // 错误次数递增
             errorNumber++;
+            globalErrorNumber++;
             RedisUtils.setCacheObject(errorKey, errorNumber, Duration.ofMinutes(lockMinutes));
+            RedisUtils.setCacheObject(globalErrorKey, globalErrorNumber, Duration.ofMinutes(lockMinutes));
             // 达到规定错误次数 则锁定登录
-            if (errorNumber >= maxRetry) {
+            if (globalErrorNumber >= globalMaxRetry) {
+                recordLogininfor(username, loginFail, MessageUtils.message(loginType.getRetryLimitExceed(), globalMaxRetry, lockMinutes));
+                throw new UserException(loginType.getRetryLimitExceed(), globalMaxRetry, lockMinutes);
+            } else if (errorNumber >= maxRetry) {
                 recordLogininfor(username, loginFail, MessageUtils.message(loginType.getRetryLimitExceed(), maxRetry, lockMinutes));
                 throw new UserException(loginType.getRetryLimitExceed(), maxRetry, lockMinutes);
             } else {
@@ -427,11 +445,17 @@ public class SysLoginService {
 
         // 登录成功 清空错误次数
         RedisUtils.deleteObject(errorKey);
+        RedisUtils.deleteObject(globalErrorKey);
     }
 
     private int resolveMaxRetryCount() {
         int value = ObjectUtil.defaultIfNull(maxRetryCount, DEFAULT_MAX_RETRY_COUNT);
         return value > 0 ? value : DEFAULT_MAX_RETRY_COUNT;
+    }
+
+    private int resolveGlobalMaxRetryCount(int maxRetry) {
+        int value = ObjectUtil.defaultIfNull(globalMaxRetryCount, DEFAULT_GLOBAL_MAX_RETRY_COUNT);
+        return value > maxRetry ? value : Math.max(maxRetry + 1, DEFAULT_GLOBAL_MAX_RETRY_COUNT);
     }
 
     private int resolveLockTime() {

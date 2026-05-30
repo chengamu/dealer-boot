@@ -5,6 +5,12 @@
 
 > 遵循开源协议在项目中保留开源协议文件即可<br>
 
+## 部署建议
+
+Docker Compose / 生产部署推荐使用 Nginx 同源代理：前端由 Nginx 提供静态资源，`/dev-api/*` 由同一个 Nginx 反向代理到后端服务。这样浏览器看到前端和 API 是同一个 Origin，通常不需要额外放开生产 CORS。
+
+详细说明见：`docs/deployment-nginx-same-origin.md`。
+
 ## 功能权限
 采用 sa-token 权限注解 
 @SaIgnore  表示不需要登录就可以访问

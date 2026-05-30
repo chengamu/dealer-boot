@@ -64,3 +64,214 @@
 2026-05-30 09:14:29 [http-nio-8081-exec-3] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /system/dict/data/type/sys_oper_type],耗时:[42]毫秒
 2026-05-30 09:14:29 [http-nio-8081-exec-4] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /monitor/operlog/list],参数类型[param],参数:[{"pageNum":["1"],"pageSize":["1"]}]
 2026-05-30 09:14:29 [http-nio-8081-exec-4] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /monitor/operlog/list],耗时:[72]毫秒
+2026-05-30 10:50:40 [background-preinit] INFO  o.h.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2026-05-30 10:50:40 [com.bocoo.BocooApplication.main()] INFO  com.bocoo.BocooApplication - Starting BocooApplication using Java 17.0.4 with PID 6000 (D:\work\base-boot\bocoo-admin\target\classes started by Administrator in D:\work\base-boot)
+2026-05-30 10:50:40 [com.bocoo.BocooApplication.main()] INFO  com.bocoo.BocooApplication - The following 1 profile is active: "dev"
+2026-05-30 10:50:44 [com.bocoo.BocooApplication.main()] INFO  c.b.c.web.i18n.JsonMessageSource - Loaded JSON i18n locales: [en_US, zh_CN]
+2026-05-30 10:50:45 [com.bocoo.BocooApplication.main()] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8081"]
+2026-05-30 10:50:45 [com.bocoo.BocooApplication.main()] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+2026-05-30 10:50:45 [com.bocoo.BocooApplication.main()] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.33]
+2026-05-30 10:50:45 [com.bocoo.BocooApplication.main()] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-05-30 10:50:46 [com.bocoo.BocooApplication.main()] INFO  c.b.common.redis.config.RedisConfig - 初始化 redis 配置
+2026-05-30 10:50:46 [com.bocoo.BocooApplication.main()] INFO  org.redisson.Version - Redisson 3.52.0
+2026-05-30 10:50:52 [com.bocoo.BocooApplication.main()] WARN  o.s.b.w.s.c.AnnotationConfigServletWebServerApplicationContext - Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'cacheController' defined in URL [jar:file:/D:/repository/com/bocoo/bocoo-modules-system/1.0.0/bocoo-modules-system-1.0.0.jar!/com/bocoo/system/controller/monitor/CacheController.class]: Unsatisfied dependency expressed through constructor parameter 0: Error creating bean with name 'redissonConnectionFactory' defined in class path resource [org/redisson/spring/starter/RedissonAutoConfigurationV2.class]: Unsatisfied dependency expressed through method 'redissonConnectionFactory' parameter 0: Error creating bean with name 'redisson' defined in class path resource [org/redisson/spring/starter/RedissonAutoConfigurationV2.class]: Failed to instantiate [org.redisson.api.RedissonClient]: Factory method 'redisson' threw exception with message: java.util.concurrent.ExecutionException: org.redisson.client.RedisConnectionException: Unable to connect to Redis server: 127.0.0.1/127.0.0.1:6379
+2026-05-30 10:50:52 [com.bocoo.BocooApplication.main()] INFO  o.a.catalina.core.StandardService - Stopping service [Tomcat]
+2026-05-30 10:50:52 [com.bocoo.BocooApplication.main()] ERROR o.s.boot.SpringApplication - Application run failed
+org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'cacheController' defined in URL [jar:file:/D:/repository/com/bocoo/bocoo-modules-system/1.0.0/bocoo-modules-system-1.0.0.jar!/com/bocoo/system/controller/monitor/CacheController.class]: Unsatisfied dependency expressed through constructor parameter 0: Error creating bean with name 'redissonConnectionFactory' defined in class path resource [org/redisson/spring/starter/RedissonAutoConfigurationV2.class]: Unsatisfied dependency expressed through method 'redissonConnectionFactory' parameter 0: Error creating bean with name 'redisson' defined in class path resource [org/redisson/spring/starter/RedissonAutoConfigurationV2.class]: Failed to instantiate [org.redisson.api.RedissonClient]: Factory method 'redisson' threw exception with message: java.util.concurrent.ExecutionException: org.redisson.client.RedisConnectionException: Unable to connect to Redis server: 127.0.0.1/127.0.0.1:6379
+	at org.springframework.beans.factory.support.ConstructorResolver.createArgumentArray(ConstructorResolver.java:795)
+	at org.springframework.beans.factory.support.ConstructorResolver.autowireConstructor(ConstructorResolver.java:237)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.autowireConstructor(AbstractAutowireCapableBeanFactory.java:1375)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBeanInstance(AbstractAutowireCapableBeanFactory.java:1212)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:562)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:522)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:337)
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:234)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:335)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:200)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.preInstantiateSingletons(DefaultListableBeanFactory.java:975)
+	at org.springframework.context.support.AbstractApplicationContext.finishBeanFactoryInitialization(AbstractApplicationContext.java:971)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:625)
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.refresh(ServletWebServerApplicationContext.java:146)
+	at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:754)
+	at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:456)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:335)
+	at com.bocoo.BocooApplication.main(BocooApplication.java:21)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at org.codehaus.mojo.exec.AbstractExecJavaBase.executeMainMethod(AbstractExecJavaBase.java:402)
+	at org.codehaus.mojo.exec.ExecJavaMojo.executeMainMethod(ExecJavaMojo.java:142)
+	at org.codehaus.mojo.exec.AbstractExecJavaBase.doExecClassLoader(AbstractExecJavaBase.java:377)
+	at org.codehaus.mojo.exec.AbstractExecJavaBase.lambda$execute$0(AbstractExecJavaBase.java:287)
+	at java.base/java.lang.Thread.run(Thread.java:833)
+Caused by: org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'redissonConnectionFactory' defined in class path resource [org/redisson/spring/starter/RedissonAutoConfigurationV2.class]: Unsatisfied dependency expressed through method 'redissonConnectionFactory' parameter 0: Error creating bean with name 'redisson' defined in class path resource [org/redisson/spring/starter/RedissonAutoConfigurationV2.class]: Failed to instantiate [org.redisson.api.RedissonClient]: Factory method 'redisson' threw exception with message: java.util.concurrent.ExecutionException: org.redisson.client.RedisConnectionException: Unable to connect to Redis server: 127.0.0.1/127.0.0.1:6379
+	at org.springframework.beans.factory.support.ConstructorResolver.createArgumentArray(ConstructorResolver.java:795)
+	at org.springframework.beans.factory.support.ConstructorResolver.instantiateUsingFactoryMethod(ConstructorResolver.java:542)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.instantiateUsingFactoryMethod(AbstractAutowireCapableBeanFactory.java:1355)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBeanInstance(AbstractAutowireCapableBeanFactory.java:1185)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:562)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:522)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:337)
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:234)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:335)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:200)
+	at org.springframework.beans.factory.config.DependencyDescriptor.resolveCandidate(DependencyDescriptor.java:254)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.doResolveDependency(DefaultListableBeanFactory.java:1443)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.resolveDependency(DefaultListableBeanFactory.java:1353)
+	at org.springframework.beans.factory.support.ConstructorResolver.resolveAutowiredArgument(ConstructorResolver.java:904)
+	at org.springframework.beans.factory.support.ConstructorResolver.createArgumentArray(ConstructorResolver.java:782)
+	... 26 common frames omitted
+Caused by: org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'redisson' defined in class path resource [org/redisson/spring/starter/RedissonAutoConfigurationV2.class]: Failed to instantiate [org.redisson.api.RedissonClient]: Factory method 'redisson' threw exception with message: java.util.concurrent.ExecutionException: org.redisson.client.RedisConnectionException: Unable to connect to Redis server: 127.0.0.1/127.0.0.1:6379
+	at org.springframework.beans.factory.support.ConstructorResolver.instantiate(ConstructorResolver.java:648)
+	at org.springframework.beans.factory.support.ConstructorResolver.instantiateUsingFactoryMethod(ConstructorResolver.java:485)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.instantiateUsingFactoryMethod(AbstractAutowireCapableBeanFactory.java:1355)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBeanInstance(AbstractAutowireCapableBeanFactory.java:1185)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:562)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:522)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:337)
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:234)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:335)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:200)
+	at org.springframework.beans.factory.config.DependencyDescriptor.resolveCandidate(DependencyDescriptor.java:254)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.doResolveDependency(DefaultListableBeanFactory.java:1443)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.resolveDependency(DefaultListableBeanFactory.java:1353)
+	at org.springframework.beans.factory.support.ConstructorResolver.resolveAutowiredArgument(ConstructorResolver.java:904)
+	at org.springframework.beans.factory.support.ConstructorResolver.createArgumentArray(ConstructorResolver.java:782)
+	... 40 common frames omitted
+Caused by: org.springframework.beans.BeanInstantiationException: Failed to instantiate [org.redisson.api.RedissonClient]: Factory method 'redisson' threw exception with message: java.util.concurrent.ExecutionException: org.redisson.client.RedisConnectionException: Unable to connect to Redis server: 127.0.0.1/127.0.0.1:6379
+	at org.springframework.beans.factory.support.SimpleInstantiationStrategy.instantiate(SimpleInstantiationStrategy.java:178)
+	at org.springframework.beans.factory.support.ConstructorResolver.instantiate(ConstructorResolver.java:644)
+	... 54 common frames omitted
+Caused by: org.redisson.client.RedisConnectionException: java.util.concurrent.ExecutionException: org.redisson.client.RedisConnectionException: Unable to connect to Redis server: 127.0.0.1/127.0.0.1:6379
+	at org.redisson.connection.MasterSlaveConnectionManager.doConnect(MasterSlaveConnectionManager.java:229)
+	at org.redisson.connection.MasterSlaveConnectionManager.connect(MasterSlaveConnectionManager.java:188)
+	at org.redisson.connection.ConnectionManager.create(ConnectionManager.java:98)
+	at org.redisson.Redisson.<init>(Redisson.java:76)
+	at org.redisson.Redisson.create(Redisson.java:119)
+	at org.redisson.spring.starter.RedissonAutoConfiguration.redisson(RedissonAutoConfiguration.java:329)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at org.springframework.beans.factory.support.SimpleInstantiationStrategy.instantiate(SimpleInstantiationStrategy.java:146)
+	... 55 common frames omitted
+Caused by: java.util.concurrent.ExecutionException: org.redisson.client.RedisConnectionException: Unable to connect to Redis server: 127.0.0.1/127.0.0.1:6379
+	at java.base/java.util.concurrent.CompletableFuture.reportGet(CompletableFuture.java:396)
+	at java.base/java.util.concurrent.CompletableFuture.get(CompletableFuture.java:2096)
+	at org.redisson.connection.MasterSlaveConnectionManager.doConnect(MasterSlaveConnectionManager.java:224)
+	... 65 common frames omitted
+Caused by: org.redisson.client.RedisConnectionException: Unable to connect to Redis server: 127.0.0.1/127.0.0.1:6379
+	at org.redisson.connection.ConnectionsHolder.lambda$createConnection$2(ConnectionsHolder.java:169)
+	at java.base/java.util.concurrent.CompletableFuture.uniHandle(CompletableFuture.java:934)
+	at java.base/java.util.concurrent.CompletableFuture$UniHandle.tryFire(CompletableFuture.java:911)
+	at java.base/java.util.concurrent.CompletableFuture.postComplete(CompletableFuture.java:510)
+	at java.base/java.util.concurrent.CompletableFuture.completeExceptionally(CompletableFuture.java:2162)
+	at org.redisson.connection.ConnectionsHolder.lambda$createConnection$5(ConnectionsHolder.java:183)
+	at java.base/java.util.concurrent.CompletableFuture.uniWhenComplete(CompletableFuture.java:863)
+	at java.base/java.util.concurrent.CompletableFuture$UniWhenComplete.tryFire(CompletableFuture.java:841)
+	at java.base/java.util.concurrent.CompletableFuture.postComplete(CompletableFuture.java:510)
+	at java.base/java.util.concurrent.CompletableFuture.completeExceptionally(CompletableFuture.java:2162)
+	at org.redisson.client.RedisClient$2$2.run(RedisClient.java:325)
+	at io.netty.util.concurrent.AbstractEventExecutor.runTask(AbstractEventExecutor.java:173)
+	at io.netty.util.concurrent.AbstractEventExecutor.safeExecute(AbstractEventExecutor.java:166)
+	at io.netty.util.concurrent.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:472)
+	at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:569)
+	at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:997)
+	at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)
+	at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)
+	... 1 common frames omitted
+Caused by: java.util.concurrent.CompletionException: io.netty.channel.AbstractChannel$AnnotatedConnectException: Connection refused: no further information: 127.0.0.1/127.0.0.1:6379
+	at java.base/java.util.concurrent.CompletableFuture.encodeRelay(CompletableFuture.java:368)
+	at java.base/java.util.concurrent.CompletableFuture.completeRelay(CompletableFuture.java:377)
+	at java.base/java.util.concurrent.CompletableFuture$UniRelay.tryFire(CompletableFuture.java:1097)
+	... 11 common frames omitted
+Caused by: io.netty.channel.AbstractChannel$AnnotatedConnectException: Connection refused: no further information: 127.0.0.1/127.0.0.1:6379
+Caused by: java.net.ConnectException: Connection refused: no further information
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+	at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:672)
+	at java.base/sun.nio.ch.SocketChannelImpl.finishConnect(SocketChannelImpl.java:946)
+	at io.netty.channel.socket.nio.NioSocketChannel.doFinishConnect(NioSocketChannel.java:336)
+	at io.netty.channel.nio.AbstractNioChannel$AbstractNioUnsafe.finishConnect(AbstractNioChannel.java:339)
+	at io.netty.channel.nio.NioEventLoop.processSelectedKey(NioEventLoop.java:776)
+	at io.netty.channel.nio.NioEventLoop.processSelectedKeysOptimized(NioEventLoop.java:724)
+	at io.netty.channel.nio.NioEventLoop.processSelectedKeys(NioEventLoop.java:650)
+	at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:562)
+	at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:997)
+	at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)
+	at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)
+	at java.base/java.lang.Thread.run(Thread.java:833)
+2026-05-30 10:59:28 [background-preinit] INFO  o.h.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2026-05-30 10:59:28 [com.bocoo.BocooApplication.main()] INFO  com.bocoo.BocooApplication - Starting BocooApplication using Java 17.0.4 with PID 18624 (D:\work\base-boot\bocoo-admin\target\classes started by Administrator in D:\work\base-boot)
+2026-05-30 10:59:28 [com.bocoo.BocooApplication.main()] INFO  com.bocoo.BocooApplication - The following 1 profile is active: "dev"
+2026-05-30 10:59:32 [com.bocoo.BocooApplication.main()] INFO  c.b.c.web.i18n.JsonMessageSource - Loaded JSON i18n locales: [en_US, zh_CN]
+2026-05-30 10:59:33 [com.bocoo.BocooApplication.main()] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8081"]
+2026-05-30 10:59:33 [com.bocoo.BocooApplication.main()] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+2026-05-30 10:59:33 [com.bocoo.BocooApplication.main()] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.33]
+2026-05-30 10:59:33 [com.bocoo.BocooApplication.main()] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-05-30 10:59:35 [com.bocoo.BocooApplication.main()] INFO  c.b.common.redis.config.RedisConfig - 初始化 redis 配置
+2026-05-30 10:59:35 [com.bocoo.BocooApplication.main()] INFO  org.redisson.Version - Redisson 3.52.0
+2026-05-30 10:59:35 [redisson-netty-1-4] INFO  o.r.connection.ConnectionsHolder - 1 connections initialized for 127.0.0.1/127.0.0.1:6379
+2026-05-30 10:59:35 [redisson-netty-1-3] INFO  o.r.connection.ConnectionsHolder - 8 connections initialized for 127.0.0.1/127.0.0.1:6379
+2026-05-30 10:59:35 [com.bocoo.BocooApplication.main()] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource detect P6SPY plugin and enabled it
+2026-05-30 10:59:35 [com.bocoo.BocooApplication.main()] INFO  com.zaxxer.hikari.HikariDataSource - master - Starting...
+2026-05-30 10:59:35 [com.bocoo.BocooApplication.main()] INFO  com.zaxxer.hikari.pool.HikariPool - master - Added connection org.postgresql.jdbc.PgConnection@42815b5e
+2026-05-30 10:59:35 [com.bocoo.BocooApplication.main()] INFO  com.zaxxer.hikari.HikariDataSource - master - Start completed.
+2026-05-30 10:59:35 [com.bocoo.BocooApplication.main()] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource - add a datasource named [master] success
+2026-05-30 10:59:35 [com.bocoo.BocooApplication.main()] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource initial loaded [1] datasource,primary datasource named [master]
+2026-05-30 10:59:39 [com.bocoo.BocooApplication.main()] INFO  c.b.common.json.config.JacksonConfig - 初始化 jackson 配置
+2026-05-30 10:59:41 [com.bocoo.BocooApplication.main()] INFO  c.b.c.w.s.ServerEndpointExporter - [34mNetty WebSocket started on port: 2831 with context path(s): '/ws' .[0m
+2026-05-30 10:59:41 [com.bocoo.BocooApplication.main()] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8081"]
+2026-05-30 10:59:41 [com.bocoo.BocooApplication.main()] INFO  com.bocoo.BocooApplication - Started BocooApplication in 13.618 seconds (process running for 18.721)
+2026-05-30 10:59:41 [com.bocoo.BocooApplication.main()] INFO  c.b.s.runner.SystemApplicationRunner - 初始化OSS配置成功
+2026-05-30 10:59:41 [com.bocoo.BocooApplication.main()] INFO  c.b.s.runner.SystemApplicationRunner - 加载参数缓存数据成功
+2026-05-30 10:59:41 [com.bocoo.BocooApplication.main()] INFO  c.b.s.runner.SystemApplicationRunner - 加载字典缓存数据成功
+2026-05-30 10:59:51 [http-nio-8081-exec-2] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-05-30 10:59:51 [http-nio-8081-exec-2] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /captchaImage],无参数
+2026-05-30 10:59:51 [http-nio-8081-exec-2] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /captchaImage],耗时:[527]毫秒
+2026-05-30 11:00:43 [http-nio-8081-exec-5] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /captchaImage],无参数
+2026-05-30 11:00:43 [http-nio-8081-exec-5] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /captchaImage],耗时:[11]毫秒
+2026-05-30 11:00:43 [http-nio-8081-exec-3] ERROR c.b.c.w.h.GlobalExceptionHandler - 请求地址'/getInfo',认证失败'未能读取到有效 token',无法访问系统资源
+2026-05-30 11:02:01 [http-nio-8081-exec-6] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /captchaImage],无参数
+2026-05-30 11:02:01 [http-nio-8081-exec-6] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /captchaImage],耗时:[10]毫秒
+2026-05-30 11:02:25 [http-nio-8081-exec-8] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /captchaImage],无参数
+2026-05-30 11:02:25 [http-nio-8081-exec-8] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /captchaImage],耗时:[7]毫秒
+2026-05-30 11:02:25 [http-nio-8081-exec-9] ERROR c.b.c.w.h.GlobalExceptionHandler - 请求地址'/getInfo',认证失败'未能读取到有效 token',无法访问系统资源
+2026-05-30 11:03:23 [http-nio-8081-exec-2] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /captchaImage],无参数
+2026-05-30 11:03:23 [http-nio-8081-exec-2] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /captchaImage],耗时:[7]毫秒
+2026-05-30 11:03:23 [http-nio-8081-exec-4] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[POST /login],参数类型[json],参数:[{"username":"admin","code":"","password":"admin123","uuid":""}]
+2026-05-30 11:03:23 [http-nio-8081-exec-4] ERROR c.b.c.w.h.GlobalExceptionHandler - Captcha invalid
+2026-05-30 11:03:23 [http-nio-8081-exec-4] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[POST /login],耗时:[57]毫秒
+2026-05-30 11:03:23 [schedule-pool-1] WARN  o.s.s.a.AnnotationAsyncExecutionInterceptor - Exception handler for async method 'public void com.bocoo.system.service.SysLogininforService.recordLogininfor(com.bocoo.common.log.event.LogininforEvent)' threw unexpected exception itself
+com.bocoo.common.core.exception.ServiceException: Exception message - The request object has been recycled and is no longer associated with this facade, Method name - recordLogininfor, Parameter value - [LogininforEvent(username=admin, status=Error, message=Captcha invalid, request=com.bocoo.common.web.filter.RepeatedlyRequestWrapper@f77e3e3, ipaddr=127.0.0.1, userAgent=Mozilla/5.0 (Windows NT; Windows NT 10.0; zh-CN) WindowsPowerShell/5.1.19041.3031, args=null)]
+	at com.bocoo.common.core.config.AsyncConfig.lambda$getAsyncUncaughtExceptionHandler$0(AsyncConfig.java:46)
+	at org.springframework.aop.interceptor.AsyncExecutionAspectSupport.handleError(AsyncExecutionAspectSupport.java:325)
+	at org.springframework.aop.interceptor.AsyncExecutionInterceptor.lambda$invoke$0(AsyncExecutionInterceptor.java:122)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:304)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:833)
+2026-05-30 11:04:20 [http-nio-8081-exec-3] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /captchaImage],无参数
+2026-05-30 11:04:20 [http-nio-8081-exec-3] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /captchaImage],耗时:[9]毫秒
+2026-05-30 11:04:37 [http-nio-8081-exec-6] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /captchaImage],无参数
+2026-05-30 11:04:37 [http-nio-8081-exec-6] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /captchaImage],耗时:[6]毫秒
+2026-05-30 11:05:01 [http-nio-8081-exec-8] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /captchaImage],无参数
+2026-05-30 11:05:01 [http-nio-8081-exec-8] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /captchaImage],耗时:[9]毫秒
+2026-05-30 11:05:01 [http-nio-8081-exec-9] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[POST /login],参数类型[json],参数:[{"username":"admin","code":"\"xHAN\"","password":"123456","uuid":"3299dee67b934aa2990a2f9dbfbbb1c9"}]
+2026-05-30 11:05:01 [http-nio-8081-exec-9] ERROR c.b.c.w.h.GlobalExceptionHandler - Captcha error
+2026-05-30 11:05:01 [http-nio-8081-exec-9] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[POST /login],耗时:[4]毫秒
+2026-05-30 11:05:01 [schedule-pool-1] INFO  c.b.s.service.SysLogininforService - [127.0.0.1]内网IP[admin][Error][Captcha error]
+2026-05-30 11:05:46 [http-nio-8081-exec-2] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /captchaImage],无参数
+2026-05-30 11:05:46 [http-nio-8081-exec-2] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /captchaImage],耗时:[5]毫秒
+2026-05-30 11:05:46 [http-nio-8081-exec-4] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[POST /login],参数类型[json],参数:[{"username":"admin","code":"20oy","password":"123456","uuid":"6c991da4c19d4cd5b71aa09c579ca5a2"}]
+2026-05-30 11:05:47 [schedule-pool-2] INFO  c.b.s.service.SysLogininforService - [127.0.0.1]内网IP[admin][Success][Login successful]
+2026-05-30 11:05:47 [http-nio-8081-exec-4] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[POST /login],耗时:[1147]毫秒
+2026-05-30 11:05:48 [http-nio-8081-exec-5] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /getInfo],无参数
+2026-05-30 11:05:48 [http-nio-8081-exec-5] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /getInfo],耗时:[98]毫秒
+2026-05-30 11:05:48 [http-nio-8081-exec-3] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /getRouters],无参数
+2026-05-30 11:05:48 [http-nio-8081-exec-3] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /getRouters],耗时:[38]毫秒
+2026-05-30 11:05:48 [http-nio-8081-exec-1] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /system/dict/data/type/sys_oper_type],无参数
+2026-05-30 11:05:48 [http-nio-8081-exec-1] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /system/dict/data/type/sys_oper_type],耗时:[44]毫秒
+2026-05-30 11:05:48 [http-nio-8081-exec-6] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /monitor/operlog/list],参数类型[param],参数:[{"pageNum":["1"],"pageSize":["1"]}]
+2026-05-30 11:05:48 [http-nio-8081-exec-6] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /monitor/operlog/list],耗时:[89]毫秒

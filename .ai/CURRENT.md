@@ -2,30 +2,28 @@
 
 ## Current Status：当前状态
 
-当前安全漏洞与业务安全修复批次已归档。
+`CODE_REVIEW.md` 风险收敛与登录页 Curtain Reveal 批次已归档。
 
-归档文件：`.ai/archive/20260530-security-business-remediation.md`
+归档文件：`.ai/archive/20260530-code-review-curtain-intro.md`
 
-最终状态：Accepted with Risks。
+最终状态：Accepted。
 
 ## Completed：已完成
 
-- 已完成 `CODE_REVIEW.md` 与 `CODE_REVIEW_BUSINESS.md` 中可直接修复的主要安全/业务安全项。
-- 已完成 PostgreSQL-only DB/架构批次：`sys_user.force_password_change`、DEV PG 列/字典/索引应用、首次登录强制改密链路、Sa-Token 单用户最大登录数。
-- 已完成新增审计类型和敏感/跨租户操作审计补充。
-- 已完成前端依赖 audit 的可兼容降险，`pnpm audit` 从 8 个问题降到 1 个剩余 `quill` advisory。
+- 已修复更新版 `CODE_REVIEW.md` 中的 5 个真实风险。
+- 已新增登录页 CSS-only Curtain Reveal 动画，并完成桌面/移动端浏览器验证。
+- 已补齐 DEV 后端 unauth/authenticated runtime/API smoke。
+- 已完成 `forcePasswordChange` 常量化；上传复用因组件行为差异暂不强抽象。
 
 ## Validation Summary：验证摘要
 
-- Passed: `pnpm i18n:validate`
-- Passed: `pnpm i18n:sync`
+- Passed: `codegraph sync`
+- Passed: `git diff --check`
 - Passed: `mvn -DskipTests compile`
-- Passed: `mvn -pl bocoo-admin -am -DskipTests package`
-- Passed: admin-ui `pnpm typecheck`
-- Passed: admin-ui `pnpm build`
-- Passed: DEV backend unauthenticated smoke
-- Passed: DEV backend authenticated smoke using existing local Redis admin Token
-- Blocked: backend OWASP Dependency-Check, due to CISA/NVD external data-source failures and no local vulnerability database
+- Passed: `admin-ui` `pnpm typecheck`
+- Passed: `admin-ui` `pnpm build`
+- Passed: Playwright Curtain Reveal browser validation
+- Passed: DEV backend unauthenticated and authenticated API smoke
 
 ## Remaining Risks / TODO：剩余风险
 
@@ -33,7 +31,7 @@
 - TODO: evaluate `@vueup/vue-quill -> quill@1.3.7` migration; do not force Quill 2.x without component compatibility testing.
 - TODO: revisit HttpOnly Cookie + CSRF after formal domain and deployment topology exist.
 - TODO: tighten production CORS origins when a formal domain exists.
-- TODO: merchant application progress self-service query remains deferred by user decision.
+- TODO: consider log clean batch-delete reuse and `XssFilter` GET/DELETE strategy as separate follow-ups.
 
 ## Next Step：下一步
 

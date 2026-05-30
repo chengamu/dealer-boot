@@ -1,5 +1,7 @@
 ﻿<template>
   <div class="auth-page">
+    <CurtainIntro />
+
     <section class="hero-panel">
       <div class="brand">
         <div class="sky-logo">skyspf</div>
@@ -125,6 +127,7 @@ import { useI18n } from 'vue-i18n'
 import type { FormInstance, FormRules } from 'element-plus'
 import { ElMessage } from 'element-plus'
 import { Connection, Lock, Message, CircleCheckFilled } from '@element-plus/icons-vue'
+import CurtainIntro from '@/components/AuthVisual/CurtainIntro.vue'
 import AuthLocaleSelect from '@/components/AuthVisual/AuthLocaleSelect.vue'
 import { useUserStore } from '@/stores/user'
 import { useLocaleStore } from '@/stores/locale'

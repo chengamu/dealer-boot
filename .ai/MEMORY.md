@@ -20,7 +20,9 @@
 - pnpm v11 不再读取 `package.json#pnpm.overrides`；本项目的前端依赖覆盖规则应放在 `admin-ui/pnpm-workspace.yaml`。
 - 后端 OWASP Dependency-Check 依赖 NVD/CISA 外部数据源；如果更新失败且本地无缓存库，必须标记为阻塞，不能当作扫描通过。
 - 登录受验证码阻挡时，可用本地 Redis 已有 admin 在线 Token 做 authenticated smoke；验证时不得输出 Token。
+- 如果 Redis 没有 `online_tokens:*`，可通过 `/captchaImage` 返回的 `data.uuid` 读取 `captcha_codes:<uuid>`；该值可能是 JSON 字符串，登录前要反序列化，且不得输出验证码、口令或 Token。
 - `sys_menu.perms` 运行时按 `distinct + Set` 进入 Sa-Token 权限字符串集合；重复值不必默认修数据，先判断是否是菜单页和按钮共享权限。
+- 代码质量建议不应默认强抽象：上传组件虽然都构造 `FormData`，但回调、状态和接口参数不同，差异明显时先记录后续项。
 
 ## 2026-05-30 Known Risks
 

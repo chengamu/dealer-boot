@@ -53,6 +53,11 @@ public interface CacheConstants {
     String PWD_ERR_CNT_KEY = "pwd_err_cnt:";
 
     /**
+     * 登录账户全局密码错误次数 redis key
+     */
+    String PWD_ERR_CNT_GLOBAL_KEY = PWD_ERR_CNT_KEY + "global:";
+
+    /**
      * 在线用户 token 扫描上限
      */
     int ONLINE_TOKEN_SCAN_LIMIT = 1000;
