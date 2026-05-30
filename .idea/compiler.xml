@@ -24,8 +24,10 @@
         <module name="bocoo-common-json" />
         <module name="bocoo-common-security" />
         <module name="bocoo-common-sensitive" />
+        <module name="bocoo-module-pay" />
         <module name="bocoo-common-excel" />
         <module name="bocoo-common-log" />
+        <module name="bocoo-modules-dealer" />
         <module name="bocoo-common-ratelimiter" />
         <module name="bocoo-common-encrypt" />
         <module name="bocoo-common-satoken" />
@@ -68,6 +70,8 @@
       <module name="bocoo-common-translation" options="-parameters" />
       <module name="bocoo-common-web" options="-parameters" />
       <module name="bocoo-common-webSocket" options="-parameters" />
+      <module name="bocoo-module-pay" options="-parameters" />
+      <module name="bocoo-modules-dealer" options="-parameters" />
       <module name="bocoo-modules-generator" options="-parameters" />
       <module name="bocoo-modules-system" options="-parameters" />
     </option>

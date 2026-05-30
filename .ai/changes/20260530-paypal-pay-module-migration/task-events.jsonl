@@ -1,0 +1,22 @@
+{"time":"2026-05-30T13:17:22+08:00","taskId":"C1","status":"done","summary":"完成支付模块边界与订单 contract：商户为付款方，厂家/平台方为收款方，渠道配置只归收款侧管理，订单侧通过内部 API 对接支付模块。"}
+{"time":"2026-05-30T13:17:22+08:00","taskId":"C2","status":"done","summary":"完成 PostgreSQL pay_* DDL contract：独立生成 PG DDL，不导入旧 SQL，交易表需要表达 payer_tenant_id 和 payee_tenant_id，config 使用 jsonb 并脱敏。"}
+{"time":"2026-05-30T13:17:22+08:00","taskId":"C3","status":"done","summary":"完成全渠道依赖与验签 contract：保留支付宝、微信、PayPal、Stripe、Mock、Wallet；PayPal webhook 必须补强主流程验签。"}
+{"time":"2026-05-30T13:17:22+08:00","taskId":"BARRIER-0","status":"done","summary":"Barrier 0 通过：scope、租户边界、DB 草案和回调验签强制要求已固化到 design.md。"}
+{"time":"2026-05-30T13:35:00+08:00","taskId":"B1","status":"running","summary":"已新增 bocoo-module-pay 模块骨架，挂到根 pom 与 bocoo-admin；支付 SDK 依赖已进入 dependencyManagement，等待 Maven 编译验证。"}
+{"time":"2026-05-30T13:35:00+08:00","taskId":"B2","status":"running","summary":"已新增支付核心实体、Mapper、枚举和 service contract；付款方/收款方租户字段已落实体，幂等状态实现待后续 service implementation。"}
+{"time":"2026-05-30T13:35:00+08:00","taskId":"B3","status":"running","summary":"已新增 sql/postgresql/pay.sql，包含 pay_* DDL 与支付字典初始数据；菜单/权限初始化等待 API/UI 明确后补。"}
+{"time":"2026-05-30T13:35:00+08:00","taskId":"CHECK-WAVE-1-PARTIAL","status":"blocked","summary":"git diff --check 已执行，仅 CRLF 提示；按 Pause Rules 暂停在 Maven build 前，等待用户授权运行编译。"}
+{"time":"2026-05-30T13:38:00+08:00","taskId":"B1","status":"done","summary":"模块骨架已通过 bocoo-module-pay 和 bocoo-admin 聚合编译验证。"}
+{"time":"2026-05-30T13:38:00+08:00","taskId":"B2","status":"done","summary":"核心实体、Mapper、service contract 和基础 Mock service implementation 已通过 bocoo-admin 聚合编译；Mock 成功路径使用条件更新保证幂等。"}
+{"time":"2026-05-30T13:38:00+08:00","taskId":"B3","status":"done","summary":"pay.sql 已在 DEV PostgreSQL 执行；只读校验确认 12 张核心表、Mock 默认应用和 Mock 默认渠道存在。菜单/权限初始化延后到 F1。"}
+{"time":"2026-05-30T13:38:00+08:00","taskId":"BARRIER-1","status":"done","summary":"Barrier 1 通过：git diff --check 无空白错误，codegraph sync 完成，bocoo-admin 聚合编译通过，DEV PG DDL 校验通过。"}
+{"time":"2026-05-30T14:04:00+08:00","taskId":"P3","status":"running","summary":"Mock 支付主链路已补 dev/local-only smoke API，并通过 dist jar runtime/API smoke；Wallet / Transfer 完整 service/API 仍在 Wave 2 后续。"}
+{"time":"2026-05-30T14:04:00+08:00","taskId":"V1","status":"done","summary":"完成 codegraph sync、git diff --check、bocoo-module-pay compile、bocoo-admin compile/package、DEV PG DDL 校验和 /pay/mock/smoke；临时服务已停止。"}
+{"time":"2026-05-30T14:20:00+08:00","taskId":"P1","status":"pending","summary":"按用户要求，PayPal / Stripe 真实支付先不做，转入 real-payment-todo.md；代码增加非 Mock / Wallet 渠道不伪造成功的保护。"}
+{"time":"2026-05-30T14:20:00+08:00","taskId":"P2","status":"pending","summary":"按用户要求，支付宝 / 微信真实支付先不做，转入 real-payment-todo.md；等待 sandbox 配置、证书和公网 webhook 地址。"}
+{"time":"2026-05-30T14:20:00+08:00","taskId":"P3","status":"running","summary":"补充 Wallet / Transfer service contract 和基础实现；真实转账提交仍转 TODO。二次 dist runtime/API smoke 通过，Mock 订单状态为 10。"}
+{"time":"2026-05-30T14:35:00+08:00","taskId":"P3","status":"done","summary":"补齐 Wallet 本地支付扣余额分支和 Wallet 业务类型枚举；Mock / Wallet 本地能力已完成，真实转账提交继续 TODO。"}
+{"time":"2026-05-30T14:35:00+08:00","taskId":"I1","status":"done","summary":"新增 PayApi / PayApiImpl / PayOrderStatusVo，订单业务可通过内部 API 创建支付单、提交支付、查询状态和接收成功通知。"}
+{"time":"2026-05-30T14:35:00+08:00","taskId":"F1","status":"done","summary":"新增支付管理查询后端入口 PayAdminController / PayAdminService，覆盖渠道、订单、退款、通知任务、钱包查询；渠道 config 已脱敏，前端菜单页面后续再做。"}
+{"time":"2026-05-30T14:35:00+08:00","taskId":"R1","status":"done","summary":"完成支付安全审查并写入 security-review.md，真实支付解冻前必须完成 webhook 验签、金额一致性和真实退款/转账幂等。"}
+{"time":"2026-05-30T14:35:00+08:00","taskId":"V1","status":"done","summary":"最终验证通过：codegraph sync、bocoo-admin compile/package、dist runtime /pay/mock/smoke、/pay/admin/channel/list 脱敏查询、git diff --check 均完成；临时服务已停止。"}

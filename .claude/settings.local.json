@@ -5,7 +5,18 @@
       "Bash(Get-ChildItem -Recurse -File -Path \"D:\\\\work\\\\base-boot\\\\admin-ui\\\\src\\\\utils\")",
       "Bash(Select-Object FullName)",
       "Bash(Get-ChildItem *)",
-      "mcp__codegraph__codegraph_explore"
+      "mcp__codegraph__codegraph_explore",
+      "Bash(git diff *)",
+      "PowerShell(Get-Content *)",
+      "PowerShell($bytes = [System.IO.File]::ReadAllBytes\\(\"D:\\\\work\\\\base-boot\\\\pom.xml\"\\); if \\($bytes.Length -ge 3 -and $bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF\\) { Write-Output \"UTF-8 with BOM\" } elseif \\($bytes.Length -ge 2 -and $bytes[0] -eq 0xFF -and $bytes[1] -eq 0xFE\\) { Write-Output \"UTF-16 LE\" } elseif \\($bytes.Length -ge 2 -and $bytes[0] -eq 0xFE -and $bytes[1] -eq 0xFF\\) { Write-Output \"UTF-16 BE\" } else { Write-Output \"UTF-8 without BOM \\(or other\\)\" }; Write-Output \"File size: $\\($bytes.Length\\) bytes\")",
+      "PowerShell(@\\(\"D:\\\\work\\\\base-boot\\\\pom.xml\", \"D:\\\\work\\\\base-boot\\\\bocoo-admin\\\\pom.xml\", \"D:\\\\work\\\\base-boot\\\\bocoo-modules-dealer\\\\pom.xml\", \"D:\\\\work\\\\base-boot\\\\bocoo-module-pay\\\\pom.xml\"\\) | ForEach-Object { $bytes = [System.IO.File]::ReadAllBytes\\($_\\); $hasBOM = \\($bytes.Length -ge 3 -and $bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF\\); Write-Output \"$_ : BOM=$hasBOM, Size=$\\($bytes.Length\\)\" })",
+      "PowerShell($files = Get-ChildItem -Path \"D:\\\\work\\\\base-boot\" -Filter \"pom.xml\" -Recurse -Depth 4; $bad = @\\(\\); $good = @\\(\\); foreach \\($f in $files\\) { $raw = [System.IO.File]::ReadAllBytes\\($f.FullName\\); $text = [System.Text.Encoding]::UTF8.GetString\\($raw\\); if \\($text -match '[一-鿿]'\\) { $good += $f.FullName } else { $containsChineseBytes = $false; for \\($i = 0; $i -lt $raw.Length - 2; $i++\\) { if \\($raw[$i] -ge 0xE0 -and $raw[$i] -le 0xEF -and $raw[$i+1] -ge 0x80\\) { $containsChineseBytes = $true; break } } if \\($containsChineseBytes\\) { $bad += $f.FullName } } }; Write-Output \"=== GOOD \\(correct Chinese\\) ===\"; $good; Write-Output \"`n=== BAD \\(garbled Chinese\\) ===\"; $bad)",
+      "PowerShell($bytes = [System.IO.File]::ReadAllBytes\\(\"D:\\\\work\\\\base-boot\\\\pom.xml\"\\); $text = [System.Text.Encoding]::UTF8.GetString\\($bytes\\); $idx = $text.IndexOf\\('榛'\\); if \\($idx -gt 0\\) { $before = $text.Substring\\([Math]::Max\\(0, $idx - 20\\), [Math]::Min\\(40, $text.Length - [Math]::Max\\(0, $idx - 20\\)\\)\\); Write-Output \"Context: $before\"; $rawBytes = $bytes[[Math]::Max\\(0, $idx-20\\)..[Math]::Min\\($bytes.Length-1, $idx+40\\)]; $hex = [BitConverter]::ToString\\($rawBytes\\); Write-Output \"Raw bytes: $hex\"; $gbk = [System.Text.Encoding]::GetEncoding\\('GBK'\\); $decodedGbk = $gbk.GetString\\($rawBytes\\); Write-Output \"Decoded as GBK: $decodedGbk\" })",
+      "PowerShell(Get-Item *)",
+      "Bash(powershell *)",
+      "PowerShell($bytes = [System.IO.File]::ReadAllBytes\\(\"D:\\\\work\\\\base-boot\\\\i18n\\\\locales\\\\en_US.json\"\\); $text = [System.Text.Encoding]::UTF8.GetString\\($bytes\\); if \\($text -match '\\\\b\\(drug|healthbrain|health_brain|brain\\)\\\\b'\\) { Write-Output \"Found\" } else { Write-Output \"No healthbrain/drug keys in en_US i18n\" })",
+      "Bash(Move-Item *)",
+      "PowerShell(Move-Item *)"
     ]
   }
 }

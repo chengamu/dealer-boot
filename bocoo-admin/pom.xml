@@ -46,6 +46,13 @@
             <version>${com.bocoo.version}</version>
         </dependency>
 
+        <!-- 支付模块 -->
+        <dependency>
+            <groupId>com.bocoo</groupId>
+            <artifactId>bocoo-module-pay</artifactId>
+            <version>${com.bocoo.version}</version>
+        </dependency>
+
         <!-- API文档 -->
         <dependency>
             <groupId>com.bocoo</groupId>

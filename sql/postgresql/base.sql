@@ -365,6 +365,50 @@ CREATE TABLE IF NOT EXISTS sys_language (
 CREATE UNIQUE INDEX IF NOT EXISTS uk_sys_language_code ON sys_language (language_code);
 CREATE INDEX IF NOT EXISTS idx_sys_language_status_sort ON sys_language (status, sort, language_code);
 
+COMMENT ON TABLE sys_country IS '国家表';
+COMMENT ON COLUMN sys_country.country_id IS '国家ID';
+COMMENT ON COLUMN sys_country.country_code IS '国家代码，ISO 3166-1 alpha-2';
+COMMENT ON COLUMN sys_country.name_en IS '英文名称';
+COMMENT ON COLUMN sys_country.name_zh IS '中文名称';
+COMMENT ON COLUMN sys_country.status IS '状态：1正常，0停用';
+COMMENT ON COLUMN sys_country.sort IS '排序';
+COMMENT ON COLUMN sys_country.create_by IS '创建者';
+COMMENT ON COLUMN sys_country.create_time IS '创建时间，UTC timestamptz';
+COMMENT ON COLUMN sys_country.update_by IS '更新者';
+COMMENT ON COLUMN sys_country.update_time IS '更新时间，UTC timestamptz';
+COMMENT ON COLUMN sys_country.remark IS '备注';
+COMMENT ON COLUMN sys_country.create_by_id IS '创建者ID';
+
+COMMENT ON TABLE sys_currency IS '币种表';
+COMMENT ON COLUMN sys_currency.currency_id IS '币种ID';
+COMMENT ON COLUMN sys_currency.currency_code IS '币种代码，ISO 4217';
+COMMENT ON COLUMN sys_currency.name_en IS '英文名称';
+COMMENT ON COLUMN sys_currency.name_zh IS '中文名称';
+COMMENT ON COLUMN sys_currency.symbol IS '货币符号';
+COMMENT ON COLUMN sys_currency.decimal_places IS '小数位数';
+COMMENT ON COLUMN sys_currency.status IS '状态：1正常，0停用';
+COMMENT ON COLUMN sys_currency.sort IS '排序';
+COMMENT ON COLUMN sys_currency.create_by IS '创建者';
+COMMENT ON COLUMN sys_currency.create_time IS '创建时间，UTC timestamptz';
+COMMENT ON COLUMN sys_currency.update_by IS '更新者';
+COMMENT ON COLUMN sys_currency.update_time IS '更新时间，UTC timestamptz';
+COMMENT ON COLUMN sys_currency.remark IS '备注';
+COMMENT ON COLUMN sys_currency.create_by_id IS '创建者ID';
+
+COMMENT ON TABLE sys_language IS '语言表';
+COMMENT ON COLUMN sys_language.language_id IS '语言ID';
+COMMENT ON COLUMN sys_language.language_code IS '语言代码';
+COMMENT ON COLUMN sys_language.name_en IS '英文名称';
+COMMENT ON COLUMN sys_language.name_native IS '本地语言名称';
+COMMENT ON COLUMN sys_language.status IS '状态：1正常，0停用';
+COMMENT ON COLUMN sys_language.sort IS '排序';
+COMMENT ON COLUMN sys_language.create_by IS '创建者';
+COMMENT ON COLUMN sys_language.create_time IS '创建时间，UTC timestamptz';
+COMMENT ON COLUMN sys_language.update_by IS '更新者';
+COMMENT ON COLUMN sys_language.update_time IS '更新时间，UTC timestamptz';
+COMMENT ON COLUMN sys_language.remark IS '备注';
+COMMENT ON COLUMN sys_language.create_by_id IS '创建者ID';
+
 CREATE TABLE IF NOT EXISTS sys_notice (
     notice_id bigint PRIMARY KEY,
     tenant_id bigint NOT NULL CHECK (tenant_id <> 0),
@@ -1058,6 +1102,20 @@ CREATE TABLE IF NOT EXISTS sys_legal_document (
 COMMENT ON TABLE sys_legal_document IS 'Legal document content, UTC timestamps';
 CREATE UNIQUE INDEX IF NOT EXISTS uk_sys_legal_document_type_locale_version ON sys_legal_document(document_type, locale, version);
 CREATE INDEX IF NOT EXISTS idx_sys_legal_document_public ON sys_legal_document(document_type, locale, status, published_time);
+COMMENT ON COLUMN sys_legal_document.document_id IS '法律文档ID';
+COMMENT ON COLUMN sys_legal_document.document_type IS '文档类型';
+COMMENT ON COLUMN sys_legal_document.locale IS '语言区域';
+COMMENT ON COLUMN sys_legal_document.title IS '标题';
+COMMENT ON COLUMN sys_legal_document.content IS '内容';
+COMMENT ON COLUMN sys_legal_document.version IS '版本号';
+COMMENT ON COLUMN sys_legal_document.status IS '状态';
+COMMENT ON COLUMN sys_legal_document.published_time IS '发布时间，UTC timestamptz';
+COMMENT ON COLUMN sys_legal_document.create_by IS '创建者';
+COMMENT ON COLUMN sys_legal_document.create_time IS '创建时间，UTC timestamptz';
+COMMENT ON COLUMN sys_legal_document.update_by IS '更新者';
+COMMENT ON COLUMN sys_legal_document.update_time IS '更新时间，UTC timestamptz';
+COMMENT ON COLUMN sys_legal_document.remark IS '备注';
+COMMENT ON COLUMN sys_legal_document.create_by_id IS '创建者ID';
 
 INSERT INTO sys_dict_type (dict_id, dict_name, dict_type, status, create_by, create_time, remark)
 VALUES

@@ -89,6 +89,12 @@
         <!-- 绗笁鏂规湇鍔￠厤缃?-->
         <aws-java-sdk-s3.version>1.12.540</aws-java-sdk-s3.version>
         <sms4j.version>2.2.0</sms4j.version>
+        <alipay-sdk-java.version>4.40.771.ALL</alipay-sdk-java.version>
+        <weixin-java-pay.version>4.8.2-20260501.180637</weixin-java-pay.version>
+        <stripe-java.version>31.0.0</stripe-java.version>
+        <paypal-checkout-sdk.version>1.0.5</paypal-checkout-sdk.version>
+        <httpclient5.version>5.5.2</httpclient5.version>
+        <httpcore5.version>5.3.6</httpcore5.version>
 
 
     </properties>
@@ -102,7 +108,8 @@
         <module>bocoo-common</module>
         <module>bocoo-modules-generator</module>
         <module>bocoo-modules-system</module>
-
+        <module>bocoo-modules-dealer</module>
+        <module>bocoo-module-pay</module>
 
     </modules>
 
@@ -367,6 +374,48 @@
                 <groupId>org.bouncycastle</groupId>
                 <artifactId>bcprov-jdk15to18</artifactId>
                 <version>${bouncycastle.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.alipay.sdk</groupId>
+                <artifactId>alipay-sdk-java</artifactId>
+                <version>${alipay-sdk-java.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.bouncycastle</groupId>
+                        <artifactId>bcprov-jdk15on</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>com.github.binarywang</groupId>
+                <artifactId>weixin-java-pay</artifactId>
+                <version>${weixin-java-pay.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.stripe</groupId>
+                <artifactId>stripe-java</artifactId>
+                <version>${stripe-java.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.paypal.sdk</groupId>
+                <artifactId>checkout-sdk</artifactId>
+                <version>${paypal-checkout-sdk.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.bouncycastle</groupId>
+                        <artifactId>bcprov-jdk15on</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.httpcomponents.client5</groupId>
+                <artifactId>httpclient5</artifactId>
+                <version>${httpclient5.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.httpcomponents.core5</groupId>
+                <artifactId>httpcore5</artifactId>
+                <version>${httpcore5.version}</version>
             </dependency>
 
 
