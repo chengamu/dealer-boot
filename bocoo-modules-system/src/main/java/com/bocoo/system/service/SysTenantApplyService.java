@@ -24,19 +24,11 @@ import com.bocoo.common.redis.utils.RedisUtils;
 import com.bocoo.common.satoken.utils.LoginHelper;
 import com.bocoo.system.domain.bo.MerchantProfileBo;
 import com.bocoo.system.domain.bo.SysTenantApplyBo;
-import com.bocoo.system.domain.entity.SysMenu;
-import com.bocoo.system.domain.entity.SysDept;
-import com.bocoo.system.domain.entity.SysRole;
-import com.bocoo.system.domain.entity.SysRoleMenu;
 import com.bocoo.system.domain.entity.SysTenant;
 import com.bocoo.system.domain.entity.SysTenantApply;
 import com.bocoo.system.domain.entity.SysUser;
 import com.bocoo.system.domain.entity.SysUserRole;
-import com.bocoo.system.mapper.SysMenuMapper;
-import com.bocoo.system.mapper.SysDeptMapper;
 import com.bocoo.system.domain.vo.SysTenantApplyVo;
-import com.bocoo.system.mapper.SysRoleMapper;
-import com.bocoo.system.mapper.SysRoleMenuMapper;
 import com.bocoo.system.mapper.SysTenantApplyMapper;
 import com.bocoo.system.mapper.SysTenantMapper;
 import com.bocoo.system.mapper.SysUserMapper;
@@ -50,9 +42,7 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.time.Duration;
-import java.util.List;
 import java.util.Locale;
 
 @RequiredArgsConstructor
@@ -60,8 +50,6 @@ import java.util.Locale;
 @Service
 public class SysTenantApplyService {
 
-    private static final String MERCHANT_ADMIN_ROLE_KEY = "merchant_admin";
-    private static final String MERCHANT_DEPT_NAME = "商家";
     private static final String PASSWORD_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%";
     private static final Duration EMAIL_CODE_TTL = Duration.ofMinutes(10);
     private static final Duration EMAIL_CODE_COOLDOWN = Duration.ofSeconds(60);
@@ -78,12 +66,9 @@ public class SysTenantApplyService {
     private final SysTenantMapper tenantMapper;
     private final SysUserService userService;
     private final MerchantProfileService merchantProfileService;
-    private final SysDeptMapper deptMapper;
-    private final SysRoleMapper roleMapper;
-    private final SysMenuMapper menuMapper;
-    private final SysRoleMenuMapper roleMenuMapper;
     private final SysUserMapper userMapper;
     private final SysUserRoleMapper userRoleMapper;
+    private final MerchantAccountDefaultsService merchantDefaultsService;
 
     @Value("${mail.enabled:false}")
     private Boolean mailEnabled;
@@ -175,10 +160,10 @@ public class SysTenantApplyService {
         String tempPassword = RandomUtil.randomString(PASSWORD_CHARS, 12);
         SysTenantApply finalApply = apply;
         TenantContextHolder.runWithTenant(tenant.getTenantId(), () -> {
-            Long deptId = ensureMerchantDept(finalApply);
+            MerchantAccountDefaultsService.MerchantDefaults defaults = merchantDefaultsService.ensureDefaults();
             com.bocoo.system.domain.bo.SysUserBo user = new com.bocoo.system.domain.bo.SysUserBo();
             user.setTenantId(tenant.getTenantId());
-            user.setDeptId(deptId);
+            user.setDeptId(defaults.dealerDept().getDeptId());
             user.setUserName(finalApply.getEmail());
             user.setEmail(finalApply.getEmail());
             user.setNickName(finalApply.getMerchantName());
@@ -189,11 +174,9 @@ public class SysTenantApplyService {
             userService.registerUser(user);
             MerchantProfileBo profile = buildMerchantProfile(apply, tenant);
             merchantProfileService.insertProfile(profile);
-            SysRole merchantRole = ensureMerchantAdminRole(tenant.getTenantId());
-            ensureMerchantRoleMenus(merchantRole.getRoleId());
             SysUserRole userRole = new SysUserRole();
             userRole.setUserId(user.getUserId());
-            userRole.setRoleId(merchantRole.getRoleId());
+            userRole.setRoleId(defaults.dealerRole().getRoleId());
             userRoleMapper.insert(userRole);
         });
 
@@ -380,117 +363,6 @@ public class SysTenantApplyService {
         profile.setAuditStatus(TenantApplyStatus.APPROVED.getCode());
         profile.setRemark(apply.getRemark());
         return profile;
-    }
-
-    private SysRole ensureMerchantAdminRole(Long tenantId) {
-        SysRole merchantRole = roleMapper.selectOne(new LambdaQueryWrapper<SysRole>()
-            .eq(SysRole::getRoleKey, MERCHANT_ADMIN_ROLE_KEY), false);
-        if (merchantRole != null) {
-            return merchantRole;
-        }
-        SysRole role = new SysRole();
-        role.setTenantId(tenantId);
-        role.setRoleName("Merchant Admin");
-        role.setRoleKey(MERCHANT_ADMIN_ROLE_KEY);
-        role.setRoleSort(1);
-        role.setDataScope("1");
-        role.setMenuCheckStrictly(true);
-        role.setDeptCheckStrictly(true);
-        role.setStatus(UserStatus.OK.getCode());
-        role.setDelFlag(UserConstants.NOT_DELETED);
-        roleMapper.insert(role);
-        return role;
-    }
-
-    private void ensureMerchantRoleMenus(Long roleId) {
-        List<Long> menuIds = ensureMerchantMenus();
-        if (menuIds.isEmpty()) {
-            return;
-        }
-        roleMenuMapper.delete(new LambdaQueryWrapper<SysRoleMenu>().eq(SysRoleMenu::getRoleId, roleId));
-        List<SysRoleMenu> roleMenus = new ArrayList<>();
-        for (Long menuId : menuIds) {
-            SysRoleMenu roleMenu = new SysRoleMenu();
-            roleMenu.setRoleId(roleId);
-            roleMenu.setMenuId(menuId);
-            roleMenus.add(roleMenu);
-        }
-        roleMenuMapper.insertBatch(roleMenus);
-    }
-
-    private List<Long> ensureMerchantMenus() {
-        SysMenu parent = selectOrCreateMenu(null, "Merchant", "menu.merchant", "merchant", UserConstants.TYPE_DIR, null, 10);
-        SysMenu profile = selectOrCreateMenu(parent.getMenuId(), "Merchant Profile", "menu.merchant.profile",
-            "profile", UserConstants.TYPE_MENU, "merchant:profile:query", 1);
-        SysMenu query = selectOrCreateMenu(profile.getMenuId(), "Merchant Profile Query", "menu.merchant.profile.query",
-            "", UserConstants.TYPE_BUTTON, "merchant:profile:query", 1);
-        SysMenu edit = selectOrCreateMenu(profile.getMenuId(), "Merchant Profile Edit", "menu.merchant.profile.edit",
-            "", UserConstants.TYPE_BUTTON, "merchant:profile:edit", 2);
-        return List.of(parent.getMenuId(), profile.getMenuId(), query.getMenuId(), edit.getMenuId());
-    }
-
-    private Long ensureMerchantDept(SysTenantApply apply) {
-        SysDept dept = deptMapper.selectOne(new LambdaQueryWrapper<SysDept>()
-            .eq(SysDept::getDeptName, MERCHANT_DEPT_NAME), false);
-        if (dept != null) {
-            return dept.getDeptId();
-        }
-        dept = new SysDept();
-        dept.setParentId(0L);
-        dept.setAncestors("0");
-        dept.setDeptName(MERCHANT_DEPT_NAME);
-        dept.setOrderNum(1);
-        dept.setLeader(resolveContactName(apply));
-        dept.setPhone(normalizeDeptPhone(StrUtil.blankToDefault(apply.getOfficePhone(), apply.getMobilePhone())));
-        dept.setEmail(apply.getEmail());
-        dept.setStatus(UserConstants.DEPT_NORMAL);
-        dept.setDelFlag(UserConstants.NOT_DELETED);
-        deptMapper.insert(dept);
-        return dept.getDeptId();
-    }
-
-    private String normalizeDeptPhone(String phone) {
-        if (StrUtil.isBlank(phone)) {
-            return null;
-        }
-        String digits = phone.replaceAll("\\D", "");
-        if (StrUtil.isBlank(digits)) {
-            return null;
-        }
-        return StrUtil.subPre(digits, 11);
-    }
-
-    private SysMenu selectOrCreateMenu(Long parentId, String menuName, String i18nKey, String path,
-                                      String menuType, String perms, Integer orderNum) {
-        LambdaQueryWrapper<SysMenu> wrapper = new LambdaQueryWrapper<SysMenu>()
-            .eq(SysMenu::getMenuType, menuType)
-            .eq(SysMenu::getMenuName, menuName)
-            .eq(parentId != null, SysMenu::getParentId, parentId)
-            .eq(ObjectUtil.isNotNull(perms), SysMenu::getPerms, perms);
-        SysMenu menu = menuMapper.selectOne(wrapper, false);
-        if (menu != null) {
-            return menu;
-        }
-        menu = new SysMenu();
-        menu.setMenuName(menuName);
-        menu.setI18nKey(i18nKey);
-        menu.setParentId(parentId == null ? 0L : parentId);
-        menu.setOrderNum(orderNum);
-        menu.setPath(path);
-        if (UserConstants.TYPE_DIR.equals(menuType)) {
-            menu.setComponent(UserConstants.LAYOUT);
-        } else if (UserConstants.TYPE_MENU.equals(menuType)) {
-            menu.setComponent("merchant/Profile");
-        }
-        menu.setIsFrame(UserConstants.NO_FRAME);
-        menu.setIsCache("0");
-        menu.setMenuType(menuType);
-        menu.setVisible(UserConstants.TYPE_BUTTON.equals(menuType) ? "0" : "1");
-        menu.setStatus(UserConstants.MENU_NORMAL);
-        menu.setPerms(perms);
-        menu.setIcon(UserConstants.TYPE_DIR.equals(menuType) ? "shop" : "form");
-        menuMapper.insert(menu);
-        return menu;
     }
 
     private void sendInitialPasswordMail(SysTenantApply apply, String tempPassword) {

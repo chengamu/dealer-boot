@@ -30,6 +30,7 @@ export interface SysUser {
   roleIds?: Array<number | string>
   createTime?: string
   deptName?: string
+  roles?: UserOptionRole[]
 }
 
 export interface UserOptionRole {

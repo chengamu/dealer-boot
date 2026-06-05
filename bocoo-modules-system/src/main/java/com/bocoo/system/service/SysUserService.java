@@ -67,6 +67,12 @@ public class SysUserService implements UserService {
         return TableDataInfo.build(page);
     }
 
+    public TableDataInfo<SysUserVo> selectPageMerchantUserList(SysUserBo user, PageQuery pageQuery) {
+        Page<SysUserVo> page = userMapper.selectPageUserList(pageQuery.build(), this.buildQueryWrapper(user));
+        page.getRecords().forEach(item -> item.setRoles(roleMapper.selectRolesByUserId(item.getUserId())));
+        return TableDataInfo.build(page);
+    }
+
 
     /**
      * 根据条件分页查询用户列表
@@ -325,6 +331,18 @@ public class SysUserService implements UserService {
         insertUserPost(user);
         SysUser sysUser = MapstructUtils.convert(user, SysUser.class);
         return userMapper.updateById(sysUser);
+    }
+
+    public int updateMerchantUser(SysUserBo user) {
+        return userMapper.update(null,
+            new LambdaUpdateWrapper<SysUser>()
+                .set(ObjectUtil.isNotNull(user.getNickName()), SysUser::getNickName, user.getNickName())
+                .set(SysUser::getPhonenumber, user.getPhonenumber())
+                .set(SysUser::getEmail, user.getEmail())
+                .set(SysUser::getSex, user.getSex())
+                .set(StringUtils.isNotBlank(user.getStatus()), SysUser::getStatus, user.getStatus())
+                .set(SysUser::getRemark, user.getRemark())
+                .eq(SysUser::getUserId, user.getUserId()));
     }
 
     /**

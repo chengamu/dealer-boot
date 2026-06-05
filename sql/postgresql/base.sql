@@ -946,9 +946,10 @@ UPDATE sys_user SET tenant_id = 1 WHERE user_id = 1;
 INSERT INTO sys_role (role_id, tenant_id, role_name, role_key, role_sort, data_scope, menu_check_strictly, dept_check_strictly, status, del_flag, create_by, create_time, remark)
 VALUES
     (1, 1, 'Super Admin', 'admin', 1, '1', true, true, '1', '0', 'system', now(), 'Platform super admin'),
-    (2, 1, 'Merchant Admin', 'merchant_admin', 2, '1', true, true, '1', '0', 'system', now(), 'Default merchant admin role')
+    (2, 1, 'Merchant Admin', 'merchant_admin', 2, '1', true, true, '1', '0', 'system', now(), 'Default merchant admin role'),
+    (3, 1, 'Merchant Store', 'merchant_store', 3, '1', true, true, '1', '0', 'system', now(), 'Default merchant store user role')
 ON CONFLICT (role_id) DO NOTHING;
-UPDATE sys_role SET tenant_id = 1 WHERE role_id IN (1, 2);
+UPDATE sys_role SET tenant_id = 1 WHERE role_id IN (1, 2, 3);
 
 INSERT INTO sys_user_role (user_id, role_id, tenant_id)
 VALUES (1, 1, 1)

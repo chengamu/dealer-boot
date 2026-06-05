@@ -137,6 +137,12 @@ const legacyFallbackRoutes: RouteRecordRaw[] = [
     meta: { title: 'merchantProfile.selfTitle' }
   },
   {
+    path: '/merchant/users',
+    name: 'MerchantUsers',
+    component: () => import('@/pages/merchant/MerchantUserPage.vue'),
+    meta: { title: 'merchantUser.managementTitle' }
+  },
+  {
     path: '/monitor/online',
     name: 'MonitorOnline',
     component: () => import('@/pages/monitor/OnlineUsersPage.vue'),
@@ -319,4 +325,3 @@ router.afterEach(() => NProgress.done())
 router.onError(() => NProgress.done())
 
 export default router
-
