@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>产品配置中心业务原型</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="mark">PC</div>
+        <div>
+          <h1>产品配置中心业务原型</h1>
+          <p>先维护产品怎么卖、怎么选、怎么算价，再让报价、订单、生产自动使用</p>
+        </div>
+      </div>
+      <div class="top-actions">
+        <a class="btn secondary" href="./config-center.html">配置录入工作台</a>
+        <a class="btn secondary" href="./config-overview.html">销售只读总览</a>
+        <span class="pill">新架构业务流程</span>
+        <span class="pill" id="savedPill">本地草稿 0</span>
+        <button class="icon-btn" id="resetAllBtn" type="button" title="清空本地草稿">Reset</button>
+      </div>
+    </header>
+
+    <main class="layout">
+      <aside class="sidebar panel">
+        <div class="panel-head">
+          <h2>待配置产品</h2>
+          <p>选择一个产品，模拟 ERP 操作员如何把它配置成可报价、可下单、可生产的商品。</p>
+          <input id="productSearch" class="search" type="search" placeholder="搜索产品、类型、控制方式">
+        </div>
+        <div class="product-list" id="productList"></div>
+      </aside>
+
+      <section class="workspace">
+        <section class="hero panel">
+          <div>
+            <div class="meta-row" id="productTags"></div>
+            <h2 id="productTitle">产品配置中心</h2>
+            <p id="productSummary">选择左侧产品，按业务流程检查配置是否符合实际操作要求。</p>
+          </div>
+          <div class="metric-grid" id="metricGrid"></div>
+        </section>
+
+        <nav class="module-tabs panel" id="moduleTabs" aria-label="配置中心模块"></nav>
+
+        <section class="module panel" id="moduleContent"></section>
+      </section>
+
+      <aside class="right-rail panel">
+        <section class="rail-card quote-card">
+          <h2>当前配置结果</h2>
+          <div class="price-value" id="priceValue">待定</div>
+          <p id="priceNote">配置发布后，报价、订单、生产会自动读取价格、提醒和组件结果。</p>
+          <div class="breakdown" id="priceBreakdown"></div>
+        </section>
+        <section class="rail-card">
+          <h3>业务流转</h3>
+          <div class="stage-list" id="stageList"></div>
+        </section>
+        <section class="rail-card">
+          <h3>校验结果</h3>
+          <div class="list" id="validationList"></div>
+        </section>
+        <section class="rail-card">
+          <h3>生产配件</h3>
+          <div class="list" id="bomList"></div>
+        </section>
+      </aside>
+    </main>
+  </div>
+
+  <div class="toast" id="toast">已保存</div>
+
+  <script src="../config-center-prototype-data.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>

@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>配置中心销售总览</title>
+  <link rel="stylesheet" href="./config-center.css">
+</head>
+<body>
+  <div class="entry-shell overview-shell">
+    <header class="entry-topbar">
+      <div class="entry-brand">
+        <div class="entry-mark">CV</div>
+        <div>
+          <h1>配置中心销售总览</h1>
+          <p>只读查看已发布配置：产品怎么卖、下单问什么、系统自动做什么、哪些规则会拦截</p>
+        </div>
+      </div>
+      <div class="entry-actions">
+        <a class="entry-link" href="./config-center.html">配置录入工作台</a>
+        <a class="entry-link" href="./index.html">业务原型</a>
+        <span class="entry-pill">只读视图</span>
+      </div>
+    </header>
+
+    <main class="overview-layout">
+      <aside class="product-pane overview-products">
+        <div class="pane-head">
+          <h2>产品配置说明书</h2>
+          <p>销售看这里，不进入录入字段。选择产品后，右侧自动生成业务说明。</p>
+          <input id="overviewSearch" class="search" type="search" placeholder="搜索产品、分类、变体">
+        </div>
+        <div class="product-list" id="overviewProductList"></div>
+      </aside>
+
+      <section class="overview-main">
+        <section class="entry-card overview-hero">
+          <div>
+            <span class="eyebrow">配置说明书 / Sales Read Only</span>
+            <h2 id="overviewTitle">选择产品</h2>
+            <p id="overviewSummary">销售查看的是发布后的配置结果，不是后台录入过程。</p>
+          </div>
+          <div class="overview-status" id="overviewStatus"></div>
+        </section>
+
+        <section class="overview-grid">
+          <article class="entry-card overview-card">
+            <span class="eyebrow">01 / 这个产品是什么</span>
+            <div id="identityPanel"></div>
+          </article>
+          <article class="entry-card overview-card">
+            <span class="eyebrow">02 / 下单会问什么</span>
+            <div id="questionsPanel"></div>
+          </article>
+          <article class="entry-card overview-card">
+            <span class="eyebrow">03 / 系统自动做什么</span>
+            <div id="automationPanel"></div>
+          </article>
+          <article class="entry-card overview-card">
+            <span class="eyebrow">04 / 价格和物料怎么来</span>
+            <div id="priceBomPanel"></div>
+          </article>
+        </section>
+      </section>
+
+      <aside class="overview-rail">
+        <section class="entry-card overview-card">
+          <span class="eyebrow">销售检查</span>
+          <div id="salesChecklist"></div>
+        </section>
+        <section class="entry-card overview-card">
+          <span class="eyebrow">下单模拟入口</span>
+          <div id="simulationPanel"></div>
+        </section>
+      </aside>
+    </main>
+  </div>
+
+  <script src="../config-center-prototype-data.js"></script>
+  <script src="./config-overview.js"></script>
+</body>
+</html>

@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>配置中心录入工作台</title>
+  <link rel="stylesheet" href="./config-center.css">
+</head>
+<body>
+  <div class="entry-shell">
+    <header class="entry-topbar">
+      <div class="entry-brand">
+        <div class="entry-mark">CC</div>
+        <div>
+          <h1>配置中心录入工作台</h1>
+          <p>左边选真实产品，右边维护产品系列、问题、选项、组件绑定和发布检查</p>
+        </div>
+      </div>
+      <div class="entry-actions">
+        <button class="entry-btn secondary" id="toggleNavBtn" type="button">收起产品列表</button>
+        <a class="entry-link" href="./config-overview.html">销售只读总览</a>
+        <a class="entry-link" href="./index.html">返回业务原型</a>
+        <span class="entry-pill" id="savedState">本地草稿 0</span>
+        <button class="entry-btn secondary" id="resetProductBtn" type="button">重置当前产品</button>
+      </div>
+    </header>
+
+    <main class="entry-layout">
+      <aside class="product-pane">
+        <div class="pane-head">
+          <h2>产品列表</h2>
+          <p>优先显示真实抽样里配置最复杂的产品。每个产品都可以进入右侧录入界面。</p>
+          <input id="productSearch" class="search" type="search" placeholder="搜索产品、系列、控制方式">
+        </div>
+        <div class="product-list" id="productList"></div>
+      </aside>
+
+      <section class="editor-pane">
+        <section class="entry-card product-editor">
+          <div class="section-head">
+            <div>
+              <span class="eyebrow">Step 1 / 产品基础</span>
+              <h2 id="productTitle">选择产品</h2>
+              <p id="productMeta">先确认产品系列、可售产品、模板来源和基础单位，再维护组件、规则、问题和选项。</p>
+            </div>
+            <div class="metric-row" id="metricRow"></div>
+          </div>
+          <div class="product-form" id="productForm"></div>
+          <div id="productSourceNote"></div>
+        </section>
+
+        <section class="entry-card">
+          <div class="section-head">
+            <div>
+              <span class="eyebrow">快速建品 / 目标 10 分钟</span>
+              <h2>从相似产品、蓝图和问题组生成草稿</h2>
+              <p>录入员优先处理差异，不从空白表单开始。这里展示第一版应该支持的快捷操作。</p>
+            </div>
+          </div>
+          <div id="quickStartPanel"></div>
+        </section>
+
+        <section class="entry-card">
+          <div class="section-head">
+            <div>
+              <span class="eyebrow">公共模块入口 / 不跟产品堆叠</span>
+              <h2>问题组模板、组件、标准品、价格用量、规则库</h2>
+              <p>这些是配置中心的公共基础模块。当前产品只引用它们，需要查看或维护时再点进去。</p>
+            </div>
+          </div>
+          <div id="sharedModuleLinks"></div>
+        </section>
+
+        <section class="entry-card is-hidden" id="sharedModuleDetailCard">
+          <div id="sharedModuleDetail"></div>
+        </section>
+
+        <section class="entry-card">
+          <div class="section-head">
+            <div>
+              <span class="eyebrow">Step 5 / 配置问题与选项</span>
+              <h2>问题录入界面</h2>
+              <p>左侧是配置问题序号；点击问题后，右侧可以编辑问题字段、必填、分组、答案和组件绑定。</p>
+            </div>
+            <button class="entry-btn" id="addQuestionBtn" type="button">新增问题</button>
+          </div>
+          <div class="question-workbench">
+            <div class="question-list" id="questionList"></div>
+            <div class="question-editor" id="questionEditor"></div>
+          </div>
+        </section>
+
+        <section class="entry-card">
+          <div class="section-head">
+            <div>
+              <span class="eyebrow">Step 6 / 发布输出</span>
+              <h2>配置结果给后面业务怎么用</h2>
+              <p>这个输出不是订单页面，而是配置中心发布后给报价、订单、生产读取的数据。</p>
+            </div>
+            <button class="entry-btn secondary" id="saveAllBtn" type="button">保存当前草稿</button>
+          </div>
+          <div class="output-grid" id="outputGrid"></div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <div class="toast" id="toast">已保存</div>
+
+  <script src="../config-center-prototype-data.js"></script>
+  <script src="./config-center.js"></script>
+</body>
+</html>
