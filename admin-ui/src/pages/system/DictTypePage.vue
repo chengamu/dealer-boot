@@ -111,7 +111,7 @@
       @pagination="getList"
     />
 
-    <el-dialog v-model="open" :title="title" width="500px" append-to-body destroy-on-close @closed="reset">
+    <el-drawer v-model="open" :title="title" size="520px" append-to-body destroy-on-close @closed="reset">
       <el-form ref="dictRef" :model="form" :rules="rules" label-width="90px">
         <el-form-item :label="t('legacy.dictName')" prop="dictName">
           <el-input v-model="form.dictName" :placeholder="t('legacy.dictNamePlaceholder')" />
@@ -134,7 +134,7 @@
           <el-button @click="cancel">{{ t('common.cancel') }}</el-button>
         </div>
       </template>
-    </el-dialog>
+    </el-drawer>
   </div>
 </template>
 

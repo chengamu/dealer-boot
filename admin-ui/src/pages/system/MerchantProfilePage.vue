@@ -1,6 +1,6 @@
 <template>
   <div class="app-container merchant-profile-page">
-    <el-form ref="queryRef" :model="queryParams" :inline="true" class="toolbar-form">
+    <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true" class="toolbar-form">
       <el-form-item :label="t('merchantProfile.merchantName')" prop="merchantName">
         <el-input v-model="queryParams.merchantName" :placeholder="t('merchantProfile.merchantNamePlaceholder')" clearable @keyup.enter="handleQuery" />
       </el-form-item>
@@ -12,6 +12,10 @@
         <el-button icon="Refresh" @click="resetQuery">{{ t('common.reset') }}</el-button>
       </el-form-item>
     </el-form>
+
+    <el-row :gutter="10" class="mb8">
+      <right-toolbar v-model:showSearch="showSearch" @queryTable="getList" />
+    </el-row>
 
     <el-table v-loading="loading" :data="rows">
       <el-table-column :label="t('merchantProfile.merchantName')" prop="merchantName" min-width="180" />
@@ -62,8 +66,10 @@
         <el-form-item :label="t('merchantProfile.remark')"><el-input v-model="editForm.remark" type="textarea" :rows="3" /></el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="editOpen = false">{{ t('common.cancel') }}</el-button>
-        <el-button type="primary" @click="submitEdit">{{ t('common.confirm') }}</el-button>
+        <div class="merchant-profile-page__drawer-footer">
+          <el-button @click="editOpen = false">{{ t('common.cancel') }}</el-button>
+          <el-button type="primary" @click="submitEdit">{{ t('common.confirm') }}</el-button>
+        </div>
       </template>
     </el-drawer>
   </div>
@@ -86,6 +92,7 @@ const detail = ref<MerchantProfile>()
 const loading = ref(false)
 const detailOpen = ref(false)
 const editOpen = ref(false)
+const showSearch = ref(true)
 const total = ref(0)
 const queryParams = reactive<MerchantProfileQuery>({ pageNum: 1, pageSize: 10 })
 const editForm = reactive<MerchantProfile>({})
@@ -151,5 +158,11 @@ getList()
 <style scoped>
 .toolbar-form {
   padding: 4px 0 12px;
+}
+
+.merchant-profile-page__drawer-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
 }
 </style>

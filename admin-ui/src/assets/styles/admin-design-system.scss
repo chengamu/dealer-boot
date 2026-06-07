@@ -343,18 +343,39 @@
   }
 
   &.hideSidebar .sidebar-container {
+    a {
+      display: flex;
+      justify-content: center;
+    }
+
     .el-menu-item,
     .el-sub-menu__title {
       display: flex;
       align-items: center;
       justify-content: center;
-      margin-left: 7px;
-      margin-right: 7px;
+      width: 42px;
+      height: 42px;
+      padding: 0 !important;
+      margin: 3px auto;
+      line-height: 42px;
+    }
+
+    .el-menu-item .el-menu-tooltip__trigger,
+    .el-menu-item .el-tooltip,
+    .el-sub-menu__title .el-tooltip {
+      display: flex !important;
+      align-items: center;
+      justify-content: center;
+      width: 42px;
+      height: 42px;
+      padding: 0 !important;
     }
 
     .svg-icon {
+      display: block;
       margin-right: 0 !important;
       margin-left: 0 !important;
+      flex: 0 0 auto;
     }
   }
 

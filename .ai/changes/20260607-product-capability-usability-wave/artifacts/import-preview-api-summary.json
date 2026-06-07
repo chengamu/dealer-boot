@@ -1,0 +1,17 @@
+{
+  "batchId": "2063465661127987202",
+  "batchCode": "IMP-20260607033845608",
+  "sourceFileName": "import-preview-e2e.xlsx",
+  "importStatus": "PARSED",
+  "totalRows": 2,
+  "successRows": 1,
+  "failedRows": 1,
+  "warningRows": 0,
+  "issueTotal": 1,
+  "issueCodes": [
+    "SHARED_MASTER_NOT_FOUND"
+  ],
+  "issueLevels": [
+    "ERROR"
+  ]
+}

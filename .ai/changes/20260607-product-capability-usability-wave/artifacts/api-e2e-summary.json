@@ -1,0 +1,39 @@
+{
+  "generatedAt": "2026-06-07T04:00:01.268Z",
+  "seed": "E2E-1780804800448",
+  "loginOk": true,
+  "templateVersionId": "2063471010233049089",
+  "pricePlanVersionId": "2063471010602147841",
+  "configEvaluate": {
+    "okStatus": "ALLOW",
+    "autoComponentCount": 1,
+    "missingStatus": "BLOCKER",
+    "missingBlockers": [
+      "product.config.required.missing:FABRIC_TYPE"
+    ]
+  },
+  "priceCalculate": {
+    "okStatus": "PRICED",
+    "totalAmount": "110.00000000",
+    "matchedCount": 2,
+    "noMatchStatus": "BLOCKER",
+    "noMatchBlockers": [
+      "product.price.rule.noMatch"
+    ]
+  },
+  "publish": {
+    "checkStatus": "PASS",
+    "blockerCount": 0,
+    "warningCount": 0,
+    "approvalIdPresent": true,
+    "firstPackageId": "2063471011373899778",
+    "secondPackageId": "2063471011373899778",
+    "idempotentSamePackage": true,
+    "firstOutboxCount": 3,
+    "secondOutboxCount": 3
+  },
+  "salesView": {
+    "rowCount": 4,
+    "containsSeedPackage": true
+  }
+}

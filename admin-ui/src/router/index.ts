@@ -255,9 +255,14 @@ const routes: RouteRecordRaw[] = [
       ...legacyFallbackRoutes,
       ...hiddenLayoutRoutes
     ]
-  },
-  { path: '/:pathMatch(.*)*', name: 'NotFound', component: () => import('@/pages/error/Error404Page.vue') }
+  }
 ]
+
+const notFoundRoute: RouteRecordRaw = {
+  path: '/:pathMatch(.*)*',
+  name: 'NotFound',
+  component: () => import('@/pages/error/Error404Page.vue')
+}
 
 export const constantRoutes = routes
 export const dynamicRoutes: RouteRecordRaw[] = []
@@ -270,8 +275,24 @@ const router = createRouter({
 
 let dynamicRoutesLoaded = false
 const dynamicRouteNames = new Set<string>()
+let notFoundRouteRegistered = false
+
+function removeNotFoundRoute() {
+  if (notFoundRouteRegistered && router.hasRoute('NotFound')) {
+    router.removeRoute('NotFound')
+  }
+  notFoundRouteRegistered = false
+}
+
+function ensureNotFoundRoute() {
+  if (!notFoundRouteRegistered && !router.hasRoute('NotFound')) {
+    router.addRoute(notFoundRoute)
+  }
+  notFoundRouteRegistered = true
+}
 
 export function resetDynamicRoutes() {
+  removeNotFoundRoute()
   dynamicRouteNames.forEach((name) => {
     if (router.hasRoute(name)) router.removeRoute(name)
   })
@@ -280,6 +301,7 @@ export function resetDynamicRoutes() {
 }
 
 export function registerDynamicRoutes(routesToRegister: RouteRecordRaw[]) {
+  removeNotFoundRoute()
   routesToRegister.forEach((route) => {
     const alreadyRegistered = router.resolve(route.path).matched.some((matched) => matched.path === route.path)
     if (!alreadyRegistered) {
@@ -287,6 +309,7 @@ export function registerDynamicRoutes(routesToRegister: RouteRecordRaw[]) {
       if (route.name && typeof route.name === 'string') dynamicRouteNames.add(route.name)
     }
   })
+  ensureNotFoundRoute()
   dynamicRoutesLoaded = true
 }
 

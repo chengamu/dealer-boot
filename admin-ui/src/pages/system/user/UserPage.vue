@@ -142,7 +142,7 @@
       </el-col>
     </el-row>
 
-    <el-dialog v-model="open" :title="title" width="720px" class="user-edit-dialog" append-to-body destroy-on-close @closed="reset">
+    <el-drawer v-model="open" :title="title" size="720px" class="user-edit-dialog" append-to-body destroy-on-close @closed="reset">
       <el-form ref="userRef" :model="form" :rules="rules" label-width="112px" class="user-dialog">
         <div class="user-dialog__intro">
           <span>{{ form.userId === undefined ? t('common.add') : t('common.edit') }}</span>
@@ -261,7 +261,7 @@
           <el-button @click="cancel">{{ t('common.cancel') }}</el-button>
         </div>
       </template>
-    </el-dialog>
+    </el-drawer>
 
     <el-dialog v-model="upload.open" :title="upload.title" width="420px" append-to-body destroy-on-close @closed="resetUpload">
       <el-upload

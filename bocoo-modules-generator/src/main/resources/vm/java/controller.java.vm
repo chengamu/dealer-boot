@@ -7,12 +7,14 @@ import com.bocoo.common.mybatis.core.page.PageQuery;
 import com.bocoo.common.core.domain.R;
 import com.bocoo.common.mybatis.core.page.TableDataInfo;
 import com.bocoo.common.log.enums.BusinessType;
+import com.bocoo.common.excel.utils.ExcelUtil;
 import ${packageName}.domain.bo.${ClassName}Bo;
 import ${packageName}.domain.vo.${ClassName}Vo;
 import ${packageName}.service.I${ClassName}Service;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -21,7 +23,7 @@ import jakarta.validation.constraints.NotEmpty;
 import java.util.List;
 
 /**
- * ${functionName} controller
+ * ${functionName} 控制层
  *
  * @author ${author}
  */
@@ -35,7 +37,7 @@ public class ${ClassName}Controller extends BaseController {
     private final I${ClassName}Service ${className}Service;
 
     /**
-     * Query ${functionName} list
+     * 查询${functionName}列表
      */
     @SaCheckPermission("${moduleName}:${businessName}:list")
     @GetMapping("/list")
@@ -49,7 +51,22 @@ public class ${ClassName}Controller extends BaseController {
     }
 
     /**
-     * Query ${functionName} list
+     * 导出${functionName}列表
+     */
+    @Log(title = "${functionName}", businessType = BusinessType.EXPORT)
+    @SaCheckPermission("${moduleName}:${businessName}:export")
+    @PostMapping("/export")
+    @Operation(summary = "导出${functionName}列表", description = "导出${functionName}列表到Excel,权限：${moduleName}:${businessName}:export")
+    public void export(
+            @Parameter(description = "${functionName}查询参数")
+            ${ClassName}Bo bo,
+            HttpServletResponse response) {
+        List<${ClassName}Vo> list = ${className}Service.queryList(bo);
+        ExcelUtil.exportExcel(list, "${functionName}数据", ${ClassName}Vo.class, response);
+    }
+
+    /**
+     * 查询${functionName}列表
      */
     @SaCheckPermission("${moduleName}:${businessName}:list")
     @GetMapping("/alllist")
@@ -61,9 +78,9 @@ public class ${ClassName}Controller extends BaseController {
     }
 
     /**
-     * Get ${functionName} detail
+     * 获取${functionName}详细信息
      *
-     * @param ${businessName}Id ${functionName} primary key
+     * @param ${businessName}Id ${functionName}主键
      */
     @SaCheckPermission("${moduleName}:${businessName}:query")
     @GetMapping("/{${businessName}Id}")
@@ -75,7 +92,7 @@ public class ${ClassName}Controller extends BaseController {
     }
 
     /**
-     * Add ${functionName}
+     * 新增${functionName}
      */
     @SaCheckPermission("${moduleName}:${businessName}:add")
     @Log(title = "${functionName}", businessType = BusinessType.INSERT)
@@ -89,7 +106,7 @@ public class ${ClassName}Controller extends BaseController {
     }
 
     /**
-     * Update ${functionName}
+     * 修改${functionName}
      */
     @SaCheckPermission("${moduleName}:${businessName}:edit")
     @Log(title = "${functionName}", businessType = BusinessType.UPDATE)
@@ -103,9 +120,9 @@ public class ${ClassName}Controller extends BaseController {
     }
 
     /**
-     * Delete ${functionName}
+     * 删除${functionName}
      *
-     * @param ${businessName}Ids ${functionName} primary keys
+     * @param ${businessName}Ids ${functionName}主键串
      */
     @SaCheckPermission("${moduleName}:${businessName}:remove")
     @Log(title = "${functionName}", businessType = BusinessType.DELETE)
@@ -126,7 +143,7 @@ public class ${ClassName}Controller extends BaseController {
     #end
     #if($hasStatus)
     /**
-     * Update ${functionName} status
+     * 修改${functionName}状态
      */
     @SaCheckPermission("${moduleName}:${businessName}:edit")
     @Log(title = "修改${functionName}状态", businessType = BusinessType.UPDATE)

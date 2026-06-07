@@ -162,7 +162,7 @@ public class SysMenuService {
             router.setPath(getRouterPath(menu));
             router.setComponent(getComponent(menu));
             router.setQuery(menu.getQueryParam());
-            router.setMeta(new MetaVo(menu.getMenuName(), menu.getIcon(), StringUtils.equals("0", menu.getIsCache()), menu.getPath()));
+            router.setMeta(new MetaVo(getRouteTitle(menu), menu.getIcon(), StringUtils.equals("0", menu.getIsCache()), menu.getPath()));
             List<SysMenu> cMenus = menu.getChildren();
             if (CollUtil.isNotEmpty(cMenus) && UserConstants.TYPE_DIR.equals(menu.getMenuType())) {
                 router.setAlwaysShow(true);
@@ -175,12 +175,12 @@ public class SysMenuService {
                 children.setPath(menu.getPath());
                 children.setComponent(menu.getComponent());
                 children.setName(StringUtils.capitalize(menu.getPath()));
-                children.setMeta(new MetaVo(menu.getMenuName(), menu.getIcon(), StringUtils.equals("0", menu.getIsCache()), menu.getPath()));
+                children.setMeta(new MetaVo(getRouteTitle(menu), menu.getIcon(), StringUtils.equals("0", menu.getIsCache()), menu.getPath()));
                 children.setQuery(menu.getQueryParam());
                 childrenList.add(children);
                 router.setChildren(childrenList);
             } else if (menu.getParentId().intValue() == 0 && isInnerLink(menu)) {
-                router.setMeta(new MetaVo(menu.getMenuName(), menu.getIcon()));
+                router.setMeta(new MetaVo(getRouteTitle(menu), menu.getIcon()));
                 router.setPath("/");
                 List<RouterVo> childrenList = new ArrayList<>();
                 RouterVo children = new RouterVo();
@@ -188,7 +188,7 @@ public class SysMenuService {
                 children.setPath(routerPath);
                 children.setComponent(UserConstants.INNER_LINK);
                 children.setName(StringUtils.capitalize(routerPath));
-                children.setMeta(new MetaVo(menu.getMenuName(), menu.getIcon(), menu.getPath()));
+                children.setMeta(new MetaVo(getRouteTitle(menu), menu.getIcon(), menu.getPath()));
                 childrenList.add(children);
                 router.setChildren(childrenList);
             }
@@ -458,6 +458,10 @@ public class SysMenuService {
         } catch (NoSuchMessageException ignored) {
             return fallback;
         }
+    }
+
+    private String getRouteTitle(SysMenu menu) {
+        return StringUtils.isBlank(menu.getI18nKey()) ? menu.getMenuName() : menu.getI18nKey();
     }
 
     /**

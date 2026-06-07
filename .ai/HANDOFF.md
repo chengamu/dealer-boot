@@ -2,33 +2,37 @@
 
 ## Current Status
 
-No active `/do` task. The Google login hardening follow-up has been archived.
+本波次无进行中 `/plan`/`/do` 任务，`共享产品能力中心上线体验收口 Wave` 已完成并归档；`Phase1` 仍为 `accepted with risks`，本波次状态为 `done`。
 
 ## Archive
 
+- `.ai/archive/20260607-product-capability-phase1.md`
+- `.ai/archive/20260607-product-capability-usability-wave.md`
 - `.ai/archive/20260530-pay-module-migration.md`
 - `.ai/archive/20260530-security-business-remediation.md`
 - `.ai/archive/20260530-code-review-curtain-intro.md`
 - `.ai/archive/20260530-healthbrain-drug-google-login.md`
 - `.ai/archive/20260530-google-login-hardening.md`
+- `.ai/archive/20260606-product-capability-center-batch1.md`
+- `.ai/archive/20260606-product-capability-center-batch2.md`
+- `.ai/archive/20260606-product-capability-center-batch3.md`
+- `.ai/archive/20260606-product-capability-center-batch4-db-readiness.md`
+- `.ai/archive/20260606-product-capability-center-batch5-sql-trial.md`
+- `.ai/archive/20260606-product-capability-center-batch6-db-execution-plan.md`
+- `.ai/archive/20260606-product-capability-center-batch7-snapshot-instance.md`
+- `.ai/archive/20260606-product-capability-center-batch8-import-center.md`
+- `.ai/archive/20260606-product-capability-center-batch9-sync-outbox.md`
+- `.ai/archive/20260606-product-capability-center-batch10-xls-import-preview.md`
 
 ## Validation Snapshot
 
 - `codegraph sync` completed.
-- `git diff --check` completed with CRLF warnings only.
+- `git diff --check` completed.
 - `mvn -pl bocoo-module-pay -am -DskipTests compile` passed.
 - `mvn -pl bocoo-admin -am -DskipTests compile` passed.
 - `mvn -pl bocoo-admin -am -DskipTests package` passed.
 - `pnpm --dir admin-ui typecheck` passed.
 - `pnpm --dir admin-ui build` passed.
-- Local Google login CORS validation from `http://127.0.0.1:8083` passed.
-- Real Google login flow was confirmed by the user as working end to end.
-- `README.md` documents local Google Client ID configuration and Google Console origin rules.
-- Google login hardening validation passed: `mvn -pl bocoo-admin -am -DskipTests compile`, `pnpm --dir admin-ui typecheck`, `pnpm --dir admin-ui build`, `codegraph sync`, and `git diff --check`.
-- DEV PostgreSQL executed `sql/postgresql/pay.sql`; 12 core `pay_*` tables plus Mock app/channel were verified.
-- Runtime/API smoke passed from `bocoo-admin/target/dist/bocoo-admin.jar`: `/pay/mock/smoke` returned order status `10`.
-- Payment admin query smoke passed: `/pay/admin/channel/list` returned success and channel config was masked.
-- Temporary backend and frontend services were stopped; ports `8081` and `8083` were free after validation.
 
 ## Remaining Follow-ups
 
@@ -42,4 +46,4 @@ No active `/do` task. The Google login hardening follow-up has been archived.
 
 ## Next Step
 
-Wait for the next user request.
+该波次已完成归档；如有新增需求，请在新 Wave 下发起新 `/plan`。

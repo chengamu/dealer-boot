@@ -10,7 +10,7 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
- * ${functionName} view object ${tableName}
+ * ${functionName}视图对象 ${tableName}
  *
  * @author ${author}
  */
@@ -47,7 +47,7 @@ public class ${ClassName}Vo {
     private String createBy;
 
     /**
-     * Create time
+     * 创建时间
      */
     @ExcelProperty(value = "创建时间")
     @Schema(description = "创建时间")

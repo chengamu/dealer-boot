@@ -996,7 +996,8 @@ VALUES
     (107, 1, 'Merchant Audit', 'sys.menu.system.merchantAudit', 1, 8, 'tenantApplication', 'system/tenant/applications', '1', '0', 'C', '1', '1', 'system:tenant:application:list', 'peoples', 'system', now(), 'Merchant tenant audit'),
     (108, 1, 'Merchant Profile', 'sys.menu.system.merchantProfile', 1, 9, 'merchantProfile', 'system/merchant/profile', '1', '0', 'C', '1', '1', 'system:merchant:profile:list', 'peoples', 'system', now(), 'Merchant profile management'),
     (1001, 1, 'Tenant Application Query', 'sys.menu.system.merchantAudit.query', 107, 1, '#', '', '1', '0', 'F', '1', '1', 'system:tenant:application:query', '#', 'system', now(), ''),
-    (1002, 1, 'Tenant Application Audit', 'sys.menu.system.merchantAudit.audit', 107, 2, '#', '', '1', '0', 'F', '1', '1', 'system:tenant:application:audit', '#', 'system', now(), ''),
+    (1002, 1, 'Tenant Application Approve', 'sys.menu.system.merchantAudit.approve', 107, 2, '#', '', '1', '0', 'F', '1', '1', 'system:tenant:application:approve', '#', 'system', now(), ''),
+    (1004, 1, 'Tenant Application Reject', 'sys.menu.system.merchantAudit.reject', 107, 3, '#', '', '1', '0', 'F', '1', '1', 'system:tenant:application:reject', '#', 'system', now(), ''),
     (1003, 1, 'Merchant Profile Query', 'sys.menu.system.merchantProfile.query', 108, 1, '#', '', '1', '0', 'F', '1', '1', 'system:merchant:profile:query', '#', 'system', now(), ''),
     (20004, 1, 'Merchant Profile Edit', 'sys.menu.system.merchantProfile.edit', 108, 2, '#', '', '1', '0', 'F', '1', '1', 'system:merchant:profile:edit', '#', 'system', now(), '')
 ON CONFLICT (menu_id) DO NOTHING;
@@ -1012,10 +1013,11 @@ UPDATE sys_menu SET i18n_key = 'sys.menu.system.config' WHERE menu_id = 106 AND 
 UPDATE sys_menu SET i18n_key = 'sys.menu.system.merchantAudit' WHERE menu_id = 107 AND i18n_key IS NULL;
 UPDATE sys_menu SET i18n_key = 'sys.menu.system.merchantProfile' WHERE menu_id = 108 AND i18n_key IS NULL;
 UPDATE sys_menu SET i18n_key = 'sys.menu.system.merchantAudit.query' WHERE menu_id = 1001 AND i18n_key IS NULL;
-UPDATE sys_menu SET i18n_key = 'sys.menu.system.merchantAudit.audit' WHERE menu_id = 1002 AND i18n_key IS NULL;
+UPDATE sys_menu SET menu_name = 'Tenant Application Approve', i18n_key = 'sys.menu.system.merchantAudit.approve', perms = 'system:tenant:application:approve', order_num = 2 WHERE menu_id = 1002;
+UPDATE sys_menu SET menu_name = 'Tenant Application Reject', i18n_key = 'sys.menu.system.merchantAudit.reject', perms = 'system:tenant:application:reject', order_num = 3 WHERE menu_id = 1004;
 UPDATE sys_menu SET i18n_key = 'sys.menu.system.merchantProfile.query' WHERE menu_id = 1003 AND i18n_key IS NULL;
 UPDATE sys_menu SET i18n_key = 'sys.menu.system.merchantProfile.edit' WHERE menu_id = 20004 AND i18n_key IS NULL;
-UPDATE sys_menu SET tenant_id = 1 WHERE menu_id IN (1, 100, 101, 102, 103, 104, 105, 106, 107, 108, 1001, 1002, 1003,  20004);
+UPDATE sys_menu SET tenant_id = 1 WHERE menu_id IN (1, 100, 101, 102, 103, 104, 105, 106, 107, 108, 1001, 1002, 1003, 1004, 20004);
 
 
 INSERT INTO sys_menu (menu_id, tenant_id, menu_name, i18n_key, parent_id, order_num, path, component, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, remark)

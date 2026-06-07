@@ -33,3 +33,10 @@
 - PayPal webhook 验签是支付迁移强制验收项；旧代码虽有 `verifyWebhookSignature` 方法，但主流程未强制调用，不能原样迁移。
 - Cookie/CSRF 认证架构和生产 CORS 域名收紧等待正式域名与部署拓扑。
 - `@vueup/vue-quill -> quill@1.3.7` 仍有 moderate advisory；没有 `quill@1.3.8` 发布版，Quill 2.x 迁移需单独评估。
+# 2026-06-07 共享产品能力中心 P0 经验
+
+- 产品能力类共用配置应保持在可拆分模块中，订单、ERP、MES 通过发布包/快照/同步数据消费，不直接写核心配置表。
+- `done` 口径必须绑定真实验收门：SQL 真实库、权限三方、Java/Vue/i18n、内部浏览器真实登录态和代码审计都要有证据。
+- 菜单 404 不应长期靠前端 alias 兜底，优先修正 `sys_menu.path/component/perms` 和动态路由映射。
+- 发布包、审核、价格快照、BOM 快照、订单快照的权威数据放数据库，Redis 只做可丢失缓存。
+- 复杂 UI 可以先按 H5/PNG 主结构上线，但像素级截图 diff 和细节体验要作为下一 Wave 显式任务保留。

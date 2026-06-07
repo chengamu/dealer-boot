@@ -89,7 +89,7 @@
       @pagination="getList"
     />
 
-    <el-dialog v-model="open" :title="title" width="780px" append-to-body destroy-on-close @closed="reset">
+    <el-drawer v-model="open" :title="title" size="760px" append-to-body destroy-on-close @closed="reset">
       <el-form ref="noticeRef" :model="form" :rules="rules" label-width="90px">
         <el-row>
           <el-col :span="12">
@@ -124,7 +124,7 @@
           <el-button @click="cancel">{{ t('common.cancel') }}</el-button>
         </div>
       </template>
-    </el-dialog>
+    </el-drawer>
   </div>
 </template>
 

@@ -1,6 +1,6 @@
 <template>
   <div class="app-container">
-    <el-form :model="queryParams" ref="queryRef" :inline="true" v-show="showSearch" label-width="68px">
+    <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true" label-width="80px">
       #foreach($column in $columns)
         #if($column.query)
           #set($dictType=$column.dictType)
@@ -17,12 +17,13 @@
                 v-model="queryParams.${column.javaField}"
                 :placeholder="fieldLabel('${column.javaField}')"
                 clearable
+                style="width: 240px"
                 @keyup.enter="handleQuery"
               />
             </el-form-item>
           #elseif(($column.htmlType == "select" || $column.htmlType == "radio") && "" != $dictType)
             <el-form-item :label="fieldLabel('${column.javaField}')" prop="${column.javaField}">
-              <el-select v-model="queryParams.${column.javaField}" :placeholder="t('common.selectPlaceholder')" clearable>
+              <el-select v-model="queryParams.${column.javaField}" :placeholder="t('common.selectPlaceholder')" clearable filterable style="width: 200px">
                 <el-option
                   v-for="dict in ${dictType}"
                   :key="dict.value"
@@ -33,7 +34,7 @@
             </el-form-item>
           #elseif(($column.htmlType == "select" || $column.htmlType == "radio") && $dictType)
             <el-form-item :label="fieldLabel('${column.javaField}')" prop="${column.javaField}">
-              <el-select v-model="queryParams.${column.javaField}" :placeholder="t('common.selectPlaceholder')" clearable>
+              <el-select v-model="queryParams.${column.javaField}" :placeholder="t('common.selectPlaceholder')" clearable filterable style="width: 200px">
                 <el-option :label="t('common.selectPlaceholder')" value="" />
               </el-select>
             </el-form-item>
@@ -47,7 +48,7 @@
               </el-date-picker>
             </el-form-item>
           #elseif($column.htmlType == "datetime" && $column.queryType == "BETWEEN")
-            <el-form-item :label="fieldLabel('${column.javaField}')" style="width: 308px">
+            <el-form-item :label="fieldLabel('${column.javaField}')" style="width: 330px">
               <el-date-picker
                 v-model="daterange${AttrName}"
                 type="daterange"
@@ -86,7 +87,7 @@
           @click="toggleExpandAll"
         >{{ t('common.expandCollapse') }}</el-button>
       </el-col>
-      <right-toolbar v-model:showSearch="showSearch" @queryTable="getList"></right-toolbar>
+      <right-toolbar v-model:showSearch="showSearch" @queryTable="getList" />
     </el-row>
 
     <el-table
@@ -145,8 +146,8 @@
       </el-table-column>
     </el-table>
 
-    <!-- Add or update ${functionName} dialog -->
-    <el-dialog :title="title" v-model="open" width="500px" append-to-body>
+    <!-- Add or update ${functionName} drawer -->
+    <el-drawer :title="title" v-model="open" size="520px" append-to-body destroy-on-close @closed="reset">
       <el-form ref="${businessName}Ref" :model="form" :rules="rules" label-width="80px">
         #foreach($column in $columns)
           #set($field=$column.javaField)
@@ -187,7 +188,7 @@
               </el-form-item>
             #elseif($column.htmlType == "select" && "" != $dictType)
               <el-form-item :label="fieldLabel('${column.javaField}')" prop="${field}">
-                <el-select v-model="form.${field}" :placeholder="t('common.selectPlaceholder')">
+                <el-select v-model="form.${field}" :placeholder="t('common.selectPlaceholder')" clearable filterable style="width: 100%">
                   <el-option
                     v-for="dict in ${dictType}"
                     :key="dict.value"
@@ -202,7 +203,7 @@
               </el-form-item>
             #elseif($column.htmlType == "select" && $dictType)
               <el-form-item :label="fieldLabel('${column.javaField}')" prop="${field}">
-                <el-select v-model="form.${field}" :placeholder="t('common.selectPlaceholder')">
+                <el-select v-model="form.${field}" :placeholder="t('common.selectPlaceholder')" clearable filterable style="width: 100%">
                   <el-option :label="t('common.selectPlaceholder')" value="" />
                 </el-select>
               </el-form-item>
@@ -260,14 +261,22 @@
         #end
       </el-form>
       <template #footer>
-        <div class="dialog-footer">
+        <div class="${businessName}-drawer-footer">
           <el-button type="primary" @click="submitForm">{{ t('common.confirm') }}</el-button>
           <el-button @click="cancel">{{ t('common.cancel') }}</el-button>
         </div>
       </template>
-    </el-dialog>
+    </el-drawer>
   </div>
 </template>
+
+<style scoped>
+.${businessName}-drawer-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+</style>
 
 <script setup name="${BusinessName}">
   import { list${BusinessName}, get${BusinessName}, del${BusinessName}, add${BusinessName}, update${BusinessName} } from "@/api/${moduleName}/${businessName}";

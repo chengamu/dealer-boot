@@ -61,7 +61,7 @@
       </el-table-column>
     </el-table>
 
-    <el-dialog v-model="open" :title="title" width="680px" append-to-body destroy-on-close @closed="reset">
+    <el-drawer v-model="open" :title="title" size="680px" append-to-body destroy-on-close @closed="reset">
       <el-form ref="menuRef" :model="form" :rules="rules" label-width="110px">
         <el-row>
           <el-col :span="24">
@@ -197,7 +197,7 @@
           <el-button @click="cancel">{{ t('common.cancel') }}</el-button>
         </div>
       </template>
-    </el-dialog>
+    </el-drawer>
   </div>
 </template>
 

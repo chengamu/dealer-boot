@@ -71,6 +71,13 @@ function resolveDictLabel(dictType: string, item: DictOption, locale: string) {
       return translated
     }
   }
+  const autoKey = item.value ? `dict.${dictType}.${item.value}` : undefined
+  if (autoKey) {
+    const translated = getMessage(autoKey, locale)
+    if (translated && translated !== autoKey) {
+      return translated
+    }
+  }
   if (item.label) {
     return item.label
   }

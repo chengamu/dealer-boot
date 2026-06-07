@@ -96,7 +96,7 @@
 
     <pagination v-show="total > 0" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" :total="total" @pagination="getList" />
 
-    <el-dialog v-model="open" :title="title" width="640px" append-to-body destroy-on-close @closed="reset">
+    <el-drawer v-model="open" :title="title" size="640px" append-to-body destroy-on-close @closed="reset">
       <el-form ref="userRef" :model="form" :rules="rules" label-width="112px">
         <el-row :gutter="16">
           <el-col :span="12" :xs="24">
@@ -162,7 +162,7 @@
           <el-button @click="cancel">{{ t('common.cancel') }}</el-button>
         </div>
       </template>
-    </el-dialog>
+    </el-drawer>
   </div>
 </template>
 

@@ -8,7 +8,7 @@ import lombok.EqualsAndHashCode;
 import java.time.LocalDateTime;
 
 /**
- * ${functionName} entity ${tableName}
+ * ${functionName}对象 ${tableName}
  *
  * @author ${author}
  */

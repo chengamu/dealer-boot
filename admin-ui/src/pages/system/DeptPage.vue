@@ -70,7 +70,7 @@
       </el-table-column>
     </el-table>
 
-    <el-dialog v-model="open" :title="title" width="600px" append-to-body destroy-on-close @closed="reset">
+    <el-drawer v-model="open" :title="title" size="560px" append-to-body destroy-on-close @closed="reset">
       <el-form ref="deptRef" :model="form" :rules="rules" label-width="90px">
         <el-row>
           <el-col v-if="form.parentId !== 0" :span="24">
@@ -125,7 +125,7 @@
           <el-button @click="cancel">{{ t('common.cancel') }}</el-button>
         </div>
       </template>
-    </el-dialog>
+    </el-drawer>
   </div>
 </template>
 

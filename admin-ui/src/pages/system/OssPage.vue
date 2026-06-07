@@ -108,7 +108,7 @@
       @pagination="getList"
     />
 
-    <el-dialog v-model="open" :title="title" width="500px" append-to-body destroy-on-close @closed="reset">
+    <el-drawer v-model="open" :title="title" size="520px" append-to-body destroy-on-close @closed="reset">
       <el-form ref="ossRef" :model="form" :rules="rules" label-width="90px">
         <el-form-item :label="t('legacy.fileName')" prop="file">
           <FileUpload v-if="uploadType === 0" v-model="form.file" />
@@ -121,7 +121,7 @@
           <el-button @click="cancel">{{ t('common.cancel') }}</el-button>
         </div>
       </template>
-    </el-dialog>
+    </el-drawer>
   </div>
 </template>
 

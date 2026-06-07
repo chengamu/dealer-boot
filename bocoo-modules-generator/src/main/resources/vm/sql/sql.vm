@@ -1,28 +1,137 @@
--- Menu SQL (PostgreSQL, tenant-aware, i18n-ready)
+-- Menu SQL (PostgreSQL, platform tenant, i18n-ready)
 insert into sys_menu (menu_id, tenant_id, menu_name, i18n_key, parent_id, order_num, path, component, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, update_by, update_time, remark)
-values (${table.menuIds[0]}, 0, '${functionName}', '${moduleName}.${businessName}.menu', '${parentMenuId}', '1', '${businessName}', '${moduleName}/${businessName}/index', '1', '0', 'C', '1', '1', '${permissionPrefix}:list', '#', 'admin', now(), '', null, '${functionName} menu')
-on conflict (menu_id) do update set menu_name = excluded.menu_name, i18n_key = excluded.i18n_key, parent_id = excluded.parent_id, path = excluded.path, component = excluded.component, perms = excluded.perms, update_by = 'admin', update_time = now();
+values (${table.menuIds[0]}, 1, '${functionName}', '${moduleName}.${businessName}.menu', '${parentMenuId}', '1', '${businessName}', '${moduleName}/${businessName}/index', '1', '0', 'C', '1', '1', '${permissionPrefix}:list', '#', 'system', now(), '', null, '${functionName} menu')
+on conflict (menu_id) do update
+set tenant_id = excluded.tenant_id,
+    menu_name = excluded.menu_name,
+    i18n_key = excluded.i18n_key,
+    parent_id = excluded.parent_id,
+    order_num = excluded.order_num,
+    path = excluded.path,
+    component = excluded.component,
+    is_frame = excluded.is_frame,
+    is_cache = excluded.is_cache,
+    menu_type = excluded.menu_type,
+    visible = excluded.visible,
+    status = excluded.status,
+    perms = excluded.perms,
+    icon = excluded.icon,
+    update_by = 'system',
+    update_time = now(),
+    remark = excluded.remark;
 
 -- Button SQL
 insert into sys_menu (menu_id, tenant_id, menu_name, i18n_key, parent_id, order_num, path, component, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, update_by, update_time, remark)
-values (${table.menuIds[1]}, 0, '${functionName} Query', '${moduleName}.${businessName}.query', ${table.menuIds[0]}, '1', '#', '', '1', '0', 'F', '0', '0', '${permissionPrefix}:query', '#', 'admin', now(), '', null, '')
-on conflict (menu_id) do update set menu_name = excluded.menu_name, i18n_key = excluded.i18n_key, parent_id = excluded.parent_id, perms = excluded.perms, update_by = 'admin', update_time = now();
+values (${table.menuIds[1]}, 1, '${functionName} Query', '${moduleName}.${businessName}.query', ${table.menuIds[0]}, '1', '#', '', '1', '0', 'F', '1', '1', '${permissionPrefix}:query', '#', 'system', now(), '', null, '')
+on conflict (menu_id) do update
+set tenant_id = excluded.tenant_id,
+    menu_name = excluded.menu_name,
+    i18n_key = excluded.i18n_key,
+    parent_id = excluded.parent_id,
+    order_num = excluded.order_num,
+    path = excluded.path,
+    component = excluded.component,
+    is_frame = excluded.is_frame,
+    is_cache = excluded.is_cache,
+    menu_type = excluded.menu_type,
+    visible = excluded.visible,
+    status = excluded.status,
+    perms = excluded.perms,
+    icon = excluded.icon,
+    update_by = 'system',
+    update_time = now(),
+    remark = excluded.remark;
 
 insert into sys_menu (menu_id, tenant_id, menu_name, i18n_key, parent_id, order_num, path, component, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, update_by, update_time, remark)
-values (${table.menuIds[2]}, 0, '${functionName} Add', '${moduleName}.${businessName}.add', ${table.menuIds[0]}, '2', '#', '', '1', '0', 'F', '0', '0', '${permissionPrefix}:add', '#', 'admin', now(), '', null, '')
-on conflict (menu_id) do update set menu_name = excluded.menu_name, i18n_key = excluded.i18n_key, parent_id = excluded.parent_id, perms = excluded.perms, update_by = 'admin', update_time = now();
+values (${table.menuIds[2]}, 1, '${functionName} Add', '${moduleName}.${businessName}.add', ${table.menuIds[0]}, '2', '#', '', '1', '0', 'F', '1', '1', '${permissionPrefix}:add', '#', 'system', now(), '', null, '')
+on conflict (menu_id) do update
+set tenant_id = excluded.tenant_id,
+    menu_name = excluded.menu_name,
+    i18n_key = excluded.i18n_key,
+    parent_id = excluded.parent_id,
+    order_num = excluded.order_num,
+    path = excluded.path,
+    component = excluded.component,
+    is_frame = excluded.is_frame,
+    is_cache = excluded.is_cache,
+    menu_type = excluded.menu_type,
+    visible = excluded.visible,
+    status = excluded.status,
+    perms = excluded.perms,
+    icon = excluded.icon,
+    update_by = 'system',
+    update_time = now(),
+    remark = excluded.remark;
 
 insert into sys_menu (menu_id, tenant_id, menu_name, i18n_key, parent_id, order_num, path, component, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, update_by, update_time, remark)
-values (${table.menuIds[3]}, 0, '${functionName} Edit', '${moduleName}.${businessName}.edit', ${table.menuIds[0]}, '3', '#', '', '1', '0', 'F', '0', '0', '${permissionPrefix}:edit', '#', 'admin', now(), '', null, '')
-on conflict (menu_id) do update set menu_name = excluded.menu_name, i18n_key = excluded.i18n_key, parent_id = excluded.parent_id, perms = excluded.perms, update_by = 'admin', update_time = now();
+values (${table.menuIds[3]}, 1, '${functionName} Edit', '${moduleName}.${businessName}.edit', ${table.menuIds[0]}, '3', '#', '', '1', '0', 'F', '1', '1', '${permissionPrefix}:edit', '#', 'system', now(), '', null, '')
+on conflict (menu_id) do update
+set tenant_id = excluded.tenant_id,
+    menu_name = excluded.menu_name,
+    i18n_key = excluded.i18n_key,
+    parent_id = excluded.parent_id,
+    order_num = excluded.order_num,
+    path = excluded.path,
+    component = excluded.component,
+    is_frame = excluded.is_frame,
+    is_cache = excluded.is_cache,
+    menu_type = excluded.menu_type,
+    visible = excluded.visible,
+    status = excluded.status,
+    perms = excluded.perms,
+    icon = excluded.icon,
+    update_by = 'system',
+    update_time = now(),
+    remark = excluded.remark;
 
 insert into sys_menu (menu_id, tenant_id, menu_name, i18n_key, parent_id, order_num, path, component, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, update_by, update_time, remark)
-values (${table.menuIds[4]}, 0, '${functionName} Delete', '${moduleName}.${businessName}.remove', ${table.menuIds[0]}, '4', '#', '', '1', '0', 'F', '0', '0', '${permissionPrefix}:remove', '#', 'admin', now(), '', null, '')
-on conflict (menu_id) do update set menu_name = excluded.menu_name, i18n_key = excluded.i18n_key, parent_id = excluded.parent_id, perms = excluded.perms, update_by = 'admin', update_time = now();
+values (${table.menuIds[4]}, 1, '${functionName} Delete', '${moduleName}.${businessName}.remove', ${table.menuIds[0]}, '4', '#', '', '1', '0', 'F', '1', '1', '${permissionPrefix}:remove', '#', 'system', now(), '', null, '')
+on conflict (menu_id) do update
+set tenant_id = excluded.tenant_id,
+    menu_name = excluded.menu_name,
+    i18n_key = excluded.i18n_key,
+    parent_id = excluded.parent_id,
+    order_num = excluded.order_num,
+    path = excluded.path,
+    component = excluded.component,
+    is_frame = excluded.is_frame,
+    is_cache = excluded.is_cache,
+    menu_type = excluded.menu_type,
+    visible = excluded.visible,
+    status = excluded.status,
+    perms = excluded.perms,
+    icon = excluded.icon,
+    update_by = 'system',
+    update_time = now(),
+    remark = excluded.remark;
 
 insert into sys_menu (menu_id, tenant_id, menu_name, i18n_key, parent_id, order_num, path, component, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, update_by, update_time, remark)
-values (${table.menuIds[5]}, 0, '${functionName} Export', '${moduleName}.${businessName}.export', ${table.menuIds[0]}, '5', '#', '', '1', '0', 'F', '0', '0', '${permissionPrefix}:export', '#', 'admin', now(), '', null, '')
-on conflict (menu_id) do update set menu_name = excluded.menu_name, i18n_key = excluded.i18n_key, parent_id = excluded.parent_id, perms = excluded.perms, update_by = 'admin', update_time = now();
+values (${table.menuIds[5]}, 1, '${functionName} Export', '${moduleName}.${businessName}.export', ${table.menuIds[0]}, '5', '#', '', '1', '0', 'F', '1', '1', '${permissionPrefix}:export', '#', 'system', now(), '', null, '')
+on conflict (menu_id) do update
+set tenant_id = excluded.tenant_id,
+    menu_name = excluded.menu_name,
+    i18n_key = excluded.i18n_key,
+    parent_id = excluded.parent_id,
+    order_num = excluded.order_num,
+    path = excluded.path,
+    component = excluded.component,
+    is_frame = excluded.is_frame,
+    is_cache = excluded.is_cache,
+    menu_type = excluded.menu_type,
+    visible = excluded.visible,
+    status = excluded.status,
+    perms = excluded.perms,
+    icon = excluded.icon,
+    update_by = 'system',
+    update_time = now(),
+    remark = excluded.remark;
+
+insert into sys_role_menu (role_id, menu_id, tenant_id)
+select 1, menu_id, 1
+from sys_menu
+where tenant_id = 1
+  and menu_id in (${table.menuIds[0]}, ${table.menuIds[1]}, ${table.menuIds[2]}, ${table.menuIds[3]}, ${table.menuIds[4]}, ${table.menuIds[5]})
+on conflict do nothing;
 
 -- i18n JSON keys to add under i18n/locales/*.json
 -- ${moduleName}.${businessName}.menu: en_US="${ClassName}", zh_CN="${functionName}"

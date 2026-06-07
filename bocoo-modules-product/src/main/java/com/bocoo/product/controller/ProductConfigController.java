@@ -1,0 +1,313 @@
+package com.bocoo.product.controller;
+
+import cn.dev33.satoken.annotation.SaCheckPermission;
+import com.bocoo.common.core.domain.R;
+import com.bocoo.common.log.annotation.Log;
+import com.bocoo.common.log.enums.BusinessType;
+import com.bocoo.common.mybatis.core.page.PageQuery;
+import com.bocoo.common.mybatis.core.page.TableDataInfo;
+import com.bocoo.common.web.core.BaseController;
+import com.bocoo.product.domain.bo.*;
+import com.bocoo.product.domain.vo.*;
+import com.bocoo.product.service.ProductConfigService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.NotEmpty;
+import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+
+/**
+ * 产品配置模板接口。
+ */
+@Validated
+@RequiredArgsConstructor
+@RestController
+@RequestMapping("/product-capability")
+@Tag(name = "产品配置模板", description = "产品配置模板接口")
+public class ProductConfigController extends BaseController {
+
+    private final ProductConfigService productConfigService;
+
+    @SaCheckPermission("product:template:list")
+    @GetMapping("/templates/list")
+    @Operation(summary = "分页查询配置模板列表")
+    public TableDataInfo<ConfigTemplateVo> listConfigTemplate(ConfigTemplateBo bo, PageQuery pageQuery) {
+        return productConfigService.queryConfigTemplatePage(bo, pageQuery);
+    }
+
+    @SaCheckPermission("product:template:list")
+    @GetMapping("/templates/options")
+    @Operation(summary = "查询配置模板选项")
+    public R<java.util.List<ConfigTemplateVo>> optionsConfigTemplate(ConfigTemplateBo bo) {
+        return R.ok(productConfigService.queryConfigTemplateList(bo));
+    }
+
+    @SaCheckPermission("product:template:list")
+    @GetMapping("/templates/{id}")
+    @Operation(summary = "获取配置模板详情")
+    public R<ConfigTemplateVo> getConfigTemplate(@PathVariable Long id) {
+        return R.ok(productConfigService.getConfigTemplateById(id));
+    }
+
+    @SaCheckPermission("product:template:edit")
+    @Log(title = "配置模板", businessType = BusinessType.INSERT)
+    @PostMapping("/templates")
+    @Operation(summary = "新增配置模板")
+    public R<Void> addConfigTemplate(@Validated @RequestBody ConfigTemplateBo bo) {
+        return toAjax(productConfigService.saveConfigTemplate(bo));
+    }
+
+    @SaCheckPermission("product:template:edit")
+    @Log(title = "配置模板", businessType = BusinessType.UPDATE)
+    @PutMapping("/templates")
+    @Operation(summary = "修改配置模板")
+    public R<Void> editConfigTemplate(@Validated @RequestBody ConfigTemplateBo bo) {
+        return toAjax(productConfigService.saveConfigTemplate(bo));
+    }
+
+    @SaCheckPermission("product:template:edit")
+    @Log(title = "配置模板", businessType = BusinessType.DELETE)
+    @DeleteMapping("/templates/{ids}")
+    @Operation(summary = "删除配置模板")
+    public R<Void> removeConfigTemplate(@NotEmpty(message = "{gen.validation.pk.required}") @PathVariable Long[] ids) {
+        return toAjax(productConfigService.removeConfigTemplateByIds(ids));
+    }
+
+
+    @SaCheckPermission("product:template:list")
+    @GetMapping("/template-versions/list")
+    @Operation(summary = "分页查询配置模板版本列表")
+    public TableDataInfo<ConfigTemplateVersionVo> listConfigTemplateVersion(ConfigTemplateVersionBo bo, PageQuery pageQuery) {
+        return productConfigService.queryConfigTemplateVersionPage(bo, pageQuery);
+    }
+
+    @SaCheckPermission("product:template:list")
+    @GetMapping("/template-versions/options")
+    @Operation(summary = "查询配置模板版本选项")
+    public R<java.util.List<ConfigTemplateVersionVo>> optionsConfigTemplateVersion(ConfigTemplateVersionBo bo) {
+        return R.ok(productConfigService.queryConfigTemplateVersionList(bo));
+    }
+
+    @SaCheckPermission("product:template:list")
+    @GetMapping("/template-versions/{id}")
+    @Operation(summary = "获取配置模板版本详情")
+    public R<ConfigTemplateVersionVo> getConfigTemplateVersion(@PathVariable Long id) {
+        return R.ok(productConfigService.getConfigTemplateVersionById(id));
+    }
+
+    @SaCheckPermission("product:template:edit")
+    @Log(title = "配置模板版本", businessType = BusinessType.INSERT)
+    @PostMapping("/template-versions")
+    @Operation(summary = "新增配置模板版本")
+    public R<Void> addConfigTemplateVersion(@Validated @RequestBody ConfigTemplateVersionBo bo) {
+        return toAjax(productConfigService.saveConfigTemplateVersion(bo));
+    }
+
+    @SaCheckPermission("product:template:edit")
+    @Log(title = "配置模板版本", businessType = BusinessType.UPDATE)
+    @PutMapping("/template-versions")
+    @Operation(summary = "修改配置模板版本")
+    public R<Void> editConfigTemplateVersion(@Validated @RequestBody ConfigTemplateVersionBo bo) {
+        return toAjax(productConfigService.saveConfigTemplateVersion(bo));
+    }
+
+    @SaCheckPermission("product:template:edit")
+    @Log(title = "配置模板版本", businessType = BusinessType.DELETE)
+    @DeleteMapping("/template-versions/{ids}")
+    @Operation(summary = "删除配置模板版本")
+    public R<Void> removeConfigTemplateVersion(@NotEmpty(message = "{gen.validation.pk.required}") @PathVariable Long[] ids) {
+        return toAjax(productConfigService.removeConfigTemplateVersionByIds(ids));
+    }
+
+
+    @SaCheckPermission("product:template:list")
+    @GetMapping("/question-groups/list")
+    @Operation(summary = "分页查询配置问题组列表")
+    public TableDataInfo<QuestionGroupVo> listQuestionGroup(QuestionGroupBo bo, PageQuery pageQuery) {
+        return productConfigService.queryQuestionGroupPage(bo, pageQuery);
+    }
+
+    @SaCheckPermission("product:template:list")
+    @GetMapping("/question-groups/options")
+    @Operation(summary = "查询配置问题组选项")
+    public R<java.util.List<QuestionGroupVo>> optionsQuestionGroup(QuestionGroupBo bo) {
+        return R.ok(productConfigService.queryQuestionGroupList(bo));
+    }
+
+    @SaCheckPermission("product:template:list")
+    @GetMapping("/question-groups/{id}")
+    @Operation(summary = "获取配置问题组详情")
+    public R<QuestionGroupVo> getQuestionGroup(@PathVariable Long id) {
+        return R.ok(productConfigService.getQuestionGroupById(id));
+    }
+
+    @SaCheckPermission("product:template:edit")
+    @Log(title = "配置问题组", businessType = BusinessType.INSERT)
+    @PostMapping("/question-groups")
+    @Operation(summary = "新增配置问题组")
+    public R<Void> addQuestionGroup(@Validated @RequestBody QuestionGroupBo bo) {
+        return toAjax(productConfigService.saveQuestionGroup(bo));
+    }
+
+    @SaCheckPermission("product:template:edit")
+    @Log(title = "配置问题组", businessType = BusinessType.UPDATE)
+    @PutMapping("/question-groups")
+    @Operation(summary = "修改配置问题组")
+    public R<Void> editQuestionGroup(@Validated @RequestBody QuestionGroupBo bo) {
+        return toAjax(productConfigService.saveQuestionGroup(bo));
+    }
+
+    @SaCheckPermission("product:template:edit")
+    @Log(title = "配置问题组", businessType = BusinessType.DELETE)
+    @DeleteMapping("/question-groups/{ids}")
+    @Operation(summary = "删除配置问题组")
+    public R<Void> removeQuestionGroup(@NotEmpty(message = "{gen.validation.pk.required}") @PathVariable Long[] ids) {
+        return toAjax(productConfigService.removeQuestionGroupByIds(ids));
+    }
+
+
+    @SaCheckPermission("product:template:list")
+    @GetMapping("/questions/list")
+    @Operation(summary = "分页查询配置问题列表")
+    public TableDataInfo<ConfigQuestionVo> listConfigQuestion(ConfigQuestionBo bo, PageQuery pageQuery) {
+        return productConfigService.queryConfigQuestionPage(bo, pageQuery);
+    }
+
+    @SaCheckPermission("product:template:list")
+    @GetMapping("/questions/options")
+    @Operation(summary = "查询配置问题选项")
+    public R<java.util.List<ConfigQuestionVo>> optionsConfigQuestion(ConfigQuestionBo bo) {
+        return R.ok(productConfigService.queryConfigQuestionList(bo));
+    }
+
+    @SaCheckPermission("product:template:list")
+    @GetMapping("/questions/{id}")
+    @Operation(summary = "获取配置问题详情")
+    public R<ConfigQuestionVo> getConfigQuestion(@PathVariable Long id) {
+        return R.ok(productConfigService.getConfigQuestionById(id));
+    }
+
+    @SaCheckPermission("product:template:edit")
+    @Log(title = "配置问题", businessType = BusinessType.INSERT)
+    @PostMapping("/questions")
+    @Operation(summary = "新增配置问题")
+    public R<Void> addConfigQuestion(@Validated @RequestBody ConfigQuestionBo bo) {
+        return toAjax(productConfigService.saveConfigQuestion(bo));
+    }
+
+    @SaCheckPermission("product:template:edit")
+    @Log(title = "配置问题", businessType = BusinessType.UPDATE)
+    @PutMapping("/questions")
+    @Operation(summary = "修改配置问题")
+    public R<Void> editConfigQuestion(@Validated @RequestBody ConfigQuestionBo bo) {
+        return toAjax(productConfigService.saveConfigQuestion(bo));
+    }
+
+    @SaCheckPermission("product:template:edit")
+    @Log(title = "配置问题", businessType = BusinessType.DELETE)
+    @DeleteMapping("/questions/{ids}")
+    @Operation(summary = "删除配置问题")
+    public R<Void> removeConfigQuestion(@NotEmpty(message = "{gen.validation.pk.required}") @PathVariable Long[] ids) {
+        return toAjax(productConfigService.removeConfigQuestionByIds(ids));
+    }
+
+
+    @SaCheckPermission("product:template:list")
+    @GetMapping("/options/list")
+    @Operation(summary = "分页查询配置答案选项列表")
+    public TableDataInfo<ConfigOptionVo> listConfigOption(ConfigOptionBo bo, PageQuery pageQuery) {
+        return productConfigService.queryConfigOptionPage(bo, pageQuery);
+    }
+
+    @SaCheckPermission("product:template:list")
+    @GetMapping("/options/options")
+    @Operation(summary = "查询配置答案选项选项")
+    public R<java.util.List<ConfigOptionVo>> optionsConfigOption(ConfigOptionBo bo) {
+        return R.ok(productConfigService.queryConfigOptionList(bo));
+    }
+
+    @SaCheckPermission("product:template:list")
+    @GetMapping("/options/{id}")
+    @Operation(summary = "获取配置答案选项详情")
+    public R<ConfigOptionVo> getConfigOption(@PathVariable Long id) {
+        return R.ok(productConfigService.getConfigOptionById(id));
+    }
+
+    @SaCheckPermission("product:template:edit")
+    @Log(title = "配置答案选项", businessType = BusinessType.INSERT)
+    @PostMapping("/options")
+    @Operation(summary = "新增配置答案选项")
+    public R<Void> addConfigOption(@Validated @RequestBody ConfigOptionBo bo) {
+        return toAjax(productConfigService.saveConfigOption(bo));
+    }
+
+    @SaCheckPermission("product:template:edit")
+    @Log(title = "配置答案选项", businessType = BusinessType.UPDATE)
+    @PutMapping("/options")
+    @Operation(summary = "修改配置答案选项")
+    public R<Void> editConfigOption(@Validated @RequestBody ConfigOptionBo bo) {
+        return toAjax(productConfigService.saveConfigOption(bo));
+    }
+
+    @SaCheckPermission("product:template:edit")
+    @Log(title = "配置答案选项", businessType = BusinessType.DELETE)
+    @DeleteMapping("/options/{ids}")
+    @Operation(summary = "删除配置答案选项")
+    public R<Void> removeConfigOption(@NotEmpty(message = "{gen.validation.pk.required}") @PathVariable Long[] ids) {
+        return toAjax(productConfigService.removeConfigOptionByIds(ids));
+    }
+
+
+    @SaCheckPermission("product:template:list")
+    @GetMapping("/rules/list")
+    @Operation(summary = "分页查询配置规则列表")
+    public TableDataInfo<ConfigRuleVo> listConfigRule(ConfigRuleBo bo, PageQuery pageQuery) {
+        return productConfigService.queryConfigRulePage(bo, pageQuery);
+    }
+
+    @SaCheckPermission("product:template:list")
+    @GetMapping("/rules/options")
+    @Operation(summary = "查询配置规则选项")
+    public R<java.util.List<ConfigRuleVo>> optionsConfigRule(ConfigRuleBo bo) {
+        return R.ok(productConfigService.queryConfigRuleList(bo));
+    }
+
+    @SaCheckPermission("product:template:list")
+    @GetMapping("/rules/{id}")
+    @Operation(summary = "获取配置规则详情")
+    public R<ConfigRuleVo> getConfigRule(@PathVariable Long id) {
+        return R.ok(productConfigService.getConfigRuleById(id));
+    }
+
+    @SaCheckPermission("product:template:rule")
+    @Log(title = "配置规则", businessType = BusinessType.INSERT)
+    @PostMapping("/rules")
+    @Operation(summary = "新增配置规则")
+    public R<Void> addConfigRule(@Validated @RequestBody ConfigRuleBo bo) {
+        return toAjax(productConfigService.saveConfigRule(bo));
+    }
+
+    @SaCheckPermission("product:template:rule")
+    @Log(title = "配置规则", businessType = BusinessType.UPDATE)
+    @PutMapping("/rules")
+    @Operation(summary = "修改配置规则")
+    public R<Void> editConfigRule(@Validated @RequestBody ConfigRuleBo bo) {
+        return toAjax(productConfigService.saveConfigRule(bo));
+    }
+
+    @SaCheckPermission("product:template:rule")
+    @Log(title = "配置规则", businessType = BusinessType.DELETE)
+    @DeleteMapping("/rules/{ids}")
+    @Operation(summary = "删除配置规则")
+    public R<Void> removeConfigRule(@NotEmpty(message = "{gen.validation.pk.required}") @PathVariable Long[] ids) {
+        return toAjax(productConfigService.removeConfigRuleByIds(ids));
+    }
+
+    @SaCheckPermission("product:template:test")
+    @PostMapping("/config/evaluate")
+    @Operation(summary = "配置求值")
+    public R<ConfigEvaluationResultVo> evaluate(@RequestBody ConfigEvaluationBo bo) {
+        return R.ok(productConfigService.evaluate(bo));
+    }
+}

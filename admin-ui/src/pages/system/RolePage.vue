@@ -86,7 +86,7 @@
       @pagination="getList"
     />
 
-    <el-dialog v-model="open" :title="title" width="500px" append-to-body destroy-on-close @closed="reset">
+    <el-drawer v-model="open" :title="title" size="560px" append-to-body destroy-on-close @closed="reset">
       <el-form ref="roleRef" :model="form" :rules="rules" label-width="100px">
         <el-form-item :label="t('role.roleName')" prop="roleName">
           <el-input v-model="form.roleName" :placeholder="t('role.roleNamePlaceholder')" />
@@ -135,9 +135,9 @@
           <el-button @click="cancel">{{ t('common.cancel') }}</el-button>
         </div>
       </template>
-    </el-dialog>
+    </el-drawer>
 
-    <el-dialog v-model="openDataScope" :title="t('role.assignDataScope')" width="500px" append-to-body destroy-on-close @closed="reset">
+    <el-drawer v-model="openDataScope" :title="t('role.assignDataScope')" size="560px" append-to-body destroy-on-close @closed="reset">
       <el-form :model="form" label-width="90px">
         <el-form-item :label="t('role.roleName')">
           <el-input v-model="form.roleName" disabled />
@@ -173,7 +173,7 @@
           <el-button @click="cancelDataScope">{{ t('common.cancel') }}</el-button>
         </div>
       </template>
-    </el-dialog>
+    </el-drawer>
   </div>
 </template>
 

@@ -1,0 +1,151 @@
+{
+  "generatedAt": "2026-06-07T04:03:54.831Z",
+  "target": "http://127.0.0.1:8083",
+  "passed": true,
+  "results": [
+    {
+      "route": "/product-master/workbench",
+      "has404": false,
+      "hasEmpty": false,
+      "hasRawI18n": false,
+      "hasSystemError": false,
+      "hasTable": true,
+      "url": "/product-master/workbench"
+    },
+    {
+      "route": "/product-master/categories",
+      "has404": false,
+      "hasEmpty": true,
+      "hasRawI18n": false,
+      "hasSystemError": false,
+      "hasTable": true,
+      "url": "/product-master/categories"
+    },
+    {
+      "route": "/product-master/materials",
+      "has404": false,
+      "hasEmpty": true,
+      "hasRawI18n": false,
+      "hasSystemError": false,
+      "hasTable": true,
+      "url": "/product-master/materials"
+    },
+    {
+      "route": "/product-master/components",
+      "has404": false,
+      "hasEmpty": true,
+      "hasRawI18n": false,
+      "hasSystemError": false,
+      "hasTable": true,
+      "url": "/product-master/components"
+    },
+    {
+      "route": "/product-master/media-assets",
+      "has404": false,
+      "hasEmpty": true,
+      "hasRawI18n": false,
+      "hasSystemError": false,
+      "hasTable": true,
+      "url": "/product-master/media-assets"
+    },
+    {
+      "route": "/product-master/media-bindings",
+      "has404": false,
+      "hasEmpty": true,
+      "hasRawI18n": false,
+      "hasSystemError": false,
+      "hasTable": true,
+      "url": "/product-master/media-bindings"
+    },
+    {
+      "route": "/product-config/template",
+      "has404": false,
+      "hasEmpty": false,
+      "hasRawI18n": false,
+      "hasSystemError": false,
+      "hasTable": true,
+      "url": "/product-config/template"
+    },
+    {
+      "route": "/product-config/pricing",
+      "has404": false,
+      "hasEmpty": false,
+      "hasRawI18n": false,
+      "hasSystemError": false,
+      "hasTable": true,
+      "url": "/product-config/pricing"
+    },
+    {
+      "route": "/product-config/quote-preview",
+      "has404": false,
+      "hasEmpty": true,
+      "hasRawI18n": false,
+      "hasSystemError": false,
+      "hasTable": true,
+      "url": "/product-config/quote-preview"
+    },
+    {
+      "route": "/product-release/publish",
+      "has404": false,
+      "hasEmpty": true,
+      "hasRawI18n": false,
+      "hasSystemError": false,
+      "hasTable": true,
+      "url": "/product-release/publish"
+    },
+    {
+      "route": "/product-release/approvals",
+      "has404": false,
+      "hasEmpty": false,
+      "hasRawI18n": false,
+      "hasSystemError": false,
+      "hasTable": true,
+      "url": "/product-release/approvals"
+    },
+    {
+      "route": "/product-release/gap-tasks",
+      "has404": false,
+      "hasEmpty": false,
+      "hasRawI18n": false,
+      "hasSystemError": false,
+      "hasTable": true,
+      "url": "/product-release/gap-tasks"
+    },
+    {
+      "route": "/product-release/packages",
+      "has404": false,
+      "hasEmpty": false,
+      "hasRawI18n": false,
+      "hasSystemError": false,
+      "hasTable": true,
+      "url": "/product-release/packages"
+    },
+    {
+      "route": "/product-release/sync-outbox",
+      "has404": false,
+      "hasEmpty": false,
+      "hasRawI18n": false,
+      "hasSystemError": false,
+      "hasTable": true,
+      "url": "/product-release/sync-outbox"
+    },
+    {
+      "route": "/product-release/import",
+      "has404": false,
+      "hasEmpty": false,
+      "hasRawI18n": false,
+      "hasSystemError": false,
+      "hasTable": true,
+      "url": "/product-release/import"
+    },
+    {
+      "route": "/product-release/sales-view",
+      "has404": false,
+      "hasEmpty": false,
+      "hasRawI18n": false,
+      "hasSystemError": false,
+      "hasTable": true,
+      "url": "/product-release/sales-view"
+    }
+  ]
+}

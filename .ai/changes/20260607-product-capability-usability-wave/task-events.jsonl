@@ -1,0 +1,30 @@
+{"ts":"2026-06-07T00:00:00+08:00","event":"task_created","task":"PCC-UW-C01","owner":"frontend-developer","wave":0,"summary":"创建上线体验 P0 contract 与 UI 精修验收任务"}
+{"ts":"2026-06-07T00:00:00+08:00","event":"task_created","task":"PCC-UW-C02","owner":"java-architect","wave":0,"summary":"创建报价、审核、缺口、发布、同步、导入 API 和数据 contract 任务"}
+{"ts":"2026-06-07T00:00:00+08:00","event":"task_created","task":"PCC-UW-C03","owner":"browser-debugger","wave":0,"summary":"创建真实浏览器验收矩阵和证据口径任务"}
+{"ts":"2026-06-07T00:00:00+08:00","event":"task_created","task":"PCC-UW-F01","owner":"frontend-developer","wave":1,"summary":"创建 5 个自定义页转 Vue 组件化重构、UI 精修和组件化任务"}
+{"ts":"2026-06-07T00:00:00+08:00","event":"task_created","task":"PCC-UW-F02","owner":"frontend-developer","wave":1,"summary":"创建普通 grid/list 和历史页面标准化复查任务"}
+{"ts":"2026-06-07T00:00:00+08:00","event":"task_created","task":"PCC-UW-B01","owner":"java-architect","wave":1,"summary":"创建后端关键流程可用性加固任务"}
+{"ts":"2026-06-07T00:00:00+08:00","event":"task_created","task":"PCC-UW-F03","owner":"frontend-developer","wave":1,"summary":"创建报价、审核、缺口、发布包、同步日志和导入中心前端流程收口任务"}
+{"ts":"2026-06-07T00:00:00+08:00","event":"task_created","task":"PCC-UW-I01","owner":"typescript-pro","wave":2,"summary":"创建前后端字段、权限、i18n、UTC 和选择器集成对齐任务"}
+{"ts":"2026-06-07T00:00:00+08:00","event":"task_created","task":"PCC-UW-I02","owner":"java-architect","wave":2,"summary":"创建真实开发库菜单、按钮、字典和关键数据核验任务"}
+{"ts":"2026-06-07T00:00:00+08:00","event":"task_created","task":"PCC-UW-R01","owner":"code-reviewer","wave":3,"summary":"创建 Static Review 任务"}
+{"ts":"2026-06-07T00:00:00+08:00","event":"task_created","task":"PCC-UW-V01","owner":"browser-debugger","wave":4,"summary":"创建内部浏览器真实录入和视觉验收任务"}
+{"ts":"2026-06-07T00:00:00+08:00","event":"task_created","task":"PCC-UW-V02","owner":"main","wave":4,"summary":"创建总验收和任务状态收口任务"}
+{"ts":"2026-06-07T09:06:23+08:00","event":"task_done","task":"PCC-UW-C01","owner":"frontend-developer","wave":0,"summary":"已冻结 UI 执行合同和 5 个自定义页主线任务边界，Wave 0 禁止触碰业务代码"}
+{"ts":"2026-06-07T09:06:23+08:00","event":"task_done","task":"PCC-UW-C02","owner":"java-architect","wave":0,"summary":"已确认报价、审核、缺口、发布、同步、导入 contract 在 Wave 0 只改文档和验收口径，不改 Java、SQL、API 文件"}
+{"ts":"2026-06-07T09:06:23+08:00","event":"task_done","task":"PCC-UW-C03","owner":"browser-debugger","wave":0,"summary":"已确认浏览器验收必须读取 UI 执行合同，不能只用 URL 可打开替代体验验收"}
+{"ts":"2026-06-07T09:06:23+08:00","event":"barrier_passed","wave":0,"summary":"合同门通过：UI 合同已被 Wave Plan、Check、Tasks 引用，任务拆分未破坏 5 个自定义页连续体验"}
+{"ts":"2026-06-07T09:55:00+08:00","event":"task_progress","task":"PCC-UW-F01","owner":"frontend-developer","wave":1,"summary":"5 个自定义页继续组件化收口，新增工作台 ECharts 趋势组件；图表使用现有依赖并保持后端权威"}
+{"ts":"2026-06-07T09:55:00+08:00","event":"task_progress","task":"PCC-UW-F02","owner":"frontend-developer","wave":1,"summary":"普通产品能力 grid 支持路由 query 回填，导入中心解析后刷新批次列表；商家审核和商家资料继续标准化"}
+{"ts":"2026-06-07T09:55:00+08:00","event":"task_progress","task":"PCC-UW-F03","owner":"frontend-developer","wave":1,"summary":"工作台卡片、进度行、优先任务、同步事件、发布 BLOCKER 补充直达和筛选动作"}
+{"ts":"2026-06-07T09:55:00+08:00","event":"validation_partial_passed","task":"PCC-UW-V02","owner":"main","wave":4,"summary":"admin-ui typecheck/build、git diff --check、codegraph sync 通过；后端 dev profile 启动成功"}
+{"ts":"2026-06-07T09:55:00+08:00","event":"validation_partial_passed","task":"PCC-UW-V01","owner":"browser-debugger","wave":4,"summary":"内部浏览器使用真实 192.* 和 UI 登录态验证 19 个产品能力入口及商家审核/资料首屏，无 404、登录回跳或系统异常；真实录入流程仍 pending"}
+{"ts":"2026-06-07T14:00:00+08:00","event":"task_done","task":"PCC-UW-F01","owner":"frontend-developer","wave":1,"summary":"5 个自定义页主结构与组件化收口完成，核心体验文案与关键快捷动作已补齐"}
+{"ts":"2026-06-07T14:00:00+08:00","event":"task_done","task":"PCC-UW-F02","owner":"frontend-developer","wave":1,"summary":"产品能力 grid 与历史页面标准化复查整改完成，路由回填、抽屉流程和关键按钮边界已收口"}
+{"ts":"2026-06-07T14:00:00+08:00","event":"task_done","task":"PCC-UW-F03","owner":"frontend-developer","wave":1,"summary":"报价预览、审核审批、缺口、发布包、同步日志、导入中心前端流程收口完成，关键动作链路完成"}
+{"ts":"2026-06-07T14:00:00+08:00","event":"task_done","task":"PCC-UW-I01","owner":"typescript-pro","wave":2,"summary":"前后端字段、权限、i18n、UTC、选择器和错误态对齐完成并纳入当前验收口径"}
+{"ts":"2026-06-07T14:00:00+08:00","event":"task_done","task":"PCC-UW-I02","owner":"java-architect","wave":2,"summary":"真实开发库菜单、按钮、字典和关键业务数据 post-check 关键口径收口完成"}
+{"ts":"2026-06-07T14:00:00+08:00","event":"task_done","task":"PCC-UW-R01","owner":"code-reviewer","wave":3,"summary":"上线体验 Wave static review 主要风险项完成清单更新，待 V01 行为复测后进入总状态收口"}
+{"ts":"2026-06-07T14:00:00+08:00","event":"task_done","task":"PCC-UW-V02","owner":"main","wave":4,"summary":"Build/Test/i18n/codegraph/diff 与任务状态收口完成，剩余仅 PCC-UW-V01"}
+{"ts":"2026-06-07T16:00:00+08:00","event":"task_done","task":"PCC-UW-V01","owner":"browser-debugger","wave":4,"summary":"像素级/近像素级对照、标准 grid 真实录入闭环、移动端抽屉/表单提交与 192/127 网络复测已完成，Runtime Validation 全量通过"}
+{"ts":"2026-06-07T18:00:00+08:00","event":"wave_archived","task":"PCC-UW-V01","owner":"main","wave":4,"summary":"共享产品能力中心上线体验收口 Wave 已归档，所有任务收口完成，参考 `.ai/archive/20260607-product-capability-usability-wave.md`"}

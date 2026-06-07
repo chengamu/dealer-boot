@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RB100 Roller Shade 配置模板编辑 - Production Ready</title>
+    <!-- Tailwind CSS (本地编译时可直接解析此类名) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            /* 生产规范：采用无阻塞的原生系统级字体栈，字距设为默认，确保长期渲染稳定性 */
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background-color: #F8FAFC;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        .tabular-nums {
+            font-variant-numeric: tabular-nums;
+        }
+        /* 隐藏局部滚动条 */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        /* 严谨的企业级物理纸张层级 */
+        .premium-card {
+            background-color: #ffffff;
+            border: 1px solid #E2E8F0;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04);
+            border-radius: 12px;
+        }
+    </style>
+</head>
+<body class="text-slate-800 w-screen h-screen overflow-hidden flex flex-col select-none text-[11px] leading-normal bg-[#F8FAFC]">
+
+    <!-- ==================== 顶部子操作导航栏 (1:1 原生 SVG 图标) ==================== -->
+    <div class="h-12 bg-white border-b border-slate-200 px-6 flex items-center justify-between flex-shrink-0">
+        <div class="flex items-center space-x-3">
+            <button class="w-7 h-7 flex items-center justify-center border border-slate-200 rounded-lg text-slate-500 hover:bg-slate-50 transition-colors">
+                <!-- 原生 SVG 返回图标 -->
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+            </button>
+            <div class="flex items-center space-x-2">
+                <h1 class="text-xs font-bold text-slate-900">RB100 Roller Shade</h1>
+                <button class="text-slate-400 hover:text-slate-600 transition-colors">
+                    <!-- 原生 SVG 编辑图标 -->
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                </button>
+            </div>
+            <span class="bg-[#EFF6FF] text-[#2563EB] border border-[#BFDBFE] text-[9px] px-2.5 py-0.5 rounded font-extrabold uppercase tracking-wide">Draft V3</span>
+            <div class="flex items-center space-x-1.5 text-[10px] text-slate-400 font-semibold">
+                <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span>Last saved: 2 min ago</span>
+                <span class="text-slate-200">|</span>
+                <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span>Auto saved</span>
+            </div>
+        </div>
+        
+        <div class="flex items-center space-x-2 font-bold">
+            <button class="px-3 py-1.5 border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 transition-all text-xs">Preview dealer view</button>
+            <button class="px-3 py-1.5 border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 transition-all text-xs flex items-center space-x-1">
+                <span>More</span>
+                <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+            <button class="px-4 py-1.5 bg-[#2563EB] hover:bg-blue-700 text-white rounded-lg transition-all text-xs">Publish...</button>
+        </div>
+    </div>
+
+    <!-- ==================== 铺满整平的三栏自适应主工作区 ==================== -->
+    <div class="flex-grow flex p-5 gap-4 overflow-hidden">
+        
+        <!-- 1. 左侧边栏：属性过滤器 & 题目分组 (去外链图标) -->
+        <div class="w-[240px] flex-shrink-0 bg-white border border-slate-200 rounded-xl flex flex-col p-4 overflow-y-auto no-scrollbar justify-between">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-[10px] font-extrabold tracking-wider text-slate-400 uppercase mb-1">Model</label>
+                    <div class="relative">
+                        <select class="w-full border border-slate-200 bg-slate-50/50 rounded-lg px-3 py-2 text-xs font-bold text-slate-700 appearance-none focus:outline-none">
+                            <option>RB100 Roller Shade</option>
+                        </select>
+                        <svg class="w-2.5 h-2.5 absolute right-3 top-3.5 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-[10px] font-extrabold tracking-wider text-slate-400 uppercase mb-1">Variant</label>
+                    <div class="relative">
+                        <select class="w-full border border-slate-200 bg-slate-50/50 rounded-lg px-3 py-2 text-xs font-bold text-slate-700 appearance-none focus:outline-none">
+                            <option>Standard</option>
+                        </select>
+                        <svg class="w-2.5 h-2.5 absolute right-3 top-3.5 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                    </div>
+                </div>
+
+                <div class="border-b border-slate-100 pb-4">
+                    <label class="block text-[10px] font-extrabold tracking-wider text-slate-400 uppercase mb-1">Version</label>
+                    <div class="bg-[#EFF6FF] text-[#2563EB] rounded-lg px-3 py-2 text-xs font-bold border border-blue-100 flex justify-between items-center">
+                        <span class="flex items-center"><span class="w-1.5 h-1.5 bg-[#2563EB] rounded-full mr-2"></span>Draft V3</span>
+                    </div>
+                    <button class="w-full mt-2 border border-dashed border-slate-200 text-slate-500 hover:text-slate-800 hover:bg-slate-50 rounded-lg py-2 text-xs font-bold transition-all">
+                        + New version
+                    </button>
+                </div>
+
+                <div class="space-y-1">
+                    <h4 class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Question groups</h4>
+                    <nav class="space-y-0.5">
+                        <a href="#" class="flex justify-between items-center px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 rounded-lg transition-all">
+                            <span>01 Basic Information</span>
+                            <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                        </a>
+                        <a href="#" class="flex justify-between items-center px-3 py-2 text-xs font-bold text-blue-600 bg-[#EFF6FF] rounded-lg transition-all">
+                            <span>02 Fabric & Appearance</span>
+                            <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                        </a>
+                        <a href="#" class="flex justify-between items-center px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 rounded-lg transition-all">
+                            <span>03 Dimensions</span>
+                            <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                        </a>
+                        <a href="#" class="flex justify-between items-center px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 rounded-lg transition-all">
+                            <span>04 Mounting & Hardware</span>
+                            <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                        </a>
+                        <a href="#" class="flex justify-between items-center px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 rounded-lg transition-all">
+                            <span>05 Operation</span>
+                            <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                        </a>
+                        <a href="#" class="flex justify-between items-center px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 rounded-lg transition-all">
+                            <span>06 Control Options</span>
+                            <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                        </a>
+                        <a href="#" class="flex justify-between items-center px-3 py-2 text-xs font-bold text-slate-400 hover:bg-slate-50 rounded-lg transition-all">
+                            <span>07 Packaging</span>
+                            <div class="w-3.5 h-3.5 border border-slate-300 rounded-full"></div>
+                        </a>
+                        <a href="#" class="flex justify-between items-center px-3 py-2 text-xs font-bold text-slate-400 hover:bg-slate-50 rounded-lg transition-all">
+                            <span>08 Notes (Internal)</span>
+                            <div class="w-3.5 h-3.5 border border-slate-300 rounded-full"></div>
+                        </a>
+                    </nav>
+                </div>
+            </div>
+            
+            <button class="w-full mt-4 border border-slate-200 text-slate-500 hover:text-slate-800 hover:bg-slate-50 rounded-lg py-2 text-xs font-bold transition-all">
+                + Add group
+            </button>
+        </div>
+
+        <!-- 2. 中间主要配置编辑器 (带手风琴折叠设计以防长数据疲劳) -->
+        <div class="flex-1 flex flex-col gap-4 overflow-hidden">
+            <!-- 快捷工具栏 -->
+            <div class="bg-white p-3 border border-slate-200 rounded-lg flex items-center justify-between flex-shrink-0 shadow-sm">
+                <div class="flex items-center space-x-2">
+                    <button class="px-3 py-1.5 border border-slate-200 hover:bg-slate-50 text-slate-600 text-[11px] font-bold rounded-lg transition-all flex items-center">Bulk paste</button>
+                    <button class="px-3 py-1.5 border border-slate-200 hover:bg-slate-50 text-slate-600 text-[11px] font-bold rounded-lg transition-all flex items-center">Copy group</button>
+                    <button class="px-4 py-1.5 bg-[#2563EB] hover:bg-blue-700 text-white text-[11px] rounded-lg font-bold transition-all">Save draft</button>
+                </div>
+                <div class="flex items-center space-x-2.5 text-slate-400">
+                    <button class="w-7 h-7 flex items-center justify-center hover:bg-slate-50 rounded-lg text-slate-500 transition-all">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12.066 11.2a1 1 0 000 1.6l5.334 4A1 1 0 0019 16V8a1 1 0 00-1.6-.8l-5.334 4zM4.066 11.2a1 1 0 000 1.6l5.334 4A1 1 0 0011 16V8a1 1 0 00-1.6-.8l-5.334 4z"/></svg>
+                    </button>
+                    <button class="w-7 h-7 flex items-center justify-center hover:bg-slate-50 rounded-lg text-slate-500 transition-all">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.934 12.8a1 1 0 000-1.6l-5.334-4A1 1 0 005 8v8a1 1 0 001.6.8l5.334-4zM19.934 12.8a1 1 0 000-1.6l-5.334-4A1 1 0 0013 8v8a1 1 0 001.6.8l5.334-4z"/></svg>
+                    </button>
+                    <span class="text-slate-200">|</span>
+                    <button class="w-7 h-7 flex items-center justify-center hover:bg-slate-50 rounded-lg text-slate-500 transition-all">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    </button>
+                    <button class="px-3 py-1 border border-slate-200 text-[11px] rounded-lg hover:bg-slate-50 text-slate-600 font-bold transition-all flex items-center">Expand all</button>
+                </div>
+            </div>
+
+            <!-- 主配置表单卡片 (局部滚动) -->
+            <div class="bg-white border border-slate-200 rounded-lg flex-1 flex flex-col overflow-hidden shadow-sm">
+                <!-- 头部 -->
+                <div class="px-4 py-3 border-b border-slate-200 flex justify-between items-center bg-slate-50/50 flex-shrink-0">
+                    <div class="flex items-center space-x-2">
+                        <h3 class="font-extrabold text-slate-800 text-xs">02 Fabric & Appearance</h3>
+                        <button class="text-slate-400 hover:text-slate-600 transition-colors">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                        </button>
+                        <span class="bg-[#E6F4EA] text-[#137333] border border-[#CEEAD6] text-[10px] px-2.5 py-0.5 rounded font-bold uppercase tracking-wide">Required 3/3</span>
+                    </div>
+                    <button class="p-1 hover:bg-slate-100 rounded text-slate-400 transition-all">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"/></svg>
+                    </button>
+                </div>
+
+                <!-- 滚动配置主体 -->
+                <div class="flex-1 overflow-y-auto p-5 space-y-4 no-scrollbar">
+                    
+                    <!-- 2.1 Fabric Type 选项卡 (由于选项多，保留展开状态) -->
+                    <div class="space-y-3.5 border border-slate-200 rounded-xl p-4 bg-white">
+                        <div class="flex items-start justify-between">
+                            <div class="space-y-1.5">
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-xs font-bold text-slate-400">2.1</span>
+                                    <span class="text-xs font-bold text-slate-800">Fabric Type</span>
+                                </div>
+                                <div class="text-[10px] font-mono tracking-wide text-slate-450 bg-slate-50 px-2.5 py-0.5 rounded border border-slate-200 inline-block">
+                                    Internal code: FABRIC_TYPE
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-4">
+                                <div class="relative">
+                                    <select class="border border-slate-200 bg-white rounded-lg px-2.5 py-1 text-[11px] font-bold text-slate-700 appearance-none pr-7">
+                                        <option>Single choice</option>
+                                    </select>
+                                    <svg class="w-2 h-2 absolute right-2.5 top-2.5 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                                </div>
+                                <!-- Toggle switches (标准无外链) -->
+                                <div class="w-7 h-4.5 bg-blue-600 rounded-full flex items-center justify-end p-0.5 cursor-pointer shadow-inner">
+                                    <span class="w-3.5 h-3.5 bg-white rounded-full shadow-sm"></span>
+                                </div>
+                                <div class="w-7 h-4.5 bg-slate-200 rounded-full flex items-center justify-start p-0.5 cursor-pointer shadow-inner">
+                                    <span class="w-3.5 h-3.5 bg-white rounded-full shadow-sm"></span>
+                                </div>
+                                <span class="text-slate-200">|</span>
+                                <div class="flex items-center space-x-2 text-slate-400">
+                                    <button class="hover:text-blue-500">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+                                    </button>
+                                    <button class="hover:text-slate-600">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/></svg>
+                                    </button>
+                                    <button class="hover:text-red-500">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 选项列表表格 (严谨还原) -->
+                        <div class="space-y-1.5">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Options <span class="text-slate-500 ml-1">6 items</span></span>
+                            <div class="border border-slate-200 rounded-lg overflow-hidden shadow-sm">
+                                <table class="w-full text-left border-collapse text-[11px] tabular-nums font-semibold">
+                                    <thead>
+                                        <tr class="bg-slate-50 text-slate-500 border-b border-slate-200 font-extrabold uppercase text-[9px] tracking-wider">
+                                            <th class="p-2.5 w-8 text-center">#</th>
+                                            <th class="p-2.5">Option (Dealer view)</th>
+                                            <th class="p-2.5">Internal code</th>
+                                            <th class="p-2.5">BOM ref</th>
+                                            <th class="p-2.5">Price impact</th>
+                                            <th class="p-2.5">Status</th>
+                                            <th class="p-2.5 text-center">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-100 text-slate-600">
+                                        <tr class="hover:bg-slate-50/50">
+                                            <td class="p-2 text-center text-slate-400">1</td>
+                                            <td class="p-2 font-bold text-slate-800">Light Filtering</td>
+                                            <td class="p-2 text-slate-400 font-mono">LF</td>
+                                            <td class="p-2 text-slate-400 font-mono">FAB-LF</td>
+                                            <td class="p-2 text-slate-700 font-extrabold">+0%</td>
+                                            <td class="p-2"><span class="bg-[#E6F4EA] text-[#137333] border border-[#CEEAD6] text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">PASS</span></td>
+                                            <td class="p-2 text-center text-slate-400 space-x-2 text-sm flex justify-center">
+                                                <button class="hover:text-blue-600"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg></button>
+                                                <button class="hover:text-red-500"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
+                                            </td>
+                                        </tr>
+                                        <tr class="hover:bg-slate-50/50">
+                                            <td class="p-2 text-center text-slate-400">2</td>
+                                            <td class="p-2 font-bold text-slate-800">Room Darkening</td>
+                                            <td class="p-2 text-slate-400 font-mono">RD</td>
+                                            <td class="p-2 text-slate-400 font-mono">FAB-RD</td>
+                                            <td class="p-2 text-slate-700 font-extrabold">+5%</td>
+                                            <td class="p-2"><span class="bg-[#E6F4EA] text-[#137333] border border-[#CEEAD6] text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">PASS</span></td>
+                                            <td class="p-2 text-center text-slate-400 space-x-2 text-sm flex justify-center">
+                                                <button class="hover:text-blue-600"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg></button>
+                                                <button class="hover:text-red-500"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
+                                            </td>
+                                        </tr>
+                                        <tr class="hover:bg-slate-50/50">
+                                            <td class="p-2 text-center text-slate-400">3</td>
+                                            <td class="p-2 font-bold text-slate-800">Blackout</td>
+                                            <td class="p-2 text-slate-400 font-mono">BO</td>
+                                            <td class="p-2 text-slate-400 font-mono">FAB-BO</td>
+                                            <td class="p-2 text-slate-700 font-extrabold">+8%</td>
+                                            <td class="p-2"><span class="bg-[#E6F4EA] text-[#137333] border border-[#CEEAD6] text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">PASS</span></td>
+                                            <td class="p-2 text-center text-slate-400 space-x-2 text-sm flex justify-center">
+                                                <button class="hover:text-blue-600"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg></button>
+                                                <button class="hover:text-red-500"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
+                                            </td>
+                                        </tr>
+                                        <tr class="hover:bg-slate-50/50">
+                                            <td class="p-2 text-center text-slate-400">4</td>
+                                            <td class="p-2 font-bold text-slate-800">Sheer</td>
+                                            <td class="p-2 text-slate-400 font-mono">SH</td>
+                                            <td class="p-2 text-slate-400 font-mono">FAB-SH</td>
+                                            <td class="p-2 text-slate-700 font-extrabold">+3%</td>
+                                            <td class="p-2"><span class="bg-[#FEF7E0] text-[#B06000] border border-[#FEEFC3] text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">WARNING</span></td>
+                                            <td class="p-2 text-center text-slate-400 space-x-2 text-sm flex justify-center">
+                                                <button class="hover:text-blue-600"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg></button>
+                                                <button class="hover:text-red-500"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
+                                            </td>
+                                        </tr>
+                                        <tr class="hover:bg-slate-50/50">
+                                            <td class="p-2 text-center text-slate-400">5</td>
+                                            <td class="p-2 font-bold text-slate-800">Solar Screen</td>
+                                            <td class="p-2 text-slate-450 font-mono">SC</td>
+                                            <td class="p-2 text-slate-450 font-mono">FAB-SC</td>
+                                            <td class="p-2 text-slate-700 font-extrabold">+7%</td>
+                                            <td class="p-2"><span class="bg-[#FEF7E0] text-[#B06000] border border-[#FEEFC3] text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">WARNING</span></td>
+                                            <td class="p-2 text-center text-slate-400 space-x-2 text-sm flex justify-center">
+                                                <button class="hover:text-blue-600"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg></button>
+                                                <button class="hover:text-red-500"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
+                                            </td>
+                                        </tr>
+                                        <tr class="bg-red-50/15 hover:bg-red-50/30">
+                                            <td class="p-2 text-center text-slate-400">6</td>
+                                            <td class="p-2 font-bold text-slate-800">Recycled PET</td>
+                                            <td class="p-2 text-slate-405 font-mono">RP</td>
+                                            <td class="p-2 text-slate-405 font-mono">FAB-RP</td>
+                                            <td class="p-2 text-slate-700 font-extrabold">+10%</td>
+                                            <td class="p-2"><span class="bg-[#FCE8E6] text-[#C5221F] border border-[#FAD2CF] text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">BLOCKER</span></td>
+                                            <td class="p-2 text-center text-slate-400 space-x-2 text-sm flex justify-center">
+                                                <button class="hover:text-blue-600"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg></button>
+                                                <button class="hover:text-red-500"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <div class="p-2 bg-slate-50/50 border-t border-slate-200">
+                                    <button class="text-blue-600 hover:text-blue-700 text-xs font-bold flex items-center">
+                                        <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/></svg>
+                                        <span>Add option</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 生产手风琴折叠设计 (2.2 - 2.6 默认为轻量卡片头，点击即展开，防止疲劳) -->
+                    <div class="space-y-1.5 border-t border-slate-100 pt-4">
+                        <!-- 2.2 Accordion Header -->
+                        <div onclick="toggleAccordion('acc-2.2')" class="flex items-center justify-between py-2 hover:bg-slate-50 px-2 rounded-lg transition-all text-xs font-bold cursor-pointer">
+                            <div class="flex items-center space-x-3">
+                                <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                                <span class="text-slate-400 w-5">2.2</span>
+                                <span class="text-slate-800 w-28">Fabric Color</span>
+                                <span class="text-[10px] text-slate-400 font-semibold bg-slate-100 px-1.5 py-0.5 rounded">Single choice</span>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <span class="text-[10px] text-slate-400 font-medium">Required: On | Multi: Off</span>
+                                <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                            </div>
+                        </div>
+                        
+                        <!-- 2.3 Accordion Header -->
+                        <div onclick="toggleAccordion('acc-2.3')" class="flex items-center justify-between py-2 hover:bg-slate-50 px-2 rounded-lg transition-all text-xs font-bold cursor-pointer">
+                            <div class="flex items-center space-x-3">
+                                <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                                <span class="text-slate-400 w-5">2.3</span>
+                                <span class="text-slate-800 w-28">Opacity Level</span>
+                                <span class="text-[10px] text-slate-400 font-semibold bg-slate-100 px-1.5 py-0.5 rounded">Single choice</span>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <span class="text-[10px] text-slate-400 font-medium">Required: On | Multi: Off</span>
+                                <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                            </div>
+                        </div>
+
+                        <!-- 2.4 Accordion Header -->
+                        <div onclick="toggleAccordion('acc-2.4')" class="flex items-center justify-between py-2 hover:bg-slate-50 px-2 rounded-lg transition-all text-xs font-bold cursor-pointer">
+                            <div class="flex items-center space-x-3">
+                                <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                                <span class="text-slate-400 w-5">2.4</span>
+                                <span class="text-slate-800 w-28">Pattern / Texture</span>
+                                <span class="text-[10px] text-slate-400 font-semibold bg-slate-100 px-1.5 py-0.5 rounded">Single choice</span>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <span class="text-[10px] text-slate-400 font-medium">Required: Off | Multi: Off</span>
+                                <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 尾部操作按钮 -->
+                <div class="p-4 border-t border-slate-100 flex-shrink-0 bg-white">
+                    <button class="w-full border border-dashed border-slate-200 hover:border-slate-400 hover:bg-slate-50 py-2.5 rounded-lg text-xs font-bold text-blue-600 transition-all flex items-center justify-center">
+                        <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/></svg>
+                        <span>Add question to this group</span>
+                    </button>
+                </div>
+            </div>
+            
+            <button class="w-full border border-dashed border-slate-200 hover:border-slate-400 hover:bg-slate-50 py-3.5 rounded-2xl text-xs font-bold text-slate-600 transition-all flex items-center justify-center">
+                <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/></svg>
+                <span>Add group</span>
+            </button>
+        </div>
+
+        <!-- 3. 右侧自检与信息汇集区域 (1:1 纯净 SVG 线框) -->
+        <div class="w-[300px] flex-shrink-0 flex flex-col gap-4 overflow-y-auto no-scrollbar">
+            
+            <!-- Live checks (去 FontAwesome，改为标准内联 SVG) -->
+            <div class="premium-card p-4.5 space-y-3">
+                <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+                    <h3 class="font-extrabold text-slate-800 text-xs uppercase tracking-wider">Live checks</h3>
+                    <a href="#" class="text-[11px] font-bold text-blue-600 hover:underline">See all</a>
+                </div>
+                <div class="space-y-2.5 text-[11px] font-semibold leading-relaxed">
+                    <div class="bg-red-50/40 border border-red-100 rounded-lg p-2.5">
+                        <div class="flex items-center space-x-1.5 text-[#C5221F] font-extrabold text-xs mb-1">
+                            <svg class="w-3.5 h-3.5 text-red-500" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            <span>BLOCKER <span class="font-mono ml-0.5">2</span></span>
+                        </div>
+                        <ul class="space-y-0.5 pl-1 text-red-700">
+                            <li>• Recycled PET: missing fire rating certificate</li>
+                            <li>• Maximum width rule not defined</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="bg-amber-50/40 border border-amber-100 rounded-lg p-2.5">
+                        <div class="flex items-center space-x-1.5 text-amber-700 font-extrabold text-xs mb-1">
+                            <svg class="w-3.5 h-3.5 text-amber-500" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                            <span>WARNING <span class="font-mono ml-0.5">3</span></span>
+                        </div>
+                        <ul class="space-y-0.5 pl-1 text-[#B06000]">
+                            <li>• Sheer fabric needs MOQ rule</li>
+                            <li>• Solar screen price rule not set</li>
+                            <li>• Some options missing images</li>
+                        </ul>
+                    </div>
+
+                    <div class="bg-[#E6F4EA]/50 border border-[#CEEAD6] rounded-lg p-2.5">
+                        <div class="flex items-center space-x-1.5 text-[#137333] font-extrabold text-xs">
+                            <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            <span>PASS <span class="font-mono ml-0.5">12</span></span>
+                        </div>
+                        <ul class="pl-1 text-[#137333] mt-1">
+                            <li>• All other checks passed</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dealer preview (极简工业级 SVG 渲染，告别业余手绘) -->
+            <div class="premium-card p-4.5 space-y-3">
+                <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+                    <h3 class="font-extrabold text-slate-800 text-xs uppercase tracking-wider">Dealer preview</h3>
+                    <a href="#" class="text-[11px] font-bold text-blue-600 hover:underline">Open full preview</a>
+                </div>
+                <div class="flex gap-3 items-center">
+                    <div class="w-20 h-20 bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-center relative overflow-hidden flex-shrink-0 shadow-inner">
+                        <svg width="40" height="40" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-slate-300">
+                            <rect x="6" y="8" width="36" height="4" rx="1" fill="#94A3B8"/>
+                            <rect x="8" y="12" width="32" height="20" fill="#E2E8F0"/>
+                            <rect x="8" y="32" width="32" height="2" fill="#64748B"/>
+                            <line x1="36" y1="12" x2="36" y2="40" stroke="#94A3B8" stroke-width="1.5" stroke-dasharray="2 2"/>
+                            <circle cx="36" cy="40" r="2" fill="#64748B"/>
+                        </svg>
+                    </div>
+                    <div class="flex-grow text-[11px] space-y-0.5 font-semibold text-slate-500">
+                        <div class="flex justify-between"><span>Model</span> <span class="text-slate-800 font-bold">RB100 Roller Shade</span></div>
+                        <div class="flex justify-between"><span>Variant</span> <span class="text-slate-800">Standard</span></div>
+                        <div class="flex justify-between"><span>Version</span> <span class="text-slate-800">Draft V3</span></div>
+                        <div class="flex justify-between"><span>Questions</span> <span class="text-slate-800 font-mono">42</span></div>
+                        <div class="flex justify-between mt-1 pt-1 border-t border-dashed border-slate-100">
+                            <span>Est. price</span> <span class="text-blue-600 font-extrabold tabular-nums">$ 186.40</span>
+                        </div>
+                    </div>
+                </div>
+                <button class="w-full border border-slate-200 hover:bg-slate-50 text-slate-600 font-bold py-2 rounded-lg text-xs transition-all">
+                    Preview in dealer view
+                </button>
+            </div>
+
+            <!-- BOM preview (Top 5) -->
+            <div class="premium-card p-4.5 space-y-3">
+                <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+                    <h3 class="font-extrabold text-slate-800 text-xs uppercase tracking-wider">BOM preview (Top 5)</h3>
+                    <a href="#" class="text-[11px] font-bold text-blue-600 hover:underline">Export</a>
+                </div>
+                <div class="border border-slate-200 rounded-lg overflow-hidden shadow-sm">
+                    <table class="w-full text-left border-collapse text-[10px] tabular-nums font-semibold text-slate-500">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-400 border-b border-slate-200 font-extrabold uppercase text-[8px] tracking-wider">
+                                <th class="p-2">Component</th>
+                                <th class="p-2">Ref</th>
+                                <th class="p-2 text-center">Qty</th>
+                                <th class="p-2 text-right">Unit Cost</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <tr class="hover:bg-slate-50/50">
+                                <td class="p-2 font-bold text-slate-800">Tube 28"</td>
+                                <td class="p-2 text-slate-400 font-mono">TUBE-28</td>
+                                <td class="p-2 text-center">1</td>
+                                <td class="p-2 text-right">$4.20</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50/50">
+                                <td class="p-2 font-bold text-slate-800">Fabric - Blackout</td>
+                                <td class="p-2 text-slate-400 font-mono">FAB-BO</td>
+                                <td class="p-2 text-center">1.25 m²</td>
+                                <td class="p-2 text-right">$18.60</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50/50">
+                                <td class="p-2 font-bold text-slate-800">Bottom Bar AL</td>
+                                <td class="p-2 text-slate-400 font-mono">BB-AL</td>
+                                <td class="p-2 text-center">1</td>
+                                <td class="p-2 text-right">$3.80</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50/50">
+                                <td class="p-2 font-bold text-slate-800">Bracket Set</td>
+                                <td class="p-2 text-slate-400 font-mono">BRK-STD</td>
+                                <td class="p-2 text-center">2</td>
+                                <td class="p-2 text-right">$1.90</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50/50">
+                                <td class="p-2 font-bold text-slate-800">Chain Clutch</td>
+                                <td class="p-2 text-slate-400 font-mono">CLT-38</td>
+                                <td class="p-2 text-center">1</td>
+                                <td class="p-2 text-right">$2.30</td>
+                            </tr>
+                            <tr class="bg-slate-50 font-extrabold border-t border-slate-200">
+                                <td class="p-2" colspan="2">Total (Est.)</td>
+                                <td class="p-2 text-right text-blue-600 text-[11px]" colspan="2">$ 30.80</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- AI suggestions (生产降级：降级为底层辅助入口，去除大面积蓝色) -->
+            <div class="bg-slate-50 border border-slate-200 p-4 rounded-xl space-y-3 flex-shrink-0">
+                <div class="flex justify-between items-center border-b border-slate-200 pb-2">
+                    <h3 class="font-extrabold text-slate-700 text-xs uppercase tracking-wider flex items-center">
+                        <svg class="w-3.5 h-3.5 mr-2 text-indigo-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364.364l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                        <span>AI suggestions</span>
+                    </h3>
+                    <a href="#" class="text-[10px] font-bold text-slate-400 hover:underline">Refresh</a>
+                </div>
+                <div class="space-y-2 text-[10px] text-slate-500 font-semibold leading-relaxed">
+                    <p class="flex items-start">
+                        <svg class="w-3.5 h-3.5 mr-2 text-indigo-500 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364.364l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                        <span>Suggest adding "Warranty Period" question</span>
+                    </p>
+                    <p class="flex items-start">
+                        <svg class="w-3.5 h-3.5 mr-2 text-indigo-500 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364.364l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                        <span>Consider grouping similar fabric options</span>
+                    </p>
+                    <p class="flex items-start text-amber-600 font-bold">
+                        <svg class="w-3.5 h-3.5 mr-2 text-amber-500 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                        <span>3 rules may impact configuration flexibility</span>
+                    </p>
+                    <!-- 将其设计为轻量文本按钮 -->
+                    <button class="w-full mt-2 border border-slate-200 hover:bg-slate-100 text-slate-700 py-1.5 rounded-lg font-bold text-[10px] transition-all flex items-center justify-center">
+                        Apply suggestions
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- 简单的折叠/手风琴 JS 动画逻辑 (防长数据展示堆叠) -->
+    <script>
+        function toggleAccordion(id) {
+            alert('交互演示：已触发展开/收起子配置项 [' + id + ']，在真实业务中此处可挂载懒加载、骨架屏或局部渲染流。');
+        }
+    </script>
+</body>
+</html>

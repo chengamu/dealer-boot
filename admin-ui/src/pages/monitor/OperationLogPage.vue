@@ -100,7 +100,7 @@
 
     <pagination v-show="total > 0" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" :total="total" @pagination="getList" />
 
-    <el-dialog v-model="open" :title="t('operlog.detailTitle')" width="700px" append-to-body destroy-on-close @closed="resetDetail">
+    <el-drawer v-model="open" :title="t('operlog.detailTitle')" size="700px" append-to-body destroy-on-close @closed="resetDetail">
       <el-form :model="form" label-width="100px">
         <el-row>
           <el-col :span="24">
@@ -131,7 +131,7 @@
           <el-button @click="open = false">{{ t('common.close') }}</el-button>
         </div>
       </template>
-    </el-dialog>
+    </el-drawer>
   </div>
 </template>
 

@@ -1,0 +1,57 @@
+{"ts":"2026-06-06T00:00:00+08:00","event":"task_started","task":"PCC-00","agent":"main","summary":"开始确认共享产品能力中心实施决策和暂停点"}
+{"ts":"2026-06-06T00:00:00+08:00","event":"task_done","task":"PCC-00","agent":"main","summary":"已确认默认实施决策：推荐新建 bocoo-modules-product，pc_* 核心表走租户忽略表，SQL 草案放 sql/postgresql/product_capability.sql，Batch 1 控制为基础能力闭环"}
+{"ts":"2026-06-06T00:00:00+08:00","event":"task_done","task":"PCC-03","agent":"frontend-developer","summary":"已新增 frontend-contract.md，冻结产品能力菜单、/product-center 路由、Batch 1 页面/API 建议、grid 与自定义页面边界、i18n/UTC/权限/状态要求和 Batch 2/3 前端 TODO"}
+{"ts":"2026-06-06T00:00:00+08:00","event":"task_done","task":"PCC-01","agent":"java-architect","summary":"已新增 db-contract.md，冻结 Batch 1/2/3 表级落地顺序、tenant 策略、SQL 草案放置和注释/UTC/hash/jsonb 检查清单"}
+{"ts":"2026-06-06T00:00:00+08:00","event":"task_done","task":"PCC-02","agent":"java-architect","summary":"已新增 api-contract.md，冻结 Batch 1 API、BO/VO 命名边界、权限、日志、分页、UTC、i18n、tenant boundary 和后续 API TODO"}
+{"ts":"2026-06-06T00:00:00+08:00","event":"barrier_passed","wave":0,"summary":"Wave 0 Contract 已通过：模块、tenant、SQL 草案、数据库、API、前端菜单/页面边界均有明确默认决策和 contract 文件"}
+{"ts":"2026-06-06T00:00:00+08:00","event":"task_started","task":"PCC-10","agent":"main","summary":"开始创建共享产品能力后端模块骨架"}
+{"ts":"2026-06-06T00:00:00+08:00","event":"task_done","task":"PCC-10","agent":"main","summary":"已新增 bocoo-modules-product 模块、ProductModule 标记类，并接入根 pom 与 bocoo-admin 依赖；后端编译通过"}
+{"ts":"2026-06-06T00:00:00+08:00","event":"task_started","task":"PCC-11","agent":"main","summary":"开始生成 Batch 1 基础资料后端能力和 SQL 草案"}
+{"ts":"2026-06-06T00:00:00+08:00","event":"task_done","task":"PCC-11","agent":"main","summary":"已生成 Batch 1 基础资料 Entity/BO/VO/Mapper/Service/Controller 与 PostgreSQL SQL 草案，补齐分类树、媒体绑定、模型变体契约入口；后端编译通过"}
+{"ts":"2026-06-06T00:00:00+08:00","event":"task_started","task":"PCC-12","agent":"main","summary":"开始实现产品能力前端菜单、API、基础 grid 页面"}
+{"ts":"2026-06-06T00:00:00+08:00","event":"task_done","task":"PCC-12","agent":"main","summary":"已新增产品能力 API、通用 grid、基础信息/产品模型/组件资料页面、动态路由映射和 Batch 1 菜单 SQL 草案；前端 typecheck 和 build 通过"}
+{"ts":"2026-06-06T00:00:00+08:00","event":"task_started","task":"PCC-13","agent":"main","summary":"开始实现产品能力工作台只读骨架和 API 对接"}
+{"ts":"2026-06-06T00:00:00+08:00","event":"task_done","task":"PCC-13","agent":"main","summary":"已新增工作台页面和后端只读 API，summary 轻量统计、progress/priority/sync-events 稳定空分页；前后端验证通过"}
+{"ts":"2026-06-06T00:00:00+08:00","event":"barrier_passed","wave":1,"summary":"Wave 1 Batch 1 Foundation 已通过：后端模块、基础资料 API、工作台 API、前端菜单/API/grid/workbench、i18n 同步、Java compile、vue-tsc、vite build 均完成"}
+{"ts":"2026-06-06T00:00:00+08:00","event":"task_started","task":"PCC-20","agent":"main","summary":"开始实现配置模板、问题组、问题、答案、规则后端和求值引擎 MVP"}
+{"ts":"2026-06-06T00:00:00+08:00","event":"task_done","task":"PCC-20","agent":"main","summary":"已新增配置模板/版本/问题组/问题/答案/规则后端 CRUD、SQL 草案和 ConfigEvaluationEngine MVP；后端编译通过"}
+{"ts":"2026-06-06T01:24:00+08:00","event":"task_started","task":"PCC-21","agent":"main","summary":"开始实现配置录入工作台前端、配置 API、二级菜单路由和 i18n"}
+{"ts":"2026-06-06T01:25:00+08:00","event":"task_done","task":"PCC-21","agent":"main","summary":"已新增配置模板工作台、配置 API、菜单路由映射和菜单 SQL 草案；i18n 同步、vue-tsc、vite build、后端编译均通过"}
+{"ts":"2026-06-06T01:26:00+08:00","event":"task_started","task":"PCC-22","agent":"main","summary":"开始实现价格方案、价格版本、价格规则项、价格试算后端和价格工作台前端"}
+{"ts":"2026-06-06T01:31:00+08:00","event":"task_done","task":"PCC-22","agent":"main","summary":"已新增价格中心后端 CRUD、PriceCalculationEngine MVP、价格试算 API、价格工作台、菜单 SQL 和 i18n；后端编译、vue-tsc、vite build 均通过"}
+{"ts":"2026-06-06T01:32:00+08:00","event":"task_started","task":"PCC-23","agent":"main","summary":"开始实现发布检查、审批记录、不可变发布包和同步 outbox"}
+{"ts":"2026-06-06T01:36:00+08:00","event":"task_done","task":"PCC-23","agent":"main","summary":"已新增发布中心后端、发布检查 API、生成发布包 API、不可变发布包和 outbox SQL 草案；后端编译通过"}
+{"ts":"2026-06-06T01:37:00+08:00","event":"task_started","task":"PCC-24","agent":"main","summary":"开始实现测试发布前端页面、发布 API、菜单路由和 i18n"}
+{"ts":"2026-06-06T01:38:00+08:00","event":"task_done","task":"PCC-24","agent":"main","summary":"已新增发布闸门页面、发布 API、二级菜单映射和 i18n；vue-tsc、vite build、后端编译通过"}
+{"ts":"2026-06-06T01:41:00+08:00","event":"task_done","task":"PCC-90","agent":"main","summary":"已完成静态审查并修复发布包/outbox API 可写风险；残余风险记录为 SQL 未真实落库和 schema MVP"}
+{"ts":"2026-06-06T01:42:00+08:00","event":"task_done","task":"PCC-91","agent":"main","summary":"已用 Vite dev server 与 Playwright 系统 Chrome 做页面 smoke；无登录态下重定向登录页，后端未启动导致 captcha 代理 500 为环境限制"}
+{"ts":"2026-06-06T01:43:00+08:00","event":"archive_created","archive":".ai/archive/20260606-product-capability-center-batch2.md","summary":"Batch 2 配置、价格、发布闭环已验证并归档，带残余风险和 Batch 3 队列"}
+{"ts":"2026-06-06T01:44:00+08:00","event":"task_started","task":"PCC-30","agent":"main","summary":"开始实现销售只读总览，要求读取发布包/read model，不读取草稿"}
+{"ts":"2026-06-06T01:45:00+08:00","event":"task_done","task":"PCC-30","agent":"main","summary":"已新增销售只读视图、只读 grid 模式、二级菜单路由和菜单 SQL；前端 typecheck/build 和后端编译通过"}
+{"ts":"2026-06-06T01:46:00+08:00","event":"task_started","task":"PCC-31","agent":"main","summary":"开始实现订单快照构建 API，产品能力中心只构建快照，订单系统后续负责持久化"}
+{"ts":"2026-06-06T01:48:00+08:00","event":"task_done","task":"PCC-31","agent":"main","summary":"已新增 order-snapshots/build、快照 BO/VO/Service/Controller 和权限草案；快照 JSON 改为 JsonUtils 结构化生成；后端编译通过"}
+{"ts":"2026-06-06T01:49:00+08:00","event":"task_done","task":"PCC-40","agent":"main","summary":"Deferred 能力已保留到任务队列：ConfigAgent、PricingAgent、导入中心、ERP/MES 深度同步、客户价/促销价、独立服务拆分"}
+{"ts":"2026-06-06T01:49:00+08:00","event":"barrier_passed","wave":3,"summary":"Wave 3 Batch 3 Consumption 通过：销售只读不读草稿，订单快照自包含，Deferred 能力未删除"}
+{"ts":"2026-06-06T01:50:00+08:00","event":"archive_created","archive":".ai/archive/20260606-product-capability-center-batch3.md","summary":"Batch 3 销售只读、订单快照构建和 Deferred 保留已验证并归档"}
+{"ts":"2026-06-06T05:35:00+08:00","event":"task_started","task":"PCC-50","agent":"main","summary":"开始数据库落库前表级评审和加固，检查索引字段、中文注释、UTC、租户忽略配置"}
+{"ts":"2026-06-06T05:38:00+08:00","event":"task_done","task":"PCC-50","agent":"main","summary":"已修复两个索引字段错误，20 张 pc_* 表加入 ignore-tables，新增数据库落库评审文档；SQL/YAML/Java/codegraph/diff 检查通过"}
+{"ts":"2026-06-06T05:41:00+08:00","event":"archive_created","archive":".ai/archive/20260606-product-capability-center-batch4-db-readiness.md","summary":"Batch 4 DB Readiness 已验证并归档，真实数据库试执行和 Deferred 能力保留为后续队列"}
+{"ts":"2026-06-06T05:42:00+08:00","event":"task_started","task":"PCC-51","agent":"main","summary":"开始一次性 PostgreSQL 16 空库试执行，验证 base.sql 后执行 product_capability.sql"}
+{"ts":"2026-06-06T05:45:00+08:00","event":"finding_fixed","task":"PCC-51","agent":"main","summary":"临时库执行发现 Batch 2/3 菜单 SQL 和最终 sys_role_menu 授权 SQL 漏 tenant_id；已统一补 tenant_id = 1"}
+{"ts":"2026-06-06T05:47:00+08:00","event":"task_done","task":"PCC-51","agent":"main","summary":"全新 PostgreSQL 16 空库顺序执行 base.sql 和 product_capability.sql 通过；结果为 20 张 pc_* 表、36 条产品能力菜单、36 条 role_id=1 授权"}
+{"ts":"2026-06-06T05:48:00+08:00","event":"archive_created","archive":".ai/archive/20260606-product-capability-center-batch5-sql-trial.md","summary":"Batch 5 SQL Trial 已验证并归档，真实开发库受控执行计划和 Deferred 能力保留为后续队列"}
+{"ts":"2026-06-06T05:49:00+08:00","event":"task_started","task":"PCC-52","agent":"main","summary":"开始生成真实开发库/测试库执行 product_capability.sql 的受控执行计划"}
+{"ts":"2026-06-06T05:50:00+08:00","event":"task_done","task":"PCC-52","agent":"main","summary":"已新增真实库受控执行计划，包含 preflight、执行模板、post-check、应用侧核验和回退策略"}
+{"ts":"2026-06-06T05:51:00+08:00","event":"archive_created","archive":".ai/archive/20260606-product-capability-center-batch6-db-execution-plan.md","summary":"Batch 6 DB Execution Plan 已验证并归档，真实库执行需人工确认目标库后进行"}
+{"ts":"2026-06-06T14:08:00+08:00","event":"task_started","task":"PCC-60","agent":"main","summary":"开始 Batch 7 通用产品能力快照实例持久化；用户确认统一放在 product 里面，后期便于拆分"}
+{"ts":"2026-06-06T14:16:00+08:00","event":"task_done","task":"PCC-60","agent":"main","summary":"已新增 pc_product_snapshot_instance 和快照实例 build/list/get API；Java compile、i18n sync、YAML parse、SQL 静态检查、临时 PostgreSQL 空库执行、codegraph sync、diff check 均通过"}
+{"ts":"2026-06-06T14:20:00+08:00","event":"archive_created","archive":".ai/archive/20260606-product-capability-center-batch7-snapshot-instance.md","summary":"Batch 7 通用快照实例持久化已验证并归档；后续继续导入中心、ERP/MES、AI、价格增强和独立服务拆分"}
+{"ts":"2026-06-06T14:24:00+08:00","event":"task_started","task":"PCC-70","agent":"main","summary":"开始 Batch 8 导入中心基础能力；范围限定为导入批次、预览 JSON 和行级问题，不做完整 Excel/AI 自动解析"}
+{"ts":"2026-06-06T14:28:00+08:00","event":"task_done","task":"PCC-70","agent":"main","summary":"已新增 pc_import_batch、pc_import_row_issue、导入中心 Entity/BO/VO/Mapper/Service/Controller 和权限菜单；Java compile、YAML parse、SQL 静态检查、临时 PostgreSQL 空库执行、diff check 均通过"}
+{"ts":"2026-06-06T14:46:00+08:00","event":"archive_created","archive":".ai/archive/20260606-product-capability-center-batch8-import-center.md","summary":"Batch 8 导入中心基础能力已验证并归档；完整 Excel/AI 解析、批量提交和冲突合并保留 Deferred"}
+{"ts":"2026-06-06T14:52:00+08:00","event":"task_started","task":"PCC-80","agent":"main","summary":"开始 Batch 9 ERP/MES 同步 Outbox 基础层；范围限定为发布后多目标 outbox 和重试标记 API，不直连外部系统"}
+{"ts":"2026-06-06T14:58:00+08:00","event":"task_done","task":"PCC-80","agent":"main","summary":"已将发布后 outbox 扩展为 ORDER、ERP、MES 三目标事件，新增 retry API、权限、前端 API 和 i18n；完整验证待执行"}
+{"ts":"2026-06-06T14:59:00+08:00","event":"archive_created","archive":".ai/archive/20260606-product-capability-center-batch9-sync-outbox.md","summary":"Batch 9 ERP/MES 同步 Outbox 基础层归档；真实 ERP/MES 推送、回调和失败退避保留 Deferred"}
+{"ts":"2026-06-06T15:10:00+08:00","event":"task_started","task":"PCC-81","agent":"main","summary":"开始 Batch 10 XLS/XLSX 导入解析预览；范围限定为预览、字段映射、共享主数据校验和行级问题，不提交正式表"}
+{"ts":"2026-06-06T15:14:00+08:00","event":"task_done","task":"PCC-81","agent":"main","summary":"已新增 parse-excel API 和前端 API；旧 XLS 字段只作映射参考，组件/物料/产品模型/价格方案通过共享编码匹配，缺失写 ERROR 行问题"}
+{"ts":"2026-06-06T15:18:00+08:00","event":"archive_created","archive":".ai/archive/20260606-product-capability-center-batch10-xls-import-preview.md","summary":"Batch 10 XLS/XLSX 导入解析预览基础层已验证并归档；导入提交、冲突合并和 AI 智能识别保留 Deferred"}

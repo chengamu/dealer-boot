@@ -60,7 +60,7 @@ public class SysTenantApplyController extends BaseController {
         return R.ok(tenantApplyService.selectById(id));
     }
 
-    @SaCheckPermission("system:tenant:application:audit")
+    @SaCheckPermission("system:tenant:application:approve")
     @PostMapping("/system/tenant/applications/{id}/approve")
     @RepeatSubmit()
     @Operation(summary = "Approve merchant application")
@@ -69,7 +69,7 @@ public class SysTenantApplyController extends BaseController {
         return R.ok();
     }
 
-    @SaCheckPermission("system:tenant:application:audit")
+    @SaCheckPermission("system:tenant:application:reject")
     @PostMapping("/system/tenant/applications/{id}/reject")
     @RepeatSubmit()
     @Operation(summary = "Reject merchant application")

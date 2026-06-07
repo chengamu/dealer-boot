@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>产品能力工作台 - Base Boot Admin</title>
+    <!-- 引入高精细 Inter 字体 -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome 图标库 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-rendering: optimizeLegibility;
+            letter-spacing: -0.015em; /* 带来极高端 SaaS 桌面端排版的微紧字距 */
+            font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+        }
+        /* 强制表格和卡片内数字等宽对齐，防止错落不平 */
+        .tabular-nums {
+            font-variant-numeric: tabular-nums;
+        }
+        /* 隐藏局部滚动条 */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        /* 
+           1:1 像素级还原 Base Boot Admin 的物理边框纸张悬浮感
+           通过微透明灰色边框与超低饱和度的多层悬浮微阴影，呈现出温润大气的框框质感
+        */
+        .premium-card {
+            background-color: #ffffff;
+            border: 1px solid #E2E8F0;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px 0 rgba(0, 0, 0, 0.02);
+            border-radius: 12px;
+            transition: all 0.2s ease;
+        }
+        .premium-card:hover {
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+            border-color: #CBD5E1;
+        }
+    </style>
+</head>
+<body class="bg-[#F8FAFC] text-slate-800 w-screen h-screen overflow-hidden flex flex-col font-sans select-none text-[11px] leading-normal">
+
+    <!-- ==================== 顶部路径导航栏 (极细扁平化) ==================== -->
+    <div class="h-12 bg-white border-b border-slate-200 px-6 flex items-center justify-between flex-shrink-0">
+        <div class="flex items-center space-x-1.5 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+            <i class="fa-solid fa-house text-slate-300 text-[9px]"></i>
+            <span class="hover:text-slate-600 cursor-pointer">首页</span>
+            <span class="text-slate-300 font-normal">/</span>
+            <span class="hover:text-slate-600 cursor-pointer">产品能力</span>
+            <span class="text-slate-300 font-normal">/</span>
+            <span class="text-slate-500 font-extrabold">工作台</span>
+        </div>
+        
+        <div class="text-[10px] text-slate-400 font-semibold flex items-center">
+            <span>数据更新时间：<span class="font-extrabold text-slate-600 font-mono">2025-05-26 10:24:31</span></span>
+            <button class="ml-2 p-1 hover:bg-slate-50 rounded text-slate-400 transition-all"><i class="fa-solid fa-arrows-rotate text-[10px]"></i></button>
+        </div>
+    </div>
+
+    <!-- ==================== 左右分栏自适应工作区 (整体视口限定，防双滚轮) ==================== -->
+    <div class="flex-grow flex overflow-hidden">
+        
+        <!-- A. 左侧核心区：待办看板 + 配置看板 + 数据分析图 (75%自适应局部滚动) -->
+        <div class="flex-1 flex flex-col overflow-y-auto p-6 gap-5 no-scrollbar bg-[#F8FAFC]">
+            
+            <!-- 标题横幅 -->
+            <div class="flex-shrink-0">
+                <h1 class="text-sm font-extrabold text-slate-900 tracking-tight">产品能力工作台</h1>
+                <p class="text-[10px] text-slate-400 font-semibold mt-0.5">聚焦配置完整性、价格可用性、资料配套、发布与同步状态，快速处理阻断与风险</p>
+            </div>
+
+            <!-- A1. 今日待处理流 (1:1 像素级大空间呼吸感卡片布局) -->
+            <div class="space-y-3.5 flex-shrink-0">
+                <h3 class="font-extrabold text-slate-800 text-[11px] uppercase tracking-wider">今日待处理流</h3>
+                <div class="grid grid-cols-5 gap-4">
+                    
+                    <!-- 1. 发布阻断 -->
+                    <div class="premium-card p-5 flex flex-col justify-between h-[135px] cursor-pointer">
+                        <div class="flex justify-between items-start">
+                            <div class="w-9 h-9 bg-red-50 text-red-500 rounded-xl flex items-center justify-center text-xs border border-red-100/50"><i class="fa-solid fa-ban"></i></div>
+                            <span class="text-[11px] text-slate-400 font-bold">发布阻断</span>
+                        </div>
+                        <div class="flex justify-between items-center mt-1">
+                            <div class="flex items-baseline space-x-1.5">
+                                <span class="text-2xl font-extrabold text-slate-950 font-mono leading-none">8</span> 
+                                <span class="text-[10px] text-red-600 font-extrabold ml-1.5 align-middle">严重</span>
+                            </div>
+                            <span class="text-[10px] text-slate-400 font-bold">较昨日 <span class="text-red-500 font-extrabold font-mono">+2</span></span>
+                        </div>
+                        <div class="text-[11px] font-bold text-blue-600 hover:underline">
+                            立即处理 <span class="text-[10px] font-normal ml-0.5">&gt;</span>
+                        </div>
+                    </div>
+                    
+                    <!-- 2. 资料缺失 -->
+                    <div class="premium-card p-5 flex flex-col justify-between h-[135px] cursor-pointer">
+                        <div class="flex justify-between items-start">
+                            <div class="w-9 h-9 bg-amber-50 text-amber-500 rounded-xl flex items-center justify-center text-xs border border-amber-100/50"><i class="fa-regular fa-folder-open"></i></div>
+                            <span class="text-[11px] text-slate-400 font-bold">资料缺失</span>
+                        </div>
+                        <div class="flex justify-between items-center mt-1">
+                            <span class="text-2xl font-extrabold text-slate-950 font-mono leading-none">24</span>
+                            <span class="text-[10px] text-slate-400 font-bold">较昨日 <span class="text-amber-500 font-extrabold font-mono">+6</span></span>
+                        </div>
+                        <div class="text-[11px] font-bold text-blue-600 hover:underline">
+                            去补齐资料 <span class="text-[10px] font-normal ml-0.5">&gt;</span>
+                        </div>
+                    </div>
+                    
+                    <!-- 3. 价格缺口 -->
+                    <div class="premium-card p-5 flex flex-col justify-between h-[135px] cursor-pointer">
+                        <div class="flex justify-between items-start">
+                            <div class="w-9 h-9 bg-yellow-50 text-yellow-600 rounded-xl flex items-center justify-center text-xs border border-yellow-100/50"><i class="fa-solid fa-dollar-sign"></i></div>
+                            <span class="text-[11px] text-slate-400 font-bold">价格缺口</span>
+                        </div>
+                        <div class="flex justify-between items-center mt-1">
+                            <span class="text-2xl font-extrabold text-slate-950 font-mono leading-none">17</span>
+                            <span class="text-[10px] text-slate-400 font-bold">较昨日 <span class="text-[#D97706] font-extrabold font-mono">+1</span></span>
+                        </div>
+                        <div class="text-[11px] font-bold text-blue-600 hover:underline">
+                            匹配价格 <span class="text-[10px] font-normal ml-0.5">&gt;</span>
+                        </div>
+                    </div>
+                    
+                    <!-- 4. 待审核快照 -->
+                    <div class="premium-card p-5 flex flex-col justify-between h-[135px] cursor-pointer">
+                        <div class="flex justify-between items-start">
+                            <div class="w-9 h-9 bg-blue-50 text-blue-500 rounded-xl flex items-center justify-center text-xs border border-blue-100/50"><i class="fa-regular fa-clock"></i></div>
+                            <span class="text-[11px] text-slate-400 font-bold">待审核快照</span>
+                        </div>
+                        <div class="flex justify-between items-center mt-1">
+                            <span class="text-2xl font-extrabold text-slate-950 font-mono leading-none">5</span>
+                            <span class="text-[10px] text-slate-400 font-bold">较昨日 <span class="text-emerald-500 font-extrabold font-mono">-1</span></span>
+                        </div>
+                        <div class="text-[11px] font-bold text-blue-600 hover:underline">
+                            去审核 <span class="text-[10px] font-normal ml-0.5">&gt;</span>
+                        </div>
+                    </div>
+                    
+                    <!-- 5. 同步异常 -->
+                    <div class="premium-card p-5 flex flex-col justify-between h-[135px] cursor-pointer">
+                        <div class="flex justify-between items-start">
+                            <div class="w-9 h-9 bg-red-50 text-red-500 rounded-xl flex items-center justify-center text-xs border border-red-100/50"><i class="fa-solid fa-arrows-spin"></i></div>
+                            <span class="text-[11px] text-slate-400 font-bold">同步异常</span>
+                        </div>
+                        <div class="flex justify-between items-center mt-1">
+                            <span class="text-2xl font-extrabold text-slate-950 font-mono leading-none">3</span>
+                            <span class="text-[10px] text-slate-400 font-bold">较昨日 <span class="text-red-500 font-extrabold font-mono">+1</span></span>
+                        </div>
+                        <div class="text-[11px] font-bold text-blue-600 hover:underline">
+                            查看详情 <span class="text-[10px] font-normal ml-0.5">&gt;</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- A2. 产品配置进度看板 (表格高度/行高呼吸感拉满) -->
+            <div class="premium-card flex flex-col overflow-hidden">
+                <div class="px-5 py-3.5 border-b border-slate-100 flex justify-between items-center bg-slate-50/30 flex-shrink-0">
+                    <h3 class="font-extrabold text-slate-800 text-[11px] uppercase tracking-wider">产品配置进度看板</h3>
+                    <div class="flex items-center space-x-2">
+                        <div class="relative">
+                            <select class="border border-slate-200 bg-white rounded-lg px-2.5 py-1 text-[10px] font-bold text-slate-500 appearance-none pr-6">
+                                <option>全部系列</option>
+                            </select>
+                            <i class="fa-solid fa-chevron-down absolute right-2.5 top-2 text-[7px] text-slate-450"></i>
+                        </div>
+                        <input type="text" placeholder="搜索产品名称/编码..." class="border border-slate-200 rounded-lg px-3 py-1 text-[10px] bg-white focus:outline-none w-36">
+                        <button class="px-3.5 py-1 bg-[#2563EB] hover:bg-blue-700 text-white rounded-lg font-bold text-[10px]">筛选</button>
+                        <button class="px-3 py-1 border border-slate-200 rounded-lg hover:bg-slate-50 text-[10px] font-bold text-slate-500 flex items-center"><i class="fa-solid fa-download mr-1.5 text-slate-400"></i>导出</button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto no-scrollbar">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead class="bg-slate-50/50 border-b border-slate-200 font-extrabold uppercase text-[9px] tracking-wider text-slate-400">
+                            <tr>
+                                <th class="py-3 px-4 w-10 text-center"><input type="checkbox" class="rounded border-slate-200 text-blue-600 focus:ring-0"></th>
+                                <th class="py-3 px-4">产品名称</th>
+                                <th class="py-3 px-4 w-24">系列</th>
+                                <th class="py-3 px-4 w-20">当前版本</th>
+                                <th class="py-3 px-4 w-32">完整度</th>
+                                <th class="py-3 px-4 text-center w-18">价格状态</th>
+                                <th class="py-3 px-4 text-center w-18">资料状态</th>
+                                <th class="py-3 px-4 text-center w-18">发布状态</th>
+                                <th class="py-3 px-4 w-18">负责人</th>
+                                <th class="py-3 px-4 text-right pr-5 w-44">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 text-slate-600 font-bold tabular-nums">
+                            <!-- Row 1 -->
+                            <tr class="hover:bg-slate-50/50 transition-colors">
+                                <td class="py-4.5 px-4 text-center"><input type="checkbox" class="rounded border-slate-200 text-blue-600 focus:ring-0"></td>
+                                <td class="py-4.5 px-4 text-slate-800 font-extrabold text-xs">RB100 Roller Shade</td>
+                                <td class="py-4.5 px-4 text-slate-400 font-mono">RB Series</td>
+                                <td class="py-4.5 px-4 text-slate-400 font-mono text-[10px]">V3.2.1</td>
+                                <td class="py-4.5 px-4">
+                                    <div class="flex items-center space-x-2.5">
+                                        <div class="w-20 bg-slate-100 h-1.5 rounded-full overflow-hidden border border-slate-50 shadow-inner">
+                                            <div class="bg-gradient-to-r from-emerald-400 to-emerald-500 h-full rounded-full" style="width: 92%"></div>
+                                        </div>
+                                        <div class="flex flex-col text-[10px] leading-tight font-extrabold">
+                                            <span class="text-slate-800">92%</span>
+                                            <span class="text-slate-400 font-normal">3</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="py-4.5 px-4 text-center">
+                                    <span class="bg-[#FEF7E0] text-[#B06000] border border-[#FEEFC3] text-[9px] px-2 py-0.5 rounded-md font-bold uppercase tracking-wider">有缺口</span>
+                                </td>
+                                <td class="py-4.5 px-4 text-center">
+                                    <span class="bg-[#FCE8E6] text-[#C5221F] border border-[#FAD2CF] text-[9px] px-2 py-0.5 rounded-md font-bold uppercase tracking-wider">部分缺失</span>
+                                </td>
+                                <td class="py-4.5 px-4 text-center">
+                                    <span class="bg-[#FCE8E6] text-[#C5221F] border border-[#FAD2CF] text-[9px] px-2 py-0.5 rounded-md font-bold uppercase tracking-wider">阻断</span>
+                                </td>
+                                <td class="py-4.5 px-4 text-slate-700">张伟</td>
+                                <td class="py-4.5 px-4 text-right pr-5 text-[10px] space-x-2 text-[#2563EB] font-bold">
+                                    <a href="#" class="hover:underline">继续配置</a>
+                                    <a href="#" class="hover:underline">补资料</a>
+                                    <a href="#" class="hover:underline">匹配价格</a>
+                                    <a href="#" class="hover:underline">发布检查</a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- 1:1 分页页脚 -->
+                <div class="px-5 py-3 border-t border-slate-100 bg-slate-50/50 flex justify-between items-center text-[10px] font-bold text-slate-400 flex-shrink-0">
+                    <div class="flex items-center space-x-2">
+                        <span>共 128 条</span>
+                        <select class="border border-slate-200 bg-white rounded px-2 py-0.5 text-slate-600">
+                            <option>20条/页</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center space-x-2 font-mono">
+                        <button class="hover:text-slate-800 cursor-pointer px-1.5 py-0.5 bg-white border border-slate-200 rounded">&lt;</button>
+                        <button class="bg-[#2563EB] text-white px-2 py-0.5 rounded shadow-sm">1</button>
+                        <button class="hover:text-slate-800 cursor-pointer px-1.5 py-0.5 bg-white border border-slate-200 rounded">2</button>
+                        <button class="hover:text-slate-800 cursor-pointer px-1.5 py-0.5 bg-white border border-slate-200 rounded">3</button>
+                        <span>...</span>
+                        <button class="hover:text-slate-800 cursor-pointer px-1.5 py-0.5 bg-white border border-slate-200 rounded">7</button>
+                        <button class="hover:text-slate-800 cursor-pointer px-1.5 py-0.5 bg-white border border-slate-200 rounded">&gt;</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- A4. 底部图表排行 + 实时同步动态 (1:1 高清扁平自适应) -->
+            <div class="grid grid-cols-3 gap-4 flex-shrink-0">
+                <!-- 1. 资料缺失 Top 10 -->
+                <div class="premium-card p-5 space-y-3.5 h-52 flex flex-col justify-between">
+                    <h4 class="font-extrabold text-slate-800 text-[10px] uppercase tracking-wider border-b border-slate-50 pb-2 flex-shrink-0">资料缺失 TOP 10</h4>
+                    <div class="flex-1 flex flex-col justify-around text-[10px] font-bold text-slate-500 tabular-nums">
+                        <div class="space-y-1">
+                            <div class="flex justify-between"><span>产品图</span> <span>38 项</span></div>
+                            <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden border border-slate-50">
+                                <div class="bg-red-500 h-full rounded-full" style="width: 76%"></div>
+                            </div>
+                        </div>
+                        <div class="space-y-1">
+                            <div class="flex justify-between"><span>安装说明书</span> <span>21 项</span></div>
+                            <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden border border-slate-50">
+                                <div class="bg-amber-500 h-full rounded-full" style="width: 42%"></div>
+                            </div>
+                        </div>
+                        <div class="space-y-1">
+                            <div class="flex justify-between"><span>测试报告</span> <span>17 项</span></div>
+                            <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden border border-slate-50">
+                                <div class="bg-amber-500 h-full rounded-full" style="width: 34%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. 价格缺口 Top 10 -->
+                <div class="premium-card p-5 space-y-3.5 h-52 flex flex-col justify-between">
+                    <h4 class="font-extrabold text-slate-800 text-[10px] uppercase tracking-wider border-b border-slate-50 pb-2 flex-shrink-0">价格缺口 TOP 10</h4>
+                    <div class="flex-1 flex flex-col justify-around text-[10px] font-bold text-slate-500 tabular-nums">
+                        <div class="space-y-1">
+                            <div class="flex justify-between"><span>北美市场</span> <span>12 项</span></div>
+                            <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden border border-slate-50">
+                                <div class="bg-red-500 h-full rounded-full" style="width: 80%"></div>
+                            </div>
+                        </div>
+                        <div class="space-y-1">
+                            <div class="flex justify-between"><span>欧洲市场</span> <span>8 项</span></div>
+                            <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden border border-slate-50">
+                                <div class="bg-orange-500 h-full rounded-full" style="width: 53%"></div>
+                            </div>
+                        </div>
+                        <div class="space-y-1">
+                            <div class="flex justify-between"><span>澳洲市场</span> <span>6 项</span></div>
+                            <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden border border-slate-50">
+                                <div class="bg-yellow-500 h-full rounded-full" style="width: 40%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. 发布/同步动态 -->
+                <div class="premium-card p-5 space-y-3.5 h-52 flex flex-col overflow-hidden">
+                    <h4 class="font-extrabold text-slate-800 text-[10px] uppercase tracking-wider border-b border-slate-50 pb-2 flex-shrink-0">发布/同步动态</h4>
+                    <div class="flex-1 overflow-y-auto no-scrollbar space-y-2 text-[10px] font-semibold text-slate-400 tabular-nums">
+                        <div class="flex items-start space-x-2 py-1.5 border-b border-slate-100/50">
+                            <span class="text-slate-400 font-mono text-[9px]">10:20</span>
+                            <span class="bg-[#FCE8E6] text-[#C5221F] border border-[#FAD2CF] px-1.5 py-0.2 rounded text-[8px] font-extrabold flex-shrink-0">发布检查</span>
+                            <span class="text-slate-800 font-extrabold truncate">RB100 Shade 未通过，存在阻断项</span>
+                        </div>
+                        <div class="flex items-start space-x-2 py-1.5 border-b border-slate-100/50">
+                            <span class="text-slate-400 font-mono text-[9px]">10:18</span>
+                            <span class="bg-[#FCE8E6] text-[#C5221F] border border-[#FAD2CF] px-1.5 py-0.2 rounded text-[8px] font-extrabold flex-shrink-0">同步异常</span>
+                            <span class="text-slate-800 font-bold truncate">价格中心同步失败: 缺少字段 currency</span>
+                        </div>
+                        <div class="flex items-start space-x-2 py-1.5">
+                            <span class="text-slate-400 font-mono text-[9px]">10:12</span>
+                            <span class="bg-[#EFF6FF] text-[#2563EB] border border-[#BFDBFE] px-1.5 py-0.2 rounded text-[8px] font-extrabold flex-shrink-0">资料补齐</span>
+                            <span class="text-slate-800 font-bold truncate">HC100 补齐安装说明书等 2 项资料</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- B. 右侧常驻管控侧边栏 (比例 25% 独立滚动) -->
+        <div class="w-[300px] flex-shrink-0 bg-white border-l border-slate-200 flex flex-col overflow-y-auto p-4 gap-4 no-scrollbar">
+            
+            <!-- B1. 优先处理队列 -->
+            <div class="premium-card p-4 space-y-3.5 flex-shrink-0">
+                <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+                    <h3 class="font-extrabold text-slate-800 text-xs uppercase tracking-wider">优先处理队列</h3>
+                    <a href="#" class="text-[10px] font-bold text-blue-600 hover:underline">更多 ></a>
+                </div>
+                <div class="space-y-2 text-[10px] font-bold">
+                    <div class="p-2.5 bg-red-50/40 border border-red-100 rounded-lg flex justify-between items-center hover:bg-red-50/60 transition-all cursor-pointer">
+                        <span class="text-slate-800 flex items-center"><span class="bg-[#FCE8E6] text-[#C5221F] border border-[#FAD2CF] text-[8px] font-extrabold px-1.5 py-0.2 rounded mr-2">阻断</span> RB100 Roller Shade 发布阻断</span>
+                        <span class="text-[9px] text-slate-400 font-medium">2小时前</span>
+                    </div>
+                    <div class="p-2.5 bg-red-50/40 border border-red-100 rounded-lg flex justify-between items-center hover:bg-red-50/60 transition-all cursor-pointer">
+                        <span class="text-slate-800 flex items-center"><span class="bg-[#FCE8E6] text-[#C5221F] border border-[#FAD2CF] text-[8px] font-extrabold px-1.5 py-0.2 rounded mr-2">阻断</span> RB200 Zebra Shade 资料缺失</span>
+                        <span class="text-[9px] text-slate-400 font-medium">3小时前</span>
+                    </div>
+                    <div class="p-2.5 bg-amber-50/40 border border-amber-100 rounded-lg flex justify-between items-center hover:bg-amber-50/60 transition-all cursor-pointer">
+                        <span class="text-slate-800 flex items-center"><span class="bg-[#FEF7E0] text-[#B06000] border border-[#FEEFC3] text-[8px] font-extrabold px-1.5 py-0.2 rounded mr-2">高风险</span> PL100 Pleated 价格缺口</span>
+                        <span class="text-[9px] text-slate-400 font-medium">3小时前</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- B2. 一键快捷操作 -->
+            <div class="premium-card p-4 space-y-3 flex-shrink-0">
+                <h3 class="font-extrabold text-slate-800 text-xs uppercase tracking-wider border-b border-slate-100 pb-2">一键快捷操作</h3>
+                <div class="grid grid-cols-2 gap-2 text-center text-[10px] font-extrabold text-slate-650">
+                    <button class="p-2.5 border border-slate-100 hover:border-[#2563EB] hover:bg-blue-50/20 rounded-lg transition-all text-left flex flex-col items-center">
+                        <i class="fa-solid fa-plus-circle text-blue-600 text-base block mb-1"></i>新建产品模型
+                    </button>
+                    <button class="p-2.5 border border-slate-100 hover:border-[#2563EB] hover:bg-blue-50/20 rounded-lg transition-all text-left flex flex-col items-center">
+                        <i class="fa-regular fa-clone text-indigo-600 text-base block mb-1"></i>维护配置模板
+                    </button>
+                    <button class="p-2.5 border border-slate-100 hover:border-[#2563EB] hover:bg-blue-50/20 rounded-lg transition-all text-left flex flex-col items-center">
+                        <i class="fa-solid fa-file-arrow-up text-amber-600 text-base block mb-1"></i>上传资料文件
+                    </button>
+                    <button class="p-2.5 border border-slate-100 hover:border-[#2563EB] hover:bg-blue-50/20 rounded-lg transition-all text-left flex flex-col items-center">
+                        <i class="fa-solid fa-money-check-dollar text-emerald-600 text-base block mb-1"></i>维护价格方案
+                    </button>
+                </div>
+            </div>
+
+            <!-- B3. 最近同步事件 -->
+            <div class="premium-card p-4 space-y-3.5 flex-shrink-0">
+                <div class="flex justify-between items-center border-b border-slate-100 pb-2 flex-shrink-0">
+                    <h3 class="font-extrabold text-slate-800 text-xs uppercase tracking-wider">最近同步事件</h3>
+                    <a href="#" class="text-[10px] font-bold text-blue-600 hover:underline">更多 ></a>
+                </div>
+                <div class="text-[10px] font-semibold space-y-2.5 text-slate-500 tabular-nums">
+                    <div class="flex justify-between items-center py-1 border-b border-slate-50 last:border-0">
+                        <span class="text-slate-700 font-bold flex items-center"><span class="text-emerald-500 mr-1.5 text-xs">●</span>产品资料同步成功</span> 
+                        <span class="text-slate-400 font-mono text-[9px]">10:20:11</span>
+                    </div>
+                    <div class="flex justify-between items-center py-1 border-b border-slate-50 last:border-0">
+                        <span class="text-slate-700 font-bold flex items-center"><span class="text-red-500 mr-1.5 text-xs">●</span>价格数据同步失败</span> 
+                        <span class="text-slate-400 font-mono text-[9px]">10:18:02</span>
+                    </div>
+                    <div class="flex justify-between items-center py-1 border-b border-slate-50 last:border-0">
+                        <span class="text-slate-700 font-bold flex items-center"><span class="text-emerald-500 mr-1.5 text-xs">●</span>BOM结构同步成功</span> 
+                        <span class="text-slate-400 font-mono text-[9px]">10:15:33</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</body>
+</html>

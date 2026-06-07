@@ -11,57 +11,57 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * ${functionName} service interface
+ * ${functionName} 服务接口
  *
  * @author ${author}
  */
 public interface I${ClassName}Service extends IBaseService<${ClassName}, ${ClassName}Vo> {
 
     /**
-     * Query ${functionName} page list
+     * 查询${functionName}列表（分页）
      *
-     * @param bo        query criteria
-     * @param pageQuery page parameters
-     * @return page data
+     * @param bo        查询条件
+     * @param pageQuery 分页参数
+     * @return 分页数据
      */
     TableDataInfo<${ClassName}Vo> queryPageList(${ClassName}Bo bo, PageQuery pageQuery);
 
     /**
-     * Query ${functionName} list
+     * 查询${functionName}列表
      *
-     * @param bo query criteria
-     * @return ${functionName} list
+     * @param bo 查询条件
+     * @return ${functionName}列表
      */
     List<${ClassName}Vo> queryList(${ClassName}Bo bo);
 
     /**
-     * Insert by business object
-     * @param bo business object
-     * @return whether the operation succeeded
+     * 根据业务对象新增
+     * @param bo 业务对象
+     * @return 是否成功
      */
     Boolean insertByBo(${ClassName}Bo bo);
 
     /**
-     * Update by business object
-     * @param bo business object
-     * @return whether the operation succeeded
+     * 根据业务对象修改
+     * @param bo 业务对象
+     * @return 是否成功
      */
     Boolean updateByBo(${ClassName}Bo bo);
 
     /**
-     * Delete by ids with optional validation
-     * @param ids primary key collection
-     * @param isValid whether to validate before deleting
-     * @return whether the operation succeeded
+     * 批量删除并校验
+     * @param ids 主键集合
+     * @param isValid 是否校验
+     * @return 是否成功
      */
     Boolean deleteWithValidByIds(Collection<Long> ids, Boolean isValid);
 
      /**
-     * Update ${functionName} status
+     * 修改${functionName}状态
      *
-     * @param id ${functionName} primary key
-     * @param status status value
-     * @return updated row count
+     * @param id ${functionName}主键
+     * @param status 状态值
+     * @return 更新记录数
      */
     int updateStatus(Long id, String status);
 
