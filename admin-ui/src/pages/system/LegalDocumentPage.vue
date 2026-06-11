@@ -2,12 +2,12 @@
   <div class="app-container legal-document-page">
     <el-form ref="queryRef" :model="queryParams" :inline="true">
       <el-form-item :label="t('legal.documentType')" prop="documentType">
-        <el-select v-model="queryParams.documentType" :placeholder="t('common.selectPlaceholder')" clearable>
+        <el-select v-model="queryParams.documentType" :placeholder="t('common.selectPlaceholder')" clearable class="legal-document-page__select">
           <el-option v-for="item in documentTypeOptions" :key="item.value" :label="item.label" :value="item.value" />
         </el-select>
       </el-form-item>
       <el-form-item :label="t('legal.locale')" prop="locale">
-        <el-select v-model="queryParams.locale" :placeholder="t('common.selectPlaceholder')" clearable>
+        <el-select v-model="queryParams.locale" :placeholder="t('common.selectPlaceholder')" clearable class="legal-document-page__select">
           <el-option v-for="item in localeOptions" :key="item.value" :label="item.label" :value="item.value" />
         </el-select>
       </el-form-item>
@@ -30,9 +30,6 @@
         <template #default="{ row }">{{ formatLocale(row.locale) }}</template>
       </el-table-column>
       <el-table-column :label="t('legal.version')" prop="version" width="130" />
-      <el-table-column :label="t('legal.status')" width="120">
-        <template #default="{ row }">{{ formatStatus(row.status) }}</template>
-      </el-table-column>
       <el-table-column :label="t('legal.publishedTime')" width="180">
         <template #default="{ row }">{{ formatUtc(row.publishedTime) }}</template>
       </el-table-column>
@@ -52,7 +49,6 @@
         <el-form-item :label="t('legal.locale')"><el-select v-model="form.locale"><el-option v-for="item in localeOptions" :key="item.value" :label="item.label" :value="item.value" /></el-select></el-form-item>
         <el-form-item :label="t('legal.title')"><el-input v-model="form.title" /></el-form-item>
         <el-form-item :label="t('legal.version')"><el-input v-model="form.version" /></el-form-item>
-        <el-form-item :label="t('legal.status')"><el-select v-model="form.status"><el-option v-for="item in statusOptions" :key="item.value" :label="item.label" :value="item.value" /></el-select></el-form-item>
         <el-form-item :label="t('legal.content')"><el-input v-model="form.content" type="textarea" :rows="18" /></el-form-item>
       </el-form>
       <template #footer>
@@ -87,21 +83,12 @@ const localeOptions = computed(() => [
   { label: t('legal.localeEnglish'), value: 'en_US' },
   { label: t('legal.localeChinese'), value: 'zh_CN' }
 ])
-const statusOptions = computed(() => [
-  { label: t('legal.statusPublished'), value: 'PUBLISHED' },
-  { label: t('legal.statusDraft'), value: 'DRAFT' }
-])
-
 function formatDocumentType(value?: string) {
   return documentTypeOptions.value.find((item) => item.value === value)?.label || value || '-'
 }
 
 function formatLocale(value?: string) {
   return localeOptions.value.find((item) => item.value === value)?.label || value || '-'
-}
-
-function formatStatus(value?: string) {
-  return statusOptions.value.find((item) => item.value === value)?.label || value || '-'
 }
 
 async function getList() {
@@ -126,11 +113,12 @@ function resetQuery() {
 }
 
 function openForm(row?: LegalDocument) {
-  Object.assign(form, { documentId: undefined, documentType: 'privacy', locale: 'en_US', title: '', content: '', version: '', status: 'DRAFT' }, row || {})
+  Object.assign(form, { documentId: undefined, documentType: 'privacy', locale: 'en_US', title: '', content: '', version: '', status: 'PUBLISHED' }, row || {})
   open.value = true
 }
 
 async function submitForm() {
+  form.status = 'PUBLISHED'
   if (form.documentId) {
     await updateLegalDocument(form)
     ElMessage.success(t('common.editSuccess'))
@@ -152,3 +140,9 @@ async function handleDelete(row: LegalDocument) {
 
 getList()
 </script>
+
+<style scoped>
+.legal-document-page__select {
+  width: 180px;
+}
+</style>

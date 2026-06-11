@@ -153,6 +153,8 @@ const swatches = ['#d9c7aa', '#e8e1d2', '#c8c5ba', '#8995a1']
 const overlaySelector = '.el-overlay, .v-modal, .el-loading-mask'
 let overlayCleanupTimer: number | undefined
 let googleScriptPromise: Promise<void> | undefined
+const googleButtonLocale = 'en'
+const googleIdentityScriptSrc = `https://accounts.google.com/gsi/client?hl=${googleButtonLocale}`
 
 const rules = computed<FormRules>(() => ({
   username: [{ required: true, message: t('login.required'), trigger: 'blur' }],
@@ -233,7 +235,7 @@ function loadGoogleIdentityScript() {
       }
       const script = document.createElement('script')
       script.id = 'google-identity-services'
-      script.src = 'https://accounts.google.com/gsi/client'
+      script.src = googleIdentityScriptSrc
       script.async = true
       script.defer = true
       script.onload = () => resolve()
@@ -266,7 +268,7 @@ async function renderGoogleButton() {
     shape: 'rectangular',
     logo_alignment: 'left',
     width: Math.min(Math.max(container.clientWidth || 360, 240), 400),
-    locale: localeValue.value.replace('_', '-')
+    locale: googleButtonLocale
   })
 }
 
@@ -604,18 +606,22 @@ onUnmounted(() => {
 }
 
 .login-panel {
-  display: grid;
-  place-items: center;
-  padding: 92px 46px 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 72px 46px 64px;
   border-radius: 0 16px 16px 0;
   background: rgba(255, 255, 255, 0.84);
 }
 
 .locale-wrap {
-  position: absolute;
-  top: 35px;
-  right: 46px;
-  width: 150px;
+  position: relative;
+  z-index: 5;
+  display: flex;
+  justify-content: flex-end;
+  width: min(100%, 552px);
+  margin-bottom: 12px;
 }
 
 .login-card {
@@ -756,9 +762,9 @@ onUnmounted(() => {
 }
 
 .auth-footer {
-  position: absolute;
+  position: fixed;
   right: 0;
-  bottom: 18px;
+  bottom: 12px;
   left: 0;
   z-index: 4;
   display: flex;
@@ -878,12 +884,12 @@ onUnmounted(() => {
   }
 
   .login-panel {
-    padding: 96px 38px 44px;
+    padding: 72px 38px 54px;
   }
 
   .locale-wrap {
-    top: 38px;
-    right: 38px;
+    width: 100%;
+    margin-bottom: 10px;
   }
 
   .login-card {
@@ -934,12 +940,11 @@ onUnmounted(() => {
 
 @media (max-width: 460px) {
   .login-panel {
-    padding: 88px 18px 36px;
+    padding: 62px 18px 44px;
   }
 
   .locale-wrap {
-    top: 28px;
-    right: 18px;
+    width: 100%;
   }
 
   .login-card {
@@ -1025,11 +1030,7 @@ onUnmounted(() => {
   }
 
   .login-panel {
-    padding: 58px 46px 42px;
-  }
-
-  .locale-wrap {
-    top: 28px;
+    padding: 48px 46px 42px;
   }
 
   .login-card {
@@ -1071,14 +1072,14 @@ onUnmounted(() => {
   }
 
   .auth-footer {
-    bottom: 9px;
+    bottom: 8px;
   }
 }
 
 @media (max-height: 820px) and (min-width: 1101px) {
   .auth-page {
     padding-bottom: 16px;
-    overflow: hidden;
+    overflow: auto;
   }
 
   .hero-panel,
@@ -1088,7 +1089,7 @@ onUnmounted(() => {
 
   .login-panel {
     padding-top: 52px;
-    padding-bottom: 28px;
+    padding-bottom: 34px;
   }
 
   .login-card {
@@ -1097,7 +1098,7 @@ onUnmounted(() => {
   }
 
   .auth-footer {
-    display: none;
+    bottom: 6px;
   }
 }
 </style>

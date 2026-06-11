@@ -17,7 +17,7 @@ crypto:
   aes-key: DevCryptoKey2026
 
 captcha:
-  enable: false
+  enable: true
 
 web:
   cors:
@@ -103,7 +103,7 @@ spring.data:
     # 数据库索引
     database: 0
     # 密码(如没有密码请注释掉)
-    # password:
+    password: s7DEOfbyIQoKhg79WGxUR6eK
     # 连接超时时间
     timeout: 10s
     # 是否开启ssl

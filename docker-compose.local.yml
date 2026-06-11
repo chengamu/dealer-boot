@@ -23,15 +23,30 @@ services:
     image: redis:7-alpine
     container_name: base-boot-redis
     restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass s7DEOfbyIQoKhg79WGxUR6eK
     ports:
       - "6379:6379"
     volumes:
       - base_boot_redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "-a", "s7DEOfbyIQoKhg79WGxUR6eK", "ping"]
       interval: 5s
       timeout: 5s
       retries: 20
+
+  minio:
+    image: minio/minio:latest
+    container_name: base-boot-minio
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: 02f8394e7dd656645cd4
+      MINIO_ROOT_PASSWORD: Zd8FW2BsnOGCSv+LfNUb7fTe3P55J1k/
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - /Users/chengmuxuan/Desktop/cmx/data/minio:/data
 
 volumes:
   base_boot_postgres_data:

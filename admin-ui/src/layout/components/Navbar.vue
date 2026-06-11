@@ -14,15 +14,16 @@
 
       <screenfull class="right-menu-item hover-effect" />
 
-      <el-dropdown @command="handleLanguage" class="right-menu-item hover-effect language-menu" trigger="click">
+      <el-dropdown @command="handleLanguage" class="right-menu-item language-menu" trigger="click" popper-class="shell-language-dropdown">
         <button
           type="button"
           class="language-wrapper"
           :aria-label="t('shell.language')"
           :title="t('shell.language')"
         >
-          <svg-icon icon-class="language" />
-          <span>{{ currentLanguageLabel }}</span>
+          <span class="language-flag">{{ currentLanguageFlag }}</span>
+          <span class="language-code">{{ currentLanguageCode }}</span>
+          <el-icon class="language-arrow"><caret-bottom /></el-icon>
         </button>
         <template #dropdown>
           <el-dropdown-menu>
@@ -30,9 +31,11 @@
               v-for="item in languages"
               :key="item.value"
               :command="item.value"
-              :disabled="localeStore.language === item.value"
+              :class="{ 'is-active': localeStore.language === item.value }"
             >
-              {{ t(item.labelKey) }}
+              <span class="language-option-flag">{{ item.flag }}</span>
+              <span>{{ t(item.labelKey) }}</span>
+              <span v-if="localeStore.language === item.value" class="language-option-check">✓</span>
             </el-dropdown-item>
           </el-dropdown-menu>
         </template>
@@ -41,7 +44,7 @@
       <message-bell class="right-menu-item message-wrapper" />
 
       <div class="avatar-container">
-        <el-dropdown @command="handleCommand" class="right-menu-item hover-effect" trigger="click">
+        <el-dropdown @command="handleCommand" class="right-menu-item user-menu" trigger="click" popper-class="shell-user-dropdown">
           <button
             type="button"
             class="avatar-wrapper"
@@ -49,14 +52,26 @@
             :title="t('shell.userMenu')"
           >
             <img :src="userStore.avatar" class="user-avatar" alt="" />
-            <el-icon><caret-bottom /></el-icon>
+            <span class="user-summary">
+              <strong>{{ userStore.displayName }}</strong>
+              <small>{{ userRoleLabel }}</small>
+            </span>
+            <el-icon class="user-arrow"><caret-bottom /></el-icon>
           </button>
           <template #dropdown>
             <el-dropdown-menu>
-              <router-link to="/user/profile">
-                <el-dropdown-item>{{ t('shell.profile') }}</el-dropdown-item>
+              <div class="user-dropdown-head">
+                <strong>{{ userStore.displayName }}</strong>
+                <small>{{ userStore.user?.email || userStore.name || '-' }}</small>
+              </div>
+              <router-link to="/user/profile" class="user-dropdown-link">
+                <el-dropdown-item>
+                  <svg-icon icon-class="user" />
+                  <span>{{ t('shell.profile') }}</span>
+                </el-dropdown-item>
               </router-link>
               <el-dropdown-item divided command="logout">
+                <svg-icon icon-class="exit" />
                 <span>{{ t('shell.logout') }}</span>
               </el-dropdown-item>
             </el-dropdown-menu>
@@ -94,11 +109,14 @@ const permissionStore = usePermissionStore()
 const t = (key: string) => getMessage(key, localeStore.language)
 
 const languages = [
-  { value: 'zh_CN', labelKey: 'language.zhCN' },
-  { value: 'en_US', labelKey: 'language.enUS' }
+  { value: 'zh_CN', labelKey: 'language.zhCN', code: 'ZH', flag: '🇨🇳' },
+  { value: 'en_US', labelKey: 'language.enUS', code: 'EN', flag: '🇺🇸' }
 ]
 
-const currentLanguageLabel = computed(() => t(languages.find(item => item.value === localeStore.language)?.labelKey || 'language.zhCN'))
+const currentLanguage = computed(() => languages.find(item => item.value === localeStore.language) || languages[0])
+const currentLanguageCode = computed(() => currentLanguage.value.code)
+const currentLanguageFlag = computed(() => currentLanguage.value.flag)
+const userRoleLabel = computed(() => userStore.roles?.[0]?.replace(/^ROLE_/, '') || 'User')
 
 function toggleSideBar() {
   appStore.toggleSideBar()
@@ -197,18 +215,43 @@ async function handleLanguage(language: 'zh_CN' | 'en_US') {
     }
 
     .language-menu {
+      display: inline-flex;
+      align-items: center;
+      padding: 0 4px;
       font-size: 14px;
 
       .language-wrapper {
         display: flex;
         align-items: center;
-        gap: 6px;
-        height: 50px;
-        padding: 0;
+        gap: 7px;
+        height: 34px;
+        padding: 0 12px;
         border: 0;
-        background: transparent;
-        color: inherit;
+        border-radius: 12px;
+        background: #f5f7fb;
+        color: #354052;
         cursor: pointer;
+        transition: background 0.18s ease, box-shadow 0.18s ease;
+
+        &:hover {
+          background: #eef3fa;
+          box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+        }
+      }
+
+      .language-flag {
+        font-size: 15px;
+        line-height: 1;
+      }
+
+      .language-code {
+        font-weight: 700;
+        letter-spacing: 0;
+      }
+
+      .language-arrow {
+        color: #94a3b8;
+        font-size: 12px;
       }
     }
 
@@ -225,31 +268,134 @@ async function handleLanguage(language: 'zh_CN' | 'en_US') {
     }
 
     .avatar-container {
-      margin-right: 40px;
+      margin-right: 18px;
 
       .avatar-wrapper {
-        margin-top: 5px;
-        padding: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        height: 44px;
+        margin-top: 3px;
+        padding: 4px 9px 4px 4px;
         border: 0;
+        border-radius: 16px;
         background: transparent;
         position: relative;
+        cursor: pointer;
+        transition: background 0.18s ease;
 
-        .user-avatar {
-          cursor: pointer;
-          width: 40px;
-          height: 40px;
-          border-radius: 10px;
+        &:hover {
+          background: #f5f7fb;
         }
 
-        i {
-          cursor: pointer;
-          position: absolute;
-          right: -20px;
-          top: 25px;
-          font-size: 12px;
+        .user-avatar {
+          width: 36px;
+          height: 36px;
+          border-radius: 12px;
+          box-shadow: 0 0 0 1px #dbe5f2;
+        }
+
+        .user-summary {
+          display: grid;
+          gap: 1px;
+          min-width: 78px;
+          color: #172033;
+          text-align: left;
+          line-height: 1.15;
+
+          strong {
+            max-width: 96px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 14px;
+            font-weight: 700;
+          }
+
+          small {
+            color: #667085;
+            font-size: 12px;
+          }
+        }
+
+        .user-arrow {
+          color: #94a3b8;
+          font-size: 14px;
         }
       }
     }
   }
+}
+
+:global(.shell-language-dropdown.el-popper),
+:global(.shell-user-dropdown.el-popper) {
+  border: 1px solid #dbe5f2;
+  border-radius: 14px !important;
+  box-shadow: 0 18px 44px rgba(15, 23, 42, 0.14);
+  overflow: hidden;
+}
+
+:global(.shell-language-dropdown .el-dropdown-menu) {
+  min-width: 176px;
+  padding: 8px;
+}
+
+:global(.shell-language-dropdown .el-dropdown-menu__item) {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) 20px;
+  gap: 10px;
+  height: 42px;
+  border-radius: 10px;
+  color: #354052;
+  font-size: 15px;
+}
+
+:global(.shell-language-dropdown .el-dropdown-menu__item.is-active) {
+  background: #ecfdf7;
+  color: #0f9f8f;
+}
+
+:global(.language-option-check) {
+  color: #0f9f8f;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+:global(.shell-user-dropdown .el-dropdown-menu) {
+  min-width: 218px;
+  padding: 0;
+}
+
+:global(.shell-user-dropdown .user-dropdown-head) {
+  display: grid;
+  gap: 4px;
+  padding: 16px 18px 14px;
+  border-bottom: 1px solid #edf2f8;
+}
+
+:global(.shell-user-dropdown .user-dropdown-head strong) {
+  color: #172033;
+  font-size: 15px;
+}
+
+:global(.shell-user-dropdown .user-dropdown-head small) {
+  color: #667085;
+  font-size: 13px;
+}
+
+:global(.shell-user-dropdown .el-dropdown-menu__item) {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 44px;
+  padding: 0 18px;
+  color: #344054;
+  font-size: 14px;
+}
+
+:global(.shell-user-dropdown .el-dropdown-menu__item--divided) {
+  margin: 6px 0 0;
+  border-top: 1px solid #edf2f8;
+  color: #ef4444;
 }
 </style>

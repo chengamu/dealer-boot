@@ -7,7 +7,7 @@
       <el-input v-model="user.phonenumber" maxlength="11" />
     </el-form-item>
     <el-form-item :label="t('user.email')" prop="email">
-      <el-input v-model="user.email" maxlength="50" />
+      <el-input v-model="user.email" maxlength="50" disabled />
     </el-form-item>
     <el-form-item :label="t('user.sex')">
       <el-radio-group v-model="user.sex">
@@ -59,10 +59,6 @@ const userSexLabelKeys: Record<string, string> = {
 const userRef = ref<FormInstance>()
 const rules = computed<FormRules<SysUser>>(() => ({
   nickName: [{ required: true, message: t('user.nickNameRequired'), trigger: 'blur' }],
-  email: [
-    { required: true, message: t('user.emailRequired'), trigger: 'blur' },
-    { type: 'email', message: t('user.emailInvalid'), trigger: ['blur', 'change'] }
-  ],
   phonenumber: [
     { required: true, message: t('user.phonenumberRequired'), trigger: 'blur' },
     { pattern: /^1[3|4|5|6|7|8|9][0-9]\d{8}$/, message: t('user.phonenumberInvalid'), trigger: 'blur' }
@@ -77,7 +73,11 @@ async function submit() {
   const valid = await userRef.value?.validate().catch(() => false)
   if (!valid) return
   try {
-    await updateUserProfile(props.user)
+    await updateUserProfile({
+      nickName: props.user.nickName,
+      phonenumber: props.user.phonenumber,
+      sex: props.user.sex
+    })
     ElMessage.success(t('common.editSuccess'))
   } catch {
     // Request interceptor already displays the backend error.

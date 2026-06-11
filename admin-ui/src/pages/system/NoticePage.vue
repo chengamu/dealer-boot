@@ -92,12 +92,12 @@
     <el-drawer v-model="open" :title="title" size="760px" append-to-body destroy-on-close @closed="reset">
       <el-form ref="noticeRef" :model="form" :rules="rules" label-width="90px">
         <el-row>
-          <el-col :span="12">
+          <el-col :span="24">
             <el-form-item :label="t('legacy.noticeTitle')" prop="noticeTitle">
               <el-input v-model="form.noticeTitle" :placeholder="t('legacy.noticeTitlePlaceholder')" />
             </el-form-item>
           </el-col>
-          <el-col :span="12">
+          <el-col :span="24">
             <el-form-item :label="t('legacy.noticeType')" prop="noticeType">
               <el-select v-model="form.noticeType" :placeholder="t('common.selectPlaceholder')">
                 <el-option v-for="dict in sys_notice_type" :key="dict.value" :label="dict.label" :value="dict.value" />
@@ -113,7 +113,7 @@
           </el-col>
           <el-col :span="24">
             <el-form-item :label="t('legacy.noticeContent')">
-              <Editor v-model="form.noticeContent" :min-height="192" />
+              <Editor v-model="form.noticeContent" :min-height="280" />
             </el-form-item>
           </el-col>
         </el-row>

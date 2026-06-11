@@ -27,6 +27,7 @@ public class MerchantAccountDefaultsService {
     public static final String STORE_DEPT_NAME = "Store";
     public static final String DEALER_ROLE_KEY = "merchant_admin";
     public static final String STORE_ROLE_KEY = "merchant_store";
+    public static final String EMPLOYEE_ROLE_KEY = "merchant_employee";
 
     private final SysDeptMapper deptMapper;
     private final SysRoleMapper roleMapper;
@@ -39,11 +40,14 @@ public class MerchantAccountDefaultsService {
         SysDept storeDept = ensureDept(STORE_DEPT_NAME, 2);
         SysRole dealerRole = ensureRole("Merchant Admin", DEALER_ROLE_KEY, 1);
         SysRole storeRole = ensureRole("Merchant Store", STORE_ROLE_KEY, 2);
+        SysRole employeeRole = ensureRole("Merchant Employee", EMPLOYEE_ROLE_KEY, 3);
         List<Long> dealerMenuIds = ensureMerchantMenus(true);
         List<Long> storeMenuIds = ensureMerchantMenus(false);
+        List<Long> employeeMenuIds = ensureMerchantMenus(false);
         ensureRoleMenus(dealerRole.getRoleId(), dealerMenuIds);
         ensureRoleMenus(storeRole.getRoleId(), storeMenuIds);
-        return new MerchantDefaults(dealerDept, storeDept, dealerRole, storeRole);
+        ensureRoleMenus(employeeRole.getRoleId(), employeeMenuIds);
+        return new MerchantDefaults(dealerDept, storeDept, dealerRole, storeRole, employeeRole);
     }
 
     public SysDept ensureDealerDept() {
@@ -60,6 +64,10 @@ public class MerchantAccountDefaultsService {
 
     public SysRole ensureStoreRole() {
         return ensureRole("Merchant Store", STORE_ROLE_KEY, 2);
+    }
+
+    public SysRole ensureEmployeeRole() {
+        return ensureRole("Merchant Employee", EMPLOYEE_ROLE_KEY, 3);
     }
 
     private SysDept ensureDept(String deptName, Integer orderNum) {
@@ -183,6 +191,6 @@ public class MerchantAccountDefaultsService {
         return menu;
     }
 
-    public record MerchantDefaults(SysDept dealerDept, SysDept storeDept, SysRole dealerRole, SysRole storeRole) {
+    public record MerchantDefaults(SysDept dealerDept, SysDept storeDept, SysRole dealerRole, SysRole storeRole, SysRole employeeRole) {
     }
 }

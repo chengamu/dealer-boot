@@ -1,15 +1,5 @@
 <template>
   <div class="app-container product-import-page">
-    <div class="product-import-page__toolbar">
-      <div>
-        <h2>{{ t('productCenter.import.title') }}</h2>
-        <p>{{ t('productCenter.import.description') }}</p>
-      </div>
-      <el-button type="primary" icon="UploadFilled" @click="uploadOpen = true" v-hasPermi="['product:import:add']">
-        {{ t('productCenter.import.parseExcel') }}
-      </el-button>
-    </div>
-
     <product-entity-grid-page ref="batchGridRef" :config="batchConfig" />
 
     <el-drawer v-model="issueOpen" :title="issueDrawerTitle" size="900px" append-to-body destroy-on-close>
@@ -108,6 +98,17 @@ const batchConfig = computed<ProductGridConfig>(() => ({
   api: productImportBatchApi,
   hideReference: true,
   showDetail: true,
+  toolbarActions: [
+    {
+      labelKey: 'productCenter.import.parseExcel',
+      icon: 'UploadFilled',
+      type: 'primary',
+      permission: 'product:import:add',
+      handler: () => {
+        uploadOpen.value = true
+      }
+    }
+  ],
   rowActions: [
     {
       labelKey: 'productCenter.import.viewIssues',
@@ -191,34 +192,6 @@ async function openIssuePreview(row: ProductRecord) {
 </script>
 
 <style scoped lang="scss">
-.product-import-page {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.product-import-page__toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 18px 20px;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  background: #fff;
-
-  h2 {
-    margin: 0 0 6px;
-    font-size: 18px;
-    color: #111827;
-  }
-
-  p {
-    margin: 0;
-    color: #64748b;
-  }
-}
-
 .product-import-page__drawer-footer {
   display: flex;
   justify-content: flex-end;

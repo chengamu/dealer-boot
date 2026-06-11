@@ -1,7 +1,7 @@
 <template>
   <div class="app-container user-page">
-    <el-row :gutter="20" class="user-page__layout">
-      <el-col :span="4" :xs="24" class="user-page__dept">
+    <el-row :gutter="12" class="user-page__layout">
+      <el-col :span="3" :xs="24" class="user-page__dept">
         <div class="head-container user-page__dept-search">
           <el-input
             v-model="deptName"
@@ -37,7 +37,7 @@
         </div>
       </el-col>
 
-      <el-col :span="20" :xs="24" class="user-page__content">
+      <el-col :span="21" :xs="24" class="user-page__content">
         <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true" label-width="96px">
           <el-form-item :label="t('user.userName')" prop="userName">
             <el-input v-model="queryParams.userName" :placeholder="t('user.userNamePlaceholder')" clearable style="width: 240px" @keyup.enter="handleQuery" />
@@ -303,8 +303,7 @@ import { computed, h, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules, type UploadInstance, type UploadProgressEvent, type UploadRawFile, type UploadRequestOptions } from 'element-plus'
 import { Briefcase, MoreFilled } from '@element-plus/icons-vue'
-import { getConfigKey } from '@/api/system/config'
-import { addUser, changeUserStatus, delUser, deptTreeSelect, getUser, listUser, resetUserPwd, updateUser, type SysUser, type TreeOption, type UserOptionPost, type UserOptionRole, type UserQuery } from '@/api/system/user'
+import { addUser, changeUserStatus, delUser, deptTreeSelect, getInitPassword, getUser, listUser, resetUserPwd, updateUser, type SysUser, type TreeOption, type UserOptionPost, type UserOptionRole, type UserQuery } from '@/api/system/user'
 import { download, request } from '@/utils/request'
 import { formatUtc, withUtcDateRange } from '@/utils/datetime'
 import { getMessage } from '@/locales'
@@ -354,7 +353,6 @@ const total = ref(0)
 const dateRange = ref<string[]>([])
 const deptName = ref('')
 const deptOptions = ref<TreeOption[]>([])
-const initPassword = ref('')
 const postOptions = ref<UserOptionPost[]>([])
 const roleOptions = ref<UserOptionRole[]>([])
 const form = ref<SysUser>({})
@@ -523,7 +521,8 @@ async function handleAdd() {
     const response = await getUser()
     postOptions.value = response.data.posts || []
     roleOptions.value = response.data.roles || []
-    form.value.password = initPassword.value
+    const initPasswordResponse = await getInitPassword()
+    form.value.password = initPasswordResponse.data || initPasswordResponse.msg || ''
     open.value = true
   })
 }
@@ -675,9 +674,6 @@ function submitFileForm() {
 
 getDeptTree()
 getList()
-getConfigKey('sys.user.initPassword').then((response) => {
-  initPassword.value = response.msg || ''
-})
 </script>
 
 <style scoped>

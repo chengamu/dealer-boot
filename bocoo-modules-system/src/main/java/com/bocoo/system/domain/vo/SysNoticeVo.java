@@ -80,4 +80,16 @@ public class SysNoticeVo implements Serializable {
     @Schema(description = "创建时间")
     private LocalDateTime createTime;
 
+    /**
+     * 当前用户是否已读
+     */
+    @Schema(description = "当前用户是否已读")
+    private Boolean read;
+
+    /**
+     * 当前用户阅读时间
+     */
+    @Schema(description = "当前用户阅读时间")
+    private LocalDateTime readTime;
+
 }

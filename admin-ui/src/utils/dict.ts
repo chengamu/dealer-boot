@@ -59,8 +59,14 @@ const frontendDictLabelKeys: Record<string, Record<string, string>> = {
 }
 
 const fallbackDictValues: Record<string, string[]> = {
+  sys_user_sex: ['0', '1', '2'],
+  sys_normal_disable: ['1', '0'],
+  sys_show_hide: ['1', '0'],
+  sys_yes_no: ['Y', 'N'],
+  sys_common_status: ['0', '1'],
   sys_notice_type: ['1', '2'],
-  sys_notice_status: ['0', '1']
+  sys_notice_status: ['0', '1'],
+  sys_oper_type: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11']
 }
 
 function resolveDictLabel(dictType: string, item: DictOption, locale: string) {

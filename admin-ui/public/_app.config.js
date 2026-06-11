@@ -16,7 +16,7 @@ window.__APP_CONFIG__ = {
 
     VITE_APP_XXL_JOB_ADMIN: '/xxl-job-admin',
 
-    VITE_APP_GOOGLE_CLIENT_ID: '',
+    VITE_APP_GOOGLE_CLIENT_ID: '11234567890-abcdefghijklmnopqrstuvwxyz.apps.googleusercontent.com',
 
     VITE_BUILD_COMPRESS: 'gzip',
 };

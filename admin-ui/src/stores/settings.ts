@@ -47,7 +47,7 @@ export const useSettingsStore = defineStore('settings', {
     sideTheme: storageSetting.sideTheme || defaults.sideTheme,
     showSettings: defaults.showSettings,
     topNav: storageSetting.topNav === undefined ? defaults.topNav : storageSetting.topNav,
-    tagsView: storageSetting.tagsView === undefined ? defaults.tagsView : storageSetting.tagsView,
+    tagsView: defaults.tagsView,
     fixedHeader: storageSetting.fixedHeader === undefined ? defaults.fixedHeader : storageSetting.fixedHeader,
     sidebarLogo: storageSetting.sidebarLogo === undefined ? defaults.sidebarLogo : storageSetting.sidebarLogo,
     dynamicTitle: storageSetting.dynamicTitle === undefined ? defaults.dynamicTitle : storageSetting.dynamicTitle

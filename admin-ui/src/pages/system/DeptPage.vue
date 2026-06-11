@@ -85,32 +85,32 @@
               />
             </el-form-item>
           </el-col>
-          <el-col :span="12">
+          <el-col :span="24">
             <el-form-item :label="t('legacy.deptName')" prop="deptName">
               <el-input v-model="form.deptName" :placeholder="t('legacy.deptNamePlaceholder')" />
             </el-form-item>
           </el-col>
-          <el-col :span="12">
+          <el-col :span="24">
             <el-form-item :label="t('legacy.orderNum')" prop="orderNum">
               <el-input-number v-model="form.orderNum" controls-position="right" :min="0" />
             </el-form-item>
           </el-col>
-          <el-col :span="12">
+          <el-col :span="24">
             <el-form-item :label="t('legacy.leader')" prop="leader">
               <el-input v-model="form.leader" :placeholder="t('legacy.leaderPlaceholder')" maxlength="20" />
             </el-form-item>
           </el-col>
-          <el-col :span="12">
+          <el-col :span="24">
             <el-form-item :label="t('legacy.phone')" prop="phone">
               <el-input v-model="form.phone" :placeholder="t('legacy.phonePlaceholder')" maxlength="11" />
             </el-form-item>
           </el-col>
-          <el-col :span="12">
+          <el-col :span="24">
             <el-form-item :label="t('user.email')" prop="email">
               <el-input v-model="form.email" :placeholder="t('user.emailPlaceholder')" maxlength="50" />
             </el-form-item>
           </el-col>
-          <el-col :span="12">
+          <el-col :span="24">
             <el-form-item :label="t('legacy.deptStatus')">
               <el-radio-group v-model="form.status">
                 <el-radio v-for="dict in sys_normal_disable" :key="dict.value" :value="dict.value">{{ dict.label }}</el-radio>

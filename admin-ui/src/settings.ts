@@ -42,7 +42,7 @@ const settings: AppSettings = {
   /**
    * Whether to show tags view
    */
-  tagsView: false,
+  tagsView: true,
 
   /**
    * Whether to fix the header

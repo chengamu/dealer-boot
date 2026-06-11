@@ -201,8 +201,15 @@ public class SysUserController extends BaseController {
         } else if (StringUtils.isNotEmpty(user.getEmail()) && !userService.checkEmailUnique(user)) {
             return R.fail("新增用户'" + user.getUserName() + "'失败，邮箱账号已存在");
         }
+        user.setPassword(userService.resolveInitialPassword(user.getPassword()));
         user.setPassword(BCrypt.hashpw(user.getPassword()));
         return toAjax(userService.insertUser(user));
+    }
+
+    @GetMapping("/init-password")
+    @Operation(summary = "获取管理员初始密码", description = "每次请求返回可用于新增用户的初始密码")
+    public R<String> initPassword() {
+        return R.ok(userService.resolveInitialPassword(StringUtils.EMPTY));
     }
 
     /**

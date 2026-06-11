@@ -46,6 +46,62 @@ public class SysNoticeController extends BaseController {
     }
 
     /**
+     * 获取当前用户可见通知公告列表
+     */
+    @GetMapping("/my/list")
+    @Operation(summary = "获取当前用户通知公告列表", description = "分页获取当前用户可见通知公告列表，并返回已读状态")
+    public TableDataInfo<SysNoticeVo> myList(
+            @Parameter(description = "分页参数")
+            PageQuery pageQuery) {
+        return noticeService.selectMyNoticePage(pageQuery);
+    }
+
+    /**
+     * 获取当前用户未读通知公告数量
+     */
+    @GetMapping("/my/unread-count")
+    @Operation(summary = "获取当前用户未读通知公告数量", description = "获取当前用户未读通知公告数量")
+    public R<Long> myUnreadCount() {
+        return R.ok(noticeService.selectMyUnreadCount());
+    }
+
+    /**
+     * 根据公告编号获取当前用户可见公告详情，并标记已读
+     *
+     * @param noticeId 公告ID
+     */
+    @GetMapping("/my/{noticeId}")
+    @Operation(summary = "获取当前用户通知公告详情", description = "根据公告ID获取当前用户可见公告详情，并标记已读")
+    public R<SysNoticeVo> myInfo(
+            @Parameter(description = "公告ID", required = true)
+            @PathVariable Long noticeId) {
+        return R.ok(noticeService.selectMyNoticeById(noticeId));
+    }
+
+    /**
+     * 标记当前用户指定公告为已读
+     *
+     * @param noticeId 公告ID
+     */
+    @PutMapping("/my/{noticeId}/read")
+    @Operation(summary = "标记通知公告已读", description = "标记当前用户指定公告为已读")
+    public R<Void> markRead(
+            @Parameter(description = "公告ID", required = true)
+            @PathVariable Long noticeId) {
+        return toAjax(noticeService.markMyNoticeRead(noticeId));
+    }
+
+    /**
+     * 标记当前用户全部公告为已读
+     */
+    @PutMapping("/my/read-all")
+    @Operation(summary = "标记全部通知公告已读", description = "标记当前用户全部可见公告为已读")
+    public R<Void> markAllRead() {
+        noticeService.markAllMyNoticesRead();
+        return R.ok();
+    }
+
+    /**
      * 根据通知公告编号获取详细信息
      *
      * @param noticeId 公告ID

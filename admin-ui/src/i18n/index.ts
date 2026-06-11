@@ -7,6 +7,14 @@ export type LocaleMessages = Record<string, string>
 const fallbackLocale: AppLocale = 'en_US'
 const loadedMessages: Partial<Record<AppLocale, LocaleMessages>> = {}
 
+function sanitizeVueI18nMessages(messages: LocaleMessages) {
+  const keys = new Set(Object.keys(messages))
+  return Object.fromEntries(Object.entries(messages).filter(([key]) => {
+    const parts = key.split('.')
+    return !parts.some((_, index) => index > 0 && keys.has(parts.slice(0, index).join('.')))
+  })) as LocaleMessages
+}
+
 export const i18n = createI18n({
   legacy: false,
   locale: getLocaleCookie() as AppLocale,
@@ -42,14 +50,14 @@ export async function loadLocaleMessages(locale: AppLocale) {
   }
   const messages = await response.json() as LocaleMessages
   loadedMessages[locale] = messages
-  i18n.global.setLocaleMessage(locale, messages)
+  i18n.global.setLocaleMessage(locale, sanitizeVueI18nMessages(messages))
   return messages
 }
 
 function setEmptyLocaleMessages(locale: AppLocale) {
   const messages: LocaleMessages = {}
   loadedMessages[locale] = messages
-  i18n.global.setLocaleMessage(locale, messages)
+  i18n.global.setLocaleMessage(locale, sanitizeVueI18nMessages(messages))
   return messages
 }
 

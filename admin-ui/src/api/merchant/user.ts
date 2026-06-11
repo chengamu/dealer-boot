@@ -6,7 +6,9 @@ function parseStrEmpty(value?: number | string) {
   return value === undefined || value === null || value === '' ? '' : value
 }
 
-export type MerchantUserQuery = UserQuery & PageQuery
+export type MerchantUserQuery = UserQuery & PageQuery & {
+  tenantId?: number | string
+}
 
 export function listMerchantUser(query?: MerchantUserQuery) {
   return requestPage<SysUser>({
@@ -16,10 +18,11 @@ export function listMerchantUser(query?: MerchantUserQuery) {
   })
 }
 
-export function getMerchantUser(userId?: number | string) {
+export function getMerchantUser(userId?: number | string, tenantId?: number | string) {
   return request<UserDetail>({
     url: `/merchant/user/${parseStrEmpty(userId)}`,
-    method: 'get'
+    method: 'get',
+    params: { tenantId }
   })
 }
 
@@ -39,31 +42,34 @@ export function updateMerchantUser(data: SysUser) {
   })
 }
 
-export function delMerchantUser(userId: number | string | Array<number | string>) {
+export function delMerchantUser(userId: number | string | Array<number | string>, tenantId?: number | string) {
   return request({
     url: `/merchant/user/${userId}`,
-    method: 'delete'
+    method: 'delete',
+    params: { tenantId }
   })
 }
 
-export function resetMerchantUserPwd(userId: number | string, password: string) {
+export function resetMerchantUserPwd(userId: number | string, password: string, tenantId?: number | string) {
   return request({
     url: '/merchant/user/resetPwd',
     method: 'put',
     data: {
       userId,
-      password
+      password,
+      tenantId
     }
   })
 }
 
-export function changeMerchantUserStatus(userId: number | string, status: string) {
+export function changeMerchantUserStatus(userId: number | string, status: string, tenantId?: number | string) {
   return request({
     url: '/merchant/user/changeStatus',
     method: 'put',
     data: {
       userId,
-      status
+      status,
+      tenantId
     }
   })
 }

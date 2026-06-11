@@ -45,11 +45,9 @@
 import ScrollPane from './ScrollPane.vue'
 import { getNormalPath } from '@/utils/ruoyi'
 import useTagsViewStore, { type TagView } from '@/stores/tagsView'
-import useSettingsStore from '@/stores/settings'
 import usePermissionStore from '@/stores/permission'
 import { getMessage } from '@/locales'
 import useLocaleStore from '@/stores/locale'
-import type { CSSProperties } from 'vue'
 import type { LocationQueryRaw, RouteLocationRaw } from 'vue-router'
 
 type ScrollPaneExpose = {
@@ -88,7 +86,6 @@ const router = useRouter();
 
 const visitedViews = computed(() => useTagsViewStore().visitedViews);
 const routes = computed(() => usePermissionStore().routes);
-const theme = computed(() => useSettingsStore().theme);
 const localeStore = useLocaleStore();
 const t = (key: string) => getMessage(key, localeStore.language);
 
@@ -124,12 +121,8 @@ function routeTitle(title?: unknown) {
   }
   return value
 }
-function activeStyle(tag: TagView): CSSProperties {
-  if (!isActive(tag)) return {};
-  return {
-    "background-color": theme.value,
-    "border-color": theme.value
-  };
+function activeStyle(_tag?: TagView) {
+  return {};
 }
 function isAffix(tag: TagView) {
   return tag.meta && tag.meta.affix

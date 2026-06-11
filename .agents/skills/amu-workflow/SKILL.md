@@ -7,7 +7,7 @@ description: 轻量工程化 AI workflow。用于需要 Codex 按 /plan、/do、
 
 ## 何时使用本 Skill
 
-当用户希望 Codex 按工程化流程处理需求、重构、修复、前后端开发、长期任务时使用。
+仅当用户明确输入 `/plan`、`/do`、`/archive` 或明确说“使用 amu-workflow”时使用。普通需求、修复、重构、前后端开发和方案讨论默认不要自动启用本 Skill。
 
 典型触发词：
 - 使用工程化工作流

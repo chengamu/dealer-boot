@@ -157,7 +157,7 @@ public class SysTenantApplyService {
         tenant.setStatus(UserStatus.OK.getCode());
         tenantMapper.insert(tenant);
 
-        String tempPassword = RandomUtil.randomString(PASSWORD_CHARS, 12);
+        String tempPassword = userService.resolveInitialPassword(RandomUtil.randomString(PASSWORD_CHARS, 12));
         SysTenantApply finalApply = apply;
         TenantContextHolder.runWithTenant(tenant.getTenantId(), () -> {
             MerchantAccountDefaultsService.MerchantDefaults defaults = merchantDefaultsService.ensureDefaults();

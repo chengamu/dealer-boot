@@ -61,7 +61,7 @@
       </el-table-column>
     </el-table>
 
-    <el-drawer v-model="open" :title="title" size="680px" append-to-body destroy-on-close @closed="reset">
+    <el-drawer v-model="open" :title="title" size="720px" append-to-body destroy-on-close @closed="reset">
       <el-form ref="menuRef" :model="form" :rules="rules" label-width="110px">
         <el-row>
           <el-col :span="24">
@@ -100,22 +100,22 @@
               </el-popover>
             </el-form-item>
           </el-col>
-          <el-col :span="12">
+          <el-col :span="24">
             <el-form-item :label="t('menu.menuName')" prop="menuName">
               <el-input v-model="form.menuName" :placeholder="t('menu.menuNamePlaceholder')" />
             </el-form-item>
           </el-col>
-          <el-col :span="12">
+          <el-col :span="24">
             <el-form-item :label="t('menu.i18nKey')" prop="i18nKey">
               <el-input v-model="form.i18nKey" :placeholder="t('menu.i18nKeyPlaceholder')" />
             </el-form-item>
           </el-col>
-          <el-col :span="12">
+          <el-col :span="24">
             <el-form-item :label="t('menu.displayOrder')" prop="orderNum">
               <el-input-number v-model="form.orderNum" controls-position="right" :min="0" />
             </el-form-item>
           </el-col>
-          <el-col v-if="form.menuType !== 'F'" :span="12">
+          <el-col v-if="form.menuType !== 'F'" :span="24">
             <el-form-item>
               <template #label>
                 <span><el-tooltip :content="t('menu.externalTooltip')" placement="top"><el-icon><QuestionFilled /></el-icon></el-tooltip>{{ t('menu.externalLink') }}</span>
@@ -126,7 +126,7 @@
               </el-radio-group>
             </el-form-item>
           </el-col>
-          <el-col v-if="form.menuType !== 'F'" :span="12">
+          <el-col v-if="form.menuType !== 'F'" :span="24">
             <el-form-item prop="path">
               <template #label>
                 <span><el-tooltip :content="t('menu.pathTooltip')" placement="top"><el-icon><QuestionFilled /></el-icon></el-tooltip>{{ t('menu.path') }}</span>
@@ -134,7 +134,7 @@
               <el-input v-model="form.path" :placeholder="t('menu.pathPlaceholder')" />
             </el-form-item>
           </el-col>
-          <el-col v-if="form.menuType === 'C'" :span="12">
+          <el-col v-if="form.menuType === 'C'" :span="24">
             <el-form-item prop="component">
               <template #label>
                 <span><el-tooltip :content="t('menu.componentTooltip')" placement="top"><el-icon><QuestionFilled /></el-icon></el-tooltip>{{ t('menu.component') }}</span>
@@ -142,7 +142,7 @@
               <el-input v-model="form.component" :placeholder="t('menu.componentPlaceholder')" />
             </el-form-item>
           </el-col>
-          <el-col v-if="form.menuType !== 'M'" :span="12">
+          <el-col v-if="form.menuType !== 'M'" :span="24">
             <el-form-item>
               <template #label>
                 <span><el-tooltip :content="t('menu.permsTooltip')" placement="top"><el-icon><QuestionFilled /></el-icon></el-tooltip>{{ t('menu.permissionString') }}</span>
@@ -150,7 +150,7 @@
               <el-input v-model="form.perms" :placeholder="t('menu.permsPlaceholder')" maxlength="100" />
             </el-form-item>
           </el-col>
-          <el-col v-if="form.menuType === 'C'" :span="12">
+          <el-col v-if="form.menuType === 'C'" :span="24">
             <el-form-item>
               <template #label>
                 <span><el-tooltip :content="t('menu.queryParamTooltip')" placement="top"><el-icon><QuestionFilled /></el-icon></el-tooltip>{{ t('menu.queryParam') }}</span>
@@ -158,7 +158,7 @@
               <el-input v-model="form.queryParam" :placeholder="t('menu.queryParamPlaceholder')" maxlength="255" />
             </el-form-item>
           </el-col>
-          <el-col v-if="form.menuType === 'C'" :span="12">
+          <el-col v-if="form.menuType === 'C'" :span="24">
             <el-form-item>
               <template #label>
                 <span><el-tooltip :content="t('menu.cacheTooltip')" placement="top"><el-icon><QuestionFilled /></el-icon></el-tooltip>{{ t('menu.cache') }}</span>
@@ -169,7 +169,7 @@
               </el-radio-group>
             </el-form-item>
           </el-col>
-          <el-col v-if="form.menuType !== 'F'" :span="12">
+          <el-col v-if="form.menuType !== 'F'" :span="24">
             <el-form-item>
               <template #label>
                 <span><el-tooltip :content="t('menu.visibleTooltip')" placement="top"><el-icon><QuestionFilled /></el-icon></el-tooltip>{{ t('menu.visible') }}</span>
@@ -179,7 +179,7 @@
               </el-radio-group>
             </el-form-item>
           </el-col>
-          <el-col :span="12">
+          <el-col :span="24">
             <el-form-item>
               <template #label>
                 <span><el-tooltip :content="t('menu.statusTooltip')" placement="top"><el-icon><QuestionFilled /></el-icon></el-tooltip>{{ t('menu.menuStatus') }}</span>

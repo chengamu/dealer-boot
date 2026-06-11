@@ -426,6 +426,17 @@ CREATE TABLE IF NOT EXISTS sys_notice (
 CREATE INDEX IF NOT EXISTS idx_sys_notice_tenant_status_time ON sys_notice (tenant_id, status, create_time DESC);
 CREATE INDEX IF NOT EXISTS idx_sys_notice_type ON sys_notice (notice_type);
 
+CREATE TABLE IF NOT EXISTS sys_notice_read (
+    read_id bigint PRIMARY KEY,
+    tenant_id bigint NOT NULL CHECK (tenant_id <> 0),
+    notice_id bigint NOT NULL REFERENCES sys_notice (notice_id) ON DELETE CASCADE,
+    user_id bigint NOT NULL,
+    read_time timestamptz NOT NULL DEFAULT now(),
+    CONSTRAINT uk_sys_notice_read_user_notice UNIQUE (tenant_id, notice_id, user_id)
+);
+CREATE INDEX IF NOT EXISTS idx_sys_notice_read_user_time ON sys_notice_read (tenant_id, user_id, read_time DESC);
+CREATE INDEX IF NOT EXISTS idx_sys_notice_read_notice ON sys_notice_read (tenant_id, notice_id);
+
 CREATE TABLE IF NOT EXISTS sys_logininfor (
     info_id bigint PRIMARY KEY,
     user_name varchar(50),
@@ -813,6 +824,13 @@ COMMENT ON COLUMN sys_notice.update_by IS '更新者';
 COMMENT ON COLUMN sys_notice.update_time IS '更新时间，UTC timestamptz';
 COMMENT ON COLUMN sys_notice.remark IS '备注';
 
+COMMENT ON TABLE sys_notice_read IS '用户公告阅读记录';
+COMMENT ON COLUMN sys_notice_read.read_id IS '阅读记录ID';
+COMMENT ON COLUMN sys_notice_read.tenant_id IS '租户ID';
+COMMENT ON COLUMN sys_notice_read.notice_id IS '公告ID';
+COMMENT ON COLUMN sys_notice_read.user_id IS '用户ID';
+COMMENT ON COLUMN sys_notice_read.read_time IS '阅读时间，UTC timestamptz';
+
 COMMENT ON TABLE sys_logininfor IS '系统访问记录表';
 COMMENT ON COLUMN sys_logininfor.info_id IS '访问ID';
 COMMENT ON COLUMN sys_logininfor.user_name IS '用户账号';
@@ -947,9 +965,10 @@ INSERT INTO sys_role (role_id, tenant_id, role_name, role_key, role_sort, data_s
 VALUES
     (1, 1, 'Super Admin', 'admin', 1, '1', true, true, '1', '0', 'system', now(), 'Platform super admin'),
     (2, 1, 'Merchant Admin', 'merchant_admin', 2, '1', true, true, '1', '0', 'system', now(), 'Default merchant admin role'),
-    (3, 1, 'Merchant Store', 'merchant_store', 3, '1', true, true, '1', '0', 'system', now(), 'Default merchant store user role')
+    (3, 1, 'Merchant Store', 'merchant_store', 3, '1', true, true, '1', '0', 'system', now(), 'Default merchant store user role'),
+    (4, 1, 'Merchant Employee', 'merchant_employee', 4, '1', true, true, '1', '0', 'system', now(), 'Default merchant employee role')
 ON CONFLICT (role_id) DO NOTHING;
-UPDATE sys_role SET tenant_id = 1 WHERE role_id IN (1, 2, 3);
+UPDATE sys_role SET tenant_id = 1 WHERE role_id IN (1, 2, 3, 4);
 
 INSERT INTO sys_user_role (user_id, role_id, tenant_id)
 VALUES (1, 1, 1)
@@ -960,8 +979,27 @@ INSERT INTO sys_config (config_id, config_name, config_key, config_value, config
 VALUES
     (1, 'Captcha enabled', 'sys.account.captchaEnabled', 'true', 'Y', 'system', now(), 'Enable captcha'),
     (2, 'Registration enabled', 'sys.account.registerUser', 'false', 'Y', 'system', now(), 'Legacy direct user registration disabled'),
-    (3, 'Initial password', 'sys.user.initPassword', '123456', 'Y', 'system', now(), 'Default password for manually created users')
+    (3, 'Initial password', 'sys.user.initPassword', '123456', 'Y', 'system', now(), 'Default password for manually created users'),
+    (11, 'OSS preview list resource', 'sys.oss.previewListResource', 'true', 'Y', 'system', now(), 'Enable OSS preview in file list')
 ON CONFLICT (config_id) DO NOTHING;
+
+INSERT INTO sys_oss_config (oss_config_id, config_key, access_key, secret_key, bucket_name, prefix, endpoint, domain, is_https, region, access_policy, status, create_by, create_time, remark)
+VALUES (1, 'minio', '02f8394e7dd656645cd4', 'Zd8FW2BsnOGCSv+LfNUb7fTe3P55J1k/', 'bocoo', '', 'localhost:9000', '', 'N', 'us-east-1', '1', '1', 'system', now(), 'Local MinIO for development')
+ON CONFLICT (oss_config_id) DO UPDATE
+SET config_key = EXCLUDED.config_key,
+    access_key = EXCLUDED.access_key,
+    secret_key = EXCLUDED.secret_key,
+    bucket_name = EXCLUDED.bucket_name,
+    prefix = EXCLUDED.prefix,
+    endpoint = EXCLUDED.endpoint,
+    domain = EXCLUDED.domain,
+    is_https = EXCLUDED.is_https,
+    region = EXCLUDED.region,
+    access_policy = EXCLUDED.access_policy,
+    status = EXCLUDED.status,
+    update_by = 'system',
+    update_time = now(),
+    remark = EXCLUDED.remark;
 
 INSERT INTO sys_dict_type (dict_id, dict_name, dict_type, status, create_by, create_time, remark)
 VALUES
@@ -993,8 +1031,8 @@ VALUES
     (104, 1, 'Post', 'sys.menu.system.post', 1, 5, 'post', 'system/post/index', '1', '0', 'C', '1', '1', 'system:post:list', 'post', 'system', now(), 'Post management'),
     (105, 1, 'Dict', 'sys.menu.system.dict', 1, 6, 'dict', 'system/dict/index', '1', '0', 'C', '1', '1', 'system:dict:list', 'dict', 'system', now(), 'Dict management'),
     (106, 1, 'Config', 'sys.menu.system.config', 1, 7, 'config', 'system/config/index', '1', '0', 'C', '1', '1', 'system:config:list', 'edit', 'system', now(), 'Config management'),
-    (107, 1, 'Merchant Audit', 'sys.menu.system.merchantAudit', 1, 8, 'tenantApplication', 'system/tenant/applications', '1', '0', 'C', '1', '1', 'system:tenant:application:list', 'peoples', 'system', now(), 'Merchant tenant audit'),
-    (108, 1, 'Merchant Profile', 'sys.menu.system.merchantProfile', 1, 9, 'merchantProfile', 'system/merchant/profile', '1', '0', 'C', '1', '1', 'system:merchant:profile:list', 'peoples', 'system', now(), 'Merchant profile management'),
+    (107, 1, 'Merchant Audit', 'sys.menu.system.merchantAudit', 1, 8, 'tenantApplication', 'system/tenant/applications', '1', '0', 'C', '1', '1', 'system:tenant:application:list', 'shop', 'system', now(), 'Merchant tenant audit'),
+    (108, 1, 'Merchant Profile', 'sys.menu.system.merchantProfile', 1, 9, 'merchantProfile', 'system/merchant/profile', '1', '0', 'C', '1', '1', 'system:merchant:profile:list', 'store', 'system', now(), 'Merchant profile management'),
     (1001, 1, 'Tenant Application Query', 'sys.menu.system.merchantAudit.query', 107, 1, '#', '', '1', '0', 'F', '1', '1', 'system:tenant:application:query', '#', 'system', now(), ''),
     (1002, 1, 'Tenant Application Approve', 'sys.menu.system.merchantAudit.approve', 107, 2, '#', '', '1', '0', 'F', '1', '1', 'system:tenant:application:approve', '#', 'system', now(), ''),
     (1004, 1, 'Tenant Application Reject', 'sys.menu.system.merchantAudit.reject', 107, 3, '#', '', '1', '0', 'F', '1', '1', 'system:tenant:application:reject', '#', 'system', now(), ''),
@@ -1061,12 +1099,17 @@ UPDATE sys_role_menu SET tenant_id = 1 WHERE role_id = 1;
 
 INSERT INTO sys_menu (menu_id, tenant_id, menu_name, i18n_key, parent_id, order_num, path, component, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, remark)
 VALUES
-    (19500, 1, 'Merchant Management', 'sys.menu.merchantManagement', 0, 20, 'merchantManagement', NULL, '1', '0', 'M', '1', '1', NULL, 'peoples', 'system', now(), 'Merchant management'),
+    (19500, 1, 'Merchant Management', 'sys.menu.merchantManagement', 0, 20, 'merchantManagement', NULL, '1', '0', 'M', '1', '1', NULL, 'store', 'system', now(), 'Merchant management'),
     (19501, 1, 'Legal Content', 'sys.menu.system.legalDocument', 1, 11, 'legal/document', 'system/legal/document', '1', '0', 'C', '1', '1', 'system:legal:document:list', 'documentation', 'system', now(), 'Legal content'),
     (20005, 1, 'Legal Content Query', 'sys.menu.system.legalDocument.query', 19501, 1, '#', '', '1', '0', 'F', '1', '1', 'system:legal:document:query', '#', 'system', now(), ''),
     (20006, 1, 'Legal Content Add', 'sys.menu.system.legalDocument.add', 19501, 2, '#', '', '1', '0', 'F', '1', '1', 'system:legal:document:add', '#', 'system', now(), ''),
     (20007, 1, 'Legal Content Edit', 'sys.menu.system.legalDocument.edit', 19501, 3, '#', '', '1', '0', 'F', '1', '1', 'system:legal:document:edit', '#', 'system', now(), ''),
-    (20008, 1, 'Legal Content Delete', 'sys.menu.system.legalDocument.remove', 19501, 4, '#', '', '1', '0', 'F', '1', '1', 'system:legal:document:remove', '#', 'system', now(), '')
+    (20008, 1, 'Legal Content Delete', 'sys.menu.system.legalDocument.remove', 19501, 4, '#', '', '1', '0', 'F', '1', '1', 'system:legal:document:remove', '#', 'system', now(), ''),
+    (20009, 1, 'Merchant Staff Management', 'sys.menu.system.merchantStaff', 19500, 3, 'merchantStaff', 'system/merchant/users', '1', '0', 'C', '1', '1', 'merchant:user:list', 'customer', 'system', now(), 'Merchant staff management'),
+    (20010, 1, 'Merchant Staff Query', 'sys.menu.system.merchantStaff.query', 20009, 1, '#', '', '1', '0', 'F', '1', '1', 'merchant:user:query', '#', 'system', now(), ''),
+    (20011, 1, 'Merchant Staff Add', 'sys.menu.system.merchantStaff.add', 20009, 2, '#', '', '1', '0', 'F', '1', '1', 'merchant:user:add', '#', 'system', now(), ''),
+    (20012, 1, 'Merchant Staff Edit', 'sys.menu.system.merchantStaff.edit', 20009, 3, '#', '', '1', '0', 'F', '1', '1', 'merchant:user:edit', '#', 'system', now(), ''),
+    (20013, 1, 'Merchant Staff Delete', 'sys.menu.system.merchantStaff.remove', 20009, 4, '#', '', '1', '0', 'F', '1', '1', 'merchant:user:remove', '#', 'system', now(), '')
 ON CONFLICT (menu_id) DO UPDATE
 SET menu_name = EXCLUDED.menu_name,
     i18n_key = EXCLUDED.i18n_key,
@@ -1074,16 +1117,21 @@ SET menu_name = EXCLUDED.menu_name,
     order_num = EXCLUDED.order_num,
     path = EXCLUDED.path,
     component = EXCLUDED.component,
+    is_frame = EXCLUDED.is_frame,
+    is_cache = EXCLUDED.is_cache,
     menu_type = EXCLUDED.menu_type,
     visible = EXCLUDED.visible,
     status = EXCLUDED.status,
+    perms = EXCLUDED.perms,
+    icon = EXCLUDED.icon,
     tenant_id = EXCLUDED.tenant_id,
     update_by = 'system',
     update_time = now();
 UPDATE sys_menu SET parent_id = 19500, order_num = 1, path = 'tenantApplication' WHERE menu_id = 107;
 UPDATE sys_menu SET parent_id = 19500, order_num = 2, path = 'merchantProfile' WHERE menu_id = 108;
 INSERT INTO sys_role_menu (role_id, menu_id, tenant_id)
-VALUES (1, 19500, 1), (1, 19501, 1), (1, 20004, 1), (1, 20005, 1), (1, 20006, 1), (1, 20007, 1), (1, 20008, 1)
+VALUES (1, 19500, 1), (1, 19501, 1), (1, 20004, 1), (1, 20005, 1), (1, 20006, 1), (1, 20007, 1), (1, 20008, 1),
+       (1, 20009, 1), (1, 20010, 1), (1, 20011, 1), (1, 20012, 1), (1, 20013, 1)
 ON CONFLICT DO NOTHING;
 
 CREATE TABLE IF NOT EXISTS sys_legal_document (

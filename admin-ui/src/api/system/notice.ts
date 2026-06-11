@@ -8,13 +8,44 @@ export interface NoticeQuery extends PageQuery {
 }
 
 export interface Notice {
-  noticeId?: number
+  noticeId?: number | string
   noticeTitle?: string
   noticeType?: string
   noticeContent?: string
   status?: string
   createBy?: string
   createTime?: string
+  read?: boolean
+  readTime?: string
+}
+
+export function listMyNotices(query: PageQuery) {
+  return requestPage<Notice>({
+    url: '/system/notice/my/list',
+    method: 'get',
+    params: query
+  })
+}
+
+export function getMyUnreadNoticeCount() {
+  return requestData<number>({
+    url: '/system/notice/my/unread-count',
+    method: 'get'
+  })
+}
+
+export function getMyNotice(noticeId: number | string) {
+  return requestData<Notice>({
+    url: `/system/notice/my/${noticeId}`,
+    method: 'get'
+  })
+}
+
+export function markAllMyNoticesRead() {
+  return request({
+    url: '/system/notice/my/read-all',
+    method: 'put'
+  })
 }
 
 export function listNotice(query: NoticeQuery) {

@@ -82,12 +82,10 @@ public class SysProfileController extends BaseController {
         }
         SysUserBo user = BeanUtil.toBean(profile, SysUserBo.class);
         user.setUserId(LoginHelper.getUserId());
+        user.setEmail(null);
         String username = LoginHelper.getUsername();
         if (StringUtils.isNotEmpty(user.getPhonenumber()) && !userService.checkPhoneUnique(user)) {
-            return R.fail("修改用户'" + username + "'失败，手机号码已存在");
-        }
-        if (StringUtils.isNotEmpty(user.getEmail()) && !userService.checkEmailUnique(user)) {
-            return R.fail("修改用户'" + username + "'失败，邮箱账号已存在");
+            return R.fail(MessageUtils.message("profile.phone.exists", username));
         }
         if (userService.updateUserProfile(user) > 0) {
             return R.ok();
@@ -140,9 +138,9 @@ public class SysProfileController extends BaseController {
                 return R.fail("文件格式不正确，请上传" + Arrays.toString(MimeTypeUtils.IMAGE_EXTENSION) + "格式");
             }
             SysOssVo oss = sysOssService.upload(avatarfile);
-            String avatar = oss.getUrl();
+            String avatar = oss.getOssId().toString();
             if (userService.updateUserAvatar(LoginHelper.getUsername(), avatar)) {
-                return R.ok(MessageUtils.message("common.upload.success"), Map.of("imgUrl", avatar));
+                return R.ok(MessageUtils.message("common.upload.success"), Map.of("imgUrl", oss.getUrl()));
             }
         }
         return R.fail(MessageUtils.message("common.upload.failed"));

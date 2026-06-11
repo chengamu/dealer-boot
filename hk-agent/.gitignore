@@ -1,0 +1,9 @@
+logs/
+__pycache__/
+.pytest_cache/
+web/frontend/node_modules/
+web/frontend/dist/
+web/frontend/.vite/
+web/frontend/*.tsbuildinfo
+web/frontend/vite.config.js
+web/frontend/vite.config.d.ts

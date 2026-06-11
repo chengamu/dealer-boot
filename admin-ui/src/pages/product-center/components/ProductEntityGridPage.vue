@@ -1,24 +1,5 @@
 <template>
-  <div class="product-grid-page">
-    <div class="product-grid-page__head">
-      <div>
-        <h2>{{ t(config.titleKey) }}</h2>
-        <p>{{ t(config.descriptionKey) }}</p>
-      </div>
-      <el-space wrap>
-        <el-button v-if="!config.readonly" type="primary" icon="Plus" @click="handleAdd" v-hasPermi="[config.permissions.add]">
-          {{ t('common.add') }}
-        </el-button>
-        <el-button v-if="!config.readonly" type="success" icon="Edit" :disabled="single" @click="handleUpdate()" v-hasPermi="[config.permissions.edit]">
-          {{ t('common.edit') }}
-        </el-button>
-        <el-button v-if="!config.readonly" type="danger" icon="Delete" :disabled="multiple" @click="handleDelete()" v-hasPermi="[config.permissions.remove]">
-          {{ t('common.delete') }}
-        </el-button>
-      </el-space>
-    </div>
-
-    <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true" class="product-grid-page__search">
+    <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true" label-width="80px" class="product-grid-page__search">
       <el-form-item v-for="field in searchFields" :key="field.prop" :label="t(field.labelKey)" :prop="field.prop">
         <el-select
           v-if="field.type === 'status' || field.type === 'select'"
@@ -49,8 +30,31 @@
         <el-button type="primary" icon="Search" @click="handleQuery">{{ t('common.search') }}</el-button>
         <el-button icon="Refresh" @click="resetQuery">{{ t('common.reset') }}</el-button>
       </el-form-item>
-      <right-toolbar v-model:showSearch="showSearch" @queryTable="getList" />
     </el-form>
+
+    <el-row :gutter="10" class="mb8 product-grid-page__toolbar">
+      <el-col :span="1.5">
+        <el-button v-if="!config.readonly" type="primary" plain icon="Plus" @click="handleAdd" v-hasPermi="[config.permissions.add]">
+          {{ t('common.add') }}
+        </el-button>
+      </el-col>
+      <el-col :span="1.5">
+        <el-button v-if="!config.readonly" type="success" plain icon="Edit" :disabled="single" @click="handleUpdate()" v-hasPermi="[config.permissions.edit]">
+          {{ t('common.edit') }}
+        </el-button>
+      </el-col>
+      <el-col :span="1.5">
+        <el-button v-if="!config.readonly" type="danger" plain icon="Delete" :disabled="multiple" @click="handleDelete()" v-hasPermi="[config.permissions.remove]">
+          {{ t('common.delete') }}
+        </el-button>
+      </el-col>
+      <el-col v-for="action in config.toolbarActions || []" :key="action.labelKey" :span="1.5">
+        <el-button :type="action.type || 'primary'" plain :icon="action.icon" @click="action.handler" v-hasPermi="[action.permission]">
+          {{ t(action.labelKey) }}
+        </el-button>
+      </el-col>
+      <right-toolbar v-model:showSearch="showSearch" @queryTable="getList" />
+    </el-row>
 
     <el-table v-loading="loading" :data="rows" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="48" align="center" />
@@ -150,7 +154,6 @@
       </el-descriptions>
       <el-empty v-if="!referenceResult.references?.length" :description="t('productCenter.common.noReferences')" />
     </el-drawer>
-  </div>
 </template>
 
 <script setup lang="ts">
@@ -198,6 +201,13 @@ export interface ProductGridConfig {
     permission: string
     disabled?: (row: ProductRecord) => boolean
     handler: (row: ProductRecord) => void | Promise<void>
+  }>
+  toolbarActions?: Array<{
+    labelKey: string
+    icon?: string
+    type?: 'primary' | 'success' | 'warning' | 'danger' | 'info'
+    permission: string
+    handler: () => void | Promise<void>
   }>
   api: {
     list: (query?: ProductPageQuery) => Promise<{ rows?: ProductRecord[]; total?: number }>
@@ -431,36 +441,12 @@ defineExpose({
 </script>
 
 <style scoped lang="scss">
-.product-grid-page {
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  padding: 16px;
-}
-
-.product-grid-page__head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 16px;
-
-  h2 {
-    margin: 0;
-    color: #111827;
-    font-size: 18px;
-    font-weight: 700;
-  }
-
-  p {
-    margin: 6px 0 0;
-    color: #6b7280;
-    font-size: 13px;
-  }
-}
-
 .product-grid-page__search {
   margin-bottom: 8px;
+}
+
+.product-grid-page__toolbar {
+  align-items: center;
 }
 
 .product-grid-page__drawer-actions {

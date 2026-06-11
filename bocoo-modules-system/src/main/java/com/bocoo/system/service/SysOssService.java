@@ -123,6 +123,32 @@ public class SysOssService implements OssService {
         return String.join(StringUtils.SEPARATOR, list);
     }
 
+    public String resolveUrl(String storedValue) {
+        if (StringUtils.isBlank(storedValue) || isExternalUrl(storedValue)) {
+            return storedValue;
+        }
+        Long ossId = Convert.toLong(storedValue, null);
+        if (ossId != null) {
+            SysOssVo oss = ossMapper.selectVoById(ossId);
+            if (ObjectUtil.isNotNull(oss)) {
+                return matchingUrl(oss).getUrl();
+            }
+        }
+        return buildUrl(OssFactory.instance().getConfigKey(), storedValue);
+    }
+
+    public String buildUrl(String configKey, String objectKey) {
+        if (StringUtils.isBlank(objectKey) || isExternalUrl(objectKey)) {
+            return objectKey;
+        }
+        OssClient storage = StringUtils.isBlank(configKey) ? OssFactory.instance() : OssFactory.instance(configKey);
+        return storage.getUrl() + "/" + objectKey;
+    }
+
+    public String getObjectKey(SysOssVo oss) {
+        return ObjectUtil.isNull(oss) ? StringUtils.EMPTY : oss.getFileName();
+    }
+
     /**
      * 构建查询条件包装器
      *
@@ -169,7 +195,7 @@ public class SysOssService implements OssService {
         FileUtils.setAttachmentResponseHeader(response, sysOss.getOriginalName());
         response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE + "; charset=UTF-8");
         OssClient storage = OssFactory.instance(sysOss.getService());
-        try (InputStream inputStream = storage.getObjectContent(sysOss.getUrl())) {
+        try (InputStream inputStream = storage.getObjectContent(sysOss.getFileName())) {
             int available = inputStream.available();
             IoUtil.copy(inputStream, response.getOutputStream(), available);
             response.setContentLength(available);
@@ -230,7 +256,7 @@ public class SysOssService implements OssService {
      */
     private SysOssVo buildResultEntity(String originalfileName, String suffix, String configKey, UploadResult uploadResult) {
         SysOss oss = new SysOss();
-        oss.setUrl(uploadResult.getUrl());
+        oss.setUrl(uploadResult.getFilename());
         oss.setFileSuffix(suffix);
         oss.setFileName(uploadResult.getFilename());
         oss.setOriginalName(originalfileName);
@@ -256,7 +282,7 @@ public class SysOssService implements OssService {
         List<SysOss> list = ossMapper.selectBatchIds(ids);
         for (SysOss sysOss : list) {
             OssClient storage = OssFactory.instance(sysOss.getService());
-            storage.delete(sysOss.getUrl());
+            storage.delete(sysOss.getFileName());
         }
         return ossMapper.deleteBatchIds(ids) > 0;
     }
@@ -272,8 +298,14 @@ public class SysOssService implements OssService {
         // 仅修改桶类型为 private 的URL，临时URL时长为120s
         if (AccessPolicyType.PRIVATE == storage.getAccessPolicy() && isPreviewListResource()) {
             oss.setUrl(storage.getPrivateUrl(oss.getFileName(), 120));
+        } else {
+            oss.setUrl(buildUrl(oss.getService(), oss.getFileName()));
         }
         return oss;
+    }
+
+    private boolean isExternalUrl(String value) {
+        return StringUtils.startsWithAny(value, "http://", "https://", "data:", "/");
     }
 
     private boolean isPreviewListResource() {

@@ -1,6 +1,7 @@
 package com.bocoo.system.controller.system;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
+import com.bocoo.common.core.utils.StringUtils;
 import com.bocoo.common.log.annotation.Log;
 import com.bocoo.common.web.core.BaseController;
 import com.bocoo.common.mybatis.core.page.PageQuery;
@@ -134,7 +135,10 @@ public class SysConfigController extends BaseController {
     @Operation(summary = "根据参数键名修改参数配置", description = "根据参数键名修改参数配置")
     public R<Void> updateByKey(
             @Parameter(description = "参数配置信息", required = true)
-            @Validated @RequestBody SysConfigBo config) {
+            @RequestBody SysConfigBo config) {
+        if (StringUtils.isBlank(config.getConfigKey()) || StringUtils.isBlank(config.getConfigValue())) {
+            return R.fail("参数键名或参数键值不能为空");
+        }
         configService.updateConfig(config);
         return R.ok();
     }

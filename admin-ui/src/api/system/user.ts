@@ -16,6 +16,7 @@ export interface UserQuery extends PageQuery {
 
 export interface SysUser {
   userId?: number
+  tenantId?: number
   deptId?: number
   userName?: string
   nickName?: string
@@ -79,6 +80,13 @@ export function listUser(query?: UserQuery) {
 export function getUser(userId?: number | string) {
   return request<UserDetail>({
     url: `/system/user/${parseStrEmpty(userId)}`,
+    method: 'get'
+  })
+}
+
+export function getInitPassword() {
+  return request<string>({
+    url: '/system/user/init-password',
     method: 'get'
   })
 }

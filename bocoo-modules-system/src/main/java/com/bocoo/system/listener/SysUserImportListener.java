@@ -6,15 +6,14 @@ import cn.hutool.core.util.ObjectUtil;
 import com.alibaba.excel.context.AnalysisContext;
 import com.alibaba.excel.event.AnalysisEventListener;
 import com.bocoo.common.core.exception.ServiceException;
-import com.bocoo.common.core.utils.SpringUtils;
 import com.bocoo.common.core.utils.ValidatorUtils;
 import com.bocoo.common.excel.core.ExcelListener;
 import com.bocoo.common.excel.core.ExcelResult;
 import com.bocoo.common.satoken.utils.LoginHelper;
+import com.bocoo.common.core.utils.SpringUtils;
 import com.bocoo.system.domain.bo.SysUserBo;
 import com.bocoo.system.domain.vo.SysUserImportVo;
 import com.bocoo.system.domain.vo.SysUserVo;
-import com.bocoo.system.service.SysConfigService;
 import com.bocoo.system.service.SysUserService;
 import lombok.extern.slf4j.Slf4j;
 
@@ -30,8 +29,6 @@ public class SysUserImportListener extends AnalysisEventListener<SysUserImportVo
 
     private final SysUserService userService;
 
-    private final String password;
-
     private final Boolean isUpdateSupport;
 
     private final String operName;
@@ -42,9 +39,7 @@ public class SysUserImportListener extends AnalysisEventListener<SysUserImportVo
     private final StringBuilder failureMsg = new StringBuilder();
 
     public SysUserImportListener(Boolean isUpdateSupport) {
-        String initPassword = SpringUtils.getBean(SysConfigService.class).selectConfigByKey("sys.user.initPassword");
         this.userService = SpringUtils.getBean(SysUserService.class);
-        this.password = BCrypt.hashpw(initPassword);
         this.isUpdateSupport = isUpdateSupport;
         this.operName = LoginHelper.getUsername();
     }
@@ -57,7 +52,7 @@ public class SysUserImportListener extends AnalysisEventListener<SysUserImportVo
             if (ObjectUtil.isNull(sysUser)) {
                 SysUserBo user = BeanUtil.toBean(userVo, SysUserBo.class);
                 ValidatorUtils.validate(user);
-                user.setPassword(password);
+                user.setPassword(BCrypt.hashpw(userService.resolveInitialPassword(user.getPassword())));
                 user.setCreateBy(operName);
                 userService.insertUser(user);
                 successNum++;

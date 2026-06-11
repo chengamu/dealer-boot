@@ -322,84 +322,6 @@ COMMENT ON COLUMN pc_sales_variant.update_time IS '更新时间，UTC timestampt
 CREATE UNIQUE INDEX IF NOT EXISTS uk_pc_sales_variant_variant_code_active ON pc_sales_variant (variant_code) WHERE COALESCE(del_flag, '0') = '0';
 CREATE INDEX IF NOT EXISTS idx_pc_sales_variant_status ON pc_sales_variant (status);
 
--- 产品能力 Batch 1 菜单和权限草案。
--- 菜单最多两级：一级“产品能力”，二级直接进入已落地页面。
-INSERT INTO sys_menu (menu_id, tenant_id, menu_name, i18n_key, parent_id, order_num, path, component, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, remark)
-VALUES
-    (24000, 1, 'Product Capability', 'productCenter.menu.title', 0, 30, 'product-center', NULL, '1', '0', 'M', '1', '1', NULL, 'component', 'system', now(), 'Shared product capability center'),
-    (24001, 1, 'Workbench', 'productCenter.menu.workbench', 24000, 1, 'workbench', 'product-center/workbench', '1', '0', 'C', '1', '1', 'product:center:view', 'dashboard', 'system', now(), 'Product capability workbench'),
-    (24002, 1, 'Base Info', 'productCenter.menu.base', 24000, 2, 'base', 'product-center/base', '1', '0', 'C', '0', '1', 'product:base:list', 'dict', 'system', now(), 'Legacy combined base information entry'),
-    (24003, 1, 'Product Models Legacy', 'productCenter.menu.model', 24000, 3, 'model', 'product-center/model', '1', '0', 'C', '0', '1', 'product:model:list', 'tree-table', 'system', now(), 'Legacy combined product models entry'),
-    (24004, 1, 'Components / Assets', 'productCenter.menu.assets', 24000, 4, 'assets', 'product-center/assets', '1', '0', 'C', '0', '1', 'product:asset:list', 'upload', 'system', now(), 'Legacy combined components and media assets entry'),
-    (24005, 1, 'Config Template', 'productCenter.menu.template', 24000, 9, 'template', 'product-center/template', '1', '0', 'C', '1', '1', 'product:template:list', 'form', 'system', now(), 'Config template workbench'),
-    (24010, 1, 'Workbench View', 'productCenter.menu.workbench', 24001, 1, '#', '', '1', '0', 'F', '1', '1', 'product:center:view', '#', 'system', now(), ''),
-    (24020, 1, 'Base List', 'productCenter.menu.base', 24002, 1, '#', '', '1', '0', 'F', '1', '1', 'product:base:list', '#', 'system', now(), ''),
-    (24021, 1, 'Base Add', 'common.add', 24002, 2, '#', '', '1', '0', 'F', '1', '1', 'product:base:add', '#', 'system', now(), ''),
-    (24022, 1, 'Base Edit', 'common.edit', 24002, 3, '#', '', '1', '0', 'F', '1', '1', 'product:base:edit', '#', 'system', now(), ''),
-    (24023, 1, 'Base Remove', 'common.delete', 24002, 4, '#', '', '1', '0', 'F', '1', '1', 'product:base:remove', '#', 'system', now(), ''),
-    (24024, 1, 'Base Reference', 'productCenter.common.references', 24002, 5, '#', '', '1', '0', 'F', '1', '1', 'product:base:reference', '#', 'system', now(), ''),
-    (24030, 1, 'Model List', 'productCenter.menu.model', 24003, 1, '#', '', '1', '0', 'F', '1', '1', 'product:model:list', '#', 'system', now(), ''),
-    (24031, 1, 'Model Add', 'common.add', 24003, 2, '#', '', '1', '0', 'F', '1', '1', 'product:model:add', '#', 'system', now(), ''),
-    (24032, 1, 'Model Edit', 'common.edit', 24003, 3, '#', '', '1', '0', 'F', '1', '1', 'product:model:edit', '#', 'system', now(), ''),
-    (24033, 1, 'Model Remove', 'common.delete', 24003, 4, '#', '', '1', '0', 'F', '1', '1', 'product:model:remove', '#', 'system', now(), ''),
-    (24040, 1, 'Asset List', 'productCenter.menu.assets', 24004, 1, '#', '', '1', '0', 'F', '1', '1', 'product:asset:list', '#', 'system', now(), ''),
-    (24041, 1, 'Asset Upload', 'common.upload', 24004, 2, '#', '', '1', '0', 'F', '1', '1', 'product:asset:upload', '#', 'system', now(), ''),
-    (24042, 1, 'Asset Bind', 'productCenter.binding.title', 24004, 3, '#', '', '1', '0', 'F', '1', '1', 'product:asset:bind', '#', 'system', now(), ''),
-    (24043, 1, 'Asset Reference', 'productCenter.common.references', 24004, 4, '#', '', '1', '0', 'F', '1', '1', 'product:asset:reference', '#', 'system', now(), ''),
-    (24050, 1, 'Template List', 'productCenter.menu.template', 24005, 1, '#', '', '1', '0', 'F', '1', '1', 'product:template:list', '#', 'system', now(), ''),
-    (24051, 1, 'Template Edit', 'common.edit', 24005, 2, '#', '', '1', '0', 'F', '1', '1', 'product:template:edit', '#', 'system', now(), ''),
-    (24052, 1, 'Template Rule', 'productCenter.template.rule', 24005, 3, '#', '', '1', '0', 'F', '1', '1', 'product:template:rule', '#', 'system', now(), ''),
-    (24053, 1, 'Template Test', 'productCenter.template.evaluate', 24005, 4, '#', '', '1', '0', 'F', '1', '1', 'product:template:test', '#', 'system', now(), '')
-ON CONFLICT (menu_id) DO UPDATE
-SET tenant_id = EXCLUDED.tenant_id,
-    menu_name = EXCLUDED.menu_name,
-    i18n_key = EXCLUDED.i18n_key,
-    parent_id = EXCLUDED.parent_id,
-    order_num = EXCLUDED.order_num,
-    path = EXCLUDED.path,
-    component = EXCLUDED.component,
-    is_frame = EXCLUDED.is_frame,
-    is_cache = EXCLUDED.is_cache,
-    menu_type = EXCLUDED.menu_type,
-    visible = EXCLUDED.visible,
-    status = EXCLUDED.status,
-    perms = EXCLUDED.perms,
-    icon = EXCLUDED.icon,
-    update_by = 'system',
-    update_time = now();
-
-INSERT INTO sys_menu (menu_id, tenant_id, menu_name, i18n_key, parent_id, order_num, path, component, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, remark)
-VALUES
-    (24100, 1, 'Product Categories', 'productCenter.menu.categories', 24000, 2, 'categories', 'product-center/base', '1', '0', 'C', '1', '1', 'product:base:list', 'tree-table', 'system', now(), 'Product category master data'),
-    (24101, 1, 'Materials', 'productCenter.menu.materials', 24000, 3, 'materials', 'product-center/base', '1', '0', 'C', '1', '1', 'product:base:list', 'dict', 'system', now(), 'Product material master data'),
-    (24102, 1, 'Components', 'productCenter.menu.components', 24000, 4, 'components', 'product-center/base', '1', '0', 'C', '1', '1', 'product:base:list', 'component', 'system', now(), 'Product component library'),
-    (24103, 1, 'Media Assets', 'productCenter.menu.mediaAssets', 24000, 5, 'media-assets', 'product-center/assets', '1', '0', 'C', '1', '1', 'product:asset:list', 'upload', 'system', now(), 'Product media asset library'),
-    (24104, 1, 'Media Bindings', 'productCenter.menu.mediaBindings', 24000, 6, 'media-bindings', 'product-center/assets', '1', '0', 'C', '1', '1', 'product:asset:list', 'link', 'system', now(), 'Product media binding management'),
-    (24105, 1, 'Product Models', 'productCenter.menu.models', 24000, 7, 'models', 'product-center/model', '1', '0', 'C', '1', '1', 'product:model:list', 'tree-table', 'system', now(), 'Product model master data'),
-    (24106, 1, 'Sales Variants', 'productCenter.menu.salesVariants', 24000, 8, 'sales-variants', 'product-center/model', '1', '0', 'C', '1', '1', 'product:model:list', 'list', 'system', now(), 'Product sales variant management')
-ON CONFLICT (menu_id) DO UPDATE
-SET tenant_id = EXCLUDED.tenant_id,
-    menu_name = EXCLUDED.menu_name,
-    i18n_key = EXCLUDED.i18n_key,
-    parent_id = EXCLUDED.parent_id,
-    order_num = EXCLUDED.order_num,
-    path = EXCLUDED.path,
-    component = EXCLUDED.component,
-    is_frame = EXCLUDED.is_frame,
-    is_cache = EXCLUDED.is_cache,
-    menu_type = EXCLUDED.menu_type,
-    visible = EXCLUDED.visible,
-    status = EXCLUDED.status,
-    perms = EXCLUDED.perms,
-    icon = EXCLUDED.icon,
-    update_by = 'system',
-    update_time = now();
-
-INSERT INTO sys_role_menu (role_id, menu_id, tenant_id)
-SELECT 1, menu_id, 1 FROM sys_menu
-WHERE menu_id BETWEEN 24000 AND 24199
-ON CONFLICT DO NOTHING;
-
 -- 产品配置模板和规则 Batch 2 草案。
 
 CREATE TABLE IF NOT EXISTS pc_config_template (
@@ -837,19 +759,6 @@ COMMENT ON COLUMN pc_price_rule_item.update_by IS '更新者';
 COMMENT ON COLUMN pc_price_rule_item.update_time IS '更新时间，UTC timestamptz';
 CREATE INDEX IF NOT EXISTS idx_pc_price_rule_item_status ON pc_price_rule_item (status);
 
-INSERT INTO sys_menu (menu_id, tenant_id, parent_id, menu_name, i18n_key, order_num, path, component, query_param, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, update_by, update_time, remark)
-VALUES
-    (24006, 1, 24000, 'Pricing', 'productCenter.menu.pricing', 10, 'pricing', 'product-center/pricing', NULL, 1, 0, 'C', '1', '1', 'product:price:list', 'money', 'admin', now(), '', NULL, '产品能力-价格中心')
-ON CONFLICT (menu_id) DO UPDATE SET tenant_id = EXCLUDED.tenant_id, parent_id = EXCLUDED.parent_id, menu_name = EXCLUDED.menu_name, i18n_key = EXCLUDED.i18n_key, order_num = EXCLUDED.order_num, path = EXCLUDED.path, component = EXCLUDED.component, visible = EXCLUDED.visible, status = EXCLUDED.status, perms = EXCLUDED.perms, icon = EXCLUDED.icon;
-
-INSERT INTO sys_menu (menu_id, tenant_id, parent_id, menu_name, i18n_key, order_num, path, component, query_param, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, update_by, update_time, remark)
-VALUES
-    (24060, 1, 24006, 'Pricing Query', 'common.search', 1, '#', NULL, NULL, 1, 0, 'F', '1', '1', 'product:price:list', '#', 'admin', now(), '', NULL, '价格中心查询'),
-    (24061, 1, 24006, 'Pricing Edit', 'common.edit', 2, '#', NULL, NULL, 1, 0, 'F', '1', '1', 'product:price:edit', '#', 'admin', now(), '', NULL, '价格中心维护'),
-    (24062, 1, 24006, 'Pricing Test', 'productCenter.price.calculate', 3, '#', NULL, NULL, 1, 0, 'F', '1', '1', 'product:price:test', '#', 'admin', now(), '', NULL, '价格试算')
-ON CONFLICT (menu_id) DO UPDATE SET tenant_id = EXCLUDED.tenant_id, parent_id = EXCLUDED.parent_id, menu_name = EXCLUDED.menu_name, i18n_key = EXCLUDED.i18n_key, order_num = EXCLUDED.order_num, visible = EXCLUDED.visible, status = EXCLUDED.status, perms = EXCLUDED.perms;
-
-
 -- =====================================================
 -- Batch 2 发布检查、审批、发布包与同步 Outbox
 -- 说明：发布包为不可变快照；所有时间字段按 UTC 语义存储，不使用 Redis 保存权威快照。
@@ -1213,71 +1122,17 @@ COMMENT ON COLUMN pc_import_row_issue.update_time IS '更新时间，UTC timesta
 CREATE INDEX IF NOT EXISTS idx_pc_import_issue_batch ON pc_import_row_issue(batch_id, row_no);
 CREATE INDEX IF NOT EXISTS idx_pc_import_issue_level ON pc_import_row_issue(batch_id, issue_level, status);
 
-INSERT INTO sys_menu (menu_id, tenant_id, parent_id, menu_name, i18n_key, order_num, path, component, query_param, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, update_by, update_time, remark)
-VALUES
-    (24007, 1, 24000, 'Publish Gate', 'productCenter.menu.publish', 11, 'publish', 'product-center/publish', NULL, 1, 0, 'C', '1', '1', 'product:publish:list', 'check', 'admin', now(), '', NULL, '产品能力-测试发布')
-ON CONFLICT (menu_id) DO UPDATE SET tenant_id = EXCLUDED.tenant_id, parent_id = EXCLUDED.parent_id, menu_name = EXCLUDED.menu_name, i18n_key = EXCLUDED.i18n_key, order_num = EXCLUDED.order_num, path = EXCLUDED.path, component = EXCLUDED.component, visible = EXCLUDED.visible, status = EXCLUDED.status, perms = EXCLUDED.perms, icon = EXCLUDED.icon;
-
-INSERT INTO sys_menu (menu_id, tenant_id, parent_id, menu_name, i18n_key, order_num, path, component, query_param, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, update_by, update_time, remark)
-VALUES
-    (24070, 1, 24007, 'Publish Query', 'common.search', 1, '#', NULL, NULL, 1, 0, 'F', '1', '1', 'product:publish:list', '#', 'admin', now(), '', NULL, '发布查询'),
-    (24071, 1, 24007, 'Publish Check', 'productCenter.publish.check', 2, '#', NULL, NULL, 1, 0, 'F', '1', '1', 'product:publish:check', '#', 'admin', now(), '', NULL, '发布检查'),
-    (24072, 1, 24007, 'Publish Approve', 'productCenter.publish.approve', 3, '#', NULL, NULL, 1, 0, 'F', '1', '1', 'product:publish:approve', '#', 'admin', now(), '', NULL, '发布审批'),
-    (24073, 1, 24007, 'Publish Package', 'productCenter.publish.publish', 4, '#', NULL, NULL, 1, 0, 'F', '1', '1', 'product:publish:publish', '#', 'admin', now(), '', NULL, '生成发布包'),
-    (24074, 1, 24007, 'Retry Sync', 'productCenter.publish.retrySync', 5, '#', NULL, NULL, 1, 0, 'F', '1', '1', 'product:publish:retrySync', '#', 'admin', now(), '', NULL, '重试产品能力同步')
-ON CONFLICT (menu_id) DO UPDATE SET tenant_id = EXCLUDED.tenant_id, parent_id = EXCLUDED.parent_id, menu_name = EXCLUDED.menu_name, i18n_key = EXCLUDED.i18n_key, order_num = EXCLUDED.order_num, visible = EXCLUDED.visible, status = EXCLUDED.status, perms = EXCLUDED.perms;
-
-INSERT INTO sys_menu (menu_id, tenant_id, parent_id, menu_name, i18n_key, order_num, path, component, query_param, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, update_by, update_time, remark)
-VALUES
-    (24008, 1, 24000, 'Sales View', 'productCenter.menu.salesView', 12, 'sales-view', 'product-center/sales-view', NULL, 1, 0, 'C', '1', '1', 'product:sales-view:list', 'eye', 'admin', now(), '', NULL, '产品能力-销售只读视图'),
-    (24080, 1, 24008, 'Sales View Query', 'common.search', 1, '#', NULL, NULL, 1, 0, 'F', '1', '1', 'product:sales-view:list', '#', 'admin', now(), '', NULL, '销售只读查询'),
-    (24081, 1, 24008, 'Build Order Snapshot', 'productCenter.orderSnapshot.build', 2, '#', NULL, NULL, 1, 0, 'F', '1', '1', 'product:order-snapshot:build', '#', 'admin', now(), '', NULL, '构建订单产品快照'),
-    (24082, 1, 24008, 'Snapshot Instance Query', 'common.search', 3, '#', NULL, NULL, 1, 0, 'F', '1', '1', 'product:snapshot-instance:list', '#', 'admin', now(), '', NULL, '产品能力快照实例查询'),
-    (24083, 1, 24008, 'Snapshot Instance Detail', 'common.detail', 4, '#', NULL, NULL, 1, 0, 'F', '1', '1', 'product:snapshot-instance:query', '#', 'admin', now(), '', NULL, '产品能力快照实例详情'),
-    (24084, 1, 24008, 'Build Snapshot Instance', 'productCenter.orderSnapshot.build', 5, '#', NULL, NULL, 1, 0, 'F', '1', '1', 'product:snapshot-instance:build', '#', 'admin', now(), '', NULL, '构建并保存产品能力快照实例')
-ON CONFLICT (menu_id) DO UPDATE SET tenant_id = EXCLUDED.tenant_id, parent_id = EXCLUDED.parent_id, menu_name = EXCLUDED.menu_name, i18n_key = EXCLUDED.i18n_key, order_num = EXCLUDED.order_num, path = EXCLUDED.path, component = EXCLUDED.component, visible = EXCLUDED.visible, status = EXCLUDED.status, perms = EXCLUDED.perms, icon = EXCLUDED.icon;
-
-INSERT INTO sys_menu (menu_id, tenant_id, parent_id, menu_name, i18n_key, order_num, path, component, query_param, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, update_by, update_time, remark)
-VALUES
-    (24090, 1, 24000, 'Import Batch Query', 'common.search', 90, '#', NULL, NULL, 1, 0, 'F', '1', '1', 'product:import:list', '#', 'admin', now(), '', NULL, '产品能力导入批次查询'),
-    (24091, 1, 24000, 'Import Batch Detail', 'common.detail', 91, '#', NULL, NULL, 1, 0, 'F', '1', '1', 'product:import:query', '#', 'admin', now(), '', NULL, '产品能力导入批次详情'),
-    (24092, 1, 24000, 'Import Batch Add', 'common.add', 92, '#', NULL, NULL, 1, 0, 'F', '1', '1', 'product:import:add', '#', 'admin', now(), '', NULL, '产品能力导入批次新增'),
-    (24093, 1, 24000, 'Import Batch Edit', 'common.edit', 93, '#', NULL, NULL, 1, 0, 'F', '1', '1', 'product:import:edit', '#', 'admin', now(), '', NULL, '产品能力导入批次编辑'),
-    (24094, 1, 24000, 'Import Batch Remove', 'common.delete', 94, '#', NULL, NULL, 1, 0, 'F', '1', '1', 'product:import:remove', '#', 'admin', now(), '', NULL, '产品能力导入批次删除')
-ON CONFLICT (menu_id) DO UPDATE SET tenant_id = EXCLUDED.tenant_id, parent_id = EXCLUDED.parent_id, menu_name = EXCLUDED.menu_name, i18n_key = EXCLUDED.i18n_key, order_num = EXCLUDED.order_num, visible = EXCLUDED.visible, status = EXCLUDED.status, perms = EXCLUDED.perms;
-
-INSERT INTO sys_role_menu (role_id, menu_id, tenant_id)
-SELECT 1, menu_id, 1 FROM sys_menu WHERE menu_id BETWEEN 24000 AND 24199
-ON CONFLICT (role_id, menu_id) DO NOTHING;
-
 -- =====================================================
 -- 第一阶段正式菜单、按钮和字典归一化
 -- 说明：
--- 1. 旧 24000 “Product Capability” 作为历史入口隐藏，不删除，避免破坏已存在角色授权和审计记录。
--- 2. 正式侧边栏使用三个一级菜单：基础资料、配置与价格、发布与应用。
--- 3. 菜单最多两级；页面内 tabs 只能作为局部细节，不承载正式主入口。
--- 4. 本块必须保持幂等，可重复执行到开发库。
+-- 1. 正式侧边栏使用三个一级菜单：基础资料、配置与价格、发布与应用。
+-- 2. 菜单最多两级；页面内 tabs 只能作为局部细节，不承载正式主入口。
+-- 3. 本块必须保持幂等，可重复执行到开发库。
 -- =====================================================
-
-UPDATE sys_menu
-SET visible = '0',
-    status = '0',
-    update_by = 'system',
-    update_time = now(),
-    remark = 'Shared product capability center | 第一阶段归一化后隐藏的历史产品能力父菜单'
-WHERE menu_id = 24000;
-
-UPDATE sys_menu
-SET visible = '0',
-    status = '0',
-    update_by = 'system',
-    update_time = now(),
-    remark = '第一阶段归一化后隐藏的历史产品能力草案菜单'
-WHERE menu_id BETWEEN 24001 AND 24199;
 
 INSERT INTO sys_menu (menu_id, tenant_id, parent_id, menu_name, i18n_key, order_num, path, component, query_param, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, update_by, update_time, remark)
 VALUES
-    (24200, 1, 0, 'Product Master Data', 'productCenter.menu.masterData', 30, 'product-master', NULL, NULL, '1', '0', 'M', '1', '1', NULL, 'dict', 'system', now(), NULL, NULL, '产品能力-基础资料'),
+    (24200, 1, 0, 'Product Master Data', 'productCenter.menu.masterData', 30, 'product-master', NULL, NULL, '1', '0', 'M', '1', '1', NULL, 'product', 'system', now(), NULL, NULL, '产品能力-基础资料'),
     (24300, 1, 0, 'Product Configuration Pricing', 'productCenter.menu.configPricing', 31, 'product-config', NULL, NULL, '1', '0', 'M', '1', '1', NULL, 'build', 'system', now(), NULL, NULL, '产品能力-配置与价格'),
     (24400, 1, 0, 'Product Release Application', 'productCenter.menu.releaseApplication', 32, 'product-release', NULL, NULL, '1', '0', 'M', '1', '1', NULL, 'deployment-unit', 'system', now(), NULL, NULL, '产品能力-发布与应用')
 ON CONFLICT (menu_id) DO UPDATE
@@ -1303,24 +1158,24 @@ SET tenant_id = EXCLUDED.tenant_id,
 INSERT INTO sys_menu (menu_id, tenant_id, parent_id, menu_name, i18n_key, order_num, path, component, query_param, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, update_by, update_time, remark)
 VALUES
     (24201, 1, 24200, 'Workbench', 'productCenter.menu.workbench', 1, 'workbench', 'product-center/workbench', NULL, '1', '0', 'C', '1', '1', 'product:center:view', 'dashboard', 'system', now(), NULL, NULL, '共享产品能力工作台'),
-    (24202, 1, 24200, 'Product Categories', 'productCenter.menu.categories', 2, 'categories', 'product-center/base', NULL, '1', '0', 'C', '1', '1', 'product:base:list', 'tree-table', 'system', now(), NULL, NULL, '产品分类'),
-    (24203, 1, 24200, 'Materials', 'productCenter.menu.materials', 3, 'materials', 'product-center/base', NULL, '1', '0', 'C', '1', '1', 'product:base:list', 'dict', 'system', now(), NULL, NULL, '物料管理'),
+    (24202, 1, 24200, 'Product Categories', 'productCenter.menu.categories', 2, 'categories', 'product-center/base', NULL, '1', '0', 'C', '1', '1', 'product:base:list', 'category', 'system', now(), NULL, NULL, '产品分类'),
+    (24203, 1, 24200, 'Materials', 'productCenter.menu.materials', 3, 'materials', 'product-center/base', NULL, '1', '0', 'C', '1', '1', 'product:base:list', 'inventory', 'system', now(), NULL, NULL, '物料管理'),
     (24204, 1, 24200, 'Auxiliary Materials', 'productCenter.menu.components', 4, 'components', 'product-center/base', NULL, '1', '0', 'C', '1', '1', 'product:base:list', 'component', 'system', now(), NULL, NULL, '辅材管理'),
     (24205, 1, 24200, 'Media Assets', 'productCenter.menu.mediaAssets', 5, 'media-assets', 'product-center/assets', NULL, '1', '0', 'C', '1', '1', 'product:asset:list', 'upload', 'system', now(), NULL, NULL, '资料资产'),
     (24206, 1, 24200, 'Media Bindings', 'productCenter.menu.mediaBindings', 6, 'media-bindings', 'product-center/assets', NULL, '1', '0', 'C', '1', '1', 'product:asset:list', 'link', 'system', now(), NULL, NULL, '资料绑定'),
-    (24301, 1, 24300, 'Product Models', 'productCenter.menu.models', 1, 'models', 'product-center/model', NULL, '1', '0', 'C', '1', '1', 'product:model:list', 'tree-table', 'system', now(), NULL, NULL, '产品模型'),
-    (24302, 1, 24300, 'Sales Variants', 'productCenter.menu.salesVariants', 2, 'sales-variants', 'product-center/model', NULL, '1', '0', 'C', '1', '1', 'product:model:list', 'list', 'system', now(), NULL, NULL, '销售变体'),
+    (24301, 1, 24300, 'Product Models', 'productCenter.menu.models', 1, 'models', 'product-center/model', NULL, '1', '0', 'C', '1', '1', 'product:model:list', 'product', 'system', now(), NULL, NULL, '产品模型'),
+    (24302, 1, 24300, 'Sales Variants', 'productCenter.menu.salesVariants', 2, 'sales-variants', 'product-center/model', NULL, '1', '0', 'C', '1', '1', 'product:model:list', 'sales', 'system', now(), NULL, NULL, '销售变体'),
     (24303, 1, 24300, 'Question Groups', 'productCenter.menu.questionGroups', 3, 'question-groups', 'product-center/question-groups', NULL, '1', '0', 'C', '1', '1', 'product:template:list', 'list', 'system', now(), NULL, NULL, '问题组模板'),
     (24304, 1, 24300, 'Config Template', 'productCenter.menu.template', 4, 'template', 'product-center/template', NULL, '1', '0', 'C', '1', '1', 'product:template:list', 'form', 'system', now(), NULL, NULL, '配置模板'),
     (24305, 1, 24300, 'Pricing', 'productCenter.menu.pricing', 5, 'pricing', 'product-center/pricing', NULL, '1', '0', 'C', '1', '1', 'product:price:list', 'money', 'system', now(), NULL, NULL, '价格中心'),
-    (24306, 1, 24300, 'Quote Preview', 'productCenter.menu.quotePreview', 6, 'quote-preview', 'product-center/quote-preview', NULL, '1', '0', 'C', '1', '1', 'product:price:test', 'calculator', 'system', now(), NULL, NULL, '报价预览'),
+    (24306, 1, 24300, 'Quote Preview', 'productCenter.menu.quotePreview', 6, 'quote-preview', 'product-center/quote-preview', NULL, '1', '0', 'C', '1', '1', 'product:price:test', 'quote', 'system', now(), NULL, NULL, '报价预览'),
     (24401, 1, 24400, 'Publish Gate', 'productCenter.menu.publish', 1, 'publish', 'product-center/publish', NULL, '1', '0', 'C', '1', '1', 'product:publish:list', 'check', 'system', now(), NULL, NULL, '测试发布'),
     (24402, 1, 24400, 'Approvals', 'productCenter.menu.approvals', 2, 'approvals', 'product-center/approvals', NULL, '1', '0', 'C', '1', '1', 'product:publish:list', 'validCode', 'system', now(), NULL, NULL, '审核审批'),
     (24403, 1, 24400, 'Gap Tasks', 'productCenter.menu.gapTasks', 3, 'gap-tasks', 'product-center/gap-tasks', NULL, '1', '0', 'C', '1', '1', 'product:publish:list', 'bug', 'system', now(), NULL, NULL, '缺口待办'),
     (24404, 1, 24400, 'Publish Packages', 'productCenter.menu.packages', 4, 'packages', 'product-center/packages', NULL, '1', '0', 'C', '1', '1', 'product:publish:list', 'zip', 'system', now(), NULL, NULL, '发布包'),
-    (24405, 1, 24400, 'Sync Outbox', 'productCenter.menu.syncOutbox', 5, 'sync-outbox', 'product-center/sync-outbox', NULL, '1', '0', 'C', '1', '1', 'product:publish:list', 'redis', 'system', now(), NULL, NULL, '同步日志'),
-    (24406, 1, 24400, 'Import Center', 'productCenter.menu.importCenter', 6, 'import', 'product-center/import', NULL, '1', '0', 'C', '1', '1', 'product:import:list', 'upload', 'system', now(), NULL, NULL, '导入中心'),
-    (24407, 1, 24400, 'Sales View', 'productCenter.menu.salesView', 7, 'sales-view', 'product-center/sales-view', NULL, '1', '0', 'C', '1', '1', 'product:sales-view:list', 'eye', 'system', now(), NULL, NULL, '销售只读总览')
+    (24405, 1, 24400, 'Sync Outbox', 'productCenter.menu.syncOutbox', 5, 'sync-outbox', 'product-center/sync-outbox', NULL, '1', '0', 'C', '1', '1', 'product:publish:list', 'erp', 'system', now(), NULL, NULL, '同步日志'),
+    (24406, 1, 24400, 'Import Center', 'productCenter.menu.importCenter', 6, 'import', 'product-center/import', NULL, '1', '0', 'C', '1', '1', 'product:import:list', 'import', 'system', now(), NULL, NULL, '导入中心'),
+    (24407, 1, 24400, 'Sales View', 'productCenter.menu.salesView', 7, 'sales-view', 'product-center/sales-view', NULL, '1', '0', 'C', '1', '1', 'product:sales-view:list', 'sales', 'system', now(), NULL, NULL, '销售只读总览')
 ON CONFLICT (menu_id) DO UPDATE
 SET tenant_id = EXCLUDED.tenant_id,
     parent_id = EXCLUDED.parent_id,

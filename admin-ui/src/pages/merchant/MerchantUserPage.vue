@@ -1,6 +1,11 @@
 <template>
   <div class="app-container merchant-user-page">
     <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true" label-width="96px">
+      <el-form-item v-if="isPlatformMode" :label="t('merchantProfile.merchantName')" prop="tenantId">
+        <el-select v-model="selectedTenantId" clearable filterable :placeholder="t('merchantUser.allMerchants')" style="width: 240px" @change="handleMerchantChange">
+          <el-option v-for="item in merchantOptions" :key="item.tenantId" :label="item.merchantName || item.companyName || String(item.tenantId)" :value="item.tenantId" />
+        </el-select>
+      </el-form-item>
       <el-form-item :label="t('user.userName')" prop="userName">
         <el-input v-model="queryParams.userName" :placeholder="t('user.userNamePlaceholder')" clearable style="width: 240px" @keyup.enter="handleQuery" />
       </el-form-item>
@@ -31,7 +36,7 @@
 
     <el-row :gutter="10" class="mb8">
       <el-col :span="1.5">
-        <el-button type="primary" plain icon="Plus" @click="handleAdd" v-hasPermi="['merchant:user:add']">{{ t('common.add') }}</el-button>
+        <el-button type="primary" plain icon="Plus" :disabled="requiresMerchantSelection" @click="handleAdd" v-hasPermi="['merchant:user:add']">{{ t('common.add') }}</el-button>
       </el-col>
       <el-col :span="1.5">
         <el-button type="success" plain icon="Edit" :disabled="single" @click="handleUpdate()" v-hasPermi="['merchant:user:edit']">{{ t('common.edit') }}</el-button>
@@ -55,13 +60,8 @@
           </div>
         </template>
       </el-table-column>
-      <el-table-column v-if="columns[1].visible" :label="t('user.role')" min-width="160">
-        <template #default="{ row }">
-          <el-tag v-for="role in row.roles || []" :key="role.roleId" type="info" class="mr4">{{ role.roleName }}</el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column v-if="columns[2].visible" :label="t('user.phonenumber')" align="center" prop="phonenumber" width="142" />
-      <el-table-column v-if="columns[3].visible" :label="t('user.status')" align="center" width="126">
+      <el-table-column v-if="columns[1].visible" :label="t('user.phonenumber')" align="center" prop="phonenumber" width="142" />
+      <el-table-column v-if="columns[2].visible" :label="t('user.status')" align="center" width="126">
         <template #default="{ row }">
           <el-switch
             v-model="row.status"
@@ -73,7 +73,7 @@
           />
         </template>
       </el-table-column>
-      <el-table-column v-if="columns[4].visible" :label="t('common.createTime')" align="center" prop="createTime" width="170">
+      <el-table-column v-if="columns[3].visible" :label="t('common.createTime')" align="center" prop="createTime" width="170">
         <template #default="{ row }">
           <span>{{ formatUtc(row.createTime) }}</span>
         </template>
@@ -85,7 +85,6 @@
             <template #dropdown>
               <el-dropdown-menu>
                 <el-dropdown-item @click="handleUpdate(row)" v-hasPermi="['merchant:user:edit']">{{ t('common.edit') }}</el-dropdown-item>
-                <el-dropdown-item @click="handleResetPwd(row)" v-hasPermi="['merchant:user:resetPwd']">{{ t('user.resetPassword') }}</el-dropdown-item>
                 <el-dropdown-item class="is-danger" @click="handleDelete(row)" v-hasPermi="['merchant:user:remove']">{{ t('common.delete') }}</el-dropdown-item>
               </el-dropdown-menu>
             </template>
@@ -99,52 +98,45 @@
     <el-drawer v-model="open" :title="title" size="640px" append-to-body destroy-on-close @closed="reset">
       <el-form ref="userRef" :model="form" :rules="rules" label-width="112px">
         <el-row :gutter="16">
-          <el-col :span="12" :xs="24">
+          <el-col :span="24">
             <el-form-item :label="t('user.nickName')" prop="nickName">
               <el-input v-model="form.nickName" :placeholder="t('user.nickNamePlaceholder')" maxlength="30" />
             </el-form-item>
           </el-col>
-          <el-col :span="12" :xs="24">
-            <el-form-item :label="t('user.role')">
-              <el-select v-model="form.roleIds" multiple disabled>
-                <el-option v-for="item in roleOptions" :key="item.roleId" :label="item.roleName" :value="item.roleId" />
-              </el-select>
-            </el-form-item>
-          </el-col>
         </el-row>
         <el-row v-if="form.userId === undefined" :gutter="16">
-          <el-col :span="12" :xs="24">
+          <el-col :span="24">
             <el-form-item :label="t('user.userName')" prop="userName">
               <el-input v-model="form.userName" :placeholder="t('user.userNamePlaceholder')" maxlength="100" />
             </el-form-item>
           </el-col>
-          <el-col :span="12" :xs="24">
+          <el-col :span="24">
             <el-form-item :label="t('user.password')" prop="password">
               <el-input v-model="form.password" :placeholder="t('user.passwordPlaceholder')" type="password" maxlength="20" show-password />
             </el-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="16">
-          <el-col :span="12" :xs="24">
+          <el-col :span="24">
             <el-form-item :label="t('user.phonenumber')" prop="phonenumber">
               <el-input v-model="form.phonenumber" :placeholder="t('user.phonenumberPlaceholder')" maxlength="20" />
             </el-form-item>
           </el-col>
-          <el-col :span="12" :xs="24">
+          <el-col :span="24">
             <el-form-item :label="t('user.email')" prop="email">
               <el-input v-model="form.email" :placeholder="t('user.emailPlaceholder')" maxlength="50" />
             </el-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="16">
-          <el-col :span="12" :xs="24">
+          <el-col :span="24">
             <el-form-item :label="t('user.sex')">
               <el-select v-model="form.sex" :placeholder="t('common.selectPlaceholder')">
                 <el-option v-for="dict in sys_user_sex" :key="dict.value" :label="getUserSexLabel(dict)" :value="dict.value" />
               </el-select>
             </el-form-item>
           </el-col>
-          <el-col :span="12" :xs="24">
+          <el-col :span="24">
             <el-form-item :label="t('user.status')">
               <el-radio-group v-model="form.status">
                 <el-radio v-for="dict in sys_normal_disable" :key="dict.value" :value="dict.value">{{ dict.label }}</el-radio>
@@ -169,14 +161,15 @@
 <script setup lang="ts" name="MerchantUserPage">
 import { computed, reactive, ref, watch } from 'vue'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
-import { getConfigKey } from '@/api/system/config'
-import { addMerchantUser, changeMerchantUserStatus, delMerchantUser, getMerchantUser, listMerchantUser, resetMerchantUserPwd, updateMerchantUser, type MerchantUserQuery } from '@/api/merchant/user'
-import type { SysUser, UserOptionRole } from '@/api/system/user'
+import { addMerchantUser, changeMerchantUserStatus, delMerchantUser, getMerchantUser, listMerchantUser, updateMerchantUser, type MerchantUserQuery } from '@/api/merchant/user'
+import { listMerchantProfiles, type MerchantProfile } from '@/api/merchant/profile'
+import type { SysUser } from '@/api/system/user'
 import { formatUtc, withUtcDateRange } from '@/utils/datetime'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 import { useDict } from '@/utils/dict'
 import { runUiAction } from '@/utils/action'
+import { getInitPassword } from '@/api/system/user'
 
 interface DictOption {
   label?: string
@@ -189,6 +182,14 @@ interface ColumnOption {
   visible: boolean
 }
 
+const props = withDefaults(
+  defineProps<{
+    platformMode?: boolean
+  }>(),
+  {
+    platformMode: false
+  }
+)
 const localeStore = useLocaleStore()
 const t = (key: string, params?: Record<string, string | number>) => {
   const message = getMessage(key, localeStore.language)
@@ -197,7 +198,7 @@ const t = (key: string, params?: Record<string, string | number>) => {
 }
 const { sys_normal_disable, sys_user_sex } = useDict('sys_normal_disable', 'sys_user_sex')
 
-const columnLabelKeys = ['user.userName', 'user.role', 'user.phonenumber', 'user.status', 'common.createTime']
+const columnLabelKeys = ['user.userName', 'user.phonenumber', 'user.status', 'common.createTime']
 const columns = ref<ColumnOption[]>(columnLabelKeys.map((key, index) => ({ key: index, label: t(key), visible: true })))
 watch(
   () => localeStore.language,
@@ -214,10 +215,11 @@ const loading = ref(true)
 const submitLoading = ref(false)
 const showSearch = ref(true)
 const ids = ref<Array<number | string>>([])
+const selectionRows = ref<SysUser[]>([])
 const total = ref(0)
 const dateRange = ref<string[]>([])
-const initPassword = ref('')
-const roleOptions = ref<UserOptionRole[]>([])
+const merchantOptions = ref<MerchantProfile[]>([])
+const selectedTenantId = ref<number | string>()
 const form = ref<SysUser>({})
 const queryRef = ref<FormInstance>()
 const userRef = ref<FormInstance>()
@@ -229,6 +231,8 @@ const queryParams = reactive<MerchantUserQuery>({
 const single = computed(() => ids.value.length !== 1)
 const multiple = computed(() => ids.value.length === 0)
 const title = computed(() => (form.value.userId ? t('user.editTitle') : t('user.addTitle')))
+const isPlatformMode = computed(() => props.platformMode)
+const requiresMerchantSelection = computed(() => isPlatformMode.value && !selectedTenantId.value)
 const userSexLabelKeys: Record<string, string> = {
   '0': 'user.sexMale',
   '1': 'user.sexFemale',
@@ -284,12 +288,18 @@ function reset() {
 async function getList() {
   loading.value = true
   try {
+    queryParams.tenantId = isPlatformMode.value ? selectedTenantId.value || undefined : undefined
     const response = await listMerchantUser(withDateRange(queryParams))
     userList.value = response.rows || []
     total.value = response.total || 0
   } finally {
     loading.value = false
   }
+}
+
+function handleMerchantChange() {
+  queryParams.pageNum = 1
+  getList()
 }
 
 function handleQuery() {
@@ -299,21 +309,26 @@ function handleQuery() {
 
 function resetQuery() {
   dateRange.value = []
+  if (isPlatformMode.value) {
+    selectedTenantId.value = undefined
+  }
   queryRef.value?.resetFields()
   handleQuery()
 }
 
 function handleSelectionChange(selection: SysUser[]) {
+  selectionRows.value = selection
   ids.value = selection.map((item) => String(item.userId)).filter(Boolean)
 }
 
 async function handleAdd() {
+  if (requiresMerchantSelection.value) return
   reset()
   await runUiAction(async () => {
-    const response = await getMerchantUser()
-    roleOptions.value = response.data.roles || []
+    const response = await getMerchantUser(undefined, selectedTenantId.value)
     form.value.roleIds = response.data.roleIds || []
-    form.value.password = initPassword.value
+    const initPasswordResponse = await getInitPassword()
+    form.value.password = initPasswordResponse.data || initPasswordResponse.msg || ''
     open.value = true
   })
 }
@@ -322,10 +337,13 @@ async function handleUpdate(row?: SysUser) {
   reset()
   const userId = row?.userId || ids.value[0]
   if (!userId) return
+  const targetTenantId = isPlatformMode.value ? row?.tenantId || selectionRows.value[0]?.tenantId : undefined
   await runUiAction(async () => {
-    const response = await getMerchantUser(userId)
+    const response = await getMerchantUser(userId, targetTenantId)
     form.value = response.data.user || {}
-    roleOptions.value = response.data.roles || []
+    if (targetTenantId) {
+      form.value.tenantId = Number(targetTenantId)
+    }
     form.value.roleIds = response.data.roleIds || []
     form.value.postIds = []
     open.value = true
@@ -343,6 +361,9 @@ async function submitForm() {
   if (!valid) return
   submitLoading.value = true
   try {
+    if (isPlatformMode.value) {
+      form.value.tenantId = selectedTenantId.value ? Number(selectedTenantId.value) : form.value.tenantId
+    }
     if (form.value.userId !== undefined) {
       await updateMerchantUser(form.value)
       ElMessage.success(t('common.editSuccess'))
@@ -367,7 +388,18 @@ async function handleDelete(row?: SysUser) {
     await ElMessageBox.confirm(t('user.deleteConfirm', { ids: Array.isArray(userIds) ? userIds.join(',') : userIds }), t('common.prompt'), {
       type: 'warning'
     })
-    await delMerchantUser(userIds)
+    if (isPlatformMode.value && !row && selectionRows.value.length) {
+      const rowsByTenant = selectionRows.value.reduce<Record<string, Array<number | string>>>((groups, item) => {
+        const key = String(item.tenantId || '')
+        if (!key || !item.userId) return groups
+        groups[key] ||= []
+        groups[key].push(item.userId)
+        return groups
+      }, {})
+      await Promise.all(Object.entries(rowsByTenant).map(([tenantId, rowUserIds]) => delMerchantUser(rowUserIds, tenantId)))
+    } else {
+      await delMerchantUser(userIds, isPlatformMode.value ? row?.tenantId : undefined)
+    }
     ElMessage.success(t('common.deleteSuccess'))
     await getList()
   } catch {
@@ -378,35 +410,22 @@ async function handleDelete(row?: SysUser) {
 async function handleStatusChange(row: SysUser) {
   if (!row.userId || !row.status) return
   try {
-    await changeMerchantUserStatus(row.userId, row.status)
+    await changeMerchantUserStatus(row.userId, row.status, isPlatformMode.value ? row.tenantId : undefined)
     ElMessage.success(t('common.editSuccess'))
   } catch {
     row.status = row.status === '0' ? '1' : '0'
   }
 }
 
-async function handleResetPwd(row: SysUser) {
-  if (!row.userId) return
-  try {
-    const result = await ElMessageBox.prompt(t('user.resetPasswordPrompt', { name: row.userName || '' }), t('common.prompt'), {
-      confirmButtonText: t('common.confirm'),
-      cancelButtonText: t('common.cancel'),
-      closeOnClickModal: false,
-      inputPattern: /^.{5,20}$/,
-      inputErrorMessage: t('user.passwordLength')
-    }).catch(() => undefined)
-    if (!result?.value) return
-    await resetMerchantUserPwd(row.userId, result.value)
-    ElMessage.success(t('user.resetPasswordSuccess', { password: result.value }))
-  } catch {
-    // Request interceptor already displays the backend error.
+async function initPage() {
+  if (isPlatformMode.value) {
+    const response = await listMerchantProfiles({ pageNum: 1, pageSize: 200 })
+    merchantOptions.value = response.rows || []
   }
+  await getList()
 }
 
-getList()
-getConfigKey('sys.user.initPassword').then((response) => {
-  initPassword.value = response.msg || ''
-})
+initPage()
 </script>
 
 <style scoped>

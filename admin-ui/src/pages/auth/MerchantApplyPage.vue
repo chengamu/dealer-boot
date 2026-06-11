@@ -317,7 +317,7 @@ loadCountries()
   grid-template-columns: 420px minmax(0, 1fr);
   min-height: 100vh;
   padding: 18px 18px 52px;
-  overflow: hidden;
+  overflow: auto;
   background: #eef6ff;
 }
 
@@ -434,7 +434,7 @@ h1 {
 }
 
 .apply-main {
-  padding: 64px 28px 18px;
+  padding: 96px 28px 18px;
   border-radius: 0 16px 16px 0;
 }
 
@@ -453,7 +453,7 @@ h1 {
 }
 
 .application-card {
-  height: calc(100vh - 132px);
+  height: calc(100vh - 184px);
   max-width: 100%;
   overflow: hidden;
   border: 1px solid rgba(218, 228, 242, 0.92);
@@ -546,9 +546,9 @@ h2 {
 }
 
 .apply-footer {
-  position: absolute;
+  position: fixed;
   right: 0;
-  bottom: 14px;
+  bottom: 12px;
   left: 0;
   z-index: 4;
   display: flex;

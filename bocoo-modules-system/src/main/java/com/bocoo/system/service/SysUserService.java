@@ -3,6 +3,7 @@ package com.bocoo.system.service;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.RandomUtil;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -17,6 +18,7 @@ import com.bocoo.system.mapper.*;
 import com.bocoo.common.core.constant.CacheNames;
 import com.bocoo.common.core.constant.UserConstants;
 import com.bocoo.common.core.context.TenantContextHolder;
+import com.bocoo.common.core.enums.TenantType;
 import com.bocoo.common.core.exception.ServiceException;
 import com.bocoo.common.core.service.UserService;
 import com.bocoo.common.core.utils.MapstructUtils;
@@ -60,6 +62,12 @@ public class SysUserService implements UserService {
     private final SysPostMapper postMapper;
     private final SysUserRoleMapper userRoleMapper;
     private final SysUserPostMapper userPostMapper;
+    private final SysOssService ossService;
+    private final SysConfigService configService;
+
+    private static final String USER_INIT_PASSWORD_CONFIG_KEY = "sys.user.initPassword";
+    private static final int USER_INIT_PASSWORD_LENGTH = 12;
+    private static final String USER_INIT_PASSWORD_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#%";
 
     public TableDataInfo<SysUserVo> selectPageUserList(SysUserBo user, PageQuery pageQuery) {
         Page<SysUserVo> page = callWithPlatformBypass(() ->
@@ -68,7 +76,12 @@ public class SysUserService implements UserService {
     }
 
     public TableDataInfo<SysUserVo> selectPageMerchantUserList(SysUserBo user, PageQuery pageQuery) {
-        Page<SysUserVo> page = userMapper.selectPageUserList(pageQuery.build(), this.buildQueryWrapper(user));
+        return selectPageMerchantUserList(user, pageQuery, false);
+    }
+
+    public TableDataInfo<SysUserVo> selectPageMerchantUserList(SysUserBo user, PageQuery pageQuery, boolean merchantTenantOnly) {
+        Page<SysUserVo> page = callWithPlatformBypass(() ->
+            userMapper.selectPageUserList(pageQuery.build(), this.buildQueryWrapper(user, merchantTenantOnly)));
         page.getRecords().forEach(item -> item.setRoles(roleMapper.selectRolesByUserId(item.getUserId())));
         return TableDataInfo.build(page);
     }
@@ -85,10 +98,16 @@ public class SysUserService implements UserService {
     }
 
     private Wrapper<SysUser> buildQueryWrapper(SysUserBo user) {
+        return buildQueryWrapper(user, false);
+    }
+
+    private Wrapper<SysUser> buildQueryWrapper(SysUserBo user, boolean merchantTenantOnly) {
         Map<String, Object> params = user.getParams();
         QueryWrapper<SysUser> wrapper = Wrappers.query();
         wrapper.eq("u.del_flag", UserConstants.NOT_DELETED)
             .eq(ObjectUtil.isNotNull(user.getUserId()), "u.user_id", user.getUserId())
+            .eq(ObjectUtil.isNotNull(user.getTenantId()), "u.tenant_id", user.getTenantId())
+            .inSql(merchantTenantOnly, "u.tenant_id", "select tenant_id from sys_tenant where tenant_type = '" + TenantType.MERCHANT.getCode() + "'")
             .like(StringUtils.isNotBlank(user.getUserName()), "u.user_name", user.getUserName())
             .eq(StringUtils.isNotBlank(user.getStatus()), "u.status", user.getStatus())
             .like(StringUtils.isNotBlank(user.getPhonenumber()), "u.phonenumber", user.getPhonenumber())
@@ -172,6 +191,7 @@ public class SysUserService implements UserService {
             return user;
         }
         user.setRoles(roleMapper.selectRolesByUserId(user.getUserId()));
+        user.setAvatar(ossService.resolveUrl(user.getAvatar()));
         return user;
     }
 
@@ -238,6 +258,26 @@ public class SysUserService implements UserService {
             .eq(SysUser::getEmail, user.getEmail())
             .ne(ObjectUtil.isNotNull(user.getUserId()), SysUser::getUserId, user.getUserId())));
         return !exist;
+    }
+
+    public boolean userHasRoleKey(Long userId, String roleKey) {
+        List<SysRoleVo> roles = roleMapper.selectRolesByUserId(userId);
+        return roles.stream().anyMatch(role -> roleKey.equals(role.getRoleKey()));
+    }
+
+    public String generateRandomPassword() {
+        return RandomUtil.randomString(USER_INIT_PASSWORD_CHARS, USER_INIT_PASSWORD_LENGTH);
+    }
+
+    public String resolveInitialPassword(String initPassword) {
+        if (StringUtils.isNotBlank(initPassword) && !"123456".equals(initPassword)) {
+            return initPassword;
+        }
+        String configuredPassword = StringUtils.trimToEmpty(configService.selectConfigByKey(USER_INIT_PASSWORD_CONFIG_KEY));
+        if (StringUtils.isNotBlank(configuredPassword) && !"123456".equals(configuredPassword)) {
+            return configuredPassword;
+        }
+        return generateRandomPassword();
     }
 
     /**
@@ -384,7 +424,6 @@ public class SysUserService implements UserService {
             new LambdaUpdateWrapper<SysUser>()
                 .set(ObjectUtil.isNotNull(user.getNickName()), SysUser::getNickName, user.getNickName())
                 .set(SysUser::getPhonenumber, user.getPhonenumber())
-                .set(SysUser::getEmail, user.getEmail())
                 .set(SysUser::getSex, user.getSex())
                 .eq(SysUser::getUserId, user.getUserId()));
     }

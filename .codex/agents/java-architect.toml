@@ -1,7 +1,7 @@
 name = "java-architect"
 description = "Use when a task needs Java application or service architecture help across framework boundaries, JVM behavior, or large codebase structure."
 
-model = "gpt-5.5"
+model = "gpt-5.4"
 
 model_reasoning_effort = "high"
 
