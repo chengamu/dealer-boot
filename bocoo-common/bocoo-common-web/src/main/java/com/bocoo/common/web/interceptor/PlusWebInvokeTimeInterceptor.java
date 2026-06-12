@@ -16,6 +16,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import java.io.BufferedReader;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  * web的调用时间统计拦截器
@@ -30,6 +31,11 @@ public class PlusWebInvokeTimeInterceptor implements HandlerInterceptor {
     private final String prodProfile = "prod";
 
     private final static ThreadLocal<StopWatch> KEY_CACHE = new ThreadLocal<>();
+    private static final String MASK = "******";
+    private static final Pattern JSON_SENSITIVE_VALUE = Pattern.compile(
+        "(?i)(\"(?:password|oldPassword|newPassword|confirmPassword|token|access_token|refresh_token|authorization|secret|secretKey|code|uuid)\"\\s*:\\s*\")([^\"]*)(\")");
+    private static final Pattern PARAM_SENSITIVE_VALUE = Pattern.compile(
+        "(?i)(\"(?:password|oldPassword|newPassword|confirmPassword|token|access_token|refresh_token|authorization|secret|secretKey|code|uuid)\"\\s*:\\s*\\[\\s*\")([^\"]*)(\")");
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
@@ -43,12 +49,12 @@ public class PlusWebInvokeTimeInterceptor implements HandlerInterceptor {
                     BufferedReader reader = request.getReader();
                     jsonParam = IoUtil.read(reader);
                 }
-                log.info("[PLUS]开始请求 => URL[{}],参数类型[json],参数:[{}]", url, jsonParam);
+                log.info("[PLUS]开始请求 => URL[{}],参数类型[json],参数:[{}]", url, maskSensitive(jsonParam));
             } else {
                 Map<String, String[]> parameterMap = request.getParameterMap();
                 if (MapUtil.isNotEmpty(parameterMap)) {
                     String parameters = JsonUtils.toJsonString(parameterMap);
-                    log.info("[PLUS]开始请求 => URL[{}],参数类型[param],参数:[{}]", url, parameters);
+                    log.info("[PLUS]开始请求 => URL[{}],参数类型[param],参数:[{}]", url, maskSensitive(parameters));
                 } else {
                     log.info("[PLUS]开始请求 => URL[{}],无参数", url);
                 }
@@ -88,6 +94,14 @@ public class PlusWebInvokeTimeInterceptor implements HandlerInterceptor {
             return StringUtils.startsWithIgnoreCase(contentType, MediaType.APPLICATION_JSON_VALUE);
         }
         return false;
+    }
+
+    private String maskSensitive(String text) {
+        if (StringUtils.isBlank(text)) {
+            return text;
+        }
+        String masked = JSON_SENSITIVE_VALUE.matcher(text).replaceAll("$1" + MASK + "$3");
+        return PARAM_SENSITIVE_VALUE.matcher(masked).replaceAll("$1" + MASK + "$3");
     }
 
 }

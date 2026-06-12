@@ -90,6 +90,30 @@ public class ProductMediaAsset extends BaseEntity {
     private Integer versionNo;
 
     /**
+     * 老系统来源
+     */
+    @Schema(description = "老系统来源")
+    private String legacySource;
+
+    /**
+     * 老系统ID
+     */
+    @Schema(description = "老系统ID")
+    private String legacyId;
+
+    /**
+     * 老系统路径
+     */
+    @Schema(description = "老系统路径")
+    private String legacyPath;
+
+    /**
+     * 老系统URL
+     */
+    @Schema(description = "老系统URL")
+    private String legacyUrl;
+
+    /**
      * 状态：1正常，0停用
      */
     @Schema(description = "状态：1正常，0停用")

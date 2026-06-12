@@ -44,24 +44,6 @@ bocoo:
       - pc_component
       - pc_media_asset
       - pc_media_binding
-      - pc_product_model
-      - pc_sales_variant
-      - pc_config_template
-      - pc_config_template_version
-      - pc_question_group
-      - pc_config_question
-      - pc_config_option
-      - pc_config_rule
-      - pc_price_plan
-      - pc_price_plan_version
-      - pc_price_rule_item
-      - pc_publish_check_result
-      - pc_publish_approval
-      - pc_product_publish_package
-      - pc_product_snapshot_instance
-      - pc_product_sync_outbox
-      - pc_import_batch
-      - pc_import_row_issue
 
 websocket:
   port: ${WEBSOCKET_PORT:2831}

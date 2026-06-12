@@ -51,6 +51,12 @@ public class ProductComponentVo implements Serializable {
     private String componentType;
 
     /**
+     * 业务口径类型
+     */
+    @Schema(description = "业务口径类型")
+    private String businessType;
+
+    /**
      * 关联物料ID
      */
     @Schema(description = "关联物料ID")
@@ -109,6 +115,18 @@ public class ProductComponentVo implements Serializable {
      */
     @Schema(description = "适用范围JSON")
     private String scopeJson;
+
+    /**
+     * 老系统来源
+     */
+    @Schema(description = "老系统来源")
+    private String legacySource;
+
+    /**
+     * 老系统编号
+     */
+    @Schema(description = "老系统编号")
+    private String legacyId;
 
     /**
      * 备注

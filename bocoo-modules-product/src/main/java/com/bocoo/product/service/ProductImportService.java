@@ -19,7 +19,6 @@ import com.bocoo.product.domain.entity.ProductComponent;
 import com.bocoo.product.domain.entity.ProductImportBatch;
 import com.bocoo.product.domain.entity.ProductImportRowIssue;
 import com.bocoo.product.domain.entity.ProductMaterial;
-import com.bocoo.product.domain.entity.ProductModel;
 import com.bocoo.product.domain.vo.ProductImportBatchVo;
 import com.bocoo.product.domain.vo.ProductImportRowIssueVo;
 import com.bocoo.product.mapper.PricePlanMapper;
@@ -27,7 +26,6 @@ import com.bocoo.product.mapper.ProductComponentMapper;
 import com.bocoo.product.mapper.ProductImportBatchMapper;
 import com.bocoo.product.mapper.ProductImportRowIssueMapper;
 import com.bocoo.product.mapper.ProductMaterialMapper;
-import com.bocoo.product.mapper.ProductModelMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -66,7 +64,6 @@ public class ProductImportService {
     private final ProductImportRowIssueMapper importRowIssueMapper;
     private final ProductComponentMapper productComponentMapper;
     private final ProductMaterialMapper productMaterialMapper;
-    private final ProductModelMapper productModelMapper;
     private final PricePlanMapper pricePlanMapper;
 
     public TableDataInfo<ProductImportBatchVo> queryImportBatchPage(ProductImportBatchBo bo, PageQuery pageQuery) {
@@ -267,7 +264,6 @@ public class ProductImportService {
             Integer rowNo = Integer.valueOf(row.getOrDefault("_rowNo", "0"));
             validateSharedCode(row, mapping, rowNo, "componentCode", "component_code", ProductComponent::getComponentCode, productComponentMapper, issues);
             validateSharedCode(row, mapping, rowNo, "materialCode", "material_code", ProductMaterial::getMaterialCode, productMaterialMapper, issues);
-            validateSharedCode(row, mapping, rowNo, "productModelCode", "model_code", ProductModel::getModelCode, productModelMapper, issues);
             validateSharedCode(row, mapping, rowNo, "pricePlanCode", "price_plan_code", PricePlan::getPricePlanCode, pricePlanMapper, issues);
         });
         if (!mapping.containsKey("componentCode") && !mapping.containsKey("materialCode")
@@ -306,7 +302,6 @@ public class ProductImportService {
         String targetType = entity.getTargetObjectType();
         String targetCode = entity.getTargetObjectCode();
         boolean exists = switch (targetType) {
-            case "PRODUCT_MODEL" -> existsProductModel(targetCode);
             case "PRICE_PLAN" -> existsPricePlan(targetCode);
             default -> true;
         };
@@ -314,11 +309,6 @@ public class ProductImportService {
             issues.add(buildIssue(0, "targetObjectCode", ISSUE_LEVEL_ERROR, "TARGET_OBJECT_NOT_FOUND",
                 "目标对象不存在：" + targetType + " / " + targetCode + "。", Map.of()));
         }
-    }
-
-    private boolean existsProductModel(String modelCode) {
-        return productModelMapper.selectCount(Wrappers.lambdaQuery(ProductModel.class)
-            .eq(ProductModel::getModelCode, modelCode)) > 0;
     }
 
     private boolean existsPricePlan(String pricePlanCode) {

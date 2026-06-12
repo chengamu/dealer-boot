@@ -1,5 +1,15 @@
 import { request, requestPage } from '@/utils/request'
-import type { ProductPageQuery, ProductRecord, ReferenceCheckResult } from './types'
+import type {
+  ProductBaseAttributeQuery,
+  ProductBaseAttributeVO,
+  ProductCategoryVO,
+  ProductCrudApi,
+  ProductPageQuery,
+  ProductRecord,
+  ProductUnitQuery,
+  ProductUnitVO,
+  ReferenceCheckResult
+} from './types'
 
 function listApi<T extends ProductRecord>(url: string, query?: ProductPageQuery) {
   return requestPage<T>({ url, method: 'get', params: query })
@@ -25,37 +35,36 @@ function referencesApi(url: string) {
   return request<ReferenceCheckResult>({ url, method: 'get' })
 }
 
-export const productCategoryApi = {
+export const productCategoryApi: ProductCrudApi<ProductCategoryVO> = {
   list: (query?: ProductPageQuery) => listApi('/product-capability/categories/list', query),
-  options: (query?: ProductPageQuery) => request<ProductRecord[]>({ url: '/product-capability/categories/options', method: 'get', params: query }),
-  tree: (query?: ProductPageQuery) => request<ProductRecord[]>({ url: '/product-capability/categories/tree', method: 'get', params: query }),
-  get: (id: string | number) => detailApi('/product-capability/categories/' + id),
-  add: (data: ProductRecord) => saveApi('/product-capability/categories', 'post', data),
-  update: (data: ProductRecord) => saveApi('/product-capability/categories', 'put', data),
+  options: (query?: ProductPageQuery) => request<ProductCategoryVO[]>({ url: '/product-capability/categories/options', method: 'get', params: query }),
+  tree: (query?: ProductPageQuery) => request<ProductCategoryVO[]>({ url: '/product-capability/categories/tree', method: 'get', params: query }),
+  get: (id: string | number) => detailApi<ProductCategoryVO>('/product-capability/categories/' + id),
+  add: (data: ProductCategoryVO) => saveApi('/product-capability/categories', 'post', data),
+  update: (data: ProductCategoryVO) => saveApi('/product-capability/categories', 'put', data),
   remove: (ids: Array<string | number> | string | number) => removeApi('/product-capability/categories/' + ids),
   changeStatus: (id: string | number, status: string) => changeStatusApi('/product-capability/categories/change-status/' + id + '/' + status),
   references: (id: string | number) => referencesApi('/product-capability/categories/' + id + '/references')
 }
 
-export const productMaterialApi = {
-  list: (query?: ProductPageQuery) => listApi('/product-capability/materials/list', query),
-  options: (query?: ProductPageQuery) => request<ProductRecord[]>({ url: '/product-capability/materials/options', method: 'get', params: query }),
-  get: (id: string | number) => detailApi('/product-capability/materials/' + id),
-  add: (data: ProductRecord) => saveApi('/product-capability/materials', 'post', data),
-  update: (data: ProductRecord) => saveApi('/product-capability/materials', 'put', data),
-  remove: (ids: Array<string | number> | string | number) => removeApi('/product-capability/materials/' + ids),
-  changeStatus: (id: string | number, status: string) => changeStatusApi('/product-capability/materials/change-status/' + id + '/' + status),
-  references: (id: string | number) => referencesApi('/product-capability/materials/' + id + '/references')
+export const productUnitApi: ProductCrudApi<ProductUnitVO, ProductUnitQuery> = {
+  list: (query?: ProductUnitQuery) => listApi('/product-capability/units/list', query),
+  options: (query?: ProductUnitQuery) => request<ProductUnitVO[]>({ url: '/product-capability/units/options', method: 'get', params: query }),
+  get: (id: string | number) => detailApi<ProductUnitVO>('/product-capability/units/' + id),
+  add: (data: ProductUnitVO) => saveApi('/product-capability/units', 'post', data),
+  update: (data: ProductUnitVO) => saveApi('/product-capability/units', 'put', data),
+  remove: (ids: Array<string | number> | string | number) => removeApi('/product-capability/units/' + ids),
+  changeStatus: (id: string | number, status: string) => changeStatusApi('/product-capability/units/change-status/' + id + '/' + status),
+  references: (id: string | number) => referencesApi('/product-capability/units/' + id + '/references')
 }
 
-export const productComponentApi = {
-  list: (query?: ProductPageQuery) => listApi('/product-capability/components/list', query),
-  options: (query?: ProductPageQuery) => request<ProductRecord[]>({ url: '/product-capability/components/options', method: 'get', params: query }),
-  get: (id: string | number) => detailApi('/product-capability/components/' + id),
-  add: (data: ProductRecord) => saveApi('/product-capability/components', 'post', data),
-  update: (data: ProductRecord) => saveApi('/product-capability/components', 'put', data),
-  remove: (ids: Array<string | number> | string | number) => removeApi('/product-capability/components/' + ids),
-  changeStatus: (id: string | number, status: string) => changeStatusApi('/product-capability/components/change-status/' + id + '/' + status),
-  references: (id: string | number) => referencesApi('/product-capability/components/' + id + '/references')
+export const productBaseAttributeApi: ProductCrudApi<ProductBaseAttributeVO, ProductBaseAttributeQuery> = {
+  list: (query?: ProductBaseAttributeQuery) => listApi('/product-capability/base-attributes/list', query),
+  options: (query?: ProductBaseAttributeQuery) => request<ProductBaseAttributeVO[]>({ url: '/product-capability/base-attributes/options', method: 'get', params: query }),
+  get: (id: string | number) => detailApi<ProductBaseAttributeVO>('/product-capability/base-attributes/' + id),
+  add: (data: ProductBaseAttributeVO) => saveApi('/product-capability/base-attributes', 'post', data),
+  update: (data: ProductBaseAttributeVO) => saveApi('/product-capability/base-attributes', 'put', data),
+  remove: (ids: Array<string | number> | string | number) => removeApi('/product-capability/base-attributes/' + ids),
+  changeStatus: (id: string | number, status: string) => changeStatusApi('/product-capability/base-attributes/change-status/' + id + '/' + status),
+  references: (id: string | number) => referencesApi('/product-capability/base-attributes/' + id + '/references')
 }
-

@@ -7,6 +7,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.math.BigDecimal;
+
 /**
  * 产品物料表 pc_material
  */
@@ -60,10 +62,70 @@ public class ProductMaterial extends BaseEntity {
     private String unitCode;
 
     /**
+     * 供应商编码
+     */
+    @Schema(description = "供应商编码")
+    private String supplierCode;
+
+    /**
      * 供应商名称
      */
     @Schema(description = "供应商名称")
     private String supplierName;
+
+    /**
+     * 工厂型号
+     */
+    @Schema(description = "工厂型号")
+    private String factoryModel;
+
+    /**
+     * 样册编号
+     */
+    @Schema(description = "样册编号")
+    private String sampleBookNo;
+
+    /**
+     * 供应商料号
+     */
+    @Schema(description = "供应商料号")
+    private String vendorItemNo;
+
+    /**
+     * 主规格
+     */
+    @Schema(description = "主规格")
+    private String primarySpec;
+
+    /**
+     * 主颜色
+     */
+    @Schema(description = "主颜色")
+    private String primaryColor;
+
+    /**
+     * 主重量
+     */
+    @Schema(description = "主重量")
+    private BigDecimal primaryWeight;
+
+    /**
+     * 属性摘要
+     */
+    @Schema(description = "属性摘要")
+    private String attributeSummary;
+
+    /**
+     * 老系统来源
+     */
+    @Schema(description = "老系统来源")
+    private String legacySource;
+
+    /**
+     * 老系统编号
+     */
+    @Schema(description = "老系统编号")
+    private String legacyId;
 
     /**
      * 状态：1正常，0停用

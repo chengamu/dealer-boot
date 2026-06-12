@@ -18,17 +18,16 @@ const t = (key: string) => getMessage(key, localeStore.language)
 
 const normalized = computed(() => String(props.value ?? ''))
 const label = computed(() => {
-  if (normalized.value === '1') return t('productCenter.status.enabled')
-  if (normalized.value === '0') return t('productCenter.status.disabled')
+  if (['1', 'true', 'ENABLED'].includes(normalized.value)) return t('productCenter.status.enabled')
+  if (['0', 'false', 'DISABLED'].includes(normalized.value)) return t('productCenter.status.disabled')
   if (normalized.value === 'PUBLISHED') return t('productCenter.status.published')
   if (normalized.value === 'DRAFT') return t('productCenter.status.draft')
   return normalized.value || t('common.none')
 })
 const tagType = computed(() => {
-  if (['1', 'PUBLISHED', 'PASS'].includes(normalized.value)) return 'success'
-  if (['0', 'BLOCKER'].includes(normalized.value)) return 'danger'
+  if (['1', 'true', 'ENABLED', 'PUBLISHED', 'PASS'].includes(normalized.value)) return 'success'
+  if (['0', 'false', 'DISABLED', 'BLOCKER'].includes(normalized.value)) return 'danger'
   if (['DRAFT', 'WARNING'].includes(normalized.value)) return 'warning'
   return 'info'
 })
 </script>
-

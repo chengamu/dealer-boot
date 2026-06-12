@@ -40,16 +40,17 @@ const configs = computed<ProductGridConfig[]>(() => [
     api: productMediaAssetApi,
     fields: [
       { prop: 'assetCode', labelKey: 'productCenter.asset.code', search: true, required: true },
-      { prop: 'assetNameCn', labelKey: 'productCenter.asset.nameCn', search: true, required: true },
+      { prop: 'assetNameCn', labelKey: 'productCenter.asset.name', search: true, required: true },
       { prop: 'assetNameEn', labelKey: 'productCenter.asset.nameEn' },
       { prop: 'assetType', labelKey: 'productCenter.asset.type', search: true },
       { prop: 'usageType', labelKey: 'productCenter.asset.usageType', search: true },
       { prop: 'languageCode', labelKey: 'productCenter.asset.languageCode' },
       { prop: 'visibility', labelKey: 'productCenter.asset.visibility' },
-      { prop: 'url', labelKey: 'productCenter.asset.url', type: 'url' },
+      { prop: 'ossId', labelKey: 'productCenter.asset.ossId', type: 'number' },
+      { prop: 'url', labelKey: 'productCenter.asset.url', type: 'url', formSpan: 2 },
       { prop: 'versionNo', labelKey: 'productCenter.asset.versionNo', type: 'number' },
       { prop: 'status', labelKey: 'productCenter.common.status', type: 'status', search: true },
-      { prop: 'remark', labelKey: 'productCenter.common.remark', type: 'textarea', table: false }
+      { prop: 'remark', labelKey: 'productCenter.common.remark', type: 'textarea', table: false, formSpan: 2 }
     ]
   },
   {
@@ -65,13 +66,13 @@ const configs = computed<ProductGridConfig[]>(() => [
       { prop: 'targetType', labelKey: 'productCenter.binding.targetType', search: true, required: true },
       { prop: 'targetId', labelKey: 'productCenter.binding.targetId', type: 'number' },
       { prop: 'targetCode', labelKey: 'productCenter.binding.targetCode', search: true, required: true },
-      { prop: 'usageType', labelKey: 'productCenter.asset.usageType', search: true },
+      { prop: 'usageType', labelKey: 'productCenter.asset.usageType' },
       { prop: 'visibility', labelKey: 'productCenter.asset.visibility' },
       { prop: 'languageCode', labelKey: 'productCenter.asset.languageCode' },
       { prop: 'requiredForPublish', labelKey: 'productCenter.binding.requiredForPublish' },
       { prop: 'sortOrder', labelKey: 'productCenter.common.sortOrder', type: 'number' },
       { prop: 'status', labelKey: 'productCenter.common.status', type: 'status', search: true },
-      { prop: 'remark', labelKey: 'productCenter.common.remark', type: 'textarea', table: false }
+      { prop: 'remark', labelKey: 'productCenter.common.remark', type: 'textarea', table: false, formSpan: 2 }
     ]
   }
 ])

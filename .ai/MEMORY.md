@@ -23,6 +23,8 @@
 - `SysProfileController.updatePwd()` 当前已校验旧密码；后续不要重复安排该项修复。
 - `sys_menu.perms` 运行时按 `distinct + Set` 进入 Sa-Token 权限字符串集合；重复值不必默认修数据，先判断是否是菜单页和按钮共享权限。
 - 本项目 Spring Boot 可运行 dist 产物路径是 `bocoo-admin/target/dist/bocoo-admin.jar`。
+- 本项目页面真实验证没有直接 Browser 工具时，可用 Playwright + 本机 Chrome；记录时要区分“未暴露 browser.open”与“不能启动浏览器”。
+- 产品基础资料表新增字段后要同时检查 Entity/BO/VO、SQL DDL、`ALTER TABLE IF EXISTS`、seed insert 和开发库现状，避免旧表缺列导致运行态 500。
 - 登录页第三方登录按钮优先使用 Google Identity Services 官方渲染；自定义按钮必须使用官方彩色 `G` 和品牌规范，不使用单色字母伪 Logo。
 - 第三方登录 token 校验应独立成 provider auth service，只返回已验证身份；登录编排仍由登录服务负责用户匹配、租户、角色和权限构建。
 

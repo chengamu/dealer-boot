@@ -8,12 +8,301 @@ export interface ProductPageQuery extends PageQuery {
   [key: string]: unknown
 }
 
+export interface ProductOption {
+  label: string
+  value: string | number
+}
+
+export interface ProductCrudApi<TRecord extends ProductRecord = ProductRecord, TQuery extends ProductPageQuery = ProductPageQuery> {
+  list: (query?: TQuery) => Promise<{ rows?: TRecord[]; total?: number }>
+  options?: (query?: TQuery) => Promise<{ data?: TRecord[] } | TRecord[]>
+  tree?: (query?: TQuery) => Promise<{ data?: TRecord[] } | TRecord[]>
+  get: (id: string | number) => Promise<{ data?: TRecord }>
+  add: (data: TRecord) => Promise<unknown>
+  update: (data: TRecord) => Promise<unknown>
+  remove: (ids: Array<string | number> | string | number) => Promise<unknown>
+  changeStatus?: (id: string | number, status: string) => Promise<unknown>
+  references?: (id: string | number) => Promise<{ data?: ReferenceCheckResult }>
+}
+
 export interface ReferenceCheckResult {
+  allowed?: boolean
   canRemove?: boolean
   canDisable?: boolean
   referenceCount?: number
+  blockerReasonKey?: string
   messageKey?: string
+  referenceSummaries?: string[]
   references?: Array<Record<string, unknown>>
+}
+
+export interface ProductCategoryVO extends ProductRecord {
+  categoryId?: number
+  categoryCode?: string
+  categoryNameCn?: string
+  categoryNameEn?: string
+  parentId?: number
+  categoryPath?: string
+  categoryLevel?: number
+  businessType?: string
+  sortOrder?: number
+  status?: string
+  remark?: string
+}
+
+export interface ProductUnitVO extends ProductRecord {
+  unitId?: number
+  unitCode?: string
+  unitNameCn?: string
+  unitNameEn?: string
+  unitType?: string
+  precisionScale?: number
+  roundingMode?: string
+  baseUnitCode?: string
+  conversionRate?: number
+  sortOrder?: number
+  status?: string
+  remark?: string
+}
+
+export interface ProductUnitQuery extends ProductPageQuery {
+  unitCode?: string
+  unitNameCn?: string
+  unitType?: string
+  status?: string
+}
+
+export interface ProductBaseAttributeVO extends ProductRecord {
+  attributeId?: number
+  attributeGroup?: string
+  attributeCode?: string
+  attributeNameCn?: string
+  attributeNameEn?: string
+  valueType?: string
+  unitCode?: string
+  materialTypes?: string
+  extraJson?: string
+  sortOrder?: number
+  status?: string
+  remark?: string
+}
+
+export interface ProductBaseAttributeQuery extends ProductPageQuery {
+  attributeGroup?: string
+  attributeCode?: string
+  attributeNameCn?: string
+  status?: string
+}
+
+export interface ProductMaterialAttributeVO extends ProductRecord {
+  attributeValueId?: number
+  materialId?: number
+  materialCode?: string
+  attributeId?: number
+  attributeCode?: string
+  attributeNameCn?: string
+  valueText?: string
+  valueNumber?: number
+  valueBool?: string | boolean
+  valueUnitCode?: string
+  sortOrder?: number
+  status?: string
+}
+
+export interface ProductMaterialAttributeQuery extends ProductPageQuery {
+  materialId?: number
+  materialCode?: string
+  attributeCode?: string
+  attributeNameCn?: string
+  status?: string
+}
+
+export interface ProductMaterialVO extends ProductRecord {
+  materialId?: number
+  materialCode?: string
+  materialNameCn?: string
+  materialNameEn?: string
+  materialType?: string
+  businessType?: string
+  unitCode?: string
+  supplierCode?: string
+  supplierName?: string
+  factoryModel?: string
+  sampleBookNo?: string
+  vendorItemNo?: string
+  primarySpec?: string
+  primaryColor?: string
+  primaryWeight?: string
+  attributeSummary?: string
+  legacySource?: string
+  legacyId?: string
+  status?: string
+  remark?: string
+  attributeList?: ProductMaterialAttributeVO[]
+}
+
+export interface ProductMaterialQuery extends ProductPageQuery {
+  materialCode?: string
+  materialNameCn?: string
+  materialType?: string
+  businessType?: string
+  supplierCode?: string
+  sampleBookNo?: string
+  vendorItemNo?: string
+  status?: string
+}
+
+export interface FabricSeriesVO extends ProductRecord {
+  seriesId?: number
+  seriesCode?: string
+  seriesNameCn?: string
+  seriesNameEn?: string
+  materialType?: string
+  defaultThicknessUnit?: string
+  thicknessRuleEnabled?: string | boolean
+  maxThicknessDiff?: number
+  maxCombinedThickness?: number
+  widthRuleEnabled?: string | boolean
+  availableWidths?: string
+  minWidthValue?: number
+  maxWidthValue?: number
+  widthUnit?: string
+  status?: string
+  remark?: string
+}
+
+export interface FabricSeriesQuery extends ProductPageQuery {
+  seriesCode?: string
+  seriesNameCn?: string
+  materialType?: string
+  status?: string
+}
+
+export interface FabricProfileVO extends ProductRecord {
+  fabricId?: number
+  fabricCode?: string
+  materialId?: number
+  materialCode?: string
+  seriesId?: number
+  seriesCode?: string
+  seriesNameCn?: string
+  colorCode?: string
+  colorName?: string
+  materialComposition?: string
+  textureType?: string
+  finishType?: string
+  factoryModel?: string
+  sampleBookNo?: string
+  vendorItemNo?: string
+  supplierCode?: string
+  supplierName?: string
+  widthValue?: number
+  widthUnit?: string
+  thicknessValue?: number
+  thicknessUnit?: string
+  gsmValue?: number
+  purchaseUnitCode?: string
+  inventoryUnitCode?: string
+  salesUnitCode?: string
+  legacyAttributeText?: string
+  status?: string
+  remark?: string
+}
+
+export interface FabricProfileQuery extends ProductPageQuery {
+  materialCode?: string
+  seriesId?: number
+  seriesCode?: string
+  colorCode?: string
+  colorName?: string
+  sampleBookNo?: string
+  vendorItemNo?: string
+  supplierCode?: string
+  status?: string
+}
+
+export interface ProductComponentItemVO extends ProductRecord {
+  componentItemId?: number
+  componentId?: number
+  componentCode?: string
+  materialId?: number
+  materialCode?: string
+  materialNameCn?: string
+  qtyFormula?: string
+  defaultQty?: number
+  unitCode?: string
+  requiredFlag?: string | boolean
+  sortOrder?: number
+  status?: string
+}
+
+export interface ProductComponentItemQuery extends ProductPageQuery {
+  componentId?: number
+  componentCode?: string
+  materialCode?: string
+  materialNameCn?: string
+  status?: string
+}
+
+export interface ProductComponentVO extends ProductRecord {
+  componentId?: number
+  componentCode?: string
+  componentNameCn?: string
+  componentNameEn?: string
+  componentType?: string
+  businessType?: string
+  defaultQty?: number
+  qtyMode?: string
+  unitCode?: string
+  materialCode?: string
+  materialNameCn?: string
+  status?: string
+  remark?: string
+  itemList?: ProductComponentItemVO[]
+}
+
+export interface ProductComponentQuery extends ProductPageQuery {
+  componentCode?: string
+  componentNameCn?: string
+  componentType?: string
+  businessType?: string
+  status?: string
+}
+
+export interface ProductMediaAssetVO extends ProductRecord {
+  assetId?: number
+  assetCode?: string
+  assetNameCn?: string
+  assetNameEn?: string
+  assetType?: string
+  usageType?: string
+  languageCode?: string
+  visibility?: string
+  url?: string
+  ossId?: number
+  versionNo?: number
+  legacySource?: string
+  legacyId?: string
+  legacyPath?: string
+  legacyUrl?: string
+  status?: string
+  remark?: string
+}
+
+export interface ProductMediaBindingVO extends ProductRecord {
+  bindingId?: number
+  assetId?: number
+  assetCode?: string
+  targetType?: string
+  targetId?: number
+  targetCode?: string
+  usageType?: string
+  visibility?: string
+  languageCode?: string
+  requiredForPublish?: string | boolean
+  sortOrder?: number
+  status?: string
+  remark?: string
 }
 
 export interface WorkbenchSummary {
@@ -63,4 +352,3 @@ export interface WorkbenchSyncEvent {
   createdTime?: string
   updatedTime?: string
 }
-
