@@ -1,6 +1,7 @@
 package com.bocoo.product.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bocoo.common.core.utils.MapstructUtils;
@@ -21,8 +22,10 @@ import java.util.Arrays;
  */
 @Service
 @RequiredArgsConstructor
-public class ProductConfigService {
+public class ProductConfigService extends ProductCrudSupport {
 
+    private final SalesProductMapper salesProductMapper;
+    private final ProductCategoryMapper categoryMapper;
     private final ConfigTemplateMapper templateIdMapper;
     private final ConfigTemplateVersionMapper templateVersionIdMapper;
     private final QuestionGroupMapper questionGroupIdMapper;
@@ -30,6 +33,81 @@ public class ProductConfigService {
     private final ConfigOptionMapper optionIdMapper;
     private final ConfigRuleMapper ruleIdMapper;
     private final ConfigEvaluationEngine configEvaluationEngine;
+
+    public TableDataInfo<SalesProductVo> querySalesProductPage(SalesProductBo bo, PageQuery pageQuery) {
+        return page(salesProductMapper, pageQuery, buildSalesProductWrapper(bo));
+    }
+
+    public java.util.List<SalesProductVo> querySalesProductList(SalesProductBo bo) {
+        return salesProductMapper.selectVoList(buildSalesProductWrapper(bo));
+    }
+
+    public SalesProductVo getSalesProductById(Long id) {
+        return salesProductMapper.selectVoById(id);
+    }
+
+    public Boolean saveSalesProduct(SalesProductBo bo) {
+        SalesProduct entity = MapstructUtils.convert(bo, SalesProduct.class);
+        if (entity == null) {
+            return Boolean.FALSE;
+        }
+        syncSalesProductCategorySnapshot(entity);
+        if (entity.getSalesProductId() == null) {
+            ProductEntityDefaults.prepareInsert(entity);
+            return salesProductMapper.insert(entity) > 0;
+        }
+        return salesProductMapper.updateById(entity) > 0;
+    }
+
+    public Boolean removeSalesProductByIds(Long[] ids) {
+        return remove(salesProductMapper, ids);
+    }
+
+    public Boolean updateSalesProductStatus(Long id, String status) {
+        return updateStatus(salesProductMapper, SalesProduct.class, "salesProductId", id, status);
+    }
+
+    public ReferenceCheckResultVo checkSalesProductReferences(Long id) {
+        SalesProduct product = salesProductMapper.selectById(id);
+        if (product == null) {
+            return referenceResult(0, null, null);
+        }
+        long count = templateIdMapper.selectCount(activeQuery(ConfigTemplate.class).eq("sales_product_id", id))
+            + templateVersionIdMapper.selectCount(activeQuery(ConfigTemplateVersion.class).eq("sales_product_id", id));
+        return referenceResult(count, "product.salesProduct.hasReferences", "Config templates / versions: " + count);
+    }
+
+    private QueryWrapper<SalesProduct> buildSalesProductWrapper(SalesProductBo bo) {
+        QueryWrapper<SalesProduct> q = activeQuery(SalesProduct.class);
+        if (bo != null) {
+            like(q, "sales_product_code", bo.getSalesProductCode());
+            if (StringUtils.isNotBlank(bo.getSalesProductNameCn())) {
+                q.and(wrapper -> wrapper.like("sales_product_name_cn", bo.getSalesProductNameCn()).or().like("sales_product_name_en", bo.getSalesProductNameCn()));
+            }
+            like(q, "sales_product_name_en", bo.getSalesProductNameEn());
+            eq(q, "category_id", bo.getCategoryId());
+            eq(q, "category_code", bo.getCategoryCode());
+            eq(q, "product_type", bo.getProductType());
+            eq(q, "sales_mode", bo.getSalesMode());
+            eq(q, "template_code", bo.getTemplateCode());
+            eq(q, "biz_status", bo.getBizStatus());
+            eq(q, "status", bo.getStatus());
+        }
+        return q.orderByAsc("sort_order", "sales_product_id");
+    }
+
+    private void syncSalesProductCategorySnapshot(SalesProduct product) {
+        if (product.getCategoryId() == null) {
+            return;
+        }
+        ProductCategory category = categoryMapper.selectById(product.getCategoryId());
+        if (category == null) {
+            return;
+        }
+        product.setCategoryCode(category.getCategoryCode());
+        product.setCategoryNameCn(category.getCategoryNameCn());
+        product.setCategoryNameEn(category.getCategoryNameEn());
+    }
 
     public TableDataInfo<ConfigTemplateVo> queryConfigTemplatePage(ConfigTemplateBo bo, PageQuery pageQuery) {
         Page<ConfigTemplateVo> result = templateIdMapper.selectVoPage(pageQuery.build(), buildConfigTemplateWrapper(bo));
@@ -60,6 +138,16 @@ public class ProductConfigService {
         return templateIdMapper.deleteBatchIds(Arrays.asList(ids)) > 0;
     }
 
+    public Boolean updateConfigTemplateStatus(Long id, String status) {
+        return updateStatus(templateIdMapper, ConfigTemplate.class, "templateId", id, status);
+    }
+
+    public ReferenceCheckResultVo checkConfigTemplateReferences(Long id) {
+        long count = templateVersionIdMapper.selectCount(activeQuery(ConfigTemplateVersion.class).eq("template_id", id))
+            + salesProductMapper.selectCount(activeQuery(SalesProduct.class).eq("template_id", id));
+        return referenceResult(count, "product.configTemplate.hasReferences", "Template versions / sales products: " + count);
+    }
+
     private LambdaQueryWrapper<ConfigTemplate> buildConfigTemplateWrapper(ConfigTemplateBo bo) {
         if (bo == null) {
             bo = new ConfigTemplateBo();
@@ -69,6 +157,8 @@ public class ProductConfigService {
         lqw.like(StringUtils.isNotBlank(bo.getTemplateNameCn()), ConfigTemplate::getTemplateNameCn, bo.getTemplateNameCn());
         lqw.like(StringUtils.isNotBlank(bo.getTemplateNameEn()), ConfigTemplate::getTemplateNameEn, bo.getTemplateNameEn());
         lqw.like(StringUtils.isNotBlank(bo.getProductModelCode()), ConfigTemplate::getProductModelCode, bo.getProductModelCode());
+        lqw.eq(bo.getSalesProductId() != null, ConfigTemplate::getSalesProductId, bo.getSalesProductId());
+        lqw.like(StringUtils.isNotBlank(bo.getSalesProductCode()), ConfigTemplate::getSalesProductCode, bo.getSalesProductCode());
         lqw.like(StringUtils.isNotBlank(bo.getBizStatus()), ConfigTemplate::getBizStatus, bo.getBizStatus());
         lqw.like(StringUtils.isNotBlank(bo.getStatus()), ConfigTemplate::getStatus, bo.getStatus());
         lqw.eq(StringUtils.isBlank(bo.getDelFlag()), ConfigTemplate::getDelFlag, "0");
@@ -105,6 +195,21 @@ public class ProductConfigService {
         return templateVersionIdMapper.deleteBatchIds(Arrays.asList(ids)) > 0;
     }
 
+    public Boolean updateConfigTemplateVersionStatus(Long id, String status) {
+        ConfigTemplateVersion entity = new ConfigTemplateVersion();
+        entity.setTemplateVersionId(id);
+        entity.setVersionStatus(status);
+        return templateVersionIdMapper.updateById(entity) > 0;
+    }
+
+    public ReferenceCheckResultVo checkConfigTemplateVersionReferences(Long id) {
+        long count = questionIdMapper.selectCount(activeQuery(ConfigQuestion.class).eq("template_version_id", id))
+            + optionIdMapper.selectCount(activeQuery(ConfigOption.class).eq("template_version_id", id))
+            + ruleIdMapper.selectCount(activeQuery(ConfigRule.class).eq("template_version_id", id))
+            + salesProductMapper.selectCount(activeQuery(SalesProduct.class).eq("template_version_id", id));
+        return referenceResult(count, "product.configTemplateVersion.hasReferences", "Questions / options / rules / sales products: " + count);
+    }
+
     private LambdaQueryWrapper<ConfigTemplateVersion> buildConfigTemplateVersionWrapper(ConfigTemplateVersionBo bo) {
         if (bo == null) {
             bo = new ConfigTemplateVersionBo();
@@ -114,6 +219,8 @@ public class ProductConfigService {
         lqw.like(StringUtils.isNotBlank(bo.getVersionNo()), ConfigTemplateVersion::getVersionNo, bo.getVersionNo());
         lqw.like(StringUtils.isNotBlank(bo.getVersionStatus()), ConfigTemplateVersion::getVersionStatus, bo.getVersionStatus());
         lqw.like(StringUtils.isNotBlank(bo.getProductModelCode()), ConfigTemplateVersion::getProductModelCode, bo.getProductModelCode());
+        lqw.eq(bo.getSalesProductId() != null, ConfigTemplateVersion::getSalesProductId, bo.getSalesProductId());
+        lqw.like(StringUtils.isNotBlank(bo.getSalesProductCode()), ConfigTemplateVersion::getSalesProductCode, bo.getSalesProductCode());
         lqw.like(StringUtils.isNotBlank(bo.getSalesVariantCode()), ConfigTemplateVersion::getSalesVariantCode, bo.getSalesVariantCode());
         lqw.like(StringUtils.isNotBlank(bo.getPricePlanCode()), ConfigTemplateVersion::getPricePlanCode, bo.getPricePlanCode());
         return lqw;
@@ -147,6 +254,15 @@ public class ProductConfigService {
 
     public Boolean removeQuestionGroupByIds(Long[] ids) {
         return questionGroupIdMapper.deleteBatchIds(Arrays.asList(ids)) > 0;
+    }
+
+    public Boolean updateQuestionGroupStatus(Long id, String status) {
+        return updateStatus(questionGroupIdMapper, QuestionGroup.class, "questionGroupId", id, status);
+    }
+
+    public ReferenceCheckResultVo checkQuestionGroupReferences(Long id) {
+        long count = questionIdMapper.selectCount(activeQuery(ConfigQuestion.class).eq("question_group_id", id));
+        return referenceResult(count, "product.questionGroup.hasReferences", "Config questions: " + count);
     }
 
     private LambdaQueryWrapper<QuestionGroup> buildQuestionGroupWrapper(QuestionGroupBo bo) {
@@ -190,6 +306,15 @@ public class ProductConfigService {
 
     public Boolean removeConfigQuestionByIds(Long[] ids) {
         return questionIdMapper.deleteBatchIds(Arrays.asList(ids)) > 0;
+    }
+
+    public Boolean updateConfigQuestionStatus(Long id, String status) {
+        return updateStatus(questionIdMapper, ConfigQuestion.class, "questionId", id, status);
+    }
+
+    public ReferenceCheckResultVo checkConfigQuestionReferences(Long id) {
+        long count = optionIdMapper.selectCount(activeQuery(ConfigOption.class).eq("question_id", id));
+        return referenceResult(count, "product.configQuestion.hasReferences", "Config options: " + count);
     }
 
     private LambdaQueryWrapper<ConfigQuestion> buildConfigQuestionWrapper(ConfigQuestionBo bo) {
@@ -237,6 +362,20 @@ public class ProductConfigService {
         return optionIdMapper.deleteBatchIds(Arrays.asList(ids)) > 0;
     }
 
+    public Boolean updateConfigOptionStatus(Long id, String status) {
+        return updateStatus(optionIdMapper, ConfigOption.class, "optionId", id, status);
+    }
+
+    public ReferenceCheckResultVo checkConfigOptionReferences(Long id) {
+        ConfigOption option = optionIdMapper.selectById(id);
+        if (option == null || StringUtils.isBlank(option.getOptionCode())) {
+            return referenceResult(0, null, null);
+        }
+        long count = ruleIdMapper.selectCount(activeQuery(ConfigRule.class).like("condition_json", option.getOptionCode()))
+            + ruleIdMapper.selectCount(activeQuery(ConfigRule.class).like("action_json", option.getOptionCode()));
+        return referenceResult(count, "product.configOption.hasReferences", "Config rules mentioning option: " + count);
+    }
+
     private LambdaQueryWrapper<ConfigOption> buildConfigOptionWrapper(ConfigOptionBo bo) {
         if (bo == null) {
             bo = new ConfigOptionBo();
@@ -281,6 +420,10 @@ public class ProductConfigService {
         return ruleIdMapper.deleteBatchIds(Arrays.asList(ids)) > 0;
     }
 
+    public Boolean updateConfigRuleStatus(Long id, String status) {
+        return updateStatus(ruleIdMapper, ConfigRule.class, "ruleId", id, status);
+    }
+
     private LambdaQueryWrapper<ConfigRule> buildConfigRuleWrapper(ConfigRuleBo bo) {
         if (bo == null) {
             bo = new ConfigRuleBo();
@@ -301,10 +444,10 @@ public class ProductConfigService {
         }
         ConfigQuestionBo questionBo = new ConfigQuestionBo();
         questionBo.setTemplateVersionId(bo.getTemplateVersionId());
-        questionBo.setStatus("1");
+        questionBo.setStatus("ENABLED");
         ConfigOptionBo optionBo = new ConfigOptionBo();
         optionBo.setTemplateVersionId(bo.getTemplateVersionId());
-        optionBo.setStatus("1");
+        optionBo.setStatus("ENABLED");
         return configEvaluationEngine.evaluate(bo, queryConfigQuestionList(questionBo), queryConfigOptionList(optionBo));
     }
 }

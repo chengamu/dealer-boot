@@ -13,6 +13,177 @@ export interface ProductOption {
   value: string | number
 }
 
+export interface SalesProductVO extends ProductRecord {
+  salesProductId?: number
+  salesProductCode?: string
+  salesProductNameCn?: string
+  salesProductNameEn?: string
+  categoryId?: number
+  categoryCode?: string
+  categoryNameCn?: string
+  categoryNameEn?: string
+  productType?: string
+  salesMode?: string
+  templateId?: number
+  templateCode?: string
+  templateVersionId?: number
+  templateVersionNo?: string
+  defaultWidth?: number
+  defaultHeight?: number
+  dimensionUnit?: string
+  bizStatus?: string
+  legacySource?: string
+  legacyId?: string
+  status?: string
+  sortOrder?: number
+  remark?: string
+}
+
+export interface SalesProductQuery extends ProductPageQuery {
+  salesProductCode?: string
+  salesProductNameCn?: string
+  categoryId?: number
+  categoryCode?: string
+  productType?: string
+  salesMode?: string
+  templateCode?: string
+  bizStatus?: string
+  status?: string
+}
+
+export interface ConfigTemplateVO extends ProductRecord {
+  templateId?: number
+  templateCode?: string
+  templateNameCn?: string
+  templateNameEn?: string
+  productModelId?: number
+  productModelCode?: string
+  salesProductId?: number
+  salesProductCode?: string
+  currentVersionId?: number
+  currentVersionNo?: string
+  publishedVersionId?: number
+  publishedVersionNo?: string
+  bizStatus?: string
+  status?: string
+  remark?: string
+}
+
+export interface ConfigTemplateVersionVO extends ProductRecord {
+  templateVersionId?: number
+  templateId?: number
+  templateCode?: string
+  versionNo?: string
+  versionName?: string
+  versionStatus?: string
+  productModelId?: number
+  productModelCode?: string
+  salesProductId?: number
+  salesProductCode?: string
+  salesVariantId?: number
+  salesVariantCode?: string
+  pricePlanVersionId?: number
+  pricePlanCode?: string
+  schemaJson?: string
+  draftHash?: string
+  remark?: string
+}
+
+export interface QuestionGroupVO extends ProductRecord {
+  questionGroupId?: number
+  groupCode?: string
+  groupNameCn?: string
+  groupNameEn?: string
+  descriptionCn?: string
+  descriptionEn?: string
+  status?: string
+  sortOrder?: number
+  remark?: string
+}
+
+export interface ConfigQuestionVO extends ProductRecord {
+  questionId?: number
+  templateVersionId?: number
+  questionGroupId?: number
+  questionCode?: string
+  questionNameCn?: string
+  questionNameEn?: string
+  helpTextCn?: string
+  helpTextEn?: string
+  inputType?: string
+  requiredFlag?: string
+  customerVisible?: string
+  defaultValue?: string
+  validationJson?: string
+  displayRuleJson?: string
+  status?: string
+  sortOrder?: number
+  remark?: string
+}
+
+export interface ConfigOptionVO extends ProductRecord {
+  optionId?: number
+  questionId?: number
+  templateVersionId?: number
+  optionCode?: string
+  optionNameCn?: string
+  optionNameEn?: string
+  optionValue?: string
+  sourceType?: string
+  sourceRefId?: number
+  sourceCode?: string
+  sourceName?: string
+  displayNameCn?: string
+  displayNameEn?: string
+  valueCode?: string
+  helpTextCn?: string
+  helpTextEn?: string
+  componentJson?: string
+  mediaJson?: string
+  ruleJson?: string
+  status?: string
+  sortOrder?: number
+  remark?: string
+}
+
+export interface ConfigEvaluationRequest extends ProductRecord {
+  salesProductId?: number
+  templateVersionId?: number
+  width?: number
+  height?: number
+  selectedOptions?: Record<string, string | number>
+  inputValues?: Record<string, unknown>
+}
+
+export interface ConfigEvaluationMessage {
+  code?: string
+  message?: string
+  targetType?: string
+  targetId?: number
+}
+
+export interface DisabledOptionVO {
+  questionId?: number
+  questionCode?: string
+  optionId?: number
+  optionCode?: string
+  disabledReason?: string
+}
+
+export interface ConfigEvaluationResultVO extends ProductRecord {
+  salesProductId?: number
+  templateVersionId?: number
+  resultStatus?: string
+  warnings?: ConfigEvaluationMessage[]
+  blockers?: ConfigEvaluationMessage[]
+  visibleQuestions?: ConfigQuestionVO[]
+  availableOptions?: ConfigOptionVO[]
+  disabledOptions?: DisabledOptionVO[]
+  validations?: ConfigEvaluationMessage[]
+  autoComponents?: ProductRecord[]
+  mediaAssets?: ProductRecord[]
+}
+
 export interface ProductCrudApi<TRecord extends ProductRecord = ProductRecord, TQuery extends ProductPageQuery = ProductPageQuery> {
   list: (query?: TQuery) => Promise<{ rows?: TRecord[]; total?: number }>
   options?: (query?: TQuery) => Promise<{ data?: TRecord[] } | TRecord[]>

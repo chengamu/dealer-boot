@@ -62,6 +62,48 @@ public class ConfigOptionVo implements Serializable {
     private String optionValue;
 
     /**
+     * 来源类型
+     */
+    @Schema(description = "来源类型")
+    private String sourceType;
+
+    /**
+     * 来源对象ID
+     */
+    @Schema(description = "来源对象ID")
+    private Long sourceRefId;
+
+    /**
+     * 来源编码
+     */
+    @Schema(description = "来源编码")
+    private String sourceCode;
+
+    /**
+     * 来源名称
+     */
+    @Schema(description = "来源名称")
+    private String sourceName;
+
+    /**
+     * 客户展示中文名称
+     */
+    @Schema(description = "客户展示中文名称")
+    private String displayNameCn;
+
+    /**
+     * 客户展示英文名称
+     */
+    @Schema(description = "客户展示英文名称")
+    private String displayNameEn;
+
+    /**
+     * 客户展示值编码
+     */
+    @Schema(description = "客户展示值编码")
+    private String valueCode;
+
+    /**
      * 答案中文说明
      */
     @Schema(description = "答案中文说明")
@@ -90,6 +132,12 @@ public class ConfigOptionVo implements Serializable {
      */
     @Schema(description = "答案价格影响摘要JSON")
     private String priceImpactJson;
+
+    /**
+     * 轻量显示 / 禁用规则JSON
+     */
+    @Schema(description = "轻量显示 / 禁用规则JSON")
+    private String ruleJson;
 
     /**
      * 状态：1正常，0停用

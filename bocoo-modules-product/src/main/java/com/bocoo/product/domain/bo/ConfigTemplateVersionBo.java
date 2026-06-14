@@ -66,6 +66,18 @@ public class ConfigTemplateVersionBo extends BaseBo {
     private String productModelCode;
 
     /**
+     * 销售产品ID
+     */
+    @Schema(description = "销售产品ID")
+    private Long salesProductId;
+
+    /**
+     * 销售产品编码
+     */
+    @Schema(description = "销售产品编码")
+    private String salesProductCode;
+
+    /**
      * 默认销售变体ID
      */
     @Schema(description = "默认销售变体ID")

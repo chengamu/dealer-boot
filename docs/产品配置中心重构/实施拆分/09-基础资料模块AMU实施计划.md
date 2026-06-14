@@ -16,7 +16,7 @@
 
 ## 1. 模块目标
 
-基础资料模块要先把后续配置器、工程规则、BOM、价格、发布、订单快照依赖的主数据打稳。
+基础资料模块要先把后续配置器、工程配置、价格、发布、订单快照以及未来 ERP 依赖的主数据打稳。
 
 一期目标：
 
@@ -38,7 +38,7 @@ OFBiz 测试数据来源标识
 
 ```text
 配置器完整规则引擎
-BOM 规则计算
+工程配置规则计算
 工程尺寸扣减试算
 价格规则试算
 发布审批流
@@ -287,18 +287,18 @@ sql/postgresql/product_capability.sql
 | 表 | 冗余字段 | 用途 |
 | --- | --- | --- |
 | `pc_fabric_profile` | `material_code`、`material_name_cn`、`series_code`、`series_name_cn`、`supplier_name`、`unit_code` | 面料列表、配置器、导入核对、分析报表少联表 |
-| `pc_component` | `component_type_name`、`business_type_name`、`default_unit_name` | 组件包列表和 BOM 预览 |
-| `pc_component_item` | `material_code`、`material_name_cn`、`material_type`、`unit_code`、`unit_name` | BOM 预览和组件明细列表少联表 |
+| `pc_component` | `component_type_name`、`business_type_name`、`default_unit_name` | 组件包列表和工程配置预览 |
+| `pc_component_item` | `material_code`、`material_name_cn`、`material_type`、`unit_code`、`unit_name` | 工程配置预览和组件明细列表少联表 |
 | `pc_media_binding` | `asset_code`、`asset_name_cn`、`asset_type`、`target_code`、`target_name` | 附件资料列表、发布检查、资料快照 |
 | `pc_media_asset` | `oss_file_name`、`oss_url`、`mime_type`、`file_size` | 附件列表、预览、发布包 |
-| `pc_material` | `attribute_summary`、`primary_spec`、`primary_color`、`primary_weight` | 物料列表、搜索和分析少联属性表 |
+| `pc_material` | `spec_summary`、`primary_spec`、`primary_color`、`primary_weight` | 物料列表、搜索和分析少联属性表 |
 
 同步要求：
 
 ```text
 ProductFabricService 更新面料系列或物料后，同步 pc_fabric_profile 冗余字段
 ProductBaseInfoService 更新物料后，同步 pc_component_item 冗余字段
-ProductBaseInfoService 更新 pc_material_attribute 后，同步 pc_material.attribute_summary 等高频冗余字段
+ProductBaseInfoService 更新 pc_material_attribute 后，同步 pc_material.spec_summary 等高频冗余字段
 资料资产更新后，同步 pc_media_binding 中的 asset 快照字段
 导入 OFBiz seed 时同时写主字段和冗余字段
 批量同步可提供 repair/sync 方法，但业务写入必须同步维护
@@ -323,7 +323,7 @@ ProductBaseInfoService 更新 pc_material_attribute 后，同步 pc_material.att
 
 ### 6.2 `pc_fabric_series`
 
-面料系列是规则承载层。配置、工程、BOM、发布检查优先引用系列上的约束；不要把厚度组合、适用产品线、适用控制系统这类规则散落到每个面料资料上。
+面料系列是面料物理资料和原始可用范围的承载层。配置、工程配置、发布检查可以引用系列编码、门幅、厚度等资料，但不能把工程方案规则塞进面料系列。厚度组合、可用门幅可以放在系列；适用产品线、适用控制系统、尺寸禁用、构成项带出规则必须进入工程配置模块。
 
 | 字段 | 中文名 | 说明 |
 | --- | --- | --- |
@@ -343,15 +343,14 @@ ProductBaseInfoService 更新 pc_material_attribute 后，同步 pc_material.att
 | `max_thickness_diff` | 最大厚度差 | 用于限制同一系列中两块/两层面料厚度差 |
 | `max_combined_thickness` | 最大组合厚度 | 用于限制两块/两层面料总厚度 |
 | `thickness_rule_enabled` | 是否启用厚度规则 | 布尔 |
-| `allowed_product_types` | 适用产品线 | 可先用 JSON 或逗号编码，后续规则模块再正规化 |
-| `allowed_control_systems` | 适用控制系统 | 可先用 JSON 或逗号编码，后续规则模块再正规化 |
+| `usage_hint` | 使用提示 | 仅用于人工备注，不作为工程限制判断 |
 | `status` | 状态 | 必填 |
 | `legacy_source` | 旧系统来源 | `OFBIZ` |
 | `legacy_id` | 旧系统 ID | `PRODUCT_CATEGORY_ID` |
 
 ### 6.2.1 `pc_unit`
 
-单位管理是基础资料模块的一等模块，不能只散落在普通字典里。价格、BOM、工程、采购都会引用单位。
+单位管理是基础资料模块的一等模块，不能只散落在普通字典里。价格、工程配置、采购、库存都会引用单位。
 
 | 字段 | 中文名 | 说明 |
 | --- | --- | --- |
@@ -367,7 +366,7 @@ ProductBaseInfoService 更新 pc_material_attribute 后，同步 pc_material.att
 
 ### 6.2.2 `pc_base_attribute`
 
-配置字典用于维护会被配置器、BOM、发布检查引用的基础属性，不等同普通系统字典。
+配置字典用于维护会被配置器、工程配置、发布检查引用的基础属性，不等同普通系统字典。
 
 | 字段 | 中文名 | 说明 |
 | --- | --- | --- |
@@ -654,6 +653,7 @@ admin-ui/src/api/product-capability
 
 | 页面 | 中文名 | 处理 |
 | --- | --- | --- |
+| `master-guide/ProductMasterGuidePage.vue` | 录入向导 | 独立菜单，基础资料第一入口 |
 | `base/ProductUnitPage.vue` | 单位管理 | 独立菜单，基础资料第一入口 |
 | `base/ProductBaseAttributePage.vue` | 配置字典 | 独立菜单，维护业务属性枚举 |
 | `base/ProductBaseInfoPage.vue` | 物料管理 / 组件包 | 保留改造，拆成清晰业务入口 |
@@ -665,7 +665,7 @@ admin-ui/src/api/product-capability
 基础资料菜单顺序必须保持：
 
 ```text
-单位管理 -> 配置字典 -> 物料管理 -> 面料系列 -> 面料资料 -> 组件包
+录入向导 -> 单位管理 -> 配置字典 -> 物料管理 -> 面料系列 -> 面料资料 -> 组件包
 ```
 
 `物料属性`、`组件明细`、`资料资产`、`资料绑定` 是内部或高级能力，默认不在基础资料一级菜单展示。需要维护时从对应业务对象入口进入，例如物料属性从物料详情进入，组件明细从组件包进入，附件从物料/面料/组件包抽屉直接上传并绑定 OSS。
@@ -793,7 +793,7 @@ Barrier 3：
 | --- | --- | --- | --- | --- |
 | `BASE-04-01` | 设计 OFBiz seed 抽取映射 | `main` | `tools/ofbiz-seed/**` 或文档 | 明确 PRODUCT/CATEGORY/DATA_RESOURCE 映射 |
 | `BASE-04-02` | 实现开发期 seed 脚本 | `main` | `tools/ofbiz-seed/**` | 只导基础资料，不导客户、地址、付款 |
-| `BASE-04-03` | 导入至少 5 个产品测试样本 | `main` | dev DB | 能生成 5 个可用于后续配置器/BOM/价格验证的产品基础资料样本 |
+| `BASE-04-03` | 导入至少 5 个产品测试样本 | `main` | dev DB | 能生成 5 个可用于后续配置器、工程配置、价格验证的产品基础资料样本 |
 | `BASE-04-04` | 校验 seed 覆盖度 | `main` | dev DB / 验证脚本 | 5 个样本覆盖面料、控制系统、电机/遥控、通用物料属性、组件包、附件资料 |
 
 Barrier 4：
@@ -820,7 +820,7 @@ legacy_source / legacy_id 可追踪
 说明：
 
 ```text
-这里的“产品样本”不是完整销售产品发布包，而是能支撑后续配置器、BOM、价格模块继续开发的基础资料样本。
+这里的“产品样本”不是完整销售产品发布包，而是能支撑后续配置器、工程配置、价格模块继续开发的基础资料样本。
 如果 OFBiz 里某个样本数据不完整，可以用手工 seed 补齐，但必须保留 legacy_source / legacy_id 或 seed_source 便于追踪。
 ```
 
@@ -840,7 +840,7 @@ legacy_source / legacy_id 可追踪
 基础资料模块完成，不是指 CRUD 页面能打开，而是要满足：
 
 ```text
-1. 单位管理、配置字典、物料管理、面料系列、面料资料、组件包都有清晰业务入口
+1. 录入向导、单位管理、配置字典、物料管理、面料系列、面料资料、组件包都有清晰业务入口
 2. 组件可以包含多个物料
 3. 物料、面料、组件包可以直接上传和查看附件，底层复用 OSS、资料资产和资料绑定台账
 4. 面料有系列、颜色、材质、纹理、工厂型号、门幅、单位
@@ -875,7 +875,7 @@ docs/产品配置中心重构/实施拆分/09-基础资料模块AMU实施计划.
 
 ```text
 不做配置器规则引擎
-不做 BOM 试算
+不做工程配置试算
 不做价格试算
 不做发布审批
 不导客户数据

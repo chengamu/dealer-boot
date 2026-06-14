@@ -28,10 +28,11 @@ public class ConfigEvaluationEngine {
             bo = new ConfigEvaluationBo();
         }
         ConfigEvaluationResultVo result = new ConfigEvaluationResultVo();
+        result.setSalesProductId(bo.getSalesProductId());
         result.setTemplateVersionId(bo.getTemplateVersionId());
         if (bo.getTemplateVersionId() == null) {
             result.setResultStatus("BLOCKER");
-            result.getBlockers().add("product.config.templateVersion.required");
+            result.getBlockers().add(message("product.config.templateVersion.required", "product.config.templateVersion.required", "TEMPLATE_VERSION", null));
             return result;
         }
         List<ConfigQuestionVo> visibleQuestions = safeList(questions).stream()
@@ -41,11 +42,22 @@ public class ConfigEvaluationEngine {
         Map<Long, ConfigQuestionVo> questionById = safeList(questions).stream()
             .filter(question -> question.getQuestionId() != null)
             .collect(Collectors.toMap(ConfigQuestionVo::getQuestionId, question -> question, (left, right) -> left));
-        result.setAvailableOptions(safeList(options).stream()
-            .filter(option -> questionById.containsKey(option.getQuestionId()))
-            .toList());
+        List<ConfigOptionVo> availableOptions = new ArrayList<>();
+        for (ConfigOptionVo option : safeList(options)) {
+            if (!questionById.containsKey(option.getQuestionId())) {
+                continue;
+            }
+            String disabledReason = disabledReason(option);
+            if (StringUtils.isNotBlank(disabledReason)) {
+                result.getDisabledOptions().add(disabledOption(questionById.get(option.getQuestionId()), option, disabledReason));
+            } else {
+                availableOptions.add(option);
+            }
+        }
+        result.setAvailableOptions(availableOptions);
         validateRequired(bo, visibleQuestions, result);
-        result.setAutoComponents(buildAutoComponents(bo, options, questionById, result));
+        result.setAutoComponents(buildAutoComponents(bo, availableOptions, questionById, result));
+        result.setMediaAssets(buildMediaAssets(bo, availableOptions, questionById, result));
         if (!result.getBlockers().isEmpty()) {
             result.setResultStatus("BLOCKER");
         } else if (!result.getWarnings().isEmpty()) {
@@ -65,7 +77,14 @@ public class ConfigEvaluationEngine {
             }
             Object selected = selectedValue(bo, question);
             if (selected == null || StringUtils.isBlank(String.valueOf(selected))) {
-                result.getBlockers().add("product.config.required.missing:" + question.getQuestionCode());
+                ConfigEvaluationResultVo.EvaluationMessageVo message = message(
+                    "product.config.required.missing",
+                    "product.config.required.missing:" + question.getQuestionCode(),
+                    "QUESTION",
+                    question.getQuestionId()
+                );
+                result.getValidations().add(message);
+                result.getBlockers().add(message);
             }
         }
     }
@@ -82,6 +101,31 @@ public class ConfigEvaluationEngine {
             components.addAll(parseComponents(question, option, result));
         }
         return components;
+    }
+
+    private List<Map<String, Object>> buildMediaAssets(ConfigEvaluationBo bo, List<ConfigOptionVo> options,
+                                                        Map<Long, ConfigQuestionVo> questionById,
+                                                        ConfigEvaluationResultVo result) {
+        List<Map<String, Object>> mediaAssets = new ArrayList<>();
+        for (ConfigOptionVo option : safeList(options)) {
+            ConfigQuestionVo question = questionById.get(option.getQuestionId());
+            if (question == null || !selectedOptionMatches(bo, question, option) || StringUtils.isBlank(option.getMediaJson())) {
+                continue;
+            }
+            try {
+                Object parsed = JsonUtils.getObjectMapper().readValue(option.getMediaJson(), Object.class);
+                if (parsed instanceof List<?> list) {
+                    for (Object item : list) {
+                        mediaAssets.add(mediaRow(question, option, item));
+                    }
+                } else {
+                    mediaAssets.add(mediaRow(question, option, parsed));
+                }
+            } catch (Exception e) {
+                result.getWarnings().add(message("product.config.mediaJson.invalid", "product.config.mediaJson.invalid:" + option.getOptionCode(), "OPTION", option.getOptionId()));
+            }
+        }
+        return mediaAssets;
     }
 
     private boolean selectedOptionMatches(ConfigEvaluationBo bo, ConfigQuestionVo question, ConfigOptionVo option) {
@@ -115,7 +159,7 @@ public class ConfigEvaluationEngine {
             }
             return components;
         } catch (Exception e) {
-            result.getWarnings().add("product.config.componentJson.invalid:" + option.getOptionCode());
+            result.getWarnings().add(message("product.config.componentJson.invalid", "product.config.componentJson.invalid:" + option.getOptionCode(), "OPTION", option.getOptionId()));
             return List.of();
         }
     }
@@ -133,6 +177,59 @@ public class ConfigEvaluationEngine {
         } else {
             row.put("component", component);
         }
+        return row;
+    }
+
+    private Map<String, Object> mediaRow(ConfigQuestionVo question, ConfigOptionVo option, Object media) {
+        Map<String, Object> row = new LinkedHashMap<>();
+        row.put("questionCode", question.getQuestionCode());
+        row.put("optionCode", option.getOptionCode());
+        row.put("optionNameCn", option.getOptionNameCn());
+        row.put("optionNameEn", option.getOptionNameEn());
+        if (media instanceof Map<?, ?> mediaMap) {
+            mediaMap.forEach((key, value) -> row.put(String.valueOf(key), value));
+        } else {
+            row.put("media", media);
+        }
+        return row;
+    }
+
+    private String disabledReason(ConfigOptionVo option) {
+        if (option == null || StringUtils.isBlank(option.getRuleJson())) {
+            return null;
+        }
+        try {
+            Object parsed = JsonUtils.getObjectMapper().readValue(option.getRuleJson(), Object.class);
+            if (!(parsed instanceof Map<?, ?> rule)) {
+                return null;
+            }
+            Object disabled = rule.get("disabled");
+            if (Boolean.TRUE.equals(disabled) || "true".equalsIgnoreCase(String.valueOf(disabled))) {
+                Object reason = rule.get("disabledReason");
+                return StringUtils.blankToDefault(reason == null ? null : String.valueOf(reason), "product.config.option.disabled");
+            }
+            return null;
+        } catch (Exception e) {
+            return "product.config.ruleJson.invalid";
+        }
+    }
+
+    private ConfigEvaluationResultVo.DisabledOptionVo disabledOption(ConfigQuestionVo question, ConfigOptionVo option, String reason) {
+        ConfigEvaluationResultVo.DisabledOptionVo row = new ConfigEvaluationResultVo.DisabledOptionVo();
+        row.setQuestionId(question == null ? null : question.getQuestionId());
+        row.setQuestionCode(question == null ? null : question.getQuestionCode());
+        row.setOptionId(option.getOptionId());
+        row.setOptionCode(option.getOptionCode());
+        row.setDisabledReason(reason);
+        return row;
+    }
+
+    private ConfigEvaluationResultVo.EvaluationMessageVo message(String code, String message, String targetType, Long targetId) {
+        ConfigEvaluationResultVo.EvaluationMessageVo row = new ConfigEvaluationResultVo.EvaluationMessageVo();
+        row.setCode(code);
+        row.setMessage(message);
+        row.setTargetType(targetType);
+        row.setTargetId(targetId);
         return row;
     }
 }

@@ -4,7 +4,6 @@ import com.bocoo.product.domain.entity.ConfigTemplateVersion;
 import io.github.linpeilie.annotations.AutoMapper;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
-import java.time.LocalDateTime;
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -67,6 +66,18 @@ public class ConfigTemplateVersionVo implements Serializable {
      */
     @Schema(description = "产品模型编码")
     private String productModelCode;
+
+    /**
+     * 销售产品ID
+     */
+    @Schema(description = "销售产品ID")
+    private Long salesProductId;
+
+    /**
+     * 销售产品编码
+     */
+    @Schema(description = "销售产品编码")
+    private String salesProductCode;
 
     /**
      * 默认销售变体ID

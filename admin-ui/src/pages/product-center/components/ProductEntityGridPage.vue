@@ -150,7 +150,7 @@
             :disabled="drawerReadonly"
             @change="handleBooleanChange(field, $event)"
           />
-          <el-select v-else-if="field.type === 'select'" v-model="form[field.prop]" :disabled="drawerReadonly" filterable clearable style="width: 100%">
+          <el-select v-else-if="field.type === 'select'" v-model="form[field.prop]" :disabled="drawerReadonly" filterable clearable style="width: 100%" @change="handleFieldChange(field, $event)">
             <el-option v-for="option in field.options || []" :key="String(option.value)" :label="option.label" :value="option.value" />
           </el-select>
           <el-input v-else-if="field.type === 'textarea'" v-model="form[field.prop] as string" type="textarea" :rows="3" :disabled="drawerReadonly" :placeholder="t('productCenter.common.inputPlaceholder')" />
@@ -253,6 +253,7 @@ export interface ProductFieldConfig {
   form?: boolean
   required?: boolean
   formSpan?: 1 | 2
+  onChange?: (value: unknown, form: ProductRecord) => void
 }
 
 export interface ProductGridConfig {
@@ -603,6 +604,10 @@ async function handleStatusChange(row: ProductRecord, field: ProductFieldConfig,
 
 function handleBooleanChange(field: ProductFieldConfig, value: unknown) {
   form.value[field.prop] = Boolean(value)
+}
+
+function handleFieldChange(field: ProductFieldConfig, value: unknown) {
+  field.onChange?.(value, form.value)
 }
 
 function cancel() {

@@ -44,7 +44,7 @@
 ```text
 OFBiz 通用实体主键和状态模型
 OFBiz Content / DataResource 作为新附件主表
-OFBiz ProductAssoc 直接作为新 BOM 规则
+OFBiz ProductAssoc 直接作为新工程配置规则
 OFBiz Quote / OrderHeader 直接作为新订单模型
 ```
 
@@ -69,7 +69,7 @@ OFBiz Quote / OrderHeader 直接作为新订单模型
 | `PRODUCT_FEATURE` | 19 | 可参考，但不是主要配置来源 |
 | `PRODUCT_FEATURE_APPL` | 0 | 不作为主要来源 |
 | `PRODUCT_PRICE` | 127 实查类型分布 | 可作为基础价格样本，但不足以覆盖新价格规则 |
-| `PRODUCT_ASSOC` | 294 | 主要是配置产品关联，不是完整 BOM |
+| `PRODUCT_ASSOC` | 294 | 主要是配置产品关联，不是完整工程配置 |
 | `PRODUCT_CONTENT` | 12 | 产品内容绑定很少，附件更多在 `DATA_RESOURCE` |
 | `CONTENT` | 470 | 附件 / 文本 / 内容索引来源 |
 | `DATA_RESOURCE` | 459 | 附件资源主来源 |
@@ -262,7 +262,7 @@ PRODUCT_CONFIG_OPTION_IACTN = 0
 
 ---
 
-## 6. BOM / 工程数据判断
+## 6. 工程配置数据判断
 
 OFBiz 标准制造模块会用：
 
@@ -271,7 +271,7 @@ PRODUCT_ASSOC.product_assoc_type_id = MANUF_COMPONENT
 PRODUCT_ASSOC.product_assoc_type_id = ENGINEER_COMPONENT
 ```
 
-代码里 `FindProductBom.groovy` 也是按这两个类型查 BOM。
+代码里 `FindProductBom.groovy` 也是按这两个类型查旧系统的组件关系。
 
 但真实库 `PRODUCT_ASSOC` 类型分布是：
 
@@ -282,10 +282,10 @@ ALSO_BOUGHT  27
 
 结论：
 
-1. 老库没有可直接复用的标准制造 BOM 数据。
+1. 老库没有可直接复用的标准制造 BOM 数据，也没有新系统需要的完整工程配置数据。
 2. `PRODUCT_CONFIG_PRODUCT` 可作为“选项带出物料 / 子产品”的参考。
-3. 新系统一期的工程模板、尺寸限制、扣减规则、BOM 预览规则仍然要新建。
-4. 老数据可以帮助我们生成 BOM 测试样本，但不能替代新系统 `pc_bom_rule`。
+3. 新系统一期要新建工程方案、构成项、可选范围、能力规则、带出规则、工程配置预览和缺失检查。
+4. 老数据可以帮助我们生成工程配置测试样本，但不能替代新系统的工程配置维护和发布检查。
 
 ---
 
@@ -357,7 +357,7 @@ Mount Position
 4. 抽取 DATA_RESOURCE / CONTENT / PRODUCT_CONTENT 作为资料资产 metadata
 5. 能访问文件本体的导入 OSS；不能访问的保留 legacy_path
 6. 抽取少量 QUOTE_ITEM / ORDER_ITEM 生成试算器回归样本
-7. 人工补齐新系统工程规则、BOM 规则、价格规则
+7. 人工补齐新系统工程配置规则和价格规则
 ```
 
 第二阶段再考虑导入更多历史样本：
@@ -408,7 +408,7 @@ Mount Position
 新系统按我们的目标模型重建
 老 OFBiz 数据用于生成真实感测试样本
 附件仍然走 base-boot OSS
-BOM / 工程规则不能指望从老库直接迁出
+工程配置规则不能指望从老库直接迁出
 配置题、选项、产品、分类可以作为第一批导入样本
 ```
 

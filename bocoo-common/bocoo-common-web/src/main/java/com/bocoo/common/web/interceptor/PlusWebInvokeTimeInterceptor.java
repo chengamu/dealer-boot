@@ -76,6 +76,9 @@ public class PlusWebInvokeTimeInterceptor implements HandlerInterceptor {
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
         if (!prodProfile.equals(SpringUtils.getActiveProfile())) {
             StopWatch stopWatch = KEY_CACHE.get();
+            if (stopWatch == null) {
+                return;
+            }
             stopWatch.stop();
             log.info("[PLUS]结束请求 => URL[{}],耗时:[{}]毫秒", request.getMethod() + " " + request.getRequestURI(), stopWatch.getTime());
             KEY_CACHE.remove();

@@ -681,9 +681,10 @@ INSERT INTO pc_unit (
     (110002, 1, 'SET', '套', 'Set', 'COUNT', 0, 'HALF_UP', 'SET', 1.000000, 'ENABLED', '0', 20, '组件套装单位', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
     (110003, 1, 'M', '米', 'Meter', 'LENGTH', 3, 'HALF_UP', 'M', 1.000000, 'ENABLED', '0', 30, '长度单位', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
     (110004, 1, 'MM', '毫米', 'Millimeter', 'LENGTH', 2, 'HALF_UP', 'M', 0.001000, 'ENABLED', '0', 40, '厚度与门幅辅助单位', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
-    (110005, 1, 'SQM', '平方米', 'Square Meter', 'AREA', 3, 'HALF_UP', 'SQM', 1.000000, 'ENABLED', '0', 50, '面积单位', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
-    (110006, 1, 'GSM', '克每平方米', 'Gram per Square Meter', 'WEIGHT', 0, 'HALF_UP', 'GSM', 1.000000, 'ENABLED', '0', 60, '面料克重单位', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
-    (110007, 1, 'KG', '千克', 'Kilogram', 'WEIGHT', 3, 'HALF_UP', 'KG', 1.000000, 'ENABLED', '0', 70, '重量单位', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00')
+    (110005, 1, 'CM', '厘米', 'Centimeter', 'LENGTH', 2, 'HALF_UP', 'M', 0.010000, 'ENABLED', '0', 45, '销售产品尺寸单位', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
+    (110006, 1, 'SQM', '平方米', 'Square Meter', 'AREA', 3, 'HALF_UP', 'SQM', 1.000000, 'ENABLED', '0', 50, '面积单位', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
+    (110007, 1, 'GSM', '克每平方米', 'Gram per Square Meter', 'WEIGHT', 0, 'HALF_UP', 'GSM', 1.000000, 'ENABLED', '0', 60, '面料克重单位', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
+    (110008, 1, 'KG', '千克', 'Kilogram', 'WEIGHT', 3, 'HALF_UP', 'KG', 1.000000, 'ENABLED', '0', 70, '重量单位', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00')
 ON CONFLICT (tenant_id, unit_code) WHERE del_flag = '0' DO NOTHING;
 
 INSERT INTO pc_base_attribute (
@@ -851,21 +852,417 @@ DROP TABLE IF EXISTS pc_config_template;
 DROP TABLE IF EXISTS pc_sales_variant;
 DROP TABLE IF EXISTS pc_product_model;
 
+CREATE TABLE IF NOT EXISTS pc_sales_product (
+    sales_product_id bigint PRIMARY KEY,
+    tenant_id bigint NOT NULL DEFAULT 1 CHECK (tenant_id <> 0),
+    sales_product_code varchar(80) NOT NULL,
+    sales_product_name_cn varchar(200) NOT NULL,
+    sales_product_name_en varchar(200),
+    category_id bigint,
+    category_code varchar(80),
+    category_name_cn varchar(200),
+    category_name_en varchar(200),
+    product_type varchar(80),
+    sales_mode varchar(80),
+    template_id bigint,
+    template_code varchar(80),
+    template_version_id bigint,
+    template_version_no varchar(80),
+    default_width numeric(18,6),
+    default_height numeric(18,6),
+    dimension_unit varchar(80),
+    biz_status varchar(40) NOT NULL DEFAULT 'DRAFT',
+    legacy_source varchar(80),
+    legacy_id varchar(120),
+    status varchar(20) NOT NULL DEFAULT 'ENABLED',
+    del_flag varchar(1) NOT NULL DEFAULT '0',
+    sort_order integer DEFAULT 0,
+    remark varchar(500),
+    create_by_id bigint,
+    create_by varchar(64),
+    create_time timestamptz,
+    update_by varchar(64),
+    update_time timestamptz
+);
+
+COMMENT ON TABLE pc_sales_product IS '销售产品表';
+COMMENT ON COLUMN pc_sales_product.sales_product_id IS '销售产品ID';
+COMMENT ON COLUMN pc_sales_product.sales_product_code IS '销售产品编码';
+COMMENT ON COLUMN pc_sales_product.sales_product_name_cn IS '销售产品中文名称';
+COMMENT ON COLUMN pc_sales_product.sales_product_name_en IS '销售产品英文名称';
+COMMENT ON COLUMN pc_sales_product.category_id IS '产品分类ID';
+COMMENT ON COLUMN pc_sales_product.category_code IS '产品分类编码';
+COMMENT ON COLUMN pc_sales_product.category_name_cn IS '产品分类中文名称快照';
+COMMENT ON COLUMN pc_sales_product.category_name_en IS '产品分类英文名称快照';
+COMMENT ON COLUMN pc_sales_product.product_type IS '产品类型';
+COMMENT ON COLUMN pc_sales_product.sales_mode IS '销售模式';
+COMMENT ON COLUMN pc_sales_product.template_id IS '默认配置模板ID';
+COMMENT ON COLUMN pc_sales_product.template_code IS '默认配置模板编码';
+COMMENT ON COLUMN pc_sales_product.template_version_id IS '默认配置模板版本ID';
+COMMENT ON COLUMN pc_sales_product.template_version_no IS '默认配置模板版本号';
+COMMENT ON COLUMN pc_sales_product.default_width IS '默认宽度';
+COMMENT ON COLUMN pc_sales_product.default_height IS '默认高度';
+COMMENT ON COLUMN pc_sales_product.dimension_unit IS '尺寸单位';
+COMMENT ON COLUMN pc_sales_product.biz_status IS '业务状态';
+COMMENT ON COLUMN pc_sales_product.legacy_source IS '旧系统来源';
+COMMENT ON COLUMN pc_sales_product.legacy_id IS '旧系统编号';
+COMMENT ON COLUMN pc_sales_product.status IS '状态：ENABLED启用，DISABLED停用';
+COMMENT ON COLUMN pc_sales_product.del_flag IS '删除标志：0存在，2删除';
+CREATE UNIQUE INDEX IF NOT EXISTS uk_pc_sales_product_code_active ON pc_sales_product (tenant_id, sales_product_code) WHERE del_flag = '0';
+CREATE INDEX IF NOT EXISTS idx_pc_sales_product_category_status ON pc_sales_product (tenant_id, category_code, status);
+CREATE INDEX IF NOT EXISTS idx_pc_sales_product_template ON pc_sales_product (tenant_id, template_id, template_version_id);
+
+CREATE TABLE IF NOT EXISTS pc_standard_sku (
+    standard_sku_id bigint PRIMARY KEY,
+    tenant_id bigint NOT NULL DEFAULT 1 CHECK (tenant_id <> 0),
+    sku_code varchar(80) NOT NULL,
+    sku_name_cn varchar(200) NOT NULL,
+    sku_name_en varchar(200),
+    sales_product_id bigint,
+    sales_product_code varchar(80),
+    width_value numeric(18,6),
+    height_value numeric(18,6),
+    dimension_unit varchar(80),
+    status varchar(20) NOT NULL DEFAULT 'ENABLED',
+    del_flag varchar(1) NOT NULL DEFAULT '0',
+    sort_order integer DEFAULT 0,
+    remark varchar(500),
+    create_by_id bigint,
+    create_by varchar(64),
+    create_time timestamptz,
+    update_by varchar(64),
+    update_time timestamptz
+);
+
+COMMENT ON TABLE pc_standard_sku IS '标品SKU预留表';
+CREATE UNIQUE INDEX IF NOT EXISTS uk_pc_standard_sku_code_active ON pc_standard_sku (tenant_id, sku_code) WHERE del_flag = '0';
+CREATE INDEX IF NOT EXISTS idx_pc_standard_sku_product ON pc_standard_sku (tenant_id, sales_product_id, status);
+
+CREATE TABLE IF NOT EXISTS pc_config_template (
+    template_id bigint PRIMARY KEY,
+    tenant_id bigint NOT NULL DEFAULT 1 CHECK (tenant_id <> 0),
+    template_code varchar(80) NOT NULL,
+    template_name_cn varchar(200) NOT NULL,
+    template_name_en varchar(200),
+    product_model_id bigint,
+    product_model_code varchar(80),
+    sales_product_id bigint,
+    sales_product_code varchar(80),
+    current_version_id bigint,
+    current_version_no varchar(80),
+    published_version_id bigint,
+    published_version_no varchar(80),
+    biz_status varchar(40) NOT NULL DEFAULT 'DRAFT',
+    status varchar(20) NOT NULL DEFAULT 'ENABLED',
+    del_flag varchar(1) NOT NULL DEFAULT '0',
+    remark varchar(500),
+    create_by_id bigint,
+    create_by varchar(64),
+    create_time timestamptz,
+    update_by varchar(64),
+    update_time timestamptz
+);
+
+COMMENT ON TABLE pc_config_template IS '配置模板表';
+CREATE UNIQUE INDEX IF NOT EXISTS uk_pc_config_template_code_active ON pc_config_template (tenant_id, template_code) WHERE del_flag = '0';
+CREATE INDEX IF NOT EXISTS idx_pc_config_template_sales_product ON pc_config_template (tenant_id, sales_product_id, status);
+
+CREATE TABLE IF NOT EXISTS pc_config_template_version (
+    template_version_id bigint PRIMARY KEY,
+    tenant_id bigint NOT NULL DEFAULT 1 CHECK (tenant_id <> 0),
+    template_id bigint NOT NULL,
+    template_code varchar(80) NOT NULL,
+    version_no varchar(80) NOT NULL,
+    version_name varchar(200),
+    version_status varchar(40) NOT NULL DEFAULT 'DRAFT',
+    product_model_id bigint,
+    product_model_code varchar(80),
+    sales_product_id bigint,
+    sales_product_code varchar(80),
+    sales_variant_id bigint,
+    sales_variant_code varchar(80),
+    price_plan_version_id bigint,
+    price_plan_code varchar(80),
+    schema_json jsonb,
+    draft_hash varchar(120),
+    effective_from timestamptz,
+    effective_to timestamptz,
+    published_package_id bigint,
+    del_flag varchar(1) NOT NULL DEFAULT '0',
+    remark varchar(500),
+    create_by_id bigint,
+    create_by varchar(64),
+    create_time timestamptz,
+    update_by varchar(64),
+    update_time timestamptz
+);
+
+COMMENT ON TABLE pc_config_template_version IS '配置模板版本表';
+CREATE UNIQUE INDEX IF NOT EXISTS uk_pc_config_template_version_active ON pc_config_template_version (tenant_id, template_id, version_no) WHERE del_flag = '0';
+CREATE INDEX IF NOT EXISTS idx_pc_config_template_version_status ON pc_config_template_version (tenant_id, version_status);
+
+CREATE TABLE IF NOT EXISTS pc_question_group (
+    question_group_id bigint PRIMARY KEY,
+    tenant_id bigint NOT NULL DEFAULT 1 CHECK (tenant_id <> 0),
+    group_code varchar(80) NOT NULL,
+    group_name_cn varchar(200) NOT NULL,
+    group_name_en varchar(200),
+    description_cn varchar(500),
+    description_en varchar(500),
+    status varchar(20) NOT NULL DEFAULT 'ENABLED',
+    del_flag varchar(1) NOT NULL DEFAULT '0',
+    sort_order integer DEFAULT 0,
+    remark varchar(500),
+    create_by_id bigint,
+    create_by varchar(64),
+    create_time timestamptz,
+    update_by varchar(64),
+    update_time timestamptz
+);
+
+COMMENT ON TABLE pc_question_group IS '配置问题组表';
+CREATE UNIQUE INDEX IF NOT EXISTS uk_pc_question_group_code_active ON pc_question_group (tenant_id, group_code) WHERE del_flag = '0';
+
+CREATE TABLE IF NOT EXISTS pc_config_question (
+    question_id bigint PRIMARY KEY,
+    tenant_id bigint NOT NULL DEFAULT 1 CHECK (tenant_id <> 0),
+    template_version_id bigint NOT NULL,
+    question_group_id bigint,
+    question_code varchar(80) NOT NULL,
+    question_name_cn varchar(200) NOT NULL,
+    question_name_en varchar(200),
+    help_text_cn varchar(500),
+    help_text_en varchar(500),
+    input_type varchar(80) NOT NULL,
+    required_flag varchar(1) NOT NULL DEFAULT '0',
+    customer_visible varchar(1) NOT NULL DEFAULT '1',
+    default_value varchar(200),
+    validation_json jsonb,
+    display_rule_json jsonb,
+    status varchar(20) NOT NULL DEFAULT 'ENABLED',
+    del_flag varchar(1) NOT NULL DEFAULT '0',
+    sort_order integer DEFAULT 0,
+    remark varchar(500),
+    create_by_id bigint,
+    create_by varchar(64),
+    create_time timestamptz,
+    update_by varchar(64),
+    update_time timestamptz
+);
+
+COMMENT ON TABLE pc_config_question IS '配置问题表';
+CREATE UNIQUE INDEX IF NOT EXISTS uk_pc_config_question_code_active ON pc_config_question (tenant_id, template_version_id, question_code) WHERE del_flag = '0';
+CREATE INDEX IF NOT EXISTS idx_pc_config_question_group ON pc_config_question (tenant_id, question_group_id, status);
+
+CREATE TABLE IF NOT EXISTS pc_config_option (
+    option_id bigint PRIMARY KEY,
+    tenant_id bigint NOT NULL DEFAULT 1 CHECK (tenant_id <> 0),
+    question_id bigint NOT NULL,
+    template_version_id bigint NOT NULL,
+    option_code varchar(80) NOT NULL,
+    option_name_cn varchar(200) NOT NULL,
+    option_name_en varchar(200),
+    option_value varchar(200),
+    source_type varchar(80),
+    source_ref_id bigint,
+    source_code varchar(80),
+    source_name varchar(200),
+    display_name_cn varchar(200),
+    display_name_en varchar(200),
+    value_code varchar(80),
+    help_text_cn varchar(500),
+    help_text_en varchar(500),
+    component_json jsonb,
+    media_json jsonb,
+    price_impact_json jsonb,
+    rule_json jsonb,
+    status varchar(20) NOT NULL DEFAULT 'ENABLED',
+    del_flag varchar(1) NOT NULL DEFAULT '0',
+    sort_order integer DEFAULT 0,
+    remark varchar(500),
+    create_by_id bigint,
+    create_by varchar(64),
+    create_time timestamptz,
+    update_by varchar(64),
+    update_time timestamptz
+);
+
+COMMENT ON TABLE pc_config_option IS '配置答案表';
+CREATE UNIQUE INDEX IF NOT EXISTS uk_pc_config_option_code_active ON pc_config_option (tenant_id, question_id, option_code) WHERE del_flag = '0';
+CREATE INDEX IF NOT EXISTS idx_pc_config_option_source ON pc_config_option (tenant_id, source_type, source_ref_id, status);
+
+CREATE TABLE IF NOT EXISTS pc_config_rule (
+    rule_id bigint PRIMARY KEY,
+    tenant_id bigint NOT NULL DEFAULT 1 CHECK (tenant_id <> 0),
+    template_version_id bigint NOT NULL,
+    rule_code varchar(80) NOT NULL,
+    rule_name_cn varchar(200) NOT NULL,
+    rule_name_en varchar(200),
+    rule_type varchar(80) NOT NULL,
+    priority integer DEFAULT 0,
+    condition_json jsonb,
+    action_json jsonb,
+    error_message_cn varchar(500),
+    error_message_en varchar(500),
+    status varchar(20) NOT NULL DEFAULT 'ENABLED',
+    del_flag varchar(1) NOT NULL DEFAULT '0',
+    remark varchar(500),
+    create_by_id bigint,
+    create_by varchar(64),
+    create_time timestamptz,
+    update_by varchar(64),
+    update_time timestamptz
+);
+
+COMMENT ON TABLE pc_config_rule IS '配置规则表';
+CREATE UNIQUE INDEX IF NOT EXISTS uk_pc_config_rule_code_active ON pc_config_rule (tenant_id, template_version_id, rule_code) WHERE del_flag = '0';
+CREATE INDEX IF NOT EXISTS idx_pc_config_rule_type_status ON pc_config_rule (tenant_id, rule_type, status);
+
+INSERT INTO pc_sales_product (
+    sales_product_id, tenant_id, sales_product_code, sales_product_name_cn, sales_product_name_en, category_id, category_code, category_name_cn, category_name_en,
+    product_type, sales_mode, template_id, template_code, template_version_id, template_version_no, default_width, default_height,
+    dimension_unit, biz_status, legacy_source, legacy_id, status, del_flag, sort_order, remark, create_by, create_time, update_by, update_time
+) VALUES
+    (200001, 1, 'SP_ROLLER_BASIC', '基础卷帘', 'Basic Roller Shade', 100101, 'ROLLER_SHADE_BASIC', '基础卷帘分类', 'Basic Roller Shade Category', 'ROLLER_SHADE', 'CONFIGURABLE', 210001, 'TPL_ROLLER_BASIC', 211001, 'V1', 120.000000, 160.000000, 'CM', 'DRAFT', 'OFBIZ', 'SP:ROLLER_BASIC', 'ENABLED', '0', 10, 'Sample: ROLLER_SHADE_BASIC', 'system', '2026-06-12 00:00:00+00', 'system', '2026-06-12 00:00:00+00'),
+    (200002, 1, 'SP_OUTDOOR_SHADE', '户外卷帘', 'Outdoor Roller Shade', 100104, 'OUTDOOR_SHADE', '户外遮阳分类', 'Outdoor Shade Category', 'OUTDOOR_SHADE', 'CONFIGURABLE', 210002, 'TPL_OUTDOOR_SHADE', 211002, 'V1', 180.000000, 220.000000, 'CM', 'DRAFT', 'OFBIZ', 'SP:OUTDOOR_SHADE', 'ENABLED', '0', 20, 'Sample: OUTDOOR_SHADE', 'system', '2026-06-12 00:00:00+00', 'system', '2026-06-12 00:00:00+00'),
+    (200003, 1, 'SP_ZEBRA_DUAL', '双层柔纱帘', 'Dual Layer Zebra Shade', 100103, 'ZEBRA_SHADE_BASIC', '柔纱帘分类', 'Zebra Shade Category', 'ZEBRA_SHADE', 'CONFIGURABLE', 210003, 'TPL_ZEBRA_DUAL', 211003, 'V1', 130.000000, 180.000000, 'CM', 'DRAFT', 'OFBIZ', 'SP:ZEBRA_DUAL', 'ENABLED', '0', 30, 'Sample: ZEBRA_SHADE_BASIC', 'system', '2026-06-12 00:00:00+00', 'system', '2026-06-12 00:00:00+00'),
+    (200004, 1, 'SP_ROLLER_MOTOR', '电动卷帘', 'Motorized Roller Shade', 100102, 'ROLLER_SHADE_MOTOR', '电动卷帘分类', 'Motorized Roller Category', 'ROLLER_SHADE', 'CONFIGURABLE', 210004, 'TPL_ROLLER_MOTOR', 211004, 'V1', 150.000000, 200.000000, 'CM', 'DRAFT', 'OFBIZ', 'SP:ROLLER_MOTOR', 'ENABLED', '0', 40, 'Sample: ROLLER_SHADE_MOTOR', 'system', '2026-06-12 00:00:00+00', 'system', '2026-06-12 00:00:00+00'),
+    (200005, 1, 'SP_TRACK_MEDIA', '资料轨道套装', 'Track Pack With Media', 100105, 'CURTAIN_TRACK_SAMPLE', '轨道套装分类', 'Curtain Track Category', 'CURTAIN_TRACK', 'CONFIGURABLE', 210005, 'TPL_TRACK_MEDIA', 211005, 'V1', 240.000000, 260.000000, 'CM', 'DRAFT', 'OFBIZ', 'SP:TRACK_MEDIA', 'ENABLED', '0', 50, 'Sample: CURTAIN_TRACK_SAMPLE', 'system', '2026-06-12 00:00:00+00', 'system', '2026-06-12 00:00:00+00')
+ON CONFLICT (tenant_id, sales_product_code) WHERE del_flag = '0' DO NOTHING;
+
+INSERT INTO pc_config_template (
+    template_id, tenant_id, template_code, template_name_cn, template_name_en, product_model_id, product_model_code,
+    sales_product_id, sales_product_code, current_version_id, current_version_no, published_version_id, published_version_no,
+    biz_status, status, del_flag, remark, create_by, create_time, update_by, update_time
+) VALUES
+    (210001, 1, 'TPL_ROLLER_BASIC', '基础卷帘配置模板', 'Basic Roller Config Template', 200001, 'SP_ROLLER_BASIC', 200001, 'SP_ROLLER_BASIC', 211001, 'V1', NULL, NULL, 'DRAFT', 'ENABLED', '0', 'Sample template', 'system', '2026-06-12 00:00:00+00', 'system', '2026-06-12 00:00:00+00'),
+    (210002, 1, 'TPL_OUTDOOR_SHADE', '户外卷帘配置模板', 'Outdoor Shade Config Template', 200002, 'SP_OUTDOOR_SHADE', 200002, 'SP_OUTDOOR_SHADE', 211002, 'V1', NULL, NULL, 'DRAFT', 'ENABLED', '0', 'Sample template', 'system', '2026-06-12 00:00:00+00', 'system', '2026-06-12 00:00:00+00'),
+    (210003, 1, 'TPL_ZEBRA_DUAL', '柔纱帘配置模板', 'Zebra Config Template', 200003, 'SP_ZEBRA_DUAL', 200003, 'SP_ZEBRA_DUAL', 211003, 'V1', NULL, NULL, 'DRAFT', 'ENABLED', '0', 'Sample template', 'system', '2026-06-12 00:00:00+00', 'system', '2026-06-12 00:00:00+00'),
+    (210004, 1, 'TPL_ROLLER_MOTOR', '电动卷帘配置模板', 'Motorized Roller Config Template', 200004, 'SP_ROLLER_MOTOR', 200004, 'SP_ROLLER_MOTOR', 211004, 'V1', NULL, NULL, 'DRAFT', 'ENABLED', '0', 'Sample template', 'system', '2026-06-12 00:00:00+00', 'system', '2026-06-12 00:00:00+00'),
+    (210005, 1, 'TPL_TRACK_MEDIA', '资料轨道配置模板', 'Track Media Config Template', 200005, 'SP_TRACK_MEDIA', 200005, 'SP_TRACK_MEDIA', 211005, 'V1', NULL, NULL, 'DRAFT', 'ENABLED', '0', 'Sample template', 'system', '2026-06-12 00:00:00+00', 'system', '2026-06-12 00:00:00+00')
+ON CONFLICT (tenant_id, template_code) WHERE del_flag = '0' DO NOTHING;
+
+INSERT INTO pc_config_template_version (
+    template_version_id, tenant_id, template_id, template_code, version_no, version_name, version_status,
+    product_model_id, product_model_code, sales_product_id, sales_product_code, schema_json, draft_hash,
+    del_flag, remark, create_by, create_time, update_by, update_time
+) VALUES
+    (211001, 1, 210001, 'TPL_ROLLER_BASIC', 'V1', 'Initial Draft', 'DRAFT', 200001, 'SP_ROLLER_BASIC', 200001, 'SP_ROLLER_BASIC', '{"sample":"ROLLER_SHADE_BASIC"}'::jsonb, 'seed-roller-basic', '0', 'Sample version', 'system', '2026-06-12 00:00:00+00', 'system', '2026-06-12 00:00:00+00'),
+    (211002, 1, 210002, 'TPL_OUTDOOR_SHADE', 'V1', 'Initial Draft', 'DRAFT', 200002, 'SP_OUTDOOR_SHADE', 200002, 'SP_OUTDOOR_SHADE', '{"sample":"OUTDOOR_SHADE"}'::jsonb, 'seed-outdoor', '0', 'Sample version', 'system', '2026-06-12 00:00:00+00', 'system', '2026-06-12 00:00:00+00'),
+    (211003, 1, 210003, 'TPL_ZEBRA_DUAL', 'V1', 'Initial Draft', 'DRAFT', 200003, 'SP_ZEBRA_DUAL', 200003, 'SP_ZEBRA_DUAL', '{"sample":"ZEBRA_SHADE_BASIC"}'::jsonb, 'seed-zebra', '0', 'Sample version', 'system', '2026-06-12 00:00:00+00', 'system', '2026-06-12 00:00:00+00'),
+    (211004, 1, 210004, 'TPL_ROLLER_MOTOR', 'V1', 'Initial Draft', 'DRAFT', 200004, 'SP_ROLLER_MOTOR', 200004, 'SP_ROLLER_MOTOR', '{"sample":"ROLLER_SHADE_MOTOR"}'::jsonb, 'seed-motor', '0', 'Sample version', 'system', '2026-06-12 00:00:00+00', 'system', '2026-06-12 00:00:00+00'),
+    (211005, 1, 210005, 'TPL_TRACK_MEDIA', 'V1', 'Initial Draft', 'DRAFT', 200005, 'SP_TRACK_MEDIA', 200005, 'SP_TRACK_MEDIA', '{"sample":"CURTAIN_TRACK_SAMPLE"}'::jsonb, 'seed-track', '0', 'Sample version', 'system', '2026-06-12 00:00:00+00', 'system', '2026-06-12 00:00:00+00')
+ON CONFLICT (tenant_id, template_id, version_no) WHERE del_flag = '0' DO NOTHING;
+
+INSERT INTO pc_question_group (
+    question_group_id, tenant_id, group_code, group_name_cn, group_name_en, description_cn, description_en,
+    status, del_flag, sort_order, remark, create_by, create_time, update_by, update_time
+) VALUES
+    (212001, 1, 'GROUP_FABRIC', '面料选择', 'Fabric Selection', '选择面料系列和颜色', 'Choose fabric series and color', 'ENABLED', '0', 10, 'Seed group', 'system', '2026-06-12 00:00:00+00', 'system', '2026-06-12 00:00:00+00'),
+    (212002, 1, 'GROUP_CONTROL', '控制方式', 'Control Method', '选择手动或电动控制', 'Choose manual or motor control', 'ENABLED', '0', 20, 'Seed group', 'system', '2026-06-12 00:00:00+00', 'system', '2026-06-12 00:00:00+00'),
+    (212003, 1, 'GROUP_INSTALL', '安装附件', 'Installation Accessories', '选择安装和附件资料', 'Choose install packs and media', 'ENABLED', '0', 30, 'Seed group', 'system', '2026-06-12 00:00:00+00', 'system', '2026-06-12 00:00:00+00')
+ON CONFLICT (tenant_id, group_code) WHERE del_flag = '0' DO NOTHING;
+
+INSERT INTO pc_config_question (
+    question_id, tenant_id, template_version_id, question_group_id, question_code, question_name_cn, question_name_en,
+    help_text_cn, help_text_en, input_type, required_flag, customer_visible, default_value, validation_json, display_rule_json,
+    status, del_flag, sort_order, remark, create_by, create_time, update_by, update_time
+) VALUES
+    (213001, 1, 211001, 212001, 'FABRIC_SERIES', '面料系列', 'Fabric Series', NULL, NULL, 'SINGLE_SELECT', '1', '1', NULL, '{"required":true}'::jsonb, NULL, 'ENABLED', '0', 10, 'SP_ROLLER_BASIC', 'system', '2026-06-12 00:00:00+00', 'system', '2026-06-12 00:00:00+00'),
+    (213002, 1, 211001, 212002, 'CONTROL_METHOD', '控制方式', 'Control Method', NULL, NULL, 'SINGLE_SELECT', '1', '1', NULL, '{"required":true}'::jsonb, NULL, 'ENABLED', '0', 20, 'SP_ROLLER_BASIC', 'system', '2026-06-12 00:00:00+00', 'system', '2026-06-12 00:00:00+00'),
+    (213003, 1, 211001, 212003, 'INSTALL_PACK', '安装包', 'Install Pack', NULL, NULL, 'SINGLE_SELECT', '1', '1', NULL, '{"required":true}'::jsonb, NULL, 'ENABLED', '0', 30, 'SP_ROLLER_BASIC', 'system', '2026-06-12 00:00:00+00', 'system', '2026-06-12 00:00:00+00'),
+    (213011, 1, 211002, 212001, 'FABRIC_SERIES', '面料系列', 'Fabric Series', NULL, NULL, 'SINGLE_SELECT', '1', '1', NULL, '{"required":true}'::jsonb, NULL, 'ENABLED', '0', 10, 'SP_OUTDOOR_SHADE', 'system', '2026-06-12 00:00:00+00', 'system', '2026-06-12 00:00:00+00'),
+    (213012, 1, 211002, 212002, 'CONTROL_METHOD', '控制方式', 'Control Method', NULL, NULL, 'SINGLE_SELECT', '1', '1', NULL, '{"required":true}'::jsonb, NULL, 'ENABLED', '0', 20, 'SP_OUTDOOR_SHADE', 'system', '2026-06-12 00:00:00+00', 'system', '2026-06-12 00:00:00+00'),
+    (213013, 1, 211002, 212003, 'INSTALL_PACK', '安装包', 'Install Pack', NULL, NULL, 'SINGLE_SELECT', '1', '1', NULL, '{"required":true}'::jsonb, NULL, 'ENABLED', '0', 30, 'SP_OUTDOOR_SHADE', 'system', '2026-06-12 00:00:00+00', 'system', '2026-06-12 00:00:00+00'),
+    (213021, 1, 211003, 212001, 'FABRIC_SERIES', '面料系列', 'Fabric Series', NULL, NULL, 'SINGLE_SELECT', '1', '1', NULL, '{"required":true}'::jsonb, NULL, 'ENABLED', '0', 10, 'SP_ZEBRA_DUAL', 'system', '2026-06-12 00:00:00+00', 'system', '2026-06-12 00:00:00+00'),
+    (213022, 1, 211003, 212002, 'CONTROL_METHOD', '控制方式', 'Control Method', NULL, NULL, 'SINGLE_SELECT', '1', '1', NULL, '{"required":true}'::jsonb, NULL, 'ENABLED', '0', 20, 'SP_ZEBRA_DUAL', 'system', '2026-06-12 00:00:00+00', 'system', '2026-06-12 00:00:00+00'),
+    (213023, 1, 211003, 212003, 'INSTALL_PACK', '安装包', 'Install Pack', NULL, NULL, 'SINGLE_SELECT', '1', '1', NULL, '{"required":true}'::jsonb, NULL, 'ENABLED', '0', 30, 'SP_ZEBRA_DUAL', 'system', '2026-06-12 00:00:00+00', 'system', '2026-06-12 00:00:00+00'),
+    (213031, 1, 211004, 212001, 'FABRIC_SERIES', '面料系列', 'Fabric Series', NULL, NULL, 'SINGLE_SELECT', '1', '1', NULL, '{"required":true}'::jsonb, NULL, 'ENABLED', '0', 10, 'SP_ROLLER_MOTOR', 'system', '2026-06-12 00:00:00+00', 'system', '2026-06-12 00:00:00+00'),
+    (213032, 1, 211004, 212002, 'CONTROL_METHOD', '控制方式', 'Control Method', NULL, NULL, 'SINGLE_SELECT', '1', '1', NULL, '{"required":true}'::jsonb, NULL, 'ENABLED', '0', 20, 'SP_ROLLER_MOTOR', 'system', '2026-06-12 00:00:00+00', 'system', '2026-06-12 00:00:00+00'),
+    (213033, 1, 211004, 212003, 'INSTALL_PACK', '安装包', 'Install Pack', NULL, NULL, 'SINGLE_SELECT', '1', '1', NULL, '{"required":true}'::jsonb, NULL, 'ENABLED', '0', 30, 'SP_ROLLER_MOTOR', 'system', '2026-06-12 00:00:00+00', 'system', '2026-06-12 00:00:00+00'),
+    (213041, 1, 211005, 212001, 'TRACK_TYPE', '轨道类型', 'Track Type', NULL, NULL, 'SINGLE_SELECT', '1', '1', NULL, '{"required":true}'::jsonb, NULL, 'ENABLED', '0', 10, 'SP_TRACK_MEDIA', 'system', '2026-06-12 00:00:00+00', 'system', '2026-06-12 00:00:00+00'),
+    (213042, 1, 211005, 212002, 'CONTROL_METHOD', '控制方式', 'Control Method', NULL, NULL, 'SINGLE_SELECT', '1', '1', NULL, '{"required":true}'::jsonb, NULL, 'ENABLED', '0', 20, 'SP_TRACK_MEDIA', 'system', '2026-06-12 00:00:00+00', 'system', '2026-06-12 00:00:00+00'),
+    (213043, 1, 211005, 212003, 'MEDIA_PACK', '资料包', 'Media Pack', NULL, NULL, 'SINGLE_SELECT', '1', '1', NULL, '{"required":true}'::jsonb, NULL, 'ENABLED', '0', 30, 'SP_TRACK_MEDIA', 'system', '2026-06-12 00:00:00+00', 'system', '2026-06-12 00:00:00+00')
+ON CONFLICT (tenant_id, template_version_id, question_code) WHERE del_flag = '0' DO NOTHING;
+
+INSERT INTO pc_config_option (
+    option_id, tenant_id, question_id, template_version_id, option_code, option_name_cn, option_name_en, option_value,
+    source_type, source_ref_id, source_code, source_name, display_name_cn, display_name_en, value_code, component_json, media_json,
+    rule_json, status, del_flag, sort_order, remark, create_by, create_time, update_by, update_time
+) VALUES
+    (214001, 1, 213001, 211001, 'FABRIC_BASIC_WHITE', '基础白色涂层布', 'Basic White Fabric', 'FABRIC_BASIC_WHITE', 'FABRIC_PROFILE', 150001, 'FABRIC_BASIC_WHITE', '基础白色涂层布', '基础白色涂层布', 'Basic White Fabric', 'FABRIC_BASIC_WHITE', NULL, '[{"assetCode":"ASSET_ROLLER_SWATCH","usageType":"SWATCH"}]'::jsonb, NULL, 'ENABLED', '0', 10, 'fabric', 'system', '2026-06-12 00:00:00+00', 'system', '2026-06-12 00:00:00+00'),
+    (214002, 1, 213001, 211001, 'FABRIC_OUTDOOR_CHARCOAL', '户外炭灰遮阳布', 'Outdoor Charcoal Fabric', 'FABRIC_OUTDOOR_CHARCOAL', 'FABRIC_PROFILE', 150003, 'FABRIC_OUTDOOR_CHARCOAL', '户外炭灰遮阳布', '户外炭灰遮阳布', 'Outdoor Charcoal Fabric', 'FABRIC_OUTDOOR_CHARCOAL', NULL, NULL, '{"disabled":true,"disabledReason":"product.config.option.seriesMismatch"}'::jsonb, 'ENABLED', '0', 20, 'disabled sample', 'system', '2026-06-12 00:00:00+00', 'system', '2026-06-12 00:00:00+00'),
+    (214003, 1, 213002, 211001, 'CONTROL_CHAIN', '手动拉珠', 'Chain Control', 'CHAIN', 'BASE_ATTRIBUTE', 120008, 'MOUNT_TYPE', '安装方式', '手动拉珠', 'Chain Control', 'CHAIN', NULL, NULL, NULL, 'ENABLED', '0', 10, 'control', 'system', '2026-06-12 00:00:00+00', 'system', '2026-06-12 00:00:00+00'),
+    (214004, 1, 213002, 211001, 'CONTROL_MOTOR', '电机控制', 'Motor Control', 'MOTOR', 'MATERIAL', 130002, 'MOTOR_AOK_45_ZIGBEE', '奥克45管状电机', '电机控制', 'Motor Control', 'MOTOR', '[{"componentCode":"COMP_ROLLER_MOTOR","qty":1,"unitCode":"SET"}]'::jsonb, '[{"assetCode":"ASSET_MOTOR_SPEC","usageType":"SPEC"}]'::jsonb, NULL, 'ENABLED', '0', 20, 'motor option', 'system', '2026-06-12 00:00:00+00', 'system', '2026-06-12 00:00:00+00'),
+    (214005, 1, 213003, 211001, 'PACK_BASIC', '基础安装包', 'Basic Install Pack', 'PACK_BASIC', 'COMPONENT', 170001, 'COMP_ROLLER_BASIC', '卷帘基础组件包', '基础安装包', 'Basic Install Pack', 'PACK_BASIC', '[{"componentCode":"COMP_ROLLER_BASIC","qty":1,"unitCode":"SET"}]'::jsonb, NULL, NULL, 'ENABLED', '0', 10, 'pack', 'system', '2026-06-12 00:00:00+00', 'system', '2026-06-12 00:00:00+00'),
+    (214006, 1, 213003, 211001, 'PACK_NONE', '不含安装包', 'No Install Pack', 'PACK_NONE', 'MANUAL', NULL, 'PACK_NONE', '不含安装包', '不含安装包', 'No Install Pack', 'PACK_NONE', NULL, NULL, NULL, 'ENABLED', '0', 20, 'pack', 'system', '2026-06-12 00:00:00+00', 'system', '2026-06-12 00:00:00+00')
+ON CONFLICT (tenant_id, question_id, option_code) WHERE del_flag = '0' DO NOTHING;
+
+INSERT INTO pc_config_option (
+    option_id, tenant_id, question_id, template_version_id, option_code, option_name_cn, option_name_en, option_value,
+    source_type, source_ref_id, source_code, source_name, display_name_cn, display_name_en, value_code, component_json, media_json,
+    rule_json, status, del_flag, sort_order, remark, create_by, create_time, update_by, update_time
+)
+SELECT ids.option_id, 1, base.question_id + seed.question_offset, base.template_version_id + seed.version_offset, base.option_code, base.option_name_cn, base.option_name_en, base.option_value,
+       source_type, source_ref_id, source_code, source_name, display_name_cn, display_name_en, value_code,
+       component_json, media_json, rule_json, status, del_flag, sort_order, remark, create_by, create_time, update_by, update_time
+FROM (
+    VALUES (10, 1, 100, 214001), (20, 2, 200, 214001), (30, 3, 300, 214001), (40, 4, 400, 214001)
+) AS seed(question_offset, version_offset, option_offset, base_option_id)
+JOIN pc_config_option base ON base.option_id BETWEEN 214001 AND 214006
+CROSS JOIN LATERAL (SELECT base.option_id + option_offset AS option_id) ids
+WHERE base.tenant_id = 1
+ON CONFLICT (tenant_id, question_id, option_code) WHERE del_flag = '0' DO NOTHING;
+
+UPDATE pc_config_option
+SET source_type = 'COMPONENT',
+    source_ref_id = 170004,
+    source_code = 'COMP_OUTDOOR_INSTALL',
+    source_name = '户外遮阳安装包',
+    component_json = '[{"componentCode":"COMP_OUTDOOR_INSTALL","qty":1,"unitCode":"SET"}]'::jsonb,
+    media_json = '[{"assetCode":"ASSET_OUTDOOR_DRAWING","usageType":"DRAWING"}]'::jsonb
+WHERE template_version_id = 211002 AND option_code = 'PACK_BASIC';
+
+UPDATE pc_config_option
+SET source_type = 'COMPONENT',
+    source_ref_id = 170003,
+    source_code = 'COMP_ZEBRA_BASIC',
+    source_name = '柔纱帘基础组件包',
+    component_json = '[{"componentCode":"COMP_ZEBRA_BASIC","qty":1,"unitCode":"SET"}]'::jsonb,
+    media_json = '[{"assetCode":"ASSET_ZEBRA_INSTALL","usageType":"INSTALL_GUIDE"}]'::jsonb
+WHERE template_version_id = 211003 AND option_code = 'PACK_BASIC';
+
+UPDATE pc_config_option
+SET source_type = 'COMPONENT',
+    source_ref_id = 170005,
+    source_code = 'COMP_CURTAIN_TRACK_MOTOR',
+    source_name = '轨道电机组件包',
+    component_json = '[{"componentCode":"COMP_CURTAIN_TRACK_MOTOR","qty":1,"unitCode":"SET"}]'::jsonb,
+    media_json = '[{"assetCode":"ASSET_TRACK_GUIDE","usageType":"INSTALL_GUIDE"}]'::jsonb
+WHERE template_version_id = 211005 AND option_code = 'PACK_BASIC';
+
+INSERT INTO pc_config_rule (
+    rule_id, tenant_id, template_version_id, rule_code, rule_name_cn, rule_name_en, rule_type, priority,
+    condition_json, action_json, error_message_cn, error_message_en, status, del_flag, remark, create_by, create_time, update_by, update_time
+) VALUES
+    (215001, 1, 211001, 'RULE_BASIC_REQUIRED', '基础卷帘必填校验', 'Basic required validation', 'REQUIRED', 10, '{"required":["FABRIC_SERIES","CONTROL_METHOD","INSTALL_PACK"]}'::jsonb, '{"result":"BLOCKER"}'::jsonb, '必填配置未完成', 'Required options are missing', 'ENABLED', '0', 'Seed rule', 'system', '2026-06-12 00:00:00+00', 'system', '2026-06-12 00:00:00+00')
+ON CONFLICT (tenant_id, template_version_id, rule_code) WHERE del_flag = '0' DO NOTHING;
+
 -- =====================================================
 -- 第一阶段正式菜单、按钮和字典归一化
 -- 说明：
--- 1. 正式侧边栏使用三个一级菜单：基础资料、配置与价格、发布与应用。
+-- 1. 正式侧边栏使用三个一级菜单：基础资料、产品配置、发布与应用。
 -- 2. 菜单最多两级；页面内 tabs 只能作为局部细节，不承载正式主入口。
 -- 3. 本块必须保持幂等，可重复执行到开发库。
 -- =====================================================
 
-DELETE FROM sys_role_menu WHERE menu_id IN (24201, 24202, 24203, 24204, 24205, 24206, 24207, 24208, 24209, 24210, 24220, 24301, 24302);
-DELETE FROM sys_menu WHERE menu_id IN (24201, 24202, 24203, 24204, 24205, 24206, 24207, 24208, 24209, 24210, 24220, 24301, 24302);
+DELETE FROM sys_role_menu WHERE menu_id IN (24201, 24202, 24203, 24204, 24205, 24206, 24207, 24208, 24209, 24210, 24211, 24220, 24301, 24302);
+DELETE FROM sys_menu WHERE menu_id IN (24201, 24202, 24203, 24204, 24205, 24206, 24207, 24208, 24209, 24210, 24211, 24220, 24301, 24302);
 
 INSERT INTO sys_menu (menu_id, tenant_id, parent_id, menu_name, i18n_key, order_num, path, component, query_param, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, update_by, update_time, remark)
 VALUES
     (24200, 1, 0, 'Product Master Data', 'productCenter.menu.masterData', 30, 'product-master', NULL, NULL, '1', '0', 'M', '1', '1', NULL, 'product', 'system', now(), NULL, NULL, '产品能力-基础资料'),
-    (24300, 1, 0, 'Product Configuration Pricing', 'productCenter.menu.configPricing', 31, 'product-config', NULL, NULL, '1', '0', 'M', '1', '1', NULL, 'build', 'system', now(), NULL, NULL, '产品能力-配置与价格'),
+    (24300, 1, 0, 'Product Configuration', 'productCenter.menu.configPricing', 31, 'product-config', NULL, NULL, '1', '0', 'M', '1', '1', NULL, 'build', 'system', now(), NULL, NULL, '产品能力-产品配置'),
     (24400, 1, 0, 'Product Release Application', 'productCenter.menu.releaseApplication', 32, 'product-release', NULL, NULL, '1', '0', 'M', '1', '1', NULL, 'deployment-unit', 'system', now(), NULL, NULL, '产品能力-发布与应用')
 ON CONFLICT (menu_id) DO UPDATE
 SET tenant_id = EXCLUDED.tenant_id,
@@ -889,20 +1286,26 @@ SET tenant_id = EXCLUDED.tenant_id,
 
 INSERT INTO sys_menu (menu_id, tenant_id, parent_id, menu_name, i18n_key, order_num, path, component, query_param, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, update_by, update_time, remark)
 VALUES
-    (24206, 1, 24200, 'Units', 'productCenter.menu.units', 1, 'units', 'product-center/base', NULL, '1', '0', 'C', '1', '1', 'product:base:list', 'unit', 'system', now(), NULL, NULL, '单位管理'),
-    (24204, 1, 24200, 'Config Dictionary', 'productCenter.menu.baseAttributes', 2, 'base-attributes', 'product-center/base', NULL, '1', '0', 'C', '1', '1', 'product:base:list', 'dict', 'system', now(), NULL, NULL, '配置字典'),
-    (24202, 1, 24200, 'Materials', 'productCenter.menu.materials', 3, 'materials', 'product-center/base', NULL, '1', '0', 'C', '1', '1', 'product:base:list', 'inventory', 'system', now(), NULL, NULL, '物料设置'),
-    (24201, 1, 24200, 'Fabric Series', 'productCenter.menu.fabricSeries', 4, 'fabric-series', 'product-center/fabric', NULL, '1', '0', 'C', '1', '1', 'product:fabric:list', 'color', 'system', now(), NULL, NULL, '面料系列'),
-    (24207, 1, 24200, 'Fabric Profiles', 'productCenter.menu.fabricProfiles', 5, 'fabric-profiles', 'product-center/fabric', NULL, '1', '0', 'C', '1', '1', 'product:fabric:list', 'swatch', 'system', now(), NULL, NULL, '面料资料'),
-    (24203, 1, 24200, 'Component Packs', 'productCenter.menu.components', 6, 'components', 'product-center/base', NULL, '1', '0', 'C', '1', '1', 'product:base:list', 'component', 'system', now(), NULL, NULL, '组件包'),
+    (24211, 1, 24200, 'Data Entry Guide', 'productCenter.menu.masterGuide', 1, 'guide', 'product-center/master-guide', NULL, '1', '0', 'C', '1', '1', 'product:base:list', 'guide', 'system', now(), NULL, NULL, '基础资料录入向导'),
+    (24206, 1, 24200, 'Units', 'productCenter.menu.units', 2, 'units', 'product-center/base', NULL, '1', '0', 'C', '1', '1', 'product:base:list', 'unit', 'system', now(), NULL, NULL, '单位管理'),
+    (24204, 1, 24200, 'Config Dictionary', 'productCenter.menu.baseAttributes', 3, 'base-attributes', 'product-center/base', NULL, '1', '0', 'C', '1', '1', 'product:base:list', 'dict', 'system', now(), NULL, NULL, '配置字典'),
+    (24202, 1, 24200, 'Materials', 'productCenter.menu.materials', 4, 'materials', 'product-center/base', NULL, '1', '0', 'C', '1', '1', 'product:base:list', 'inventory', 'system', now(), NULL, NULL, '物料设置'),
+    (24201, 1, 24200, 'Fabric Series', 'productCenter.menu.fabricSeries', 5, 'fabric-series', 'product-center/fabric', NULL, '1', '0', 'C', '1', '1', 'product:fabric:list', 'color', 'system', now(), NULL, NULL, '面料系列'),
+    (24207, 1, 24200, 'Fabric Profiles', 'productCenter.menu.fabricProfiles', 6, 'fabric-profiles', 'product-center/fabric', NULL, '1', '0', 'C', '1', '1', 'product:fabric:list', 'swatch', 'system', now(), NULL, NULL, '面料资料'),
+    (24203, 1, 24200, 'Component Packs', 'productCenter.menu.components', 7, 'components', 'product-center/base', NULL, '1', '0', 'C', '1', '1', 'product:base:list', 'component', 'system', now(), NULL, NULL, '组件包'),
     (24208, 1, 24200, 'Material Attributes', 'productCenter.menu.materialAttributes', 91, 'material-attributes', 'product-center/base', NULL, '1', '0', 'C', '0', '1', 'product:material-attribute:list', 'list', 'system', now(), NULL, NULL, '物料属性，预留能力，默认不在基础资料一级菜单展示'),
     (24209, 1, 24200, 'Component Items', 'productCenter.menu.componentItems', 92, 'component-items', 'product-center/base', NULL, '1', '0', 'C', '0', '1', 'product:component-item:list', 'list', 'system', now(), NULL, NULL, '组件明细，从组件包行内入口维护'),
     (24205, 1, 24200, 'Media Assets', 'productCenter.menu.mediaAssets', 93, 'media-assets', 'product-center/assets', NULL, '1', '0', 'C', '0', '1', 'product:asset:list', 'upload', 'system', now(), NULL, NULL, '资料资产，附件台账，默认不在基础资料一级菜单展示'),
     (24210, 1, 24200, 'Media Bindings', 'productCenter.menu.mediaBindings', 94, 'media-bindings', 'product-center/assets', NULL, '1', '0', 'C', '0', '1', 'product:asset:list', 'link', 'system', now(), NULL, NULL, '资料绑定，附件关联台账，默认不在基础资料一级菜单展示'),
+    (24304, 1, 24300, 'Configuration Entry Workbench', 'productCenter.menu.template', 1, 'template', 'product-center/template', NULL, '1', '0', 'C', '1', '1', 'product:template:list', 'form', 'system', now(), NULL, NULL, '配置录入工作台'),
+    (24301, 1, 24300, 'Sales Products', 'productCenter.menu.salesProducts', 2, 'sales-products', 'product-center/sales-products', NULL, '1', '0', 'C', '1', '1', 'product:sales-product:list', 'product', 'system', now(), NULL, NULL, '销售产品台账'),
     (24303, 1, 24300, 'Question Groups', 'productCenter.menu.questionGroups', 3, 'question-groups', 'product-center/question-groups', NULL, '1', '0', 'C', '1', '1', 'product:template:list', 'list', 'system', now(), NULL, NULL, '问题组模板'),
-    (24304, 1, 24300, 'Config Template', 'productCenter.menu.template', 4, 'template', 'product-center/template', NULL, '1', '0', 'C', '1', '1', 'product:template:list', 'form', 'system', now(), NULL, NULL, '配置模板'),
-    (24305, 1, 24300, 'Pricing', 'productCenter.menu.pricing', 5, 'pricing', 'product-center/pricing', NULL, '1', '0', 'C', '1', '1', 'product:price:list', 'money', 'system', now(), NULL, NULL, '价格中心'),
-    (24306, 1, 24300, 'Quote Preview', 'productCenter.menu.quotePreview', 6, 'quote-preview', 'product-center/quote-preview', NULL, '1', '0', 'C', '1', '1', 'product:price:test', 'quote', 'system', now(), NULL, NULL, '报价预览'),
+    (24307, 1, 24300, 'Config Questions', 'productCenter.menu.configQuestions', 4, 'config-questions', 'product-center/config-questions', NULL, '1', '0', 'C', '1', '1', 'product:template:list', 'question', 'system', now(), NULL, NULL, '配置问题'),
+    (24308, 1, 24300, 'Config Options', 'productCenter.menu.configOptions', 5, 'config-options', 'product-center/config-options', NULL, '1', '0', 'C', '1', '1', 'product:template:list', 'list', 'system', now(), NULL, NULL, '配置答案'),
+    (24309, 1, 24300, 'Config Evaluator', 'productCenter.menu.configEvaluator', 6, 'config-evaluator', 'product-center/config-evaluator', NULL, '1', '0', 'C', '1', '1', 'product:template:test', 'calculator', 'system', now(), NULL, NULL, '配置求值器'),
+    (24302, 1, 24300, 'Standard SKU', 'productCenter.menu.standardSkus', 7, 'standard-skus', 'product-center/standard-skus', NULL, '1', '0', 'C', '0', '1', 'product:standard-sku:list', 'barcode', 'system', now(), NULL, NULL, '标品SKU预留入口'),
+    (24305, 1, 24300, 'Pricing', 'productCenter.menu.pricing', 91, 'pricing', 'product-center/pricing', NULL, '1', '0', 'C', '0', '1', 'product:price:list', 'money', 'system', now(), NULL, NULL, '价格中心，本阶段不改造，默认隐藏'),
+    (24306, 1, 24300, 'Quote Preview', 'productCenter.menu.quotePreview', 92, 'quote-preview', 'product-center/quote-preview', NULL, '1', '0', 'C', '0', '1', 'product:price:test', 'quote', 'system', now(), NULL, NULL, '报价预览，本阶段不改造，默认隐藏'),
     (24401, 1, 24400, 'Publish Gate', 'productCenter.menu.publish', 1, 'publish', 'product-center/publish', NULL, '1', '0', 'C', '1', '1', 'product:publish:list', 'check', 'system', now(), NULL, NULL, '测试发布'),
     (24402, 1, 24400, 'Approvals', 'productCenter.menu.approvals', 2, 'approvals', 'product-center/approvals', NULL, '1', '0', 'C', '1', '1', 'product:publish:list', 'validCode', 'system', now(), NULL, NULL, '审核审批'),
     (24403, 1, 24400, 'Gap Tasks', 'productCenter.menu.gapTasks', 3, 'gap-tasks', 'product-center/gap-tasks', NULL, '1', '0', 'C', '1', '1', 'product:publish:list', 'bug', 'system', now(), NULL, NULL, '缺口待办'),
@@ -962,14 +1365,11 @@ VALUES
     (24271, 1, 24210, 'Binding Add', 'common.add', 2, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:asset:bind', '#', 'system', now(), NULL, NULL, '资料绑定新增'),
     (24272, 1, 24210, 'Binding Edit', 'common.edit', 3, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:asset:bind', '#', 'system', now(), NULL, NULL, '资料绑定编辑'),
     (24273, 1, 24210, 'Binding Reference', 'productCenter.common.references', 4, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:asset:reference', '#', 'system', now(), NULL, NULL, '资料绑定引用检查'),
-    (24310, 1, 24301, 'Model Query', 'common.search', 1, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:model:list', '#', 'system', now(), NULL, NULL, '产品模型查询'),
-    (24311, 1, 24301, 'Model Add', 'common.add', 2, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:model:add', '#', 'system', now(), NULL, NULL, '产品模型新增'),
-    (24312, 1, 24301, 'Model Edit', 'common.edit', 3, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:model:edit', '#', 'system', now(), NULL, NULL, '产品模型编辑'),
-    (24313, 1, 24301, 'Model Delete', 'common.delete', 4, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:model:remove', '#', 'system', now(), NULL, NULL, '产品模型删除'),
-    (24320, 1, 24302, 'Variant Query', 'common.search', 1, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:model:list', '#', 'system', now(), NULL, NULL, '销售变体查询'),
-    (24321, 1, 24302, 'Variant Add', 'common.add', 2, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:model:add', '#', 'system', now(), NULL, NULL, '销售变体新增'),
-    (24322, 1, 24302, 'Variant Edit', 'common.edit', 3, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:model:edit', '#', 'system', now(), NULL, NULL, '销售变体编辑'),
-    (24323, 1, 24302, 'Variant Delete', 'common.delete', 4, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:model:remove', '#', 'system', now(), NULL, NULL, '销售变体删除'),
+    (24310, 1, 24301, 'Sales Product Query', 'common.search', 1, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:sales-product:list', '#', 'system', now(), NULL, NULL, '销售产品查询'),
+    (24311, 1, 24301, 'Sales Product Add', 'common.add', 2, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:sales-product:add', '#', 'system', now(), NULL, NULL, '销售产品新增'),
+    (24312, 1, 24301, 'Sales Product Edit', 'common.edit', 3, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:sales-product:edit', '#', 'system', now(), NULL, NULL, '销售产品编辑'),
+    (24313, 1, 24301, 'Sales Product Delete', 'common.delete', 4, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:sales-product:remove', '#', 'system', now(), NULL, NULL, '销售产品删除'),
+    (24314, 1, 24301, 'Sales Product Reference', 'productCenter.common.references', 5, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:sales-product:reference', '#', 'system', now(), NULL, NULL, '销售产品引用检查'),
     (24330, 1, 24303, 'Question Group Query', 'common.search', 1, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:template:list', '#', 'system', now(), NULL, NULL, '问题组查询'),
     (24331, 1, 24303, 'Question Group Add', 'common.add', 2, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:template:edit', '#', 'system', now(), NULL, NULL, '问题组新增'),
     (24332, 1, 24303, 'Question Group Edit', 'common.edit', 3, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:template:edit', '#', 'system', now(), NULL, NULL, '问题组编辑'),
@@ -978,6 +1378,17 @@ VALUES
     (24341, 1, 24304, 'Template Edit', 'common.edit', 2, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:template:edit', '#', 'system', now(), NULL, NULL, '配置模板维护'),
     (24342, 1, 24304, 'Template Rule', 'productCenter.template.rule', 3, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:template:rule', '#', 'system', now(), NULL, NULL, '配置规则维护'),
     (24343, 1, 24304, 'Template Evaluate', 'productCenter.template.evaluate', 4, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:template:test', '#', 'system', now(), NULL, NULL, '配置求值'),
+    (24370, 1, 24307, 'Question Query', 'common.search', 1, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:template:list', '#', 'system', now(), NULL, NULL, '配置问题查询'),
+    (24371, 1, 24307, 'Question Add', 'common.add', 2, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:template:edit', '#', 'system', now(), NULL, NULL, '配置问题新增'),
+    (24372, 1, 24307, 'Question Edit', 'common.edit', 3, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:template:edit', '#', 'system', now(), NULL, NULL, '配置问题编辑'),
+    (24373, 1, 24307, 'Question Delete', 'common.delete', 4, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:template:edit', '#', 'system', now(), NULL, NULL, '配置问题删除'),
+    (24374, 1, 24307, 'Question Reference', 'productCenter.common.references', 5, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:template:list', '#', 'system', now(), NULL, NULL, '配置问题引用检查'),
+    (24380, 1, 24308, 'Option Query', 'common.search', 1, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:template:list', '#', 'system', now(), NULL, NULL, '配置答案查询'),
+    (24381, 1, 24308, 'Option Add', 'common.add', 2, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:template:edit', '#', 'system', now(), NULL, NULL, '配置答案新增'),
+    (24382, 1, 24308, 'Option Edit', 'common.edit', 3, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:template:edit', '#', 'system', now(), NULL, NULL, '配置答案编辑'),
+    (24383, 1, 24308, 'Option Delete', 'common.delete', 4, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:template:edit', '#', 'system', now(), NULL, NULL, '配置答案删除'),
+    (24384, 1, 24308, 'Option Reference', 'productCenter.common.references', 5, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:template:list', '#', 'system', now(), NULL, NULL, '配置答案引用检查'),
+    (24390, 1, 24309, 'Evaluator Run', 'productCenter.template.evaluate', 1, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:template:test', '#', 'system', now(), NULL, NULL, '配置求值器运行'),
     (24350, 1, 24305, 'Pricing Query', 'common.search', 1, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:price:list', '#', 'system', now(), NULL, NULL, '价格查询'),
     (24351, 1, 24305, 'Pricing Edit', 'common.edit', 2, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:price:edit', '#', 'system', now(), NULL, NULL, '价格维护'),
     (24352, 1, 24305, 'Pricing Test', 'productCenter.price.calculate', 3, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:price:test', '#', 'system', now(), NULL, NULL, '价格试算'),

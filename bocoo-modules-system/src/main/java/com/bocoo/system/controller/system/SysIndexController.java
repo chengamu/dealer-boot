@@ -25,11 +25,11 @@ public class SysIndexController {
     private final BocooConfig bocooConfig;
 
     /**
-     * 访问首页，提示语
+     * 访问服务信息，提示语
      */
     @SaIgnore
-    @GetMapping("/")
-    @Operation(summary = "访问首页", description = "访问系统首页，返回欢迎信息")
+    @GetMapping("/server-info")
+    @Operation(summary = "访问服务信息", description = "访问系统服务信息，返回欢迎信息")
     public String index() {
         return StringUtils.format("欢迎使用{}后台管理框架，当前版本：v{}，请通过前端地址访问。", bocooConfig.getName(), bocooConfig.getVersion());
     }

@@ -54,6 +54,18 @@ public class ConfigTemplate extends BaseEntity {
     private String productModelCode;
 
     /**
+     * 销售产品ID
+     */
+    @Schema(description = "销售产品ID")
+    private Long salesProductId;
+
+    /**
+     * 销售产品编码
+     */
+    @Schema(description = "销售产品编码")
+    private String salesProductCode;
+
+    /**
      * 当前版本ID
      */
     @Schema(description = "当前版本ID")

@@ -29,6 +29,66 @@ public class ProductConfigController extends BaseController {
 
     private final ProductConfigService productConfigService;
 
+    @SaCheckPermission("product:sales-product:list")
+    @GetMapping("/sales-products/list")
+    @Operation(summary = "分页查询销售产品列表")
+    public TableDataInfo<SalesProductVo> listSalesProduct(SalesProductBo bo, PageQuery pageQuery) {
+        return productConfigService.querySalesProductPage(bo, pageQuery);
+    }
+
+    @SaCheckPermission("product:sales-product:list")
+    @GetMapping("/sales-products/options")
+    @Operation(summary = "查询销售产品选项")
+    public R<java.util.List<SalesProductVo>> optionsSalesProduct(SalesProductBo bo) {
+        return R.ok(productConfigService.querySalesProductList(bo));
+    }
+
+    @SaCheckPermission("product:sales-product:list")
+    @GetMapping("/sales-products/{id}")
+    @Operation(summary = "获取销售产品详情")
+    public R<SalesProductVo> getSalesProduct(@PathVariable Long id) {
+        return R.ok(productConfigService.getSalesProductById(id));
+    }
+
+    @SaCheckPermission("product:sales-product:add")
+    @Log(title = "销售产品", businessType = BusinessType.INSERT)
+    @PostMapping("/sales-products")
+    @Operation(summary = "新增销售产品")
+    public R<Void> addSalesProduct(@Validated @RequestBody SalesProductBo bo) {
+        return toAjax(productConfigService.saveSalesProduct(bo));
+    }
+
+    @SaCheckPermission("product:sales-product:edit")
+    @Log(title = "销售产品", businessType = BusinessType.UPDATE)
+    @PutMapping("/sales-products")
+    @Operation(summary = "修改销售产品")
+    public R<Void> editSalesProduct(@Validated @RequestBody SalesProductBo bo) {
+        return toAjax(productConfigService.saveSalesProduct(bo));
+    }
+
+    @SaCheckPermission("product:sales-product:edit")
+    @Log(title = "修改销售产品状态", businessType = BusinessType.UPDATE)
+    @PutMapping("/sales-products/change-status/{id}/{status}")
+    @Operation(summary = "修改销售产品状态")
+    public R<Void> changeSalesProductStatus(@PathVariable Long id, @PathVariable String status) {
+        return toAjax(productConfigService.updateSalesProductStatus(id, status));
+    }
+
+    @SaCheckPermission("product:sales-product:remove")
+    @Log(title = "销售产品", businessType = BusinessType.DELETE)
+    @DeleteMapping("/sales-products/{ids}")
+    @Operation(summary = "删除销售产品")
+    public R<Void> removeSalesProduct(@NotEmpty(message = "{gen.validation.pk.required}") @PathVariable Long[] ids) {
+        return toAjax(productConfigService.removeSalesProductByIds(ids));
+    }
+
+    @SaCheckPermission("product:sales-product:reference")
+    @GetMapping("/sales-products/{id}/references")
+    @Operation(summary = "检查销售产品引用")
+    public R<ReferenceCheckResultVo> checkSalesProductReferences(@PathVariable Long id) {
+        return R.ok(productConfigService.checkSalesProductReferences(id));
+    }
+
     @SaCheckPermission("product:template:list")
     @GetMapping("/templates/list")
     @Operation(summary = "分页查询配置模板列表")
@@ -72,6 +132,21 @@ public class ProductConfigController extends BaseController {
     @Operation(summary = "删除配置模板")
     public R<Void> removeConfigTemplate(@NotEmpty(message = "{gen.validation.pk.required}") @PathVariable Long[] ids) {
         return toAjax(productConfigService.removeConfigTemplateByIds(ids));
+    }
+
+    @SaCheckPermission("product:template:edit")
+    @Log(title = "修改配置模板状态", businessType = BusinessType.UPDATE)
+    @PutMapping("/templates/change-status/{id}/{status}")
+    @Operation(summary = "修改配置模板状态")
+    public R<Void> changeConfigTemplateStatus(@PathVariable Long id, @PathVariable String status) {
+        return toAjax(productConfigService.updateConfigTemplateStatus(id, status));
+    }
+
+    @SaCheckPermission("product:template:list")
+    @GetMapping("/templates/{id}/references")
+    @Operation(summary = "检查配置模板引用")
+    public R<ReferenceCheckResultVo> checkConfigTemplateReferences(@PathVariable Long id) {
+        return R.ok(productConfigService.checkConfigTemplateReferences(id));
     }
 
 
@@ -120,6 +195,21 @@ public class ProductConfigController extends BaseController {
         return toAjax(productConfigService.removeConfigTemplateVersionByIds(ids));
     }
 
+    @SaCheckPermission("product:template:edit")
+    @Log(title = "修改配置模板版本状态", businessType = BusinessType.UPDATE)
+    @PutMapping("/template-versions/change-status/{id}/{status}")
+    @Operation(summary = "修改配置模板版本状态")
+    public R<Void> changeConfigTemplateVersionStatus(@PathVariable Long id, @PathVariable String status) {
+        return toAjax(productConfigService.updateConfigTemplateVersionStatus(id, status));
+    }
+
+    @SaCheckPermission("product:template:list")
+    @GetMapping("/template-versions/{id}/references")
+    @Operation(summary = "检查配置模板版本引用")
+    public R<ReferenceCheckResultVo> checkConfigTemplateVersionReferences(@PathVariable Long id) {
+        return R.ok(productConfigService.checkConfigTemplateVersionReferences(id));
+    }
+
 
     @SaCheckPermission("product:template:list")
     @GetMapping("/question-groups/list")
@@ -164,6 +254,21 @@ public class ProductConfigController extends BaseController {
     @Operation(summary = "删除配置问题组")
     public R<Void> removeQuestionGroup(@NotEmpty(message = "{gen.validation.pk.required}") @PathVariable Long[] ids) {
         return toAjax(productConfigService.removeQuestionGroupByIds(ids));
+    }
+
+    @SaCheckPermission("product:template:edit")
+    @Log(title = "修改配置问题组状态", businessType = BusinessType.UPDATE)
+    @PutMapping("/question-groups/change-status/{id}/{status}")
+    @Operation(summary = "修改配置问题组状态")
+    public R<Void> changeQuestionGroupStatus(@PathVariable Long id, @PathVariable String status) {
+        return toAjax(productConfigService.updateQuestionGroupStatus(id, status));
+    }
+
+    @SaCheckPermission("product:template:list")
+    @GetMapping("/question-groups/{id}/references")
+    @Operation(summary = "检查配置问题组引用")
+    public R<ReferenceCheckResultVo> checkQuestionGroupReferences(@PathVariable Long id) {
+        return R.ok(productConfigService.checkQuestionGroupReferences(id));
     }
 
 
@@ -212,6 +317,21 @@ public class ProductConfigController extends BaseController {
         return toAjax(productConfigService.removeConfigQuestionByIds(ids));
     }
 
+    @SaCheckPermission("product:template:edit")
+    @Log(title = "修改配置问题状态", businessType = BusinessType.UPDATE)
+    @PutMapping("/questions/change-status/{id}/{status}")
+    @Operation(summary = "修改配置问题状态")
+    public R<Void> changeConfigQuestionStatus(@PathVariable Long id, @PathVariable String status) {
+        return toAjax(productConfigService.updateConfigQuestionStatus(id, status));
+    }
+
+    @SaCheckPermission("product:template:list")
+    @GetMapping("/questions/{id}/references")
+    @Operation(summary = "检查配置问题引用")
+    public R<ReferenceCheckResultVo> checkConfigQuestionReferences(@PathVariable Long id) {
+        return R.ok(productConfigService.checkConfigQuestionReferences(id));
+    }
+
 
     @SaCheckPermission("product:template:list")
     @GetMapping("/options/list")
@@ -258,6 +378,21 @@ public class ProductConfigController extends BaseController {
         return toAjax(productConfigService.removeConfigOptionByIds(ids));
     }
 
+    @SaCheckPermission("product:template:edit")
+    @Log(title = "修改配置答案状态", businessType = BusinessType.UPDATE)
+    @PutMapping("/options/change-status/{id}/{status}")
+    @Operation(summary = "修改配置答案状态")
+    public R<Void> changeConfigOptionStatus(@PathVariable Long id, @PathVariable String status) {
+        return toAjax(productConfigService.updateConfigOptionStatus(id, status));
+    }
+
+    @SaCheckPermission("product:template:list")
+    @GetMapping("/options/{id}/references")
+    @Operation(summary = "检查配置答案引用")
+    public R<ReferenceCheckResultVo> checkConfigOptionReferences(@PathVariable Long id) {
+        return R.ok(productConfigService.checkConfigOptionReferences(id));
+    }
+
 
     @SaCheckPermission("product:template:list")
     @GetMapping("/rules/list")
@@ -302,6 +437,14 @@ public class ProductConfigController extends BaseController {
     @Operation(summary = "删除配置规则")
     public R<Void> removeConfigRule(@NotEmpty(message = "{gen.validation.pk.required}") @PathVariable Long[] ids) {
         return toAjax(productConfigService.removeConfigRuleByIds(ids));
+    }
+
+    @SaCheckPermission("product:template:rule")
+    @Log(title = "修改配置规则状态", businessType = BusinessType.UPDATE)
+    @PutMapping("/rules/change-status/{id}/{status}")
+    @Operation(summary = "修改配置规则状态")
+    public R<Void> changeConfigRuleStatus(@PathVariable Long id, @PathVariable String status) {
+        return toAjax(productConfigService.updateConfigRuleStatus(id, status));
     }
 
     @SaCheckPermission("product:template:test")
