@@ -9,11 +9,13 @@ import { computed, onMounted, ref } from 'vue'
 import { configOptionApi, configQuestionApi } from '@/api/product-capability/config'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
+import { useProductDict } from '@/hooks/useProductDict'
 import ProductEntityGridPage, { type ProductGridConfig } from '@/pages/product-center/components/ProductEntityGridPage.vue'
 import type { ConfigQuestionVO, ProductOption, ProductRecord } from '@/api/product-capability/types'
 
 const localeStore = useLocaleStore()
 const t = (key: string) => getMessage(key, localeStore.language)
+const { options: productDictOptions } = useProductDict('config_option_source_type')
 
 const questions = ref<ConfigQuestionVO[]>([])
 
@@ -24,15 +26,7 @@ const templatePermissions = {
   reference: 'product:template:list'
 }
 
-const sourceTypeOptions = computed<ProductOption[]>(() => [
-  { label: t('productCenter.sourceType.manual'), value: 'MANUAL' },
-  { label: t('productCenter.sourceType.baseAttribute'), value: 'BASE_ATTRIBUTE' },
-  { label: t('productCenter.sourceType.material'), value: 'MATERIAL' },
-  { label: t('productCenter.sourceType.fabricProfile'), value: 'FABRIC_PROFILE' },
-  { label: t('productCenter.sourceType.fabricSeries'), value: 'FABRIC_SERIES' },
-  { label: t('productCenter.sourceType.component'), value: 'COMPONENT' },
-  { label: t('productCenter.sourceType.mediaAsset'), value: 'MEDIA_ASSET' }
-])
+const sourceTypeOptions = computed<ProductOption[]>(() => productDictOptions.value.config_option_source_type || [])
 const questionOptions = computed<ProductOption[]>(() =>
   questions.value.map((item) => ({
     label: `${item.questionCode || ''} ${item.questionNameCn || item.questionNameEn || ''}`.trim(),

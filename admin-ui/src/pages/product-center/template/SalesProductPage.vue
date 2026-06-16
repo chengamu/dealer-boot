@@ -10,11 +10,13 @@ import { productCategoryApi, productUnitApi } from '@/api/product-capability/bas
 import { configTemplateVersionApi, salesProductApi } from '@/api/product-capability/config'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
+import { useProductDict } from '@/hooks/useProductDict'
 import ProductEntityGridPage, { type ProductGridConfig } from '@/pages/product-center/components/ProductEntityGridPage.vue'
 import type { ConfigTemplateVersionVO, ProductCategoryVO, ProductOption, ProductRecord, ProductUnitVO } from '@/api/product-capability/types'
 
 const localeStore = useLocaleStore()
 const t = (key: string) => getMessage(key, localeStore.language)
+const { options: productDictOptions } = useProductDict('product_business_type')
 
 const categories = ref<ProductCategoryVO[]>([])
 const templateVersions = ref<ConfigTemplateVersionVO[]>([])
@@ -27,12 +29,7 @@ const salesProductPermissions = {
   reference: 'product:sales-product:reference'
 }
 
-const productTypeOptions = computed<ProductOption[]>(() => [
-  { label: t('productCenter.salesProduct.productTypeRollerShade'), value: 'ROLLER_SHADE' },
-  { label: t('productCenter.salesProduct.productTypeOutdoorShade'), value: 'OUTDOOR_SHADE' },
-  { label: t('productCenter.salesProduct.productTypeZebraShade'), value: 'ZEBRA_SHADE' },
-  { label: t('productCenter.salesProduct.productTypeCurtainTrack'), value: 'CURTAIN_TRACK' }
-])
+const productTypeOptions = computed<ProductOption[]>(() => productDictOptions.value.product_business_type || [])
 const salesModeOptions = computed<ProductOption[]>(() => [
   { label: t('productCenter.salesProduct.salesModeConfigurable'), value: 'CONFIGURABLE' },
   { label: t('productCenter.salesProduct.salesModeStandard'), value: 'STANDARD' }

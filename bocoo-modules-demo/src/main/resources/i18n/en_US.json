@@ -1,0 +1,13 @@
+{
+  "demo.request.invalid": "Invalid request payload",
+  "demo.techManagement.title.required": "Title is required",
+  "demo.techManagement.title.max": "Title must be {max} characters or less",
+  "demo.techManagement.title.exists": "Title already exists: {{title}}",
+  "demo.techManagement.label.max": "Label must be {max} characters or less",
+  "demo.techManagement.customLabel.max": "Custom label must be {max} characters or less",
+  "demo.techManagement.deadline.max": "Deadline must be {max} characters or less",
+  "demo.techManagement.description.max": "Description must be {max} characters or less",
+  "demo.techManagement.contact.max": "Contact must be {max} characters or less",
+  "demo.techManagement.contactInfo.max": "Contact info must be {max} characters or less",
+  "demo.techManagement.img.max": "Image URL must be {max} characters or less"
+}

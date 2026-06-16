@@ -15,7 +15,8 @@ import { useRoute, useRouter } from 'vue-router'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 import { productUnitApi } from '@/api/product-capability/base'
-import type { ProductUnitVO } from '@/api/product-capability/types'
+import { productMaterialApi } from '@/api/product-capability/material'
+import type { ProductRecord, ProductUnitVO } from '@/api/product-capability/types'
 import { fabricProfileApi, fabricSeriesApi } from '@/api/product-capability/fabric'
 import ProductEntityGridPage, { type ProductGridConfig } from '@/pages/product-center/components/ProductEntityGridPage.vue'
 
@@ -54,6 +55,24 @@ const widthUnitOptions = computed(() => {
 const fabricUnitOptions = computed(() => {
   return unitList.value.map(unitOption)
 })
+
+function labelOf(row: ProductRecord, codeKey: string, cnKey: string, enKey?: string) {
+  const code = String(row[codeKey] || '')
+  const name = localeStore.language === 'zh_CN' ? row[cnKey] : row[enKey || cnKey] || row[cnKey]
+  return `${code} ${String(name || '')}`.trim()
+}
+
+async function loadSeriesOptions() {
+  const response = await fabricSeriesApi.options?.({ status: 'ENABLED', pageNum: 1, pageSize: 500 })
+  const rows = Array.isArray(response) ? response : response?.data || []
+  return rows.map((row) => ({ value: row.seriesCode, label: labelOf(row, 'seriesCode', 'seriesNameCn', 'seriesNameEn'), record: row }))
+}
+
+async function loadFabricMaterialOptions() {
+  const response = await productMaterialApi.options?.({ materialType: 'FABRIC', status: 'ENABLED', pageNum: 1, pageSize: 500 })
+  const rows = Array.isArray(response) ? response : response?.data || []
+  return rows.map((row) => ({ value: row.materialCode, label: labelOf(row, 'materialCode', 'materialNameCn', 'materialNameEn'), record: row }))
+}
 
 async function loadUnits() {
   const response = await productUnitApi.options?.({ status: 'ENABLED' })
@@ -95,21 +114,21 @@ const configs = computed<ProductGridConfig[]>(() => [
       }
     ],
     fields: [
-      { prop: 'seriesCode', labelKey: 'productCenter.fabricSeries.code', search: true, required: true, minWidth: 160 },
-      { prop: 'seriesNameCn', labelKey: 'productCenter.fabricSeries.name', search: true, required: true, minWidth: 180 },
-      { prop: 'seriesNameEn', labelKey: 'productCenter.fabricSeries.nameEn', minWidth: 180 },
+      { prop: 'seriesCode', labelKey: 'productCenter.fabricSeries.code', search: true, required: true, minWidth: 160, sectionKey: 'basic', sectionLabelKey: 'productCenter.formSection.basic' },
+      { prop: 'seriesNameCn', labelKey: 'productCenter.fabricSeries.name', search: true, required: true, minWidth: 180, sectionKey: 'basic' },
+      { prop: 'seriesNameEn', labelKey: 'productCenter.fabricSeries.nameEn', minWidth: 180, table: false, sectionKey: 'basic' },
       { prop: 'materialType', labelKey: 'productCenter.fabricSeries.materialType', form: false, table: false },
-      { prop: 'defaultThicknessUnit', labelKey: 'productCenter.fabricSeries.defaultThicknessUnit', type: 'select', options: thicknessUnitOptions.value },
-      { prop: 'thicknessRuleEnabled', labelKey: 'productCenter.fabricSeries.thicknessRuleEnabled', type: 'boolean' },
-      { prop: 'maxThicknessDiff', labelKey: 'productCenter.fabricSeries.maxThicknessDiff', type: 'number' },
-      { prop: 'maxCombinedThickness', labelKey: 'productCenter.fabricSeries.maxCombinedThickness', type: 'number' },
-      { prop: 'widthRuleEnabled', labelKey: 'productCenter.fabricSeries.widthRuleEnabled', type: 'boolean' },
-      { prop: 'availableWidths', labelKey: 'productCenter.fabricSeries.availableWidths', minWidth: 180 },
-      { prop: 'minWidthValue', labelKey: 'productCenter.fabricSeries.minWidthValue', type: 'number' },
-      { prop: 'maxWidthValue', labelKey: 'productCenter.fabricSeries.maxWidthValue', type: 'number' },
-      { prop: 'widthUnit', labelKey: 'productCenter.fabricSeries.widthUnit', type: 'select', options: widthUnitOptions.value },
+      { prop: 'defaultThicknessUnit', labelKey: 'productCenter.fabricSeries.defaultThicknessUnit', type: 'select', options: thicknessUnitOptions.value, table: false, sectionKey: 'thickness', sectionLabelKey: 'productCenter.formSection.fabricCapability' },
+      { prop: 'thicknessRuleEnabled', labelKey: 'productCenter.fabricSeries.thicknessRuleEnabled', type: 'boolean', table: false, sectionKey: 'thickness' },
+      { prop: 'maxThicknessDiff', labelKey: 'productCenter.fabricSeries.maxThicknessDiff', type: 'number', table: false, sectionKey: 'thickness' },
+      { prop: 'maxCombinedThickness', labelKey: 'productCenter.fabricSeries.maxCombinedThickness', type: 'number', sectionKey: 'thickness' },
+      { prop: 'widthRuleEnabled', labelKey: 'productCenter.fabricSeries.widthRuleEnabled', type: 'boolean', table: false, sectionKey: 'width', sectionLabelKey: 'productCenter.formSection.widthCapability' },
+      { prop: 'availableWidths', labelKey: 'productCenter.fabricSeries.availableWidths', minWidth: 180, sectionKey: 'width' },
+      { prop: 'minWidthValue', labelKey: 'productCenter.fabricSeries.minWidthValue', type: 'number', table: false, sectionKey: 'width' },
+      { prop: 'maxWidthValue', labelKey: 'productCenter.fabricSeries.maxWidthValue', type: 'number', table: false, sectionKey: 'width' },
+      { prop: 'widthUnit', labelKey: 'productCenter.fabricSeries.widthUnit', type: 'select', options: widthUnitOptions.value, sectionKey: 'width' },
       { prop: 'status', labelKey: 'productCenter.common.status', type: 'status', search: true },
-      { prop: 'remark', labelKey: 'productCenter.common.remark', type: 'textarea', table: false, formSpan: 2 }
+      { prop: 'remark', labelKey: 'productCenter.common.remark', type: 'textarea', table: false, formSpan: 2, sectionKey: 'note', sectionLabelKey: 'productCenter.formSection.note' }
     ]
   },
   {
@@ -127,28 +146,39 @@ const configs = computed<ProductGridConfig[]>(() => [
     attachments: { targetType: 'FABRIC_PROFILE', targetCodeField: 'materialCode', defaultUsageType: 'SWATCH' },
     fields: [
       { prop: 'fabricCode', labelKey: 'productCenter.fabricProfile.fabricCode', form: false, table: false },
-      { prop: 'materialCode', labelKey: 'productCenter.fabricProfile.fabricCode', search: true, required: true, minWidth: 160 },
+      {
+        prop: 'materialCode',
+        labelKey: 'productCenter.fabricProfile.fabricCode',
+        type: 'remote-select',
+        search: true,
+        required: true,
+        minWidth: 160,
+        optionLoader: loadFabricMaterialOptions,
+        fillFields: { materialNameCn: 'materialNameCn', supplierCode: 'supplierCode', supplierName: 'supplierName', vendorItemNo: 'vendorItemNo', sampleBookNo: 'sampleBookNo' },
+        sectionKey: 'basic',
+        sectionLabelKey: 'productCenter.formSection.basic'
+      },
       { prop: 'materialNameCn', labelKey: 'productCenter.fabricProfile.materialNameCn', search: true, minWidth: 180 },
-      { prop: 'seriesCode', labelKey: 'productCenter.fabricProfile.seriesCode', search: true, required: true, minWidth: 160 },
-      { prop: 'colorCode', labelKey: 'productCenter.fabricProfile.colorCode', search: true },
-      { prop: 'colorName', labelKey: 'productCenter.fabricProfile.colorName', minWidth: 140 },
-      { prop: 'materialComposition', labelKey: 'productCenter.fabricProfile.materialComposition', minWidth: 180 },
-      { prop: 'textureType', labelKey: 'productCenter.fabricProfile.textureType' },
-      { prop: 'finishType', labelKey: 'productCenter.fabricProfile.finishType' },
-      { prop: 'factoryModel', labelKey: 'productCenter.fabricProfile.factoryModel', minWidth: 160 },
-      { prop: 'sampleBookNo', labelKey: 'productCenter.fabricProfile.sampleBookNo', search: true, minWidth: 160 },
-      { prop: 'vendorItemNo', labelKey: 'productCenter.fabricProfile.vendorItemNo', minWidth: 160 },
-      { prop: 'supplierCode', labelKey: 'productCenter.fabricProfile.supplierCode', search: true, minWidth: 160 },
-      { prop: 'supplierName', labelKey: 'productCenter.fabricProfile.supplierName', minWidth: 200 },
-      { prop: 'widthValue', labelKey: 'productCenter.fabricProfile.widthValue', type: 'number' },
-      { prop: 'widthUnit', labelKey: 'productCenter.fabricProfile.widthUnit', type: 'select', options: widthUnitOptions.value },
-      { prop: 'thicknessValue', labelKey: 'productCenter.fabricProfile.thicknessValue', type: 'number' },
-      { prop: 'thicknessUnit', labelKey: 'productCenter.fabricProfile.thicknessUnit', type: 'select', options: thicknessUnitOptions.value },
-      { prop: 'gsmValue', labelKey: 'productCenter.fabricProfile.gsmValue', type: 'number' },
-      { prop: 'purchaseUnitCode', labelKey: 'productCenter.fabricProfile.purchaseUnitCode', type: 'select', options: fabricUnitOptions.value },
-      { prop: 'inventoryUnitCode', labelKey: 'productCenter.fabricProfile.inventoryUnitCode', type: 'select', options: fabricUnitOptions.value },
-      { prop: 'salesUnitCode', labelKey: 'productCenter.fabricProfile.salesUnitCode', type: 'select', options: fabricUnitOptions.value },
-      { prop: 'legacyAttributeText', labelKey: 'productCenter.fabricProfile.legacyAttributeText', type: 'textarea', table: false, formSpan: 2 },
+      { prop: 'seriesCode', labelKey: 'productCenter.fabricProfile.seriesCode', type: 'remote-select', optionLoader: loadSeriesOptions, search: true, required: true, minWidth: 160, sectionKey: 'basic' },
+      { prop: 'colorCode', labelKey: 'productCenter.fabricProfile.colorCode', search: true, sectionKey: 'color', sectionLabelKey: 'productCenter.formSection.colorSpec' },
+      { prop: 'colorName', labelKey: 'productCenter.fabricProfile.colorName', minWidth: 140, sectionKey: 'color' },
+      { prop: 'materialComposition', labelKey: 'productCenter.fabricProfile.materialComposition', minWidth: 180, table: false, sectionKey: 'color' },
+      { prop: 'textureType', labelKey: 'productCenter.fabricProfile.textureType', table: false, sectionKey: 'color' },
+      { prop: 'finishType', labelKey: 'productCenter.fabricProfile.finishType', table: false, sectionKey: 'color' },
+      { prop: 'factoryModel', labelKey: 'productCenter.fabricProfile.factoryModel', minWidth: 160, table: false, sectionKey: 'supplier', sectionLabelKey: 'productCenter.formSection.supplier' },
+      { prop: 'sampleBookNo', labelKey: 'productCenter.fabricProfile.sampleBookNo', search: true, minWidth: 160, table: false, sectionKey: 'supplier' },
+      { prop: 'vendorItemNo', labelKey: 'productCenter.fabricProfile.vendorItemNo', minWidth: 160, table: false, sectionKey: 'supplier' },
+      { prop: 'supplierCode', labelKey: 'productCenter.fabricProfile.supplierCode', search: true, minWidth: 160, table: false, sectionKey: 'supplier' },
+      { prop: 'supplierName', labelKey: 'productCenter.fabricProfile.supplierName', minWidth: 200, sectionKey: 'supplier' },
+      { prop: 'widthValue', labelKey: 'productCenter.fabricProfile.widthValue', type: 'number', sectionKey: 'capability', sectionLabelKey: 'productCenter.formSection.fabricCapability' },
+      { prop: 'widthUnit', labelKey: 'productCenter.fabricProfile.widthUnit', type: 'select', options: widthUnitOptions.value, sectionKey: 'capability' },
+      { prop: 'thicknessValue', labelKey: 'productCenter.fabricProfile.thicknessValue', type: 'number', sectionKey: 'capability' },
+      { prop: 'thicknessUnit', labelKey: 'productCenter.fabricProfile.thicknessUnit', type: 'select', options: thicknessUnitOptions.value, sectionKey: 'capability' },
+      { prop: 'gsmValue', labelKey: 'productCenter.fabricProfile.gsmValue', type: 'number', table: false, sectionKey: 'capability' },
+      { prop: 'purchaseUnitCode', labelKey: 'productCenter.fabricProfile.purchaseUnitCode', type: 'select', options: fabricUnitOptions.value, table: false, sectionKey: 'unit', sectionLabelKey: 'productCenter.formSection.unitsErp' },
+      { prop: 'inventoryUnitCode', labelKey: 'productCenter.fabricProfile.inventoryUnitCode', type: 'select', options: fabricUnitOptions.value, table: false, sectionKey: 'unit' },
+      { prop: 'salesUnitCode', labelKey: 'productCenter.fabricProfile.salesUnitCode', type: 'select', options: fabricUnitOptions.value, table: false, sectionKey: 'unit' },
+      { prop: 'legacyAttributeText', labelKey: 'productCenter.fabricProfile.legacyAttributeText', type: 'textarea', table: false, formSpan: 2, sectionKey: 'note', sectionLabelKey: 'productCenter.formSection.note' },
       { prop: 'status', labelKey: 'productCenter.common.status', type: 'status', search: true },
       { prop: 'remark', labelKey: 'productCenter.common.remark', type: 'textarea', table: false, formSpan: 2 }
     ]

@@ -63,6 +63,15 @@ public class ProductMaterialVo implements Serializable {
     @Schema(description = "单位编码")
     private String unitCode;
 
+    @Schema(description = "采购单位编码")
+    private String purchaseUnitCode;
+
+    @Schema(description = "库存单位编码")
+    private String inventoryUnitCode;
+
+    @Schema(description = "工程使用单位编码")
+    private String usageUnitCode;
+
     /**
      * 供应商编码
      */
@@ -99,6 +108,9 @@ public class ProductMaterialVo implements Serializable {
     @Schema(description = "主规格")
     private String primarySpec;
 
+    @Schema(description = "规格摘要")
+    private String specSummary;
+
     /**
      * 主颜色
      */
@@ -110,6 +122,12 @@ public class ProductMaterialVo implements Serializable {
      */
     @Schema(description = "主重量")
     private BigDecimal primaryWeight;
+
+    @Schema(description = "是否可采购")
+    private Boolean purchaseEnabled;
+
+    @Schema(description = "是否入库")
+    private Boolean inventoryEnabled;
 
     /**
      * 属性摘要

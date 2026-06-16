@@ -347,7 +347,8 @@ const quickActions: QuickAction[] = [
   { key: 'material', labelKey: 'productCenter.masterGuide.openMaterials', path: '/product-master/materials', icon: Files },
   { key: 'fabric', labelKey: 'productCenter.masterGuide.openFabricProfiles', path: '/product-master/fabric-profiles', icon: Tickets },
   { key: 'component', labelKey: 'productCenter.masterGuide.openComponents', path: '/product-master/components', icon: Box },
-  { key: 'dictionary', labelKey: 'productCenter.masterGuide.openAttributes', path: '/product-master/base-attributes', icon: Collection },
+  { key: 'dictionary', labelKey: 'productCenter.masterGuide.openProductDicts', path: '/product-master/product-dicts', icon: Collection },
+  { key: 'baseAttributes', labelKey: 'productCenter.masterGuide.openAttributes', path: '/product-master/base-attributes', icon: Collection },
   { key: 'attributes', labelKey: 'productCenter.masterGuide.openMaterialAttributes', path: '/product-master/materials?tab=materialAttribute', icon: List },
   { key: 'items', labelKey: 'productCenter.masterGuide.openComponentItems', path: '/product-master/components?tab=componentItem', icon: Connection }
 ]

@@ -9,11 +9,13 @@ import { computed, onMounted, ref } from 'vue'
 import { configQuestionApi, configTemplateVersionApi, questionGroupApi } from '@/api/product-capability/config'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
+import { useProductDict } from '@/hooks/useProductDict'
 import ProductEntityGridPage, { type ProductGridConfig } from '@/pages/product-center/components/ProductEntityGridPage.vue'
 import type { ConfigTemplateVersionVO, ProductOption, QuestionGroupVO } from '@/api/product-capability/types'
 
 const localeStore = useLocaleStore()
 const t = (key: string) => getMessage(key, localeStore.language)
+const { options: productDictOptions } = useProductDict('config_input_type')
 
 const templateVersions = ref<ConfigTemplateVersionVO[]>([])
 const questionGroups = ref<QuestionGroupVO[]>([])
@@ -25,13 +27,7 @@ const templatePermissions = {
   reference: 'product:template:list'
 }
 
-const inputTypeOptions = computed<ProductOption[]>(() => [
-  { label: t('productCenter.inputType.singleSelect'), value: 'SINGLE_SELECT' },
-  { label: t('productCenter.inputType.multiSelect'), value: 'MULTI_SELECT' },
-  { label: t('productCenter.inputType.number'), value: 'NUMBER' },
-  { label: t('productCenter.inputType.text'), value: 'TEXT' },
-  { label: t('productCenter.inputType.boolean'), value: 'BOOLEAN' }
-])
+const inputTypeOptions = computed<ProductOption[]>(() => productDictOptions.value.config_input_type || [])
 const flagOptions = computed<ProductOption[]>(() => [
   { label: t('common.yes'), value: '1' },
   { label: t('common.no'), value: '0' }

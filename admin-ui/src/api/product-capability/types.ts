@@ -13,6 +13,57 @@ export interface ProductOption {
   value: string | number
 }
 
+export interface ProductDictOption {
+  label?: string
+  labelCn?: string
+  labelEn?: string
+  value: string
+  dictTypeCode?: string
+  parentValue?: string
+}
+
+export interface ProductDictTypeVO extends ProductRecord {
+  dictTypeId?: number
+  dictTypeCode?: string
+  dictTypeNameCn?: string
+  dictTypeNameEn?: string
+  businessDomain?: string
+  systemFlag?: boolean
+  editableFlag?: boolean
+  status?: string
+  sortOrder?: number
+  remark?: string
+}
+
+export interface ProductDictTypeQuery extends ProductPageQuery {
+  dictTypeCode?: string
+  dictTypeNameCn?: string
+  businessDomain?: string
+  status?: string
+}
+
+export interface ProductDictItemVO extends ProductRecord {
+  dictItemId?: number
+  dictTypeCode?: string
+  dictItemValue?: string
+  dictItemLabelCn?: string
+  dictItemLabelEn?: string
+  parentValue?: string
+  systemFlag?: boolean
+  editableFlag?: boolean
+  status?: string
+  sortOrder?: number
+  remark?: string
+}
+
+export interface ProductDictItemQuery extends ProductPageQuery {
+  dictTypeCode?: string
+  dictItemValue?: string
+  dictItemLabelCn?: string
+  parentValue?: string
+  status?: string
+}
+
 export interface SalesProductVO extends ProductRecord {
   salesProductId?: number
   salesProductCode?: string
@@ -296,14 +347,20 @@ export interface ProductMaterialVO extends ProductRecord {
   materialType?: string
   businessType?: string
   unitCode?: string
+  purchaseUnitCode?: string
+  inventoryUnitCode?: string
+  usageUnitCode?: string
   supplierCode?: string
   supplierName?: string
   factoryModel?: string
   sampleBookNo?: string
   vendorItemNo?: string
   primarySpec?: string
+  specSummary?: string
   primaryColor?: string
   primaryWeight?: string
+  purchaseEnabled?: string | boolean
+  inventoryEnabled?: string | boolean
   attributeSummary?: string
   legacySource?: string
   legacyId?: string
@@ -320,7 +377,136 @@ export interface ProductMaterialQuery extends ProductPageQuery {
   supplierCode?: string
   sampleBookNo?: string
   vendorItemNo?: string
+  specSummary?: string
   status?: string
+}
+
+export interface EngineeringPlanVO extends ProductRecord {
+  planId?: number
+  planCode?: string
+  planNameCn?: string
+  planNameEn?: string
+  categoryCode?: string
+  categoryNameCn?: string
+  seriesId?: number
+  seriesCode?: string
+  seriesNameCn?: string
+  currentVersionId?: number
+  currentVersionNo?: string
+  bizStatus?: string
+  status?: string
+  sortOrder?: number
+  remark?: string
+}
+
+export interface EngineeringPlanVersionVO extends ProductRecord {
+  versionId?: number
+  planId?: number
+  planCode?: string
+  versionNo?: string
+  versionName?: string
+  bizStatus?: string
+  status?: string
+  ruleSchemaVersion?: string
+  configJson?: string
+  remark?: string
+}
+
+export interface EngineeringItemVO extends ProductRecord {
+  itemId?: number
+  versionId?: number
+  planId?: number
+  itemCode?: string
+  itemNameCn?: string
+  itemNameEn?: string
+  itemType?: string
+  sourceType?: string
+  requiredFlag?: string
+  multiSelectFlag?: string
+  customerSelectable?: string
+  defaultSourceCode?: string
+  status?: string
+  sortOrder?: number
+  extraJson?: string
+  remark?: string
+}
+
+export interface EngineeringItemScopeVO extends ProductRecord {
+  scopeId?: number
+  versionId?: number
+  itemId?: number
+  itemCode?: string
+  scopeType?: string
+  scopeCode?: string
+  scopeNameCn?: string
+  scopeNameEn?: string
+  includeFlag?: string
+  conditionJson?: string
+  status?: string
+  sortOrder?: number
+  remark?: string
+}
+
+export interface EngineeringRuleVO extends ProductRecord {
+  ruleId?: number
+  versionId?: number
+  ruleCode?: string
+  ruleNameCn?: string
+  ruleNameEn?: string
+  ruleType?: string
+  conditionJson?: string
+  actionJson?: string
+  severity?: string
+  messageCn?: string
+  messageEn?: string
+  status?: string
+  sortOrder?: number
+  remark?: string
+}
+
+export interface EngineeringOutputRuleVO extends ProductRecord {
+  outputRuleId?: number
+  versionId?: number
+  ruleCode?: string
+  ruleNameCn?: string
+  ruleNameEn?: string
+  conditionJson?: string
+  outputType?: string
+  outputCode?: string
+  outputNameCn?: string
+  outputNameEn?: string
+  defaultQty?: number
+  unitCode?: string
+  reasonCn?: string
+  reasonEn?: string
+  status?: string
+  sortOrder?: number
+  remark?: string
+}
+
+export interface StandardSkuEngineeringVO extends ProductRecord {
+  skuEngineeringId?: number
+  versionId?: number
+  standardSkuId?: number
+  standardSkuCode?: string
+  standardSkuNameCn?: string
+  standardSkuNameEn?: string
+  fixedItemsJson?: string
+  status?: string
+  remark?: string
+}
+
+export interface EngineeringCheckCaseVO extends ProductRecord {
+  checkCaseId?: number
+  versionId?: number
+  caseCode?: string
+  caseNameCn?: string
+  caseNameEn?: string
+  inputJson?: string
+  expectedJson?: string
+  status?: string
+  sortOrder?: number
+  remark?: string
 }
 
 export interface FabricSeriesVO extends ProductRecord {

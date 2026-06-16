@@ -9,12 +9,18 @@ import com.bocoo.product.domain.entity.ProductSnapshotInstance;
 import com.bocoo.product.domain.vo.OrderProductSnapshotVo;
 import com.bocoo.product.domain.vo.ProductSnapshotInstanceVo;
 import com.bocoo.product.service.ProductOrderSnapshotService;
+import com.bocoo.product.service.ProductSnapshotInstanceService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
  * 产品能力快照实例接口。
@@ -27,6 +33,7 @@ import org.springframework.web.bind.annotation.*;
 public class ProductOrderSnapshotController {
 
     private final ProductOrderSnapshotService productOrderSnapshotService;
+    private final ProductSnapshotInstanceService productSnapshotInstanceService;
 
     @SaCheckPermission("product:order-snapshot:build")
     @PostMapping("/order-snapshots/build")
@@ -46,13 +53,13 @@ public class ProductOrderSnapshotController {
     @GetMapping("/snapshot-instances/list")
     @Operation(summary = "分页查询产品能力快照实例")
     public TableDataInfo<ProductSnapshotInstanceVo> list(ProductSnapshotInstance query, PageQuery pageQuery) {
-        return productOrderSnapshotService.querySnapshotInstancePage(query, pageQuery);
+        return productSnapshotInstanceService.queryPageList(query, pageQuery);
     }
 
     @SaCheckPermission("product:snapshot-instance:query")
     @GetMapping("/snapshot-instances/{snapshotId}")
     @Operation(summary = "获取产品能力快照实例详情")
     public R<ProductSnapshotInstanceVo> get(@Parameter(description = "产品能力快照实例ID", required = true) @PathVariable Long snapshotId) {
-        return R.ok(productOrderSnapshotService.getSnapshotInstanceById(snapshotId));
+        return R.ok(productSnapshotInstanceService.queryById(snapshotId));
     }
 }

@@ -1,0 +1,13 @@
+{
+  "demo.request.invalid": "请求参数无效",
+  "demo.techManagement.title.required": "标题不能为空",
+  "demo.techManagement.title.max": "标题不能超过 {max} 个字符",
+  "demo.techManagement.title.exists": "标题已存在：{{title}}",
+  "demo.techManagement.label.max": "标签不能超过 {max} 个字符",
+  "demo.techManagement.customLabel.max": "自定义标签不能超过 {max} 个字符",
+  "demo.techManagement.deadline.max": "发布有效期不能超过 {max} 个字符",
+  "demo.techManagement.description.max": "详细描述不能超过 {max} 个字符",
+  "demo.techManagement.contact.max": "联系人不能超过 {max} 个字符",
+  "demo.techManagement.contactInfo.max": "联系方式不能超过 {max} 个字符",
+  "demo.techManagement.img.max": "图片URL不能超过 {max} 个字符"
+}

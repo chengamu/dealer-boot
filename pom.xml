@@ -108,6 +108,7 @@
         <module>bocoo-common</module>
         <module>bocoo-modules-generator</module>
         <module>bocoo-modules-system</module>
+        <module>bocoo-modules-demo</module>
         <module>bocoo-modules-dealer</module>
         <module>bocoo-modules-product</module>
         <module>bocoo-module-pay</module>

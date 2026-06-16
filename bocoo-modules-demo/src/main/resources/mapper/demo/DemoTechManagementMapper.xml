@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bocoo.demo.mapper.DemoTechManagementMapper">
+
+    <select id="selectTechnologyStatusCount" resultType="com.bocoo.demo.domain.vo.DemoTechnologyStatusCountVo">
+        select
+            status,
+            count(management_id) as count
+        from tech_management
+        group by status
+        order by status
+    </select>
+
+</mapper>

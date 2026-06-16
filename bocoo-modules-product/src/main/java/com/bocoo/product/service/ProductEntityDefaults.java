@@ -7,12 +7,12 @@ import java.lang.reflect.Method;
 /**
  * 产品能力实体默认值。
  */
-final class ProductEntityDefaults {
+public final class ProductEntityDefaults {
 
     private ProductEntityDefaults() {
     }
 
-    static void prepareInsert(Object entity) {
+    public static void prepareInsert(Object entity) {
         if (entity == null) {
             return;
         }
