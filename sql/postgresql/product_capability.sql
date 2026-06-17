@@ -173,7 +173,7 @@ CREATE TABLE IF NOT EXISTS pc_base_attribute (
     update_time timestamptz
 );
 
-COMMENT ON TABLE pc_base_attribute IS '基础属性定义表';
+COMMENT ON TABLE pc_base_attribute IS '物料属性定义表';
 COMMENT ON COLUMN pc_base_attribute.attribute_id IS '属性定义ID';
 COMMENT ON COLUMN pc_base_attribute.tenant_id IS '租户ID';
 COMMENT ON COLUMN pc_base_attribute.attribute_group IS '属性分组';
@@ -219,6 +219,9 @@ CREATE TABLE IF NOT EXISTS pc_material (
     primary_weight numeric(18,6),
     purchase_enabled boolean NOT NULL DEFAULT false,
     inventory_enabled boolean NOT NULL DEFAULT false,
+    purchase_unit_price numeric(18,4),
+    cost_unit_price numeric(18,4),
+    price_currency_code varchar(12) DEFAULT 'CNY',
     attribute_summary varchar(1000),
     legacy_source varchar(80),
     legacy_id varchar(120),
@@ -248,6 +251,9 @@ ALTER TABLE IF EXISTS pc_material
     ADD COLUMN IF NOT EXISTS primary_weight numeric(18,6),
     ADD COLUMN IF NOT EXISTS purchase_enabled boolean NOT NULL DEFAULT false,
     ADD COLUMN IF NOT EXISTS inventory_enabled boolean NOT NULL DEFAULT false,
+    ADD COLUMN IF NOT EXISTS purchase_unit_price numeric(18,4),
+    ADD COLUMN IF NOT EXISTS cost_unit_price numeric(18,4),
+    ADD COLUMN IF NOT EXISTS price_currency_code varchar(12) DEFAULT 'CNY',
     ADD COLUMN IF NOT EXISTS attribute_summary varchar(1000),
     ADD COLUMN IF NOT EXISTS legacy_source varchar(80),
     ADD COLUMN IF NOT EXISTS legacy_id varchar(120);
@@ -275,6 +281,9 @@ COMMENT ON COLUMN pc_material.primary_color IS '主颜色摘要';
 COMMENT ON COLUMN pc_material.primary_weight IS '主重量/克重数值';
 COMMENT ON COLUMN pc_material.purchase_enabled IS '是否可采购主数据标记';
 COMMENT ON COLUMN pc_material.inventory_enabled IS '是否入库主数据标记';
+COMMENT ON COLUMN pc_material.purchase_unit_price IS '采购单价';
+COMMENT ON COLUMN pc_material.cost_unit_price IS '成本单价';
+COMMENT ON COLUMN pc_material.price_currency_code IS '价格币种，默认 CNY';
 COMMENT ON COLUMN pc_material.attribute_summary IS '属性摘要';
 COMMENT ON COLUMN pc_material.legacy_source IS '旧系统来源';
 COMMENT ON COLUMN pc_material.legacy_id IS '旧系统对象ID';
@@ -769,6 +778,7 @@ INSERT INTO pc_product_dict_type (
     (118003, 1, 'product_business_type', '业务类型', 'Business Type', 'BASE', true, true, 'ENABLED', 30, '产品业务口径类型', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
     (118004, 1, 'product_component_type', '组件包类型', 'Component Pack Type', 'BASE', true, true, 'ENABLED', 40, '组件包类型', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
     (118005, 1, 'product_asset_type', '资料类型', 'Asset Type', 'BASE', true, true, 'ENABLED', 50, '资料资产类型', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
+    (118006, 1, 'product_attribute_group', '物料属性分组', 'Material Attribute Group', 'BASE', true, true, 'ENABLED', 60, '物料属性定义分组', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
     (118101, 1, 'engineering_item_type', '工程构成项类型', 'Engineering Item Type', 'ENGINEERING', true, true, 'ENABLED', 110, '工程构成项类型', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
     (118102, 1, 'engineering_scope_type', '可选范围类型', 'Engineering Scope Type', 'ENGINEERING', true, true, 'ENABLED', 120, '工程可选范围类型', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
     (118103, 1, 'engineering_rule_source', '规则条件来源', 'Engineering Rule Source', 'ENGINEERING', true, true, 'ENABLED', 130, '工程规则条件来源', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
@@ -830,6 +840,10 @@ INSERT INTO pc_product_dict_item (
     (119404, 1, 'product_asset_type', 'INSTALL_GUIDE', '安装说明', 'Installation Guide', NULL, true, true, 'ENABLED', 40, '安装说明', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
     (119405, 1, 'product_asset_type', 'DRAWING', '图纸', 'Drawing', NULL, true, true, 'ENABLED', 50, '图纸', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
     (119406, 1, 'product_asset_type', 'OTHER', '其他', 'Other', NULL, true, true, 'ENABLED', 90, '其他资料', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
+    (119451, 1, 'product_attribute_group', 'FABRIC', '面料参数', 'Fabric Attributes', NULL, true, true, 'ENABLED', 10, '面料类物料参数', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
+    (119452, 1, 'product_attribute_group', 'CONTROL', '控制系统参数', 'Control Attributes', NULL, true, true, 'ENABLED', 20, '电机、遥控、拉珠等控制系统参数', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
+    (119453, 1, 'product_attribute_group', 'HARDWARE', '五金配件参数', 'Hardware Attributes', NULL, true, true, 'ENABLED', 30, '铝材、下杆、安装件、配件参数', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
+    (119454, 1, 'product_attribute_group', 'PACKAGING', '包装参数', 'Packaging Attributes', NULL, true, true, 'ENABLED', 40, '包装件参数', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
     (119501, 1, 'engineering_item_type', 'MAIN_FABRIC', '主面料', 'Main Fabric', NULL, true, true, 'ENABLED', 10, '主面料构成项', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
     (119502, 1, 'engineering_item_type', 'SECONDARY_FABRIC', '副面料', 'Secondary Fabric', NULL, true, true, 'ENABLED', 20, '副面料构成项', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
     (119503, 1, 'engineering_item_type', 'PROFILE', '铝材/下杆/轨道', 'Profile / Rail / Track', NULL, true, true, 'ENABLED', 30, '型材类构成项', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
@@ -848,7 +862,7 @@ INSERT INTO pc_product_dict_item (
     (119701, 1, 'engineering_rule_source', 'MATERIAL', '物料', 'Material', NULL, true, true, 'ENABLED', 10, '规则条件可引用物料', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
     (119702, 1, 'engineering_rule_source', 'COMPONENT', '组件包', 'Component Pack', NULL, true, true, 'ENABLED', 20, '规则条件可引用组件包', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
     (119703, 1, 'engineering_rule_source', 'FABRIC_SERIES', '面料系列', 'Fabric Series', NULL, true, true, 'ENABLED', 30, '规则条件可引用面料系列', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
-    (119704, 1, 'engineering_rule_source', 'BASE_ATTRIBUTE', '基础属性', 'Base Attribute', NULL, true, true, 'ENABLED', 40, '规则条件可引用基础属性', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
+    (119704, 1, 'engineering_rule_source', 'BASE_ATTRIBUTE', '物料属性', 'Material Attribute', NULL, true, true, 'ENABLED', 40, '规则条件可引用物料属性', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
     (119705, 1, 'engineering_rule_source', 'MEDIA', '资料附件', 'Media', NULL, true, true, 'ENABLED', 50, '规则条件可引用资料附件', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
     (119711, 1, 'engineering_rule_type', 'DIMENSION_LIMIT', '尺寸限制', 'Dimension Limit', NULL, true, true, 'ENABLED', 10, '尺寸限制规则', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
     (119712, 1, 'engineering_rule_type', 'THICKNESS_LIMIT', '厚度限制', 'Thickness Limit', NULL, true, true, 'ENABLED', 20, '厚度限制规则', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
@@ -880,7 +894,7 @@ INSERT INTO pc_product_dict_item (
     (120104, 1, 'config_input_type', 'MULTI_SELECT', '多选', 'Multi Select', NULL, true, true, 'ENABLED', 40, '多选', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
     (120105, 1, 'config_input_type', 'BOOLEAN', '是否', 'Boolean', NULL, true, true, 'ENABLED', 50, '是否输入', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
     (120201, 1, 'config_option_source_type', 'MANUAL', '手工维护', 'Manual', NULL, true, true, 'ENABLED', 10, '手工维护', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
-    (120202, 1, 'config_option_source_type', 'BASE_ATTRIBUTE', '基础属性', 'Base Attribute', NULL, true, true, 'ENABLED', 20, '基础属性来源', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
+    (120202, 1, 'config_option_source_type', 'BASE_ATTRIBUTE', '物料属性', 'Material Attribute', NULL, true, true, 'ENABLED', 20, '物料属性来源', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
     (120203, 1, 'config_option_source_type', 'MATERIAL', '物料', 'Material', NULL, true, true, 'ENABLED', 30, '物料来源', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
     (120204, 1, 'config_option_source_type', 'FABRIC_PROFILE', '面料资料', 'Fabric Profile', NULL, true, true, 'ENABLED', 40, '面料资料来源', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
     (120205, 1, 'config_option_source_type', 'FABRIC_SERIES', '面料系列', 'Fabric Series', NULL, true, true, 'ENABLED', 50, '面料系列来源', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
@@ -2085,7 +2099,7 @@ VALUES
     (24212, 1, 24200, 'Product Categories', 'productCenter.menu.categories', 2, 'categories', 'product-center/base', NULL, '1', '0', 'C', '1', '1', 'product:base:list', 'tree-table', 'system', now(), NULL, NULL, '产品分类'),
     (24206, 1, 24200, 'Units', 'productCenter.menu.units', 3, 'units', 'product-center/base', NULL, '1', '0', 'C', '1', '1', 'product:unit:list', 'unit', 'system', now(), NULL, NULL, '单位管理'),
     (24213, 1, 24200, 'Product Dictionaries', 'productCenter.menu.productDicts', 4, 'product-dicts', 'product-center/product-dicts', NULL, '1', '0', 'C', '1', '1', 'product:dict:list', 'dict', 'system', now(), NULL, NULL, '产品业务字典'),
-    (24204, 1, 24200, 'Base Attributes', 'productCenter.menu.baseAttributes', 5, 'base-attributes', 'product-center/base', NULL, '1', '0', 'C', '1', '1', 'product:base-attribute:list', 'dict', 'system', now(), NULL, NULL, '基础属性定义'),
+    (24204, 1, 24200, 'Material Attribute Definitions', 'productCenter.menu.baseAttributes', 5, 'base-attributes', 'product-center/base', NULL, '1', '0', 'C', '1', '1', 'product:base-attribute:list', 'dict', 'system', now(), NULL, NULL, '物料属性定义'),
     (24202, 1, 24200, 'Materials', 'productCenter.menu.materials', 6, 'materials', 'product-center/base', NULL, '1', '0', 'C', '1', '1', 'product:base:list', 'inventory', 'system', now(), NULL, NULL, '物料资料'),
     (24208, 1, 24200, 'Material Attributes', 'productCenter.menu.materialAttributes', 7, 'material-attributes', 'product-center/base', NULL, '1', '0', 'C', '1', '1', 'product:material-attribute:list', 'list', 'system', now(), NULL, NULL, '物料属性'),
     (24201, 1, 24200, 'Fabric Series', 'productCenter.menu.fabricSeries', 8, 'fabric-series', 'product-center/fabric', NULL, '1', '0', 'C', '1', '1', 'product:fabric:list', 'color', 'system', now(), NULL, NULL, '面料系列'),
@@ -2143,11 +2157,11 @@ SET tenant_id = EXCLUDED.tenant_id,
 
 INSERT INTO sys_menu (menu_id, tenant_id, parent_id, menu_name, i18n_key, order_num, path, component, query_param, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, update_by, update_time, remark)
 VALUES
-    (24230, 1, 24204, 'Base Attribute Query', 'common.search', 1, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:base-attribute:list', '#', 'system', now(), NULL, NULL, '基础属性查询'),
-    (24231, 1, 24204, 'Base Attribute Add', 'common.add', 2, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:base-attribute:add', '#', 'system', now(), NULL, NULL, '基础属性新增'),
-    (24232, 1, 24204, 'Base Attribute Edit', 'common.edit', 3, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:base-attribute:edit', '#', 'system', now(), NULL, NULL, '基础属性编辑'),
-    (24233, 1, 24204, 'Base Attribute Delete', 'common.delete', 4, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:base-attribute:remove', '#', 'system', now(), NULL, NULL, '基础属性删除'),
-    (24234, 1, 24204, 'Base Attribute Reference', 'productCenter.common.references', 5, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:base-attribute:reference', '#', 'system', now(), NULL, NULL, '基础属性引用检查'),
+    (24230, 1, 24204, 'Material Attribute Query', 'common.search', 1, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:base-attribute:list', '#', 'system', now(), NULL, NULL, '物料属性查询'),
+    (24231, 1, 24204, 'Material Attribute Add', 'common.add', 2, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:base-attribute:add', '#', 'system', now(), NULL, NULL, '物料属性新增'),
+    (24232, 1, 24204, 'Material Attribute Edit', 'common.edit', 3, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:base-attribute:edit', '#', 'system', now(), NULL, NULL, '物料属性编辑'),
+    (24233, 1, 24204, 'Material Attribute Delete', 'common.delete', 4, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:base-attribute:remove', '#', 'system', now(), NULL, NULL, '物料属性删除'),
+    (24234, 1, 24204, 'Material Attribute Reference', 'productCenter.common.references', 5, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:base-attribute:reference', '#', 'system', now(), NULL, NULL, '物料属性引用检查'),
     (24235, 1, 24213, 'Product Dictionary Query', 'common.search', 1, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:dict:list', '#', 'system', now(), NULL, NULL, '产品字典查询'),
     (24236, 1, 24213, 'Product Dictionary Add', 'common.add', 2, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:dict:add', '#', 'system', now(), NULL, NULL, '产品字典新增'),
     (24237, 1, 24213, 'Product Dictionary Edit', 'common.edit', 3, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:dict:edit', '#', 'system', now(), NULL, NULL, '产品字典编辑'),

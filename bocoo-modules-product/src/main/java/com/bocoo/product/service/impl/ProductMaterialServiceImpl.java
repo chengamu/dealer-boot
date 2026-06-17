@@ -7,12 +7,14 @@ import com.bocoo.common.core.utils.StringUtils;
 import com.bocoo.common.mybatis.core.page.PageQuery;
 import com.bocoo.common.mybatis.core.page.TableDataInfo;
 import com.bocoo.product.domain.bo.ProductMaterialBo;
+import com.bocoo.product.domain.bo.ProductMaterialAttributeBo;
 import com.bocoo.product.domain.entity.FabricProfile;
 import com.bocoo.product.domain.entity.ProductComponentItem;
 import com.bocoo.product.domain.entity.ProductMaterial;
 import com.bocoo.product.domain.entity.ProductMaterialAttribute;
 import com.bocoo.product.domain.entity.ProductMediaBinding;
 import com.bocoo.product.domain.vo.ProductMaterialVo;
+import com.bocoo.product.domain.vo.ProductMaterialAttributeVo;
 import com.bocoo.product.domain.vo.ReferenceCheckResultVo;
 import com.bocoo.product.mapper.FabricProfileMapper;
 import com.bocoo.product.mapper.ProductComponentItemMapper;
@@ -48,7 +50,11 @@ public class ProductMaterialServiceImpl extends ProductServiceSupport implements
 
     @Override
     public ProductMaterialVo queryById(Long id) {
-        return materialMapper.selectVoById(id);
+        ProductMaterialVo vo = materialMapper.selectVoById(id);
+        if (vo != null) {
+            vo.setAttributeList(queryAttributes(id));
+        }
+        return vo;
     }
 
     @Override
@@ -59,14 +65,25 @@ public class ProductMaterialServiceImpl extends ProductServiceSupport implements
             return Boolean.FALSE;
         }
         ProductEntityDefaults.prepareInsert(entity);
-        return materialMapper.insert(entity) > 0;
+        boolean inserted = materialMapper.insert(entity) > 0;
+        if (inserted) {
+            syncAttributes(entity.getMaterialId(), bo);
+        }
+        return inserted;
     }
 
     @Override
     public Boolean updateByBo(ProductMaterialBo bo) {
         normalizeMaterial(bo);
         ProductMaterial entity = MapstructUtils.convert(bo, ProductMaterial.class);
-        return entity != null && materialMapper.updateById(entity) > 0;
+        if (entity == null) {
+            return Boolean.FALSE;
+        }
+        boolean updated = materialMapper.updateById(entity) > 0;
+        if (updated) {
+            syncAttributes(entity.getMaterialId(), bo);
+        }
+        return updated;
     }
 
     @Override
@@ -101,7 +118,9 @@ public class ProductMaterialServiceImpl extends ProductServiceSupport implements
             eq(q, "material_type", bo.getMaterialType());
             eq(q, "business_type", bo.getBusinessType());
             like(q, "spec_summary", bo.getSpecSummary());
+            like(q, "supplier_code", bo.getSupplierCode());
             like(q, "supplier_name", bo.getSupplierName());
+            like(q, "vendor_item_no", bo.getVendorItemNo());
             eq(q, "status", bo.getStatus());
         }
         return q.orderByDesc("update_time");
@@ -128,6 +147,44 @@ public class ProductMaterialServiceImpl extends ProductServiceSupport implements
         }
         if (bo.getInventoryEnabled() == null) {
             bo.setInventoryEnabled(Boolean.FALSE);
+        }
+        if (StringUtils.isBlank(bo.getPriceCurrencyCode())) {
+            bo.setPriceCurrencyCode("CNY");
+        }
+    }
+
+    private List<ProductMaterialAttributeVo> queryAttributes(Long materialId) {
+        return materialAttributeMapper.selectVoList(activeQuery(ProductMaterialAttribute.class)
+            .eq("material_id", materialId)
+            .orderByAsc("sort_order", "material_attribute_id"));
+    }
+
+    private void syncAttributes(Long materialId, ProductMaterialBo bo) {
+        if (materialId == null || bo.getAttributeList() == null) {
+            return;
+        }
+        materialAttributeMapper.delete(activeQuery(ProductMaterialAttribute.class).eq("material_id", materialId));
+        int index = 0;
+        for (ProductMaterialAttributeBo item : bo.getAttributeList()) {
+            if (item == null || StringUtils.isBlank(item.getAttributeCode())) {
+                continue;
+            }
+            ProductMaterialAttribute entity = MapstructUtils.convert(item, ProductMaterialAttribute.class);
+            if (entity == null) {
+                continue;
+            }
+            entity.setAttributeValueId(null);
+            entity.setMaterialId(materialId);
+            entity.setMaterialCode(bo.getMaterialCode());
+            if (entity.getSortOrder() == null) {
+                entity.setSortOrder(index * 10 + 10);
+            }
+            if (StringUtils.isBlank(entity.getStatus())) {
+                entity.setStatus("ENABLED");
+            }
+            ProductEntityDefaults.prepareInsert(entity);
+            materialAttributeMapper.insert(entity);
+            index++;
         }
     }
 }

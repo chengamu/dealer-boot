@@ -1,0 +1,97 @@
+package com.bocoo.product.service;
+
+import com.bocoo.common.core.exception.ServiceException;
+import com.bocoo.product.domain.bo.ProductUnitBo;
+import com.bocoo.product.domain.entity.ProductUnit;
+import com.bocoo.product.domain.vo.ReferenceCheckResultVo;
+import com.bocoo.product.mapper.FabricProfileMapper;
+import com.bocoo.product.mapper.ProductComponentItemMapper;
+import com.bocoo.product.mapper.ProductComponentMapper;
+import com.bocoo.product.mapper.ProductMaterialMapper;
+import com.bocoo.product.mapper.ProductUnitMapper;
+import com.bocoo.product.service.impl.ProductUnitServiceImpl;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+
+@ExtendWith(MockitoExtension.class)
+class ProductUnitServiceTest {
+
+    @Mock
+    private ProductUnitMapper unitMapper;
+    @Mock
+    private ProductMaterialMapper materialMapper;
+    @Mock
+    private ProductComponentMapper componentMapper;
+    @Mock
+    private ProductComponentItemMapper componentItemMapper;
+    @Mock
+    private FabricProfileMapper fabricProfileMapper;
+
+    private ProductUnitServiceImpl productUnitService;
+
+    @BeforeEach
+    void setUp() {
+        productUnitService = new ProductUnitServiceImpl(
+            unitMapper,
+            materialMapper,
+            componentMapper,
+            componentItemMapper,
+            fabricProfileMapper
+        );
+    }
+
+    @Test
+    void unitReferenceCheckCountsEveryBusinessUsage() {
+        ProductUnit unit = new ProductUnit();
+        unit.setUnitId(3001L);
+        unit.setUnitCode("MM");
+        when(unitMapper.selectById(3001L)).thenReturn(unit);
+        when(materialMapper.selectCount(any())).thenReturn(1L);
+        when(componentMapper.selectCount(any())).thenReturn(2L);
+        when(componentItemMapper.selectCount(any())).thenReturn(3L);
+        when(fabricProfileMapper.selectCount(any())).thenReturn(4L);
+
+        ReferenceCheckResultVo result = productUnitService.checkReferences(3001L);
+
+        assertThat(result.getAllowed()).isFalse();
+        assertThat(result.getReferenceCount()).isEqualTo(10L);
+        assertThat(result.getBlockerReasonKey()).isEqualTo("product.unit.hasReferences");
+        assertThat(result.getReferenceSummaries()).containsExactly("Unit code references: 10");
+    }
+
+    @Test
+    void unitReferenceCheckAllowsUnknownUnit() {
+        when(unitMapper.selectById(3001L)).thenReturn(null);
+
+        ReferenceCheckResultVo result = productUnitService.checkReferences(3001L);
+
+        assertThat(result.getAllowed()).isTrue();
+        assertThat(result.getReferenceCount()).isZero();
+        assertThat(result.getReferenceSummaries()).isEmpty();
+    }
+
+    @Test
+    void insertUnitRejectsBaseUnitWithDifferentType() {
+        ProductUnit baseUnit = new ProductUnit();
+        baseUnit.setUnitCode("PCS");
+        baseUnit.setUnitType("COUNT");
+        when(unitMapper.selectOne(any())).thenReturn(baseUnit);
+
+        ProductUnitBo bo = new ProductUnitBo();
+        bo.setUnitCode("CM");
+        bo.setUnitNameCn("厘米");
+        bo.setUnitType("LENGTH");
+        bo.setBaseUnitCode("PCS");
+
+        assertThatThrownBy(() -> productUnitService.insertByBo(bo))
+            .isInstanceOf(ServiceException.class);
+    }
+}

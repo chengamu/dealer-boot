@@ -2,6 +2,7 @@ package com.bocoo.product.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.bocoo.common.core.exception.ServiceException;
 import com.bocoo.common.core.utils.MapstructUtils;
 import com.bocoo.common.core.utils.StringUtils;
 import com.bocoo.common.mybatis.core.page.PageQuery;
@@ -41,6 +42,7 @@ public class ProductCategoryServiceImpl extends ProductServiceSupport implements
 
     @Override
     public Boolean insertByBo(ProductCategoryBo bo) {
+        normalizeCategory(bo);
         ProductCategory entity = MapstructUtils.convert(bo, ProductCategory.class);
         if (entity == null) {
             return Boolean.FALSE;
@@ -51,6 +53,7 @@ public class ProductCategoryServiceImpl extends ProductServiceSupport implements
 
     @Override
     public Boolean updateByBo(ProductCategoryBo bo) {
+        normalizeCategory(bo);
         ProductCategory entity = MapstructUtils.convert(bo, ProductCategory.class);
         return entity != null && categoryMapper.updateById(entity) > 0;
     }
@@ -83,5 +86,28 @@ public class ProductCategoryServiceImpl extends ProductServiceSupport implements
             eq(q, "status", bo.getStatus());
         }
         return q.orderByAsc("sort_order", "category_id");
+    }
+
+    private void normalizeCategory(ProductCategoryBo bo) {
+        if (bo == null) {
+            return;
+        }
+        Long parentId = bo.getParentId();
+        if (parentId == null || parentId <= 0) {
+            bo.setParentId(0L);
+            bo.setCategoryLevel(1);
+            bo.setCategoryPath(bo.getCategoryCode());
+            return;
+        }
+        if (parentId.equals(bo.getCategoryId())) {
+            throw ServiceException.ofMessageKey("product.category.parentCannotSelf");
+        }
+        ProductCategory parent = categoryMapper.selectById(parentId);
+        if (parent == null || !"0".equals(parent.getDelFlag())) {
+            throw ServiceException.ofMessageKey("product.category.parentNotFound");
+        }
+        bo.setCategoryLevel((parent.getCategoryLevel() == null ? 1 : parent.getCategoryLevel()) + 1);
+        String parentPath = StringUtils.blankToDefault(parent.getCategoryPath(), parent.getCategoryCode());
+        bo.setCategoryPath(parentPath + "/" + bo.getCategoryCode());
     }
 }

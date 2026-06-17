@@ -36,6 +36,7 @@ const { options: productDictOptions } = useProductDict(
   'product_material_type',
   'product_component_type',
   'product_business_type',
+  'product_attribute_group',
   'engineering_qty_mode'
 )
 
@@ -50,10 +51,10 @@ const routeTabMap: Record<string, string> = {
 }
 
 const valueTypeOptions = computed(() => [
-  { label: t('productCenter.baseAttribute.valueTypeText'), value: 'text' },
-  { label: t('productCenter.baseAttribute.valueTypeNumber'), value: 'number' },
-  { label: t('productCenter.baseAttribute.valueTypeBoolean'), value: 'boolean' },
-  { label: t('productCenter.baseAttribute.valueTypeEnum'), value: 'enum' }
+  { label: t('productCenter.baseAttribute.valueTypeText'), value: 'TEXT' },
+  { label: t('productCenter.baseAttribute.valueTypeNumber'), value: 'NUMBER' },
+  { label: t('productCenter.baseAttribute.valueTypeBoolean'), value: 'BOOLEAN' },
+  { label: t('productCenter.baseAttribute.valueTypeEnum'), value: 'ENUM' }
 ])
 
 function unitOption(unit: ProductUnitVO) {
@@ -88,10 +89,40 @@ async function loadMaterialOptions(form?: ProductRecord) {
   return rows.map((row) => ({ value: row.materialCode, label: labelOf(row, 'materialCode', 'materialNameCn', 'materialNameEn'), record: row }))
 }
 
+async function loadCategoryOptions() {
+  const response = await productCategoryApi.options?.({ status: 'ENABLED', pageNum: 1, pageSize: 500 })
+  const rows = Array.isArray(response) ? response : response?.data || []
+  return rows.map((row) => ({ value: row.categoryId, label: labelOf(row, 'categoryCode', 'categoryNameCn', 'categoryNameEn'), record: row }))
+}
+
 async function loadComponentOptions() {
   const response = await productComponentApi.options?.({ status: 'ENABLED', pageNum: 1, pageSize: 500 })
   const rows = Array.isArray(response) ? response : response?.data || []
   return rows.map((row) => ({ value: row.componentCode, label: labelOf(row, 'componentCode', 'componentNameCn', 'componentNameEn'), record: row }))
+}
+
+async function loadUnitOptions(form?: ProductRecord) {
+  const unitType = form?.unitType as string | undefined
+  return unitList.value
+    .filter((unit) => !unitType || unit.unitType === unitType)
+    .map(unitOption)
+}
+
+async function loadBaseAttributeOptions(form?: ProductRecord) {
+  const materialType = String(form?.materialType || '')
+  if (!materialType) return []
+  const response = await productBaseAttributeApi.options?.({
+    status: 'ENABLED',
+    materialTypes: materialType,
+    pageNum: 1,
+    pageSize: 500
+  })
+  const rows = Array.isArray(response) ? response : response?.data || []
+  return rows.map((row) => ({
+    value: row.attributeCode,
+    label: labelOf(row, 'attributeCode', 'attributeNameCn', 'attributeNameEn'),
+    record: row
+  }))
 }
 
 async function loadUnits() {
@@ -115,13 +146,14 @@ const configs = computed<ProductGridConfig[]>(() => [
     idKey: 'categoryId',
     permissions: { add: 'product:base:add', edit: 'product:base:edit', remove: 'product:base:remove', reference: 'product:base:reference' },
     api: productCategoryApi,
+    tree: { parentKey: 'parentId', rowKey: 'categoryId', rootValue: 0 },
     fields: [
       { prop: 'categoryCode', labelKey: 'productCenter.category.code', search: true, required: true },
       { prop: 'categoryNameCn', labelKey: 'productCenter.category.name', search: true, required: true },
       { prop: 'categoryNameEn', labelKey: 'productCenter.category.nameEn' },
-      { prop: 'parentId', labelKey: 'productCenter.category.parentId', type: 'number', table: false },
-      { prop: 'categoryLevel', labelKey: 'productCenter.category.level', type: 'number', form: false },
-      { prop: 'categoryPath', labelKey: 'productCenter.category.path', table: false },
+      { prop: 'parentId', labelKey: 'productCenter.category.parentCategory', type: 'tree-select', optionLoader: loadCategoryOptions, table: false },
+      { prop: 'categoryLevel', labelKey: 'productCenter.category.level', type: 'number', form: false, table: false },
+      { prop: 'categoryPath', labelKey: 'productCenter.category.path', table: false, readonly: () => true },
       { prop: 'status', labelKey: 'productCenter.common.status', type: 'status', search: true },
       { prop: 'sortOrder', labelKey: 'productCenter.common.sortOrder', type: 'number' },
       { prop: 'remark', labelKey: 'productCenter.common.remark', type: 'textarea', table: false, formSpan: 2 }
@@ -135,6 +167,9 @@ const configs = computed<ProductGridConfig[]>(() => [
     permissions: { add: 'product:base:add', edit: 'product:base:edit', remove: 'product:base:remove', reference: 'product:base:reference' },
     api: productMaterialApi,
     attachments: { targetType: 'MATERIAL', targetCodeField: 'materialCode', defaultUsageType: 'SPEC' },
+    optionLoaders: {
+      __unitOptions: async () => unitOptions.value
+    },
     rowActions: [
       {
         labelKey: 'productCenter.material.manageAttributes',
@@ -147,8 +182,9 @@ const configs = computed<ProductGridConfig[]>(() => [
       { prop: 'materialCode', labelKey: 'productCenter.material.code', search: true, required: true, sectionKey: 'basic', sectionLabelKey: 'productCenter.formSection.basic' },
       { prop: 'materialNameCn', labelKey: 'productCenter.material.name', search: true, required: true, sectionKey: 'basic' },
       { prop: 'materialNameEn', labelKey: 'productCenter.material.nameEn', table: false, sectionKey: 'basic' },
-      { prop: 'materialType', labelKey: 'productCenter.material.type', type: 'select', options: productDictOptions.value.product_material_type || [], search: true, sectionKey: 'basic' },
+      { prop: 'materialType', labelKey: 'productCenter.material.type', type: 'select', options: productDictOptions.value.product_material_type || [], search: true, clearFields: ['attributeList'], sectionKey: 'basic' },
       { prop: 'businessType', labelKey: 'productCenter.material.businessType', type: 'select', options: productDictOptions.value.product_business_type || [], search: true, sectionKey: 'basic' },
+      { prop: 'attributeList', labelKey: 'productCenter.material.typeAttributes', type: 'material-attributes', optionLoader: loadBaseAttributeOptions, table: false, formSpan: 2, sectionKey: 'attributes', sectionLabelKey: 'productCenter.formSection.typeAttributes' },
       { prop: 'unitCode', labelKey: 'productCenter.common.unitCode', type: 'select', options: unitOptions.value, sectionKey: 'erp', sectionLabelKey: 'productCenter.formSection.unitsErp' },
       { prop: 'purchaseUnitCode', labelKey: 'productCenter.material.purchaseUnitCode', type: 'select', options: unitOptions.value, table: false, sectionKey: 'erp' },
       { prop: 'inventoryUnitCode', labelKey: 'productCenter.material.inventoryUnitCode', type: 'select', options: unitOptions.value, table: false, sectionKey: 'erp' },
@@ -156,8 +192,11 @@ const configs = computed<ProductGridConfig[]>(() => [
       { prop: 'purchaseEnabled', labelKey: 'productCenter.material.purchaseEnabled', type: 'boolean', table: false, sectionKey: 'erp' },
       { prop: 'inventoryEnabled', labelKey: 'productCenter.material.inventoryEnabled', type: 'boolean', table: false, sectionKey: 'erp' },
       { prop: 'supplierCode', labelKey: 'productCenter.material.supplierCode', table: false, sectionKey: 'supplier', sectionLabelKey: 'productCenter.formSection.supplier' },
-      { prop: 'supplierName', labelKey: 'productCenter.material.supplierName', sectionKey: 'supplier' },
-      { prop: 'vendorItemNo', labelKey: 'productCenter.material.vendorItemNo', table: false, sectionKey: 'supplier' },
+      { prop: 'supplierName', labelKey: 'productCenter.material.supplierName', search: true, minWidth: 160, sectionKey: 'supplier' },
+      { prop: 'vendorItemNo', labelKey: 'productCenter.material.vendorItemNo', search: true, minWidth: 150, sectionKey: 'supplier' },
+      { prop: 'purchaseUnitPrice', labelKey: 'productCenter.material.purchaseUnitPrice', type: 'number', width: 130, sectionKey: 'supplier' },
+      { prop: 'costUnitPrice', labelKey: 'productCenter.material.costUnitPrice', type: 'number', width: 130, sectionKey: 'supplier' },
+      { prop: 'priceCurrencyCode', labelKey: 'productCenter.material.priceCurrencyCode', table: false, sectionKey: 'supplier' },
       { prop: 'primarySpec', labelKey: 'productCenter.material.primarySpec', sectionKey: 'spec', sectionLabelKey: 'productCenter.formSection.spec' },
       { prop: 'specSummary', labelKey: 'productCenter.material.specSummary', formSpan: 2, sectionKey: 'spec' },
       { prop: 'primaryColor', labelKey: 'productCenter.material.primaryColor', sectionKey: 'spec' },
@@ -281,14 +320,14 @@ const configs = computed<ProductGridConfig[]>(() => [
     },
     api: productBaseAttributeApi,
     fields: [
-      { prop: 'attributeGroup', labelKey: 'productCenter.baseAttribute.group', search: true, required: true },
+      { prop: 'attributeGroup', labelKey: 'productCenter.baseAttribute.group', type: 'select', options: productDictOptions.value.product_attribute_group || [], search: true, required: true },
       { prop: 'attributeCode', labelKey: 'productCenter.baseAttribute.code', search: true, required: true },
       { prop: 'attributeNameCn', labelKey: 'productCenter.baseAttribute.name', search: true, required: true },
       { prop: 'attributeNameEn', labelKey: 'productCenter.baseAttribute.nameEn' },
-      { prop: 'valueType', labelKey: 'productCenter.baseAttribute.valueType', type: 'select', options: valueTypeOptions.value },
-      { prop: 'unitCode', labelKey: 'productCenter.baseAttribute.unitCode', type: 'select', options: unitOptions.value },
-      { prop: 'materialTypes', labelKey: 'productCenter.baseAttribute.materialTypes' },
-      { prop: 'extraJson', labelKey: 'productCenter.baseAttribute.extraJson', type: 'textarea', table: false, formSpan: 2 },
+      { prop: 'valueType', labelKey: 'productCenter.baseAttribute.valueType', type: 'select', options: valueTypeOptions.value, required: true },
+      { prop: 'unitCode', labelKey: 'productCenter.baseAttribute.unitCode', type: 'select', options: unitOptions.value, visible: (form) => form.valueType === 'NUMBER' },
+      { prop: 'materialTypes', labelKey: 'productCenter.baseAttribute.materialTypes', type: 'select', multiple: true, valueMode: 'csv', options: productDictOptions.value.product_material_type || [] },
+      { prop: 'extraJson', labelKey: 'productCenter.baseAttribute.extraJson', type: 'textarea', table: false, form: false, formSpan: 2 },
       { prop: 'status', labelKey: 'productCenter.common.status', type: 'status', search: true },
       { prop: 'remark', labelKey: 'productCenter.common.remark', type: 'textarea', table: false, formSpan: 2 }
     ]
@@ -307,8 +346,8 @@ const configs = computed<ProductGridConfig[]>(() => [
       { prop: 'unitType', labelKey: 'productCenter.unit.type', type: 'select', options: unitTypeOptions.value, search: true },
       { prop: 'precisionScale', labelKey: 'productCenter.unit.precisionScale', type: 'number' },
       { prop: 'roundingMode', labelKey: 'productCenter.unit.roundingMode', type: 'select', options: roundingModeOptions.value },
-      { prop: 'baseUnitCode', labelKey: 'productCenter.unit.baseUnitCode', type: 'select', options: unitOptions.value },
-      { prop: 'conversionRate', labelKey: 'productCenter.unit.conversionRate', type: 'number' },
+      { prop: 'baseUnitCode', labelKey: 'productCenter.unit.baseUnitCode', type: 'remote-select', optionLoader: loadUnitOptions },
+      { prop: 'conversionRate', labelKey: 'productCenter.unit.conversionRateHelp', type: 'number' },
       { prop: 'status', labelKey: 'productCenter.common.status', type: 'status', search: true },
       { prop: 'sortOrder', labelKey: 'productCenter.common.sortOrder', type: 'number' },
       { prop: 'remark', labelKey: 'productCenter.common.remark', type: 'textarea', table: false, formSpan: 2 }

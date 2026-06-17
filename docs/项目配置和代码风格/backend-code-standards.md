@@ -137,11 +137,71 @@ Mapper XML 规范：
 - 导出接口使用 `ExcelUtil.exportExcel(...)`，前端导出按钮必须有对应后端接口和菜单按钮权限。
 - 状态变更必须按真实主键字段生成或手写，不允许硬编码 `getId`。
 
-## 6. 后端验证
+## 6. 后端单元测试规范
+
+后端单元测试优先覆盖 ServiceImpl、Engine 和规则类，不把浏览器自动化当作后端单元测试的一部分。
+
+测试目录约定：
+
+```text
+bocoo-admin/src/test/java/com/bocoo/<module>/service/
+```
+
+当前项目由 `bocoo-admin` 聚合启动测试；业务模块的轻量单元测试先放在 `bocoo-admin/src/test/java` 下，包名仍按真实业务模块组织，例如 `com.bocoo.product.service`。
+
+单元测试优先级：
+
+- 字典、单位、分类、基础属性等基础资料：唯一校验、系统内置删除拦截、状态切换、options 返回、引用检查。
+- 物料、面料、组件、附件绑定：业务编码统一、冗余字段同步、附件绑定引用、删除前引用检查。
+- 工程配置、产品配置、价格：规则解析、试算结果、阻断/警告、输出组件/物料/附件。
+- 发布、导入、快照：状态流转、解析校验、错误汇总、快照结构。
+
+测试写法：
+
+- 优先使用 `JUnit 5` + `MockitoExtension`，Mock Mapper，不连接开发库。
+- ServiceImpl 单元测试只验证业务规则和 Mapper 调用结果，不验证 MyBatis-Plus SQL 生成细节。
+- Engine 测试使用内存对象构造输入，断言输出 DTO / Result / Map 的关键字段。
+- 重要异常使用 `assertThatThrownBy(...).isInstanceOf(ServiceException.class)`，不要只测空返回。
+- 不为了测试访问 private 方法；如确实需要测试，优先把业务规则提取成包内可见 helper 或 Engine。
+- 不在单元测试里依赖当前开发库已有数据，不读取生产配置，不输出密钥、连接串。
+- 当前不要求浏览器自动化；页面级回归可以后续使用 Browser / Playwright 单独做。
+
+推荐命名：
+
+```text
+ProductDictServiceTest
+ProductUnitServiceTest
+FabricSeriesServiceTest
+EngineeringPreviewServiceTest
+```
+
+测试命令：
+
+```bash
+# 跑指定测试
+mvn -pl bocoo-admin -am -Dtest=ProductDictServiceTest,ProductUnitServiceTest -Dsurefire.failIfNoSpecifiedTests=false test
+
+# 跑产品模块相关单元测试
+mvn -pl bocoo-admin -am -Dtest='*Product*Test,*Fabric*Test,*Engineering*Test' -Dsurefire.failIfNoSpecifiedTests=false test
+
+# 编译兜底
+mvn -pl bocoo-admin -am -DskipTests compile
+```
+
+新增或重构产品模块后，至少补以下一类测试：
+
+```text
+基础资料 CRUD / options / 引用检查
+规则或试算器核心分支
+删除、停用、状态切换等容易破坏数据一致性的操作
+```
+
+## 7. 后端验证
 
 后端改动后至少检查：
 
 - `mvn -pl <module> -am -DskipTests compile`。
+- 涉及业务规则、引用检查、状态切换、试算器时，补并执行对应单元测试。
 - 权限码三方一致：Vue `v-hasPermi`、Java `@SaCheckPermission`、`sys_menu.perms`。
 - Mapper XML、i18n 资源、权限码都在本模块业务边界内。
 - Mapper XML 的 namespace、statement id、resultType / resultMap 和 Java Mapper 对齐。

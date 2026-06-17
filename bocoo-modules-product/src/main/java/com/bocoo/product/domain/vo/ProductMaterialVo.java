@@ -9,6 +9,7 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * 产品物料视图对象
@@ -129,6 +130,15 @@ public class ProductMaterialVo implements Serializable {
     @Schema(description = "是否入库")
     private Boolean inventoryEnabled;
 
+    @Schema(description = "采购单价")
+    private BigDecimal purchaseUnitPrice;
+
+    @Schema(description = "成本单价")
+    private BigDecimal costUnitPrice;
+
+    @Schema(description = "价格币种")
+    private String priceCurrencyCode;
+
     /**
      * 属性摘要
      */
@@ -164,6 +174,9 @@ public class ProductMaterialVo implements Serializable {
      */
     @Schema(description = "物料属性JSON")
     private String attributeJson;
+
+    @Schema(description = "物料属性值列表")
+    private List<ProductMaterialAttributeVo> attributeList;
 
     /**
      * 备注

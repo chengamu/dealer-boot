@@ -64,5 +64,6 @@ class ProductMaterialServiceTest {
         assertThat(bo.getUsageUnitCode()).isEqualTo("M");
         assertThat(bo.getPurchaseEnabled()).isFalse();
         assertThat(bo.getInventoryEnabled()).isFalse();
+        assertThat(bo.getPriceCurrencyCode()).isEqualTo("CNY");
     }
 }

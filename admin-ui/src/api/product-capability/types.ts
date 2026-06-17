@@ -361,6 +361,9 @@ export interface ProductMaterialVO extends ProductRecord {
   primaryWeight?: string
   purchaseEnabled?: string | boolean
   inventoryEnabled?: string | boolean
+  purchaseUnitPrice?: number
+  costUnitPrice?: number
+  priceCurrencyCode?: string
   attributeSummary?: string
   legacySource?: string
   legacyId?: string

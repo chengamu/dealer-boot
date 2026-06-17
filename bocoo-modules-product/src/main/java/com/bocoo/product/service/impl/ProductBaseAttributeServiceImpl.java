@@ -2,6 +2,7 @@ package com.bocoo.product.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.bocoo.common.core.exception.ServiceException;
 import com.bocoo.common.core.utils.MapstructUtils;
 import com.bocoo.common.core.utils.StringUtils;
 import com.bocoo.common.mybatis.core.page.PageQuery;
@@ -44,6 +45,7 @@ public class ProductBaseAttributeServiceImpl extends ProductServiceSupport imple
 
     @Override
     public Boolean insertByBo(ProductBaseAttributeBo bo) {
+        normalizeBaseAttribute(bo);
         ProductBaseAttribute entity = MapstructUtils.convert(bo, ProductBaseAttribute.class);
         if (entity == null) {
             return Boolean.FALSE;
@@ -54,6 +56,7 @@ public class ProductBaseAttributeServiceImpl extends ProductServiceSupport imple
 
     @Override
     public Boolean updateByBo(ProductBaseAttributeBo bo) {
+        normalizeBaseAttribute(bo);
         ProductBaseAttribute entity = MapstructUtils.convert(bo, ProductBaseAttribute.class);
         return entity != null && baseAttributeMapper.updateById(entity) > 0;
     }
@@ -84,8 +87,26 @@ public class ProductBaseAttributeServiceImpl extends ProductServiceSupport imple
             if (StringUtils.isNotBlank(bo.getAttributeNameCn())) {
                 q.and(wrapper -> wrapper.like("attribute_name_cn", bo.getAttributeNameCn()).or().like("attribute_name_en", bo.getAttributeNameCn()));
             }
+            like(q, "material_types", bo.getMaterialTypes());
             eq(q, "status", bo.getStatus());
         }
         return q.orderByAsc("sort_order", "attribute_id");
+    }
+
+    private void normalizeBaseAttribute(ProductBaseAttributeBo bo) {
+        if (bo == null) {
+            return;
+        }
+        if (StringUtils.isBlank(bo.getAttributeGroup())) {
+            throw ServiceException.ofMessageKey("product.baseAttribute.groupRequired");
+        }
+        if (StringUtils.isBlank(bo.getValueType())) {
+            bo.setValueType("TEXT");
+        } else {
+            bo.setValueType(bo.getValueType().toUpperCase());
+        }
+        if (!"NUMBER".equals(bo.getValueType())) {
+            bo.setUnitCode(null);
+        }
     }
 }

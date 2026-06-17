@@ -2,6 +2,7 @@ package com.bocoo.product.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.bocoo.common.core.exception.ServiceException;
 import com.bocoo.common.core.utils.MapstructUtils;
 import com.bocoo.common.core.utils.StringUtils;
 import com.bocoo.common.mybatis.core.page.PageQuery;
@@ -24,6 +25,7 @@ import com.bocoo.product.service.ProductUnitService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -53,6 +55,7 @@ public class ProductUnitServiceImpl extends ProductServiceSupport implements Pro
 
     @Override
     public Boolean insertByBo(ProductUnitBo bo) {
+        normalizeUnit(bo);
         ProductUnit entity = MapstructUtils.convert(bo, ProductUnit.class);
         if (entity == null) {
             return Boolean.FALSE;
@@ -63,6 +66,7 @@ public class ProductUnitServiceImpl extends ProductServiceSupport implements Pro
 
     @Override
     public Boolean updateByBo(ProductUnitBo bo) {
+        normalizeUnit(bo);
         ProductUnit entity = MapstructUtils.convert(bo, ProductUnit.class);
         return entity != null && unitMapper.updateById(entity) > 0;
     }
@@ -106,5 +110,30 @@ public class ProductUnitServiceImpl extends ProductServiceSupport implements Pro
             eq(q, "status", bo.getStatus());
         }
         return q.orderByAsc("sort_order", "unit_id");
+    }
+
+    private void normalizeUnit(ProductUnitBo bo) {
+        if (bo == null) {
+            return;
+        }
+        if (StringUtils.isBlank(bo.getBaseUnitCode())) {
+            bo.setBaseUnitCode(bo.getUnitCode());
+        }
+        if (bo.getConversionRate() == null) {
+            bo.setConversionRate(BigDecimal.ONE);
+        }
+        if (StringUtils.isBlank(bo.getBaseUnitCode()) || StringUtils.isBlank(bo.getUnitType())) {
+            return;
+        }
+        ProductUnit baseUnit = unitMapper.selectOne(activeQuery(ProductUnit.class).eq("unit_code", bo.getBaseUnitCode()));
+        if (baseUnit == null && StringUtils.equals(bo.getUnitCode(), bo.getBaseUnitCode())) {
+            return;
+        }
+        if (baseUnit == null) {
+            throw ServiceException.ofMessageKey("product.unit.baseUnitNotFound");
+        }
+        if (!StringUtils.equals(bo.getUnitType(), baseUnit.getUnitType())) {
+            throw ServiceException.ofMessageKey("product.unit.baseUnitTypeMismatch");
+        }
     }
 }

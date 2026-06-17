@@ -127,6 +127,15 @@ public class ProductMaterial extends BaseEntity {
     @Schema(description = "是否入库")
     private Boolean inventoryEnabled;
 
+    @Schema(description = "采购单价")
+    private BigDecimal purchaseUnitPrice;
+
+    @Schema(description = "成本单价")
+    private BigDecimal costUnitPrice;
+
+    @Schema(description = "价格币种")
+    private String priceCurrencyCode;
+
     /**
      * 属性摘要
      */

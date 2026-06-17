@@ -64,6 +64,9 @@
       v-loading="loading"
       :data="rows"
       border
+      :row-key="config.tree?.rowKey || config.idKey"
+      :tree-props="config.tree?.treeProps || { children: 'children' }"
+      :default-expand-all="Boolean(config.tree)"
       :data-testid="`product-grid-${config.key}`"
       class="product-grid-page__table"
       @selection-change="handleSelectionChange"
@@ -131,7 +134,7 @@
     </el-table>
 
     <pagination
-      v-show="total > 0"
+      v-show="total > 0 && !config.tree"
       v-model:page="queryParams.pageNum"
       v-model:limit="queryParams.pageSize"
       :total="total"
@@ -152,7 +155,20 @@
             :disabled="drawerReadonly"
             @change="handleBooleanChange(field, $event)"
           />
-          <el-select v-else-if="field.type === 'select' || field.type === 'remote-select'" v-model="form[field.prop]" :disabled="drawerReadonly" filterable clearable style="width: 100%" @change="handleSelectChange(field, $event)">
+          <el-tree-select
+            v-else-if="field.type === 'tree-select'"
+            v-model="form[field.prop]"
+            :data="fieldTreeOptions(field)"
+            :props="{ label: 'label', value: 'value', children: 'children' }"
+            :disabled="drawerReadonly || field.readonly?.(form)"
+            filterable
+            clearable
+            check-strictly
+            default-expand-all
+            style="width: 100%"
+            @change="handleSelectChange(field, $event)"
+          />
+          <el-select v-else-if="field.type === 'select' || field.type === 'remote-select'" v-model="form[field.prop]" :disabled="drawerReadonly || field.readonly?.(form)" :multiple="field.multiple" filterable clearable style="width: 100%" @change="handleSelectChange(field, $event)">
             <el-option v-for="option in fieldOptions(field)" :key="String(option.value)" :label="option.label" :value="option.value" />
           </el-select>
           <div v-else-if="field.type === 'rule-condition'" class="product-grid-page__builder">
@@ -234,8 +250,47 @@
             </el-select>
             <el-input v-model="expectedDraft.note" :disabled="drawerReadonly" :placeholder="t('productCenter.common.remark')" @input="syncExpectedJson(field)" />
           </div>
-          <el-input v-else-if="field.type === 'textarea'" v-model="form[field.prop] as string" type="textarea" :rows="3" :disabled="drawerReadonly" :placeholder="t('productCenter.common.inputPlaceholder')" />
-          <el-input v-else v-model="form[field.prop] as string" :disabled="drawerReadonly" :placeholder="t('productCenter.common.inputPlaceholder')" />
+          <div v-else-if="field.type === 'material-attributes'" class="product-grid-page__builder product-grid-page__material-attributes">
+            <el-alert :title="t('productCenter.material.typeAttributeHint')" type="info" show-icon :closable="false" />
+            <el-empty v-if="!materialAttributeRows(field).length" :description="t('productCenter.material.noTypeAttributes')" />
+            <div v-for="row in materialAttributeRows(field)" :key="String(row.attributeCode)" class="product-grid-page__material-attribute-row">
+              <span class="product-grid-page__material-attribute-label">{{ displayValue(row.attributeNameCn || row.attributeCode) }}</span>
+              <el-input-number
+                v-if="row.valueType === 'NUMBER'"
+                v-model="row.valueNumber"
+                :disabled="drawerReadonly"
+                :min="0"
+                controls-position="right"
+                @change="syncMaterialAttributes(field)"
+              />
+              <el-switch
+                v-else-if="row.valueType === 'BOOLEAN'"
+                v-model="row.valueBool"
+                :disabled="drawerReadonly"
+                @change="syncMaterialAttributes(field)"
+              />
+              <el-input
+                v-else
+                v-model="row.valueText"
+                :disabled="drawerReadonly"
+                :placeholder="t('productCenter.common.inputPlaceholder')"
+                @input="syncMaterialAttributes(field)"
+              />
+              <el-select
+                v-if="row.valueType === 'NUMBER'"
+                v-model="row.valueUnitCode"
+                :disabled="drawerReadonly"
+                clearable
+                filterable
+                :placeholder="t('productCenter.common.unitCode')"
+                @change="syncMaterialAttributes(field)"
+              >
+                <el-option v-for="option in fieldOptions({ ...field, prop: '__unitOptions' })" :key="String(option.value)" :label="option.label" :value="option.value" />
+              </el-select>
+            </div>
+          </div>
+          <el-input v-else-if="field.type === 'textarea'" v-model="form[field.prop] as string" type="textarea" :rows="3" :disabled="drawerReadonly || field.readonly?.(form)" :placeholder="t('productCenter.common.inputPlaceholder')" />
+          <el-input v-else v-model="form[field.prop] as string" :disabled="drawerReadonly || field.readonly?.(form)" :placeholder="t('productCenter.common.inputPlaceholder')" />
         </el-form-item>
         </template>
         <div v-if="attachmentEnabled" v-loading="attachmentLoading" class="product-grid-page__attachments">
@@ -325,11 +380,15 @@ import { getApiBaseUrl } from '@/utils/config'
 export interface ProductFieldConfig {
   prop: string
   labelKey: string
-  type?: 'text' | 'textarea' | 'number' | 'status' | 'datetime' | 'url' | 'select' | 'boolean' | 'remote-select' | 'rule-condition' | 'rule-action' | 'fixed-items' | 'case-input' | 'expected-result'
+  type?: 'text' | 'textarea' | 'number' | 'status' | 'datetime' | 'url' | 'select' | 'boolean' | 'remote-select' | 'tree-select' | 'rule-condition' | 'rule-action' | 'fixed-items' | 'case-input' | 'expected-result' | 'material-attributes'
   options?: Array<{ label?: string; value?: string | number; record?: ProductRecord }>
   optionLoader?: (form: ProductRecord) => Promise<Array<{ label?: string; value?: string | number; record?: ProductRecord }>>
   fillFields?: Record<string, string | undefined>
   clearFields?: string[]
+  multiple?: boolean
+  valueMode?: 'raw' | 'csv'
+  visible?: (form: ProductRecord) => boolean
+  readonly?: (form: ProductRecord) => boolean
   sectionKey?: string
   sectionLabelKey?: string
   width?: number | string
@@ -381,6 +440,12 @@ export interface ProductGridConfig {
     handler: () => void | Promise<void>
   }>
   optionLoaders?: Record<string, (form: ProductRecord) => Promise<Array<{ label?: string; value?: string | number; record?: ProductRecord }>>>
+  tree?: {
+    parentKey: string
+    rowKey?: string
+    rootValue?: string | number
+    treeProps?: { children?: string }
+  }
   api: {
     list: (query?: ProductPageQuery) => Promise<{ rows?: ProductRecord[]; total?: number }>
     get: (id: string | number) => Promise<{ data?: ProductRecord }>
@@ -430,10 +495,12 @@ const fixedItemDrafts = ref<Record<string, Array<Record<string, unknown>>>>({})
 const actionDraft = ref<Record<string, unknown>>({ type: 'WARN' })
 const caseInputDraft = ref<Record<string, unknown>>({})
 const expectedDraft = ref<Record<string, unknown>>({ resultStatus: 'OK' })
+const materialAttributeDrafts = ref<Record<string, ProductRecord[]>>({})
 
 const searchFields = computed(() => props.config.fields.filter((field) => field.search))
 const tableFields = computed(() => props.config.fields.filter((field) => field.table !== false))
-const formFields = computed(() => props.config.fields.filter((field) => field.form !== false && field.type !== 'datetime' && field.type !== 'status'))
+const allFormFields = computed(() => props.config.fields.filter((field) => field.form !== false && field.type !== 'datetime' && field.type !== 'status'))
+const formFields = computed(() => allFormFields.value.filter((field) => !field.visible || field.visible(form.value)))
 const formSections = computed(() => {
   const sections: Array<{ key: string; labelKey?: string; fields: ProductFieldConfig[] }> = []
   formFields.value.forEach((field) => {
@@ -492,6 +559,10 @@ function fieldOptions(field: ProductFieldConfig) {
   return remoteOptions.value[field.prop] || field.options || []
 }
 
+function fieldTreeOptions(field: ProductFieldConfig) {
+  return buildTreeOptions(fieldOptions(field))
+}
+
 function normalizeStatus(value: unknown) {
   return value === 'ENABLED' || value === '1' || value === 'true' || value === true || value === 1 ? 'ENABLED' : 'DISABLED'
 }
@@ -518,9 +589,12 @@ function normalizeNumberValue(value: unknown) {
 
 function normalizeFormRecord(record?: ProductRecord) {
   const next: ProductRecord = { ...(record || {}) }
-  formFields.value.forEach((field) => {
+  allFormFields.value.forEach((field) => {
     if (field.type === 'number') next[field.prop] = normalizeNumberValue(next[field.prop])
     if (field.type === 'boolean') next[field.prop] = next[field.prop] === '1' || next[field.prop] === 'true' || next[field.prop] === true || next[field.prop] === 1
+    if (field.multiple && field.valueMode === 'csv' && typeof next[field.prop] === 'string') {
+      next[field.prop] = String(next[field.prop]).split(',').map((item) => item.trim()).filter(Boolean)
+    }
   })
   return next
 }
@@ -535,9 +609,50 @@ function defaultColumnMinWidth(field: ProductFieldConfig) {
 
 function formItemClass(field: ProductFieldConfig) {
   return {
-    'product-grid-page__form-item--full': field.formSpan === 2 || field.type === 'textarea' || field.type === 'url' || field.type === 'rule-condition' || field.type === 'rule-action' || field.type === 'fixed-items' || field.type === 'case-input' || field.type === 'expected-result',
+    'product-grid-page__form-item--full': field.formSpan === 2 || field.type === 'textarea' || field.type === 'url' || field.type === 'rule-condition' || field.type === 'rule-action' || field.type === 'fixed-items' || field.type === 'case-input' || field.type === 'expected-result' || field.type === 'material-attributes',
     'product-grid-page__form-item--compact': field.type === 'number' || field.type === 'boolean'
   }
+}
+
+function buildTreeOptions(options: Array<{ label?: string; value?: string | number; record?: ProductRecord }>) {
+  const nodeMap = new Map<string | number, Array<{ label?: string; value?: string | number; record?: ProductRecord; children?: unknown[] }>[number]>()
+  const roots: Array<{ label?: string; value?: string | number; record?: ProductRecord; children?: unknown[] }> = []
+  options.forEach((option) => {
+    const value = option.value
+    if (value == null) return
+    nodeMap.set(value, { ...option, children: [] })
+  })
+  nodeMap.forEach((node) => {
+    const parentValue = node.record?.parentId as string | number | undefined
+    if (parentValue && parentValue !== props.config.tree?.rootValue && nodeMap.has(parentValue)) {
+      ;(nodeMap.get(parentValue)?.children as typeof roots | undefined)?.push(node)
+    } else {
+      roots.push(node)
+    }
+  })
+  return roots
+}
+
+function buildTreeRows(data: ProductRecord[]) {
+  const tree = props.config.tree
+  if (!tree) return data
+  const rowKey = tree.rowKey || props.config.idKey
+  const rootValue = tree.rootValue ?? 0
+  const nodeMap = new Map<string | number, ProductRecord & { children?: ProductRecord[] }>()
+  const roots: Array<ProductRecord & { children?: ProductRecord[] }> = []
+  data.forEach((row) => {
+    const id = row[rowKey]
+    if (isRecordId(id)) nodeMap.set(id, { ...row, children: [] })
+  })
+  nodeMap.forEach((node) => {
+    const parentId = node[tree.parentKey]
+    if (isRecordId(parentId) && parentId !== rootValue && nodeMap.has(parentId)) {
+      nodeMap.get(parentId)?.children?.push(node)
+    } else {
+      roots.push(node)
+    }
+  })
+  return roots
 }
 
 function rowIndex(index: number) {
@@ -554,9 +669,10 @@ function rowActionKey(action: NonNullable<ProductGridConfig['rowActions']>[numbe
 
 function reset() {
   const next: ProductRecord = { status: 'ENABLED', delFlag: '0', ...(props.config.defaultRecord || {}) }
-  formFields.value.forEach((field) => {
+  allFormFields.value.forEach((field) => {
     if (field.type === 'number') next[field.prop] = 0
     if (field.type === 'boolean') next[field.prop] = false
+    if (field.multiple) next[field.prop] = []
   })
   form.value = next
   attachmentRows.value = []
@@ -565,11 +681,12 @@ function reset() {
   actionDraft.value = { type: 'WARN' }
   caseInputDraft.value = {}
   expectedDraft.value = { resultStatus: 'OK' }
+  materialAttributeDrafts.value = {}
   formRef.value?.resetFields()
 }
 
 async function loadRemoteOptions() {
-  const fieldEntries = await Promise.all(formFields.value.filter((field) => field.optionLoader).map(async (field) => {
+  const fieldEntries = await Promise.all(allFormFields.value.filter((field) => field.optionLoader).map(async (field) => {
     const options = await field.optionLoader?.(form.value)
     return [field.prop, options || []] as const
   }))
@@ -604,9 +721,11 @@ async function loadAttachments(record?: ProductRecord) {
 async function getList() {
   loading.value = true
   try {
-    const response = await props.config.api.list(queryParams)
-    rows.value = response.rows || []
-    total.value = response.total || 0
+    const requestParams = props.config.tree ? { ...queryParams, pageNum: 1, pageSize: 1000 } : queryParams
+    const response = await props.config.api.list(requestParams)
+    const nextRows = response.rows || []
+    rows.value = buildTreeRows(nextRows)
+    total.value = props.config.tree ? nextRows.length : response.total || 0
   } finally {
     loading.value = false
   }
@@ -746,7 +865,10 @@ function handleFieldChange(field: ProductFieldConfig, value: unknown) {
 
 function handleSelectChange(field: ProductFieldConfig, value: unknown) {
   const option = fieldOptions(field).find((item) => item.value === value)
-  if (field.clearFields?.length) field.clearFields.forEach((prop) => delete form.value[prop])
+  if (field.clearFields?.length) field.clearFields.forEach((prop) => {
+    delete form.value[prop]
+    delete materialAttributeDrafts.value[prop]
+  })
   if (option?.record && field.fillFields) {
     Object.entries(field.fillFields).forEach(([target, source]) => {
       if (!source) return
@@ -801,10 +923,40 @@ function hydrateBuilderDrafts() {
         systemCode: selectedItems.SYSTEM
       }
     }
-    if (field.type === 'expected-result') {
+  if (field.type === 'expected-result') {
       expectedDraft.value = { resultStatus: 'OK', ...parseJsonObject(form.value[field.prop]) }
     }
   })
+}
+
+function materialAttributeRows(field: ProductFieldConfig): ProductRecord[] {
+  if (materialAttributeDrafts.value[field.prop]) return materialAttributeDrafts.value[field.prop]
+  const existing = Array.isArray(form.value[field.prop]) ? form.value[field.prop] as ProductRecord[] : []
+  const existingMap = new Map(existing.map((row) => [String(row.attributeCode || ''), row]))
+  const rows: ProductRecord[] = fieldOptions(field).map((option, index) => {
+    const definition = option.record || {}
+    const attributeCode = String(definition.attributeCode || option.value || '')
+    const valueType = String(definition.valueType || 'TEXT').toUpperCase()
+    const current = existingMap.get(attributeCode) || {}
+    return {
+      ...current,
+      attributeId: definition.attributeId,
+      attributeCode,
+      attributeNameCn: definition.attributeNameCn || option.label,
+      valueType,
+      valueUnitCode: current.valueUnitCode || definition.unitCode,
+      sortOrder: current.sortOrder || definition.sortOrder || index * 10 + 10,
+      status: current.status || 'ENABLED'
+    }
+  })
+  materialAttributeDrafts.value[field.prop] = rows
+  form.value[field.prop] = rows
+  return rows
+}
+
+function syncMaterialAttributes(field: ProductFieldConfig) {
+  const rows = materialAttributeRows(field)
+  form.value[field.prop] = rows.filter((row) => row.valueText || row.valueNumber !== undefined || row.valueBool !== undefined)
 }
 
 function conditionRows(field: ProductFieldConfig) {
@@ -948,12 +1100,21 @@ async function handleRowAction(action: NonNullable<ProductGridConfig['rowActions
 async function submitForm() {
   const valid = await formRef.value?.validate().catch(() => false)
   if (!valid) return
+  allFormFields.value.forEach((field) => {
+    if (field.multiple && field.valueMode === 'csv' && Array.isArray(form.value[field.prop])) {
+      form.value[field.prop] = (form.value[field.prop] as unknown[]).join(',')
+    }
+    if (field.visible && !field.visible(form.value)) {
+      delete form.value[field.prop]
+    }
+  })
   formFields.value.forEach((field) => {
     if (field.type === 'rule-condition') syncConditionJson(field)
     if (field.type === 'rule-action') syncActionJson(field)
     if (field.type === 'fixed-items') syncFixedItemsJson(field)
     if (field.type === 'case-input') syncCaseInputJson(field)
     if (field.type === 'expected-result') syncExpectedJson(field)
+    if (field.type === 'material-attributes') syncMaterialAttributes(field)
   })
   submitLoading.value = true
   try {
