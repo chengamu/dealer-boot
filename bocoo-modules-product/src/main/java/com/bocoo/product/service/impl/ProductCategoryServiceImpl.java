@@ -9,9 +9,14 @@ import com.bocoo.common.mybatis.core.page.PageQuery;
 import com.bocoo.common.mybatis.core.page.TableDataInfo;
 import com.bocoo.product.domain.bo.ProductCategoryBo;
 import com.bocoo.product.domain.entity.ProductCategory;
+import com.bocoo.product.domain.entity.ProductMediaBinding;
+import com.bocoo.product.domain.entity.SalesProduct;
+import com.bocoo.product.domain.vo.BaseEditCheckResultVo;
 import com.bocoo.product.domain.vo.ProductCategoryVo;
 import com.bocoo.product.domain.vo.ReferenceCheckResultVo;
 import com.bocoo.product.mapper.ProductCategoryMapper;
+import com.bocoo.product.mapper.ProductMediaBindingMapper;
+import com.bocoo.product.mapper.SalesProductMapper;
 import com.bocoo.product.service.ProductCategoryService;
 import com.bocoo.product.service.ProductEntityDefaults;
 import lombok.RequiredArgsConstructor;
@@ -24,15 +29,17 @@ import java.util.List;
 public class ProductCategoryServiceImpl extends ProductServiceSupport implements ProductCategoryService {
 
     private final ProductCategoryMapper categoryMapper;
+    private final SalesProductMapper salesProductMapper;
+    private final ProductMediaBindingMapper mediaBindingMapper;
 
     @Override
     public TableDataInfo<ProductCategoryVo> queryPageList(ProductCategoryBo bo, PageQuery pageQuery) {
-        return page(categoryMapper, pageQuery, buildQueryWrapper(bo));
+        return page(categoryMapper, pageQuery, buildQueryWrapper(bo), q -> q.orderByAsc("sort_order", "category_id"));
     }
 
     @Override
     public List<ProductCategoryVo> queryList(ProductCategoryBo bo) {
-        return categoryMapper.selectVoList(buildQueryWrapper(bo));
+        return categoryMapper.selectVoList(applyDefaultSort(null, buildQueryWrapper(bo), q -> q.orderByAsc("sort_order", "category_id")));
     }
 
     @Override
@@ -43,6 +50,7 @@ public class ProductCategoryServiceImpl extends ProductServiceSupport implements
     @Override
     public Boolean insertByBo(ProductCategoryBo bo) {
         normalizeCategory(bo);
+        validateCategoryCodeUnique(bo);
         ProductCategory entity = MapstructUtils.convert(bo, ProductCategory.class);
         if (entity == null) {
             return Boolean.FALSE;
@@ -54,12 +62,22 @@ public class ProductCategoryServiceImpl extends ProductServiceSupport implements
     @Override
     public Boolean updateByBo(ProductCategoryBo bo) {
         normalizeCategory(bo);
+        validateCategoryCodeUnique(bo);
+        if (bo != null && bo.getCategoryId() != null) {
+            ProductCategory current = categoryMapper.selectById(bo.getCategoryId());
+            if (current != null) {
+                assertNormalEditable(current.getStatus());
+            }
+        }
         ProductCategory entity = MapstructUtils.convert(bo, ProductCategory.class);
         return entity != null && categoryMapper.updateById(entity) > 0;
     }
 
     @Override
     public Boolean deleteWithValidByIds(Long[] ids) {
+        for (Long id : ids) {
+            assertNoReferences(checkReferences(id));
+        }
         return remove(categoryMapper, ids);
     }
 
@@ -71,8 +89,34 @@ public class ProductCategoryServiceImpl extends ProductServiceSupport implements
     }
 
     @Override
+    public BaseEditCheckResultVo checkEditAllowed(Long id) {
+        ProductCategory category = categoryMapper.selectById(id);
+        if (category == null) {
+            return deniedEditCheck(null, "product.base.edit.notFound", null);
+        }
+        return editCheckResult(category.getStatus(), checkReferences(id));
+    }
+
+    @Override
     public ReferenceCheckResultVo checkReferences(Long categoryId) {
-        return referenceResult(0, null, null);
+        ProductCategory category = categoryMapper.selectById(categoryId);
+        if (category == null) {
+            return referenceResult(0, null, null);
+        }
+        long childCount = categoryMapper.selectCount(activeQuery(ProductCategory.class).eq("parent_id", categoryId));
+        long salesProductCount = salesProductMapper.selectCount(activeQuery(SalesProduct.class).eq("category_id", categoryId));
+        long bindingCount = mediaBindingMapper.selectCount(activeQuery(ProductMediaBinding.class).eq("target_type", "CATEGORY").eq("target_id", categoryId));
+        ReferenceCheckResultVo result = referenceResult(childCount + salesProductCount + bindingCount, "product.category.hasReferences", null);
+        if (childCount > 0) {
+            result.getReferenceSummaries().add("Child categories: " + childCount);
+        }
+        if (salesProductCount > 0) {
+            result.getReferenceSummaries().add("Sales products: " + salesProductCount);
+        }
+        if (bindingCount > 0) {
+            result.getReferenceSummaries().add("Media bindings: " + bindingCount);
+        }
+        return result;
     }
 
     private QueryWrapper<ProductCategory> buildQueryWrapper(ProductCategoryBo bo) {
@@ -85,7 +129,7 @@ public class ProductCategoryServiceImpl extends ProductServiceSupport implements
             like(q, "category_name_en", bo.getCategoryNameEn());
             eq(q, "status", bo.getStatus());
         }
-        return q.orderByAsc("sort_order", "category_id");
+        return q;
     }
 
     private void normalizeCategory(ProductCategoryBo bo) {
@@ -109,5 +153,17 @@ public class ProductCategoryServiceImpl extends ProductServiceSupport implements
         bo.setCategoryLevel((parent.getCategoryLevel() == null ? 1 : parent.getCategoryLevel()) + 1);
         String parentPath = StringUtils.blankToDefault(parent.getCategoryPath(), parent.getCategoryCode());
         bo.setCategoryPath(parentPath + "/" + bo.getCategoryCode());
+    }
+
+    private void validateCategoryCodeUnique(ProductCategoryBo bo) {
+        if (bo == null || StringUtils.isBlank(bo.getCategoryCode())) {
+            return;
+        }
+        long count = categoryMapper.selectCount(activeQuery(ProductCategory.class)
+            .eq("category_code", bo.getCategoryCode())
+            .ne(bo.getCategoryId() != null, "category_id", bo.getCategoryId()));
+        if (count > 0) {
+            throw ServiceException.ofMessageKey("product.category.codeExists");
+        }
     }
 }

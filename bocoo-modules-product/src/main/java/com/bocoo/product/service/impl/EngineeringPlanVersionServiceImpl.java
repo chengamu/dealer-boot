@@ -28,7 +28,7 @@ public class EngineeringPlanVersionServiceImpl extends ProductServiceSupport imp
             eq(q, "biz_status", query.getBizStatus());
             eq(q, "status", query.getStatus());
         }
-        return page(versionMapper, pageQuery, q.orderByDesc("update_time"));
+        return page(versionMapper, pageQuery, q, wrapper -> wrapper.orderByDesc("update_time"));
     }
 
     @Override

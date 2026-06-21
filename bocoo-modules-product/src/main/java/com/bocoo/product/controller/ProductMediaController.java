@@ -9,6 +9,7 @@ import com.bocoo.common.mybatis.core.page.TableDataInfo;
 import com.bocoo.common.web.core.BaseController;
 import com.bocoo.product.domain.bo.ProductMediaAssetBo;
 import com.bocoo.product.domain.bo.ProductMediaBindingBo;
+import com.bocoo.product.domain.vo.BaseEditCheckResultVo;
 import com.bocoo.product.domain.vo.ProductMediaAssetVo;
 import com.bocoo.product.domain.vo.ProductMediaBindingVo;
 import com.bocoo.product.domain.vo.ReferenceCheckResultVo;
@@ -61,6 +62,13 @@ public class ProductMediaController extends BaseController {
     @Operation(summary = "获取产品资料资产详情")
     public R<ProductMediaAssetVo> getProductMediaAsset(@Parameter(description = "产品资料资产ID", required = true) @PathVariable Long id) {
         return R.ok(productMediaAssetService.queryById(id));
+    }
+
+    @SaCheckPermission("product:asset:upload")
+    @GetMapping("/media-assets/{id}/edit-check")
+    @Operation(summary = "检查产品资料资产是否可修改")
+    public R<BaseEditCheckResultVo> checkProductMediaAssetEdit(@PathVariable Long id) {
+        return R.ok(productMediaAssetService.checkEditAllowed(id));
     }
 
     @SaCheckPermission("product:asset:upload")

@@ -1,229 +1,26 @@
-## 平台简介
+# base-boot
 
-> 本项目继承自ruoyi-vue-plus
+`base-boot` 是基于 RuoYi-Vue-Plus 改造的业务管理系统，当前主数据库为 PostgreSQL，前端为 Vue 3 + TypeScript + Element Plus。
 
+## 快速入口
 
-> 遵循开源协议在项目中保留开源协议文件即可<br>
+| 目的 | 入口 |
+| --- | --- |
+| 项目协作规则 | `AGENTS.md` |
+| 文档索引 | `docs/README.md` |
+| 代码规范 | `docs/项目配置和代码风格/README.md` |
+| 产品配置知识库 | `docs/产品配置知识库/README.md` |
+| 管理端前端说明 | `admin-ui/README.md` |
 
-## 部署建议
+## 文档原则
 
-Docker Compose / 生产部署推荐使用 Nginx 同源代理：前端由 Nginx 提供静态资源，`/dev-api/*` 由同一个 Nginx 反向代理到后端服务。这样浏览器看到前端和 API 是同一个 Origin，通常不需要额外放开生产 CORS。
+- 根目录只保留入口和长期有效规则。
+- 临时任务计划、执行过程、截图证据和一次性调试记录不进入根目录文档体系。
+- 当前可信文档以 `docs/README.md` 为准。
+- 开发约束、文档治理、业务知识库规则都从 `docs/README.md` 进入，不在根目录重复维护。
 
-详细说明见：`docs/deployment-nginx-same-origin.md`。
+## 部署说明
 
-## 开发规范
+Docker Compose / 生产部署推荐使用 Nginx 同源代理：前端由 Nginx 提供静态资源，`/dev-api/*` 由同一个 Nginx 反向代理到后端服务。
 
-前后端普通 grid、特殊自定义页面、代码生成器、权限、导出、i18n、UTC 和后端分层的统一规范见：
-
-- `docs/项目配置和代码风格/fullstack-code-standards.md`
-- `docs/项目配置和代码风格/frontend-i18n-utc-rules.md`
-
-### OSS 文件引用规则
-
-- 业务表不要保存 OSS 绝对访问地址，例如 `http://localhost:9000/bucket/path/file.png`。
-- 业务表优先保存 `sys_oss.oss_id`；如果确实只需要对象路径，也只能保存 object key，例如 `2026/06/08/xxx.png`。
-- 对外返回给前端时，由后端通过 `SysOssService` 统一解析成可访问 URL，避免换域名、换桶、换存储服务商时批量替换业务数据。
-- 列表页如果有大量图片，不要逐条请求 OSS；应批量收集 `oss_id`，一次查询 `sys_oss`，再在内存中拼接 URL。
-- 私有桶预览 URL 需要签名时，只在需要展示或下载时生成临时 URL，不把签名 URL 写入业务表。
-
-## 本地 Google 登录配置
-
-Google 登录本地联调需要配置同一个 Google Web Client ID，但不要提交 Client Secret。
-
-1. 前端按钮配置
-
-   修改 `admin-ui/public/_app.config.js`：
-
-   ```js
-   VITE_APP_GOOGLE_CLIENT_ID: '你的 Google Web Client ID',
-   ```
-
-   该文件是前端运行时配置，本地开发时改完刷新登录页即可。留空时登录页会隐藏 Google 登录按钮。
-
-2. 后端 token 校验配置
-
-   后端配置项在 `bocoo-admin/src/main/resources/application.yml`：
-
-   ```yml
-   auth:
-     google:
-       client-id: ${GOOGLE_CLIENT_ID:}
-   ```
-
-   本地启动后端时用环境变量传入同一个 Web Client ID：
-
-   ```powershell
-   $env:GOOGLE_CLIENT_ID="你的 Google Web Client ID"
-   java -jar bocoo-admin.jar --spring.profiles.active=dev
-   ```
-
-3. Google Console 授权来源
-
-   在 Google OAuth Web Client 的 `Authorized JavaScript origins` 中加入本地前端地址：
-
-   ```text
-   http://127.0.0.1:8083
-   http://localhost:8083
-   ```
-
-   这里配置的是“浏览器打开的前端站点 Origin”，不是每个登录用户的 IP。Origin 只包含协议、域名或 IP、端口，不包含路径。
-
-   如果其他人访问本机局域网地址测试，例如前端地址是 `http://192.168.1.20:8083`，则需要额外加入：
-
-   ```text
-   http://192.168.1.20:8083
-   ```
-
-   如果后期正式部署为 Nginx 同源代理，例如用户访问 `https://admin.example.com`，则只需要加入正式前端域名：
-
-   ```text
-   https://admin.example.com
-   ```
-
-   如果使用非标准端口，需要带端口，例如 `https://admin.example.com:8443`。生产环境建议使用 HTTPS 和正式域名，不建议把临时 IP 地址作为长期配置。
-
-   本地流程不需要配置 Google Client Secret；后端只使用 Web Client ID 校验 Google ID token 的 audience。
-
-## 功能权限
-采用 sa-token 权限注解 
-@SaIgnore  表示不需要登录就可以访问
-@SaCheckPermission("system:dept:list") 表示需要登录才能访问，表示访问该接口需要用户已登录且拥有"system:dept:list"权限
-
-## 数据权限
-
-自动填充逻辑在 InjectionMetaObjectHandler 类中实现
-
-示例：
-public interface SysUserMapper extends BaseMapperPlus<SysUser, SysUserVo> {
-
-    @DataPermission({
-        @DataColumn(key = "deptName", value = "u.dept_id"),
-        @DataColumn(key = "userName", value = "u.user_id")
-    })
-    Page<SysUserVo> selectPageUserList(@Param("page") Page<SysUser> page, @Param(Constants.WRAPPER) Wrapper<SysUser> queryWrapper);
-}
-
-@DataPermission({
-@DataColumn(key = "deptName", value = "u.dept_id"),
-@DataColumn(key = "userName", value = "u.user_id")
-})
-
-添加@DataPermission 内容权限
-   @DataColumn 表示过滤的字段； u. 是表的前缀。
-PlusDataPermissionHandler 类中 实现了SQL动态构造，调用 SysDataScopeService类 返回的部门字符串会作为参数，传递给数据库，数据库会根据部门字符串进行过滤。
-
-SysDataScopeService 类中实现了部门数据权限接口，在查询之前会调用此方法，返回的部门的字符串，。
-DataScopeType.java 定义了key = "userName" 的获取方式；
-规则说明：
-SELECT操作：使用 OR 连接多个条件
-UPDATE/DELETE操作：使用 AND 连接多个条件
-如：
-// 用户有多个角色，每个角色有不同的数据权限
-// 角色1：部门103及子部门 (dataScope=3)
-// 角色2：自定义部门105,106 (dataScope=5)
-// 最终生成的SQL条件：
-WHERE (d.dept_id IN (103,104,105))  -- 角色1的权限
-OR (d.dept_id IN (105,106))      -- 角色2的权限
-
-// 为了安全，更新/删除操作要求满足所有角色的权限
-// 最终生成的SQL条件：
-WHERE (d.dept_id IN (103,104,105))   -- 角色1的权限
-AND (d.dept_id IN (105,106))       -- 角色2的权限
-
-
-
-## 更新记录
-2026-05-28 体验调整：管理端顶部栏隐藏 Layout Settings 入口，布局配置仍保留在代码中，后续如需开放需重新评估权限和视觉一致性。
-1. 简化代码，去除service 接口，去除一些没必要校验。
-2. 逻辑删除优化：0代表存在 1代表删除。
-3. BaseEntity 优化 Date->LocalDateTime, createBy和updateBy保持String。
-4. 状态修改，1代表正常，0代表停用。
-5. 简化数据库支持，目前只支持mysql。
-6. 完成重构 common, framework 包结构, 参照 cloud 版本拆分子模块 ; update 更新模块包名 ;
-7. 代码生成前端vue文件去掉一些不需要的方法。
-8. 代码生成前端vue文件优化，增加el-card，表格样式修改。
-9. system模块增加vo、bo。
-10. 全局异常处理优化:增加文件名或填写内容过长提示。
-11. service端baseMapper改类名小驼峰。
-12. 代码生成，前端编辑页面由dialog改为drawer
-13. 删除 snail-job monitor-admin bocoo-extend 基本用不到 
-14. 优化 获取aop代理的方式 减少与其他使用aop的功能冲突的概率
-15. 使用 jdk17 语法优化代码
-16. mapstruct-plus 接入替换 BeanUtil ,用于实体类转换 ; 原先BeanUtil 对jdk17实体类转换会出错。
-2025-07-26 升级 
-17. 添加了wms
-18. 添加了文档管理模块，需要搭建MinIO 进行文件上传下载；
-# 备份 MinIO 数据 直接备份挂载目录  用DOCKER  compose 安装
-tar -czvf minio_backup.tar.gz /root/mnt/share/minio_data
-
-
-
-## 本框架与RuoYi的功能差异
-
-| 功能          | 本框架                                                                                                               | RuoYi                                                                              |
-|-------------|-------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------|
-| 前端项目        | 基于vue3-element-admin开源项目重写<br/>Vue3 + TS + ElementPlus                                                            | 基于Vue2/Vue3 + JS                                                                   | 
-| 后端项目结构      | 采用插件化 + 扩展包形式 结构解耦 易于扩展                                                                                           | 模块相互注入耦合严重难以扩展                                                                     | 
-| 后端代码风格      | 严格遵守Alibaba规范与项目统一配置的代码格式化                                                                                        | 代码书写与常规结构不同阅读障碍大                                                                   |
-| Web容器       | 采用 Undertow 基于 XNIO 的高性能容器                                                                                        | 采用 Tomcat                                                                          |
-| 权限认证        | 采用 Sa-Token、Jwt 静态使用功能齐全 低耦合 高扩展                                                                                  | Spring Security 配置繁琐扩展性极差                                                          |
-| 权限注解        | 采用 Sa-Token 支持注解 登录校验、角色校验、权限校验、二级认证校验、HttpBasic校验、忽略校验<br/>角色与权限校验支持多种条件 如 `AND` `OR` 或 `权限 OR 角色` 等复杂表达式        | 只支持是否存在匹配                                                                          |
-| 关系数据库支持     | 原生支持 MySQL、Oracle、PostgreSQL、SQLServer<br/>可同时使用异构切换                                                              | 支持 Mysql、Oracle 不支持同时使用、不支持异构切换                                                    |
-| 缓存数据库       | 支持 Redis 5-7 支持大部分新功能特性 如 分布式限流、分布式队列                                                                             | Redis 简单 get set 支持                                                                |
-| Redis客户端    | 采用 Redisson Redis官方推荐 基于Netty的客户端工具<br/>支持Redis 90%以上的命令 底层优化规避很多不正确的用法 例如: keys被转换为scan<br/>支持单机、哨兵、单主集群、多主集群等模式 | Lettuce + RedisTemplate 支持模式少 工具使用繁琐<br/>连接池采用 common-pool Bug多经常性出问题              |
-| 缓存注解        | 采用 Spring-Cache 注解 对其扩展了实现支持了更多功能<br/>例如 过期时间 最大空闲时间 组最大长度等 只需一个注解即可完成数据自动缓存                                      | 需手动编写Redis代码逻辑                                                                     |
-| ORM框架       | 采用 Mybatis-Plus 基于对象几乎不用写SQL全java操作 功能强大插件众多<br/>例如多租户插件 分页插件 乐观锁插件等等                                             | 采用 Mybatis 基于XML需要手写SQL                                                            |
-| SQL监控       | 采用 p6spy 可输出完整SQL与执行时间监控                                                                                          | log输出 需手动拼接sql与参数无法快速查看调试问题                                                        |
-| 数据分页        | 采用 Mybatis-Plus 分页插件<br/>框架对其进行了扩展 对象化分页对象 支持多种方式传参 支持前端多排序 复杂排序                                                  | 采用 PageHelper 仅支持单查询分页 参数只能从param传 只能单排序 功能扩展性差 体验不好                               |
-| 数据权限        | 采用 Mybatis-Plus 插件 自行分析拼接SQL 无感式过滤<br/>只需为Mapper设置好注解条件 支持多种自定义 不限于部门角色                                           | 采用 注解+aop 实现 基于部门角色 生成的sql兼容性差 不支持其他业务扩展<br/>生成sql后需手动拼接到具体业务sql上 对于多个Mapper查询不起作用 |
-| 数据脱敏        | 采用 注解 + jackson 序列化期间脱敏 支持不同模块不同的脱敏条件<br/>支持多种策略 如身份证、手机号、地址、邮箱、银行卡等 可自行扩展                                        | 无                                                                                  |
-| 数据加解密       | 采用 注解 + mybatis 拦截器 对存取数据期间自动加解密<br/>支持多种策略 如BASE64、AES、RSA、SM2、SM4等                                              | 无                                                                                  |
-| 数据翻译        | 采用 注解 + jackson 序列化期间动态修改数据 数据进行翻译<br/>支持多种模式: `映射翻译` `直接翻译` `其他扩展条件翻译` 接口化两步即可完成自定义扩展 内置多种翻译实现                   | 无                                                                                  |
-| 多数据源框架      | 采用 dynamic-datasource 支持世面大部分数据库<br/>通过yml配置即可动态管理异构不同种类的数据库 也可通过前端页面添加数据源<br/>支持spel表达式从请求头参数等条件切换数据源            | 基于 druid 手动编写代码配置数据源 配置繁琐 支持性差                                                     |
-| 多数据源事务      | 采用 dynamic-datasource 支持多数据源不同种类的数据库事务回滚                                                                          | 不支持                                                                                |
-| 数据库连接池      | 采用 HikariCP Spring官方内置连接池 配置简单 以性能与稳定性闻名天下                                                                        | 采用 druid bug众多 社区维护差 活跃度低 配置众多繁琐性能一般                                               |
-| 数据库主键       | 采用 雪花ID 基于时间戳的 有序增长 唯一ID 再也不用为分库分表 数据合并主键冲突重复而发愁                                                                  | 采用 数据库自增ID 支持数据量有限 不支持多数据源主键唯一                                                     |
-| 序列化         | 采用 Jackson Spring官方内置序列化 靠谱!!!                                                                                    | 采用 fastjson bugjson 远近闻名                                                           | 
-| 分布式幂等       | 参考美团GTIS防重系统简化实现(细节可看文档)                                                                                          | 手动编写注解基于aop实现                                                                      |
-| 分布式任务调度     | 采用 Xxl-Job 天生支持分布式 统一的管理中心                                                                                        | 采用 Quartz 基于数据库锁性能差 集群需要做很多配置与改造                                                   | 
-| 文件存储        | 采用 Minio 分布式文件存储 天生支持多机、多硬盘、多分片、多副本存储<br/>支持权限管理 安全可靠 文件可加密存储                                                     | 采用 本机文件存储 文件裸漏 易丢失泄漏 不支持集群有单点效应                                                    |
-| 云存储         | 采用 AWS S3 协议客户端 支持 七牛、阿里、腾讯 等一切支持S3协议的厂家                                                                          | 不支持                                                                                |
-| 短信          | 采用 sms4j 短信融合包 支持数十种短信厂家 只需在yml配置好厂家密钥即可使用 可多厂家共用                                                                 | 不支持                                                                                |
-| 邮件          | 采用 mail-api 通用协议支持大部分邮件厂商                                                                                         | 不支持                                                                                |
-| 接口文档        | 采用 SpringDoc、javadoc 无注解零入侵基于java注释<br/>只需把注释写好 无需再写一大堆的文档注解了                                                     | 采用 Springfox 已停止维护 需要编写大量的注解来支持文档生成                                                | 
-| 校验框架        | 采用 Validation 支持注解与工具类校验 注解支持国际化                                                                                  | 仅支持注解 且注解不支持国际化                                                                    |
-| Excel框架     | 采用 Alibaba EasyExcel 基于插件化<br/>框架对其增加了很多功能 例如 自动合并相同内容 自动排列布局 字典翻译等                                               | 基于 POI 手写实现 功能有限 复杂 扩展性差                                                           |
-| 工具类框架       | 采用 Hutool、Lombok 上百种工具覆盖90%的使用需求 基于注解自动生成 get set 等简化框架大量代码                                                       | 手写工具稳定性差易出问题 工具数量有限 代码臃肿需自己手写 get set 等                                            | 
-| 监控框架        | 采用 SpringBoot-Admin 基于SpringBoot官方 actuator 探针机制<br/>实时监控服务状态 框架还为其扩展了在线日志查看监控                                    | 无                                                                                  | 
-| 链路追踪        | 采用 Apache SkyWalking 还在为请求不知道去哪了 到哪出了问题而烦恼吗<br/>用了它即可实时查看请求经过的每一处每一个节点                                            | 无                                                                                  |
-| 代码生成器       | 只需设计好表结构 一键生成所有crud代码与页面<br/>降低80%的开发量 把精力都投入到业务设计上<br/>框架为其适配MP、SpringDoc规范化代码 同时支持动态多数据源代码生成                    | 代码生成原生结构 只支持单数据源生成                                                                 |
-| 项目路径修改      | 提供详细的修改方案文档 并为其做了一些改动 非常简单即可修改成自己想要的                                                                              | 需要做很多改造 文档说明有限                                                                     |
-| 国际化         | 目标为单源 JSON 国际化：`en_US.json` 人工维护，`zh_CN.json` 构建期 AI 补全，前后端运行时读取静态 JSON；旧请求头/properties/DB i18n 链路逐步兼容迁移                         | 只提供基础功能 其他需自行编写扩展                                                                  |
-| 代码单例测试      | 提供单例测试 使用方式编写方法与maven多环境单测插件                                                                                      | 只提供基础功能 其他需自行编写扩展                                                                  |
-| Demo案例      | 提供框架功能的实际使用案例 单独一个模块提供了很多很全                                                                                       | 无                                                                                  |
-
-
-## 本框架与RuoYi的业务差异
-
-| 业务     | 功能说明                                    | 本框架 | RuoYi            |
-|--------|-----------------------------------------|-----|------------------|
-| 用户管理   | 用户的管理配置 如:新增用户、分配用户所属部门、角色、岗位等          | 支持  | 支持               |
-| 部门管理   | 配置系统组织机构（公司、部门、小组） 树结构展现支持数据权限          | 支持  | 支持               |
-| 岗位管理   | 配置系统用户所属担任职务                            | 支持  | 支持               |
-| 菜单管理   | 配置系统菜单、操作权限、按钮权限标识等                     | 支持  | 支持               |
-| 角色管理   | 角色菜单权限分配、设置角色按机构进行数据范围权限划分              | 支持  | 支持               |
-| 字典管理   | 对系统中经常使用的一些较为固定的数据进行维护                  | 支持  | 支持               |
-| 参数管理   | 对系统动态配置常用参数                             | 支持  | 支持               |
-| 通知公告   | 系统通知公告信息发布维护                            | 支持  | 支持               |
-| 操作日志   | 系统正常操作日志记录和查询 系统异常信息日志记录和查询             | 支持  | 支持               |
-| 登录日志   | 系统登录日志记录查询包含登录异常                        | 支持  | 支持               |
-| 文件管理   | 系统文件展示、上传、下载、删除等管理                      | 支持  | 无                |
-| 文件配置管理 | 系统文件上传、下载所需要的配置信息动态添加、修改、删除等管理          | 支持  | 无                |
-| 在线用户管理 | 已登录系统的在线用户信息监控与强制踢出操作                   | 支持  | 支持               |
-| 定时任务   | 运行报表、任务管理(添加、修改、删除)、日志管理、执行器管理等         | 支持  | 仅支持任务与日志管理       |
-| 代码生成   | 多数据源前后端代码的生成（java、html、xml、sql）支持CRUD下载 | 支持  | 仅支持单数据源          |
-| 系统接口   | 根据业务代码自动生成相关的api接口文档                    | 支持  | 支持               |
-| 服务监控   | 监视集群系统CPU、内存、磁盘、堆栈、在线日志、Spring相关配置等     | 支持  | 仅支持单机CPU、内存、磁盘监控 |
-| 缓存监控   | 对系统的缓存信息查询，命令统计等。                       | 支持  | 支持               |
-| 在线构建器  | 拖动表单元素生成相应的HTML代码。                      | 支持  | 支持               |
-| 使用案例   | 系统的一些功能案例                               | 支持  | 不支持              |
+详细说明见 `docs/项目配置和代码风格/deployment-nginx-same-origin.md`。

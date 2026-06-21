@@ -1,6 +1,7 @@
 import { request, requestPage } from '@/utils/request'
 import type {
   ProductCrudApi,
+  EditCheckResult,
   ProductMaterialAttributeQuery,
   ProductMaterialAttributeVO,
   ProductMaterialQuery,
@@ -12,14 +13,20 @@ function referencesApi(url: string) {
   return request<ReferenceCheckResult>({ url, method: 'get' })
 }
 
+function editCheckApi(url: string) {
+  return request<EditCheckResult>({ url, method: 'get' })
+}
+
 export const productMaterialApi: ProductCrudApi<ProductMaterialVO, ProductMaterialQuery> = {
   list: (query?: ProductMaterialQuery) => requestPage<ProductMaterialVO>({ url: '/product-capability/materials/list', method: 'get', params: query }),
   options: (query?: ProductMaterialQuery) => request<ProductMaterialVO[]>({ url: '/product-capability/materials/options', method: 'get', params: query }),
   get: (id: string | number) => request<ProductMaterialVO>({ url: '/product-capability/materials/' + id, method: 'get' }),
   add: (data: ProductMaterialVO) => request({ url: '/product-capability/materials', method: 'post', data }),
   update: (data: ProductMaterialVO) => request({ url: '/product-capability/materials', method: 'put', data }),
+  superUpdate: (data: ProductMaterialVO) => request({ url: '/product-capability/materials/super-update', method: 'put', data }),
   remove: (ids: Array<string | number> | string | number) => request({ url: '/product-capability/materials/' + ids, method: 'delete' }),
   changeStatus: (id: string | number, status: string) => request({ url: '/product-capability/materials/change-status/' + id + '/' + status, method: 'put' }),
+  editCheck: (id: string | number) => editCheckApi('/product-capability/materials/' + id + '/edit-check'),
   references: (id: string | number) => referencesApi('/product-capability/materials/' + id + '/references')
 }
 
@@ -43,5 +50,6 @@ export const productMaterialAttributeApi: ProductCrudApi<ProductMaterialAttribut
   update: (data: ProductMaterialAttributeVO) => request({ url: '/product-capability/material-attributes', method: 'put', data }),
   remove: (ids: Array<string | number> | string | number) => request({ url: '/product-capability/material-attributes/' + ids, method: 'delete' }),
   changeStatus: (id: string | number, status: string) => request({ url: '/product-capability/material-attributes/change-status/' + id + '/' + status, method: 'put' }),
+  editCheck: (id: string | number) => editCheckApi('/product-capability/material-attributes/' + id + '/edit-check'),
   references: (id: string | number) => referencesApi('/product-capability/material-attributes/' + id + '/references')
 }

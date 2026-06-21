@@ -310,7 +310,6 @@ import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 import { useDict } from '@/utils/dict'
 import { runUiAction } from '@/utils/action'
-import { getApiBaseUrl } from '@/utils/config'
 
 interface DictOption {
   label?: string
@@ -370,7 +369,7 @@ const upload = reactive({
   title: '',
   isUploading: false,
   updateSupport: 0,
-  url: `${getApiBaseUrl()}/system/user/importData`
+  url: '/system/user/importData'
 })
 
 const single = computed(() => ids.value.length !== 1)

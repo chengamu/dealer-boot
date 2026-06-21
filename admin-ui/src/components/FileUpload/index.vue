@@ -44,7 +44,6 @@ import { listByIds, delOss } from "@/api/system/oss";
 import { getMessage } from "@/locales";
 import { useLocaleStore } from "@/stores/locale";
 import { runUiAction } from "@/utils/action";
-import { getApiBaseUrl } from "@/utils/config";
 import service from "@/utils/request";
 import type { PropType } from "vue";
 import type { UploadFile, UploadInstance, UploadRawFile, UploadRequestOptions, UploadUserFile } from "element-plus";
@@ -115,8 +114,7 @@ const emit = defineEmits<{
 }>();
 const number = ref(0);
 const uploadList = ref<UploadItem[]>([]);
-const baseUrl = getApiBaseUrl();
-const uploadFileUrl = ref(baseUrl + "/system/oss/upload"); // 上传文件服务器地址
+const uploadFileUrl = ref("/system/oss/upload"); // 上传文件服务器地址
 const fileList = ref<UploadItem[]>([]);
 const showTip = computed(
   () => props.isShowTip && (props.fileType || props.fileSize)

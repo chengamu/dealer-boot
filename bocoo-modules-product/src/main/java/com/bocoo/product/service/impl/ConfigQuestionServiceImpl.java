@@ -29,12 +29,12 @@ public class ConfigQuestionServiceImpl extends ProductServiceSupport implements 
 
     @Override
     public TableDataInfo<ConfigQuestionVo> queryPageList(ConfigQuestionBo bo, PageQuery pageQuery) {
-        return page(configQuestionMapper, pageQuery, buildQueryWrapper(bo));
+        return page(configQuestionMapper, pageQuery, buildQueryWrapper(bo), q -> q.orderByAsc("sort_order", "question_id"));
     }
 
     @Override
     public List<ConfigQuestionVo> queryList(ConfigQuestionBo bo) {
-        return configQuestionMapper.selectVoList(buildQueryWrapper(bo));
+        return configQuestionMapper.selectVoList(applyDefaultSort(null, buildQueryWrapper(bo), q -> q.orderByAsc("sort_order", "question_id")));
     }
 
     @Override
@@ -86,7 +86,7 @@ public class ConfigQuestionServiceImpl extends ProductServiceSupport implements 
         like(q, "input_type", bo.getInputType());
         like(q, "status", bo.getStatus());
         }
-        return q.orderByAsc("sort_order", "question_id");
+        return q;
     }
 
 }

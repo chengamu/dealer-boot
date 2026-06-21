@@ -338,7 +338,6 @@ const sourceTypeOptions = computed<ProductOption[]>(() => [
   { label: t('productCenter.sourceType.manual'), value: 'MANUAL' },
   { label: t('productCenter.sourceType.baseAttribute'), value: 'BASE_ATTRIBUTE' },
   { label: t('productCenter.sourceType.material'), value: 'MATERIAL' },
-  { label: t('productCenter.sourceType.fabricProfile'), value: 'FABRIC_PROFILE' },
   { label: t('productCenter.sourceType.fabricSeries'), value: 'FABRIC_SERIES' },
   { label: t('productCenter.sourceType.component'), value: 'COMPONENT' },
   { label: t('productCenter.sourceType.mediaAsset'), value: 'MEDIA_ASSET' }

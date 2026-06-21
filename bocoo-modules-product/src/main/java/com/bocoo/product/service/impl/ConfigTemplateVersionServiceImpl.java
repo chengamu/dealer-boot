@@ -41,12 +41,12 @@ public class ConfigTemplateVersionServiceImpl extends ProductServiceSupport impl
 
     @Override
     public TableDataInfo<ConfigTemplateVersionVo> queryPageList(ConfigTemplateVersionBo bo, PageQuery pageQuery) {
-        return page(configTemplateVersionMapper, pageQuery, buildQueryWrapper(bo));
+        return page(configTemplateVersionMapper, pageQuery, buildQueryWrapper(bo), q -> q.orderByDesc("update_time"));
     }
 
     @Override
     public List<ConfigTemplateVersionVo> queryList(ConfigTemplateVersionBo bo) {
-        return configTemplateVersionMapper.selectVoList(buildQueryWrapper(bo));
+        return configTemplateVersionMapper.selectVoList(applyDefaultSort(null, buildQueryWrapper(bo), q -> q.orderByDesc("update_time")));
     }
 
     @Override
@@ -102,7 +102,7 @@ public class ConfigTemplateVersionServiceImpl extends ProductServiceSupport impl
         like(q, "sales_variant_code", bo.getSalesVariantCode());
         like(q, "price_plan_code", bo.getPricePlanCode());
         }
-        return q.orderByDesc("update_time");
+        return q;
     }
 
 }

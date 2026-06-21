@@ -12,8 +12,7 @@
 | 新增文案、错误消息、时间字段 | [i18n-utc-standards.md](./i18n-utc-standards.md) |
 | 使用代码生成器 | [code-generator-standards.md](./code-generator-standards.md) |
 | 部署同源代理 | [deployment-nginx-same-origin.md](./deployment-nginx-same-origin.md) |
-
-历史迁移记录在 [archive/](./archive/) 下，只作为背景资料，不作为新功能模板。
+| 新增、删除、整理文档 | [documentation-governance.md](./documentation-governance.md) |
 
 ## 2. 总原则
 

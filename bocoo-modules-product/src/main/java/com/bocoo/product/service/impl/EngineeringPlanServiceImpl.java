@@ -23,12 +23,12 @@ public class EngineeringPlanServiceImpl extends ProductServiceSupport implements
 
     @Override
     public TableDataInfo<EngineeringPlanVo> queryPageList(EngineeringPlanBo query, PageQuery pageQuery) {
-        return page(planMapper, pageQuery, buildQueryWrapper(query));
+        return page(planMapper, pageQuery, buildQueryWrapper(query), q -> q.orderByDesc("update_time"));
     }
 
     @Override
     public List<EngineeringPlanVo> queryList(EngineeringPlanBo query) {
-        return planMapper.selectVoList(buildQueryWrapper(query));
+        return planMapper.selectVoList(applyDefaultSort(null, buildQueryWrapper(query), q -> q.orderByDesc("update_time")));
     }
 
     @Override
@@ -64,6 +64,6 @@ public class EngineeringPlanServiceImpl extends ProductServiceSupport implements
             eq(q, "biz_status", query.getBizStatus());
             eq(q, "status", query.getStatus());
         }
-        return q.orderByDesc("update_time");
+        return q;
     }
 }

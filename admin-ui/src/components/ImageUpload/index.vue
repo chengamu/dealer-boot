@@ -52,7 +52,6 @@ import { listByIds, delOss } from "@/api/system/oss";
 import { getMessage } from "@/locales";
 import { useLocaleStore } from "@/stores/locale";
 import { runUiAction } from "@/utils/action";
-import { getApiBaseUrl } from "@/utils/config";
 import service from "@/utils/request";
 import type { PropType } from "vue";
 import type { UploadFile, UploadInstance, UploadRawFile, UploadRequestOptions, UploadUserFile } from "element-plus";
@@ -124,8 +123,7 @@ const number = ref(0);
 const uploadList = ref<UploadItem[]>([]);
 const dialogImageUrl = ref("");
 const dialogVisible = ref(false);
-const baseUrl = getApiBaseUrl();
-const uploadImgUrl = ref(baseUrl + "/system/oss/upload"); // 上传的图片服务器地址
+const uploadImgUrl = ref("/system/oss/upload"); // 上传的图片服务器地址
 const fileList = ref<UploadItem[]>([]);
 const showTip = computed(
   () => props.isShowTip && (props.fileType || props.fileSize)

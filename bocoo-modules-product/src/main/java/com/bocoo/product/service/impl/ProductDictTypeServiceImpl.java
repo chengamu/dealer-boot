@@ -10,6 +10,7 @@ import com.bocoo.common.mybatis.core.page.TableDataInfo;
 import com.bocoo.product.domain.bo.ProductDictTypeBo;
 import com.bocoo.product.domain.entity.ProductDictItem;
 import com.bocoo.product.domain.entity.ProductDictType;
+import com.bocoo.product.domain.vo.BaseEditCheckResultVo;
 import com.bocoo.product.domain.vo.ProductDictTypeVo;
 import com.bocoo.product.domain.vo.ReferenceCheckResultVo;
 import com.bocoo.product.mapper.ProductDictItemMapper;
@@ -30,12 +31,12 @@ public class ProductDictTypeServiceImpl extends ProductServiceSupport implements
 
     @Override
     public TableDataInfo<ProductDictTypeVo> queryPageList(ProductDictTypeBo bo, PageQuery pageQuery) {
-        return page(dictTypeMapper, pageQuery, buildQueryWrapper(bo));
+        return page(dictTypeMapper, pageQuery, buildQueryWrapper(bo), q -> q.orderByAsc("sort_order", "dict_type_id"));
     }
 
     @Override
     public List<ProductDictTypeVo> queryList(ProductDictTypeBo bo) {
-        return dictTypeMapper.selectVoList(buildQueryWrapper(bo));
+        return dictTypeMapper.selectVoList(applyDefaultSort(null, buildQueryWrapper(bo), q -> q.orderByAsc("sort_order", "dict_type_id")));
     }
 
     @Override
@@ -57,6 +58,13 @@ public class ProductDictTypeServiceImpl extends ProductServiceSupport implements
     @Override
     public Boolean updateByBo(ProductDictTypeBo bo) {
         validateDictType(bo);
+        if (bo != null && bo.getDictTypeId() != null) {
+            ProductDictType current = dictTypeMapper.selectById(bo.getDictTypeId());
+            if (current != null) {
+                assertDictEditable(current.getSystemFlag(), current.getEditableFlag());
+                assertNormalEditable(current.getStatus());
+            }
+        }
         ProductDictType entity = MapstructUtils.convert(bo, ProductDictType.class);
         return entity != null && dictTypeMapper.updateById(entity) > 0;
     }
@@ -85,6 +93,19 @@ public class ProductDictTypeServiceImpl extends ProductServiceSupport implements
     }
 
     @Override
+    public BaseEditCheckResultVo checkEditAllowed(Long id) {
+        ProductDictType entity = dictTypeMapper.selectById(id);
+        if (entity == null) {
+            return deniedEditCheck(null, "product.base.edit.notFound", null);
+        }
+        ReferenceCheckResultVo references = checkReferences(id);
+        if (isDictLocked(entity.getSystemFlag(), entity.getEditableFlag())) {
+            return deniedEditCheck(entity.getStatus(), "product.dict.notEditable", references);
+        }
+        return editCheckResult(entity.getStatus(), references);
+    }
+
+    @Override
     public ReferenceCheckResultVo checkReferences(Long id) {
         ProductDictType entity = dictTypeMapper.selectById(id);
         if (entity == null || StringUtils.isBlank(entity.getDictTypeCode())) {
@@ -104,7 +125,7 @@ public class ProductDictTypeServiceImpl extends ProductServiceSupport implements
             eq(q, "business_domain", bo.getBusinessDomain());
             eq(q, "status", bo.getStatus());
         }
-        return q.orderByAsc("sort_order", "dict_type_id");
+        return q;
     }
 
     private void validateDictType(ProductDictTypeBo bo) {
@@ -119,5 +140,15 @@ public class ProductDictTypeServiceImpl extends ProductServiceSupport implements
         if (dictTypeMapper.selectCount(q) > 0) {
             throw ServiceException.ofMessageKey("product.dict.typeCodeExists");
         }
+    }
+
+    private void assertDictEditable(Boolean systemFlag, Boolean editableFlag) {
+        if (isDictLocked(systemFlag, editableFlag)) {
+            throw ServiceException.ofMessageKey("product.dict.notEditable");
+        }
+    }
+
+    private boolean isDictLocked(Boolean systemFlag, Boolean editableFlag) {
+        return Boolean.TRUE.equals(systemFlag) && Boolean.FALSE.equals(editableFlag);
     }
 }

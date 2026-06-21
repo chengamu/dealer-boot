@@ -82,6 +82,12 @@ resources/mapper/
 | BO | 请求对象，继承 `BaseBo`，包含校验注解和查询参数 |
 | VO | 返回对象，允许冗余展示字段和 Excel 注解 |
 
+列表排序规则：
+
+- 分页列表统一接收 `PageQuery.orderByColumn` / `PageQuery.isAsc`，由 `pageQuery.build()` 生成服务端排序。
+- 后端可以设置业务默认排序，但不得覆盖前端显式排序；当前端传入 `orderByColumn` 和 `isAsc` 时，不再追加 wrapper 默认排序。
+- 前端传入 camelCase 字段名，由 `PageQuery` 转 snake_case；不要在 Controller 或 Service 里拼接未转义 SQL 排序片段。
+
 Controller 标准接口：
 
 ```text

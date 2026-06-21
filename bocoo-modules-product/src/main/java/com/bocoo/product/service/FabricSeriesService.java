@@ -3,6 +3,7 @@ package com.bocoo.product.service;
 import com.bocoo.common.mybatis.core.page.PageQuery;
 import com.bocoo.common.mybatis.core.page.TableDataInfo;
 import com.bocoo.product.domain.bo.FabricSeriesBo;
+import com.bocoo.product.domain.vo.BaseEditCheckResultVo;
 import com.bocoo.product.domain.vo.FabricSeriesVo;
 import com.bocoo.product.domain.vo.ReferenceCheckResultVo;
 
@@ -23,6 +24,8 @@ public interface FabricSeriesService {
     Boolean deleteWithValidByIds(Long[] ids);
 
     Boolean updateStatus(Long id, String status);
+
+    BaseEditCheckResultVo checkEditAllowed(Long id);
 
     ReferenceCheckResultVo checkReferences(Long seriesId);
 }

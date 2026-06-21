@@ -2,11 +2,14 @@ package com.bocoo.product.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.bocoo.common.core.exception.ServiceException;
 import com.bocoo.common.core.utils.MapstructUtils;
+import com.bocoo.common.core.utils.StringUtils;
 import com.bocoo.common.mybatis.core.page.PageQuery;
 import com.bocoo.common.mybatis.core.page.TableDataInfo;
 import com.bocoo.product.domain.bo.ProductMaterialAttributeBo;
 import com.bocoo.product.domain.entity.ProductMaterialAttribute;
+import com.bocoo.product.domain.vo.BaseEditCheckResultVo;
 import com.bocoo.product.domain.vo.ProductMaterialAttributeVo;
 import com.bocoo.product.domain.vo.ReferenceCheckResultVo;
 import com.bocoo.product.mapper.ProductMaterialAttributeMapper;
@@ -25,12 +28,12 @@ public class ProductMaterialAttributeServiceImpl extends ProductServiceSupport i
 
     @Override
     public TableDataInfo<ProductMaterialAttributeVo> queryPageList(ProductMaterialAttributeBo bo, PageQuery pageQuery) {
-        return page(materialAttributeMapper, pageQuery, buildQueryWrapper(bo));
+        return page(materialAttributeMapper, pageQuery, buildQueryWrapper(bo), q -> q.orderByAsc("sort_order", "material_attribute_id"));
     }
 
     @Override
     public List<ProductMaterialAttributeVo> queryList(ProductMaterialAttributeBo bo) {
-        return materialAttributeMapper.selectVoList(buildQueryWrapper(bo));
+        return materialAttributeMapper.selectVoList(applyDefaultSort(null, buildQueryWrapper(bo), q -> q.orderByAsc("sort_order", "material_attribute_id")));
     }
 
     @Override
@@ -40,6 +43,7 @@ public class ProductMaterialAttributeServiceImpl extends ProductServiceSupport i
 
     @Override
     public Boolean insertByBo(ProductMaterialAttributeBo bo) {
+        validateMaterialAttributeUnique(bo);
         ProductMaterialAttribute entity = MapstructUtils.convert(bo, ProductMaterialAttribute.class);
         if (entity == null) {
             return Boolean.FALSE;
@@ -50,12 +54,22 @@ public class ProductMaterialAttributeServiceImpl extends ProductServiceSupport i
 
     @Override
     public Boolean updateByBo(ProductMaterialAttributeBo bo) {
+        validateMaterialAttributeUnique(bo);
+        if (bo != null && bo.getAttributeValueId() != null) {
+            ProductMaterialAttribute current = materialAttributeMapper.selectById(bo.getAttributeValueId());
+            if (current != null) {
+                assertNormalEditable(current.getStatus());
+            }
+        }
         ProductMaterialAttribute entity = MapstructUtils.convert(bo, ProductMaterialAttribute.class);
         return entity != null && materialAttributeMapper.updateById(entity) > 0;
     }
 
     @Override
     public Boolean deleteWithValidByIds(Long[] ids) {
+        for (Long id : ids) {
+            assertNoReferences(checkReferences(id));
+        }
         return remove(materialAttributeMapper, ids);
     }
 
@@ -64,6 +78,15 @@ public class ProductMaterialAttributeServiceImpl extends ProductServiceSupport i
         return materialAttributeMapper.update(null, new LambdaUpdateWrapper<ProductMaterialAttribute>()
             .eq(ProductMaterialAttribute::getAttributeValueId, id)
             .set(ProductMaterialAttribute::getStatus, status)) > 0;
+    }
+
+    @Override
+    public BaseEditCheckResultVo checkEditAllowed(Long id) {
+        ProductMaterialAttribute attribute = materialAttributeMapper.selectById(id);
+        if (attribute == null) {
+            return deniedEditCheck(null, "product.base.edit.notFound", null);
+        }
+        return editCheckResult(attribute.getStatus(), checkReferences(id));
     }
 
     @Override
@@ -80,6 +103,19 @@ public class ProductMaterialAttributeServiceImpl extends ProductServiceSupport i
             like(q, "attribute_name_cn", bo.getAttributeNameCn());
             eq(q, "status", bo.getStatus());
         }
-        return q.orderByAsc("sort_order", "material_attribute_id");
+        return q;
+    }
+
+    private void validateMaterialAttributeUnique(ProductMaterialAttributeBo bo) {
+        if (bo == null || bo.getMaterialId() == null || StringUtils.isBlank(bo.getAttributeCode())) {
+            return;
+        }
+        long count = materialAttributeMapper.selectCount(activeQuery(ProductMaterialAttribute.class)
+            .eq("material_id", bo.getMaterialId())
+            .eq("attribute_code", bo.getAttributeCode())
+            .ne(bo.getAttributeValueId() != null, "material_attribute_id", bo.getAttributeValueId()));
+        if (count > 0) {
+            throw ServiceException.ofMessageKey("product.materialAttribute.codeExists");
+        }
     }
 }

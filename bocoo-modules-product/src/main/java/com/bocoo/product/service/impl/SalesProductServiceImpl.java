@@ -37,12 +37,12 @@ public class SalesProductServiceImpl extends ProductServiceSupport implements Sa
 
     @Override
     public TableDataInfo<SalesProductVo> queryPageList(SalesProductBo bo, PageQuery pageQuery) {
-        return page(salesProductMapper, pageQuery, buildQueryWrapper(bo));
+        return page(salesProductMapper, pageQuery, buildQueryWrapper(bo), q -> q.orderByAsc("sort_order", "sales_product_id"));
     }
 
     @Override
     public List<SalesProductVo> queryList(SalesProductBo bo) {
-        return salesProductMapper.selectVoList(buildQueryWrapper(bo));
+        return salesProductMapper.selectVoList(applyDefaultSort(null, buildQueryWrapper(bo), q -> q.orderByAsc("sort_order", "sales_product_id")));
     }
 
     @Override
@@ -104,7 +104,7 @@ public class SalesProductServiceImpl extends ProductServiceSupport implements Sa
         eq(q, "biz_status", bo.getBizStatus());
         eq(q, "status", bo.getStatus());
         }
-        return q.orderByAsc("sort_order", "sales_product_id");
+        return q;
     }
 
     private void syncCategorySnapshot(SalesProduct product) {

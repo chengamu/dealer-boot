@@ -9,6 +9,7 @@ import com.bocoo.common.mybatis.core.page.TableDataInfo;
 import com.bocoo.common.web.core.BaseController;
 import com.bocoo.product.domain.bo.ProductComponentBo;
 import com.bocoo.product.domain.bo.ProductComponentItemBo;
+import com.bocoo.product.domain.vo.BaseEditCheckResultVo;
 import com.bocoo.product.domain.vo.ProductComponentItemVo;
 import com.bocoo.product.domain.vo.ProductComponentVo;
 import com.bocoo.product.domain.vo.ReferenceCheckResultVo;
@@ -61,6 +62,13 @@ public class ProductComponentController extends BaseController {
     @Operation(summary = "获取产品组件详情")
     public R<ProductComponentVo> getProductComponent(@Parameter(description = "产品组件ID", required = true) @PathVariable Long id) {
         return R.ok(productComponentService.queryById(id));
+    }
+
+    @SaCheckPermission("product:base:edit")
+    @GetMapping("/components/{id}/edit-check")
+    @Operation(summary = "检查产品组件是否可修改")
+    public R<BaseEditCheckResultVo> checkProductComponentEdit(@PathVariable Long id) {
+        return R.ok(productComponentService.checkEditAllowed(id));
     }
 
     @SaCheckPermission("product:base:add")
@@ -121,6 +129,13 @@ public class ProductComponentController extends BaseController {
     @Operation(summary = "获取产品组件明细详情")
     public R<ProductComponentItemVo> getProductComponentItem(@Parameter(description = "产品组件明细ID", required = true) @PathVariable Long id) {
         return R.ok(productComponentItemService.queryById(id));
+    }
+
+    @SaCheckPermission("product:component-item:edit")
+    @GetMapping("/component-items/{id}/edit-check")
+    @Operation(summary = "检查产品组件明细是否可修改")
+    public R<BaseEditCheckResultVo> checkProductComponentItemEdit(@PathVariable Long id) {
+        return R.ok(productComponentItemService.checkEditAllowed(id));
     }
 
     @SaCheckPermission("product:component-item:add")

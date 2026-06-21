@@ -142,10 +142,23 @@ function beforeUpload(file: File) {
   return false
 }
 
+function getAvatarFilename(blob: Blob) {
+  const type = blob.type || 'image/png'
+  const extensionMap: Record<string, string> = {
+    'image/bmp': 'bmp',
+    'image/gif': 'gif',
+    'image/jpeg': 'jpg',
+    'image/jpg': 'jpg',
+    'image/png': 'png'
+  }
+  return `avatar.${extensionMap[type] || 'png'}`
+}
+
 function uploadImg() {
   cropper.value?.getCropBlob(async (data: Blob) => {
     const formData = new FormData()
-    formData.append('avatarfile', data, options.filename)
+    const file = new File([data], getAvatarFilename(data), { type: data.type || 'image/png' })
+    formData.append('avatarfile', file, file.name)
     const response = await uploadAvatar(formData)
     open.value = false
     options.img = response.data.imgUrl

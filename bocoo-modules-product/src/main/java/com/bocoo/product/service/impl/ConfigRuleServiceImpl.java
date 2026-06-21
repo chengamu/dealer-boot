@@ -26,12 +26,12 @@ public class ConfigRuleServiceImpl extends ProductServiceSupport implements Conf
 
     @Override
     public TableDataInfo<ConfigRuleVo> queryPageList(ConfigRuleBo bo, PageQuery pageQuery) {
-        return page(configRuleMapper, pageQuery, buildQueryWrapper(bo));
+        return page(configRuleMapper, pageQuery, buildQueryWrapper(bo), q -> q.orderByAsc("sort_order", "rule_id"));
     }
 
     @Override
     public List<ConfigRuleVo> queryList(ConfigRuleBo bo) {
-        return configRuleMapper.selectVoList(buildQueryWrapper(bo));
+        return configRuleMapper.selectVoList(applyDefaultSort(null, buildQueryWrapper(bo), q -> q.orderByAsc("sort_order", "rule_id")));
     }
 
     @Override
@@ -81,7 +81,7 @@ public class ConfigRuleServiceImpl extends ProductServiceSupport implements Conf
         like(q, "rule_type", bo.getRuleType());
         like(q, "status", bo.getStatus());
         }
-        return q.orderByAsc("sort_order", "rule_id");
+        return q;
     }
 
 }

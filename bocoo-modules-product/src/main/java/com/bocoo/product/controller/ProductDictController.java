@@ -9,6 +9,7 @@ import com.bocoo.common.mybatis.core.page.TableDataInfo;
 import com.bocoo.common.web.core.BaseController;
 import com.bocoo.product.domain.bo.ProductDictItemBo;
 import com.bocoo.product.domain.bo.ProductDictTypeBo;
+import com.bocoo.product.domain.vo.BaseEditCheckResultVo;
 import com.bocoo.product.domain.vo.ProductDictItemVo;
 import com.bocoo.product.domain.vo.ProductDictOptionVo;
 import com.bocoo.product.domain.vo.ProductDictTypeVo;
@@ -64,6 +65,13 @@ public class ProductDictController extends BaseController {
     @Operation(summary = "获取产品业务字典类型详情")
     public R<ProductDictTypeVo> getDictType(@Parameter(description = "字典类型ID", required = true) @PathVariable Long id) {
         return R.ok(productDictTypeService.queryById(id));
+    }
+
+    @SaCheckPermission("product:dict:edit")
+    @GetMapping("/product-dict-types/{id}/edit-check")
+    @Operation(summary = "检查产品业务字典类型是否可修改")
+    public R<BaseEditCheckResultVo> checkDictTypeEdit(@PathVariable Long id) {
+        return R.ok(productDictTypeService.checkEditAllowed(id));
     }
 
     @SaCheckPermission("product:dict:add")
@@ -131,6 +139,13 @@ public class ProductDictController extends BaseController {
     @Operation(summary = "获取产品业务字典项详情")
     public R<ProductDictItemVo> getDictItem(@Parameter(description = "字典项ID", required = true) @PathVariable Long id) {
         return R.ok(productDictItemService.queryById(id));
+    }
+
+    @SaCheckPermission("product:dict:edit")
+    @GetMapping("/product-dict-items/{id}/edit-check")
+    @Operation(summary = "检查产品业务字典项是否可修改")
+    public R<BaseEditCheckResultVo> checkDictItemEdit(@PathVariable Long id) {
+        return R.ok(productDictItemService.checkEditAllowed(id));
     }
 
     @SaCheckPermission("product:dict:add")

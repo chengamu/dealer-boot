@@ -29,12 +29,12 @@ public class QuestionGroupServiceImpl extends ProductServiceSupport implements Q
 
     @Override
     public TableDataInfo<QuestionGroupVo> queryPageList(QuestionGroupBo bo, PageQuery pageQuery) {
-        return page(questionGroupMapper, pageQuery, buildQueryWrapper(bo));
+        return page(questionGroupMapper, pageQuery, buildQueryWrapper(bo), q -> q.orderByDesc("update_time"));
     }
 
     @Override
     public List<QuestionGroupVo> queryList(QuestionGroupBo bo) {
-        return questionGroupMapper.selectVoList(buildQueryWrapper(bo));
+        return questionGroupMapper.selectVoList(applyDefaultSort(null, buildQueryWrapper(bo), q -> q.orderByDesc("update_time")));
     }
 
     @Override
@@ -83,7 +83,7 @@ public class QuestionGroupServiceImpl extends ProductServiceSupport implements Q
         like(q, "group_name_en", bo.getGroupNameEn());
         like(q, "status", bo.getStatus());
         }
-        return q.orderByDesc("update_time");
+        return q;
     }
 
 }

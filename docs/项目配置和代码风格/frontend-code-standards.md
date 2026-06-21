@@ -31,6 +31,8 @@ app-container
 - 操作列固定右侧，优先使用图标按钮 + `el-tooltip` + `aria-label`。
 - 常用操作顺序建议：引用检查、详情、修改、删除、管理子资料。
 - 分页使用项目现有 `pagination` 组件。
+- 普通分页 grid 的表头排序必须走服务端排序，使用 `orderByColumn` / `isAsc` 请求参数；禁止只对当前页数组排序。
+- 只有字段配置显式声明可排序的列才显示排序入口，状态、附件、备注、JSON、长文本和操作列默认不开放排序。
 - 普通 grid 支持双击行打开详情抽屉。
 - 业务状态使用开关或明确状态标签，不裸显示 `true/false`、`1/0`、`ENABLED/DISABLED`。
 - Boolean 业务字段展示为“是/否”，表单里用 `el-switch`。

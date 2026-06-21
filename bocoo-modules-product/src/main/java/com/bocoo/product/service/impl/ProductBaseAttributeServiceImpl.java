@@ -10,6 +10,7 @@ import com.bocoo.common.mybatis.core.page.TableDataInfo;
 import com.bocoo.product.domain.bo.ProductBaseAttributeBo;
 import com.bocoo.product.domain.entity.ProductBaseAttribute;
 import com.bocoo.product.domain.entity.ProductMaterialAttribute;
+import com.bocoo.product.domain.vo.BaseEditCheckResultVo;
 import com.bocoo.product.domain.vo.ProductBaseAttributeVo;
 import com.bocoo.product.domain.vo.ReferenceCheckResultVo;
 import com.bocoo.product.mapper.ProductBaseAttributeMapper;
@@ -30,12 +31,12 @@ public class ProductBaseAttributeServiceImpl extends ProductServiceSupport imple
 
     @Override
     public TableDataInfo<ProductBaseAttributeVo> queryPageList(ProductBaseAttributeBo bo, PageQuery pageQuery) {
-        return page(baseAttributeMapper, pageQuery, buildQueryWrapper(bo));
+        return page(baseAttributeMapper, pageQuery, buildQueryWrapper(bo), q -> q.orderByAsc("sort_order", "attribute_id"));
     }
 
     @Override
     public List<ProductBaseAttributeVo> queryList(ProductBaseAttributeBo bo) {
-        return baseAttributeMapper.selectVoList(buildQueryWrapper(bo));
+        return baseAttributeMapper.selectVoList(applyDefaultSort(null, buildQueryWrapper(bo), q -> q.orderByAsc("sort_order", "attribute_id")));
     }
 
     @Override
@@ -46,6 +47,7 @@ public class ProductBaseAttributeServiceImpl extends ProductServiceSupport imple
     @Override
     public Boolean insertByBo(ProductBaseAttributeBo bo) {
         normalizeBaseAttribute(bo);
+        validateBaseAttributeUnique(bo);
         ProductBaseAttribute entity = MapstructUtils.convert(bo, ProductBaseAttribute.class);
         if (entity == null) {
             return Boolean.FALSE;
@@ -57,12 +59,22 @@ public class ProductBaseAttributeServiceImpl extends ProductServiceSupport imple
     @Override
     public Boolean updateByBo(ProductBaseAttributeBo bo) {
         normalizeBaseAttribute(bo);
+        validateBaseAttributeUnique(bo);
+        if (bo != null && bo.getAttributeId() != null) {
+            ProductBaseAttribute current = baseAttributeMapper.selectById(bo.getAttributeId());
+            if (current != null) {
+                assertNormalEditable(current.getStatus());
+            }
+        }
         ProductBaseAttribute entity = MapstructUtils.convert(bo, ProductBaseAttribute.class);
         return entity != null && baseAttributeMapper.updateById(entity) > 0;
     }
 
     @Override
     public Boolean deleteWithValidByIds(Long[] ids) {
+        for (Long id : ids) {
+            assertNoReferences(checkReferences(id));
+        }
         return remove(baseAttributeMapper, ids);
     }
 
@@ -71,6 +83,15 @@ public class ProductBaseAttributeServiceImpl extends ProductServiceSupport imple
         return baseAttributeMapper.update(null, new LambdaUpdateWrapper<ProductBaseAttribute>()
             .eq(ProductBaseAttribute::getAttributeId, id)
             .set(ProductBaseAttribute::getStatus, status)) > 0;
+    }
+
+    @Override
+    public BaseEditCheckResultVo checkEditAllowed(Long id) {
+        ProductBaseAttribute attribute = baseAttributeMapper.selectById(id);
+        if (attribute == null) {
+            return deniedEditCheck(null, "product.base.edit.notFound", null);
+        }
+        return editCheckResult(attribute.getStatus(), checkReferences(id));
     }
 
     @Override
@@ -90,7 +111,7 @@ public class ProductBaseAttributeServiceImpl extends ProductServiceSupport imple
             like(q, "material_types", bo.getMaterialTypes());
             eq(q, "status", bo.getStatus());
         }
-        return q.orderByAsc("sort_order", "attribute_id");
+        return q;
     }
 
     private void normalizeBaseAttribute(ProductBaseAttributeBo bo) {
@@ -107,6 +128,19 @@ public class ProductBaseAttributeServiceImpl extends ProductServiceSupport imple
         }
         if (!"NUMBER".equals(bo.getValueType())) {
             bo.setUnitCode(null);
+        }
+    }
+
+    private void validateBaseAttributeUnique(ProductBaseAttributeBo bo) {
+        if (bo == null || StringUtils.isBlank(bo.getAttributeGroup()) || StringUtils.isBlank(bo.getAttributeCode())) {
+            return;
+        }
+        long count = baseAttributeMapper.selectCount(activeQuery(ProductBaseAttribute.class)
+            .eq("attribute_group", bo.getAttributeGroup())
+            .eq("attribute_code", bo.getAttributeCode())
+            .ne(bo.getAttributeId() != null, "attribute_id", bo.getAttributeId()));
+        if (count > 0) {
+            throw ServiceException.ofMessageKey("product.baseAttribute.codeExists");
         }
     }
 }

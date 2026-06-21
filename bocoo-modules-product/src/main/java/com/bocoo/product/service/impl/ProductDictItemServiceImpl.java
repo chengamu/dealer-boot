@@ -8,13 +8,28 @@ import com.bocoo.common.core.utils.StringUtils;
 import com.bocoo.common.mybatis.core.page.PageQuery;
 import com.bocoo.common.mybatis.core.page.TableDataInfo;
 import com.bocoo.product.domain.bo.ProductDictItemBo;
+import com.bocoo.product.domain.entity.FabricSeries;
+import com.bocoo.product.domain.entity.ProductBaseAttribute;
+import com.bocoo.product.domain.entity.ProductCategory;
+import com.bocoo.product.domain.entity.ProductComponent;
 import com.bocoo.product.domain.entity.ProductDictItem;
 import com.bocoo.product.domain.entity.ProductDictType;
+import com.bocoo.product.domain.entity.ProductMaterial;
+import com.bocoo.product.domain.entity.ProductMediaAsset;
+import com.bocoo.product.domain.entity.ProductUnit;
+import com.bocoo.product.domain.vo.BaseEditCheckResultVo;
 import com.bocoo.product.domain.vo.ProductDictItemVo;
 import com.bocoo.product.domain.vo.ProductDictOptionVo;
 import com.bocoo.product.domain.vo.ReferenceCheckResultVo;
+import com.bocoo.product.mapper.FabricSeriesMapper;
+import com.bocoo.product.mapper.ProductBaseAttributeMapper;
+import com.bocoo.product.mapper.ProductCategoryMapper;
+import com.bocoo.product.mapper.ProductComponentMapper;
 import com.bocoo.product.mapper.ProductDictItemMapper;
 import com.bocoo.product.mapper.ProductDictTypeMapper;
+import com.bocoo.product.mapper.ProductMaterialMapper;
+import com.bocoo.product.mapper.ProductMediaAssetMapper;
+import com.bocoo.product.mapper.ProductUnitMapper;
 import com.bocoo.product.service.ProductDictItemService;
 import com.bocoo.product.service.ProductEntityDefaults;
 import lombok.RequiredArgsConstructor;
@@ -28,15 +43,22 @@ public class ProductDictItemServiceImpl extends ProductServiceSupport implements
 
     private final ProductDictTypeMapper dictTypeMapper;
     private final ProductDictItemMapper dictItemMapper;
+    private final ProductUnitMapper unitMapper;
+    private final ProductMaterialMapper materialMapper;
+    private final FabricSeriesMapper fabricSeriesMapper;
+    private final ProductCategoryMapper categoryMapper;
+    private final ProductComponentMapper componentMapper;
+    private final ProductMediaAssetMapper mediaAssetMapper;
+    private final ProductBaseAttributeMapper baseAttributeMapper;
 
     @Override
     public TableDataInfo<ProductDictItemVo> queryPageList(ProductDictItemBo bo, PageQuery pageQuery) {
-        return page(dictItemMapper, pageQuery, buildQueryWrapper(bo));
+        return page(dictItemMapper, pageQuery, buildQueryWrapper(bo), q -> q.orderByAsc("dict_type_code", "sort_order", "dict_item_id"));
     }
 
     @Override
     public List<ProductDictItemVo> queryList(ProductDictItemBo bo) {
-        return dictItemMapper.selectVoList(buildQueryWrapper(bo));
+        return dictItemMapper.selectVoList(applyDefaultSort(null, buildQueryWrapper(bo), q -> q.orderByAsc("dict_type_code", "sort_order", "dict_item_id")));
     }
 
     @Override
@@ -66,6 +88,13 @@ public class ProductDictItemServiceImpl extends ProductServiceSupport implements
     @Override
     public Boolean updateByBo(ProductDictItemBo bo) {
         validateDictItem(bo);
+        if (bo != null && bo.getDictItemId() != null) {
+            ProductDictItem current = dictItemMapper.selectById(bo.getDictItemId());
+            if (current != null) {
+                assertDictEditable(current.getSystemFlag(), current.getEditableFlag());
+                assertNormalEditable(current.getStatus());
+            }
+        }
         ProductDictItem entity = MapstructUtils.convert(bo, ProductDictItem.class);
         return entity != null && dictItemMapper.updateById(entity) > 0;
     }
@@ -77,6 +106,7 @@ public class ProductDictItemServiceImpl extends ProductServiceSupport implements
             if (entity != null && Boolean.TRUE.equals(entity.getSystemFlag())) {
                 throw ServiceException.ofMessageKey("product.dict.systemItemCannotDelete");
             }
+            assertNoReferences(checkReferences(id));
         }
         return remove(dictItemMapper, ids);
     }
@@ -89,12 +119,28 @@ public class ProductDictItemServiceImpl extends ProductServiceSupport implements
     }
 
     @Override
+    public BaseEditCheckResultVo checkEditAllowed(Long id) {
+        ProductDictItem entity = dictItemMapper.selectById(id);
+        if (entity == null) {
+            return deniedEditCheck(null, "product.base.edit.notFound", null);
+        }
+        ReferenceCheckResultVo references = checkReferences(id);
+        if (isDictLocked(entity.getSystemFlag(), entity.getEditableFlag())) {
+            return deniedEditCheck(entity.getStatus(), "product.dict.notEditable", references);
+        }
+        return editCheckResult(entity.getStatus(), references);
+    }
+
+    @Override
     public ReferenceCheckResultVo checkReferences(Long id) {
         ProductDictItem entity = dictItemMapper.selectById(id);
         if (entity != null && Boolean.TRUE.equals(entity.getSystemFlag())) {
             return referenceResult(1, "product.dict.systemItemCannotDelete", "System dictionary item");
         }
-        return referenceResult(0, null, null);
+        if (entity == null || StringUtils.isBlank(entity.getDictTypeCode()) || StringUtils.isBlank(entity.getDictItemValue())) {
+            return referenceResult(0, null, null);
+        }
+        return checkBusinessReferences(entity.getDictTypeCode(), entity.getDictItemValue());
     }
 
     private QueryWrapper<ProductDictItem> buildQueryWrapper(ProductDictItemBo bo) {
@@ -108,7 +154,7 @@ public class ProductDictItemServiceImpl extends ProductServiceSupport implements
             eq(q, "parent_value", bo.getParentValue());
             eq(q, "status", bo.getStatus());
         }
-        return q.orderByAsc("dict_type_code", "sort_order", "dict_item_id");
+        return q;
     }
 
     private void validateDictItem(ProductDictItemBo bo) {
@@ -139,5 +185,32 @@ public class ProductDictItemServiceImpl extends ProductServiceSupport implements
         vo.setDictTypeCode(row.getDictTypeCode());
         vo.setParentValue(row.getParentValue());
         return vo;
+    }
+
+    private void assertDictEditable(Boolean systemFlag, Boolean editableFlag) {
+        if (isDictLocked(systemFlag, editableFlag)) {
+            throw ServiceException.ofMessageKey("product.dict.notEditable");
+        }
+    }
+
+    private boolean isDictLocked(Boolean systemFlag, Boolean editableFlag) {
+        return Boolean.TRUE.equals(systemFlag) && Boolean.FALSE.equals(editableFlag);
+    }
+
+    private ReferenceCheckResultVo checkBusinessReferences(String dictTypeCode, String value) {
+        long count = switch (dictTypeCode) {
+            case "product_unit_type" -> unitMapper.selectCount(activeQuery(ProductUnit.class).eq("unit_type", value));
+            case "product_material_type" -> materialMapper.selectCount(activeQuery(ProductMaterial.class).eq("material_type", value))
+                + fabricSeriesMapper.selectCount(activeQuery(FabricSeries.class).eq("material_type", value))
+                + baseAttributeMapper.selectCount(activeQuery(ProductBaseAttribute.class).like("material_types", value));
+            case "product_business_type" -> categoryMapper.selectCount(activeQuery(ProductCategory.class).eq("business_type", value))
+                + materialMapper.selectCount(activeQuery(ProductMaterial.class).eq("business_type", value))
+                + componentMapper.selectCount(activeQuery(ProductComponent.class).eq("business_type", value));
+            case "product_component_type" -> componentMapper.selectCount(activeQuery(ProductComponent.class).eq("component_type", value));
+            case "product_asset_type" -> mediaAssetMapper.selectCount(activeQuery(ProductMediaAsset.class).eq("asset_type", value));
+            case "product_attribute_group" -> baseAttributeMapper.selectCount(activeQuery(ProductBaseAttribute.class).eq("attribute_group", value));
+            default -> 0L;
+        };
+        return referenceResult(count, "product.dict.itemHasReferences", "Dictionary item references: " + count);
     }
 }

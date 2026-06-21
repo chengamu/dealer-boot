@@ -9,6 +9,7 @@ import com.bocoo.common.mybatis.core.page.TableDataInfo;
 import com.bocoo.common.web.core.BaseController;
 import com.bocoo.product.domain.bo.ProductMaterialAttributeBo;
 import com.bocoo.product.domain.bo.ProductMaterialBo;
+import com.bocoo.product.domain.vo.BaseEditCheckResultVo;
 import com.bocoo.product.domain.vo.ProductMaterialAttributeVo;
 import com.bocoo.product.domain.vo.ProductMaterialVo;
 import com.bocoo.product.domain.vo.ReferenceCheckResultVo;
@@ -63,6 +64,13 @@ public class ProductMaterialController extends BaseController {
         return R.ok(productMaterialService.queryById(id));
     }
 
+    @SaCheckPermission("product:base:edit")
+    @GetMapping("/materials/{id}/edit-check")
+    @Operation(summary = "检查产品物料是否可修改")
+    public R<BaseEditCheckResultVo> checkProductMaterialEdit(@PathVariable Long id) {
+        return R.ok(productMaterialService.checkEditAllowed(id));
+    }
+
     @SaCheckPermission("product:base:add")
     @Log(title = "产品物料", businessType = BusinessType.INSERT)
     @PostMapping("/materials")
@@ -77,6 +85,14 @@ public class ProductMaterialController extends BaseController {
     @Operation(summary = "修改产品物料")
     public R<Void> editProductMaterial(@Validated @RequestBody ProductMaterialBo bo) {
         return toAjax(productMaterialService.updateByBo(bo));
+    }
+
+    @SaCheckPermission("product:base:superEdit")
+    @Log(title = "产品物料超级修改", businessType = BusinessType.UPDATE)
+    @PutMapping("/materials/super-update")
+    @Operation(summary = "超级修改产品物料")
+    public R<Void> superEditProductMaterial(@Validated @RequestBody ProductMaterialBo bo) {
+        return toAjax(productMaterialService.superUpdateByBo(bo));
     }
 
     @SaCheckPermission("product:base:edit")
@@ -121,6 +137,13 @@ public class ProductMaterialController extends BaseController {
     @Operation(summary = "获取物料属性值详情")
     public R<ProductMaterialAttributeVo> getProductMaterialAttribute(@Parameter(description = "物料属性值ID", required = true) @PathVariable Long id) {
         return R.ok(productMaterialAttributeService.queryById(id));
+    }
+
+    @SaCheckPermission("product:material-attribute:edit")
+    @GetMapping("/material-attributes/{id}/edit-check")
+    @Operation(summary = "检查物料属性值是否可修改")
+    public R<BaseEditCheckResultVo> checkProductMaterialAttributeEdit(@PathVariable Long id) {
+        return R.ok(productMaterialAttributeService.checkEditAllowed(id));
     }
 
     @SaCheckPermission("product:material-attribute:add")

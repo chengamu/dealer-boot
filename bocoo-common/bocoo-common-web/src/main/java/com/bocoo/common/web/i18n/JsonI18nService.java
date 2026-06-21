@@ -41,8 +41,10 @@ public class JsonI18nService implements I18nService {
         }
         String result = message;
         for (Map.Entry<String, ?> entry : args.entrySet()) {
-            String placeholder = "{{" + entry.getKey() + "}}";
-            result = result.replace(placeholder, String.valueOf(entry.getValue()));
+            String value = String.valueOf(entry.getValue());
+            result = result
+                .replace("{{" + entry.getKey() + "}}", value)
+                .replace("{" + entry.getKey() + "}", value);
         }
         return result;
     }

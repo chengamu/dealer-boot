@@ -1,5 +1,6 @@
 import { request, requestPage } from '@/utils/request'
 import type {
+  EditCheckResult,
   ProductCrudApi,
   ProductDictItemQuery,
   ProductDictItemVO,
@@ -13,6 +14,10 @@ function referencesApi(url: string) {
   return request<ReferenceCheckResult>({ url, method: 'get' })
 }
 
+function editCheckApi(url: string) {
+  return request<EditCheckResult>({ url, method: 'get' })
+}
+
 export const productDictTypeApi: ProductCrudApi<ProductDictTypeVO, ProductDictTypeQuery> = {
   list: (query?: ProductDictTypeQuery) => requestPage<ProductDictTypeVO>({ url: '/product-capability/product-dict-types/list', method: 'get', params: query }),
   options: (query?: ProductDictTypeQuery) => request<ProductDictTypeVO[]>({ url: '/product-capability/product-dict-types/options', method: 'get', params: query }),
@@ -21,6 +26,7 @@ export const productDictTypeApi: ProductCrudApi<ProductDictTypeVO, ProductDictTy
   update: (data: ProductDictTypeVO) => request({ url: '/product-capability/product-dict-types', method: 'put', data }),
   remove: (ids: Array<string | number> | string | number) => request({ url: '/product-capability/product-dict-types/' + ids, method: 'delete' }),
   changeStatus: (id: string | number, status: string) => request({ url: '/product-capability/product-dict-types/change-status/' + id + '/' + status, method: 'put' }),
+  editCheck: (id: string | number) => editCheckApi('/product-capability/product-dict-types/' + id + '/edit-check'),
   references: (id: string | number) => referencesApi('/product-capability/product-dict-types/' + id + '/references')
 }
 
@@ -32,6 +38,7 @@ export const productDictItemApi: ProductCrudApi<ProductDictItemVO, ProductDictIt
   update: (data: ProductDictItemVO) => request({ url: '/product-capability/product-dict-items', method: 'put', data }),
   remove: (ids: Array<string | number> | string | number) => request({ url: '/product-capability/product-dict-items/' + ids, method: 'delete' }),
   changeStatus: (id: string | number, status: string) => request({ url: '/product-capability/product-dict-items/change-status/' + id + '/' + status, method: 'put' }),
+  editCheck: (id: string | number) => editCheckApi('/product-capability/product-dict-items/' + id + '/edit-check'),
   references: (id: string | number) => referencesApi('/product-capability/product-dict-items/' + id + '/references')
 }
 

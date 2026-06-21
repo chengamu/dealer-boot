@@ -29,12 +29,12 @@ public class ConfigOptionServiceImpl extends ProductServiceSupport implements Co
 
     @Override
     public TableDataInfo<ConfigOptionVo> queryPageList(ConfigOptionBo bo, PageQuery pageQuery) {
-        return page(configOptionMapper, pageQuery, buildQueryWrapper(bo));
+        return page(configOptionMapper, pageQuery, buildQueryWrapper(bo), q -> q.orderByAsc("sort_order", "option_id"));
     }
 
     @Override
     public List<ConfigOptionVo> queryList(ConfigOptionBo bo) {
-        return configOptionMapper.selectVoList(buildQueryWrapper(bo));
+        return configOptionMapper.selectVoList(applyDefaultSort(null, buildQueryWrapper(bo), q -> q.orderByAsc("sort_order", "option_id")));
     }
 
     @Override
@@ -88,7 +88,7 @@ public class ConfigOptionServiceImpl extends ProductServiceSupport implements Co
         like(q, "option_name_en", bo.getOptionNameEn());
         like(q, "status", bo.getStatus());
         }
-        return q.orderByAsc("sort_order", "option_id");
+        return q;
     }
 
 }

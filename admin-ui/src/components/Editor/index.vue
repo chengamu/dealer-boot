@@ -33,7 +33,6 @@ import type { CSSProperties } from 'vue';
 import type { UploadRawFile, UploadRequestOptions } from 'element-plus';
 import { getMessage } from '@/locales'
 import useLocaleStore from '@/stores/locale'
-import { getApiBaseUrl } from '@/utils/config'
 import service from '@/utils/request'
 
 type UploadResponse = {
@@ -110,7 +109,7 @@ const emit = defineEmits<{
   (event: 'update:modelValue', value: string): void
 }>();
 // 上传的图片服务器地址
-const uploadUrl = ref(getApiBaseUrl() + "/system/oss/upload");
+const uploadUrl = ref("/system/oss/upload");
 const quillEditorRef = ref<QuillEditorExpose | null>(null);
 
 const options = computed(() => ({

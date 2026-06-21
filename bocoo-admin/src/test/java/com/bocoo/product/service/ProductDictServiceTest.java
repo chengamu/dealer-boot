@@ -5,6 +5,7 @@ import com.bocoo.product.domain.bo.ProductDictItemBo;
 import com.bocoo.product.domain.bo.ProductDictTypeBo;
 import com.bocoo.product.domain.entity.ProductDictItem;
 import com.bocoo.product.domain.entity.ProductDictType;
+import com.bocoo.product.domain.vo.BaseEditCheckResultVo;
 import com.bocoo.product.domain.vo.ProductDictItemVo;
 import com.bocoo.product.domain.vo.ProductDictOptionVo;
 import com.bocoo.product.domain.vo.ReferenceCheckResultVo;
@@ -23,6 +24,8 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -126,5 +129,55 @@ class ProductDictServiceTest {
         assertThat(result.getReferenceCount()).isEqualTo(1L);
         assertThat(result.getBlockerReasonKey()).isEqualTo("product.dict.systemItemCannotDelete");
         assertThat(result.getReferenceSummaries()).containsExactly("System dictionary item");
+    }
+
+    @Test
+    void dictTypeEditCheckRejectsEnabledType() {
+        ProductDictType entity = new ProductDictType();
+        entity.setDictTypeId(1001L);
+        entity.setDictTypeCode("product_unit_type");
+        entity.setStatus("ENABLED");
+        when(dictTypeMapper.selectById(1001L)).thenReturn(entity);
+
+        BaseEditCheckResultVo result = dictTypeService.checkEditAllowed(1001L);
+
+        assertThat(result.getEditable()).isFalse();
+        assertThat(result.getReasonKey()).isEqualTo("product.base.edit.enabledDenied");
+    }
+
+    @Test
+    void dictTypeEditCheckRejectsLockedSystemTypeEvenWhenDisabled() {
+        ProductDictType entity = new ProductDictType();
+        entity.setDictTypeId(1001L);
+        entity.setDictTypeCode("product_unit_type");
+        entity.setStatus("DISABLED");
+        entity.setSystemFlag(Boolean.TRUE);
+        entity.setEditableFlag(Boolean.FALSE);
+        when(dictTypeMapper.selectById(1001L)).thenReturn(entity);
+
+        BaseEditCheckResultVo result = dictTypeService.checkEditAllowed(1001L);
+
+        assertThat(result.getEditable()).isFalse();
+        assertThat(result.getReasonKey()).isEqualTo("product.dict.notEditable");
+    }
+
+    @Test
+    void normalUpdateRejectsEnabledDictItem() {
+        ProductDictItem current = new ProductDictItem();
+        current.setDictItemId(2001L);
+        current.setDictTypeCode("product_unit_type");
+        current.setDictItemValue("LENGTH");
+        current.setStatus("ENABLED");
+        when(dictTypeMapper.selectCount(any())).thenReturn(1L);
+        when(dictItemMapper.selectById(2001L)).thenReturn(current);
+
+        ProductDictItemBo bo = new ProductDictItemBo();
+        bo.setDictItemId(2001L);
+        bo.setDictTypeCode("product_unit_type");
+        bo.setDictItemValue("LENGTH");
+
+        assertThatThrownBy(() -> dictItemService.updateByBo(bo))
+            .isInstanceOf(ServiceException.class);
+        verify(dictItemMapper, never()).updateById(any());
     }
 }

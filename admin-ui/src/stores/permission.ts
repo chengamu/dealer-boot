@@ -73,7 +73,6 @@ const migratedViewModules: Record<string, () => Promise<unknown>> = {
   'product-master/product-dicts': () => import('@/pages/product-center/base/ProductDictPage.vue'),
   'product-master/fabrics': () => import('@/pages/product-center/fabric/ProductFabricPage.vue'),
   'product-master/fabric-series': () => import('@/pages/product-center/fabric/ProductFabricPage.vue'),
-  'product-master/fabric-profiles': () => import('@/pages/product-center/fabric/ProductFabricPage.vue'),
   'product-master/materials': () => import('@/pages/product-center/base/ProductBaseInfoPage.vue'),
   'product-master/material-attributes': () => import('@/pages/product-center/base/ProductBaseInfoPage.vue'),
   'product-master/components': () => import('@/pages/product-center/base/ProductBaseInfoPage.vue'),

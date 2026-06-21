@@ -33,12 +33,12 @@ public class ConfigTemplateServiceImpl extends ProductServiceSupport implements 
 
     @Override
     public TableDataInfo<ConfigTemplateVo> queryPageList(ConfigTemplateBo bo, PageQuery pageQuery) {
-        return page(configTemplateMapper, pageQuery, buildQueryWrapper(bo));
+        return page(configTemplateMapper, pageQuery, buildQueryWrapper(bo), q -> q.orderByDesc("update_time"));
     }
 
     @Override
     public List<ConfigTemplateVo> queryList(ConfigTemplateBo bo) {
-        return configTemplateMapper.selectVoList(buildQueryWrapper(bo));
+        return configTemplateMapper.selectVoList(applyDefaultSort(null, buildQueryWrapper(bo), q -> q.orderByDesc("update_time")));
     }
 
     @Override
@@ -92,7 +92,7 @@ public class ConfigTemplateServiceImpl extends ProductServiceSupport implements 
         like(q, "biz_status", bo.getBizStatus());
         like(q, "status", bo.getStatus());
         }
-        return q.orderByDesc("update_time");
+        return q;
     }
 
 }

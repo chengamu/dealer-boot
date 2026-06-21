@@ -3,6 +3,7 @@ package com.bocoo.product.service;
 import com.bocoo.common.mybatis.core.page.PageQuery;
 import com.bocoo.common.mybatis.core.page.TableDataInfo;
 import com.bocoo.product.domain.bo.ProductBaseAttributeBo;
+import com.bocoo.product.domain.vo.BaseEditCheckResultVo;
 import com.bocoo.product.domain.vo.ProductBaseAttributeVo;
 import com.bocoo.product.domain.vo.ReferenceCheckResultVo;
 
@@ -23,6 +24,8 @@ public interface ProductBaseAttributeService {
     Boolean deleteWithValidByIds(Long[] ids);
 
     Boolean updateStatus(Long id, String status);
+
+    BaseEditCheckResultVo checkEditAllowed(Long id);
 
     ReferenceCheckResultVo checkReferences(Long attributeId);
 }

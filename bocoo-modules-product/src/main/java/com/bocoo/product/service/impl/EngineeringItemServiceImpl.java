@@ -29,7 +29,7 @@ public class EngineeringItemServiceImpl extends ProductServiceSupport implements
                 q.and(wrapper -> wrapper.like("item_name_cn", query.getItemNameCn()).or().like("item_name_en", query.getItemNameCn()));
             }
         }
-        return page(itemMapper, pageQuery, q.orderByAsc("sort_order").orderByDesc("update_time"));
+        return page(itemMapper, pageQuery, q, wrapper -> wrapper.orderByAsc("sort_order").orderByDesc("update_time"));
     }
 
     @Override

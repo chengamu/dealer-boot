@@ -1,8 +1,12 @@
 import { request, requestPage } from '@/utils/request'
-import type { ProductPageQuery, ProductRecord, ReferenceCheckResult } from './types'
+import type { EditCheckResult, ProductPageQuery, ProductRecord, ReferenceCheckResult } from './types'
 
 function referencesApi(url: string) {
   return request<ReferenceCheckResult>({ url, method: 'get' })
+}
+
+function editCheckApi(url: string) {
+  return request<EditCheckResult>({ url, method: 'get' })
 }
 
 export const productMediaAssetApi = {
@@ -13,6 +17,7 @@ export const productMediaAssetApi = {
   update: (data: ProductRecord) => request({ url: '/product-capability/media-assets', method: 'put', data }),
   remove: (ids: Array<string | number> | string | number) => request({ url: '/product-capability/media-assets/' + ids, method: 'delete' }),
   changeStatus: (id: string | number, status: string) => request({ url: '/product-capability/media-assets/change-status/' + id + '/' + status, method: 'put' }),
+  editCheck: (id: string | number) => editCheckApi('/product-capability/media-assets/' + id + '/edit-check'),
   references: (id: string | number) => referencesApi('/product-capability/media-assets/' + id + '/references')
 }
 
@@ -27,4 +32,3 @@ export const productMediaBindingApi = {
   batchBind: (data: ProductRecord) => request({ url: '/product-capability/media-bindings/batch', method: 'post', data }),
   references: (id: string | number) => referencesApi('/product-capability/media-bindings/' + id + '/references')
 }
-

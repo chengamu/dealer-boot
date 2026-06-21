@@ -57,30 +57,6 @@ public class ProductComponentVo implements Serializable {
     private String businessType;
 
     /**
-     * 关联物料ID
-     */
-    @Schema(description = "关联物料ID")
-    private Long materialId;
-
-    /**
-     * 关联物料编码快照
-     */
-    @Schema(description = "关联物料编码快照")
-    private String materialCode;
-
-    /**
-     * 关联物料中文名称快照
-     */
-    @Schema(description = "关联物料中文名称快照")
-    private String materialNameCn;
-
-    /**
-     * 关联物料英文名称快照
-     */
-    @Schema(description = "关联物料英文名称快照")
-    private String materialNameEn;
-
-    /**
      * 默认数量
      */
     @Schema(description = "默认数量")

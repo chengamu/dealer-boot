@@ -49,6 +49,15 @@ public class ProductMaterial extends BaseEntity {
     @Schema(description = "物料类型")
     private String materialType;
 
+    @Schema(description = "面料系列ID")
+    private Long fabricSeriesId;
+
+    @Schema(description = "面料系列编码")
+    private String fabricSeriesCode;
+
+    @Schema(description = "面料系列中文名称")
+    private String fabricSeriesNameCn;
+
     /**
      * 业务口径类型
      */

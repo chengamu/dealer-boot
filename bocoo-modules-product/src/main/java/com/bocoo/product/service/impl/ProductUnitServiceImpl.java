@@ -8,16 +8,17 @@ import com.bocoo.common.core.utils.StringUtils;
 import com.bocoo.common.mybatis.core.page.PageQuery;
 import com.bocoo.common.mybatis.core.page.TableDataInfo;
 import com.bocoo.product.domain.bo.ProductUnitBo;
-import com.bocoo.product.domain.entity.FabricProfile;
 import com.bocoo.product.domain.entity.ProductComponent;
 import com.bocoo.product.domain.entity.ProductComponentItem;
 import com.bocoo.product.domain.entity.ProductMaterial;
+import com.bocoo.product.domain.entity.ProductMaterialAttribute;
 import com.bocoo.product.domain.entity.ProductUnit;
+import com.bocoo.product.domain.vo.BaseEditCheckResultVo;
 import com.bocoo.product.domain.vo.ProductUnitVo;
 import com.bocoo.product.domain.vo.ReferenceCheckResultVo;
-import com.bocoo.product.mapper.FabricProfileMapper;
 import com.bocoo.product.mapper.ProductComponentItemMapper;
 import com.bocoo.product.mapper.ProductComponentMapper;
+import com.bocoo.product.mapper.ProductMaterialAttributeMapper;
 import com.bocoo.product.mapper.ProductMaterialMapper;
 import com.bocoo.product.mapper.ProductUnitMapper;
 import com.bocoo.product.service.ProductEntityDefaults;
@@ -34,18 +35,18 @@ public class ProductUnitServiceImpl extends ProductServiceSupport implements Pro
 
     private final ProductUnitMapper unitMapper;
     private final ProductMaterialMapper materialMapper;
+    private final ProductMaterialAttributeMapper materialAttributeMapper;
     private final ProductComponentMapper componentMapper;
     private final ProductComponentItemMapper componentItemMapper;
-    private final FabricProfileMapper fabricProfileMapper;
 
     @Override
     public TableDataInfo<ProductUnitVo> queryPageList(ProductUnitBo bo, PageQuery pageQuery) {
-        return page(unitMapper, pageQuery, buildQueryWrapper(bo));
+        return page(unitMapper, pageQuery, buildQueryWrapper(bo), q -> q.orderByAsc("sort_order", "unit_id"));
     }
 
     @Override
     public List<ProductUnitVo> queryList(ProductUnitBo bo) {
-        return unitMapper.selectVoList(buildQueryWrapper(bo));
+        return unitMapper.selectVoList(applyDefaultSort(null, buildQueryWrapper(bo), q -> q.orderByAsc("sort_order", "unit_id")));
     }
 
     @Override
@@ -56,6 +57,7 @@ public class ProductUnitServiceImpl extends ProductServiceSupport implements Pro
     @Override
     public Boolean insertByBo(ProductUnitBo bo) {
         normalizeUnit(bo);
+        validateUnitCodeUnique(bo);
         ProductUnit entity = MapstructUtils.convert(bo, ProductUnit.class);
         if (entity == null) {
             return Boolean.FALSE;
@@ -67,12 +69,22 @@ public class ProductUnitServiceImpl extends ProductServiceSupport implements Pro
     @Override
     public Boolean updateByBo(ProductUnitBo bo) {
         normalizeUnit(bo);
+        validateUnitCodeUnique(bo);
+        if (bo != null && bo.getUnitId() != null) {
+            ProductUnit current = unitMapper.selectById(bo.getUnitId());
+            if (current != null) {
+                assertNormalEditable(current.getStatus());
+            }
+        }
         ProductUnit entity = MapstructUtils.convert(bo, ProductUnit.class);
         return entity != null && unitMapper.updateById(entity) > 0;
     }
 
     @Override
     public Boolean deleteWithValidByIds(Long[] ids) {
+        for (Long id : ids) {
+            assertNoReferences(checkReferences(id));
+        }
         return remove(unitMapper, ids);
     }
 
@@ -84,18 +96,26 @@ public class ProductUnitServiceImpl extends ProductServiceSupport implements Pro
     }
 
     @Override
+    public BaseEditCheckResultVo checkEditAllowed(Long id) {
+        ProductUnit unit = unitMapper.selectById(id);
+        if (unit == null) {
+            return deniedEditCheck(null, "product.base.edit.notFound", null);
+        }
+        return editCheckResult(unit.getStatus(), checkReferences(id));
+    }
+
+    @Override
     public ReferenceCheckResultVo checkReferences(Long unitId) {
         ProductUnit unit = unitMapper.selectById(unitId);
         if (unit == null || unit.getUnitCode() == null) {
             return referenceResult(0, null, null);
         }
         String code = unit.getUnitCode();
-        long count = materialMapper.selectCount(activeQuery(ProductMaterial.class).eq("unit_code", code))
+        long count = materialMapper.selectCount(activeQuery(ProductMaterial.class)
+            .and(q -> q.eq("unit_code", code).or().eq("purchase_unit_code", code).or().eq("inventory_unit_code", code).or().eq("usage_unit_code", code)))
+            + materialAttributeMapper.selectCount(activeQuery(ProductMaterialAttribute.class).eq("value_unit_code", code))
             + componentMapper.selectCount(activeQuery(ProductComponent.class).eq("unit_code", code))
-            + componentItemMapper.selectCount(activeQuery(ProductComponentItem.class).eq("unit_code", code))
-            + fabricProfileMapper.selectCount(activeQuery(FabricProfile.class)
-            .and(q -> q.eq("width_unit", code).or().eq("thickness_unit", code)
-                .or().eq("purchase_unit_code", code).or().eq("inventory_unit_code", code).or().eq("sales_unit_code", code)));
+            + componentItemMapper.selectCount(activeQuery(ProductComponentItem.class).eq("unit_code", code));
         return referenceResult(count, "product.unit.hasReferences", "Unit code references: " + count);
     }
 
@@ -109,7 +129,7 @@ public class ProductUnitServiceImpl extends ProductServiceSupport implements Pro
             eq(q, "unit_type", bo.getUnitType());
             eq(q, "status", bo.getStatus());
         }
-        return q.orderByAsc("sort_order", "unit_id");
+        return q;
     }
 
     private void normalizeUnit(ProductUnitBo bo) {
@@ -134,6 +154,18 @@ public class ProductUnitServiceImpl extends ProductServiceSupport implements Pro
         }
         if (!StringUtils.equals(bo.getUnitType(), baseUnit.getUnitType())) {
             throw ServiceException.ofMessageKey("product.unit.baseUnitTypeMismatch");
+        }
+    }
+
+    private void validateUnitCodeUnique(ProductUnitBo bo) {
+        if (bo == null || StringUtils.isBlank(bo.getUnitCode())) {
+            return;
+        }
+        long count = unitMapper.selectCount(activeQuery(ProductUnit.class)
+            .eq("unit_code", bo.getUnitCode())
+            .ne(bo.getUnitId() != null, "unit_id", bo.getUnitId()));
+        if (count > 0) {
+            throw ServiceException.ofMessageKey("product.unit.codeExists");
         }
     }
 }

@@ -7,7 +7,7 @@
         <p class="guide-hero__description">{{ t('productCenter.masterGuide.description') }}</p>
       </div>
       <div class="guide-hero__actions">
-        <el-button type="primary" :icon="Plus" @click="go('/product-master/fabric-profiles')">
+        <el-button type="primary" :icon="Plus" @click="go('/product-master/materials?materialType=FABRIC')">
           {{ t('productCenter.masterGuide.newFabric') }}
         </el-button>
         <el-button :icon="Box" @click="go('/product-master/components')">
@@ -135,7 +135,7 @@
           <div class="guide-impact">
             <div>
               <span>{{ t('productCenter.masterGuide.impactConfig') }}</span>
-              <strong>{{ counts.fabricProfiles + counts.components }}</strong>
+              <strong>{{ counts.fabricMaterials + counts.components }}</strong>
             </div>
             <p>{{ t('productCenter.masterGuide.impactDesc') }}</p>
           </div>
@@ -166,9 +166,9 @@ import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 import { productBaseAttributeApi, productUnitApi } from '@/api/product-capability/base'
 import { productComponentApi, productComponentItemApi } from '@/api/product-capability/component'
-import { fabricProfileApi, fabricSeriesApi } from '@/api/product-capability/fabric'
+import { fabricSeriesApi } from '@/api/product-capability/fabric'
 import { productMaterialApi, productMaterialAttributeApi } from '@/api/product-capability/material'
-import type { FabricProfileVO, ProductComponentVO, ProductMaterialVO, ProductPageQuery } from '@/api/product-capability/types'
+import type { ProductComponentVO, ProductMaterialVO, ProductPageQuery } from '@/api/product-capability/types'
 
 interface MetricConfig {
   key: keyof OverviewCounts
@@ -217,7 +217,7 @@ interface OverviewCounts {
   materials: number
   materialAttributes: number
   fabricSeries: number
-  fabricProfiles: number
+  fabricMaterials: number
   components: number
   componentItems: number
 }
@@ -235,7 +235,7 @@ const t = (key: string) => getMessage(key, localeStore.language)
 const loading = ref(false)
 const activeMode = ref('fabric')
 const recentMaterials = ref<ProductMaterialVO[]>([])
-const recentFabrics = ref<FabricProfileVO[]>([])
+const recentFabrics = ref<ProductMaterialVO[]>([])
 const recentComponents = ref<ProductComponentVO[]>([])
 const counts = reactive<OverviewCounts>({
   units: 0,
@@ -243,7 +243,7 @@ const counts = reactive<OverviewCounts>({
   materials: 0,
   materialAttributes: 0,
   fabricSeries: 0,
-  fabricProfiles: 0,
+  fabricMaterials: 0,
   components: 0,
   componentItems: 0
 })
@@ -255,7 +255,7 @@ const metricConfigs: MetricConfig[] = [
   { key: 'units', labelKey: 'productCenter.masterGuide.metricUnits', path: '/product-master/units', icon: SetUp },
   { key: 'attributes', labelKey: 'productCenter.masterGuide.metricAttributes', path: '/product-master/base-attributes', icon: Collection },
   { key: 'materials', labelKey: 'productCenter.masterGuide.metricMaterials', path: '/product-master/materials', icon: Files },
-  { key: 'fabricProfiles', labelKey: 'productCenter.masterGuide.metricFabrics', path: '/product-master/fabric-profiles', icon: Tickets },
+  { key: 'fabricMaterials', labelKey: 'productCenter.masterGuide.metricFabrics', path: '/product-master/materials?materialType=FABRIC', icon: Tickets },
   { key: 'components', labelKey: 'productCenter.masterGuide.metricComponents', path: '/product-master/components', icon: Box },
   { key: 'componentItems', labelKey: 'productCenter.masterGuide.metricComponentItems', path: '/product-master/components?tab=componentItem', icon: Connection }
 ]
@@ -272,12 +272,12 @@ const flows = computed<GuideFlow[]>(() => [
     badgeKey: 'productCenter.masterGuide.fabricBadge',
     titleKey: 'productCenter.masterGuide.fabricFlowTitle',
     summaryKey: 'productCenter.masterGuide.fabricFlowSummary',
-    primaryPath: '/product-master/fabric-profiles',
+    primaryPath: '/product-master/materials?materialType=FABRIC',
     steps: [
       step('fabric-units', 1, 'productCenter.masterGuide.stepUnits', 'productCenter.masterGuide.stepUnitsDesc', 'productCenter.masterGuide.openUnits', '/product-master/units', SetUp, counts.units > 0),
-      step('fabric-material', 2, 'productCenter.masterGuide.stepMaterial', 'productCenter.masterGuide.stepMaterialDesc', 'productCenter.masterGuide.openMaterials', '/product-master/materials', Files, counts.materials > 0),
+      step('fabric-attributes', 2, 'productCenter.masterGuide.stepMaterialAttributes', 'productCenter.masterGuide.stepMaterialAttributesDesc', 'productCenter.masterGuide.openAttributes', '/product-master/base-attributes', Collection, counts.attributes > 0),
       step('fabric-series', 3, 'productCenter.masterGuide.stepFabricSeries', 'productCenter.masterGuide.stepFabricSeriesDesc', 'productCenter.masterGuide.openFabricSeries', '/product-master/fabric-series', Collection, counts.fabricSeries > 0),
-      step('fabric-profile', 4, 'productCenter.masterGuide.stepFabricProfile', 'productCenter.masterGuide.stepFabricProfileDesc', 'productCenter.masterGuide.openFabricProfiles', '/product-master/fabric-profiles', Tickets, counts.fabricProfiles > 0)
+      step('fabric-material', 4, 'productCenter.masterGuide.stepFabricMaterial', 'productCenter.masterGuide.stepFabricMaterialDesc', 'productCenter.masterGuide.openFabricMaterials', '/product-master/materials?materialType=FABRIC', Tickets, counts.fabricMaterials > 0)
     ]
   },
   {
@@ -302,10 +302,10 @@ const recentItems = computed<RecentItem[]>(() => {
   const source = activeMode.value === 'fabric'
     ? [
         ...recentFabrics.value.map((item) => ({
-          key: `fabric-${item.fabricId || item.fabricCode}`,
-          title: item.fabricCode || item.colorName || '-',
-          meta: [item.seriesNameCn || item.seriesCode, item.widthValue ? `${item.widthValue}${item.widthUnit || ''}` : item.materialCode].filter(Boolean).join(' / '),
-          path: '/product-master/fabric-profiles'
+          key: `fabric-${item.materialId || item.materialCode}`,
+          title: item.materialCode || item.materialNameCn || '-',
+          meta: [item.fabricSeriesNameCn || item.fabricSeriesCode, item.primarySpec, item.unitCode].filter(Boolean).join(' / '),
+          path: '/product-master/materials?materialType=FABRIC'
         })),
         ...recentMaterials.value.map((item) => ({
           key: `material-${item.materialId || item.materialCode}`,
@@ -337,7 +337,7 @@ const gaps = computed<GuideGap[]>(() => {
   if (counts.attributes === 0) items.push({ key: 'attributes', labelKey: 'productCenter.masterGuide.gapAttributes', path: '/product-master/base-attributes' })
   if (counts.materials === 0) items.push({ key: 'materials', labelKey: 'productCenter.masterGuide.gapMaterials', path: '/product-master/materials' })
   if (counts.fabricSeries === 0) items.push({ key: 'fabricSeries', labelKey: 'productCenter.masterGuide.gapFabricSeries', path: '/product-master/fabric-series' })
-  if (counts.fabricProfiles === 0) items.push({ key: 'fabricProfiles', labelKey: 'productCenter.masterGuide.gapFabricProfiles', path: '/product-master/fabric-profiles' })
+  if (counts.fabricMaterials === 0) items.push({ key: 'fabricMaterials', labelKey: 'productCenter.masterGuide.gapFabricMaterials', path: '/product-master/materials?materialType=FABRIC' })
   if (counts.components === 0) items.push({ key: 'components', labelKey: 'productCenter.masterGuide.gapComponents', path: '/product-master/components' })
   if (counts.componentItems === 0) items.push({ key: 'componentItems', labelKey: 'productCenter.masterGuide.gapComponentItems', path: '/product-master/components?tab=componentItem' })
   return items
@@ -345,7 +345,7 @@ const gaps = computed<GuideGap[]>(() => {
 
 const quickActions: QuickAction[] = [
   { key: 'material', labelKey: 'productCenter.masterGuide.openMaterials', path: '/product-master/materials', icon: Files },
-  { key: 'fabric', labelKey: 'productCenter.masterGuide.openFabricProfiles', path: '/product-master/fabric-profiles', icon: Tickets },
+  { key: 'fabric', labelKey: 'productCenter.masterGuide.openFabricMaterials', path: '/product-master/materials?materialType=FABRIC', icon: Tickets },
   { key: 'component', labelKey: 'productCenter.masterGuide.openComponents', path: '/product-master/components', icon: Box },
   { key: 'dictionary', labelKey: 'productCenter.masterGuide.openProductDicts', path: '/product-master/product-dicts', icon: Collection },
   { key: 'baseAttributes', labelKey: 'productCenter.masterGuide.openAttributes', path: '/product-master/base-attributes', icon: Collection },
@@ -375,7 +375,7 @@ async function loadOverview() {
       materials,
       materialAttributes,
       fabricSeries,
-      fabricProfiles,
+      fabricMaterials,
       components,
       componentItems
     ] = await Promise.all([
@@ -384,7 +384,7 @@ async function loadOverview() {
       productMaterialApi.list(countQuery),
       productMaterialAttributeApi.list(countQuery),
       fabricSeriesApi.list(countQuery),
-      fabricProfileApi.list(countQuery),
+      productMaterialApi.list({ ...countQuery, materialType: 'FABRIC' }),
       productComponentApi.list(countQuery),
       productComponentItemApi.list(countQuery)
     ])
@@ -393,12 +393,12 @@ async function loadOverview() {
     counts.materials = materials.total || 0
     counts.materialAttributes = materialAttributes.total || 0
     counts.fabricSeries = fabricSeries.total || 0
-    counts.fabricProfiles = fabricProfiles.total || 0
+    counts.fabricMaterials = fabricMaterials.total || 0
     counts.components = components.total || 0
     counts.componentItems = componentItems.total || 0
     const [recentMaterialRows, recentFabricRows, recentComponentRows] = await Promise.all([
       productMaterialApi.list(recentQuery),
-      fabricProfileApi.list(recentQuery),
+      productMaterialApi.list({ ...recentQuery, materialType: 'FABRIC' }),
       productComponentApi.list(recentQuery)
     ])
     recentMaterials.value = recentMaterialRows.rows || []

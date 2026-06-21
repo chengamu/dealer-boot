@@ -29,7 +29,7 @@ public class StandardSkuEngineeringServiceImpl extends ProductServiceSupport imp
                 q.and(wrapper -> wrapper.like("standard_sku_name_cn", query.getStandardSkuNameCn()).or().like("standard_sku_name_en", query.getStandardSkuNameCn()));
             }
         }
-        return page(standardSkuEngineeringMapper, pageQuery, q.orderByDesc("update_time").orderByAsc("standard_sku_code"));
+        return page(standardSkuEngineeringMapper, pageQuery, q, wrapper -> wrapper.orderByDesc("update_time").orderByAsc("standard_sku_code"));
     }
 
     @Override

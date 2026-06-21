@@ -29,7 +29,7 @@ public class EngineeringRuleServiceImpl extends ProductServiceSupport implements
                 q.and(wrapper -> wrapper.like("rule_name_cn", query.getRuleNameCn()).or().like("rule_name_en", query.getRuleNameCn()));
             }
         }
-        return page(ruleMapper, pageQuery, q.orderByAsc("sort_order").orderByDesc("update_time"));
+        return page(ruleMapper, pageQuery, q, wrapper -> wrapper.orderByAsc("sort_order").orderByDesc("update_time"));
     }
 
     @Override

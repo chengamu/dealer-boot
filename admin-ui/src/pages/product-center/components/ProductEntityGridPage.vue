@@ -47,6 +47,11 @@
           {{ t('common.edit') }}
         </el-button>
       </el-col>
+      <el-col v-if="config.superEditPermission && config.api.superUpdate" :span="1.5">
+        <el-button type="warning" plain icon="EditPen" :disabled="single" @click="handleSuperUpdate()" v-hasPermi="[config.superEditPermission]">
+          {{ t('productCenter.common.superEdit') }}
+        </el-button>
+      </el-col>
       <el-col :span="1.5">
         <el-button v-if="!config.readonly" type="danger" plain icon="Delete" :disabled="multiple" @click="handleDelete()" v-hasPermi="[config.permissions.remove]">
           {{ t('common.delete') }}
@@ -55,6 +60,16 @@
       <el-col v-for="action in config.toolbarActions || []" :key="action.labelKey" :span="1.5">
         <el-button :type="action.type || 'primary'" plain :icon="action.icon" @click="action.handler" v-hasPermi="[action.permission]">
           {{ t(action.labelKey) }}
+        </el-button>
+      </el-col>
+      <el-col v-if="config.closePath" :span="1.5">
+        <el-button type="warning" plain icon="Close" @click="handleClosePage">
+          {{ t('common.close') }}
+        </el-button>
+      </el-col>
+      <el-col v-if="isComponentItemGrid && !config.readonly" :span="1.5">
+        <el-button type="warning" plain icon="Grid" @click="openBatchEntry" v-hasPermi="[config.permissions.add]">
+          {{ t('productCenter.componentItem.batchEntry') }}
         </el-button>
       </el-col>
       <right-toolbar v-model:showSearch="showSearch" @queryTable="getList" />
@@ -67,9 +82,11 @@
       :row-key="config.tree?.rowKey || config.idKey"
       :tree-props="config.tree?.treeProps || { children: 'children' }"
       :default-expand-all="Boolean(config.tree)"
+      :default-sort="config.defaultSort"
       :data-testid="`product-grid-${config.key}`"
       class="product-grid-page__table"
       @selection-change="handleSelectionChange"
+      @sort-change="handleSortChange"
       @row-dblclick="handleRowDblclick"
     >
       <el-table-column type="selection" width="48" align="center" />
@@ -83,6 +100,8 @@
         :min-width="field.minWidth || defaultColumnMinWidth(field)"
         :resizable="true"
         :align="field.align || 'center'"
+        :sortable="field.sortable ? 'custom' : false"
+        :sort-by="field.sortProp || field.prop"
         :show-overflow-tooltip="field.type !== 'status' && field.type !== 'url'"
       >
         <template #default="{ row }">
@@ -113,6 +132,9 @@
           </el-tooltip>
           <el-tooltip v-if="!config.readonly" :content="t('common.edit')" placement="top">
             <el-button link type="primary" icon="Edit" :aria-label="t('common.edit')" @click="handleUpdate(row)" v-hasPermi="[config.permissions.edit]" />
+          </el-tooltip>
+          <el-tooltip v-if="config.superEditPermission && config.api.superUpdate" :content="t('productCenter.common.superEdit')" placement="top">
+            <el-button link type="warning" icon="EditPen" :aria-label="t('productCenter.common.superEdit')" @click="handleSuperUpdate(row)" v-hasPermi="[config.superEditPermission]" />
           </el-tooltip>
           <el-tooltip v-if="!config.readonly" :content="t('common.delete')" placement="top">
             <el-button link type="primary" icon="Delete" :aria-label="t('common.delete')" @click="handleDelete(row)" v-hasPermi="[config.permissions.remove]" />
@@ -337,6 +359,14 @@
       </template>
     </el-drawer>
 
+    <ProductComponentItemBatchEntry
+      v-if="isComponentItemGrid"
+      v-model="batchEntryOpen"
+      :config="config"
+      :query-params="{ ...queryParams }"
+      @saved="getList"
+    />
+
     <el-drawer v-model="referenceOpen" :title="t('productCenter.common.references')" size="420px" append-to-body>
       <el-descriptions :column="1" border>
         <el-descriptions-item :label="t('productCenter.common.canRemove')">
@@ -366,8 +396,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { computed, defineAsyncComponent, reactive, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules, type UploadRawFile, type UploadRequestOptions } from 'element-plus'
 import { formatUtc } from '@/utils/datetime'
 import { getMessage } from '@/locales'
@@ -394,6 +424,8 @@ export interface ProductFieldConfig {
   width?: number | string
   minWidth?: number | string
   align?: 'left' | 'center' | 'right'
+  sortable?: boolean
+  sortProp?: string
   search?: boolean
   table?: boolean
   form?: boolean
@@ -413,9 +445,11 @@ export interface ProductGridConfig {
     remove: string
     reference: string
   }
+  superEditPermission?: string
   fields: ProductFieldConfig[]
   readonly?: boolean
   initialQuery?: ProductPageQuery
+  defaultSort?: { prop: string; order: 'ascending' | 'descending' }
   defaultRecord?: ProductRecord
   attachments?: {
     targetType: string
@@ -424,6 +458,7 @@ export interface ProductGridConfig {
   }
   hideReference?: boolean
   showDetail?: boolean
+  closePath?: string
   rowActions?: Array<{
     labelKey: string
     icon?: string
@@ -451,8 +486,10 @@ export interface ProductGridConfig {
     get: (id: string | number) => Promise<{ data?: ProductRecord }>
     add: (data: ProductRecord) => Promise<unknown>
     update: (data: ProductRecord) => Promise<unknown>
+    superUpdate?: (data: ProductRecord) => Promise<unknown>
     remove: (ids: Array<string | number> | string | number) => Promise<unknown>
     changeStatus?: (id: string | number, status: string) => Promise<unknown>
+    editCheck?: (id: string | number) => Promise<{ data?: { editable?: boolean; reason?: string; reasonKey?: string; impactSummary?: string[] } }>
     references?: (id: string | number) => Promise<{ data?: ReferenceCheckResult }>
   }
 }
@@ -461,7 +498,9 @@ const props = defineProps<{
   config: ProductGridConfig
 }>()
 
+const ProductComponentItemBatchEntry = defineAsyncComponent(() => import('./ProductComponentItemBatchEntry.vue'))
 const route = useRoute()
+const router = useRouter()
 const localeStore = useLocaleStore()
 const t = (key: string, params?: Record<string, string | number>) => {
   const message = getMessage(key, localeStore.language)
@@ -476,6 +515,7 @@ const showSearch = ref(true)
 const open = ref(false)
 const referenceOpen = ref(false)
 const drawerReadonly = ref(false)
+const superEditMode = ref(false)
 const rowActionLoading = ref('')
 const ids = ref<Array<string | number>>([])
 const total = ref(0)
@@ -496,7 +536,15 @@ const actionDraft = ref<Record<string, unknown>>({ type: 'WARN' })
 const caseInputDraft = ref<Record<string, unknown>>({})
 const expectedDraft = ref<Record<string, unknown>>({ resultStatus: 'OK' })
 const materialAttributeDrafts = ref<Record<string, ProductRecord[]>>({})
+const materialAttributeDraftKeys = ref<Record<string, string>>({})
+const batchEntryOpen = ref(false)
 
+const defaultSortParams = computed(() => {
+  const field = props.config.fields.find((item) => item.prop === props.config.defaultSort?.prop)
+  const prop = field?.sortProp || props.config.defaultSort?.prop
+  const order = props.config.defaultSort?.order
+  return prop && order ? { orderByColumn: prop, isAsc: order } : undefined
+})
 const searchFields = computed(() => props.config.fields.filter((field) => field.search))
 const tableFields = computed(() => props.config.fields.filter((field) => field.table !== false))
 const allFormFields = computed(() => props.config.fields.filter((field) => field.form !== false && field.type !== 'datetime' && field.type !== 'status'))
@@ -529,9 +577,11 @@ const referenceSummaries = computed(() => {
 })
 const drawerTitle = computed(() => {
   if (drawerReadonly.value) return t('common.detail')
+  if (superEditMode.value) return t('productCenter.common.superEditTitle', { name: t(props.config.titleKey) })
   return form.value[props.config.idKey] ? t('productCenter.common.editTitle', { name: t(props.config.titleKey) }) : t('productCenter.common.addTitle', { name: t(props.config.titleKey) })
 })
 const attachmentEnabled = computed(() => Boolean(props.config.attachments))
+const isComponentItemGrid = computed(() => props.config.key === 'componentItem')
 const currentRecordId = computed(() => {
   const value = form.value[props.config.idKey]
   return isRecordId(value) ? value : ''
@@ -659,6 +709,15 @@ function rowIndex(index: number) {
   return (Number(queryParams.pageNum || 1) - 1) * Number(queryParams.pageSize || 10) + index + 1
 }
 
+function applyDefaultSort() {
+  delete queryParams.orderByColumn
+  delete queryParams.isAsc
+  if (defaultSortParams.value) {
+    queryParams.orderByColumn = defaultSortParams.value.orderByColumn
+    queryParams.isAsc = defaultSortParams.value.isAsc
+  }
+}
+
 function isCancelError(error: unknown) {
   return error === 'cancel' || error === 'close'
 }
@@ -682,6 +741,8 @@ function reset() {
   caseInputDraft.value = {}
   expectedDraft.value = { resultStatus: 'OK' }
   materialAttributeDrafts.value = {}
+  materialAttributeDraftKeys.value = {}
+  superEditMode.value = false
   formRef.value?.resetFields()
 }
 
@@ -749,6 +810,7 @@ function resetQueryParams() {
   })
   queryParams.pageNum = 1
   Object.assign(queryParams, props.config.initialQuery || {})
+  applyDefaultSort()
 }
 
 function applyRouteQuery() {
@@ -758,6 +820,18 @@ function applyRouteQuery() {
       queryParams[field.prop] = value
     }
   })
+}
+
+function handleSortChange({ prop, order }: { prop?: string; order?: 'ascending' | 'descending' | null }) {
+  queryParams.pageNum = 1
+  if (prop && order) {
+    const field = props.config.fields.find((item) => item.prop === prop)
+    queryParams.orderByColumn = field?.sortProp || prop
+    queryParams.isAsc = order
+  } else {
+    applyDefaultSort()
+  }
+  getList()
 }
 
 function handleSelectionChange(selection: ProductRecord[]) {
@@ -774,8 +848,38 @@ function handleAdd() {
 async function handleUpdate(row?: ProductRecord) {
   const id = row?.[props.config.idKey] ?? ids.value[0]
   if (!isRecordId(id)) return
+  if (!(await checkBeforeEdit(id))) return
+  await openEditor(id, false)
+}
+
+async function handleSuperUpdate(row?: ProductRecord) {
+  const id = row?.[props.config.idKey] ?? ids.value[0]
+  if (!isRecordId(id) || !props.config.api.superUpdate) return
+  await openEditor(id, true)
+}
+
+async function checkBeforeEdit(id: string | number) {
+  if (!props.config.api.editCheck) return true
+  const response = await props.config.api.editCheck(id)
+  const result = response.data || {}
+  if (result.editable !== false) return true
+  const reasonKey = result.reasonKey || result.reason || 'productCenter.common.editDenied'
+  ElMessage.warning(t(reasonKey))
+  if (result.impactSummary?.length) {
+    referenceResult.value = {
+      allowed: false,
+      blockerReasonKey: reasonKey,
+      referenceSummaries: result.impactSummary
+    }
+    referenceOpen.value = true
+  }
+  return false
+}
+
+async function openEditor(id: string | number, isSuperEdit: boolean) {
   reset()
   drawerReadonly.value = false
+  superEditMode.value = isSuperEdit
   const response = await props.config.api.get(id)
   form.value = normalizeFormRecord(response.data)
   hydrateBuilderDrafts()
@@ -868,6 +972,7 @@ function handleSelectChange(field: ProductFieldConfig, value: unknown) {
   if (field.clearFields?.length) field.clearFields.forEach((prop) => {
     delete form.value[prop]
     delete materialAttributeDrafts.value[prop]
+    delete materialAttributeDraftKeys.value[prop]
   })
   if (option?.record && field.fillFields) {
     Object.entries(field.fillFields).forEach(([target, source]) => {
@@ -930,10 +1035,14 @@ function hydrateBuilderDrafts() {
 }
 
 function materialAttributeRows(field: ProductFieldConfig): ProductRecord[] {
-  if (materialAttributeDrafts.value[field.prop]) return materialAttributeDrafts.value[field.prop]
+  const options = fieldOptions(field)
+  const optionKey = options.map((option) => String(option.record?.attributeCode || option.value || '')).join('|')
+  if (materialAttributeDrafts.value[field.prop] && materialAttributeDraftKeys.value[field.prop] === optionKey) {
+    return materialAttributeDrafts.value[field.prop]
+  }
   const existing = Array.isArray(form.value[field.prop]) ? form.value[field.prop] as ProductRecord[] : []
   const existingMap = new Map(existing.map((row) => [String(row.attributeCode || ''), row]))
-  const rows: ProductRecord[] = fieldOptions(field).map((option, index) => {
+  const rows: ProductRecord[] = options.map((option, index) => {
     const definition = option.record || {}
     const attributeCode = String(definition.attributeCode || option.value || '')
     const valueType = String(definition.valueType || 'TEXT').toUpperCase()
@@ -950,8 +1059,18 @@ function materialAttributeRows(field: ProductFieldConfig): ProductRecord[] {
     }
   })
   materialAttributeDrafts.value[field.prop] = rows
+  materialAttributeDraftKeys.value[field.prop] = optionKey
   form.value[field.prop] = rows
   return rows
+}
+
+function handleClosePage() {
+  if (props.config.closePath) router.push(props.config.closePath)
+}
+
+async function openBatchEntry() {
+  if (!isComponentItemGrid.value) return
+  batchEntryOpen.value = true
 }
 
 function syncMaterialAttributes(field: ProductFieldConfig) {
@@ -1119,7 +1238,11 @@ async function submitForm() {
   submitLoading.value = true
   try {
     if (form.value[props.config.idKey]) {
-      await props.config.api.update(form.value)
+      if (superEditMode.value && props.config.api.superUpdate) {
+        await props.config.api.superUpdate(form.value)
+      } else {
+        await props.config.api.update(form.value)
+      }
       ElMessage.success(t('common.editSuccess'))
     } else {
       await props.config.api.add(form.value)
@@ -1145,7 +1268,7 @@ async function uploadAttachment(options: UploadRequestOptions) {
   if (!props.config.attachments || !currentRecordId.value) return
   const formData = new FormData()
   formData.append(options.filename, options.file)
-  const uploadResponse = await service.post(`${getApiBaseUrl()}/system/oss/upload`, formData) as unknown as { data?: ProductRecord }
+  const uploadResponse = await service.post('/system/oss/upload', formData) as unknown as { data?: ProductRecord }
   const uploadData = uploadResponse.data || {}
   const assetCode = `ASSET_${props.config.attachments.targetType}_${currentRecordId.value}_${Date.now()}`
   await productMediaAssetApi.add({

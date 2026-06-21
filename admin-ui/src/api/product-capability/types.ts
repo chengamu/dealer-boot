@@ -242,9 +242,19 @@ export interface ProductCrudApi<TRecord extends ProductRecord = ProductRecord, T
   get: (id: string | number) => Promise<{ data?: TRecord }>
   add: (data: TRecord) => Promise<unknown>
   update: (data: TRecord) => Promise<unknown>
+  superUpdate?: (data: TRecord) => Promise<unknown>
   remove: (ids: Array<string | number> | string | number) => Promise<unknown>
   changeStatus?: (id: string | number, status: string) => Promise<unknown>
+  editCheck?: (id: string | number) => Promise<{ data?: EditCheckResult }>
   references?: (id: string | number) => Promise<{ data?: ReferenceCheckResult }>
+}
+
+export interface EditCheckResult {
+  editable?: boolean
+  reason?: string
+  reasonKey?: string
+  status?: string
+  impactSummary?: string[]
 }
 
 export interface ReferenceCheckResult {
@@ -345,6 +355,9 @@ export interface ProductMaterialVO extends ProductRecord {
   materialNameCn?: string
   materialNameEn?: string
   materialType?: string
+  fabricSeriesId?: number
+  fabricSeriesCode?: string
+  fabricSeriesNameCn?: string
   businessType?: string
   unitCode?: string
   purchaseUnitCode?: string
@@ -376,6 +389,7 @@ export interface ProductMaterialQuery extends ProductPageQuery {
   materialCode?: string
   materialNameCn?: string
   materialType?: string
+  fabricSeriesCode?: string
   businessType?: string
   supplierCode?: string
   sampleBookNo?: string
@@ -538,49 +552,6 @@ export interface FabricSeriesQuery extends ProductPageQuery {
   status?: string
 }
 
-export interface FabricProfileVO extends ProductRecord {
-  fabricId?: number
-  fabricCode?: string
-  materialId?: number
-  materialCode?: string
-  seriesId?: number
-  seriesCode?: string
-  seriesNameCn?: string
-  colorCode?: string
-  colorName?: string
-  materialComposition?: string
-  textureType?: string
-  finishType?: string
-  factoryModel?: string
-  sampleBookNo?: string
-  vendorItemNo?: string
-  supplierCode?: string
-  supplierName?: string
-  widthValue?: number
-  widthUnit?: string
-  thicknessValue?: number
-  thicknessUnit?: string
-  gsmValue?: number
-  purchaseUnitCode?: string
-  inventoryUnitCode?: string
-  salesUnitCode?: string
-  legacyAttributeText?: string
-  status?: string
-  remark?: string
-}
-
-export interface FabricProfileQuery extends ProductPageQuery {
-  materialCode?: string
-  seriesId?: number
-  seriesCode?: string
-  colorCode?: string
-  colorName?: string
-  sampleBookNo?: string
-  vendorItemNo?: string
-  supplierCode?: string
-  status?: string
-}
-
 export interface ProductComponentItemVO extends ProductRecord {
   componentItemId?: number
   componentId?: number
@@ -614,8 +585,6 @@ export interface ProductComponentVO extends ProductRecord {
   defaultQty?: number
   qtyMode?: string
   unitCode?: string
-  materialCode?: string
-  materialNameCn?: string
   status?: string
   remark?: string
   itemList?: ProductComponentItemVO[]

@@ -10,6 +10,7 @@ import com.bocoo.common.web.core.BaseController;
 import com.bocoo.product.domain.bo.ProductBaseAttributeBo;
 import com.bocoo.product.domain.bo.ProductCategoryBo;
 import com.bocoo.product.domain.bo.ProductUnitBo;
+import com.bocoo.product.domain.vo.BaseEditCheckResultVo;
 import com.bocoo.product.domain.vo.ProductBaseAttributeVo;
 import com.bocoo.product.domain.vo.ProductCategoryVo;
 import com.bocoo.product.domain.vo.ProductUnitVo;
@@ -74,6 +75,13 @@ public class ProductBaseInfoController extends BaseController {
         return R.ok(productCategoryService.queryById(id));
     }
 
+    @SaCheckPermission("product:base:edit")
+    @GetMapping("/categories/{id}/edit-check")
+    @Operation(summary = "检查产品分类是否可修改")
+    public R<BaseEditCheckResultVo> checkProductCategoryEdit(@PathVariable Long id) {
+        return R.ok(productCategoryService.checkEditAllowed(id));
+    }
+
     @SaCheckPermission("product:base:add")
     @Log(title = "产品分类", businessType = BusinessType.INSERT)
     @PostMapping("/categories")
@@ -134,6 +142,13 @@ public class ProductBaseInfoController extends BaseController {
         return R.ok(productUnitService.queryById(id));
     }
 
+    @SaCheckPermission("product:unit:edit")
+    @GetMapping("/units/{id}/edit-check")
+    @Operation(summary = "检查产品单位是否可修改")
+    public R<BaseEditCheckResultVo> checkProductUnitEdit(@PathVariable Long id) {
+        return R.ok(productUnitService.checkEditAllowed(id));
+    }
+
     @SaCheckPermission("product:unit:add")
     @Log(title = "产品单位", businessType = BusinessType.INSERT)
     @PostMapping("/units")
@@ -192,6 +207,13 @@ public class ProductBaseInfoController extends BaseController {
     @Operation(summary = "获取基础属性详情")
     public R<ProductBaseAttributeVo> getProductBaseAttribute(@Parameter(description = "基础属性ID", required = true) @PathVariable Long id) {
         return R.ok(productBaseAttributeService.queryById(id));
+    }
+
+    @SaCheckPermission("product:base-attribute:edit")
+    @GetMapping("/base-attributes/{id}/edit-check")
+    @Operation(summary = "检查基础属性是否可修改")
+    public R<BaseEditCheckResultVo> checkProductBaseAttributeEdit(@PathVariable Long id) {
+        return R.ok(productBaseAttributeService.checkEditAllowed(id));
     }
 
     @SaCheckPermission("product:base-attribute:add")

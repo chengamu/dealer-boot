@@ -1,5 +1,6 @@
 import { request, requestPage } from '@/utils/request'
 import type {
+  EditCheckResult,
   ProductComponentItemQuery,
   ProductComponentItemVO,
   ProductComponentQuery,
@@ -10,6 +11,10 @@ import type {
 
 function referencesApi(url: string) {
   return request<ReferenceCheckResult>({ url, method: 'get' })
+}
+
+function editCheckApi(url: string) {
+  return request<EditCheckResult>({ url, method: 'get' })
 }
 
 export const productComponentItemApi: ProductCrudApi<ProductComponentItemVO, ProductComponentItemQuery> & {
@@ -32,6 +37,7 @@ export const productComponentItemApi: ProductCrudApi<ProductComponentItemVO, Pro
   update: (data: ProductComponentItemVO) => request({ url: '/product-capability/component-items', method: 'put', data }),
   remove: (ids: Array<string | number> | string | number) => request({ url: '/product-capability/component-items/' + ids, method: 'delete' }),
   changeStatus: (id: string | number, status: string) => request({ url: '/product-capability/component-items/change-status/' + id + '/' + status, method: 'put' }),
+  editCheck: (id: string | number) => editCheckApi('/product-capability/component-items/' + id + '/edit-check'),
   references: (id: string | number) => referencesApi('/product-capability/component-items/' + id + '/references')
 }
 
@@ -43,5 +49,6 @@ export const productComponentApi: ProductCrudApi<ProductComponentVO, ProductComp
   update: (data: ProductComponentVO) => request({ url: '/product-capability/components', method: 'put', data }),
   remove: (ids: Array<string | number> | string | number) => request({ url: '/product-capability/components/' + ids, method: 'delete' }),
   changeStatus: (id: string | number, status: string) => request({ url: '/product-capability/components/change-status/' + id + '/' + status, method: 'put' }),
+  editCheck: (id: string | number) => editCheckApi('/product-capability/components/' + id + '/edit-check'),
   references: (id: string | number) => referencesApi('/product-capability/components/' + id + '/references')
 }

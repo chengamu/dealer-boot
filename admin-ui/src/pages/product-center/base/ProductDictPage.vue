@@ -1,22 +1,12 @@
 <template>
   <div class="app-container product-center-page product-dict-page">
-    <section class="product-dict-page__panel product-dict-page__panel--types">
+    <div class="product-dict-page__search-bar">
       <el-form ref="typeQueryRef" :model="typeQuery" :inline="true" class="product-dict-page__search">
         <el-form-item :label="t('productCenter.productDict.typeCode')" prop="dictTypeCode">
-          <el-input
-            v-model="typeQuery.dictTypeCode"
-            :placeholder="t('productCenter.common.inputPlaceholder')"
-            clearable
-            @keyup.enter="queryTypes"
-          />
+          <el-input v-model="typeQuery.dictTypeCode" :placeholder="t('productCenter.common.inputPlaceholder')" clearable @keyup.enter="queryTypes" />
         </el-form-item>
         <el-form-item :label="t('productCenter.productDict.typeName')" prop="dictTypeNameCn">
-          <el-input
-            v-model="typeQuery.dictTypeNameCn"
-            :placeholder="t('productCenter.common.inputPlaceholder')"
-            clearable
-            @keyup.enter="queryTypes"
-          />
+          <el-input v-model="typeQuery.dictTypeNameCn" :placeholder="t('productCenter.common.inputPlaceholder')" clearable @keyup.enter="queryTypes" />
         </el-form-item>
         <el-form-item :label="t('productCenter.common.status')" prop="status">
           <el-select v-model="typeQuery.status" :placeholder="t('productCenter.common.selectPlaceholder')" clearable>
@@ -30,115 +20,12 @@
         </el-form-item>
       </el-form>
 
-      <div class="product-dict-page__toolbar">
-        <div class="product-dict-page__title">
-          <strong>{{ t('productCenter.productDict.typeTitle') }}</strong>
-          <span>{{ t('productCenter.productDict.typeDescription') }}</span>
-        </div>
-        <div class="product-dict-page__actions">
-          <el-button type="primary" plain icon="Plus" @click="addType" v-hasPermi="['product:dict:add']">
-            {{ t('common.add') }}
-          </el-button>
-          <el-button type="success" plain icon="Edit" :disabled="selectedTypeIds.length !== 1" @click="editSelectedType" v-hasPermi="['product:dict:edit']">
-            {{ t('common.edit') }}
-          </el-button>
-          <el-button type="danger" plain icon="Delete" :disabled="!selectedTypeIds.length" @click="deleteSelectedTypes" v-hasPermi="['product:dict:remove']">
-            {{ t('common.delete') }}
-          </el-button>
-        </div>
-      </div>
-
-      <el-table
-        v-loading="typeLoading"
-        :data="typeRows"
-        border
-        highlight-current-row
-        row-key="dictTypeId"
-        class="product-dict-page__table"
-        @current-change="selectType"
-        @selection-change="handleTypeSelection"
-        @row-dblclick="editType"
-      >
-        <el-table-column type="selection" width="44" align="center" />
-        <el-table-column type="index" :index="typeRowIndex" :label="t('common.index')" width="64" align="center" fixed />
-        <el-table-column :label="t('productCenter.productDict.typeCode')" prop="dictTypeCode" min-width="190" show-overflow-tooltip />
-        <el-table-column :label="t('productCenter.productDict.typeNameCn')" prop="dictTypeNameCn" min-width="170" show-overflow-tooltip />
-        <el-table-column :label="t('productCenter.productDict.typeNameEn')" prop="dictTypeNameEn" min-width="210" show-overflow-tooltip />
-        <el-table-column :label="t('productCenter.productDict.businessDomain')" prop="businessDomain" width="116" align="center">
-          <template #default="{ row }">
-            {{ businessDomainLabel(row.businessDomain) }}
-          </template>
-        </el-table-column>
-        <el-table-column :label="t('productCenter.common.sortOrder')" prop="sortOrder" width="88" align="center" />
-        <el-table-column :label="t('productCenter.common.status')" prop="status" width="100" align="center">
-          <template #default="{ row }">
-            <el-switch
-              :model-value="row.status"
-              active-value="ENABLED"
-              inactive-value="DISABLED"
-              @change="changeTypeStatus(row, $event)"
-            />
-          </template>
-        </el-table-column>
-        <el-table-column :label="t('common.operate')" width="112" align="center" fixed="right">
-          <template #default="{ row }">
-            <el-tooltip :content="t('common.edit')" placement="top">
-              <el-button link type="primary" icon="Edit" :aria-label="t('common.edit')" @click.stop="editType(row)" v-hasPermi="['product:dict:edit']" />
-            </el-tooltip>
-            <el-tooltip :content="t('common.delete')" placement="top">
-              <el-button link type="primary" icon="Delete" :aria-label="t('common.delete')" @click.stop="deleteType(row)" v-hasPermi="['product:dict:remove']" />
-            </el-tooltip>
-          </template>
-        </el-table-column>
-      </el-table>
-
-      <pagination
-        v-show="typeTotal > 0"
-        v-model:page="typeQuery.pageNum"
-        v-model:limit="typeQuery.pageSize"
-        :total="typeTotal"
-        @pagination="loadTypes"
-      />
-    </section>
-
-    <section class="product-dict-page__panel product-dict-page__panel--items">
-      <div class="product-dict-page__item-head">
-        <div class="product-dict-page__title">
-          <strong>{{ t('productCenter.productDict.itemTitle') }}</strong>
-          <span v-if="activeType">{{ activeType.dictTypeNameCn }} / {{ activeType.dictTypeCode }}</span>
-          <span v-else>{{ t('productCenter.productDict.selectType') }}</span>
-        </div>
-        <div class="product-dict-page__actions">
-          <el-button type="primary" plain icon="Plus" :disabled="!activeType" @click="addItem" v-hasPermi="['product:dict:add']">
-            {{ t('common.add') }}
-          </el-button>
-          <el-button type="success" plain icon="Edit" :disabled="selectedItemIds.length !== 1" @click="editSelectedItem" v-hasPermi="['product:dict:edit']">
-            {{ t('common.edit') }}
-          </el-button>
-          <el-button type="danger" plain icon="Delete" :disabled="!selectedItemIds.length" @click="deleteSelectedItems" v-hasPermi="['product:dict:remove']">
-            {{ t('common.delete') }}
-          </el-button>
-        </div>
-      </div>
-
-      <el-form ref="itemQueryRef" :model="itemQuery" :inline="true" class="product-dict-page__search product-dict-page__search--items">
+      <el-form ref="itemQueryRef" :model="itemQuery" :inline="true" class="product-dict-page__search">
         <el-form-item :label="t('productCenter.productDict.itemValue')" prop="dictItemValue">
-          <el-input
-            v-model="itemQuery.dictItemValue"
-            :placeholder="t('productCenter.common.inputPlaceholder')"
-            clearable
-            :disabled="!activeType"
-            @keyup.enter="queryItems"
-          />
+          <el-input v-model="itemQuery.dictItemValue" :placeholder="t('productCenter.common.inputPlaceholder')" clearable :disabled="!activeType" @keyup.enter="queryItems" />
         </el-form-item>
         <el-form-item :label="t('productCenter.productDict.itemLabel')" prop="dictItemLabelCn">
-          <el-input
-            v-model="itemQuery.dictItemLabelCn"
-            :placeholder="t('productCenter.common.inputPlaceholder')"
-            clearable
-            :disabled="!activeType"
-            @keyup.enter="queryItems"
-          />
+          <el-input v-model="itemQuery.dictItemLabelCn" :placeholder="t('productCenter.common.inputPlaceholder')" clearable :disabled="!activeType" @keyup.enter="queryItems" />
         </el-form-item>
         <el-form-item :label="t('productCenter.common.status')" prop="status">
           <el-select v-model="itemQuery.status" :placeholder="t('productCenter.common.selectPlaceholder')" clearable :disabled="!activeType">
@@ -151,62 +38,114 @@
           <el-button icon="Refresh" :disabled="!activeType" @click="resetItemQuery">{{ t('common.reset') }}</el-button>
         </el-form-item>
       </el-form>
+    </div>
 
-      <el-table
-        v-loading="itemLoading"
-        :data="itemRows"
-        border
-        row-key="dictItemId"
-        class="product-dict-page__table"
-        @selection-change="handleItemSelection"
-        @row-dblclick="editItem"
-      >
-        <el-table-column type="selection" width="44" align="center" />
-        <el-table-column type="index" :index="itemRowIndex" :label="t('common.index')" width="64" align="center" fixed />
-        <el-table-column :label="t('productCenter.productDict.itemValue')" prop="dictItemValue" min-width="170" show-overflow-tooltip />
-        <el-table-column :label="t('productCenter.productDict.itemLabelCn')" prop="dictItemLabelCn" min-width="180" show-overflow-tooltip />
-        <el-table-column :label="t('productCenter.productDict.itemLabelEn')" prop="dictItemLabelEn" min-width="200" show-overflow-tooltip />
-        <el-table-column v-if="supportsParentValue" :label="t('productCenter.productDict.parentItem')" prop="parentValue" min-width="160" show-overflow-tooltip>
-          <template #default="{ row }">
-            {{ parentItemLabel(row.parentValue) }}
-          </template>
-        </el-table-column>
-        <el-table-column :label="t('productCenter.productDict.systemFlag')" prop="systemFlag" width="92" align="center">
-          <template #default="{ row }">
-            {{ booleanLabel(row.systemFlag) }}
-          </template>
-        </el-table-column>
-        <el-table-column :label="t('productCenter.common.sortOrder')" prop="sortOrder" width="88" align="center" />
-        <el-table-column :label="t('productCenter.common.status')" prop="status" width="100" align="center">
-          <template #default="{ row }">
-            <el-switch
-              :model-value="row.status"
-              active-value="ENABLED"
-              inactive-value="DISABLED"
-              @change="changeItemStatus(row, $event)"
-            />
-          </template>
-        </el-table-column>
-        <el-table-column :label="t('common.operate')" width="112" align="center" fixed="right">
-          <template #default="{ row }">
-            <el-tooltip :content="t('common.edit')" placement="top">
-              <el-button link type="primary" icon="Edit" :aria-label="t('common.edit')" @click.stop="editItem(row)" v-hasPermi="['product:dict:edit']" />
-            </el-tooltip>
-            <el-tooltip :content="t('common.delete')" placement="top">
-              <el-button link type="primary" icon="Delete" :aria-label="t('common.delete')" @click.stop="deleteItem(row)" v-hasPermi="['product:dict:remove']" />
-            </el-tooltip>
-          </template>
-        </el-table-column>
-      </el-table>
+    <div ref="gridWrapRef" class="product-dict-page__grids" :style="gridStyle">
+      <section class="product-dict-page__panel product-dict-page__panel--types">
+        <div class="product-dict-page__toolbar">
+          <div class="product-dict-page__title">
+            <strong>{{ t('productCenter.productDict.typeTitle') }}</strong>
+          </div>
+          <div class="product-dict-page__actions">
+            <el-button type="primary" plain icon="Plus" @click="addType" v-hasPermi="['product:dict:add']">{{ t('common.add') }}</el-button>
+            <el-button type="success" plain icon="Edit" :disabled="selectedTypeIds.length !== 1" @click="editSelectedType" v-hasPermi="['product:dict:edit']">{{ t('common.edit') }}</el-button>
+            <el-button type="danger" plain icon="Delete" :disabled="!selectedTypeIds.length" @click="deleteSelectedTypes" v-hasPermi="['product:dict:remove']">{{ t('common.delete') }}</el-button>
+          </div>
+        </div>
 
-      <pagination
-        v-show="itemTotal > 0"
-        v-model:page="itemQuery.pageNum"
-        v-model:limit="itemQuery.pageSize"
-        :total="itemTotal"
-        @pagination="loadItems"
-      />
-    </section>
+        <el-table
+          v-loading="typeLoading"
+          :data="typeRows"
+          border
+          highlight-current-row
+          row-key="dictTypeId"
+          class="product-dict-page__table"
+          :default-sort="typeDefaultSort"
+          @current-change="selectType"
+          @selection-change="handleTypeSelection"
+          @sort-change="handleTypeSortChange"
+          @row-dblclick="editType"
+        >
+          <el-table-column type="selection" width="42" align="center" />
+          <el-table-column type="index" :index="typeRowIndex" :label="t('common.index')" width="58" align="center" />
+          <el-table-column :label="t('productCenter.productDict.typeCode')" prop="dictTypeCode" min-width="180" sortable="custom" show-overflow-tooltip />
+          <el-table-column :label="t('productCenter.productDict.typeNameCn')" prop="dictTypeNameCn" min-width="150" sortable="custom" show-overflow-tooltip />
+          <el-table-column :label="t('productCenter.common.sortOrder')" prop="sortOrder" width="72" align="center" sortable="custom" />
+          <el-table-column :label="t('productCenter.common.status')" prop="status" width="88" align="center">
+            <template #default="{ row }">
+              <el-switch :model-value="row.status" active-value="ENABLED" inactive-value="DISABLED" @change="changeTypeStatus(row, $event)" />
+            </template>
+          </el-table-column>
+          <el-table-column :label="t('common.operate')" width="88" align="center">
+            <template #default="{ row }">
+              <el-tooltip :content="t('common.edit')" placement="top">
+                <el-button link type="primary" icon="Edit" :aria-label="t('common.edit')" @click.stop="editType(row)" v-hasPermi="['product:dict:edit']" />
+              </el-tooltip>
+              <el-tooltip :content="t('common.delete')" placement="top">
+                <el-button link type="primary" icon="Delete" :aria-label="t('common.delete')" @click.stop="deleteType(row)" v-hasPermi="['product:dict:remove']" />
+              </el-tooltip>
+            </template>
+          </el-table-column>
+        </el-table>
+
+        <pagination v-show="typeTotal > 0" v-model:page="typeQuery.pageNum" v-model:limit="typeQuery.pageSize" :total="typeTotal" @pagination="loadTypes" />
+      </section>
+
+      <div class="product-dict-page__divider" @pointerdown="startResize" />
+
+      <section class="product-dict-page__panel product-dict-page__panel--items">
+        <div class="product-dict-page__toolbar">
+          <div class="product-dict-page__title">
+            <strong>{{ t('productCenter.productDict.itemTitle') }}</strong>
+            <span v-if="activeType">{{ activeType.dictTypeNameCn }} / {{ activeType.dictTypeCode }}</span>
+          </div>
+          <div class="product-dict-page__actions">
+            <el-button type="primary" plain icon="Plus" :disabled="!activeType" @click="addItem" v-hasPermi="['product:dict:add']">{{ t('common.add') }}</el-button>
+            <el-button type="success" plain icon="Edit" :disabled="selectedItemIds.length !== 1" @click="editSelectedItem" v-hasPermi="['product:dict:edit']">{{ t('common.edit') }}</el-button>
+            <el-button type="danger" plain icon="Delete" :disabled="!selectedItemIds.length" @click="deleteSelectedItems" v-hasPermi="['product:dict:remove']">{{ t('common.delete') }}</el-button>
+          </div>
+        </div>
+
+        <el-table
+          v-loading="itemLoading"
+          :data="itemRows"
+          border
+          row-key="dictItemId"
+          class="product-dict-page__table"
+          :default-sort="itemDefaultSort"
+          @selection-change="handleItemSelection"
+          @sort-change="handleItemSortChange"
+          @row-dblclick="editItem"
+        >
+          <el-table-column type="selection" width="42" align="center" />
+          <el-table-column type="index" :index="itemRowIndex" :label="t('common.index')" width="58" align="center" />
+          <el-table-column :label="t('productCenter.productDict.itemValue')" prop="dictItemValue" min-width="145" sortable="custom" show-overflow-tooltip />
+          <el-table-column :label="t('productCenter.productDict.itemLabelCn')" prop="dictItemLabelCn" min-width="150" sortable="custom" show-overflow-tooltip />
+          <el-table-column :label="t('productCenter.productDict.itemLabelEn')" prop="dictItemLabelEn" min-width="150" show-overflow-tooltip />
+          <el-table-column v-if="supportsParentValue" :label="t('productCenter.productDict.parentItem')" prop="parentValue" min-width="140" show-overflow-tooltip>
+            <template #default="{ row }">{{ parentItemLabel(row.parentValue) }}</template>
+          </el-table-column>
+          <el-table-column :label="t('productCenter.common.sortOrder')" prop="sortOrder" width="72" align="center" sortable="custom" />
+          <el-table-column :label="t('productCenter.common.status')" prop="status" width="88" align="center">
+            <template #default="{ row }">
+              <el-switch :model-value="row.status" active-value="ENABLED" inactive-value="DISABLED" @change="changeItemStatus(row, $event)" />
+            </template>
+          </el-table-column>
+          <el-table-column :label="t('common.operate')" width="88" align="center">
+            <template #default="{ row }">
+              <el-tooltip :content="t('common.edit')" placement="top">
+                <el-button link type="primary" icon="Edit" :aria-label="t('common.edit')" @click.stop="editItem(row)" v-hasPermi="['product:dict:edit']" />
+              </el-tooltip>
+              <el-tooltip :content="t('common.delete')" placement="top">
+                <el-button link type="primary" icon="Delete" :aria-label="t('common.delete')" @click.stop="deleteItem(row)" v-hasPermi="['product:dict:remove']" />
+              </el-tooltip>
+            </template>
+          </el-table-column>
+        </el-table>
+
+        <pagination v-show="itemTotal > 0" v-model:page="itemQuery.pageNum" v-model:limit="itemQuery.pageSize" :total="itemTotal" @pagination="loadItems" />
+      </section>
+    </div>
 
     <el-drawer v-model="typeDrawerOpen" :title="typeDrawerTitle" size="72%" append-to-body destroy-on-close @closed="resetTypeForm">
       <el-form ref="typeFormRef" :model="typeForm" :rules="typeRules" label-width="136px" class="product-dict-page__form">
@@ -294,13 +233,13 @@
 </template>
 
 <script setup lang="ts" name="ProductDictPage">
-import { computed, reactive, ref } from 'vue'
+import { computed, onBeforeUnmount, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 import { productDictItemApi, productDictTypeApi } from '@/api/product-capability/product-dict'
-import type { ProductDictItemQuery, ProductDictItemVO, ProductDictTypeQuery, ProductDictTypeVO } from '@/api/product-capability/types'
+import type { ProductCrudApi, ProductDictItemQuery, ProductDictItemVO, ProductDictTypeQuery, ProductDictTypeVO } from '@/api/product-capability/types'
 
 const route = useRoute()
 const router = useRouter()
@@ -334,20 +273,32 @@ const typeQueryRef = ref<FormInstance>()
 const itemQueryRef = ref<FormInstance>()
 const typeFormRef = ref<FormInstance>()
 const itemFormRef = ref<FormInstance>()
+const gridWrapRef = ref<HTMLElement>()
+const leftPanelWidth = ref(560)
+const resizing = ref(false)
+const typeDefaultSort = { prop: 'sortOrder', order: 'ascending' as const }
+const itemDefaultSort = { prop: 'sortOrder', order: 'ascending' as const }
 
 const typeQuery = reactive<ProductDictTypeQuery>({
   pageNum: 1,
-  pageSize: 10
+  pageSize: 10,
+  orderByColumn: typeDefaultSort.prop,
+  isAsc: typeDefaultSort.order
 })
 const itemQuery = reactive<ProductDictItemQuery>({
   pageNum: 1,
-  pageSize: 10
+  pageSize: 10,
+  orderByColumn: itemDefaultSort.prop,
+  isAsc: itemDefaultSort.order
 })
 const typeForm = ref<ProductDictTypeVO>({})
 const itemForm = ref<ProductDictItemVO>({})
 
 const typeDrawerTitle = computed(() => typeForm.value.dictTypeId ? t('productCenter.productDict.editType') : t('productCenter.productDict.addType'))
 const itemDrawerTitle = computed(() => itemForm.value.dictItemId ? t('productCenter.productDict.editItem') : t('productCenter.productDict.addItem'))
+const gridStyle = computed(() => ({
+  gridTemplateColumns: `${leftPanelWidth.value}px 3px minmax(0, 1fr)`
+}))
 const hierarchicalDictTypes = new Set(['product_category_level'])
 const supportsParentValue = computed(() => Boolean(activeType.value?.dictTypeCode && hierarchicalDictTypes.has(activeType.value.dictTypeCode)))
 const parentItemOptions = computed(() => itemRows.value
@@ -372,6 +323,30 @@ function typeRowIndex(index: number) {
 
 function itemRowIndex(index: number) {
   return (Number(itemQuery.pageNum || 1) - 1) * Number(itemQuery.pageSize || 10) + index + 1
+}
+
+function stopResize() {
+  if (!resizing.value) return
+  resizing.value = false
+  document.body.classList.remove('product-dict-page--resizing')
+  window.removeEventListener('pointermove', handleResize)
+  window.removeEventListener('pointerup', stopResize)
+}
+
+function handleResize(event: PointerEvent) {
+  const rect = gridWrapRef.value?.getBoundingClientRect()
+  if (!rect) return
+  const nextWidth = event.clientX - rect.left
+  const maxWidth = Math.max(480, rect.width - 620)
+  leftPanelWidth.value = Math.min(Math.max(nextWidth, 420), maxWidth)
+}
+
+function startResize(event: PointerEvent) {
+  resizing.value = true
+  document.body.classList.add('product-dict-page--resizing')
+  window.addEventListener('pointermove', handleResize)
+  window.addEventListener('pointerup', stopResize)
+  handleResize(event)
 }
 
 function businessDomainLabel(value?: string) {
@@ -413,6 +388,27 @@ function resetItemForm() {
     sortOrder: 0
   }
   itemFormRef.value?.resetFields()
+}
+
+function applySort(query: ProductDictTypeQuery | ProductDictItemQuery, defaultSort: typeof typeDefaultSort, prop?: string, order?: 'ascending' | 'descending' | null) {
+  query.pageNum = 1
+  if (prop && order) {
+    query.orderByColumn = prop
+    query.isAsc = order
+  } else {
+    query.orderByColumn = defaultSort.prop
+    query.isAsc = defaultSort.order
+  }
+}
+
+function handleTypeSortChange({ prop, order }: { prop?: string; order?: 'ascending' | 'descending' | null }) {
+  applySort(typeQuery, typeDefaultSort, prop, order)
+  loadTypes()
+}
+
+function handleItemSortChange({ prop, order }: { prop?: string; order?: 'ascending' | 'descending' | null }) {
+  applySort(itemQuery, itemDefaultSort, prop, order)
+  loadItems()
 }
 
 async function loadTypes() {
@@ -470,11 +466,13 @@ function queryItems() {
 
 function resetTypeQuery() {
   typeQueryRef.value?.resetFields()
+  applySort(typeQuery, typeDefaultSort)
   queryTypes()
 }
 
 function resetItemQuery() {
   itemQueryRef.value?.resetFields()
+  applySort(itemQuery, itemDefaultSort)
   queryItems()
 }
 
@@ -482,6 +480,7 @@ async function selectType(row?: ProductDictTypeVO) {
   if (!row?.dictTypeCode || row.dictTypeCode === activeType.value?.dictTypeCode) return
   activeType.value = row
   itemQuery.pageNum = 1
+  applySort(itemQuery, itemDefaultSort)
   selectedItemIds.value = []
   await router.replace({ path: '/product-master/product-dicts', query: { dictTypeCode: row.dictTypeCode } })
   await loadItems()
@@ -508,6 +507,7 @@ function addType() {
 
 async function editType(row: ProductDictTypeVO) {
   if (!row.dictTypeId) return
+  if (!(await checkDictEdit(productDictTypeApi.editCheck, row.dictTypeId))) return
   const response = await productDictTypeApi.get(row.dictTypeId)
   typeForm.value = { ...response.data }
   typeDrawerOpen.value = true
@@ -594,9 +594,20 @@ function addItem() {
 
 async function editItem(row: ProductDictItemVO) {
   if (!row.dictItemId) return
+  if (!(await checkDictEdit(productDictItemApi.editCheck, row.dictItemId))) return
   const response = await productDictItemApi.get(row.dictItemId)
   itemForm.value = { ...response.data }
   itemDrawerOpen.value = true
+}
+
+async function checkDictEdit(editCheck: ProductCrudApi['editCheck'], id: string | number) {
+  if (!editCheck) return true
+  const response = await editCheck(id)
+  const result = response.data || {}
+  if (result.editable !== false) return true
+  const reasonKey = result.reasonKey || result.reason || 'productCenter.common.editDenied'
+  ElMessage.warning(t(reasonKey))
+  return false
 }
 
 function editSelectedItem() {
@@ -673,18 +684,61 @@ async function changeItemStatus(row: ProductDictItemVO, value: unknown) {
   }
 }
 
+onBeforeUnmount(stopResize)
+
 loadTypes()
 </script>
 
 <style scoped lang="scss">
 .product-dict-page {
   display: grid;
-  grid-template-columns: minmax(520px, 0.95fr) minmax(620px, 1.25fr);
+  grid-template-rows: auto minmax(0, 1fr);
   gap: 12px;
+  height: calc(100dvh - var(--admin-shell-header) - var(--admin-tags-height) - 78px);
+  min-height: 0;
+  overflow: hidden;
+}
+
+.product-dict-page__search-bar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+  padding: 12px 12px 4px;
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 8px;
+  background: var(--el-bg-color);
+}
+
+.product-dict-page__grids {
+  display: grid;
+  min-height: 0;
+}
+
+.product-dict-page__divider {
+  position: relative;
+  cursor: col-resize;
+
+  &::before {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 1px;
+    width: 1px;
+    border-radius: 1px;
+    background: var(--el-border-color-lighter);
+    content: '';
+  }
+
+  &:hover::before {
+    background: var(--el-color-primary);
+  }
 }
 
 .product-dict-page__panel {
+  display: flex;
+  flex-direction: column;
   min-width: 0;
+  min-height: 0;
   padding: 12px;
   border: 1px solid var(--el-border-color-lighter);
   border-radius: 8px;
@@ -692,28 +746,22 @@ loadTypes()
 }
 
 .product-dict-page__search {
-  margin-bottom: 8px;
+  margin-bottom: 0;
 
   :deep(.el-form-item) {
-    margin-right: 12px;
-    margin-bottom: 10px;
+    margin-right: 8px;
+    margin-bottom: 8px;
   }
 
   :deep(.el-input),
   :deep(.el-select) {
-    width: 190px;
+    width: 168px;
   }
 }
 
-.product-dict-page__search--items {
-  padding-top: 10px;
-  border-top: 1px solid var(--el-border-color-lighter);
-}
-
-.product-dict-page__toolbar,
-.product-dict-page__item-head {
+.product-dict-page__toolbar {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 12px;
   margin-bottom: 10px;
@@ -738,14 +786,22 @@ loadTypes()
 
 .product-dict-page__actions {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: flex-end;
   gap: 8px;
 }
 
 .product-dict-page__table {
+  flex: 1 1 auto;
+  min-height: 320px;
+  overflow: hidden;
+
   :deep(.el-table__body tr) {
     cursor: pointer;
+  }
+
+  :deep(.el-table__cell) {
+    padding: 10px 0;
   }
 }
 
@@ -788,8 +844,13 @@ loadTypes()
 }
 
 @media (max-width: 1280px) {
-  .product-dict-page {
-    grid-template-columns: 1fr;
+  .product-dict-page__search-bar,
+  .product-dict-page__grids {
+    grid-template-columns: 1fr !important;
+  }
+
+  .product-dict-page__divider {
+    display: none;
   }
 }
 
@@ -798,13 +859,19 @@ loadTypes()
     grid-template-columns: 1fr;
   }
 
-  .product-dict-page__toolbar,
-  .product-dict-page__item-head {
+  .product-dict-page__toolbar {
     display: grid;
   }
 
   .product-dict-page__actions {
     justify-content: flex-start;
   }
+}
+</style>
+
+<style lang="scss">
+.product-dict-page--resizing {
+  cursor: col-resize;
+  user-select: none;
 }
 </style>

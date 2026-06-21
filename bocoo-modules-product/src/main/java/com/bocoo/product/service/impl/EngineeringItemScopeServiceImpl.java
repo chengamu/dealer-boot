@@ -30,7 +30,7 @@ public class EngineeringItemScopeServiceImpl extends ProductServiceSupport imple
                 q.and(wrapper -> wrapper.like("scope_name_cn", query.getScopeNameCn()).or().like("scope_name_en", query.getScopeNameCn()));
             }
         }
-        return page(scopeMapper, pageQuery, q.orderByAsc("sort_order").orderByDesc("update_time"));
+        return page(scopeMapper, pageQuery, q, wrapper -> wrapper.orderByAsc("sort_order").orderByDesc("update_time"));
     }
 
     @Override

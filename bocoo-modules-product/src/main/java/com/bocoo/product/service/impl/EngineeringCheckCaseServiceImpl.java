@@ -29,7 +29,7 @@ public class EngineeringCheckCaseServiceImpl extends ProductServiceSupport imple
                 q.and(wrapper -> wrapper.like("case_name_cn", query.getCaseNameCn()).or().like("case_name_en", query.getCaseNameCn()));
             }
         }
-        return page(checkCaseMapper, pageQuery, q.orderByAsc("sort_order").orderByDesc("update_time"));
+        return page(checkCaseMapper, pageQuery, q, wrapper -> wrapper.orderByAsc("sort_order").orderByDesc("update_time"));
     }
 
     @Override

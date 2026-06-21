@@ -34,7 +34,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Map;
 
 /**
@@ -135,7 +134,8 @@ public class SysProfileController extends BaseController {
         if (!avatarfile.isEmpty()) {
             String extension = FileUtil.extName(avatarfile.getOriginalFilename());
             if (!StringUtils.equalsAnyIgnoreCase(extension, MimeTypeUtils.IMAGE_EXTENSION)) {
-                return R.fail("文件格式不正确，请上传" + Arrays.toString(MimeTypeUtils.IMAGE_EXTENSION) + "格式");
+                return R.fail(MessageUtils.message("upload.invalidImageType",
+                    Map.of("types", String.join(", ", MimeTypeUtils.IMAGE_EXTENSION))));
             }
             SysOssVo oss = sysOssService.upload(avatarfile);
             String avatar = oss.getOssId().toString();

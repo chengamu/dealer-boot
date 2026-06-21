@@ -26,7 +26,7 @@ public class EngineeringOutputRuleServiceImpl extends ProductServiceSupport impl
             like(q, "rule_code", query.getRuleCode());
             like(q, "output_code", query.getOutputCode());
         }
-        return page(outputRuleMapper, pageQuery, q.orderByAsc("sort_order").orderByDesc("update_time"));
+        return page(outputRuleMapper, pageQuery, q, wrapper -> wrapper.orderByAsc("sort_order").orderByDesc("update_time"));
     }
 
     @Override

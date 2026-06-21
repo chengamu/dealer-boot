@@ -2,6 +2,8 @@ allowBuilds:
   '@parcel/watcher': true
   esbuild: true
   vue-demi: true
+minimumReleaseAgeExclude:
+  - vxe-table@4.19.15
 overrides:
   braces: 3.0.3
   css-what: 5.0.1

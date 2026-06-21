@@ -3,14 +3,17 @@ package com.bocoo.product.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.bocoo.common.core.exception.ServiceException;
 import com.bocoo.common.core.utils.StringUtils;
 import com.bocoo.common.mybatis.core.mapper.BaseMapperPlus;
 import com.bocoo.common.mybatis.core.page.PageQuery;
 import com.bocoo.common.mybatis.core.page.TableDataInfo;
+import com.bocoo.product.domain.vo.BaseEditCheckResultVo;
 import com.bocoo.product.domain.vo.ReferenceCheckResultVo;
 import com.bocoo.product.service.ProductEntityDefaults;
 
 import java.util.Arrays;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
@@ -18,13 +21,39 @@ import java.util.function.Function;
  */
 abstract class ProductServiceSupport {
 
+    protected static final String STATUS_ENABLED = "ENABLED";
+    protected static final String STATUS_DISABLED = "DISABLED";
+
     protected <T, V> TableDataInfo<V> page(BaseMapperPlus<T, V> mapper, PageQuery pageQuery, QueryWrapper<T> wrapper) {
         Page<V> result = mapper.selectVoPage(pageQuery.build(), wrapper);
         return TableDataInfo.build(result);
     }
 
+    protected <T, V> TableDataInfo<V> page(BaseMapperPlus<T, V> mapper, PageQuery pageQuery, QueryWrapper<T> wrapper, Consumer<QueryWrapper<T>> defaultSorter) {
+        applyDefaultSort(pageQuery, wrapper, defaultSorter);
+        return page(mapper, pageQuery, wrapper);
+    }
+
+    protected <T> QueryWrapper<T> applyDefaultSort(PageQuery pageQuery, QueryWrapper<T> wrapper, Consumer<QueryWrapper<T>> defaultSorter) {
+        if (!hasPageSort(pageQuery)) {
+            defaultSorter.accept(wrapper);
+        }
+        return wrapper;
+    }
+
+    protected boolean hasPageSort(PageQuery pageQuery) {
+        return pageQuery != null && StringUtils.isNotBlank(pageQuery.getOrderByColumn()) && StringUtils.isNotBlank(pageQuery.getIsAsc());
+    }
+
     protected <T> Boolean remove(BaseMapperPlus<T, ?> mapper, Long[] ids) {
         return mapper.deleteBatchIds(Arrays.asList(ids)) > 0;
+    }
+
+    protected void assertNoReferences(ReferenceCheckResultVo references) {
+        if (references != null && !Boolean.TRUE.equals(references.getAllowed())) {
+            String blockerKey = StringUtils.blankToDefault(references.getBlockerReasonKey(), "product.base.delete.hasReferences");
+            throw ServiceException.ofMessageKey(blockerKey);
+        }
     }
 
     protected <T> Boolean saveEntity(BaseMapperPlus<T, ?> mapper, T entity, Function<T, Long> idReader) {
@@ -49,6 +78,38 @@ abstract class ProductServiceSupport {
             }
         }
         return vo;
+    }
+
+    protected BaseEditCheckResultVo editCheckResult(String status, ReferenceCheckResultVo references) {
+        BaseEditCheckResultVo vo = new BaseEditCheckResultVo();
+        vo.setStatus(status);
+        vo.setEditable(!isEnabledStatus(status));
+        if (!Boolean.TRUE.equals(vo.getEditable())) {
+            vo.setReason("product.base.edit.enabledDenied");
+            vo.setReasonKey("product.base.edit.enabledDenied");
+        }
+        if (references != null) {
+            vo.getImpactSummary().addAll(references.getReferenceSummaries());
+        }
+        return vo;
+    }
+
+    protected BaseEditCheckResultVo deniedEditCheck(String status, String reasonKey, ReferenceCheckResultVo references) {
+        BaseEditCheckResultVo vo = editCheckResult(status, references);
+        vo.setEditable(Boolean.FALSE);
+        vo.setReason(reasonKey);
+        vo.setReasonKey(reasonKey);
+        return vo;
+    }
+
+    protected void assertNormalEditable(String status) {
+        if (isEnabledStatus(status)) {
+            throw ServiceException.ofMessageKey("product.base.edit.enabledDenied");
+        }
+    }
+
+    protected boolean isEnabledStatus(String status) {
+        return status != null && STATUS_ENABLED.equalsIgnoreCase(status);
     }
 
     protected <T> QueryWrapper<T> activeQuery() {

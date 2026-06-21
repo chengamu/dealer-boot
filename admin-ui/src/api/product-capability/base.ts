@@ -4,6 +4,7 @@ import type {
   ProductBaseAttributeVO,
   ProductCategoryVO,
   ProductCrudApi,
+  EditCheckResult,
   ProductPageQuery,
   ProductRecord,
   ProductUnitQuery,
@@ -35,6 +36,10 @@ function referencesApi(url: string) {
   return request<ReferenceCheckResult>({ url, method: 'get' })
 }
 
+function editCheckApi(url: string) {
+  return request<EditCheckResult>({ url, method: 'get' })
+}
+
 export const productCategoryApi: ProductCrudApi<ProductCategoryVO> = {
   list: (query?: ProductPageQuery) => listApi('/product-capability/categories/list', query),
   options: (query?: ProductPageQuery) => request<ProductCategoryVO[]>({ url: '/product-capability/categories/options', method: 'get', params: query }),
@@ -44,6 +49,7 @@ export const productCategoryApi: ProductCrudApi<ProductCategoryVO> = {
   update: (data: ProductCategoryVO) => saveApi('/product-capability/categories', 'put', data),
   remove: (ids: Array<string | number> | string | number) => removeApi('/product-capability/categories/' + ids),
   changeStatus: (id: string | number, status: string) => changeStatusApi('/product-capability/categories/change-status/' + id + '/' + status),
+  editCheck: (id: string | number) => editCheckApi('/product-capability/categories/' + id + '/edit-check'),
   references: (id: string | number) => referencesApi('/product-capability/categories/' + id + '/references')
 }
 
@@ -55,6 +61,7 @@ export const productUnitApi: ProductCrudApi<ProductUnitVO, ProductUnitQuery> = {
   update: (data: ProductUnitVO) => saveApi('/product-capability/units', 'put', data),
   remove: (ids: Array<string | number> | string | number) => removeApi('/product-capability/units/' + ids),
   changeStatus: (id: string | number, status: string) => changeStatusApi('/product-capability/units/change-status/' + id + '/' + status),
+  editCheck: (id: string | number) => editCheckApi('/product-capability/units/' + id + '/edit-check'),
   references: (id: string | number) => referencesApi('/product-capability/units/' + id + '/references')
 }
 
@@ -66,5 +73,6 @@ export const productBaseAttributeApi: ProductCrudApi<ProductBaseAttributeVO, Pro
   update: (data: ProductBaseAttributeVO) => saveApi('/product-capability/base-attributes', 'put', data),
   remove: (ids: Array<string | number> | string | number) => removeApi('/product-capability/base-attributes/' + ids),
   changeStatus: (id: string | number, status: string) => changeStatusApi('/product-capability/base-attributes/change-status/' + id + '/' + status),
+  editCheck: (id: string | number) => editCheckApi('/product-capability/base-attributes/' + id + '/edit-check'),
   references: (id: string | number) => referencesApi('/product-capability/base-attributes/' + id + '/references')
 }

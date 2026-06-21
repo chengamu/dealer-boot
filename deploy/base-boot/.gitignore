@@ -1,0 +1,6 @@
+.env
+bocoo-admin.jar
+config/application-prod.yml
+data/
+logs/
+sql/local-minio-oss-config.sql
