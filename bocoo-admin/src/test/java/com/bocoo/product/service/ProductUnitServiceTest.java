@@ -4,9 +4,9 @@ import com.bocoo.common.core.exception.ServiceException;
 import com.bocoo.product.domain.bo.ProductUnitBo;
 import com.bocoo.product.domain.entity.ProductUnit;
 import com.bocoo.product.domain.vo.ReferenceCheckResultVo;
-import com.bocoo.product.mapper.FabricProfileMapper;
 import com.bocoo.product.mapper.ProductComponentItemMapper;
 import com.bocoo.product.mapper.ProductComponentMapper;
+import com.bocoo.product.mapper.ProductMaterialAttributeMapper;
 import com.bocoo.product.mapper.ProductMaterialMapper;
 import com.bocoo.product.mapper.ProductUnitMapper;
 import com.bocoo.product.service.impl.ProductUnitServiceImpl;
@@ -29,11 +29,11 @@ class ProductUnitServiceTest {
     @Mock
     private ProductMaterialMapper materialMapper;
     @Mock
+    private ProductMaterialAttributeMapper materialAttributeMapper;
+    @Mock
     private ProductComponentMapper componentMapper;
     @Mock
     private ProductComponentItemMapper componentItemMapper;
-    @Mock
-    private FabricProfileMapper fabricProfileMapper;
 
     private ProductUnitServiceImpl productUnitService;
 
@@ -42,9 +42,9 @@ class ProductUnitServiceTest {
         productUnitService = new ProductUnitServiceImpl(
             unitMapper,
             materialMapper,
+            materialAttributeMapper,
             componentMapper,
-            componentItemMapper,
-            fabricProfileMapper
+            componentItemMapper
         );
     }
 
@@ -55,9 +55,9 @@ class ProductUnitServiceTest {
         unit.setUnitCode("MM");
         when(unitMapper.selectById(3001L)).thenReturn(unit);
         when(materialMapper.selectCount(any())).thenReturn(1L);
+        when(materialAttributeMapper.selectCount(any())).thenReturn(4L);
         when(componentMapper.selectCount(any())).thenReturn(2L);
         when(componentItemMapper.selectCount(any())).thenReturn(3L);
-        when(fabricProfileMapper.selectCount(any())).thenReturn(4L);
 
         ReferenceCheckResultVo result = productUnitService.checkReferences(3001L);
 

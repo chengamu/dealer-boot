@@ -15,7 +15,7 @@ import java.util.List;
  *
  * @author ${author}
  */
-public interface I${ClassName}Service extends IBaseService<${ClassName}, ${ClassName}Vo> {
+public interface ${ClassName}Service extends IBaseService<${ClassName}, ${ClassName}Vo> {
 
     /**
      * 查询${functionName}列表（分页）
@@ -33,6 +33,14 @@ public interface I${ClassName}Service extends IBaseService<${ClassName}, ${Class
      * @return ${functionName}列表
      */
     List<${ClassName}Vo> queryList(${ClassName}Bo bo);
+
+    /**
+     * 根据主键查询${functionName}
+     *
+     * @param id ${functionName}主键
+     * @return ${functionName}信息
+     */
+    ${ClassName}Vo queryById(Long id);
 
     /**
      * 根据业务对象新增

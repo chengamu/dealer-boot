@@ -244,6 +244,11 @@ CREATE TABLE IF NOT EXISTS pc_material (
     update_time timestamptz
 );
 
+ALTER TABLE IF EXISTS pc_material
+    ADD COLUMN IF NOT EXISTS fabric_series_id bigint,
+    ADD COLUMN IF NOT EXISTS fabric_series_code varchar(80),
+    ADD COLUMN IF NOT EXISTS fabric_series_name_cn varchar(200);
+
 COMMENT ON TABLE pc_material IS '产品物料表';
 COMMENT ON COLUMN pc_material.material_id IS '产品物料ID';
 COMMENT ON COLUMN pc_material.tenant_id IS '租户ID';

@@ -1,8 +1,8 @@
 package com.bocoo.product.service;
 
 import com.bocoo.product.domain.vo.ReferenceCheckResultVo;
-import com.bocoo.product.mapper.FabricProfileMapper;
 import com.bocoo.product.mapper.FabricSeriesMapper;
+import com.bocoo.product.mapper.ProductMaterialMapper;
 import com.bocoo.product.mapper.ProductMediaBindingMapper;
 import com.bocoo.product.service.impl.FabricSeriesServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,7 +21,7 @@ class FabricSeriesServiceTest {
     @Mock
     private FabricSeriesMapper fabricSeriesMapper;
     @Mock
-    private FabricProfileMapper fabricProfileMapper;
+    private ProductMaterialMapper materialMapper;
     @Mock
     private ProductMediaBindingMapper mediaBindingMapper;
 
@@ -31,14 +31,14 @@ class FabricSeriesServiceTest {
     void setUp() {
         fabricSeriesService = new FabricSeriesServiceImpl(
             fabricSeriesMapper,
-            fabricProfileMapper,
+            materialMapper,
             mediaBindingMapper
         );
     }
 
     @Test
-    void fabricSeriesReferenceCheckCountsProfilesAndMediaBindings() {
-        when(fabricProfileMapper.selectCount(any())).thenReturn(3L);
+    void fabricSeriesReferenceCheckCountsMaterialsAndMediaBindings() {
+        when(materialMapper.selectCount(any())).thenReturn(3L);
         when(mediaBindingMapper.selectCount(any())).thenReturn(2L);
 
         ReferenceCheckResultVo result = fabricSeriesService.checkReferences(140001L);
@@ -47,14 +47,14 @@ class FabricSeriesServiceTest {
         assertThat(result.getReferenceCount()).isEqualTo(5L);
         assertThat(result.getBlockerReasonKey()).isEqualTo("product.fabricSeries.hasReferences");
         assertThat(result.getReferenceSummaries()).containsExactly(
-            "Fabric profiles: 3",
+            "Fabric materials: 3",
             "Media bindings: 2"
         );
     }
 
     @Test
     void fabricSeriesReferenceCheckAllowsUnusedSeries() {
-        when(fabricProfileMapper.selectCount(any())).thenReturn(0L);
+        when(materialMapper.selectCount(any())).thenReturn(0L);
         when(mediaBindingMapper.selectCount(any())).thenReturn(0L);
 
         ReferenceCheckResultVo result = fabricSeriesService.checkReferences(140001L);

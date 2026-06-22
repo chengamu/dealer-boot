@@ -1,32 +1,26 @@
 package com.bocoo.product.service;
 
-import cn.hutool.extra.spring.SpringUtil;
 import com.bocoo.common.core.exception.ServiceException;
 import com.bocoo.product.domain.bo.ProductMaterialBo;
 import com.bocoo.product.domain.entity.ProductMaterial;
 import com.bocoo.product.domain.vo.BaseEditCheckResultVo;
-import com.bocoo.product.mapper.FabricProfileMapper;
+import com.bocoo.product.mapper.FabricSeriesMapper;
 import com.bocoo.product.mapper.ProductComponentItemMapper;
 import com.bocoo.product.mapper.ProductMaterialAttributeMapper;
 import com.bocoo.product.mapper.ProductMaterialMapper;
 import com.bocoo.product.mapper.ProductMediaBindingMapper;
 import com.bocoo.product.service.impl.ProductMaterialServiceImpl;
-import io.github.linpeilie.Converter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.context.support.GenericApplicationContext;
 
 import java.lang.reflect.Method;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -41,7 +35,7 @@ class ProductMaterialServiceTest {
     @Mock
     private ProductComponentItemMapper componentItemMapper;
     @Mock
-    private FabricProfileMapper fabricProfileMapper;
+    private FabricSeriesMapper fabricSeriesMapper;
     @Mock
     private ProductMediaBindingMapper mediaBindingMapper;
 
@@ -49,31 +43,14 @@ class ProductMaterialServiceTest {
 
     @BeforeEach
     void setUp() {
-        prepareMapstructConverter();
+        ProductServiceTestSupport.prepareMapperAndConverter();
         productMaterialService = new ProductMaterialServiceImpl(
             materialMapper,
             materialAttributeMapper,
             componentItemMapper,
-            fabricProfileMapper,
+            fabricSeriesMapper,
             mediaBindingMapper
         );
-    }
-
-    private void prepareMapstructConverter() {
-        Converter converter = mock(Converter.class);
-        lenient().when(converter.convert(any(ProductMaterialBo.class), eq(ProductMaterial.class))).thenAnswer(invocation -> {
-            ProductMaterialBo source = invocation.getArgument(0);
-            ProductMaterial target = new ProductMaterial();
-            target.setMaterialId(source.getMaterialId());
-            target.setMaterialCode(source.getMaterialCode());
-            target.setMaterialNameCn(source.getMaterialNameCn());
-            target.setMaterialType(source.getMaterialType());
-            return target;
-        });
-        GenericApplicationContext context = new GenericApplicationContext();
-        context.registerBean(Converter.class, () -> converter);
-        context.refresh();
-        new SpringUtil().setApplicationContext(context);
     }
 
     @Test
@@ -81,7 +58,7 @@ class ProductMaterialServiceTest {
         ProductMaterialBo bo = new ProductMaterialBo();
         bo.setMaterialCode("FABRIC_CELLULAR_25_WHITE");
         bo.setMaterialNameCn("25mm 米色蜂巢面料");
-        bo.setMaterialType("FABRIC");
+        bo.setMaterialType("PROFILE");
         bo.setUnitCode("M");
         bo.setPrimarySpec("25mm");
         bo.setAttributeSummary("25mm / 米色 / 遮光");

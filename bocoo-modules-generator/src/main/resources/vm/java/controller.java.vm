@@ -1,6 +1,8 @@
 package ${packageName}.controller;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
+import com.bocoo.common.core.validate.AddGroup;
+import com.bocoo.common.core.validate.EditGroup;
 import com.bocoo.common.log.annotation.Log;
 import com.bocoo.common.web.core.BaseController;
 import com.bocoo.common.mybatis.core.page.PageQuery;
@@ -10,7 +12,7 @@ import com.bocoo.common.log.enums.BusinessType;
 import com.bocoo.common.excel.utils.ExcelUtil;
 import ${packageName}.domain.bo.${ClassName}Bo;
 import ${packageName}.domain.vo.${ClassName}Vo;
-import ${packageName}.service.I${ClassName}Service;
+import ${packageName}.service.${ClassName}Service;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -20,6 +22,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import java.util.List;
 
 /**
@@ -34,7 +37,7 @@ import java.util.List;
 @Tag(name = "${functionName}管理", description = "${functionName}管理接口")
 public class ${ClassName}Controller extends BaseController {
 
-    private final I${ClassName}Service ${className}Service;
+    private final ${ClassName}Service ${className}Service;
 
     /**
      * 查询${functionName}列表
@@ -69,9 +72,9 @@ public class ${ClassName}Controller extends BaseController {
      * 查询${functionName}列表
      */
     @SaCheckPermission("${moduleName}:${businessName}:list")
-    @GetMapping("/alllist")
-    @Operation(summary = "查询${functionName}列表", description = "查询${functionName}列表,权限：${moduleName}:${businessName}:list")
-    public List<${ClassName}Vo> alllist(
+    @GetMapping("/allList")
+    @Operation(summary = "查询${functionName}全部列表", description = "查询${functionName}全部列表,权限：${moduleName}:${businessName}:list")
+    public List<${ClassName}Vo> allList(
             @Parameter(description = "${functionName}查询参数")
             ${ClassName}Bo bo) {
         return ${className}Service.queryList(bo);
@@ -87,8 +90,9 @@ public class ${ClassName}Controller extends BaseController {
     @Operation(summary = "获取${functionName}详细信息", description = "根据主键获取${functionName}详细信息,权限：${moduleName}:${businessName}:query")
     public R<${ClassName}Vo> getInfo(
             @Parameter(description = "${functionName}主键", required = true)
+            @NotNull(message = "{gen.validation.id.required}")
             @PathVariable Long ${businessName}Id) {
-        return R.ok(${className}Service.getVoById(${businessName}Id));
+        return R.ok(${className}Service.queryById(${businessName}Id));
     }
 
     /**
@@ -100,7 +104,7 @@ public class ${ClassName}Controller extends BaseController {
     @Operation(summary = "新增${functionName}", description = "新增${functionName},权限：${moduleName}:${businessName}:add")
     public R<Void> add(
             @Parameter(description = "${functionName}信息", required = true)
-            @Validated
+            @Validated(AddGroup.class)
             @RequestBody ${ClassName}Bo bo) {
         return toAjax(${className}Service.insertByBo(bo));
     }
@@ -114,7 +118,7 @@ public class ${ClassName}Controller extends BaseController {
     @Operation(summary = "修改${functionName}", description = "修改${functionName},权限：${moduleName}:${businessName}:edit")
     public R<Void> edit(
             @Parameter(description = "${functionName}信息", required = true)
-            @Validated
+            @Validated(EditGroup.class)
             @RequestBody ${ClassName}Bo bo) {
         return toAjax(${className}Service.updateByBo(bo));
     }
@@ -147,10 +151,11 @@ public class ${ClassName}Controller extends BaseController {
      */
     @SaCheckPermission("${moduleName}:${businessName}:edit")
     @Log(title = "修改${functionName}状态", businessType = BusinessType.UPDATE)
-    @PutMapping("/changeStatus/{${businessName}Id}/{status}")
+    @PutMapping("/change-status/{${businessName}Id}/{status}")
     @Operation(summary = "修改${functionName}状态", description = "修改${functionName}状态,权限：${moduleName}:${businessName}:edit")
     public R<Void> changeStatus(
             @Parameter(description = "${functionName}主键", required = true)
+            @NotNull(message = "{gen.validation.id.required}")
             @PathVariable Long ${businessName}Id,
             @Parameter(description = "${functionName}状态", required = true)
             @PathVariable String status) {

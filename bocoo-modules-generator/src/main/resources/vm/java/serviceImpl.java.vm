@@ -15,7 +15,7 @@ import ${packageName}.domain.bo.${ClassName}Bo;
 import ${packageName}.domain.vo.${ClassName}Vo;
 import ${packageName}.domain.entity.${ClassName};
 import ${packageName}.mapper.${ClassName}Mapper;
-import ${packageName}.service.I${ClassName}Service;
+import ${packageName}.service.${ClassName}Service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -30,7 +30,7 @@ import java.util.Map;
  */
 @Service
 @RequiredArgsConstructor
-public class ${ClassName}ServiceImpl extends BaseServiceImpl<${ClassName}Mapper, ${ClassName}, ${ClassName}Vo> implements I${ClassName}Service {
+public class ${ClassName}ServiceImpl extends BaseServiceImpl<${ClassName}Mapper, ${ClassName}, ${ClassName}Vo> implements ${ClassName}Service {
 
     /**
      * 查询${functionName}列表
@@ -64,7 +64,7 @@ public class ${ClassName}ServiceImpl extends BaseServiceImpl<${ClassName}Mapper,
      * @param id ${functionName}主键
      * @return ${functionName}信息
      */
-
+    @Override
     public ${ClassName}Vo queryById(Long id) {
         return getVoById(id);
     }

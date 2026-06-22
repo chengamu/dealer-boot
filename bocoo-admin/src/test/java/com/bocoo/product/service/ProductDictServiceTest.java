@@ -9,8 +9,15 @@ import com.bocoo.product.domain.vo.BaseEditCheckResultVo;
 import com.bocoo.product.domain.vo.ProductDictItemVo;
 import com.bocoo.product.domain.vo.ProductDictOptionVo;
 import com.bocoo.product.domain.vo.ReferenceCheckResultVo;
+import com.bocoo.product.mapper.FabricSeriesMapper;
+import com.bocoo.product.mapper.ProductBaseAttributeMapper;
+import com.bocoo.product.mapper.ProductCategoryMapper;
+import com.bocoo.product.mapper.ProductComponentMapper;
 import com.bocoo.product.mapper.ProductDictItemMapper;
 import com.bocoo.product.mapper.ProductDictTypeMapper;
+import com.bocoo.product.mapper.ProductMaterialMapper;
+import com.bocoo.product.mapper.ProductMediaAssetMapper;
+import com.bocoo.product.mapper.ProductUnitMapper;
 import com.bocoo.product.service.impl.ProductDictItemServiceImpl;
 import com.bocoo.product.service.impl.ProductDictTypeServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,6 +42,20 @@ class ProductDictServiceTest {
     private ProductDictTypeMapper dictTypeMapper;
     @Mock
     private ProductDictItemMapper dictItemMapper;
+    @Mock
+    private ProductUnitMapper unitMapper;
+    @Mock
+    private ProductMaterialMapper materialMapper;
+    @Mock
+    private FabricSeriesMapper fabricSeriesMapper;
+    @Mock
+    private ProductCategoryMapper categoryMapper;
+    @Mock
+    private ProductComponentMapper componentMapper;
+    @Mock
+    private ProductMediaAssetMapper mediaAssetMapper;
+    @Mock
+    private ProductBaseAttributeMapper baseAttributeMapper;
 
     private ProductDictTypeServiceImpl dictTypeService;
     private ProductDictItemServiceImpl dictItemService;
@@ -42,7 +63,17 @@ class ProductDictServiceTest {
     @BeforeEach
     void setUp() {
         dictTypeService = new ProductDictTypeServiceImpl(dictTypeMapper, dictItemMapper);
-        dictItemService = new ProductDictItemServiceImpl(dictTypeMapper, dictItemMapper);
+        dictItemService = new ProductDictItemServiceImpl(
+            dictTypeMapper,
+            dictItemMapper,
+            unitMapper,
+            materialMapper,
+            fabricSeriesMapper,
+            categoryMapper,
+            componentMapper,
+            mediaAssetMapper,
+            baseAttributeMapper
+        );
     }
 
     @Test
