@@ -1,5 +1,5 @@
 <template>
-    <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true" label-width="80px" class="product-grid-page__search">
+    <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true" label-width="72px" class="product-grid-page__search">
       <el-form-item v-for="field in searchFields" :key="field.prop" :label="t(field.labelKey)" :prop="field.prop">
         <el-select
           v-if="field.type === 'status' || field.type === 'select' || field.type === 'boolean'"
@@ -7,7 +7,7 @@
           :placeholder="t('productCenter.common.selectPlaceholder')"
           clearable
           filterable
-          style="width: 180px"
+          style="width: 150px"
         >
           <template v-if="field.type === 'status'">
             <el-option :label="t('productCenter.status.enabled')" value="ENABLED" />
@@ -26,7 +26,7 @@
           v-model="queryParams[field.prop]"
           :placeholder="t('productCenter.common.inputPlaceholder')"
           clearable
-          style="width: 220px"
+          style="width: 160px"
           @keyup.enter="handleQuery"
         />
       </el-form-item>
@@ -38,11 +38,16 @@
 
     <el-row :gutter="10" class="mb8 product-grid-page__toolbar">
       <el-col :span="1.5">
-        <el-button v-if="!config.readonly" type="primary" plain icon="Plus" @click="handleAdd" v-hasPermi="[config.permissions.add]">
+        <el-button v-if="!config.readonly" type="primary" plain icon="Plus" @click="handleAdd()" v-hasPermi="[config.permissions.add]">
           {{ t('common.add') }}
         </el-button>
       </el-col>
-      <el-col :span="1.5">
+      <el-col v-if="isTreeGrid" :span="1.5">
+        <el-button type="info" plain icon="Sort" @click="toggleExpandAll">
+          {{ t('common.expandCollapse') }}
+        </el-button>
+      </el-col>
+      <el-col v-if="!isTreeGrid" :span="1.5">
         <el-button v-if="!config.readonly" type="success" plain icon="Edit" :disabled="single" @click="handleUpdate()" v-hasPermi="[config.permissions.edit]">
           {{ t('common.edit') }}
         </el-button>
@@ -52,9 +57,27 @@
           {{ t('productCenter.common.superEdit') }}
         </el-button>
       </el-col>
-      <el-col :span="1.5">
+      <el-col v-if="!isTreeGrid" :span="1.5">
         <el-button v-if="!config.readonly" type="danger" plain icon="Delete" :disabled="multiple" @click="handleDelete()" v-hasPermi="[config.permissions.remove]">
           {{ t('common.delete') }}
+        </el-button>
+      </el-col>
+      <el-col v-if="isSingleRowActions && !isTreeGrid && !config.hideReference" :span="1.5">
+        <el-button type="info" plain icon="View" :disabled="single" @click="handleSelectedReference" v-hasPermi="[config.permissions.reference]">
+          {{ t('productCenter.common.references') }}
+        </el-button>
+      </el-col>
+      <el-col v-for="action in singleRowToolbarActions" :key="action.labelKey" :span="1.5">
+        <el-button
+          :type="action.type || 'primary'"
+          plain
+          :icon="action.icon"
+          :disabled="single || Boolean(rowActionLoading)"
+          :loading="selectedRow ? rowActionLoading === rowActionKey(action, selectedRow) : false"
+          @click="handleSelectedRowAction(action)"
+          v-hasPermi="[action.permission]"
+        >
+          {{ t(action.labelKey) }}
         </el-button>
       </el-col>
       <el-col v-for="action in config.toolbarActions || []" :key="action.labelKey" :span="1.5">
@@ -72,25 +95,28 @@
           {{ t('productCenter.componentItem.batchEntry') }}
         </el-button>
       </el-col>
-      <right-toolbar v-model:showSearch="showSearch" @queryTable="getList" />
+      <right-toolbar v-if="!isTreeGrid" v-model:showSearch="showSearch" @queryTable="getList" />
     </el-row>
 
     <el-table
+      :key="tableRenderKey"
       v-loading="loading"
       :data="rows"
       border
       :row-key="config.tree?.rowKey || config.idKey"
       :tree-props="config.tree?.treeProps || { children: 'children' }"
-      :default-expand-all="Boolean(config.tree)"
+      :default-expand-all="isTreeGrid && isExpandAll"
       :default-sort="config.defaultSort"
+      :highlight-current-row="isSingleRowActions && !isTreeGrid"
       :data-testid="`product-grid-${config.key}`"
       class="product-grid-page__table"
       @selection-change="handleSelectionChange"
+      @row-click="handleRowClick"
       @sort-change="handleSortChange"
       @row-dblclick="handleRowDblclick"
     >
-      <el-table-column type="selection" width="48" align="center" />
-      <el-table-column type="index" :index="rowIndex" :label="t('common.index')" width="64" align="center" fixed />
+      <el-table-column v-if="!isSingleRowActions" type="selection" width="48" align="center" />
+      <el-table-column v-if="!isTreeGrid" type="index" :index="rowIndex" :label="t('common.index')" width="64" align="center" fixed />
       <el-table-column
         v-for="field in tableFields"
         :key="field.prop"
@@ -122,22 +148,28 @@
           <span v-else>{{ displayValue(row[field.prop]) }}</span>
         </template>
       </el-table-column>
-      <el-table-column :label="t('common.operate')" align="center" width="176" fixed="right" class-name="small-padding fixed-width">
+      <el-table-column v-if="showOperationColumn" :label="t('common.operate')" align="center" width="176" fixed="right" class-name="small-padding fixed-width">
         <template #default="{ row }">
-          <el-tooltip v-if="!config.hideReference" :content="t('productCenter.common.references')" placement="top">
+          <el-tooltip v-if="isTreeGrid && !config.readonly" :content="t('common.add')" placement="top">
+            <el-button link type="primary" icon="Plus" :aria-label="t('common.add')" @click="handleAdd(row)" v-hasPermi="[config.permissions.add]" />
+          </el-tooltip>
+          <el-tooltip v-if="!config.hideReference && !isTreeGrid && !isSingleRowActions" :content="t('productCenter.common.references')" placement="top">
             <el-button link type="primary" icon="View" :aria-label="t('productCenter.common.references')" @click="handleReference(row)" v-hasPermi="[config.permissions.reference]" />
           </el-tooltip>
-          <el-tooltip v-if="config.showDetail" :content="t('common.detail')" placement="top">
+          <el-tooltip v-if="config.showDetail && !isSingleRowActions" :content="t('common.detail')" placement="top">
             <el-button link type="primary" icon="Document" :aria-label="t('common.detail')" @click="handleDetail(row)" v-hasPermi="[config.permissions.reference]" />
           </el-tooltip>
-          <el-tooltip v-if="!config.readonly" :content="t('common.edit')" placement="top">
+          <el-tooltip v-if="!config.readonly && (!isSingleRowActions || isTreeGrid)" :content="t('common.edit')" placement="top">
             <el-button link type="primary" icon="Edit" :aria-label="t('common.edit')" @click="handleUpdate(row)" v-hasPermi="[config.permissions.edit]" />
           </el-tooltip>
           <el-tooltip v-if="config.superEditPermission && config.api.superUpdate" :content="t('productCenter.common.superEdit')" placement="top">
             <el-button link type="warning" icon="EditPen" :aria-label="t('productCenter.common.superEdit')" @click="handleSuperUpdate(row)" v-hasPermi="[config.superEditPermission]" />
           </el-tooltip>
-          <el-tooltip v-if="!config.readonly" :content="t('common.delete')" placement="top">
+          <el-tooltip v-if="!config.readonly && (!isSingleRowActions || isTreeGrid)" :content="t('common.delete')" placement="top">
             <el-button link type="primary" icon="Delete" :aria-label="t('common.delete')" @click="handleDelete(row)" v-hasPermi="[config.permissions.remove]" />
+          </el-tooltip>
+          <el-tooltip v-if="!config.hideReference && isTreeGrid" :content="t('productCenter.common.references')" placement="top">
+            <el-button link type="primary" icon="View" :aria-label="t('productCenter.common.references')" @click="handleReference(row)" v-hasPermi="[config.permissions.reference]" />
           </el-tooltip>
           <el-tooltip v-for="action in config.rowActions || []" :key="action.labelKey" :content="t(action.labelKey)" placement="top">
             <el-button
@@ -168,7 +200,14 @@
         <template v-for="section in formSections" :key="section.key">
           <div v-if="section.labelKey" class="product-grid-page__section-title">{{ t(section.labelKey) }}</div>
           <el-form-item v-for="field in section.fields" :key="field.prop" :label="t(field.labelKey)" :prop="field.prop" :class="formItemClass(field)">
-          <el-input-number v-if="field.type === 'number'" v-model="form[field.prop] as number" :min="0" :disabled="drawerReadonly" controls-position="right" class="product-grid-page__number" />
+          <el-input-number
+            v-if="field.type === 'number'"
+            v-model="form[field.prop] as number"
+            :min="0"
+            :disabled="drawerReadonly"
+            controls-position="right"
+            class="product-grid-page__number"
+          />
           <el-switch
             v-else-if="field.type === 'boolean'"
             :model-value="Boolean(form[field.prop])"
@@ -182,7 +221,7 @@
             v-model="form[field.prop]"
             :data="fieldTreeOptions(field)"
             :props="{ label: 'label', value: 'value', children: 'children' }"
-            :disabled="drawerReadonly || field.readonly?.(form)"
+            :disabled="drawerReadonly || isTreeParentLocked(field) || field.readonly?.(form)"
             filterable
             clearable
             check-strictly
@@ -190,7 +229,7 @@
             style="width: 100%"
             @change="handleSelectChange(field, $event)"
           />
-          <el-select v-else-if="field.type === 'select' || field.type === 'remote-select'" v-model="form[field.prop]" :disabled="drawerReadonly || field.readonly?.(form)" :multiple="field.multiple" filterable clearable style="width: 100%" @change="handleSelectChange(field, $event)">
+          <el-select v-else-if="field.type === 'select' || field.type === 'remote-select'" v-model="form[field.prop]" :disabled="drawerReadonly || isTreeParentLocked(field) || field.readonly?.(form)" :multiple="field.multiple" filterable clearable style="width: 100%" @change="handleSelectChange(field, $event)">
             <el-option v-for="option in fieldOptions(field)" :key="String(option.value)" :label="option.label" :value="option.value" />
           </el-select>
           <div v-else-if="field.type === 'rule-condition'" class="product-grid-page__builder">
@@ -311,8 +350,8 @@
               </el-select>
             </div>
           </div>
-          <el-input v-else-if="field.type === 'textarea'" v-model="form[field.prop] as string" type="textarea" :rows="3" :disabled="drawerReadonly || field.readonly?.(form)" :placeholder="t('productCenter.common.inputPlaceholder')" />
-          <el-input v-else v-model="form[field.prop] as string" :disabled="drawerReadonly || field.readonly?.(form)" :placeholder="t('productCenter.common.inputPlaceholder')" />
+          <el-input v-else-if="field.type === 'textarea'" v-model="form[field.prop] as string" type="textarea" :rows="3" :disabled="drawerReadonly || isTreeParentLocked(field) || field.readonly?.(form)" :placeholder="t('productCenter.common.inputPlaceholder')" />
+          <el-input v-else v-model="form[field.prop] as string" :disabled="drawerReadonly || isTreeParentLocked(field) || field.readonly?.(form)" :placeholder="t('productCenter.common.inputPlaceholder')" />
         </el-form-item>
         </template>
         <div v-if="attachmentEnabled" v-loading="attachmentLoading" class="product-grid-page__attachments">
@@ -396,7 +435,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineAsyncComponent, reactive, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules, type UploadRawFile, type UploadRequestOptions } from 'element-plus'
 import { formatUtc } from '@/utils/datetime'
@@ -448,6 +487,8 @@ export interface ProductGridConfig {
   superEditPermission?: string
   fields: ProductFieldConfig[]
   readonly?: boolean
+  singleRowActions?: boolean
+  submitFields?: string[]
   initialQuery?: ProductPageQuery
   defaultSort?: { prop: string; order: 'ascending' | 'descending' }
   defaultRecord?: ProductRecord
@@ -523,6 +564,10 @@ const form = ref<ProductRecord>({})
 const referenceResult = ref<ReferenceCheckResult>({})
 const attachmentRows = ref<ProductRecord[]>([])
 const attachmentLoading = ref(false)
+const isExpandAll = ref(true)
+const tableRenderKey = ref(0)
+const lockedTreeParentId = ref<string | number | null>(null)
+const currentRow = ref<ProductRecord>()
 const queryRef = ref<FormInstance>()
 const formRef = ref<FormInstance>()
 const queryParams = reactive<ProductPageQuery>({
@@ -582,6 +627,13 @@ const drawerTitle = computed(() => {
 })
 const attachmentEnabled = computed(() => Boolean(props.config.attachments))
 const isComponentItemGrid = computed(() => props.config.key === 'componentItem')
+const isTreeGrid = computed(() => Boolean(props.config.tree))
+const isSingleRowActions = computed(() => isTreeGrid.value || Boolean(props.config.singleRowActions))
+const singleRowToolbarActions = computed(() => isSingleRowActions.value && !isTreeGrid.value ? props.config.rowActions || [] : [])
+const selectedRow = computed(() => currentRow.value || rows.value.find((row) => row[props.config.idKey] === ids.value[0]))
+const showOperationColumn = computed(() => {
+  return isSingleRowActions.value ? isTreeGrid.value : true
+})
 const currentRecordId = computed(() => {
   const value = form.value[props.config.idKey]
   return isRecordId(value) ? value : ''
@@ -664,6 +716,10 @@ function formItemClass(field: ProductFieldConfig) {
   }
 }
 
+function isTreeParentLocked(field: ProductFieldConfig) {
+  return Boolean(isTreeGrid.value && lockedTreeParentId.value != null && field.prop === props.config.tree?.parentKey && !form.value[props.config.idKey])
+}
+
 function buildTreeOptions(options: Array<{ label?: string; value?: string | number; record?: ProductRecord }>) {
   const nodeMap = new Map<string | number, Array<{ label?: string; value?: string | number; record?: ProductRecord; children?: unknown[] }>[number]>()
   const roots: Array<{ label?: string; value?: string | number; record?: ProductRecord; children?: unknown[] }> = []
@@ -743,6 +799,7 @@ function reset() {
   materialAttributeDrafts.value = {}
   materialAttributeDraftKeys.value = {}
   superEditMode.value = false
+  lockedTreeParentId.value = null
   formRef.value?.resetFields()
 }
 
@@ -780,6 +837,8 @@ async function loadAttachments(record?: ProductRecord) {
 }
 
 async function getList() {
+  ids.value = []
+  currentRow.value = undefined
   loading.value = true
   try {
     const requestParams = props.config.tree ? { ...queryParams, pageNum: 1, pageSize: 1000 } : queryParams
@@ -835,11 +894,25 @@ function handleSortChange({ prop, order }: { prop?: string; order?: 'ascending' 
 }
 
 function handleSelectionChange(selection: ProductRecord[]) {
+  if (isSingleRowActions.value) return
   ids.value = selection.map((item) => item[props.config.idKey]).filter(isRecordId)
 }
 
-function handleAdd() {
+function handleRowClick(row: ProductRecord) {
+  if (!isSingleRowActions.value || isTreeGrid.value) return
+  const id = row[props.config.idKey]
+  ids.value = isRecordId(id) ? [id] : []
+  currentRow.value = isRecordId(id) ? row : undefined
+}
+
+function handleAdd(parentRow?: ProductRecord) {
   reset()
+  const tree = props.config.tree
+  if (tree) {
+    const parentId = parentRow?.[tree.rowKey || props.config.idKey]
+    form.value[tree.parentKey] = isRecordId(parentId) ? parentId : tree.rootValue ?? 0
+    lockedTreeParentId.value = isRecordId(parentId) ? parentId : null
+  }
   drawerReadonly.value = false
   open.value = true
   loadRemoteOptions()
@@ -901,6 +974,11 @@ async function handleDetail(row: ProductRecord) {
   await loadRemoteOptions()
 }
 
+function toggleExpandAll() {
+  isExpandAll.value = !isExpandAll.value
+  tableRenderKey.value += 1
+}
+
 async function handleRowDblclick(row: ProductRecord) {
   await handleDetail(row)
 }
@@ -942,6 +1020,10 @@ async function handleReference(row: ProductRecord) {
   const response = await props.config.api.references(id)
   referenceResult.value = response.data || {}
   referenceOpen.value = true
+}
+
+async function handleSelectedReference() {
+  if (selectedRow.value) await handleReference(selectedRow.value)
 }
 
 async function handleStatusChange(row: ProductRecord, field: ProductFieldConfig, value: unknown) {
@@ -1204,6 +1286,20 @@ function cancel() {
   reset()
 }
 
+function handleDrawerShortcut(event: KeyboardEvent) {
+  if (event.key !== 'Escape' || !open.value || !drawerReadonly.value) return
+  event.preventDefault()
+  cancel()
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleDrawerShortcut)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleDrawerShortcut)
+})
+
 async function handleRowAction(action: NonNullable<ProductGridConfig['rowActions']>[number], row: ProductRecord) {
   rowActionLoading.value = rowActionKey(action, row)
   try {
@@ -1214,6 +1310,19 @@ async function handleRowAction(action: NonNullable<ProductGridConfig['rowActions
   } finally {
     rowActionLoading.value = ''
   }
+}
+
+async function handleSelectedRowAction(action: NonNullable<ProductGridConfig['rowActions']>[number]) {
+  if (selectedRow.value) await handleRowAction(action, selectedRow.value)
+}
+
+function submitPayload() {
+  if (!props.config.submitFields?.length) return form.value
+  const payload: ProductRecord = {}
+  props.config.submitFields.forEach((field) => {
+    if (form.value[field] !== undefined) payload[field] = form.value[field]
+  })
+  return payload
 }
 
 async function submitForm() {
@@ -1239,13 +1348,13 @@ async function submitForm() {
   try {
     if (form.value[props.config.idKey]) {
       if (superEditMode.value && props.config.api.superUpdate) {
-        await props.config.api.superUpdate(form.value)
+        await props.config.api.superUpdate(submitPayload())
       } else {
-        await props.config.api.update(form.value)
+        await props.config.api.update(submitPayload())
       }
       ElMessage.success(t('common.editSuccess'))
     } else {
-      await props.config.api.add(form.value)
+      await props.config.api.add(submitPayload())
       ElMessage.success(t('common.addSuccess'))
     }
     open.value = false
@@ -1326,6 +1435,9 @@ async function removeAttachment(row: ProductRecord) {
 
 watch(() => [props.config.key, route.fullPath], () => {
   ids.value = []
+  currentRow.value = undefined
+  isExpandAll.value = true
+  tableRenderKey.value += 1
   resetQueryParams()
   applyRouteQuery()
   reset()

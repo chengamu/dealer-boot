@@ -1,0 +1,660 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>物料编码规则 V1</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --surface: #ffffff;
+      --surface-soft: #f8fafc;
+      --ink: #172033;
+      --muted: #667085;
+      --line: #d9e2ef;
+      --blue: #1d73e8;
+      --blue-soft: #e8f1ff;
+      --green: #159957;
+      --green-soft: #e8f7ef;
+      --orange: #c76b16;
+      --orange-soft: #fff2df;
+      --shadow: 0 18px 45px rgba(23, 32, 51, .10);
+      --radius: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+      line-height: 1.65;
+    }
+
+    .page {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 34px 22px 56px;
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      border-radius: 24px;
+      background:
+        radial-gradient(circle at 90% 10%, rgba(29, 115, 232, .16), transparent 32%),
+        linear-gradient(135deg, #ffffff 0%, #eef5ff 100%);
+      box-shadow: var(--shadow);
+      padding: 36px;
+      border: 1px solid rgba(29, 115, 232, .14);
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 28px;
+      align-items: end;
+    }
+
+    .hero h1 {
+      margin: 0 0 14px;
+      font-size: clamp(34px, 5vw, 64px);
+      line-height: 1.05;
+      letter-spacing: 0;
+    }
+
+    .hero p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 18px;
+      max-width: 680px;
+    }
+
+    .rule-card {
+      background: rgba(255, 255, 255, .82);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 22px;
+      backdrop-filter: blur(10px);
+    }
+
+    .rule-label {
+      margin-bottom: 10px;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .code {
+      display: inline-flex;
+      align-items: center;
+      max-width: 100%;
+      border-radius: 12px;
+      background: #101828;
+      color: #ffffff;
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      font-size: 17px;
+      line-height: 1.45;
+      padding: 12px 14px;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+
+    .code.large {
+      display: flex;
+      font-size: clamp(18px, 2.4vw, 28px);
+      padding: 18px 20px;
+      margin-top: 12px;
+    }
+
+    .segments {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .segment {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--surface);
+      padding: 14px;
+      min-height: 112px;
+    }
+
+    .segment strong {
+      display: block;
+      color: var(--blue);
+      font-size: 18px;
+      line-height: 1.2;
+      margin-bottom: 8px;
+    }
+
+    .segment span {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    section {
+      margin-top: 24px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: 0 10px 28px rgba(23, 32, 51, .06);
+      padding: 26px;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 14px;
+    }
+
+    .section-title h2 {
+      margin: 0;
+      font-size: 24px;
+      line-height: 1.2;
+    }
+
+    .section-title p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .dictionary {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      overflow: hidden;
+      background: var(--surface-soft);
+    }
+
+    .dictionary h3 {
+      margin: 0;
+      background: #eef4ff;
+      color: #174ea6;
+      font-size: 18px;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--surface);
+    }
+
+    th,
+    td {
+      text-align: left;
+      padding: 11px 13px;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+      font-size: 14px;
+    }
+
+    th {
+      color: #344054;
+      background: #f8fafc;
+      font-weight: 700;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .mono {
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      color: #101828;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .note {
+      border-radius: 14px;
+      padding: 16px 18px;
+      background: var(--orange-soft);
+      border: 1px solid #ffd8a8;
+      color: #7a3d08;
+      margin-top: 16px;
+    }
+
+    .principles {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .principle {
+      border-radius: 16px;
+      background: var(--green-soft);
+      border: 1px solid #b8e6cc;
+      padding: 18px;
+    }
+
+    .principle strong {
+      display: block;
+      color: var(--green);
+      font-size: 18px;
+      margin-bottom: 6px;
+    }
+
+    .principle span {
+      color: #37604a;
+      font-size: 14px;
+    }
+
+    .examples {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .example {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+      border-radius: 14px;
+      background: var(--surface-soft);
+      border: 1px solid var(--line);
+      padding: 16px;
+    }
+
+    .example-title {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .example .code {
+      width: 100%;
+      justify-content: flex-start;
+      font-size: 15px;
+    }
+
+    .steps {
+      counter-reset: step;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .steps li {
+      counter-increment: step;
+      position: relative;
+      min-height: 104px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: var(--surface-soft);
+      padding: 18px 18px 18px 64px;
+    }
+
+    .steps li::before {
+      content: counter(step);
+      position: absolute;
+      left: 18px;
+      top: 18px;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--blue);
+      color: #ffffff;
+      font-weight: 800;
+      display: grid;
+      place-items: center;
+    }
+
+    .steps strong {
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    .steps span {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .footer {
+      margin-top: 24px;
+      color: var(--muted);
+      font-size: 13px;
+      text-align: center;
+    }
+
+    @media (max-width: 940px) {
+      .hero-grid,
+      .grid-2,
+      .grid-3,
+      .examples,
+      .steps,
+      .principles {
+        grid-template-columns: 1fr;
+      }
+
+      .segments {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 560px) {
+      .page {
+        padding: 14px 12px 36px;
+      }
+
+      .hero,
+      section {
+        padding: 20px;
+        border-radius: 18px;
+      }
+
+      .segments {
+        grid-template-columns: 1fr;
+      }
+
+      th,
+      td {
+        padding: 10px;
+      }
+    }
+
+    @media print {
+      body {
+        background: #ffffff;
+      }
+
+      .page {
+        max-width: none;
+        padding: 0;
+      }
+
+      .hero,
+      section {
+        box-shadow: none;
+        break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="hero">
+      <div class="hero-grid">
+        <div>
+          <h1>物料编码规则 V1</h1>
+          <p>面向技术科和工厂录入人员的统一取号规则：先按中文业务信息判断，再生成标准编码。厂家不用背英文缩写，只要按字段确认内容。</p>
+        </div>
+        <div class="rule-card">
+          <div class="rule-label">物料编码总规则</div>
+          <div class="code large">TYPE-FAMILY-MODEL-SPEC-COLOR-SUP3</div>
+          <div class="segments" aria-label="编码段说明">
+            <div class="segment"><strong>TYPE</strong><span>物料大类</span></div>
+            <div class="segment"><strong>FAMILY</strong><span>产品线 / 适用场景</span></div>
+            <div class="segment"><strong>MODEL</strong><span>型号 / 名称缩写</span></div>
+            <div class="segment"><strong>SPEC</strong><span>核心规格</span></div>
+            <div class="segment"><strong>COLOR</strong><span>颜色</span></div>
+            <div class="segment"><strong>SUP3</strong><span>供应商后三位</span></div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <section>
+      <div class="section-title">
+        <h2>规则结论</h2>
+        <p>技术科按这个顺序取号</p>
+      </div>
+      <div class="principles">
+        <div class="principle"><strong>中文先判断</strong><span>先确定大类、产品线、名称、规格、颜色、供应商。</span></div>
+        <div class="principle"><strong>编码后生成</strong><span>英文代码是系统标准，不要求工厂人员死记。</span></div>
+        <div class="principle"><strong>固定 6 段</strong><span>每段用短横线分隔，不能少段。</span></div>
+        <div class="principle"><strong>没有就填 NA</strong><span>没有规格或颜色时，统一写 NA。</span></div>
+      </div>
+      <div class="note">说明：供应商后三位进入物料编码，表示“同一种东西，不同供应商，按不同物料 SKU 管理”。供应商料号、样册编号、工厂型号仍然单独填写，不塞进物料编码。</div>
+    </section>
+
+    <section>
+      <div class="section-title">
+        <h2>厂家填写口径</h2>
+        <p>工厂按中文字段提供，系统或技术科转换为编码</p>
+      </div>
+      <table>
+        <thead><tr><th>工厂需要确认</th><th>怎么填写</th><th>生成到编码哪一段</th></tr></thead>
+        <tbody>
+          <tr><td>物料是什么</td><td>面料、铝材、系统件、电机、遥控、配件、五金、包装、说明书</td><td><span class="mono">TYPE</span></td></tr>
+          <tr><td>用于什么产品</td><td>户外帘、卷帘、斑马帘、蜂巢帘、轨道帘；多个产品通用就写通用</td><td><span class="mono">FAMILY</span></td></tr>
+          <tr><td>型号或名称</td><td>例如 TT230、150D*300D、28管、20下杆、RIC02、PET胶条</td><td><span class="mono">MODEL</span></td></tr>
+          <tr><td>最关键规格</td><td>例如门幅185、门幅200、36英寸、0.8mm、4*30、M6、1.2</td><td><span class="mono">SPEC</span></td></tr>
+          <tr><td>颜色</td><td>白色、灰色、黑色、银白、透明；没有颜色就写无颜色</td><td><span class="mono">COLOR</span></td></tr>
+          <tr><td>供应商</td><td>使用已有供应商编号，取后三位；不足三位补 0</td><td><span class="mono">SUP3</span></td></tr>
+        </tbody>
+      </table>
+      <div class="examples" style="margin-top: 16px;">
+        <div class="example">
+          <div class="example-title">厂家说法：灰色户外帘面料，TT230，门幅185，供应商001</div>
+          <div class="code">FAB-OUT-TT230-W185-GY-001</div>
+        </div>
+        <div class="example">
+          <div class="example-title">厂家说法：白色涂层布，150D*300D，门幅200，供应商002</div>
+          <div class="code">FAB-ROL-150D300D-W200-WH-002</div>
+        </div>
+        <div class="example">
+          <div class="example-title">厂家说法：户外帘28管，银白色，供应商001</div>
+          <div class="code">ALU-OUT-TUBE28-NA-SV-001</div>
+        </div>
+        <div class="example">
+          <div class="example-title">厂家说法：透明PET胶条，规格1.2，通用，供应商001</div>
+          <div class="code">ACC-COM-GLUEPET-S12-TR-001</div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-title">
+        <h2>中文与编码对照</h2>
+        <p>中文名称给厂家看，编码给系统使用</p>
+      </div>
+      <div class="grid-2">
+        <div class="dictionary">
+          <h3>1. TYPE：物料大类</h3>
+          <table>
+            <thead><tr><th>代码</th><th>含义</th><th>使用范围</th></tr></thead>
+            <tbody>
+              <tr><td>面料</td><td class="mono">FAB</td><td>所有真实布料 SKU</td></tr>
+              <tr><td>铝材 / 型材</td><td class="mono">ALU</td><td>铝管、上梁、下杆、轨道</td></tr>
+              <tr><td>系统件 / 机构</td><td class="mono">SYS</td><td>弹簧盒、齿轮箱、限位器</td></tr>
+              <tr><td>电机</td><td class="mono">MTR</td><td>电机、接线款电机</td></tr>
+              <tr><td>遥控</td><td class="mono">RMT</td><td>遥控器、控制器</td></tr>
+              <tr><td>通用配件</td><td class="mono">ACC</td><td>胶条、拉珠、手柄、封头、防风球</td></tr>
+              <tr><td>五金</td><td class="mono">HDW</td><td>螺丝、膨胀、安装码、支架</td></tr>
+              <tr><td>包装</td><td class="mono">PKG</td><td>纸箱、PET盒、蜂窝板、珍珠棉</td></tr>
+              <tr><td>资料 / 印刷品</td><td class="mono">DOC</td><td>说明书、标签、彩卡、宣传册</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="dictionary">
+          <h3>2. FAMILY：产品线 / 适用场景</h3>
+          <table>
+            <thead><tr><th>中文</th><th>代码</th><th>取值规则</th></tr></thead>
+            <tbody>
+              <tr><td>户外帘</td><td class="mono">OUT</td><td>明确属于户外帘</td></tr>
+              <tr><td>卷帘</td><td class="mono">ROL</td><td>明确属于卷帘</td></tr>
+              <tr><td>斑马帘</td><td class="mono">ZEB</td><td>明确属于斑马帘</td></tr>
+              <tr><td>蜂巢帘</td><td class="mono">HC</td><td>明确属于蜂巢帘</td></tr>
+              <tr><td>轨道帘</td><td class="mono">TRK</td><td>明确属于轨道帘</td></tr>
+              <tr><td>通用</td><td class="mono">COM</td><td>多个产品通用，统一用 COM</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-title">
+        <h2>型号与规格</h2>
+        <p>MODEL 取核心识别名，SPEC 取最关键规格</p>
+      </div>
+      <div class="grid-2">
+        <div class="dictionary">
+          <h3>3. MODEL：型号 / 名称缩写</h3>
+          <table>
+            <thead><tr><th>写法</th><th>含义</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">TT230</td><td>面料型号 TT230</td></tr>
+              <tr><td class="mono">150D300D</td><td>面料型号 150D*300D</td></tr>
+              <tr><td class="mono">TUBE28</td><td>28 管</td></tr>
+              <tr><td class="mono">BAR20</td><td>20 下杆</td></tr>
+              <tr><td class="mono">RIC02</td><td>RIC02 机构</td></tr>
+              <tr><td class="mono">SCREW</td><td>螺丝</td></tr>
+              <tr><td class="mono">GLUEPET</td><td>PET 胶条</td></tr>
+              <tr><td class="mono">CTN</td><td>纸箱</td></tr>
+              <tr><td class="mono">PETBOX</td><td>PET 盒</td></tr>
+              <tr><td class="mono">MANUAL</td><td>说明书</td></tr>
+              <tr><td class="mono">FOAM</td><td>珍珠棉</td></tr>
+              <tr><td class="mono">BRACKET</td><td>安装码 / 支架</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="dictionary">
+          <h3>4. SPEC：核心规格</h3>
+          <table>
+            <thead><tr><th>写法</th><th>含义</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">W185</td><td>门幅 185CM</td></tr>
+              <tr><td class="mono">W200</td><td>门幅 200CM</td></tr>
+              <tr><td class="mono">W36</td><td>36 英寸宽</td></tr>
+              <tr><td class="mono">L122</td><td>长度 1.22 米</td></tr>
+              <tr><td class="mono">T08</td><td>厚度 0.8mm</td></tr>
+              <tr><td class="mono">P500</td><td>参数 500</td></tr>
+              <tr><td class="mono">0430</td><td>螺丝 4*30</td></tr>
+              <tr><td class="mono">2913</td><td>螺丝 2.9*13</td></tr>
+              <tr><td class="mono">M6</td><td>M6</td></tr>
+              <tr><td class="mono">S12</td><td>规格 1.2</td></tr>
+              <tr><td class="mono">W38</td><td>38 英寸包装</td></tr>
+              <tr><td class="mono">NA</td><td>无核心规格</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="note">写法要求：尽量用英文和数字；去掉 *、/、空格、中文括号等特殊符号；型号太长时只保留最关键部分。</div>
+    </section>
+
+    <section>
+      <div class="section-title">
+        <h2>颜色与供应商</h2>
+        <p>颜色统一短码，供应商固定三位</p>
+      </div>
+      <div class="grid-2">
+        <div class="dictionary">
+          <h3>5. COLOR：颜色</h3>
+          <table>
+            <thead><tr><th>代码</th><th>含义</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">WH</td><td>白色</td></tr>
+              <tr><td class="mono">GY</td><td>灰色</td></tr>
+              <tr><td class="mono">BK</td><td>黑色</td></tr>
+              <tr><td class="mono">SV</td><td>银色 / 银白</td></tr>
+              <tr><td class="mono">IV</td><td>象牙白</td></tr>
+              <tr><td class="mono">TR</td><td>透明</td></tr>
+              <tr><td class="mono">GN</td><td>绿色</td></tr>
+              <tr><td class="mono">RD</td><td>红色</td></tr>
+              <tr><td class="mono">BL</td><td>蓝色</td></tr>
+              <tr><td class="mono">BN</td><td>棕色</td></tr>
+              <tr><td class="mono">NA</td><td>无颜色</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="dictionary">
+          <h3>6. SUP3：供应商后三位</h3>
+          <table>
+            <thead><tr><th>供应商编号</th><th>编码取值</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">1</td><td class="mono">001</td></tr>
+              <tr><td class="mono">23</td><td class="mono">023</td></tr>
+              <tr><td class="mono">105</td><td class="mono">105</td></tr>
+              <tr><td class="mono">999</td><td class="mono">999</td></tr>
+            </tbody>
+          </table>
+          <div class="note">规则：固定三位，不足三位前面补 0。供应商编号已经存在时，直接取后三位追加。</div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-title">
+        <h2>取号流程</h2>
+        <p>从左到右，逐段确认</p>
+      </div>
+      <ol class="steps">
+        <li><strong>判断物料大类</strong><span>先确认是面料、铝材、系统件、包装，还是资料印刷品。</span></li>
+        <li><strong>判断适用产品线</strong><span>明确产品用对应代码；多产品通用时用 COM。</span></li>
+        <li><strong>提取型号或名称</strong><span>保留最容易识别的型号、品牌或名称缩写。</span></li>
+        <li><strong>提取核心规格</strong><span>门幅、英寸、厚度、长度、参数、螺丝规格等。</span></li>
+        <li><strong>确认颜色</strong><span>有颜色写颜色短码；无颜色写 NA。</span></li>
+        <li><strong>追加供应商后三位</strong><span>不足三位补 0，作为最后一段。</span></li>
+      </ol>
+    </section>
+
+    <section>
+      <div class="section-title">
+        <h2>编码示例</h2>
+        <p>来自窗帘 BOM 常见物料</p>
+      </div>
+      <div class="examples">
+        <div class="example"><div class="example-title">户外帘灰色面料</div><div class="code">FAB-OUT-TT230-W185-GY-001</div></div>
+        <div class="example"><div class="example-title">白色涂层布</div><div class="code">FAB-ROL-150D300D-W200-WH-002</div></div>
+        <div class="example"><div class="example-title">户外帘 28 管银白</div><div class="code">ALU-OUT-TUBE28-NA-SV-001</div></div>
+        <div class="example"><div class="example-title">户外帘 20 下杆银白</div><div class="code">ALU-OUT-BAR20-NA-SV-001</div></div>
+        <div class="example"><div class="example-title">RIC02 加速弹簧盒 500</div><div class="code">SYS-ROL-RIC02-P500-NA-003</div></div>
+        <div class="example"><div class="example-title">镀锌螺丝 4*30</div><div class="code">HDW-COM-SCREW-0430-ZN-001</div></div>
+        <div class="example"><div class="example-title">透明 PET 胶条 1.2</div><div class="code">ACC-COM-GLUEPET-S12-TR-001</div></div>
+        <div class="example"><div class="example-title">38 英寸纸箱</div><div class="code">PKG-ROL-CTN-W38-NA-004</div></div>
+        <div class="example"><div class="example-title">20 英寸 PET 盒</div><div class="code">PKG-ROL-PETBOX-W20-NA-004</div></div>
+        <div class="example"><div class="example-title">安装说明书</div><div class="code">DOC-OUT-MANUAL-A4-NA-001</div></div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-title">
+        <h2>填写注意事项</h2>
+        <p>避免后续重复维护</p>
+      </div>
+      <table>
+        <thead><tr><th>项目</th><th>要求</th></tr></thead>
+        <tbody>
+          <tr><td>编码格式</td><td>固定 6 段：<span class="mono">TYPE-FAMILY-MODEL-SPEC-COLOR-SUP3</span></td></tr>
+          <tr><td>大小写</td><td>全部大写。</td></tr>
+          <tr><td>空值处理</td><td>没有规格写 <span class="mono">NA</span>，没有颜色写 <span class="mono">NA</span>。</td></tr>
+          <tr><td>禁止内容</td><td>不使用中文、空格、斜杠、星号、括号等特殊符号。</td></tr>
+          <tr><td>独立字段</td><td>供应商料号、样册编号、工厂型号单独填写，不塞进物料编码。</td></tr>
+          <tr><td>供应商变化</td><td>供应商后三位进入物料编码时，不同供应商视为不同物料 SKU。</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <div class="footer">物料编码规则 V1 · 技术科汇报版</div>
+  </main>
+</body>
+</html>

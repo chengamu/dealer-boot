@@ -64,7 +64,7 @@ public class ProductMediaController extends BaseController {
         return R.ok(productMediaAssetService.queryById(id));
     }
 
-    @SaCheckPermission("product:asset:upload")
+    @SaCheckPermission("product:asset:edit")
     @GetMapping("/media-assets/{id}/edit-check")
     @Operation(summary = "检查产品资料资产是否可修改")
     public R<BaseEditCheckResultVo> checkProductMediaAssetEdit(@PathVariable Long id) {
@@ -79,7 +79,7 @@ public class ProductMediaController extends BaseController {
         return toAjax(productMediaAssetService.insertByBo(bo));
     }
 
-    @SaCheckPermission("product:asset:upload")
+    @SaCheckPermission("product:asset:edit")
     @Log(title = "产品资料资产", businessType = BusinessType.UPDATE)
     @PutMapping("/media-assets")
     @Operation(summary = "修改产品资料资产")
@@ -87,7 +87,7 @@ public class ProductMediaController extends BaseController {
         return toAjax(productMediaAssetService.updateByBo(bo));
     }
 
-    @SaCheckPermission("product:asset:upload")
+    @SaCheckPermission("product:asset:edit")
     @Log(title = "修改产品资料资产状态", businessType = BusinessType.UPDATE)
     @PutMapping("/media-assets/change-status/{id}/{status}")
     @Operation(summary = "修改产品资料资产状态")
@@ -95,7 +95,7 @@ public class ProductMediaController extends BaseController {
         return toAjax(productMediaAssetService.updateStatus(id, status));
     }
 
-    @SaCheckPermission("product:asset:upload")
+    @SaCheckPermission("product:asset:remove")
     @Log(title = "产品资料资产", businessType = BusinessType.DELETE)
     @DeleteMapping("/media-assets/{ids}")
     @Operation(summary = "删除产品资料资产")
@@ -155,7 +155,7 @@ public class ProductMediaController extends BaseController {
         return toAjax(productMediaBindingService.updateStatus(id, status));
     }
 
-    @SaCheckPermission("product:asset:bind")
+    @SaCheckPermission("product:asset:unbind")
     @Log(title = "产品资料绑定", businessType = BusinessType.DELETE)
     @DeleteMapping("/media-bindings/{ids}")
     @Operation(summary = "删除产品资料绑定")

@@ -177,7 +177,7 @@ CREATE TABLE IF NOT EXISTS pc_base_attribute (
     update_time timestamptz
 );
 
-COMMENT ON TABLE pc_base_attribute IS '物料属性定义表';
+COMMENT ON TABLE pc_base_attribute IS '物料属性表';
 COMMENT ON COLUMN pc_base_attribute.attribute_id IS '属性定义ID';
 COMMENT ON COLUMN pc_base_attribute.tenant_id IS '租户ID';
 COMMENT ON COLUMN pc_base_attribute.attribute_group IS '属性分组';
@@ -636,20 +636,39 @@ CREATE INDEX IF NOT EXISTS idx_pc_media_binding_target_active ON pc_media_bindin
 CREATE INDEX IF NOT EXISTS idx_pc_media_binding_target ON pc_media_binding (tenant_id, target_type, target_id, status);
 CREATE INDEX IF NOT EXISTS idx_pc_media_binding_asset ON pc_media_binding (tenant_id, asset_id, status);
 
--- 基础资料最小 seed，覆盖 5 个产品测试样本：
--- ROLLER_SHADE_BASIC / ROLLER_SHADE_MOTOR / ZEBRA_SHADE_BASIC / OUTDOOR_SHADE / CURTAIN_TRACK_SAMPLE
+-- 基础资料 seed：产品分类树
 
 INSERT INTO pc_category (
     category_id, tenant_id, parent_id, category_code, category_name_cn, category_name_en, business_type,
     category_level, category_path, status, del_flag, sort_order, remark, create_by, create_time, update_by, update_time
 ) VALUES
     (100001, 1, 0, 'WINDOW_COVERING', '窗饰产品', 'Window Covering', 'PRODUCT_BASE', 1, 'WINDOW_COVERING', 'ENABLED', '0', 1, '基础资料根分类', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
-    (100101, 1, 100001, 'ROLLER_SHADE_BASIC', '基础卷帘样本', 'Roller Shade Basic Sample', 'PRODUCT_BASE', 2, 'WINDOW_COVERING/ROLLER_SHADE_BASIC', 'ENABLED', '0', 10, 'Sample: ROLLER_SHADE_BASIC', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
-    (100102, 1, 100001, 'ROLLER_SHADE_MOTOR', '电动卷帘样本', 'Motorized Roller Shade Sample', 'PRODUCT_BASE', 2, 'WINDOW_COVERING/ROLLER_SHADE_MOTOR', 'ENABLED', '0', 20, 'Sample: ROLLER_SHADE_MOTOR', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
-    (100103, 1, 100001, 'ZEBRA_SHADE_BASIC', '柔纱帘样本', 'Zebra Shade Basic Sample', 'PRODUCT_BASE', 2, 'WINDOW_COVERING/ZEBRA_SHADE_BASIC', 'ENABLED', '0', 30, 'Sample: ZEBRA_SHADE_BASIC', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
-    (100104, 1, 100001, 'OUTDOOR_SHADE', '户外遮阳样本', 'Outdoor Shade Sample', 'PRODUCT_BASE', 2, 'WINDOW_COVERING/OUTDOOR_SHADE', 'ENABLED', '0', 40, 'Sample: OUTDOOR_SHADE', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
-    (100105, 1, 100001, 'CURTAIN_TRACK_SAMPLE', '轨道配件样本', 'Curtain Track Sample', 'PRODUCT_BASE', 2, 'WINDOW_COVERING/CURTAIN_TRACK_SAMPLE', 'ENABLED', '0', 50, 'Sample: CURTAIN_TRACK_SAMPLE', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00')
-ON CONFLICT (category_id) DO NOTHING;
+    (100101, 1, 100001, 'ROLLER_SHADE', '卷帘', 'Roller Shade', 'PRODUCT_BASE', 2, 'WINDOW_COVERING/ROLLER_SHADE', 'ENABLED', '0', 10, '产品分类：卷帘', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
+    (100102, 1, 100001, 'ZEBRA_SHADE', '斑马帘', 'Zebra Shade', 'PRODUCT_BASE', 2, 'WINDOW_COVERING/ZEBRA_SHADE', 'ENABLED', '0', 20, '产品分类：斑马帘', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
+    (100103, 1, 100001, 'HONEYCOMB_SHADE', '蜂巢帘', 'Honeycomb Shade', 'PRODUCT_BASE', 2, 'WINDOW_COVERING/HONEYCOMB_SHADE', 'ENABLED', '0', 30, '产品分类：蜂巢帘', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
+    (100104, 1, 100001, 'OUTDOOR_SHADE', '户外帘', 'Outdoor Shade', 'PRODUCT_BASE', 2, 'WINDOW_COVERING/OUTDOOR_SHADE', 'ENABLED', '0', 40, '产品分类：户外帘', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
+    (100105, 1, 100001, 'DOUBLE_LAYER_TRACK', '双层平轨', 'Double Layer Track', 'PRODUCT_BASE', 2, 'WINDOW_COVERING/DOUBLE_LAYER_TRACK', 'ENABLED', '0', 50, '产品分类：双层平轨', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
+    (100106, 1, 100001, 'FABRIC_CURTAIN', '布艺窗帘', 'Fabric Curtain', 'PRODUCT_BASE', 2, 'WINDOW_COVERING/FABRIC_CURTAIN', 'ENABLED', '0', 60, '产品分类：布艺窗帘', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
+    (100107, 1, 100001, 'DREAM_SHADE', '梦幻帘', 'Dream Shade', 'PRODUCT_BASE', 2, 'WINDOW_COVERING/DREAM_SHADE', 'ENABLED', '0', 70, '产品分类：梦幻帘', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
+    (100108, 1, 100001, 'SHANGRI_LA_SHADE', '香格里拉帘', 'Shangri-La Shade', 'PRODUCT_BASE', 2, 'WINDOW_COVERING/SHANGRI_LA_SHADE', 'ENABLED', '0', 80, '产品分类：香格里拉帘', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
+    (100109, 1, 100001, 'ROMAN_SHADE', '罗马帘', 'Roman Shade', 'PRODUCT_BASE', 2, 'WINDOW_COVERING/ROMAN_SHADE', 'ENABLED', '0', 90, '产品分类：罗马帘', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
+    (100110, 1, 100001, 'SCREEN_SHADE', '屏风帘', 'Screen Shade', 'PRODUCT_BASE', 2, 'WINDOW_COVERING/SCREEN_SHADE', 'ENABLED', '0', 100, '产品分类：屏风帘', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
+    (100111, 1, 100001, 'WINDPROOF_SHADE', '防风帘', 'Windproof Shade', 'PRODUCT_BASE', 2, 'WINDOW_COVERING/WINDPROOF_SHADE', 'ENABLED', '0', 110, '产品分类：防风帘', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
+    (100112, 1, 100001, 'WOOD_VENETIAN_BLIND', '木百叶帘', 'Wood Venetian Blind', 'PRODUCT_BASE', 2, 'WINDOW_COVERING/WOOD_VENETIAN_BLIND', 'ENABLED', '0', 120, '产品分类：木百叶帘', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00')
+ON CONFLICT (category_id) DO UPDATE
+SET parent_id = EXCLUDED.parent_id,
+    category_code = EXCLUDED.category_code,
+    category_name_cn = EXCLUDED.category_name_cn,
+    category_name_en = EXCLUDED.category_name_en,
+    business_type = EXCLUDED.business_type,
+    category_level = EXCLUDED.category_level,
+    category_path = EXCLUDED.category_path,
+    status = EXCLUDED.status,
+    del_flag = EXCLUDED.del_flag,
+    sort_order = EXCLUDED.sort_order,
+    remark = EXCLUDED.remark,
+    update_by = 'system',
+    update_time = now();
 
 INSERT INTO pc_unit (
     unit_id, tenant_id, unit_code, unit_name_cn, unit_name_en, unit_type, precision_scale, rounding_mode,
@@ -674,7 +693,7 @@ INSERT INTO pc_product_dict_type (
     (118003, 1, 'product_business_type', '业务类型', 'Business Type', 'BASE', true, true, 'ENABLED', 30, '产品业务口径类型', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
     (118004, 1, 'product_component_type', '组件包类型', 'Component Pack Type', 'BASE', true, true, 'ENABLED', 40, '组件包类型', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
     (118005, 1, 'product_asset_type', '资料类型', 'Asset Type', 'BASE', true, true, 'ENABLED', 50, '资料资产类型', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
-    (118006, 1, 'product_attribute_group', '物料属性分组', 'Material Attribute Group', 'BASE', true, true, 'ENABLED', 60, '物料属性定义分组', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
+    (118006, 1, 'product_attribute_group', '物料属性分组', 'Material Attribute Group', 'BASE', true, false, 'ENABLED', 60, '物料属性系统分组', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
     (118101, 1, 'engineering_item_type', '工程构成项类型', 'Engineering Item Type', 'ENGINEERING', true, true, 'ENABLED', 110, '工程构成项类型', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
     (118102, 1, 'engineering_scope_type', '可选范围类型', 'Engineering Scope Type', 'ENGINEERING', true, true, 'ENABLED', 120, '工程可选范围类型', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
     (118103, 1, 'engineering_rule_source', '规则条件来源', 'Engineering Rule Source', 'ENGINEERING', true, true, 'ENABLED', 130, '工程规则条件来源', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
@@ -736,10 +755,11 @@ INSERT INTO pc_product_dict_item (
     (119404, 1, 'product_asset_type', 'INSTALL_GUIDE', '安装说明', 'Installation Guide', NULL, true, true, 'ENABLED', 40, '安装说明', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
     (119405, 1, 'product_asset_type', 'DRAWING', '图纸', 'Drawing', NULL, true, true, 'ENABLED', 50, '图纸', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
     (119406, 1, 'product_asset_type', 'OTHER', '其他', 'Other', NULL, true, true, 'ENABLED', 90, '其他资料', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
-    (119451, 1, 'product_attribute_group', 'FABRIC', '面料参数', 'Fabric Attributes', NULL, true, true, 'ENABLED', 10, '面料类物料参数', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
-    (119452, 1, 'product_attribute_group', 'CONTROL', '控制系统参数', 'Control Attributes', NULL, true, true, 'ENABLED', 20, '电机、遥控、拉珠等控制系统参数', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
-    (119453, 1, 'product_attribute_group', 'HARDWARE', '五金配件参数', 'Hardware Attributes', NULL, true, true, 'ENABLED', 30, '铝材、下杆、安装件、配件参数', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
-    (119454, 1, 'product_attribute_group', 'PACKAGING', '包装参数', 'Packaging Attributes', NULL, true, true, 'ENABLED', 40, '包装件参数', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
+    (119451, 1, 'product_attribute_group', 'FABRIC', '面料', 'Fabric', NULL, true, false, 'ENABLED', 10, '面料属性分组', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
+    (119452, 1, 'product_attribute_group', 'ALUMINUM', '铝材', 'Aluminum', NULL, true, false, 'ENABLED', 20, '铝材属性分组', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
+    (119453, 1, 'product_attribute_group', 'CONTROL', '控制系统', 'Control System', NULL, true, false, 'ENABLED', 30, '电机、遥控、拉珠等控制系统属性分组', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
+    (119454, 1, 'product_attribute_group', 'HARDWARE', '五金配件', 'Hardware', NULL, true, false, 'ENABLED', 40, '五金配件属性分组', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
+    (119455, 1, 'product_attribute_group', 'PACKAGING', '包装参数', 'Packaging', NULL, true, false, 'ENABLED', 50, '包装参数属性分组', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
     (119501, 1, 'engineering_item_type', 'MAIN_FABRIC', '主面料', 'Main Fabric', NULL, true, true, 'ENABLED', 10, '主面料构成项', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
     (119502, 1, 'engineering_item_type', 'SECONDARY_FABRIC', '副面料', 'Secondary Fabric', NULL, true, true, 'ENABLED', 20, '副面料构成项', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
     (119503, 1, 'engineering_item_type', 'PROFILE', '铝材/下杆/轨道', 'Profile / Rail / Track', NULL, true, true, 'ENABLED', 30, '型材类构成项', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
@@ -1004,7 +1024,7 @@ INSERT INTO pc_media_asset (
     oss_id, url, alt_text, version_no, legacy_source, legacy_id, legacy_path, legacy_url, status, del_flag, remark,
     create_by, create_time, update_by, update_time
 ) VALUES
-    (190001, 1, 'ASSET_ROLLER_SWATCH', '卷帘基础色卡', 'Roller Basic Swatch', 'SWATCH', 'FABRIC_SERIES', 'en_US', 'INTERNAL', NULL, NULL, 'Basic coated fabric swatch', 1, 'OFBIZ', 'CONTENT:ROLLER_SWATCH', '/legacy/ofbiz/content/roller-basic-swatch.pdf', 'ofbiz://roller-basic-swatch', 'ENABLED', '0', 'Sample: ROLLER_SHADE_BASIC', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
+    (190001, 1, 'ASSET_ROLLER_SWATCH', '卷帘基础面料色卡', 'Roller Basic Fabric Swatch', 'SWATCH', 'MATERIAL', 'en_US', 'INTERNAL', NULL, NULL, 'Basic coated fabric swatch', 1, 'OFBIZ', 'CONTENT:ROLLER_SWATCH', '/legacy/ofbiz/content/roller-basic-swatch.pdf', 'ofbiz://roller-basic-swatch', 'ENABLED', '0', 'Sample: FABRIC_BASIC_WHITE', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
     (190002, 1, 'ASSET_MOTOR_SPEC', '卷帘电机规格书', 'Roller Motor Specification', 'SPEC', 'MATERIAL', 'en_US', 'INTERNAL', NULL, NULL, 'AOK motor specification', 1, 'OFBIZ', 'CONTENT:MOTOR_SPEC', '/legacy/ofbiz/content/roller-motor-spec.pdf', 'ofbiz://roller-motor-spec', 'ENABLED', '0', 'Sample: ROLLER_SHADE_MOTOR', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
     (190003, 1, 'ASSET_ZEBRA_INSTALL', '柔纱帘安装说明', 'Zebra Installation Guide', 'INSTALL_GUIDE', 'COMPONENT', 'en_US', 'INTERNAL', NULL, NULL, 'Zebra basic install guide', 1, 'OFBIZ', 'CONTENT:ZEBRA_INSTALL', '/legacy/ofbiz/content/zebra-install.pdf', 'ofbiz://zebra-install', 'ENABLED', '0', 'Sample: ZEBRA_SHADE_BASIC', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
     (190004, 1, 'ASSET_OUTDOOR_DRAWING', '户外遮阳安装图', 'Outdoor Installation Drawing', 'DRAWING', 'CATEGORY', 'en_US', 'INTERNAL', NULL, NULL, 'Outdoor shade installation drawing', 1, 'OFBIZ', 'CONTENT:OUTDOOR_DRAWING', '/legacy/ofbiz/content/outdoor-drawing.pdf', 'ofbiz://outdoor-drawing', 'ENABLED', '0', 'Sample: OUTDOOR_SHADE', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
@@ -1031,7 +1051,7 @@ INSERT INTO pc_media_binding (
     binding_id, tenant_id, asset_id, asset_code, target_type, target_id, target_code, usage_type, visibility,
     language_code, required_for_publish, sort_order, status, del_flag, remark, create_by, create_time, update_by, update_time
 ) VALUES
-    (195001, 1, 190001, 'ASSET_ROLLER_SWATCH', 'FABRIC_SERIES', 140001, 'FS_BASIC_COATED', 'SWATCH', 'INTERNAL', 'en_US', '0', 10, 'ENABLED', '0', 'Sample: ROLLER_SHADE_BASIC', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
+    (195001, 1, 190001, 'ASSET_ROLLER_SWATCH', 'MATERIAL', 130001, 'FABRIC_BASIC_WHITE', 'SWATCH', 'INTERNAL', 'en_US', '0', 10, 'ENABLED', '0', 'Sample: FABRIC_BASIC_WHITE', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
     (195002, 1, 190002, 'ASSET_MOTOR_SPEC', 'MATERIAL', 130002, 'MOTOR_AOK_45_ZIGBEE', 'SPEC', 'INTERNAL', 'en_US', '1', 10, 'ENABLED', '0', 'Sample: ROLLER_SHADE_MOTOR', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
     (195003, 1, 190003, 'ASSET_ZEBRA_INSTALL', 'COMPONENT', 170003, 'COMP_ZEBRA_BASIC', 'INSTALL_GUIDE', 'INTERNAL', 'en_US', '0', 10, 'ENABLED', '0', 'Sample: ZEBRA_SHADE_BASIC', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
     (195004, 1, 190004, 'ASSET_OUTDOOR_DRAWING', 'CATEGORY', 100104, 'OUTDOOR_SHADE', 'DRAWING', 'INTERNAL', 'en_US', '1', 10, 'ENABLED', '0', 'Sample: OUTDOOR_SHADE', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
@@ -1552,12 +1572,35 @@ INSERT INTO pc_sales_product (
     product_type, sales_mode, template_id, template_code, template_version_id, template_version_no, default_width, default_height,
     dimension_unit, biz_status, legacy_source, legacy_id, status, del_flag, sort_order, remark, create_by, create_time, update_by, update_time
 ) VALUES
-    (200001, 1, 'SP_ROLLER_BASIC', '基础卷帘', 'Basic Roller Shade', 100101, 'ROLLER_SHADE_BASIC', '基础卷帘分类', 'Basic Roller Shade Category', 'ROLLER_SHADE', 'CONFIGURABLE', 210001, 'TPL_ROLLER_BASIC', 211001, 'V1', 120.000000, 160.000000, 'CM', 'DRAFT', 'OFBIZ', 'SP:ROLLER_BASIC', 'ENABLED', '0', 10, 'Sample: ROLLER_SHADE_BASIC', 'system', '2026-06-12 00:00:00+00', 'system', '2026-06-12 00:00:00+00'),
-    (200002, 1, 'SP_OUTDOOR_SHADE', '户外卷帘', 'Outdoor Roller Shade', 100104, 'OUTDOOR_SHADE', '户外遮阳分类', 'Outdoor Shade Category', 'OUTDOOR_SHADE', 'CONFIGURABLE', 210002, 'TPL_OUTDOOR_SHADE', 211002, 'V1', 180.000000, 220.000000, 'CM', 'DRAFT', 'OFBIZ', 'SP:OUTDOOR_SHADE', 'ENABLED', '0', 20, 'Sample: OUTDOOR_SHADE', 'system', '2026-06-12 00:00:00+00', 'system', '2026-06-12 00:00:00+00'),
-    (200003, 1, 'SP_ZEBRA_DUAL', '双层柔纱帘', 'Dual Layer Zebra Shade', 100103, 'ZEBRA_SHADE_BASIC', '柔纱帘分类', 'Zebra Shade Category', 'ZEBRA_SHADE', 'CONFIGURABLE', 210003, 'TPL_ZEBRA_DUAL', 211003, 'V1', 130.000000, 180.000000, 'CM', 'DRAFT', 'OFBIZ', 'SP:ZEBRA_DUAL', 'ENABLED', '0', 30, 'Sample: ZEBRA_SHADE_BASIC', 'system', '2026-06-12 00:00:00+00', 'system', '2026-06-12 00:00:00+00'),
-    (200004, 1, 'SP_ROLLER_MOTOR', '电动卷帘', 'Motorized Roller Shade', 100102, 'ROLLER_SHADE_MOTOR', '电动卷帘分类', 'Motorized Roller Category', 'ROLLER_SHADE', 'CONFIGURABLE', 210004, 'TPL_ROLLER_MOTOR', 211004, 'V1', 150.000000, 200.000000, 'CM', 'DRAFT', 'OFBIZ', 'SP:ROLLER_MOTOR', 'ENABLED', '0', 40, 'Sample: ROLLER_SHADE_MOTOR', 'system', '2026-06-12 00:00:00+00', 'system', '2026-06-12 00:00:00+00'),
-    (200005, 1, 'SP_TRACK_MEDIA', '资料轨道套装', 'Track Pack With Media', 100105, 'CURTAIN_TRACK_SAMPLE', '轨道套装分类', 'Curtain Track Category', 'CURTAIN_TRACK', 'CONFIGURABLE', 210005, 'TPL_TRACK_MEDIA', 211005, 'V1', 240.000000, 260.000000, 'CM', 'DRAFT', 'OFBIZ', 'SP:TRACK_MEDIA', 'ENABLED', '0', 50, 'Sample: CURTAIN_TRACK_SAMPLE', 'system', '2026-06-12 00:00:00+00', 'system', '2026-06-12 00:00:00+00')
-ON CONFLICT (tenant_id, sales_product_code) WHERE del_flag = '0' DO NOTHING;
+    (200001, 1, 'SP_ROLLER_BASIC', '基础卷帘', 'Basic Roller Shade', 100101, 'ROLLER_SHADE', '卷帘', 'Roller Shade', 'ROLLER_SHADE', 'CONFIGURABLE', 210001, 'TPL_ROLLER_BASIC', 211001, 'V1', 120.000000, 160.000000, 'CM', 'DRAFT', 'OFBIZ', 'SP:ROLLER_BASIC', 'ENABLED', '0', 10, 'Seed sales product: roller shade', 'system', '2026-06-12 00:00:00+00', 'system', '2026-06-12 00:00:00+00'),
+    (200002, 1, 'SP_OUTDOOR_SHADE', '户外卷帘', 'Outdoor Roller Shade', 100104, 'OUTDOOR_SHADE', '户外帘', 'Outdoor Shade', 'OUTDOOR_SHADE', 'CONFIGURABLE', 210002, 'TPL_OUTDOOR_SHADE', 211002, 'V1', 180.000000, 220.000000, 'CM', 'DRAFT', 'OFBIZ', 'SP:OUTDOOR_SHADE', 'ENABLED', '0', 20, 'Seed sales product: outdoor shade', 'system', '2026-06-12 00:00:00+00', 'system', '2026-06-12 00:00:00+00'),
+    (200003, 1, 'SP_ZEBRA_DUAL', '双层柔纱帘', 'Dual Layer Zebra Shade', 100102, 'ZEBRA_SHADE', '斑马帘', 'Zebra Shade', 'ZEBRA_SHADE', 'CONFIGURABLE', 210003, 'TPL_ZEBRA_DUAL', 211003, 'V1', 130.000000, 180.000000, 'CM', 'DRAFT', 'OFBIZ', 'SP:ZEBRA_DUAL', 'ENABLED', '0', 30, 'Seed sales product: zebra shade', 'system', '2026-06-12 00:00:00+00', 'system', '2026-06-12 00:00:00+00'),
+    (200004, 1, 'SP_ROLLER_MOTOR', '电动卷帘', 'Motorized Roller Shade', 100101, 'ROLLER_SHADE', '卷帘', 'Roller Shade', 'ROLLER_SHADE', 'CONFIGURABLE', 210004, 'TPL_ROLLER_MOTOR', 211004, 'V1', 150.000000, 200.000000, 'CM', 'DRAFT', 'OFBIZ', 'SP:ROLLER_MOTOR', 'ENABLED', '0', 40, 'Seed sales product: motorized roller shade', 'system', '2026-06-12 00:00:00+00', 'system', '2026-06-12 00:00:00+00'),
+    (200005, 1, 'SP_TRACK_MEDIA', '资料轨道套装', 'Track Pack With Media', 100105, 'DOUBLE_LAYER_TRACK', '双层平轨', 'Double Layer Track', 'CURTAIN_TRACK', 'CONFIGURABLE', 210005, 'TPL_TRACK_MEDIA', 211005, 'V1', 240.000000, 260.000000, 'CM', 'DRAFT', 'OFBIZ', 'SP:TRACK_MEDIA', 'ENABLED', '0', 50, 'Seed sales product: double layer track', 'system', '2026-06-12 00:00:00+00', 'system', '2026-06-12 00:00:00+00')
+ON CONFLICT (tenant_id, sales_product_code) WHERE del_flag = '0' DO UPDATE
+SET sales_product_name_cn = EXCLUDED.sales_product_name_cn,
+    sales_product_name_en = EXCLUDED.sales_product_name_en,
+    category_id = EXCLUDED.category_id,
+    category_code = EXCLUDED.category_code,
+    category_name_cn = EXCLUDED.category_name_cn,
+    category_name_en = EXCLUDED.category_name_en,
+    product_type = EXCLUDED.product_type,
+    sales_mode = EXCLUDED.sales_mode,
+    template_id = EXCLUDED.template_id,
+    template_code = EXCLUDED.template_code,
+    template_version_id = EXCLUDED.template_version_id,
+    template_version_no = EXCLUDED.template_version_no,
+    default_width = EXCLUDED.default_width,
+    default_height = EXCLUDED.default_height,
+    dimension_unit = EXCLUDED.dimension_unit,
+    biz_status = EXCLUDED.biz_status,
+    legacy_source = EXCLUDED.legacy_source,
+    legacy_id = EXCLUDED.legacy_id,
+    status = EXCLUDED.status,
+    sort_order = EXCLUDED.sort_order,
+    remark = EXCLUDED.remark,
+    update_by = 'system',
+    update_time = now();
 
 INSERT INTO pc_config_template (
     template_id, tenant_id, template_code, template_name_cn, template_name_en, product_model_id, product_model_code,
@@ -1682,10 +1725,28 @@ INSERT INTO pc_engineering_plan (
     series_id, series_code, series_name_cn, series_name_en, current_version_id, current_version_no, biz_status, status, del_flag,
     sort_order, remark, create_by, create_time, update_by, update_time
 ) VALUES
-    (300001, 1, 'ENG_ROLLER_BASIC', '卷帘工程方案', 'Roller Shade Engineering Plan', 100101, 'ROLLER_SHADE_BASIC', '基础卷帘分类', 'Basic Roller Shade Category',
+    (300001, 1, 'ENG_ROLLER_BASIC', '卷帘工程方案', 'Roller Shade Engineering Plan', 100101, 'ROLLER_SHADE', '卷帘', 'Roller Shade',
      140001, 'FS_BASIC_COATED', '基础涂层面料', 'Basic Coated Fabric', 301001, 'V1', 'DRAFT', 'ENABLED', '0',
      10, 'Seed engineering plan for roller shade', 'system', '2026-06-14 00:00:00+00', 'system', '2026-06-14 00:00:00+00')
-ON CONFLICT (tenant_id, plan_code) WHERE del_flag = '0' DO NOTHING;
+ON CONFLICT (tenant_id, plan_code) WHERE del_flag = '0' DO UPDATE
+SET plan_name_cn = EXCLUDED.plan_name_cn,
+    plan_name_en = EXCLUDED.plan_name_en,
+    category_id = EXCLUDED.category_id,
+    category_code = EXCLUDED.category_code,
+    category_name_cn = EXCLUDED.category_name_cn,
+    category_name_en = EXCLUDED.category_name_en,
+    series_id = EXCLUDED.series_id,
+    series_code = EXCLUDED.series_code,
+    series_name_cn = EXCLUDED.series_name_cn,
+    series_name_en = EXCLUDED.series_name_en,
+    current_version_id = EXCLUDED.current_version_id,
+    current_version_no = EXCLUDED.current_version_no,
+    biz_status = EXCLUDED.biz_status,
+    status = EXCLUDED.status,
+    sort_order = EXCLUDED.sort_order,
+    remark = EXCLUDED.remark,
+    update_by = 'system',
+    update_time = now();
 
 INSERT INTO pc_engineering_plan_version (
     version_id, tenant_id, plan_id, plan_code, version_no, version_name, biz_status, status, del_flag, rule_schema_version, config_json,
@@ -1762,24 +1823,12 @@ INSERT INTO pc_engineering_check_case (
      'ENABLED', '0', 10, 'Seed check case', 'system', '2026-06-14 00:00:00+00', 'system', '2026-06-14 00:00:00+00')
 ON CONFLICT (tenant_id, version_id, case_code) WHERE del_flag = '0' DO NOTHING;
 
-INSERT INTO pc_category (
-    category_id, tenant_id, parent_id, category_code, category_name_cn, category_name_en, business_type,
-    category_level, category_path, status, del_flag, sort_order, remark, create_by, create_time, update_by, update_time
-) VALUES
-    (100106, 1, 100001, 'HONEYCOMB_SHADE', '蜂巢帘', 'Honeycomb Shade', 'PRODUCT_BASE', 2, 'WINDOW_COVERING/HONEYCOMB_SHADE', 'ENABLED', '0', 15, 'Sample: HONEYCOMB_SHADE', 'system', '2026-06-14 00:00:00+00', 'system', '2026-06-14 00:00:00+00')
-ON CONFLICT (category_id) DO UPDATE
-SET category_name_cn = EXCLUDED.category_name_cn,
-    category_name_en = EXCLUDED.category_name_en,
-    status = EXCLUDED.status,
-    update_by = 'system',
-    update_time = now();
-
 INSERT INTO pc_engineering_plan (
     plan_id, tenant_id, plan_code, plan_name_cn, plan_name_en, category_id, category_code, category_name_cn, category_name_en,
     series_id, series_code, series_name_cn, series_name_en, current_version_id, current_version_no, biz_status, status, del_flag,
     sort_order, remark, create_by, create_time, update_by, update_time
 ) VALUES
-    (300002, 1, 'ENG_HONEYCOMB_25', '蜂巢帘工程方案', 'Honeycomb Shade Engineering Plan', 100106, 'HONEYCOMB_SHADE', '蜂巢帘', 'Honeycomb Shade',
+    (300002, 1, 'ENG_HONEYCOMB_25', '蜂巢帘工程方案', 'Honeycomb Shade Engineering Plan', 100103, 'HONEYCOMB_SHADE', '蜂巢帘', 'Honeycomb Shade',
      140101, 'FS_HONEYCOMB_25', '25mm蜂巢布系列', '25mm Honeycomb Fabric Series', 301002, 'V1', 'DRAFT', 'ENABLED', '0',
      20, 'Seed engineering plan for honeycomb shade', 'system', '2026-06-14 00:00:00+00', 'system', '2026-06-14 00:00:00+00')
 ON CONFLICT (tenant_id, plan_code) WHERE del_flag = '0' DO UPDATE
@@ -1788,11 +1837,17 @@ SET plan_name_cn = EXCLUDED.plan_name_cn,
     category_id = EXCLUDED.category_id,
     category_code = EXCLUDED.category_code,
     category_name_cn = EXCLUDED.category_name_cn,
+    category_name_en = EXCLUDED.category_name_en,
     series_id = EXCLUDED.series_id,
     series_code = EXCLUDED.series_code,
+    series_name_cn = EXCLUDED.series_name_cn,
+    series_name_en = EXCLUDED.series_name_en,
     current_version_id = EXCLUDED.current_version_id,
     current_version_no = EXCLUDED.current_version_no,
+    biz_status = EXCLUDED.biz_status,
     status = EXCLUDED.status,
+    sort_order = EXCLUDED.sort_order,
+    remark = EXCLUDED.remark,
     update_by = 'system',
     update_time = now();
 
@@ -1930,6 +1985,28 @@ SET case_name_cn = EXCLUDED.case_name_cn,
 
 DELETE FROM sys_role_menu WHERE menu_id IN (24201, 24202, 24203, 24204, 24205, 24206, 24207, 24208, 24209, 24210, 24211, 24212, 24213, 24220, 24301, 24302);
 DELETE FROM sys_menu WHERE menu_id IN (24201, 24202, 24203, 24204, 24205, 24206, 24207, 24208, 24209, 24210, 24211, 24212, 24213, 24220, 24301, 24302);
+DELETE FROM sys_role_menu
+WHERE menu_id IN (
+    SELECT menu_id
+    FROM sys_menu
+    WHERE path = 'fabric-profiles'
+       OR i18n_key = 'productCenter.menu.fabricProfiles'
+    UNION
+    SELECT child.menu_id
+    FROM sys_menu parent
+    JOIN sys_menu child ON child.parent_id = parent.menu_id
+    WHERE parent.path = 'fabric-profiles'
+       OR parent.i18n_key = 'productCenter.menu.fabricProfiles'
+);
+DELETE FROM sys_menu
+WHERE parent_id IN (
+    SELECT menu_id
+    FROM sys_menu
+    WHERE path = 'fabric-profiles'
+       OR i18n_key = 'productCenter.menu.fabricProfiles'
+)
+   OR path = 'fabric-profiles'
+   OR i18n_key = 'productCenter.menu.fabricProfiles';
 
 INSERT INTO sys_menu (menu_id, tenant_id, parent_id, menu_name, i18n_key, order_num, path, component, query_param, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, update_by, update_time, remark)
 VALUES
@@ -1961,12 +2038,12 @@ INSERT INTO sys_menu (menu_id, tenant_id, parent_id, menu_name, i18n_key, order_
 VALUES
     (24211, 1, 24200, 'Data Entry Guide', 'productCenter.menu.masterGuide', 1, 'guide', 'product-center/master-guide', NULL, '1', '0', 'C', '1', '1', 'product:base:list', 'guide', 'system', now(), NULL, NULL, '基础资料录入向导'),
     (24212, 1, 24200, 'Product Categories', 'productCenter.menu.categories', 2, 'categories', 'product-center/base', NULL, '1', '0', 'C', '1', '1', 'product:base:list', 'tree-table', 'system', now(), NULL, NULL, '产品分类'),
-    (24206, 1, 24200, 'Units', 'productCenter.menu.units', 3, 'units', 'product-center/base', NULL, '1', '0', 'C', '1', '1', 'product:unit:list', 'unit', 'system', now(), NULL, NULL, '单位管理'),
+    (24201, 1, 24200, 'Fabric Series', 'productCenter.menu.fabricSeries', 3, 'fabric-series', 'product-center/fabric', NULL, '1', '0', 'C', '1', '1', 'product:fabric:list', 'color', 'system', now(), NULL, NULL, '面料系列'),
     (24213, 1, 24200, 'Product Dictionaries', 'productCenter.menu.productDicts', 4, 'product-dicts', 'product-center/product-dicts', NULL, '1', '0', 'C', '1', '1', 'product:dict:list', 'dict', 'system', now(), NULL, NULL, '产品业务字典'),
-    (24204, 1, 24200, 'Material Attribute Definitions', 'productCenter.menu.baseAttributes', 5, 'base-attributes', 'product-center/base', NULL, '1', '0', 'C', '1', '1', 'product:base-attribute:list', 'dict', 'system', now(), NULL, NULL, '物料属性定义'),
-    (24201, 1, 24200, 'Fabric Series', 'productCenter.menu.fabricSeries', 6, 'fabric-series', 'product-center/fabric', NULL, '1', '0', 'C', '1', '1', 'product:fabric:list', 'color', 'system', now(), NULL, NULL, '面料系列'),
+    (24206, 1, 24200, 'Units', 'productCenter.menu.units', 5, 'units', 'product-center/base', NULL, '1', '0', 'C', '1', '1', 'product:unit:list', 'unit', 'system', now(), NULL, NULL, '单位管理'),
+    (24204, 1, 24200, 'Material Attributes', 'productCenter.menu.baseAttributes', 6, 'base-attributes', 'product-center/base', NULL, '1', '0', 'C', '1', '1', 'product:base-attribute:list', 'dict', 'system', now(), NULL, NULL, '物料属性'),
     (24202, 1, 24200, 'Materials', 'productCenter.menu.materials', 7, 'materials', 'product-center/base', NULL, '1', '0', 'C', '1', '1', 'product:base:list', 'inventory', 'system', now(), NULL, NULL, '物料资料'),
-    (24208, 1, 24200, 'Material Attributes', 'productCenter.menu.materialAttributes', 8, 'material-attributes', 'product-center/base', NULL, '1', '0', 'C', '0', '1', 'product:material-attribute:list', 'list', 'system', now(), NULL, NULL, '物料属性，从物料资料抽屉同步维护'),
+    (24208, 1, 24200, 'Material Attribute Values', 'productCenter.menu.materialAttributes', 8, 'material-attributes', 'product-center/base', NULL, '1', '0', 'C', '0', '1', 'product:material-attribute:list', 'list', 'system', now(), NULL, NULL, '物料属性值，从物料资料抽屉同步维护'),
     (24203, 1, 24200, 'Component Packs', 'productCenter.menu.components', 9, 'components', 'product-center/base', NULL, '1', '0', 'C', '1', '1', 'product:base:list', 'component', 'system', now(), NULL, NULL, '组件包'),
     (24205, 1, 24200, 'Media Assets', 'productCenter.menu.mediaAssets', 10, 'media-assets', 'product-center/assets', NULL, '1', '0', 'C', '1', '1', 'product:asset:list', 'upload', 'system', now(), NULL, NULL, '资料资产'),
     (24209, 1, 24200, 'Component Items', 'productCenter.menu.componentItems', 92, 'component-items', 'product-center/base', NULL, '1', '0', 'C', '0', '1', 'product:component-item:list', 'list', 'system', now(), NULL, NULL, '组件明细，从组件包行内入口维护'),
@@ -2020,6 +2097,21 @@ SET tenant_id = EXCLUDED.tenant_id,
 
 INSERT INTO sys_menu (menu_id, tenant_id, parent_id, menu_name, i18n_key, order_num, path, component, query_param, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, update_by, update_time, remark)
 VALUES
+    (24214, 1, 24212, 'Category Query', 'common.search', 1, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:base:list', '#', 'system', now(), NULL, NULL, '产品分类查询'),
+    (24215, 1, 24212, 'Category Add', 'common.add', 2, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:base:add', '#', 'system', now(), NULL, NULL, '产品分类新增'),
+    (24216, 1, 24212, 'Category Edit', 'common.edit', 3, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:base:edit', '#', 'system', now(), NULL, NULL, '产品分类编辑'),
+    (24217, 1, 24212, 'Category Delete', 'common.delete', 4, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:base:remove', '#', 'system', now(), NULL, NULL, '产品分类删除'),
+    (24218, 1, 24212, 'Category Reference', 'productCenter.common.references', 5, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:base:reference', '#', 'system', now(), NULL, NULL, '产品分类引用检查'),
+    (24220, 1, 24201, 'Fabric Series Query', 'common.search', 1, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:fabric:list', '#', 'system', now(), NULL, NULL, '面料系列查询'),
+    (24221, 1, 24201, 'Fabric Series Add', 'common.add', 2, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:fabric:add', '#', 'system', now(), NULL, NULL, '面料系列新增'),
+    (24222, 1, 24201, 'Fabric Series Edit', 'common.edit', 3, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:fabric:edit', '#', 'system', now(), NULL, NULL, '面料系列编辑'),
+    (24223, 1, 24201, 'Fabric Series Delete', 'common.delete', 4, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:fabric:remove', '#', 'system', now(), NULL, NULL, '面料系列删除'),
+    (24224, 1, 24201, 'Fabric Series Reference', 'productCenter.common.references', 5, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:fabric:reference', '#', 'system', now(), NULL, NULL, '面料系列引用检查'),
+    (24225, 1, 24206, 'Unit Query', 'common.search', 1, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:unit:list', '#', 'system', now(), NULL, NULL, '单位查询'),
+    (24226, 1, 24206, 'Unit Add', 'common.add', 2, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:unit:add', '#', 'system', now(), NULL, NULL, '单位新增'),
+    (24227, 1, 24206, 'Unit Edit', 'common.edit', 3, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:unit:edit', '#', 'system', now(), NULL, NULL, '单位编辑'),
+    (24228, 1, 24206, 'Unit Delete', 'common.delete', 4, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:unit:remove', '#', 'system', now(), NULL, NULL, '单位删除'),
+    (24229, 1, 24206, 'Unit Reference', 'productCenter.common.references', 5, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:unit:reference', '#', 'system', now(), NULL, NULL, '单位引用检查'),
     (24230, 1, 24204, 'Material Attribute Query', 'common.search', 1, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:base-attribute:list', '#', 'system', now(), NULL, NULL, '物料属性查询'),
     (24231, 1, 24204, 'Material Attribute Add', 'common.add', 2, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:base-attribute:add', '#', 'system', now(), NULL, NULL, '物料属性新增'),
     (24232, 1, 24204, 'Material Attribute Edit', 'common.edit', 3, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:base-attribute:edit', '#', 'system', now(), NULL, NULL, '物料属性编辑'),
@@ -2034,15 +2126,18 @@ VALUES
     (24241, 1, 24202, 'Material Add', 'common.add', 2, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:base:add', '#', 'system', now(), NULL, NULL, '物料新增'),
     (24242, 1, 24202, 'Material Edit', 'common.edit', 3, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:base:edit', '#', 'system', now(), NULL, NULL, '物料编辑'),
     (24243, 1, 24202, 'Material Delete', 'common.delete', 4, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:base:remove', '#', 'system', now(), NULL, NULL, '物料删除'),
+    (24244, 1, 24202, 'Material Reference', 'productCenter.common.references', 5, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:base:reference', '#', 'system', now(), NULL, NULL, '物料引用检查'),
+    (24245, 1, 24202, 'Material Super Edit', 'productCenter.common.superEdit', 6, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:base:superEdit', '#', 'system', now(), NULL, NULL, '物料超级修改'),
     (24280, 1, 24208, 'Material Attribute Query', 'common.search', 1, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:material-attribute:list', '#', 'system', now(), NULL, NULL, '物料属性查询'),
     (24281, 1, 24208, 'Material Attribute Add', 'common.add', 2, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:material-attribute:add', '#', 'system', now(), NULL, NULL, '物料属性新增'),
     (24282, 1, 24208, 'Material Attribute Edit', 'common.edit', 3, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:material-attribute:edit', '#', 'system', now(), NULL, NULL, '物料属性编辑'),
     (24283, 1, 24208, 'Material Attribute Delete', 'common.delete', 4, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:material-attribute:remove', '#', 'system', now(), NULL, NULL, '物料属性删除'),
     (24284, 1, 24208, 'Material Attribute Reference', 'productCenter.common.references', 5, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:material-attribute:reference', '#', 'system', now(), NULL, NULL, '物料属性引用检查'),
-    (24250, 1, 24203, 'Component Query', 'common.search', 1, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:base:list', '#', 'system', now(), NULL, NULL, '辅材查询'),
-    (24251, 1, 24203, 'Component Add', 'common.add', 2, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:base:add', '#', 'system', now(), NULL, NULL, '辅材新增'),
-    (24252, 1, 24203, 'Component Edit', 'common.edit', 3, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:base:edit', '#', 'system', now(), NULL, NULL, '辅材编辑'),
-    (24253, 1, 24203, 'Component Delete', 'common.delete', 4, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:base:remove', '#', 'system', now(), NULL, NULL, '辅材删除'),
+    (24250, 1, 24203, 'Component Query', 'common.search', 1, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:base:list', '#', 'system', now(), NULL, NULL, '组件包查询'),
+    (24251, 1, 24203, 'Component Add', 'common.add', 2, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:base:add', '#', 'system', now(), NULL, NULL, '组件包新增'),
+    (24252, 1, 24203, 'Component Edit', 'common.edit', 3, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:base:edit', '#', 'system', now(), NULL, NULL, '组件包编辑'),
+    (24253, 1, 24203, 'Component Delete', 'common.delete', 4, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:base:remove', '#', 'system', now(), NULL, NULL, '组件包删除'),
+    (24254, 1, 24203, 'Component Reference', 'productCenter.common.references', 5, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:base:reference', '#', 'system', now(), NULL, NULL, '组件包引用检查'),
     (24290, 1, 24209, 'Component Item Query', 'common.search', 1, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:component-item:list', '#', 'system', now(), NULL, NULL, '组件明细查询'),
     (24291, 1, 24209, 'Component Item Add', 'common.add', 2, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:component-item:add', '#', 'system', now(), NULL, NULL, '组件明细新增'),
     (24292, 1, 24209, 'Component Item Edit', 'common.edit', 3, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:component-item:edit', '#', 'system', now(), NULL, NULL, '组件明细编辑'),
@@ -2050,11 +2145,14 @@ VALUES
     (24294, 1, 24209, 'Component Item Reference', 'productCenter.common.references', 5, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:component-item:reference', '#', 'system', now(), NULL, NULL, '组件明细引用检查'),
     (24260, 1, 24205, 'Asset Query', 'common.search', 1, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:asset:list', '#', 'system', now(), NULL, NULL, '资料资产查询'),
     (24261, 1, 24205, 'Asset Upload', 'common.upload', 2, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:asset:upload', '#', 'system', now(), NULL, NULL, '资料资产上传'),
-    (24262, 1, 24205, 'Asset Reference', 'productCenter.common.references', 3, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:asset:reference', '#', 'system', now(), NULL, NULL, '资料资产引用检查'),
+    (24263, 1, 24205, 'Asset Edit', 'common.edit', 3, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:asset:edit', '#', 'system', now(), NULL, NULL, '资料资产编辑'),
+    (24264, 1, 24205, 'Asset Delete', 'common.delete', 4, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:asset:remove', '#', 'system', now(), NULL, NULL, '资料资产删除'),
+    (24262, 1, 24205, 'Asset Reference', 'productCenter.common.references', 5, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:asset:reference', '#', 'system', now(), NULL, NULL, '资料资产引用检查'),
     (24270, 1, 24210, 'Binding Query', 'common.search', 1, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:asset:list', '#', 'system', now(), NULL, NULL, '资料绑定查询'),
     (24271, 1, 24210, 'Binding Add', 'common.add', 2, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:asset:bind', '#', 'system', now(), NULL, NULL, '资料绑定新增'),
     (24272, 1, 24210, 'Binding Edit', 'common.edit', 3, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:asset:bind', '#', 'system', now(), NULL, NULL, '资料绑定编辑'),
-    (24273, 1, 24210, 'Binding Reference', 'productCenter.common.references', 4, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:asset:reference', '#', 'system', now(), NULL, NULL, '资料绑定引用检查'),
+    (24274, 1, 24210, 'Binding Delete', 'common.delete', 4, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:asset:unbind', '#', 'system', now(), NULL, NULL, '资料绑定删除'),
+    (24273, 1, 24210, 'Binding Reference', 'productCenter.common.references', 5, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:asset:reference', '#', 'system', now(), NULL, NULL, '资料绑定引用检查'),
     (24510, 1, 24501, 'Engineering Query', 'common.search', 1, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:engineering:list', '#', 'system', now(), NULL, NULL, '工程配置查询'),
     (24511, 1, 24501, 'Engineering Add', 'common.add', 2, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:engineering:add', '#', 'system', now(), NULL, NULL, '工程配置新增'),
     (24512, 1, 24501, 'Engineering Edit', 'common.edit', 3, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:engineering:edit', '#', 'system', now(), NULL, NULL, '工程配置编辑'),

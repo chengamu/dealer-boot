@@ -155,7 +155,6 @@ import {
   Connection,
   Files,
   Finished,
-  List,
   Plus,
   Refresh,
   SetUp,
@@ -289,9 +288,8 @@ const flows = computed<GuideFlow[]>(() => [
     primaryPath: '/product-master/components',
     steps: [
       step('component-materials', 1, 'productCenter.masterGuide.stepComponentMaterial', 'productCenter.masterGuide.stepComponentMaterialDesc', 'productCenter.masterGuide.openMaterials', '/product-master/materials', Files, counts.materials > 0),
-      step('component-attributes', 2, 'productCenter.masterGuide.stepMaterialAttributes', 'productCenter.masterGuide.stepMaterialAttributesDesc', 'productCenter.masterGuide.openMaterialAttributes', '/product-master/materials?tab=materialAttribute', List, counts.materialAttributes > 0),
-      step('component-pack', 3, 'productCenter.masterGuide.stepComponentPack', 'productCenter.masterGuide.stepComponentPackDesc', 'productCenter.masterGuide.openComponents', '/product-master/components', Box, counts.components > 0),
-      step('component-items', 4, 'productCenter.masterGuide.stepComponentItems', 'productCenter.masterGuide.stepComponentItemsDesc', 'productCenter.masterGuide.openComponentItems', '/product-master/components?tab=componentItem', Connection, counts.componentItems > 0)
+      step('component-pack', 2, 'productCenter.masterGuide.stepComponentPack', 'productCenter.masterGuide.stepComponentPackDesc', 'productCenter.masterGuide.openComponents', '/product-master/components', Box, counts.components > 0),
+      step('component-items', 3, 'productCenter.masterGuide.stepComponentItems', 'productCenter.masterGuide.stepComponentItemsDesc', 'productCenter.masterGuide.openComponentItems', '/product-master/components?tab=componentItem', Connection, counts.componentItems > 0)
     ]
   }
 ])
@@ -349,7 +347,6 @@ const quickActions: QuickAction[] = [
   { key: 'component', labelKey: 'productCenter.masterGuide.openComponents', path: '/product-master/components', icon: Box },
   { key: 'dictionary', labelKey: 'productCenter.masterGuide.openProductDicts', path: '/product-master/product-dicts', icon: Collection },
   { key: 'baseAttributes', labelKey: 'productCenter.masterGuide.openAttributes', path: '/product-master/base-attributes', icon: Collection },
-  { key: 'attributes', labelKey: 'productCenter.masterGuide.openMaterialAttributes', path: '/product-master/materials?tab=materialAttribute', icon: List },
   { key: 'items', labelKey: 'productCenter.masterGuide.openComponentItems', path: '/product-master/components?tab=componentItem', icon: Connection }
 ]
 

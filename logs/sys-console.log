@@ -1,172 +1,370 @@
-2026-06-21 12:45:03 [background-preinit] INFO  o.h.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
-2026-06-21 12:45:03 [main] INFO  com.bocoo.BocooApplication - Starting BocooApplication using Java 17.0.19 with PID 56827 (/Users/chengmuxuan/Desktop/cmx/base-boot/bocoo-admin/target/classes started by chengmuxuan in /Users/chengmuxuan/Desktop/cmx/base-boot)
-2026-06-21 12:45:03 [main] INFO  com.bocoo.BocooApplication - The following 1 profile is active: "dev"
-2026-06-21 12:45:05 [main] INFO  c.b.c.web.i18n.JsonMessageSource - Loaded JSON i18n locales: [en_US, zh_CN]
-2026-06-21 12:45:05 [main] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8081"]
-2026-06-21 12:45:05 [main] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
-2026-06-21 12:45:05 [main] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.33]
-2026-06-21 12:45:05 [main] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
-2026-06-21 12:45:05 [main] INFO  c.b.common.redis.config.RedisConfig - 初始化 redis 配置
-2026-06-21 12:45:05 [main] INFO  org.redisson.Version - Redisson 3.52.0
-2026-06-21 12:45:05 [main] WARN  i.n.r.d.DnsServerAddressStreamProviders - Can not find io.netty.resolver.dns.macos.MacOSDnsServerAddressStreamProvider in the classpath, fallback to system defaults. This may result in incorrect DNS resolutions on MacOS. Check whether you have a dependency on 'io.netty:netty-resolver-dns-native-macos'
-2026-06-21 12:45:05 [redisson-netty-1-4] INFO  o.r.connection.ConnectionsHolder - 1 connections initialized for 127.0.0.1/127.0.0.1:6379
-2026-06-21 12:45:05 [redisson-netty-1-3] INFO  o.r.connection.ConnectionsHolder - 8 connections initialized for 127.0.0.1/127.0.0.1:6379
-2026-06-21 12:45:05 [main] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource detect P6SPY plugin and enabled it
-2026-06-21 12:45:05 [main] INFO  com.zaxxer.hikari.HikariDataSource - master - Starting...
-2026-06-21 12:45:05 [main] INFO  com.zaxxer.hikari.pool.HikariPool - master - Added connection org.postgresql.jdbc.PgConnection@5e89e527
-2026-06-21 12:45:05 [main] INFO  com.zaxxer.hikari.HikariDataSource - master - Start completed.
-2026-06-21 12:45:05 [main] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource - add a datasource named [master] success
-2026-06-21 12:45:05 [main] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource initial loaded [1] datasource,primary datasource named [master]
-2026-06-21 12:45:07 [main] INFO  c.b.common.json.config.JacksonConfig - 初始化 jackson 配置
-2026-06-21 12:45:09 [main] INFO  c.b.c.w.s.ServerEndpointExporter - [34mNetty WebSocket started on port: 2831 with context path(s): '/ws' .[0m
-2026-06-21 12:45:09 [main] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8081"]
-2026-06-21 12:45:09 [main] INFO  com.bocoo.BocooApplication - Started BocooApplication in 5.754 seconds (process running for 6.975)
-2026-06-21 12:45:09 [main] INFO  c.b.s.runner.SystemApplicationRunner - 初始化OSS配置成功
-2026-06-21 12:45:09 [main] INFO  c.b.s.runner.SystemApplicationRunner - 加载参数缓存数据成功
-2026-06-21 12:45:09 [main] INFO  c.b.s.runner.SystemApplicationRunner - 加载字典缓存数据成功
-2026-06-21 12:45:09 [RMI TCP Connection(3)-127.0.0.1] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
-2026-06-21 14:50:36 [master housekeeper] WARN  com.zaxxer.hikari.pool.HikariPool - master - Thread starvation or clock leap detected (housekeeper delta=15m29s813ms).
-2026-06-21 14:52:29 [master housekeeper] WARN  com.zaxxer.hikari.pool.HikariPool - master - Thread starvation or clock leap detected (housekeeper delta=1m52s829ms).
-2026-06-21 14:52:38 [master housekeeper] WARN  com.zaxxer.hikari.pool.PoolBase - master - Failed to validate connection org.postgresql.jdbc.PgConnection@68b98b16 (This connection has been closed.). Possibly consider using a shorter maxLifetime value.
-2026-06-21 14:52:43 [master housekeeper] WARN  com.zaxxer.hikari.pool.PoolBase - master - Failed to validate connection org.postgresql.jdbc.PgConnection@166b7c2c (This connection has been closed.). Possibly consider using a shorter maxLifetime value.
-2026-06-21 14:52:48 [master housekeeper] WARN  com.zaxxer.hikari.pool.PoolBase - master - Failed to validate connection org.postgresql.jdbc.PgConnection@3b0fc683 (This connection has been closed.). Possibly consider using a shorter maxLifetime value.
-2026-06-21 14:52:53 [master housekeeper] WARN  com.zaxxer.hikari.pool.PoolBase - master - Failed to validate connection org.postgresql.jdbc.PgConnection@7b5df3be (This connection has been closed.). Possibly consider using a shorter maxLifetime value.
-2026-06-21 14:52:58 [master housekeeper] WARN  com.zaxxer.hikari.pool.PoolBase - master - Failed to validate connection org.postgresql.jdbc.PgConnection@375dffa2 (This connection has been closed.). Possibly consider using a shorter maxLifetime value.
-2026-06-21 14:53:01 [redisson-timer-4-1] ERROR o.r.c.handler.PingConnectionHandler - Unable to send PING command over channel: [id: 0x838b58ec, L:/127.0.0.1:51257 - R:127.0.0.1/127.0.0.1:6379]
-org.redisson.client.RedisTimeoutException: Command execution timeout for command: (PING), params: [], Redis client: [addr=redis://127.0.0.1:6379,127.0.0.1/127.0.0.1:6379]
-	at org.redisson.client.RedisConnection.lambda$async$2(RedisConnection.java:300)
-	at io.netty.util.HashedWheelTimer$HashedWheelTimeout.run(HashedWheelTimer.java:713)
-	at io.netty.util.concurrent.ImmediateExecutor.execute(ImmediateExecutor.java:34)
-	at io.netty.util.HashedWheelTimer$HashedWheelTimeout.expire(HashedWheelTimer.java:701)
-	at io.netty.util.HashedWheelTimer$HashedWheelBucket.expireTimeouts(HashedWheelTimer.java:788)
-	at io.netty.util.HashedWheelTimer$Worker.run(HashedWheelTimer.java:501)
-	at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)
-	at java.base/java.lang.Thread.run(Thread.java:840)
-2026-06-21 14:53:01 [redisson-timer-4-1] ERROR o.r.c.handler.PingConnectionHandler - Unable to send PING command over channel: [id: 0xb319e401, L:/127.0.0.1:51258 - R:127.0.0.1/127.0.0.1:6379]
-org.redisson.client.RedisTimeoutException: Command execution timeout for command: (PING), params: [], Redis client: [addr=redis://127.0.0.1:6379,127.0.0.1/127.0.0.1:6379]
-	at org.redisson.client.RedisConnection.lambda$async$2(RedisConnection.java:300)
-	at io.netty.util.HashedWheelTimer$HashedWheelTimeout.run(HashedWheelTimer.java:713)
-	at io.netty.util.concurrent.ImmediateExecutor.execute(ImmediateExecutor.java:34)
-	at io.netty.util.HashedWheelTimer$HashedWheelTimeout.expire(HashedWheelTimer.java:701)
-	at io.netty.util.HashedWheelTimer$HashedWheelBucket.expireTimeouts(HashedWheelTimer.java:788)
-	at io.netty.util.HashedWheelTimer$Worker.run(HashedWheelTimer.java:501)
-	at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)
-	at java.base/java.lang.Thread.run(Thread.java:840)
-2026-06-21 14:53:01 [redisson-timer-4-1] ERROR o.r.c.handler.PingConnectionHandler - Unable to send PING command over channel: [id: 0xa6165c59, L:/127.0.0.1:51259 - R:127.0.0.1/127.0.0.1:6379]
-org.redisson.client.RedisTimeoutException: Command execution timeout for command: (PING), params: [], Redis client: [addr=redis://127.0.0.1:6379,127.0.0.1/127.0.0.1:6379]
-	at org.redisson.client.RedisConnection.lambda$async$2(RedisConnection.java:300)
-	at io.netty.util.HashedWheelTimer$HashedWheelTimeout.run(HashedWheelTimer.java:713)
-	at io.netty.util.concurrent.ImmediateExecutor.execute(ImmediateExecutor.java:34)
-	at io.netty.util.HashedWheelTimer$HashedWheelTimeout.expire(HashedWheelTimer.java:701)
-	at io.netty.util.HashedWheelTimer$HashedWheelBucket.expireTimeouts(HashedWheelTimer.java:788)
-	at io.netty.util.HashedWheelTimer$Worker.run(HashedWheelTimer.java:501)
-	at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)
-	at java.base/java.lang.Thread.run(Thread.java:840)
-2026-06-21 14:53:01 [redisson-timer-4-1] ERROR o.r.c.handler.PingConnectionHandler - Unable to send PING command over channel: [id: 0x917b3d50, L:/127.0.0.1:51260 - R:127.0.0.1/127.0.0.1:6379]
-org.redisson.client.RedisTimeoutException: Command execution timeout for command: (PING), params: [], Redis client: [addr=redis://127.0.0.1:6379,127.0.0.1/127.0.0.1:6379]
-	at org.redisson.client.RedisConnection.lambda$async$2(RedisConnection.java:300)
-	at io.netty.util.HashedWheelTimer$HashedWheelTimeout.run(HashedWheelTimer.java:713)
-	at io.netty.util.concurrent.ImmediateExecutor.execute(ImmediateExecutor.java:34)
-	at io.netty.util.HashedWheelTimer$HashedWheelTimeout.expire(HashedWheelTimer.java:701)
-	at io.netty.util.HashedWheelTimer$HashedWheelBucket.expireTimeouts(HashedWheelTimer.java:788)
-	at io.netty.util.HashedWheelTimer$Worker.run(HashedWheelTimer.java:501)
-	at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)
-	at java.base/java.lang.Thread.run(Thread.java:840)
-2026-06-21 14:53:01 [redisson-timer-4-1] ERROR o.r.c.handler.PingConnectionHandler - Unable to send PING command over channel: [id: 0x4b5b591f, L:/127.0.0.1:51261 - R:127.0.0.1/127.0.0.1:6379]
-org.redisson.client.RedisTimeoutException: Command execution timeout for command: (PING), params: [], Redis client: [addr=redis://127.0.0.1:6379,127.0.0.1/127.0.0.1:6379]
-	at org.redisson.client.RedisConnection.lambda$async$2(RedisConnection.java:300)
-	at io.netty.util.HashedWheelTimer$HashedWheelTimeout.run(HashedWheelTimer.java:713)
-	at io.netty.util.concurrent.ImmediateExecutor.execute(ImmediateExecutor.java:34)
-	at io.netty.util.HashedWheelTimer$HashedWheelTimeout.expire(HashedWheelTimer.java:701)
-	at io.netty.util.HashedWheelTimer$HashedWheelBucket.expireTimeouts(HashedWheelTimer.java:788)
-	at io.netty.util.HashedWheelTimer$Worker.run(HashedWheelTimer.java:501)
-	at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)
-	at java.base/java.lang.Thread.run(Thread.java:840)
-2026-06-21 14:53:01 [redisson-timer-4-1] ERROR o.r.c.handler.PingConnectionHandler - Unable to send PING command over channel: [id: 0xec07ca8f, L:/127.0.0.1:51262 - R:127.0.0.1/127.0.0.1:6379]
-org.redisson.client.RedisTimeoutException: Command execution timeout for command: (PING), params: [], Redis client: [addr=redis://127.0.0.1:6379,127.0.0.1/127.0.0.1:6379]
-	at org.redisson.client.RedisConnection.lambda$async$2(RedisConnection.java:300)
-	at io.netty.util.HashedWheelTimer$HashedWheelTimeout.run(HashedWheelTimer.java:713)
-	at io.netty.util.concurrent.ImmediateExecutor.execute(ImmediateExecutor.java:34)
-	at io.netty.util.HashedWheelTimer$HashedWheelTimeout.expire(HashedWheelTimer.java:701)
-	at io.netty.util.HashedWheelTimer$HashedWheelBucket.expireTimeouts(HashedWheelTimer.java:788)
-	at io.netty.util.HashedWheelTimer$Worker.run(HashedWheelTimer.java:501)
-	at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)
-	at java.base/java.lang.Thread.run(Thread.java:840)
-2026-06-21 14:53:01 [redisson-timer-4-1] ERROR o.r.c.handler.PingConnectionHandler - Unable to send PING command over channel: [id: 0xec813b5b, L:/127.0.0.1:51263 - R:127.0.0.1/127.0.0.1:6379]
-org.redisson.client.RedisTimeoutException: Command execution timeout for command: (PING), params: [], Redis client: [addr=redis://127.0.0.1:6379,127.0.0.1/127.0.0.1:6379]
-	at org.redisson.client.RedisConnection.lambda$async$2(RedisConnection.java:300)
-	at io.netty.util.HashedWheelTimer$HashedWheelTimeout.run(HashedWheelTimer.java:713)
-	at io.netty.util.concurrent.ImmediateExecutor.execute(ImmediateExecutor.java:34)
-	at io.netty.util.HashedWheelTimer$HashedWheelTimeout.expire(HashedWheelTimer.java:701)
-	at io.netty.util.HashedWheelTimer$HashedWheelBucket.expireTimeouts(HashedWheelTimer.java:788)
-	at io.netty.util.HashedWheelTimer$Worker.run(HashedWheelTimer.java:501)
-	at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)
-	at java.base/java.lang.Thread.run(Thread.java:840)
-2026-06-21 14:53:02 [redisson-timer-4-1] ERROR o.r.c.handler.PingConnectionHandler - Unable to send PING command over channel: [id: 0x5baf6953, L:/127.0.0.1:51264 - R:127.0.0.1/127.0.0.1:6379]
-org.redisson.client.RedisTimeoutException: Command execution timeout for command: (PING), params: [], Redis client: [addr=redis://127.0.0.1:6379,127.0.0.1/127.0.0.1:6379]
-	at org.redisson.client.RedisConnection.lambda$async$2(RedisConnection.java:300)
-	at io.netty.util.HashedWheelTimer$HashedWheelTimeout.run(HashedWheelTimer.java:713)
-	at io.netty.util.concurrent.ImmediateExecutor.execute(ImmediateExecutor.java:34)
-	at io.netty.util.HashedWheelTimer$HashedWheelTimeout.expire(HashedWheelTimer.java:701)
-	at io.netty.util.HashedWheelTimer$HashedWheelBucket.expireTimeouts(HashedWheelTimer.java:788)
-	at io.netty.util.HashedWheelTimer$Worker.run(HashedWheelTimer.java:501)
-	at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)
-	at java.base/java.lang.Thread.run(Thread.java:840)
-2026-06-21 14:53:02 [redisson-timer-4-1] ERROR o.r.c.handler.PingConnectionHandler - Unable to send PING command over channel: [id: 0x730a765d, L:/127.0.0.1:51265 - R:127.0.0.1/127.0.0.1:6379]
-org.redisson.client.RedisTimeoutException: Command execution timeout for command: (PING), params: [], Redis client: [addr=redis://127.0.0.1:6379,127.0.0.1/127.0.0.1:6379]
-	at org.redisson.client.RedisConnection.lambda$async$2(RedisConnection.java:300)
-	at io.netty.util.HashedWheelTimer$HashedWheelTimeout.run(HashedWheelTimer.java:713)
-	at io.netty.util.concurrent.ImmediateExecutor.execute(ImmediateExecutor.java:34)
-	at io.netty.util.HashedWheelTimer$HashedWheelTimeout.expire(HashedWheelTimer.java:701)
-	at io.netty.util.HashedWheelTimer$HashedWheelBucket.expireTimeouts(HashedWheelTimer.java:788)
-	at io.netty.util.HashedWheelTimer$Worker.run(HashedWheelTimer.java:501)
-	at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)
-	at java.base/java.lang.Thread.run(Thread.java:840)
-2026-06-21 14:53:03 [master housekeeper] WARN  com.zaxxer.hikari.pool.PoolBase - master - Failed to validate connection org.postgresql.jdbc.PgConnection@41fdfa34 (This connection has been closed.). Possibly consider using a shorter maxLifetime value.
-2026-06-21 14:53:08 [master housekeeper] WARN  com.zaxxer.hikari.pool.PoolBase - master - Failed to validate connection org.postgresql.jdbc.PgConnection@6860ed65 (This connection has been closed.). Possibly consider using a shorter maxLifetime value.
-2026-06-21 15:08:13 [master housekeeper] WARN  com.zaxxer.hikari.pool.PoolBase - master - Failed to validate connection org.postgresql.jdbc.PgConnection@3fe489ee (This connection has been closed.). Possibly consider using a shorter maxLifetime value.
-2026-06-21 15:08:18 [master housekeeper] WARN  com.zaxxer.hikari.pool.PoolBase - master - Failed to validate connection org.postgresql.jdbc.PgConnection@69f74559 (This connection has been closed.). Possibly consider using a shorter maxLifetime value.
-2026-06-21 15:08:23 [master housekeeper] WARN  com.zaxxer.hikari.pool.PoolBase - master - Failed to validate connection org.postgresql.jdbc.PgConnection@6fcf9e82 (This connection has been closed.). Possibly consider using a shorter maxLifetime value.
-2026-06-21 15:08:23 [master housekeeper] WARN  com.zaxxer.hikari.pool.HikariPool - master - Thread starvation or clock leap detected (housekeeper delta=15m54s194ms).
-2026-06-21 15:19:04 [master housekeeper] WARN  com.zaxxer.hikari.pool.HikariPool - master - Thread starvation or clock leap detected (housekeeper delta=10m11s601ms).
-2026-06-21 15:34:34 [master housekeeper] WARN  com.zaxxer.hikari.pool.HikariPool - master - Thread starvation or clock leap detected (housekeeper delta=15m29s601ms).
-2026-06-21 15:50:34 [master housekeeper] WARN  com.zaxxer.hikari.pool.HikariPool - master - Thread starvation or clock leap detected (housekeeper delta=15m30s149ms).
-2026-06-21 16:06:34 [master housekeeper] WARN  com.zaxxer.hikari.pool.HikariPool - master - Thread starvation or clock leap detected (housekeeper delta=15m29s798ms).
-2026-06-21 16:22:04 [master housekeeper] WARN  com.zaxxer.hikari.pool.HikariPool - master - Thread starvation or clock leap detected (housekeeper delta=15m30s61ms).
-2026-06-21 16:36:27 [master housekeeper] WARN  com.zaxxer.hikari.pool.HikariPool - master - Thread starvation or clock leap detected (housekeeper delta=13m53s168ms).
-2026-06-21 16:50:05 [master housekeeper] WARN  com.zaxxer.hikari.pool.HikariPool - master - Thread starvation or clock leap detected (housekeeper delta=13m37s608ms).
-2026-06-21 17:25:30 [SpringApplicationShutdownHook] INFO  c.b.c.core.config.ThreadPoolConfig - ====关闭后台任务任务线程池====
-2026-06-21 17:25:30 [SpringApplicationShutdownHook] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource start closing ....
-2026-06-21 17:25:30 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - master - Shutdown initiated...
-2026-06-21 17:25:30 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - master - Shutdown completed.
-2026-06-21 17:25:30 [SpringApplicationShutdownHook] INFO  c.b.d.d.d.DefaultDataSourceDestroyer - dynamic-datasource close the datasource named [master] success,
-2026-06-21 17:25:30 [SpringApplicationShutdownHook] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource all closed success,bye
-2026-06-21 17:25:37 [background-preinit] INFO  o.h.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
-2026-06-21 17:25:37 [main] INFO  com.bocoo.BocooApplication - Starting BocooApplication using Java 17.0.19 with PID 67912 (/Users/chengmuxuan/Desktop/cmx/base-boot/bocoo-admin/target/classes started by chengmuxuan in /Users/chengmuxuan/Desktop/cmx/base-boot)
-2026-06-21 17:25:37 [main] INFO  com.bocoo.BocooApplication - The following 1 profile is active: "dev"
-2026-06-21 17:25:38 [main] INFO  c.b.c.web.i18n.JsonMessageSource - Loaded JSON i18n locales: [en_US, zh_CN]
-2026-06-21 17:25:39 [main] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8081"]
-2026-06-21 17:25:39 [main] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
-2026-06-21 17:25:39 [main] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.33]
-2026-06-21 17:25:39 [main] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
-2026-06-21 17:25:39 [main] INFO  c.b.common.redis.config.RedisConfig - 初始化 redis 配置
-2026-06-21 17:25:39 [main] INFO  org.redisson.Version - Redisson 3.52.0
-2026-06-21 17:25:39 [main] WARN  i.n.r.d.DnsServerAddressStreamProviders - Can not find io.netty.resolver.dns.macos.MacOSDnsServerAddressStreamProvider in the classpath, fallback to system defaults. This may result in incorrect DNS resolutions on MacOS. Check whether you have a dependency on 'io.netty:netty-resolver-dns-native-macos'
-2026-06-21 17:25:39 [redisson-netty-1-4] INFO  o.r.connection.ConnectionsHolder - 1 connections initialized for 127.0.0.1/127.0.0.1:6379
-2026-06-21 17:25:39 [redisson-netty-1-3] INFO  o.r.connection.ConnectionsHolder - 8 connections initialized for 127.0.0.1/127.0.0.1:6379
-2026-06-21 17:25:39 [main] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource detect P6SPY plugin and enabled it
-2026-06-21 17:25:39 [main] INFO  com.zaxxer.hikari.HikariDataSource - master - Starting...
-2026-06-21 17:25:39 [main] INFO  com.zaxxer.hikari.pool.HikariPool - master - Added connection org.postgresql.jdbc.PgConnection@6c2a7c73
-2026-06-21 17:25:39 [main] INFO  com.zaxxer.hikari.HikariDataSource - master - Start completed.
-2026-06-21 17:25:39 [main] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource - add a datasource named [master] success
-2026-06-21 17:25:39 [main] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource initial loaded [1] datasource,primary datasource named [master]
-2026-06-21 17:25:41 [main] INFO  c.b.common.json.config.JacksonConfig - 初始化 jackson 配置
-2026-06-21 17:25:42 [main] INFO  c.b.c.w.s.ServerEndpointExporter - [34mNetty WebSocket started on port: 2831 with context path(s): '/ws' .[0m
-2026-06-21 17:25:42 [main] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8081"]
-2026-06-21 17:25:42 [main] INFO  com.bocoo.BocooApplication - Started BocooApplication in 5.047 seconds (process running for 5.607)
-2026-06-21 17:25:42 [main] INFO  c.b.s.runner.SystemApplicationRunner - 初始化OSS配置成功
-2026-06-21 17:25:42 [main] INFO  c.b.s.runner.SystemApplicationRunner - 加载参数缓存数据成功
-2026-06-21 17:25:42 [main] INFO  c.b.s.runner.SystemApplicationRunner - 加载字典缓存数据成功
-2026-06-21 17:25:43 [RMI TCP Connection(1)-127.0.0.1] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
-2026-06-21 18:42:08 [master housekeeper] WARN  com.zaxxer.hikari.pool.HikariPool - master - Retrograde clock change detected (housekeeper delta=27s892ms), soft-evicting connections from pool.
-2026-06-21 21:43:29 [master housekeeper] WARN  com.zaxxer.hikari.pool.HikariPool - master - Thread starvation or clock leap detected (housekeeper delta=2m19s595ms).
+2026-06-24 00:00:19 [background-preinit] INFO  o.h.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2026-06-24 00:00:19 [main] INFO  com.bocoo.BocooApplication - Starting BocooApplication using Java 17.0.19 with PID 97522 (/Users/chengmuxuan/Desktop/cmx/base-boot/bocoo-admin/target/classes started by chengmuxuan in /Users/chengmuxuan/Desktop/cmx/base-boot)
+2026-06-24 00:00:19 [main] INFO  com.bocoo.BocooApplication - The following 1 profile is active: "dev"
+2026-06-24 00:00:20 [main] WARN  o.s.b.w.s.c.AnnotationConfigServletWebServerApplicationContext - Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.CannotLoadBeanClassException: Error loading class [com.bocoo.common.log.event.OperLogEventToSysOperLogBoMapperImpl] for bean with name 'operLogEventToSysOperLogBoMapperImpl' defined in file [/Users/chengmuxuan/Desktop/cmx/base-boot/bocoo-modules-system/target/classes/com/bocoo/common/log/event/OperLogEventToSysOperLogBoMapperImpl.class]: problem with class file or dependent class
+2026-06-24 00:00:20 [main] ERROR o.s.boot.SpringApplication - Application run failed
+org.springframework.beans.factory.CannotLoadBeanClassException: Error loading class [com.bocoo.common.log.event.OperLogEventToSysOperLogBoMapperImpl] for bean with name 'operLogEventToSysOperLogBoMapperImpl' defined in file [/Users/chengmuxuan/Desktop/cmx/base-boot/bocoo-modules-system/target/classes/com/bocoo/common/log/event/OperLogEventToSysOperLogBoMapperImpl.class]: problem with class file or dependent class
+	at org.springframework.beans.factory.support.AbstractBeanFactory.resolveBeanClass(AbstractBeanFactory.java:1559)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.determineTargetType(AbstractAutowireCapableBeanFactory.java:685)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.predictBeanType(AbstractAutowireCapableBeanFactory.java:653)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.isFactoryBean(AbstractBeanFactory.java:1687)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.doGetBeanNamesForType(DefaultListableBeanFactory.java:562)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.getBeanNamesForType(DefaultListableBeanFactory.java:534)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.getBeanNamesForType(DefaultListableBeanFactory.java:528)
+	at com.baomidou.mybatisplus.autoconfigure.MybatisPlusAutoConfiguration$AutoConfiguredMapperScannerRegistrar.getBeanNameForType(MybatisPlusAutoConfiguration.java:368)
+	at com.baomidou.mybatisplus.autoconfigure.MybatisPlusAutoConfiguration$AutoConfiguredMapperScannerRegistrar.registerBeanDefinitions(MybatisPlusAutoConfiguration.java:342)
+	at org.springframework.context.annotation.ImportBeanDefinitionRegistrar.registerBeanDefinitions(ImportBeanDefinitionRegistrar.java:86)
+	at org.springframework.context.annotation.ConfigurationClassBeanDefinitionReader.lambda$loadBeanDefinitionsFromRegistrars$1(ConfigurationClassBeanDefinitionReader.java:376)
+	at java.base/java.util.LinkedHashMap.forEach(LinkedHashMap.java:721)
+	at org.springframework.context.annotation.ConfigurationClassBeanDefinitionReader.loadBeanDefinitionsFromRegistrars(ConfigurationClassBeanDefinitionReader.java:375)
+	at org.springframework.context.annotation.ConfigurationClassBeanDefinitionReader.loadBeanDefinitionsForConfigurationClass(ConfigurationClassBeanDefinitionReader.java:148)
+	at org.springframework.context.annotation.ConfigurationClassBeanDefinitionReader.loadBeanDefinitions(ConfigurationClassBeanDefinitionReader.java:120)
+	at org.springframework.context.annotation.ConfigurationClassPostProcessor.processConfigBeanDefinitions(ConfigurationClassPostProcessor.java:429)
+	at org.springframework.context.annotation.ConfigurationClassPostProcessor.postProcessBeanDefinitionRegistry(ConfigurationClassPostProcessor.java:290)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanDefinitionRegistryPostProcessors(PostProcessorRegistrationDelegate.java:349)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:118)
+	at org.springframework.context.support.AbstractApplicationContext.invokeBeanFactoryPostProcessors(AbstractApplicationContext.java:789)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:607)
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.refresh(ServletWebServerApplicationContext.java:146)
+	at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:754)
+	at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:456)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:335)
+	at com.bocoo.BocooApplication.main(BocooApplication.java:21)
+Caused by: java.lang.ClassFormatError: Duplicate method name "convert" with signature "(LOperLogEvent;)Lcom.bocoo.system.domain.bo.SysOperLogBo;" in class file com/bocoo/common/log/event/OperLogEventToSysOperLogBoMapperImpl
+	at java.base/java.lang.ClassLoader.defineClass1(Native Method)
+	at java.base/java.lang.ClassLoader.defineClass(ClassLoader.java:1017)
+	at java.base/java.security.SecureClassLoader.defineClass(SecureClassLoader.java:150)
+	at java.base/jdk.internal.loader.BuiltinClassLoader.defineClass(BuiltinClassLoader.java:862)
+	at java.base/jdk.internal.loader.BuiltinClassLoader.findClassOnClassPathOrNull(BuiltinClassLoader.java:760)
+	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClassOrNull(BuiltinClassLoader.java:681)
+	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:639)
+	at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)
+	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:525)
+	at java.base/java.lang.Class.forName0(Native Method)
+	at java.base/java.lang.Class.forName(Class.java:469)
+	at org.springframework.util.ClassUtils.forName(ClassUtils.java:304)
+	at org.springframework.beans.factory.support.AbstractBeanDefinition.resolveBeanClass(AbstractBeanDefinition.java:489)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doResolveBeanClass(AbstractBeanFactory.java:1624)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.resolveBeanClass(AbstractBeanFactory.java:1549)
+	... 25 common frames omitted
+2026-06-24 00:00:31 [background-preinit] INFO  o.h.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2026-06-24 00:00:31 [main] INFO  com.bocoo.BocooApplication - Starting BocooApplication using Java 17.0.19 with PID 97763 (/Users/chengmuxuan/Desktop/cmx/base-boot/bocoo-admin/target/classes started by chengmuxuan in /Users/chengmuxuan/Desktop/cmx/base-boot)
+2026-06-24 00:00:31 [main] INFO  com.bocoo.BocooApplication - The following 1 profile is active: "dev"
+2026-06-24 00:00:32 [main] WARN  o.s.b.w.s.c.AnnotationConfigServletWebServerApplicationContext - Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.CannotLoadBeanClassException: Error loading class [com.bocoo.common.log.event.OperLogEventToSysOperLogBoMapperImpl] for bean with name 'operLogEventToSysOperLogBoMapperImpl' defined in file [/Users/chengmuxuan/Desktop/cmx/base-boot/bocoo-modules-system/target/classes/com/bocoo/common/log/event/OperLogEventToSysOperLogBoMapperImpl.class]: problem with class file or dependent class
+2026-06-24 00:00:32 [main] ERROR o.s.boot.SpringApplication - Application run failed
+org.springframework.beans.factory.CannotLoadBeanClassException: Error loading class [com.bocoo.common.log.event.OperLogEventToSysOperLogBoMapperImpl] for bean with name 'operLogEventToSysOperLogBoMapperImpl' defined in file [/Users/chengmuxuan/Desktop/cmx/base-boot/bocoo-modules-system/target/classes/com/bocoo/common/log/event/OperLogEventToSysOperLogBoMapperImpl.class]: problem with class file or dependent class
+	at org.springframework.beans.factory.support.AbstractBeanFactory.resolveBeanClass(AbstractBeanFactory.java:1559)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.determineTargetType(AbstractAutowireCapableBeanFactory.java:685)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.predictBeanType(AbstractAutowireCapableBeanFactory.java:653)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.isFactoryBean(AbstractBeanFactory.java:1687)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.doGetBeanNamesForType(DefaultListableBeanFactory.java:562)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.getBeanNamesForType(DefaultListableBeanFactory.java:534)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.getBeanNamesForType(DefaultListableBeanFactory.java:528)
+	at com.baomidou.mybatisplus.autoconfigure.MybatisPlusAutoConfiguration$AutoConfiguredMapperScannerRegistrar.getBeanNameForType(MybatisPlusAutoConfiguration.java:368)
+	at com.baomidou.mybatisplus.autoconfigure.MybatisPlusAutoConfiguration$AutoConfiguredMapperScannerRegistrar.registerBeanDefinitions(MybatisPlusAutoConfiguration.java:342)
+	at org.springframework.context.annotation.ImportBeanDefinitionRegistrar.registerBeanDefinitions(ImportBeanDefinitionRegistrar.java:86)
+	at org.springframework.context.annotation.ConfigurationClassBeanDefinitionReader.lambda$loadBeanDefinitionsFromRegistrars$1(ConfigurationClassBeanDefinitionReader.java:376)
+	at java.base/java.util.LinkedHashMap.forEach(LinkedHashMap.java:721)
+	at org.springframework.context.annotation.ConfigurationClassBeanDefinitionReader.loadBeanDefinitionsFromRegistrars(ConfigurationClassBeanDefinitionReader.java:375)
+	at org.springframework.context.annotation.ConfigurationClassBeanDefinitionReader.loadBeanDefinitionsForConfigurationClass(ConfigurationClassBeanDefinitionReader.java:148)
+	at org.springframework.context.annotation.ConfigurationClassBeanDefinitionReader.loadBeanDefinitions(ConfigurationClassBeanDefinitionReader.java:120)
+	at org.springframework.context.annotation.ConfigurationClassPostProcessor.processConfigBeanDefinitions(ConfigurationClassPostProcessor.java:429)
+	at org.springframework.context.annotation.ConfigurationClassPostProcessor.postProcessBeanDefinitionRegistry(ConfigurationClassPostProcessor.java:290)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanDefinitionRegistryPostProcessors(PostProcessorRegistrationDelegate.java:349)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:118)
+	at org.springframework.context.support.AbstractApplicationContext.invokeBeanFactoryPostProcessors(AbstractApplicationContext.java:789)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:607)
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.refresh(ServletWebServerApplicationContext.java:146)
+	at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:754)
+	at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:456)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:335)
+	at com.bocoo.BocooApplication.main(BocooApplication.java:21)
+Caused by: java.lang.ClassFormatError: Duplicate method name "convert" with signature "(LOperLogEvent;)Lcom.bocoo.system.domain.bo.SysOperLogBo;" in class file com/bocoo/common/log/event/OperLogEventToSysOperLogBoMapperImpl
+	at java.base/java.lang.ClassLoader.defineClass1(Native Method)
+	at java.base/java.lang.ClassLoader.defineClass(ClassLoader.java:1017)
+	at java.base/java.security.SecureClassLoader.defineClass(SecureClassLoader.java:150)
+	at java.base/jdk.internal.loader.BuiltinClassLoader.defineClass(BuiltinClassLoader.java:862)
+	at java.base/jdk.internal.loader.BuiltinClassLoader.findClassOnClassPathOrNull(BuiltinClassLoader.java:760)
+	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClassOrNull(BuiltinClassLoader.java:681)
+	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:639)
+	at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)
+	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:525)
+	at java.base/java.lang.Class.forName0(Native Method)
+	at java.base/java.lang.Class.forName(Class.java:469)
+	at org.springframework.util.ClassUtils.forName(ClassUtils.java:304)
+	at org.springframework.beans.factory.support.AbstractBeanDefinition.resolveBeanClass(AbstractBeanDefinition.java:489)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doResolveBeanClass(AbstractBeanFactory.java:1624)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.resolveBeanClass(AbstractBeanFactory.java:1549)
+	... 25 common frames omitted
+2026-06-24 00:01:55 [background-preinit] INFO  o.h.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2026-06-24 00:01:55 [main] INFO  com.bocoo.BocooApplication - Starting BocooApplication using Java 17.0.19 with PID 98771 (/Users/chengmuxuan/Desktop/cmx/base-boot/bocoo-admin/target/classes started by chengmuxuan in /Users/chengmuxuan/Desktop/cmx/base-boot)
+2026-06-24 00:01:55 [main] INFO  com.bocoo.BocooApplication - The following 1 profile is active: "dev"
+2026-06-24 00:01:56 [main] WARN  o.s.b.w.s.c.AnnotationConfigServletWebServerApplicationContext - Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.CannotLoadBeanClassException: Error loading class [com.bocoo.product.service.impl.ConfigOptionServiceImpl] for bean with name 'configOptionServiceImpl' defined in file [/Users/chengmuxuan/Desktop/cmx/base-boot/bocoo-modules-product/target/classes/com/bocoo/product/service/impl/ConfigOptionServiceImpl.class]: problem with class file or dependent class
+2026-06-24 00:01:56 [main] ERROR o.s.boot.SpringApplication - Application run failed
+org.springframework.beans.factory.CannotLoadBeanClassException: Error loading class [com.bocoo.product.service.impl.ConfigOptionServiceImpl] for bean with name 'configOptionServiceImpl' defined in file [/Users/chengmuxuan/Desktop/cmx/base-boot/bocoo-modules-product/target/classes/com/bocoo/product/service/impl/ConfigOptionServiceImpl.class]: problem with class file or dependent class
+	at org.springframework.beans.factory.support.AbstractBeanFactory.resolveBeanClass(AbstractBeanFactory.java:1559)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.determineTargetType(AbstractAutowireCapableBeanFactory.java:685)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.predictBeanType(AbstractAutowireCapableBeanFactory.java:653)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.isFactoryBean(AbstractBeanFactory.java:1687)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.doGetBeanNamesForType(DefaultListableBeanFactory.java:562)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.getBeanNamesForType(DefaultListableBeanFactory.java:534)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.getBeanNamesForType(DefaultListableBeanFactory.java:528)
+	at com.baomidou.mybatisplus.autoconfigure.MybatisPlusAutoConfiguration$AutoConfiguredMapperScannerRegistrar.getBeanNameForType(MybatisPlusAutoConfiguration.java:368)
+	at com.baomidou.mybatisplus.autoconfigure.MybatisPlusAutoConfiguration$AutoConfiguredMapperScannerRegistrar.registerBeanDefinitions(MybatisPlusAutoConfiguration.java:342)
+	at org.springframework.context.annotation.ImportBeanDefinitionRegistrar.registerBeanDefinitions(ImportBeanDefinitionRegistrar.java:86)
+	at org.springframework.context.annotation.ConfigurationClassBeanDefinitionReader.lambda$loadBeanDefinitionsFromRegistrars$1(ConfigurationClassBeanDefinitionReader.java:376)
+	at java.base/java.util.LinkedHashMap.forEach(LinkedHashMap.java:721)
+	at org.springframework.context.annotation.ConfigurationClassBeanDefinitionReader.loadBeanDefinitionsFromRegistrars(ConfigurationClassBeanDefinitionReader.java:375)
+	at org.springframework.context.annotation.ConfigurationClassBeanDefinitionReader.loadBeanDefinitionsForConfigurationClass(ConfigurationClassBeanDefinitionReader.java:148)
+	at org.springframework.context.annotation.ConfigurationClassBeanDefinitionReader.loadBeanDefinitions(ConfigurationClassBeanDefinitionReader.java:120)
+	at org.springframework.context.annotation.ConfigurationClassPostProcessor.processConfigBeanDefinitions(ConfigurationClassPostProcessor.java:429)
+	at org.springframework.context.annotation.ConfigurationClassPostProcessor.postProcessBeanDefinitionRegistry(ConfigurationClassPostProcessor.java:290)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanDefinitionRegistryPostProcessors(PostProcessorRegistrationDelegate.java:349)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:118)
+	at org.springframework.context.support.AbstractApplicationContext.invokeBeanFactoryPostProcessors(AbstractApplicationContext.java:789)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:607)
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.refresh(ServletWebServerApplicationContext.java:146)
+	at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:754)
+	at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:456)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:335)
+	at com.bocoo.BocooApplication.main(BocooApplication.java:21)
+Caused by: java.lang.ClassFormatError: Duplicate method name "queryPageList" with signature "(Lcom.bocoo.product.domain.bo.ConfigOptionBo;LPageQuery;)LTableDataInfo;" in class file com/bocoo/product/service/impl/ConfigOptionServiceImpl
+	at java.base/java.lang.ClassLoader.defineClass1(Native Method)
+	at java.base/java.lang.ClassLoader.defineClass(ClassLoader.java:1017)
+	at java.base/java.security.SecureClassLoader.defineClass(SecureClassLoader.java:150)
+	at java.base/jdk.internal.loader.BuiltinClassLoader.defineClass(BuiltinClassLoader.java:862)
+	at java.base/jdk.internal.loader.BuiltinClassLoader.findClassOnClassPathOrNull(BuiltinClassLoader.java:760)
+	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClassOrNull(BuiltinClassLoader.java:681)
+	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:639)
+	at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)
+	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:525)
+	at java.base/java.lang.Class.forName0(Native Method)
+	at java.base/java.lang.Class.forName(Class.java:469)
+	at org.springframework.util.ClassUtils.forName(ClassUtils.java:304)
+	at org.springframework.beans.factory.support.AbstractBeanDefinition.resolveBeanClass(AbstractBeanDefinition.java:489)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doResolveBeanClass(AbstractBeanFactory.java:1624)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.resolveBeanClass(AbstractBeanFactory.java:1549)
+	... 25 common frames omitted
+2026-06-24 00:03:05 [background-preinit] INFO  o.h.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2026-06-24 00:03:06 [main] INFO  com.bocoo.BocooApplication - Starting BocooApplication using Java 17.0.19 with PID 1175 (/Users/chengmuxuan/Desktop/cmx/base-boot/bocoo-admin/target/classes started by chengmuxuan in /Users/chengmuxuan/Desktop/cmx/base-boot)
+2026-06-24 00:03:06 [main] INFO  com.bocoo.BocooApplication - The following 1 profile is active: "dev"
+2026-06-24 00:03:07 [main] WARN  o.s.b.w.s.c.AnnotationConfigServletWebServerApplicationContext - Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.CannotLoadBeanClassException: Error loading class [com.bocoo.common.log.event.OperLogEventToSysOperLogBoMapperImpl] for bean with name 'operLogEventToSysOperLogBoMapperImpl' defined in file [/Users/chengmuxuan/Desktop/cmx/base-boot/bocoo-modules-system/target/classes/com/bocoo/common/log/event/OperLogEventToSysOperLogBoMapperImpl.class]: problem with class file or dependent class
+2026-06-24 00:03:07 [main] ERROR o.s.boot.SpringApplication - Application run failed
+org.springframework.beans.factory.CannotLoadBeanClassException: Error loading class [com.bocoo.common.log.event.OperLogEventToSysOperLogBoMapperImpl] for bean with name 'operLogEventToSysOperLogBoMapperImpl' defined in file [/Users/chengmuxuan/Desktop/cmx/base-boot/bocoo-modules-system/target/classes/com/bocoo/common/log/event/OperLogEventToSysOperLogBoMapperImpl.class]: problem with class file or dependent class
+	at org.springframework.beans.factory.support.AbstractBeanFactory.resolveBeanClass(AbstractBeanFactory.java:1559)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.determineTargetType(AbstractAutowireCapableBeanFactory.java:685)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.predictBeanType(AbstractAutowireCapableBeanFactory.java:653)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.isFactoryBean(AbstractBeanFactory.java:1687)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.doGetBeanNamesForType(DefaultListableBeanFactory.java:562)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.getBeanNamesForType(DefaultListableBeanFactory.java:534)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.getBeanNamesForType(DefaultListableBeanFactory.java:528)
+	at com.baomidou.mybatisplus.autoconfigure.MybatisPlusAutoConfiguration$AutoConfiguredMapperScannerRegistrar.getBeanNameForType(MybatisPlusAutoConfiguration.java:368)
+	at com.baomidou.mybatisplus.autoconfigure.MybatisPlusAutoConfiguration$AutoConfiguredMapperScannerRegistrar.registerBeanDefinitions(MybatisPlusAutoConfiguration.java:342)
+	at org.springframework.context.annotation.ImportBeanDefinitionRegistrar.registerBeanDefinitions(ImportBeanDefinitionRegistrar.java:86)
+	at org.springframework.context.annotation.ConfigurationClassBeanDefinitionReader.lambda$loadBeanDefinitionsFromRegistrars$1(ConfigurationClassBeanDefinitionReader.java:376)
+	at java.base/java.util.LinkedHashMap.forEach(LinkedHashMap.java:721)
+	at org.springframework.context.annotation.ConfigurationClassBeanDefinitionReader.loadBeanDefinitionsFromRegistrars(ConfigurationClassBeanDefinitionReader.java:375)
+	at org.springframework.context.annotation.ConfigurationClassBeanDefinitionReader.loadBeanDefinitionsForConfigurationClass(ConfigurationClassBeanDefinitionReader.java:148)
+	at org.springframework.context.annotation.ConfigurationClassBeanDefinitionReader.loadBeanDefinitions(ConfigurationClassBeanDefinitionReader.java:120)
+	at org.springframework.context.annotation.ConfigurationClassPostProcessor.processConfigBeanDefinitions(ConfigurationClassPostProcessor.java:429)
+	at org.springframework.context.annotation.ConfigurationClassPostProcessor.postProcessBeanDefinitionRegistry(ConfigurationClassPostProcessor.java:290)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanDefinitionRegistryPostProcessors(PostProcessorRegistrationDelegate.java:349)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:118)
+	at org.springframework.context.support.AbstractApplicationContext.invokeBeanFactoryPostProcessors(AbstractApplicationContext.java:789)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:607)
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.refresh(ServletWebServerApplicationContext.java:146)
+	at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:754)
+	at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:456)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:335)
+	at com.bocoo.BocooApplication.main(BocooApplication.java:21)
+Caused by: java.lang.ClassFormatError: Duplicate method name "convert" with signature "(LOperLogEvent;)Lcom.bocoo.system.domain.bo.SysOperLogBo;" in class file com/bocoo/common/log/event/OperLogEventToSysOperLogBoMapperImpl
+	at java.base/java.lang.ClassLoader.defineClass1(Native Method)
+	at java.base/java.lang.ClassLoader.defineClass(ClassLoader.java:1017)
+	at java.base/java.security.SecureClassLoader.defineClass(SecureClassLoader.java:150)
+	at java.base/jdk.internal.loader.BuiltinClassLoader.defineClass(BuiltinClassLoader.java:862)
+	at java.base/jdk.internal.loader.BuiltinClassLoader.findClassOnClassPathOrNull(BuiltinClassLoader.java:760)
+	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClassOrNull(BuiltinClassLoader.java:681)
+	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:639)
+	at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)
+	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:525)
+	at java.base/java.lang.Class.forName0(Native Method)
+	at java.base/java.lang.Class.forName(Class.java:469)
+	at org.springframework.util.ClassUtils.forName(ClassUtils.java:304)
+	at org.springframework.beans.factory.support.AbstractBeanDefinition.resolveBeanClass(AbstractBeanDefinition.java:489)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doResolveBeanClass(AbstractBeanFactory.java:1624)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.resolveBeanClass(AbstractBeanFactory.java:1549)
+	... 25 common frames omitted
+2026-06-24 00:03:30 [background-preinit] INFO  o.h.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2026-06-24 00:03:30 [main] INFO  com.bocoo.BocooApplication - Starting BocooApplication using Java 17.0.19 with PID 1893 (/Users/chengmuxuan/Desktop/cmx/base-boot/bocoo-admin/target/classes started by chengmuxuan in /Users/chengmuxuan/Desktop/cmx/base-boot)
+2026-06-24 00:03:30 [main] INFO  com.bocoo.BocooApplication - The following 1 profile is active: "dev"
+2026-06-24 00:03:31 [main] WARN  o.s.b.w.s.c.AnnotationConfigServletWebServerApplicationContext - Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.CannotLoadBeanClassException: Error loading class [com.bocoo.common.log.event.OperLogEventToSysOperLogBoMapperImpl] for bean with name 'operLogEventToSysOperLogBoMapperImpl' defined in file [/Users/chengmuxuan/Desktop/cmx/base-boot/bocoo-modules-system/target/classes/com/bocoo/common/log/event/OperLogEventToSysOperLogBoMapperImpl.class]: problem with class file or dependent class
+2026-06-24 00:03:31 [main] ERROR o.s.boot.SpringApplication - Application run failed
+org.springframework.beans.factory.CannotLoadBeanClassException: Error loading class [com.bocoo.common.log.event.OperLogEventToSysOperLogBoMapperImpl] for bean with name 'operLogEventToSysOperLogBoMapperImpl' defined in file [/Users/chengmuxuan/Desktop/cmx/base-boot/bocoo-modules-system/target/classes/com/bocoo/common/log/event/OperLogEventToSysOperLogBoMapperImpl.class]: problem with class file or dependent class
+	at org.springframework.beans.factory.support.AbstractBeanFactory.resolveBeanClass(AbstractBeanFactory.java:1559)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.determineTargetType(AbstractAutowireCapableBeanFactory.java:685)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.predictBeanType(AbstractAutowireCapableBeanFactory.java:653)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.isFactoryBean(AbstractBeanFactory.java:1687)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.doGetBeanNamesForType(DefaultListableBeanFactory.java:562)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.getBeanNamesForType(DefaultListableBeanFactory.java:534)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.getBeanNamesForType(DefaultListableBeanFactory.java:528)
+	at com.baomidou.mybatisplus.autoconfigure.MybatisPlusAutoConfiguration$AutoConfiguredMapperScannerRegistrar.getBeanNameForType(MybatisPlusAutoConfiguration.java:368)
+	at com.baomidou.mybatisplus.autoconfigure.MybatisPlusAutoConfiguration$AutoConfiguredMapperScannerRegistrar.registerBeanDefinitions(MybatisPlusAutoConfiguration.java:342)
+	at org.springframework.context.annotation.ImportBeanDefinitionRegistrar.registerBeanDefinitions(ImportBeanDefinitionRegistrar.java:86)
+	at org.springframework.context.annotation.ConfigurationClassBeanDefinitionReader.lambda$loadBeanDefinitionsFromRegistrars$1(ConfigurationClassBeanDefinitionReader.java:376)
+	at java.base/java.util.LinkedHashMap.forEach(LinkedHashMap.java:721)
+	at org.springframework.context.annotation.ConfigurationClassBeanDefinitionReader.loadBeanDefinitionsFromRegistrars(ConfigurationClassBeanDefinitionReader.java:375)
+	at org.springframework.context.annotation.ConfigurationClassBeanDefinitionReader.loadBeanDefinitionsForConfigurationClass(ConfigurationClassBeanDefinitionReader.java:148)
+	at org.springframework.context.annotation.ConfigurationClassBeanDefinitionReader.loadBeanDefinitions(ConfigurationClassBeanDefinitionReader.java:120)
+	at org.springframework.context.annotation.ConfigurationClassPostProcessor.processConfigBeanDefinitions(ConfigurationClassPostProcessor.java:429)
+	at org.springframework.context.annotation.ConfigurationClassPostProcessor.postProcessBeanDefinitionRegistry(ConfigurationClassPostProcessor.java:290)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanDefinitionRegistryPostProcessors(PostProcessorRegistrationDelegate.java:349)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:118)
+	at org.springframework.context.support.AbstractApplicationContext.invokeBeanFactoryPostProcessors(AbstractApplicationContext.java:789)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:607)
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.refresh(ServletWebServerApplicationContext.java:146)
+	at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:754)
+	at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:456)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:335)
+	at com.bocoo.BocooApplication.main(BocooApplication.java:21)
+Caused by: java.lang.ClassFormatError: Duplicate method name "convert" with signature "(LOperLogEvent;)Lcom.bocoo.system.domain.bo.SysOperLogBo;" in class file com/bocoo/common/log/event/OperLogEventToSysOperLogBoMapperImpl
+	at java.base/java.lang.ClassLoader.defineClass1(Native Method)
+	at java.base/java.lang.ClassLoader.defineClass(ClassLoader.java:1017)
+	at java.base/java.security.SecureClassLoader.defineClass(SecureClassLoader.java:150)
+	at java.base/jdk.internal.loader.BuiltinClassLoader.defineClass(BuiltinClassLoader.java:862)
+	at java.base/jdk.internal.loader.BuiltinClassLoader.findClassOnClassPathOrNull(BuiltinClassLoader.java:760)
+	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClassOrNull(BuiltinClassLoader.java:681)
+	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:639)
+	at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)
+	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:525)
+	at java.base/java.lang.Class.forName0(Native Method)
+	at java.base/java.lang.Class.forName(Class.java:469)
+	at org.springframework.util.ClassUtils.forName(ClassUtils.java:304)
+	at org.springframework.beans.factory.support.AbstractBeanDefinition.resolveBeanClass(AbstractBeanDefinition.java:489)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doResolveBeanClass(AbstractBeanFactory.java:1624)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.resolveBeanClass(AbstractBeanFactory.java:1549)
+	... 25 common frames omitted
+2026-06-24 00:24:23 [background-preinit] INFO  o.h.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2026-06-24 00:24:23 [main] INFO  com.bocoo.BocooApplication - Starting BocooApplication using Java 17.0.19 with PID 9975 (/Users/chengmuxuan/Desktop/cmx/base-boot/bocoo-admin/target/classes started by chengmuxuan in /Users/chengmuxuan/Desktop/cmx/base-boot)
+2026-06-24 00:24:23 [main] INFO  com.bocoo.BocooApplication - The following 1 profile is active: "dev"
+2026-06-24 00:24:26 [main] WARN  o.s.b.w.s.c.AnnotationConfigServletWebServerApplicationContext - Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.CannotLoadBeanClassException: Error loading class [com.bocoo.common.log.event.OperLogEventToSysOperLogBoMapperImpl] for bean with name 'operLogEventToSysOperLogBoMapperImpl' defined in file [/Users/chengmuxuan/Desktop/cmx/base-boot/bocoo-modules-system/target/classes/com/bocoo/common/log/event/OperLogEventToSysOperLogBoMapperImpl.class]: problem with class file or dependent class
+2026-06-24 00:24:26 [main] ERROR o.s.boot.SpringApplication - Application run failed
+org.springframework.beans.factory.CannotLoadBeanClassException: Error loading class [com.bocoo.common.log.event.OperLogEventToSysOperLogBoMapperImpl] for bean with name 'operLogEventToSysOperLogBoMapperImpl' defined in file [/Users/chengmuxuan/Desktop/cmx/base-boot/bocoo-modules-system/target/classes/com/bocoo/common/log/event/OperLogEventToSysOperLogBoMapperImpl.class]: problem with class file or dependent class
+	at org.springframework.beans.factory.support.AbstractBeanFactory.resolveBeanClass(AbstractBeanFactory.java:1559)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.determineTargetType(AbstractAutowireCapableBeanFactory.java:685)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.predictBeanType(AbstractAutowireCapableBeanFactory.java:653)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.isFactoryBean(AbstractBeanFactory.java:1687)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.doGetBeanNamesForType(DefaultListableBeanFactory.java:562)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.getBeanNamesForType(DefaultListableBeanFactory.java:534)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.getBeanNamesForType(DefaultListableBeanFactory.java:528)
+	at com.baomidou.mybatisplus.autoconfigure.MybatisPlusAutoConfiguration$AutoConfiguredMapperScannerRegistrar.getBeanNameForType(MybatisPlusAutoConfiguration.java:368)
+	at com.baomidou.mybatisplus.autoconfigure.MybatisPlusAutoConfiguration$AutoConfiguredMapperScannerRegistrar.registerBeanDefinitions(MybatisPlusAutoConfiguration.java:342)
+	at org.springframework.context.annotation.ImportBeanDefinitionRegistrar.registerBeanDefinitions(ImportBeanDefinitionRegistrar.java:86)
+	at org.springframework.context.annotation.ConfigurationClassBeanDefinitionReader.lambda$loadBeanDefinitionsFromRegistrars$1(ConfigurationClassBeanDefinitionReader.java:376)
+	at java.base/java.util.LinkedHashMap.forEach(LinkedHashMap.java:721)
+	at org.springframework.context.annotation.ConfigurationClassBeanDefinitionReader.loadBeanDefinitionsFromRegistrars(ConfigurationClassBeanDefinitionReader.java:375)
+	at org.springframework.context.annotation.ConfigurationClassBeanDefinitionReader.loadBeanDefinitionsForConfigurationClass(ConfigurationClassBeanDefinitionReader.java:148)
+	at org.springframework.context.annotation.ConfigurationClassBeanDefinitionReader.loadBeanDefinitions(ConfigurationClassBeanDefinitionReader.java:120)
+	at org.springframework.context.annotation.ConfigurationClassPostProcessor.processConfigBeanDefinitions(ConfigurationClassPostProcessor.java:429)
+	at org.springframework.context.annotation.ConfigurationClassPostProcessor.postProcessBeanDefinitionRegistry(ConfigurationClassPostProcessor.java:290)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanDefinitionRegistryPostProcessors(PostProcessorRegistrationDelegate.java:349)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:118)
+	at org.springframework.context.support.AbstractApplicationContext.invokeBeanFactoryPostProcessors(AbstractApplicationContext.java:789)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:607)
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.refresh(ServletWebServerApplicationContext.java:146)
+	at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:754)
+	at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:456)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:335)
+	at com.bocoo.BocooApplication.main(BocooApplication.java:21)
+Caused by: java.lang.ClassFormatError: Duplicate method name "convert" with signature "(LOperLogEvent;)Lcom.bocoo.system.domain.bo.SysOperLogBo;" in class file com/bocoo/common/log/event/OperLogEventToSysOperLogBoMapperImpl
+	at java.base/java.lang.ClassLoader.defineClass1(Native Method)
+	at java.base/java.lang.ClassLoader.defineClass(ClassLoader.java:1017)
+	at java.base/java.security.SecureClassLoader.defineClass(SecureClassLoader.java:150)
+	at java.base/jdk.internal.loader.BuiltinClassLoader.defineClass(BuiltinClassLoader.java:862)
+	at java.base/jdk.internal.loader.BuiltinClassLoader.findClassOnClassPathOrNull(BuiltinClassLoader.java:760)
+	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClassOrNull(BuiltinClassLoader.java:681)
+	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:639)
+	at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)
+	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:525)
+	at java.base/java.lang.Class.forName0(Native Method)
+	at java.base/java.lang.Class.forName(Class.java:469)
+	at org.springframework.util.ClassUtils.forName(ClassUtils.java:304)
+	at org.springframework.beans.factory.support.AbstractBeanDefinition.resolveBeanClass(AbstractBeanDefinition.java:489)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doResolveBeanClass(AbstractBeanFactory.java:1624)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.resolveBeanClass(AbstractBeanFactory.java:1549)
+	... 25 common frames omitted
+2026-06-24 00:26:27 [background-preinit] INFO  o.h.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2026-06-24 00:26:27 [main] INFO  com.bocoo.BocooApplication - Starting BocooApplication using Java 17.0.19 with PID 11779 (/Users/chengmuxuan/Desktop/cmx/base-boot/bocoo-admin/target/classes started by chengmuxuan in /Users/chengmuxuan/Desktop/cmx/base-boot)
+2026-06-24 00:26:27 [main] INFO  com.bocoo.BocooApplication - The following 1 profile is active: "dev"
+2026-06-24 00:26:29 [main] WARN  o.s.b.w.s.c.AnnotationConfigServletWebServerApplicationContext - Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.CannotLoadBeanClassException: Error loading class [com.bocoo.common.log.event.OperLogEventToSysOperLogBoMapperImpl] for bean with name 'operLogEventToSysOperLogBoMapperImpl' defined in file [/Users/chengmuxuan/Desktop/cmx/base-boot/bocoo-modules-system/target/classes/com/bocoo/common/log/event/OperLogEventToSysOperLogBoMapperImpl.class]: problem with class file or dependent class
+2026-06-24 00:26:29 [main] ERROR o.s.boot.SpringApplication - Application run failed
+org.springframework.beans.factory.CannotLoadBeanClassException: Error loading class [com.bocoo.common.log.event.OperLogEventToSysOperLogBoMapperImpl] for bean with name 'operLogEventToSysOperLogBoMapperImpl' defined in file [/Users/chengmuxuan/Desktop/cmx/base-boot/bocoo-modules-system/target/classes/com/bocoo/common/log/event/OperLogEventToSysOperLogBoMapperImpl.class]: problem with class file or dependent class
+	at org.springframework.beans.factory.support.AbstractBeanFactory.resolveBeanClass(AbstractBeanFactory.java:1559)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.determineTargetType(AbstractAutowireCapableBeanFactory.java:685)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.predictBeanType(AbstractAutowireCapableBeanFactory.java:653)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.isFactoryBean(AbstractBeanFactory.java:1687)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.doGetBeanNamesForType(DefaultListableBeanFactory.java:562)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.getBeanNamesForType(DefaultListableBeanFactory.java:534)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.getBeanNamesForType(DefaultListableBeanFactory.java:528)
+	at com.baomidou.mybatisplus.autoconfigure.MybatisPlusAutoConfiguration$AutoConfiguredMapperScannerRegistrar.getBeanNameForType(MybatisPlusAutoConfiguration.java:368)
+	at com.baomidou.mybatisplus.autoconfigure.MybatisPlusAutoConfiguration$AutoConfiguredMapperScannerRegistrar.registerBeanDefinitions(MybatisPlusAutoConfiguration.java:342)
+	at org.springframework.context.annotation.ImportBeanDefinitionRegistrar.registerBeanDefinitions(ImportBeanDefinitionRegistrar.java:86)
+	at org.springframework.context.annotation.ConfigurationClassBeanDefinitionReader.lambda$loadBeanDefinitionsFromRegistrars$1(ConfigurationClassBeanDefinitionReader.java:376)
+	at java.base/java.util.LinkedHashMap.forEach(LinkedHashMap.java:721)
+	at org.springframework.context.annotation.ConfigurationClassBeanDefinitionReader.loadBeanDefinitionsFromRegistrars(ConfigurationClassBeanDefinitionReader.java:375)
+	at org.springframework.context.annotation.ConfigurationClassBeanDefinitionReader.loadBeanDefinitionsForConfigurationClass(ConfigurationClassBeanDefinitionReader.java:148)
+	at org.springframework.context.annotation.ConfigurationClassBeanDefinitionReader.loadBeanDefinitions(ConfigurationClassBeanDefinitionReader.java:120)
+	at org.springframework.context.annotation.ConfigurationClassPostProcessor.processConfigBeanDefinitions(ConfigurationClassPostProcessor.java:429)
+	at org.springframework.context.annotation.ConfigurationClassPostProcessor.postProcessBeanDefinitionRegistry(ConfigurationClassPostProcessor.java:290)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanDefinitionRegistryPostProcessors(PostProcessorRegistrationDelegate.java:349)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:118)
+	at org.springframework.context.support.AbstractApplicationContext.invokeBeanFactoryPostProcessors(AbstractApplicationContext.java:789)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:607)
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.refresh(ServletWebServerApplicationContext.java:146)
+	at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:754)
+	at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:456)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:335)
+	at com.bocoo.BocooApplication.main(BocooApplication.java:21)
+Caused by: java.lang.ClassFormatError: Duplicate method name "convert" with signature "(LOperLogEvent;)Lcom.bocoo.system.domain.bo.SysOperLogBo;" in class file com/bocoo/common/log/event/OperLogEventToSysOperLogBoMapperImpl
+	at java.base/java.lang.ClassLoader.defineClass1(Native Method)
+	at java.base/java.lang.ClassLoader.defineClass(ClassLoader.java:1017)
+	at java.base/java.security.SecureClassLoader.defineClass(SecureClassLoader.java:150)
+	at java.base/jdk.internal.loader.BuiltinClassLoader.defineClass(BuiltinClassLoader.java:862)
+	at java.base/jdk.internal.loader.BuiltinClassLoader.findClassOnClassPathOrNull(BuiltinClassLoader.java:760)
+	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClassOrNull(BuiltinClassLoader.java:681)
+	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:639)
+	at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)
+	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:525)
+	at java.base/java.lang.Class.forName0(Native Method)
+	at java.base/java.lang.Class.forName(Class.java:469)
+	at org.springframework.util.ClassUtils.forName(ClassUtils.java:304)
+	at org.springframework.beans.factory.support.AbstractBeanDefinition.resolveBeanClass(AbstractBeanDefinition.java:489)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doResolveBeanClass(AbstractBeanFactory.java:1624)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.resolveBeanClass(AbstractBeanFactory.java:1549)
+	... 25 common frames omitted
+2026-06-24 06:03:36 [background-preinit] INFO  o.h.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2026-06-24 06:03:36 [main] INFO  com.bocoo.BocooApplication - Starting BocooApplication using Java 17.0.19 with PID 38784 (/Users/chengmuxuan/Desktop/cmx/base-boot/bocoo-admin/target/classes started by chengmuxuan in /Users/chengmuxuan/Desktop/cmx/base-boot)
+2026-06-24 06:03:36 [main] INFO  com.bocoo.BocooApplication - The following 1 profile is active: "dev"
+2026-06-24 06:03:37 [main] INFO  c.b.c.web.i18n.JsonMessageSource - Loaded JSON i18n locales: [en_US, zh_CN]
+2026-06-24 06:03:37 [main] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8081"]
+2026-06-24 06:03:37 [main] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+2026-06-24 06:03:37 [main] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.33]
+2026-06-24 06:03:37 [main] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-06-24 06:03:38 [main] INFO  c.b.common.redis.config.RedisConfig - 初始化 redis 配置
+2026-06-24 06:03:38 [main] INFO  org.redisson.Version - Redisson 3.52.0
+2026-06-24 06:03:38 [main] WARN  i.n.r.d.DnsServerAddressStreamProviders - Can not find io.netty.resolver.dns.macos.MacOSDnsServerAddressStreamProvider in the classpath, fallback to system defaults. This may result in incorrect DNS resolutions on MacOS. Check whether you have a dependency on 'io.netty:netty-resolver-dns-native-macos'
+2026-06-24 06:03:38 [redisson-netty-1-4] INFO  o.r.connection.ConnectionsHolder - 1 connections initialized for 127.0.0.1/127.0.0.1:6379
+2026-06-24 06:03:38 [redisson-netty-1-3] INFO  o.r.connection.ConnectionsHolder - 8 connections initialized for 127.0.0.1/127.0.0.1:6379
+2026-06-24 06:03:38 [main] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource detect P6SPY plugin and enabled it
+2026-06-24 06:03:38 [main] INFO  com.zaxxer.hikari.HikariDataSource - master - Starting...
+2026-06-24 06:03:38 [main] INFO  com.zaxxer.hikari.pool.HikariPool - master - Added connection org.postgresql.jdbc.PgConnection@75f316df
+2026-06-24 06:03:38 [main] INFO  com.zaxxer.hikari.HikariDataSource - master - Start completed.
+2026-06-24 06:03:38 [main] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource - add a datasource named [master] success
+2026-06-24 06:03:38 [main] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource initial loaded [1] datasource,primary datasource named [master]
+2026-06-24 06:03:40 [main] INFO  c.b.common.json.config.JacksonConfig - 初始化 jackson 配置
+2026-06-24 06:03:41 [main] INFO  c.b.c.w.s.ServerEndpointExporter - [34mNetty WebSocket started on port: 2831 with context path(s): '/ws' .[0m
+2026-06-24 06:03:41 [main] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8081"]
+2026-06-24 06:03:41 [main] INFO  com.bocoo.BocooApplication - Started BocooApplication in 5.106 seconds (process running for 5.599)
+2026-06-24 06:03:41 [main] INFO  c.b.s.runner.SystemApplicationRunner - 初始化OSS配置成功
+2026-06-24 06:03:41 [main] INFO  c.b.s.runner.SystemApplicationRunner - 加载参数缓存数据成功
+2026-06-24 06:03:41 [main] INFO  c.b.s.runner.SystemApplicationRunner - 加载字典缓存数据成功
+2026-06-24 06:03:41 [RMI TCP Connection(1)-192.168.1.5] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'

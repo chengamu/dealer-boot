@@ -87,6 +87,10 @@ public class ProductDictTypeServiceImpl extends ProductServiceSupport implements
 
     @Override
     public Boolean updateStatus(Long id, String status) {
+        ProductDictType current = dictTypeMapper.selectById(id);
+        if (current != null) {
+            assertDictEditable(current.getSystemFlag(), current.getEditableFlag());
+        }
         return dictTypeMapper.update(null, new LambdaUpdateWrapper<ProductDictType>()
             .eq(ProductDictType::getDictTypeId, id)
             .set(ProductDictType::getStatus, status)) > 0;

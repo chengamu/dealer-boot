@@ -66,11 +66,6 @@ function unitOption(unit: ProductUnitVO) {
 
 const unitOptions = computed(() => unitList.value.map(unitOption))
 const unitTypeOptions = computed(() => productDictOptions.value.product_unit_type || [])
-const roundingModeOptions = computed(() => [
-  { label: t('productCenter.unit.roundingHalfUp'), value: 'HALF_UP' },
-  { label: t('productCenter.unit.roundingUp'), value: 'UP' },
-  { label: t('productCenter.unit.roundingDown'), value: 'DOWN' }
-])
 const qtyModeOptions = computed(() => productDictOptions.value.engineering_qty_mode || [])
 
 function labelOf(row: ProductRecord, codeKey: string, cnKey: string, enKey?: string) {
@@ -160,7 +155,7 @@ const configs = computed<ProductGridConfig[]>(() => [
       { prop: 'categoryNameEn', labelKey: 'productCenter.category.nameEn' },
       { prop: 'parentId', labelKey: 'productCenter.category.parentCategory', type: 'tree-select', optionLoader: loadCategoryOptions, table: false },
       { prop: 'categoryLevel', labelKey: 'productCenter.category.level', type: 'number', form: false, table: false },
-      { prop: 'categoryPath', labelKey: 'productCenter.category.path', table: false, readonly: () => true },
+      { prop: 'categoryPath', labelKey: 'productCenter.category.path', form: false, table: false },
       { prop: 'status', labelKey: 'productCenter.common.status', type: 'status', search: true },
       { prop: 'sortOrder', labelKey: 'productCenter.common.sortOrder', type: 'number' },
       { prop: 'remark', labelKey: 'productCenter.common.remark', type: 'textarea', table: false, formSpan: 2 }
@@ -173,20 +168,13 @@ const configs = computed<ProductGridConfig[]>(() => [
     idKey: 'materialId',
     permissions: { add: 'product:base:add', edit: 'product:base:edit', remove: 'product:base:remove', reference: 'product:base:reference' },
     superEditPermission: 'product:base:superEdit',
+    singleRowActions: true,
     api: productMaterialApi,
     defaultSort: { prop: 'updateTime', order: 'descending' },
     attachments: { targetType: 'MATERIAL', targetCodeField: 'materialCode', defaultUsageType: 'SPEC' },
     optionLoaders: {
       __unitOptions: async () => unitOptions.value
     },
-    rowActions: [
-      {
-        labelKey: 'productCenter.material.manageAttributes',
-        icon: 'List',
-        permission: 'product:material-attribute:list',
-        handler: (row) => pushTab('/product-master/materials', 'materialAttribute', { materialCode: String(row.materialCode || '') })
-      }
-    ],
     fields: [
       { prop: 'materialCode', labelKey: 'productCenter.material.code', search: true, required: true, sortable: true, sectionKey: 'basic', sectionLabelKey: 'productCenter.formSection.basic' },
       { prop: 'materialNameCn', labelKey: 'productCenter.material.name', search: true, required: true, sortable: true, sectionKey: 'basic' },
@@ -240,7 +228,9 @@ const configs = computed<ProductGridConfig[]>(() => [
       reference: 'product:material-attribute:reference'
     },
     api: productMaterialAttributeApi,
-    closePath: '/product-master/materials',
+    singleRowActions: true,
+    readonly: true,
+    hideReference: true,
     defaultSort: { prop: 'sortOrder', order: 'ascending' },
     fields: [
       {
@@ -269,6 +259,7 @@ const configs = computed<ProductGridConfig[]>(() => [
     descriptionKey: 'productCenter.component.description',
     idKey: 'componentId',
     permissions: { add: 'product:base:add', edit: 'product:base:edit', remove: 'product:base:remove', reference: 'product:base:reference' },
+    singleRowActions: true,
     api: productComponentApi,
     defaultSort: { prop: 'updateTime', order: 'descending' },
     attachments: { targetType: 'COMPONENT', targetCodeField: 'componentCode', defaultUsageType: 'INSTALL_GUIDE' },
@@ -305,6 +296,7 @@ const configs = computed<ProductGridConfig[]>(() => [
       reference: 'product:component-item:reference'
     },
     api: productComponentItemApi,
+    singleRowActions: true,
     defaultSort: { prop: 'sortOrder', order: 'ascending' },
     fields: [
       {
@@ -348,6 +340,7 @@ const configs = computed<ProductGridConfig[]>(() => [
       reference: 'product:base-attribute:reference'
     },
     api: productBaseAttributeApi,
+    singleRowActions: true,
     defaultSort: { prop: 'sortOrder', order: 'ascending' },
     fields: [
       { prop: 'attributeGroup', labelKey: 'productCenter.baseAttribute.group', type: 'select', options: productDictOptions.value.product_attribute_group || [], search: true, required: true },
@@ -368,6 +361,7 @@ const configs = computed<ProductGridConfig[]>(() => [
     descriptionKey: 'productCenter.unit.description',
     idKey: 'unitId',
     permissions: { add: 'product:unit:add', edit: 'product:unit:edit', remove: 'product:unit:remove', reference: 'product:unit:reference' },
+    singleRowActions: true,
     api: productUnitApi,
     defaultSort: { prop: 'sortOrder', order: 'ascending' },
     fields: [
@@ -375,10 +369,6 @@ const configs = computed<ProductGridConfig[]>(() => [
       { prop: 'unitNameCn', labelKey: 'productCenter.unit.name', search: true, required: true, sortable: true },
       { prop: 'unitNameEn', labelKey: 'productCenter.unit.nameEn' },
       { prop: 'unitType', labelKey: 'productCenter.unit.type', type: 'select', options: unitTypeOptions.value, search: true },
-      { prop: 'precisionScale', labelKey: 'productCenter.unit.precisionScale', type: 'number' },
-      { prop: 'roundingMode', labelKey: 'productCenter.unit.roundingMode', type: 'select', options: roundingModeOptions.value },
-      { prop: 'baseUnitCode', labelKey: 'productCenter.unit.baseUnitCode', type: 'remote-select', optionLoader: loadUnitOptions },
-      { prop: 'conversionRate', labelKey: 'productCenter.unit.conversionRateHelp', type: 'number' },
       { prop: 'status', labelKey: 'productCenter.common.status', type: 'status', search: true },
       { prop: 'sortOrder', labelKey: 'productCenter.common.sortOrder', type: 'number', sortable: true },
       { prop: 'remark', labelKey: 'productCenter.common.remark', type: 'textarea', table: false, formSpan: 2 }

@@ -1,58 +1,47 @@
-2026-06-21 12:45:03 [background-preinit] INFO  o.h.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
-2026-06-21 12:45:03 [main] INFO  com.bocoo.BocooApplication - Starting BocooApplication using Java 17.0.19 with PID 56827 (/Users/chengmuxuan/Desktop/cmx/base-boot/bocoo-admin/target/classes started by chengmuxuan in /Users/chengmuxuan/Desktop/cmx/base-boot)
-2026-06-21 12:45:03 [main] INFO  com.bocoo.BocooApplication - The following 1 profile is active: "dev"
-2026-06-21 12:45:05 [main] INFO  c.b.c.web.i18n.JsonMessageSource - Loaded JSON i18n locales: [en_US, zh_CN]
-2026-06-21 12:45:05 [main] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8081"]
-2026-06-21 12:45:05 [main] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
-2026-06-21 12:45:05 [main] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.33]
-2026-06-21 12:45:05 [main] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
-2026-06-21 12:45:05 [main] INFO  c.b.common.redis.config.RedisConfig - 初始化 redis 配置
-2026-06-21 12:45:05 [main] INFO  org.redisson.Version - Redisson 3.52.0
-2026-06-21 12:45:05 [redisson-netty-1-4] INFO  o.r.connection.ConnectionsHolder - 1 connections initialized for 127.0.0.1/127.0.0.1:6379
-2026-06-21 12:45:05 [redisson-netty-1-3] INFO  o.r.connection.ConnectionsHolder - 8 connections initialized for 127.0.0.1/127.0.0.1:6379
-2026-06-21 12:45:05 [main] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource detect P6SPY plugin and enabled it
-2026-06-21 12:45:05 [main] INFO  com.zaxxer.hikari.HikariDataSource - master - Starting...
-2026-06-21 12:45:05 [main] INFO  com.zaxxer.hikari.pool.HikariPool - master - Added connection org.postgresql.jdbc.PgConnection@5e89e527
-2026-06-21 12:45:05 [main] INFO  com.zaxxer.hikari.HikariDataSource - master - Start completed.
-2026-06-21 12:45:05 [main] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource - add a datasource named [master] success
-2026-06-21 12:45:05 [main] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource initial loaded [1] datasource,primary datasource named [master]
-2026-06-21 12:45:07 [main] INFO  c.b.common.json.config.JacksonConfig - 初始化 jackson 配置
-2026-06-21 12:45:09 [main] INFO  c.b.c.w.s.ServerEndpointExporter - [34mNetty WebSocket started on port: 2831 with context path(s): '/ws' .[0m
-2026-06-21 12:45:09 [main] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8081"]
-2026-06-21 12:45:09 [main] INFO  com.bocoo.BocooApplication - Started BocooApplication in 5.754 seconds (process running for 6.975)
-2026-06-21 12:45:09 [main] INFO  c.b.s.runner.SystemApplicationRunner - 初始化OSS配置成功
-2026-06-21 12:45:09 [main] INFO  c.b.s.runner.SystemApplicationRunner - 加载参数缓存数据成功
-2026-06-21 12:45:09 [main] INFO  c.b.s.runner.SystemApplicationRunner - 加载字典缓存数据成功
-2026-06-21 12:45:09 [RMI TCP Connection(3)-127.0.0.1] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
-2026-06-21 17:25:30 [SpringApplicationShutdownHook] INFO  c.b.c.core.config.ThreadPoolConfig - ====关闭后台任务任务线程池====
-2026-06-21 17:25:30 [SpringApplicationShutdownHook] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource start closing ....
-2026-06-21 17:25:30 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - master - Shutdown initiated...
-2026-06-21 17:25:30 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - master - Shutdown completed.
-2026-06-21 17:25:30 [SpringApplicationShutdownHook] INFO  c.b.d.d.d.DefaultDataSourceDestroyer - dynamic-datasource close the datasource named [master] success,
-2026-06-21 17:25:30 [SpringApplicationShutdownHook] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource all closed success,bye
-2026-06-21 17:25:37 [background-preinit] INFO  o.h.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
-2026-06-21 17:25:37 [main] INFO  com.bocoo.BocooApplication - Starting BocooApplication using Java 17.0.19 with PID 67912 (/Users/chengmuxuan/Desktop/cmx/base-boot/bocoo-admin/target/classes started by chengmuxuan in /Users/chengmuxuan/Desktop/cmx/base-boot)
-2026-06-21 17:25:37 [main] INFO  com.bocoo.BocooApplication - The following 1 profile is active: "dev"
-2026-06-21 17:25:38 [main] INFO  c.b.c.web.i18n.JsonMessageSource - Loaded JSON i18n locales: [en_US, zh_CN]
-2026-06-21 17:25:39 [main] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8081"]
-2026-06-21 17:25:39 [main] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
-2026-06-21 17:25:39 [main] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.33]
-2026-06-21 17:25:39 [main] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
-2026-06-21 17:25:39 [main] INFO  c.b.common.redis.config.RedisConfig - 初始化 redis 配置
-2026-06-21 17:25:39 [main] INFO  org.redisson.Version - Redisson 3.52.0
-2026-06-21 17:25:39 [redisson-netty-1-4] INFO  o.r.connection.ConnectionsHolder - 1 connections initialized for 127.0.0.1/127.0.0.1:6379
-2026-06-21 17:25:39 [redisson-netty-1-3] INFO  o.r.connection.ConnectionsHolder - 8 connections initialized for 127.0.0.1/127.0.0.1:6379
-2026-06-21 17:25:39 [main] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource detect P6SPY plugin and enabled it
-2026-06-21 17:25:39 [main] INFO  com.zaxxer.hikari.HikariDataSource - master - Starting...
-2026-06-21 17:25:39 [main] INFO  com.zaxxer.hikari.pool.HikariPool - master - Added connection org.postgresql.jdbc.PgConnection@6c2a7c73
-2026-06-21 17:25:39 [main] INFO  com.zaxxer.hikari.HikariDataSource - master - Start completed.
-2026-06-21 17:25:39 [main] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource - add a datasource named [master] success
-2026-06-21 17:25:39 [main] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource initial loaded [1] datasource,primary datasource named [master]
-2026-06-21 17:25:41 [main] INFO  c.b.common.json.config.JacksonConfig - 初始化 jackson 配置
-2026-06-21 17:25:42 [main] INFO  c.b.c.w.s.ServerEndpointExporter - [34mNetty WebSocket started on port: 2831 with context path(s): '/ws' .[0m
-2026-06-21 17:25:42 [main] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8081"]
-2026-06-21 17:25:42 [main] INFO  com.bocoo.BocooApplication - Started BocooApplication in 5.047 seconds (process running for 5.607)
-2026-06-21 17:25:42 [main] INFO  c.b.s.runner.SystemApplicationRunner - 初始化OSS配置成功
-2026-06-21 17:25:42 [main] INFO  c.b.s.runner.SystemApplicationRunner - 加载参数缓存数据成功
-2026-06-21 17:25:42 [main] INFO  c.b.s.runner.SystemApplicationRunner - 加载字典缓存数据成功
-2026-06-21 17:25:43 [RMI TCP Connection(1)-127.0.0.1] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-06-24 00:00:19 [background-preinit] INFO  o.h.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2026-06-24 00:00:19 [main] INFO  com.bocoo.BocooApplication - Starting BocooApplication using Java 17.0.19 with PID 97522 (/Users/chengmuxuan/Desktop/cmx/base-boot/bocoo-admin/target/classes started by chengmuxuan in /Users/chengmuxuan/Desktop/cmx/base-boot)
+2026-06-24 00:00:19 [main] INFO  com.bocoo.BocooApplication - The following 1 profile is active: "dev"
+2026-06-24 00:00:31 [background-preinit] INFO  o.h.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2026-06-24 00:00:31 [main] INFO  com.bocoo.BocooApplication - Starting BocooApplication using Java 17.0.19 with PID 97763 (/Users/chengmuxuan/Desktop/cmx/base-boot/bocoo-admin/target/classes started by chengmuxuan in /Users/chengmuxuan/Desktop/cmx/base-boot)
+2026-06-24 00:00:31 [main] INFO  com.bocoo.BocooApplication - The following 1 profile is active: "dev"
+2026-06-24 00:01:55 [background-preinit] INFO  o.h.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2026-06-24 00:01:55 [main] INFO  com.bocoo.BocooApplication - Starting BocooApplication using Java 17.0.19 with PID 98771 (/Users/chengmuxuan/Desktop/cmx/base-boot/bocoo-admin/target/classes started by chengmuxuan in /Users/chengmuxuan/Desktop/cmx/base-boot)
+2026-06-24 00:01:55 [main] INFO  com.bocoo.BocooApplication - The following 1 profile is active: "dev"
+2026-06-24 00:03:05 [background-preinit] INFO  o.h.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2026-06-24 00:03:06 [main] INFO  com.bocoo.BocooApplication - Starting BocooApplication using Java 17.0.19 with PID 1175 (/Users/chengmuxuan/Desktop/cmx/base-boot/bocoo-admin/target/classes started by chengmuxuan in /Users/chengmuxuan/Desktop/cmx/base-boot)
+2026-06-24 00:03:06 [main] INFO  com.bocoo.BocooApplication - The following 1 profile is active: "dev"
+2026-06-24 00:03:30 [background-preinit] INFO  o.h.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2026-06-24 00:03:30 [main] INFO  com.bocoo.BocooApplication - Starting BocooApplication using Java 17.0.19 with PID 1893 (/Users/chengmuxuan/Desktop/cmx/base-boot/bocoo-admin/target/classes started by chengmuxuan in /Users/chengmuxuan/Desktop/cmx/base-boot)
+2026-06-24 00:03:30 [main] INFO  com.bocoo.BocooApplication - The following 1 profile is active: "dev"
+2026-06-24 00:24:23 [background-preinit] INFO  o.h.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2026-06-24 00:24:23 [main] INFO  com.bocoo.BocooApplication - Starting BocooApplication using Java 17.0.19 with PID 9975 (/Users/chengmuxuan/Desktop/cmx/base-boot/bocoo-admin/target/classes started by chengmuxuan in /Users/chengmuxuan/Desktop/cmx/base-boot)
+2026-06-24 00:24:23 [main] INFO  com.bocoo.BocooApplication - The following 1 profile is active: "dev"
+2026-06-24 00:26:27 [background-preinit] INFO  o.h.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2026-06-24 00:26:27 [main] INFO  com.bocoo.BocooApplication - Starting BocooApplication using Java 17.0.19 with PID 11779 (/Users/chengmuxuan/Desktop/cmx/base-boot/bocoo-admin/target/classes started by chengmuxuan in /Users/chengmuxuan/Desktop/cmx/base-boot)
+2026-06-24 00:26:27 [main] INFO  com.bocoo.BocooApplication - The following 1 profile is active: "dev"
+2026-06-24 06:03:36 [background-preinit] INFO  o.h.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2026-06-24 06:03:36 [main] INFO  com.bocoo.BocooApplication - Starting BocooApplication using Java 17.0.19 with PID 38784 (/Users/chengmuxuan/Desktop/cmx/base-boot/bocoo-admin/target/classes started by chengmuxuan in /Users/chengmuxuan/Desktop/cmx/base-boot)
+2026-06-24 06:03:36 [main] INFO  com.bocoo.BocooApplication - The following 1 profile is active: "dev"
+2026-06-24 06:03:37 [main] INFO  c.b.c.web.i18n.JsonMessageSource - Loaded JSON i18n locales: [en_US, zh_CN]
+2026-06-24 06:03:37 [main] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8081"]
+2026-06-24 06:03:37 [main] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+2026-06-24 06:03:37 [main] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.33]
+2026-06-24 06:03:37 [main] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-06-24 06:03:38 [main] INFO  c.b.common.redis.config.RedisConfig - 初始化 redis 配置
+2026-06-24 06:03:38 [main] INFO  org.redisson.Version - Redisson 3.52.0
+2026-06-24 06:03:38 [redisson-netty-1-4] INFO  o.r.connection.ConnectionsHolder - 1 connections initialized for 127.0.0.1/127.0.0.1:6379
+2026-06-24 06:03:38 [redisson-netty-1-3] INFO  o.r.connection.ConnectionsHolder - 8 connections initialized for 127.0.0.1/127.0.0.1:6379
+2026-06-24 06:03:38 [main] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource detect P6SPY plugin and enabled it
+2026-06-24 06:03:38 [main] INFO  com.zaxxer.hikari.HikariDataSource - master - Starting...
+2026-06-24 06:03:38 [main] INFO  com.zaxxer.hikari.pool.HikariPool - master - Added connection org.postgresql.jdbc.PgConnection@75f316df
+2026-06-24 06:03:38 [main] INFO  com.zaxxer.hikari.HikariDataSource - master - Start completed.
+2026-06-24 06:03:38 [main] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource - add a datasource named [master] success
+2026-06-24 06:03:38 [main] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource initial loaded [1] datasource,primary datasource named [master]
+2026-06-24 06:03:40 [main] INFO  c.b.common.json.config.JacksonConfig - 初始化 jackson 配置
+2026-06-24 06:03:41 [main] INFO  c.b.c.w.s.ServerEndpointExporter - [34mNetty WebSocket started on port: 2831 with context path(s): '/ws' .[0m
+2026-06-24 06:03:41 [main] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8081"]
+2026-06-24 06:03:41 [main] INFO  com.bocoo.BocooApplication - Started BocooApplication in 5.106 seconds (process running for 5.599)
+2026-06-24 06:03:41 [main] INFO  c.b.s.runner.SystemApplicationRunner - 初始化OSS配置成功
+2026-06-24 06:03:41 [main] INFO  c.b.s.runner.SystemApplicationRunner - 加载参数缓存数据成功
+2026-06-24 06:03:41 [main] INFO  c.b.s.runner.SystemApplicationRunner - 加载字典缓存数据成功
+2026-06-24 06:03:41 [RMI TCP Connection(1)-192.168.1.5] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'

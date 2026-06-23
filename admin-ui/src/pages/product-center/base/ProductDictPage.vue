@@ -2,17 +2,8 @@
   <div class="app-container product-center-page product-dict-page">
     <div class="product-dict-page__search-bar">
       <el-form ref="typeQueryRef" :model="typeQuery" :inline="true" class="product-dict-page__search">
-        <el-form-item :label="t('productCenter.productDict.typeCode')" prop="dictTypeCode">
-          <el-input v-model="typeQuery.dictTypeCode" :placeholder="t('productCenter.common.inputPlaceholder')" clearable @keyup.enter="queryTypes" />
-        </el-form-item>
         <el-form-item :label="t('productCenter.productDict.typeName')" prop="dictTypeNameCn">
           <el-input v-model="typeQuery.dictTypeNameCn" :placeholder="t('productCenter.common.inputPlaceholder')" clearable @keyup.enter="queryTypes" />
-        </el-form-item>
-        <el-form-item :label="t('productCenter.common.status')" prop="status">
-          <el-select v-model="typeQuery.status" :placeholder="t('productCenter.common.selectPlaceholder')" clearable>
-            <el-option :label="t('productCenter.status.enabled')" value="ENABLED" />
-            <el-option :label="t('productCenter.status.disabled')" value="DISABLED" />
-          </el-select>
         </el-form-item>
         <el-form-item>
           <el-button type="primary" icon="Search" @click="queryTypes">{{ t('common.search') }}</el-button>
@@ -21,17 +12,8 @@
       </el-form>
 
       <el-form ref="itemQueryRef" :model="itemQuery" :inline="true" class="product-dict-page__search">
-        <el-form-item :label="t('productCenter.productDict.itemValue')" prop="dictItemValue">
-          <el-input v-model="itemQuery.dictItemValue" :placeholder="t('productCenter.common.inputPlaceholder')" clearable :disabled="!activeType" @keyup.enter="queryItems" />
-        </el-form-item>
         <el-form-item :label="t('productCenter.productDict.itemLabel')" prop="dictItemLabelCn">
           <el-input v-model="itemQuery.dictItemLabelCn" :placeholder="t('productCenter.common.inputPlaceholder')" clearable :disabled="!activeType" @keyup.enter="queryItems" />
-        </el-form-item>
-        <el-form-item :label="t('productCenter.common.status')" prop="status">
-          <el-select v-model="itemQuery.status" :placeholder="t('productCenter.common.selectPlaceholder')" clearable :disabled="!activeType">
-            <el-option :label="t('productCenter.status.enabled')" value="ENABLED" />
-            <el-option :label="t('productCenter.status.disabled')" value="DISABLED" />
-          </el-select>
         </el-form-item>
         <el-form-item>
           <el-button type="primary" icon="Search" :disabled="!activeType" @click="queryItems">{{ t('common.search') }}</el-button>
@@ -62,11 +44,9 @@
           class="product-dict-page__table"
           :default-sort="typeDefaultSort"
           @current-change="selectType"
-          @selection-change="handleTypeSelection"
           @sort-change="handleTypeSortChange"
           @row-dblclick="editType"
         >
-          <el-table-column type="selection" width="42" align="center" />
           <el-table-column type="index" :index="typeRowIndex" :label="t('common.index')" width="58" align="center" />
           <el-table-column :label="t('productCenter.productDict.typeCode')" prop="dictTypeCode" min-width="180" sortable="custom" show-overflow-tooltip />
           <el-table-column :label="t('productCenter.productDict.typeNameCn')" prop="dictTypeNameCn" min-width="150" sortable="custom" show-overflow-tooltip />
@@ -74,16 +54,6 @@
           <el-table-column :label="t('productCenter.common.status')" prop="status" width="88" align="center">
             <template #default="{ row }">
               <el-switch :model-value="row.status" active-value="ENABLED" inactive-value="DISABLED" @change="changeTypeStatus(row, $event)" />
-            </template>
-          </el-table-column>
-          <el-table-column :label="t('common.operate')" width="88" align="center">
-            <template #default="{ row }">
-              <el-tooltip :content="t('common.edit')" placement="top">
-                <el-button link type="primary" icon="Edit" :aria-label="t('common.edit')" @click.stop="editType(row)" v-hasPermi="['product:dict:edit']" />
-              </el-tooltip>
-              <el-tooltip :content="t('common.delete')" placement="top">
-                <el-button link type="primary" icon="Delete" :aria-label="t('common.delete')" @click.stop="deleteType(row)" v-hasPermi="['product:dict:remove']" />
-              </el-tooltip>
             </template>
           </el-table-column>
         </el-table>
@@ -110,14 +80,14 @@
           v-loading="itemLoading"
           :data="itemRows"
           border
+          highlight-current-row
           row-key="dictItemId"
           class="product-dict-page__table"
           :default-sort="itemDefaultSort"
-          @selection-change="handleItemSelection"
+          @current-change="selectItem"
           @sort-change="handleItemSortChange"
           @row-dblclick="editItem"
         >
-          <el-table-column type="selection" width="42" align="center" />
           <el-table-column type="index" :index="itemRowIndex" :label="t('common.index')" width="58" align="center" />
           <el-table-column :label="t('productCenter.productDict.itemValue')" prop="dictItemValue" min-width="145" sortable="custom" show-overflow-tooltip />
           <el-table-column :label="t('productCenter.productDict.itemLabelCn')" prop="dictItemLabelCn" min-width="150" sortable="custom" show-overflow-tooltip />
@@ -129,16 +99,6 @@
           <el-table-column :label="t('productCenter.common.status')" prop="status" width="88" align="center">
             <template #default="{ row }">
               <el-switch :model-value="row.status" active-value="ENABLED" inactive-value="DISABLED" @change="changeItemStatus(row, $event)" />
-            </template>
-          </el-table-column>
-          <el-table-column :label="t('common.operate')" width="88" align="center">
-            <template #default="{ row }">
-              <el-tooltip :content="t('common.edit')" placement="top">
-                <el-button link type="primary" icon="Edit" :aria-label="t('common.edit')" @click.stop="editItem(row)" v-hasPermi="['product:dict:edit']" />
-              </el-tooltip>
-              <el-tooltip :content="t('common.delete')" placement="top">
-                <el-button link type="primary" icon="Delete" :aria-label="t('common.delete')" @click.stop="deleteItem(row)" v-hasPermi="['product:dict:remove']" />
-              </el-tooltip>
             </template>
           </el-table-column>
         </el-table>
@@ -163,13 +123,6 @@
           <el-select v-model="typeForm.businessDomain" filterable>
             <el-option v-for="option in businessDomainOptions" :key="option.value" :label="option.label" :value="option.value" />
           </el-select>
-        </el-form-item>
-        <div class="product-dict-page__section-title">{{ t('productCenter.formSection.control') }}</div>
-        <el-form-item :label="t('productCenter.productDict.systemFlag')" prop="systemFlag">
-          <el-switch v-model="typeForm.systemFlag" />
-        </el-form-item>
-        <el-form-item :label="t('productCenter.productDict.editableFlag')" prop="editableFlag">
-          <el-switch v-model="typeForm.editableFlag" />
         </el-form-item>
         <el-form-item :label="t('productCenter.common.sortOrder')" prop="sortOrder">
           <el-input-number v-model="typeForm.sortOrder" :min="0" controls-position="right" class="product-dict-page__number" />
@@ -206,13 +159,6 @@
           <el-select v-model="itemForm.parentValue" clearable filterable :placeholder="t('productCenter.common.selectPlaceholder')">
             <el-option v-for="option in parentItemOptions" :key="String(option.value)" :label="option.label" :value="option.value" />
           </el-select>
-        </el-form-item>
-        <div class="product-dict-page__section-title">{{ t('productCenter.formSection.control') }}</div>
-        <el-form-item :label="t('productCenter.productDict.systemFlag')" prop="systemFlag">
-          <el-switch v-model="itemForm.systemFlag" />
-        </el-form-item>
-        <el-form-item :label="t('productCenter.productDict.editableFlag')" prop="editableFlag">
-          <el-switch v-model="itemForm.editableFlag" />
         </el-form-item>
         <el-form-item :label="t('productCenter.common.sortOrder')" prop="sortOrder">
           <el-input-number v-model="itemForm.sortOrder" :min="0" controls-position="right" class="product-dict-page__number" />
@@ -429,9 +375,12 @@ async function syncActiveType() {
   const matched = typeRows.value.find((item) => item.dictTypeCode === currentCode)
   if (matched) {
     activeType.value = matched
+    selectedTypeIds.value = isRecordId(matched.dictTypeId) ? [matched.dictTypeId] : []
     await loadItems()
   } else {
     activeType.value = undefined
+    selectedTypeIds.value = []
+    selectedItemIds.value = []
     itemRows.value = []
     itemTotal.value = 0
   }
@@ -441,6 +390,7 @@ async function loadItems() {
   if (!activeType.value?.dictTypeCode) {
     itemRows.value = []
     itemTotal.value = 0
+    selectedItemIds.value = []
     return
   }
   itemLoading.value = true
@@ -449,6 +399,7 @@ async function loadItems() {
     const response = await productDictItemApi.list(itemQuery)
     itemRows.value = response.rows || []
     itemTotal.value = response.total || 0
+    selectedItemIds.value = []
   } finally {
     itemLoading.value = false
   }
@@ -466,17 +417,22 @@ function queryItems() {
 
 function resetTypeQuery() {
   typeQueryRef.value?.resetFields()
+  typeQuery.dictTypeCode = undefined
+  typeQuery.status = undefined
   applySort(typeQuery, typeDefaultSort)
   queryTypes()
 }
 
 function resetItemQuery() {
   itemQueryRef.value?.resetFields()
+  itemQuery.dictItemValue = undefined
+  itemQuery.status = undefined
   applySort(itemQuery, itemDefaultSort)
   queryItems()
 }
 
 async function selectType(row?: ProductDictTypeVO) {
+  selectedTypeIds.value = isRecordId(row?.dictTypeId) ? [row.dictTypeId] : []
   if (!row?.dictTypeCode || row.dictTypeCode === activeType.value?.dictTypeCode) return
   activeType.value = row
   itemQuery.pageNum = 1
@@ -486,18 +442,8 @@ async function selectType(row?: ProductDictTypeVO) {
   await loadItems()
 }
 
-function handleTypeSelection(selection: ProductDictTypeVO[]) {
-  selectedTypeIds.value = selection.reduce<Array<string | number>>((result, item) => {
-    if (isRecordId(item.dictTypeId)) result.push(item.dictTypeId)
-    return result
-  }, [])
-}
-
-function handleItemSelection(selection: ProductDictItemVO[]) {
-  selectedItemIds.value = selection.reduce<Array<string | number>>((result, item) => {
-    if (isRecordId(item.dictItemId)) result.push(item.dictItemId)
-    return result
-  }, [])
+function selectItem(row?: ProductDictItemVO) {
+  selectedItemIds.value = isRecordId(row?.dictItemId) ? [row.dictItemId] : []
 }
 
 function addType() {
@@ -691,12 +637,9 @@ loadTypes()
 
 <style scoped lang="scss">
 .product-dict-page {
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
+  display: flex;
+  flex-direction: column;
   gap: 12px;
-  height: calc(100dvh - var(--admin-shell-header) - var(--admin-tags-height) - 78px);
-  min-height: 0;
-  overflow: hidden;
 }
 
 .product-dict-page__search-bar {
@@ -707,11 +650,11 @@ loadTypes()
   border: 1px solid var(--el-border-color-lighter);
   border-radius: 8px;
   background: var(--el-bg-color);
+  align-items: start;
 }
 
 .product-dict-page__grids {
   display: grid;
-  min-height: 0;
 }
 
 .product-dict-page__divider {
@@ -738,7 +681,6 @@ loadTypes()
   display: flex;
   flex-direction: column;
   min-width: 0;
-  min-height: 0;
   padding: 12px;
   border: 1px solid var(--el-border-color-lighter);
   border-radius: 8px;
@@ -792,10 +734,6 @@ loadTypes()
 }
 
 .product-dict-page__table {
-  flex: 1 1 auto;
-  min-height: 320px;
-  overflow: hidden;
-
   :deep(.el-table__body tr) {
     cursor: pointer;
   }

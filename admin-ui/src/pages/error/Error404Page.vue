@@ -16,7 +16,7 @@
           <span>{{ altT('error.notFoundInfo') }}</span>
         </div>
         <div class="bullshit__actions">
-          <router-link to="/index" class="bullshit__return-home">{{ t('error.goHome') }}</router-link>
+          <router-link :to="returnTarget" class="bullshit__return-home">{{ returnLabel }}</router-link>
           <button
             v-for="item in languages"
             :key="item.value"
@@ -37,10 +37,14 @@ import { computed } from 'vue'
 import { localeOptions, type AppLocale } from '@/i18n'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
+import { getToken } from '@/utils/auth'
 
 const localeStore = useLocaleStore()
 const t = (key: string) => getMessage(key, localeStore.language)
 const altT = (key: string) => getMessage(key, localeStore.language === 'en_US' ? 'zh_CN' : 'en_US')
+const hasToken = computed(() => Boolean(getToken()))
+const returnTarget = computed(() => hasToken.value ? '/index' : '/login')
+const returnLabel = computed(() => hasToken.value ? t('error.goHome') : t('error.goLogin'))
 const languages = computed<Array<{ value: AppLocale; label: string }>>(() => localeOptions.map(item => ({
   value: item.value,
   label: getMessage(item.labelKey, localeStore.language)
@@ -170,7 +174,6 @@ const languages = computed<Array<{ value: AppLocale; label: string }>>(() => loc
       border-radius: 100px;
       text-align: center;
       color: #ffffff;
-      opacity: 0;
       font-size: 14px;
       line-height: 36px;
       cursor: pointer;

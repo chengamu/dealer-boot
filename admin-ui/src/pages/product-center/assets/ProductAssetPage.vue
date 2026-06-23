@@ -29,8 +29,8 @@ const routeTabMap: Record<string, string> = {
   'media-bindings': 'binding'
 }
 
-const assetPermissions = { add: 'product:asset:upload', edit: 'product:asset:upload', remove: 'product:asset:upload', reference: 'product:asset:reference' }
-const bindingPermissions = { add: 'product:asset:bind', edit: 'product:asset:bind', remove: 'product:asset:bind', reference: 'product:asset:reference' }
+const assetPermissions = { add: 'product:asset:upload', edit: 'product:asset:edit', remove: 'product:asset:remove', reference: 'product:asset:reference' }
+const bindingPermissions = { add: 'product:asset:bind', edit: 'product:asset:bind', remove: 'product:asset:unbind', reference: 'product:asset:reference' }
 const assetTypeOptions = computed(() => productDictOptions.value.product_asset_type || [])
 const usageTypeOptions = computed(() => [
   { label: t('productCenter.asset.usageInstall'), value: 'INSTALL_GUIDE' },
@@ -51,6 +51,7 @@ const configs = computed<ProductGridConfig[]>(() => [
     idKey: 'assetId',
     permissions: assetPermissions,
     api: productMediaAssetApi,
+    singleRowActions: true,
     fields: [
       { prop: 'assetCode', labelKey: 'productCenter.asset.code', search: true, required: true },
       { prop: 'assetNameCn', labelKey: 'productCenter.asset.name', search: true, required: true },
@@ -73,6 +74,7 @@ const configs = computed<ProductGridConfig[]>(() => [
     idKey: 'bindingId',
     permissions: bindingPermissions,
     api: productMediaBindingApi,
+    singleRowActions: true,
     fields: [
       { prop: 'assetId', labelKey: 'productCenter.asset.id', type: 'number', required: true },
       { prop: 'assetCode', labelKey: 'productCenter.asset.code', search: true, required: true },

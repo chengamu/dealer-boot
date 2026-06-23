@@ -193,6 +193,19 @@ class ProductDictServiceTest {
     }
 
     @Test
+    void updateStatusRejectsLockedSystemDictType() {
+        ProductDictType entity = new ProductDictType();
+        entity.setDictTypeId(1001L);
+        entity.setSystemFlag(Boolean.TRUE);
+        entity.setEditableFlag(Boolean.FALSE);
+        when(dictTypeMapper.selectById(1001L)).thenReturn(entity);
+
+        assertThatThrownBy(() -> dictTypeService.updateStatus(1001L, "DISABLED"))
+            .isInstanceOf(ServiceException.class);
+        verify(dictTypeMapper, never()).update(any(), any());
+    }
+
+    @Test
     void normalUpdateRejectsEnabledDictItem() {
         ProductDictItem current = new ProductDictItem();
         current.setDictItemId(2001L);
@@ -210,5 +223,18 @@ class ProductDictServiceTest {
         assertThatThrownBy(() -> dictItemService.updateByBo(bo))
             .isInstanceOf(ServiceException.class);
         verify(dictItemMapper, never()).updateById(any());
+    }
+
+    @Test
+    void updateStatusRejectsLockedSystemDictItem() {
+        ProductDictItem entity = new ProductDictItem();
+        entity.setDictItemId(2001L);
+        entity.setSystemFlag(Boolean.TRUE);
+        entity.setEditableFlag(Boolean.FALSE);
+        when(dictItemMapper.selectById(2001L)).thenReturn(entity);
+
+        assertThatThrownBy(() -> dictItemService.updateStatus(2001L, "DISABLED"))
+            .isInstanceOf(ServiceException.class);
+        verify(dictItemMapper, never()).update(any(), any());
     }
 }
