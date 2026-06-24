@@ -2,6 +2,7 @@ package com.bocoo.product.controller;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import com.bocoo.common.core.domain.R;
+import com.bocoo.common.core.utils.StringUtils;
 import com.bocoo.common.log.annotation.Log;
 import com.bocoo.common.log.enums.BusinessType;
 import com.bocoo.common.mybatis.core.page.PageQuery;
@@ -54,6 +55,9 @@ public class ProductMaterialController extends BaseController {
     @GetMapping("/materials/options")
     @Operation(summary = "查询产品物料选项")
     public R<java.util.List<ProductMaterialVo>> optionsProductMaterial(ProductMaterialBo bo) {
+        if (StringUtils.isBlank(bo.getStatus())) {
+            bo.setStatus("ENABLED");
+        }
         return R.ok(productMaterialService.queryList(bo));
     }
 
@@ -101,22 +105,6 @@ public class ProductMaterialController extends BaseController {
     @Operation(summary = "修改产品物料状态")
     public R<Void> changeProductMaterialStatus(@PathVariable Long id, @PathVariable String status) {
         return toAjax(productMaterialService.updateStatus(id, status));
-    }
-
-    @SaCheckPermission("product:base:edit")
-    @Log(title = "审核产品物料", businessType = BusinessType.UPDATE)
-    @PutMapping("/materials/audit/{id}")
-    @Operation(summary = "审核产品物料")
-    public R<Void> auditProductMaterial(@PathVariable Long id) {
-        return toAjax(productMaterialService.audit(id));
-    }
-
-    @SaCheckPermission("product:base:edit")
-    @Log(title = "取消审核产品物料", businessType = BusinessType.UPDATE)
-    @PutMapping("/materials/unaudit/{id}")
-    @Operation(summary = "取消审核产品物料")
-    public R<Void> unauditProductMaterial(@PathVariable Long id) {
-        return toAjax(productMaterialService.unaudit(id));
     }
 
     @SaCheckPermission("product:base:remove")

@@ -11,7 +11,6 @@ import com.bocoo.common.mybatis.core.page.TableDataInfo;
 import com.bocoo.common.satoken.utils.LoginHelper;
 import com.bocoo.product.domain.bo.ProductMaterialBo;
 import com.bocoo.product.domain.bo.ProductMaterialAttributeBo;
-import com.bocoo.product.domain.entity.ProductComponentItem;
 import com.bocoo.product.domain.entity.ProductMaterial;
 import com.bocoo.product.domain.entity.ProductMaterialAttribute;
 import com.bocoo.product.domain.entity.ProductMaterialType;
@@ -20,11 +19,11 @@ import com.bocoo.product.domain.vo.BaseEditCheckResultVo;
 import com.bocoo.product.domain.vo.ProductMaterialVo;
 import com.bocoo.product.domain.vo.ProductMaterialAttributeVo;
 import com.bocoo.product.domain.vo.ReferenceCheckResultVo;
-import com.bocoo.product.mapper.ProductComponentItemMapper;
 import com.bocoo.product.mapper.ProductMaterialAttributeMapper;
 import com.bocoo.product.mapper.ProductMaterialMapper;
 import com.bocoo.product.mapper.ProductMaterialTypeMapper;
 import com.bocoo.product.mapper.ProductMediaBindingMapper;
+import com.bocoo.product.service.ProductChangeLogService;
 import com.bocoo.product.service.ProductEntityDefaults;
 import com.bocoo.product.service.ProductMaterialService;
 import lombok.RequiredArgsConstructor;
@@ -40,9 +39,9 @@ public class ProductMaterialServiceImpl extends ProductServiceSupport implements
 
     private final ProductMaterialMapper materialMapper;
     private final ProductMaterialAttributeMapper materialAttributeMapper;
-    private final ProductComponentItemMapper componentItemMapper;
     private final ProductMaterialTypeMapper materialTypeMapper;
     private final ProductMediaBindingMapper mediaBindingMapper;
+    private final ProductChangeLogService changeLogService;
 
     @Override
     public TableDataInfo<ProductMaterialVo> queryPageList(ProductMaterialBo bo, PageQuery pageQuery) {
@@ -75,6 +74,7 @@ public class ProductMaterialServiceImpl extends ProductServiceSupport implements
         boolean inserted = materialMapper.insert(entity) > 0;
         if (inserted) {
             syncAttributes(entity.getMaterialId(), bo);
+            recordMaterialChange(entity.getMaterialId(), entity.getMaterialCode(), "CREATE", null, entity);
         }
         return inserted;
     }
@@ -92,11 +92,11 @@ public class ProductMaterialServiceImpl extends ProductServiceSupport implements
     private Boolean updateMaterial(ProductMaterialBo bo, boolean checkStatus) {
         normalizeMaterial(bo);
         validateMaterialUnique(bo);
-        if (checkStatus && bo != null && bo.getMaterialId() != null) {
-            ProductMaterial current = materialMapper.selectById(bo.getMaterialId());
-            if (current != null) {
-                assertNotAudited(current);
-                assertNormalEditable(current.getStatus());
+        ProductMaterial current = null;
+        if (bo != null && bo.getMaterialId() != null) {
+            current = materialMapper.selectById(bo.getMaterialId());
+            if (checkStatus && current != null) {
+                assertMaterialEditable(current);
             }
         }
         ProductMaterial entity = MapstructUtils.convert(bo, ProductMaterial.class);
@@ -106,6 +106,7 @@ public class ProductMaterialServiceImpl extends ProductServiceSupport implements
         boolean updated = materialMapper.updateById(entity) > 0;
         if (updated) {
             syncAttributes(entity.getMaterialId(), bo);
+            recordMaterialChange(entity.getMaterialId(), entity.getMaterialCode(), checkStatus ? "UPDATE" : "SUPER_UPDATE", current, entity);
         }
         return updated;
     }
@@ -120,29 +121,33 @@ public class ProductMaterialServiceImpl extends ProductServiceSupport implements
 
     @Override
     public Boolean updateStatus(Long id, String status) {
-        return materialMapper.update(null, new LambdaUpdateWrapper<ProductMaterial>()
+        ProductMaterial current = materialMapper.selectById(id);
+        ProductMaterial before = copyStatusSnapshot(current);
+        String auditBy = currentUsername();
+        java.time.LocalDateTime auditTime = TimeUtils.utcNow();
+        LambdaUpdateWrapper<ProductMaterial> wrapper = new LambdaUpdateWrapper<ProductMaterial>()
             .eq(ProductMaterial::getMaterialId, id)
-            .set(ProductMaterial::getStatus, status)) > 0;
-    }
-
-    @Override
-    public Boolean audit(Long id) {
-        return materialMapper.update(null, new LambdaUpdateWrapper<ProductMaterial>()
-            .eq(ProductMaterial::getMaterialId, id)
-            .set(ProductMaterial::getAuditStatus, "AUDITED")
-            .set(ProductMaterial::getAuditById, currentUserId())
-            .set(ProductMaterial::getAuditBy, currentUsername())
-            .set(ProductMaterial::getAuditTime, TimeUtils.utcNow())) > 0;
-    }
-
-    @Override
-    public Boolean unaudit(Long id) {
-        return materialMapper.update(null, new LambdaUpdateWrapper<ProductMaterial>()
-            .eq(ProductMaterial::getMaterialId, id)
-            .set(ProductMaterial::getAuditStatus, "DRAFT")
-            .set(ProductMaterial::getAuditById, null)
-            .set(ProductMaterial::getAuditBy, null)
-            .set(ProductMaterial::getAuditTime, null)) > 0;
+            .set(ProductMaterial::getStatus, status);
+        if (STATUS_ENABLED.equalsIgnoreCase(status)) {
+            wrapper.set(ProductMaterial::getAuditBy, auditBy)
+                .set(ProductMaterial::getAuditTime, auditTime);
+        }
+        boolean updated = materialMapper.update(null, wrapper) > 0;
+        if (updated) {
+            ProductMaterial after = copyStatusSnapshot(current);
+            if (after == null) {
+                after = new ProductMaterial();
+                after.setMaterialId(id);
+            }
+            after.setStatus(status);
+            if (STATUS_ENABLED.equalsIgnoreCase(status)) {
+                after.setAuditBy(auditBy);
+                after.setAuditTime(auditTime);
+            }
+            String actionType = STATUS_ENABLED.equalsIgnoreCase(status) ? "AUDIT" : "UNAUDIT";
+            recordMaterialChange(id, after.getMaterialCode(), actionType, before, after);
+        }
+        return updated;
     }
 
     @Override
@@ -151,7 +156,7 @@ public class ProductMaterialServiceImpl extends ProductServiceSupport implements
         if (material == null) {
             return deniedEditCheck(null, "product.base.edit.notFound", null);
         }
-        if ("AUDITED".equalsIgnoreCase(material.getAuditStatus())) {
+        if (isEnabledStatus(material.getStatus())) {
             return deniedEditCheck(material.getStatus(), "product.material.auditedEditDenied", checkReferences(id));
         }
         return editCheckResult(material.getStatus(), checkReferences(id));
@@ -160,9 +165,10 @@ public class ProductMaterialServiceImpl extends ProductServiceSupport implements
     @Override
     public ReferenceCheckResultVo checkReferences(Long materialId) {
         long count = materialAttributeMapper.selectCount(activeQuery(ProductMaterialAttribute.class).eq("material_id", materialId))
-            + componentItemMapper.selectCount(activeQuery(ProductComponentItem.class).eq("material_id", materialId))
             + mediaBindingMapper.selectCount(activeQuery(ProductMediaBinding.class).eq("target_type", "MATERIAL").eq("target_id", materialId));
-        return referenceResult(count, "product.material.hasReferences", "Material references: " + count);
+        ReferenceCheckResultVo result = referenceResult(count, "product.material.hasReferences", "Material references: " + count);
+        result.setCanDisable(Boolean.TRUE);
+        return result;
     }
 
     private QueryWrapper<ProductMaterial> buildQueryWrapper(ProductMaterialBo bo) {
@@ -177,11 +183,9 @@ public class ProductMaterialServiceImpl extends ProductServiceSupport implements
             eq(q, "attribute_group_code", bo.getAttributeGroupCode());
             like(q, "model", bo.getModel());
             like(q, "spec", bo.getSpec());
-            like(q, "spec_model_text", bo.getSpecModelText());
             like(q, "manufacturer_code", bo.getManufacturerCode());
             like(q, "manufacturer_name", bo.getManufacturerName());
             like(q, "manufacturer_item_no", bo.getManufacturerItemNo());
-            eq(q, "audit_status", bo.getAuditStatus());
             eq(q, "status", bo.getStatus());
         }
         return q;
@@ -193,11 +197,8 @@ public class ProductMaterialServiceImpl extends ProductServiceSupport implements
         }
         trimMaterialFields(bo);
         validateRequiredFields(bo);
-        if (StringUtils.isBlank(bo.getAuditStatus())) {
-            bo.setAuditStatus("DRAFT");
-        }
         if (StringUtils.isBlank(bo.getStatus())) {
-            bo.setStatus("ENABLED");
+            bo.setStatus(STATUS_DISABLED);
         }
         if (StringUtils.isBlank(bo.getSpecModelText())) {
             bo.setSpecModelText(buildSpecModelText(bo.getModel(), bo.getSpec()));
@@ -318,7 +319,6 @@ public class ProductMaterialServiceImpl extends ProductServiceSupport implements
         bo.setSpec(trimToNull(bo.getSpec()));
         bo.setSpecModelText(trimToNull(bo.getSpecModelText()));
         bo.setColorName(trimToNull(bo.getColorName()));
-        bo.setAuditStatus(trimToNull(bo.getAuditStatus()));
         bo.setStatus(trimToNull(bo.getStatus()));
     }
 
@@ -333,17 +333,9 @@ public class ProductMaterialServiceImpl extends ProductServiceSupport implements
         return "型号：" + model + "；规格：" + spec;
     }
 
-    private void assertNotAudited(ProductMaterial current) {
-        if (current != null && "AUDITED".equalsIgnoreCase(current.getAuditStatus())) {
+    private void assertMaterialEditable(ProductMaterial current) {
+        if (current != null && isEnabledStatus(current.getStatus())) {
             throw ServiceException.ofMessageKey("product.material.auditedEditDenied");
-        }
-    }
-
-    private Long currentUserId() {
-        try {
-            return LoginHelper.getUserId();
-        } catch (Exception ignored) {
-            return null;
         }
     }
 
@@ -353,6 +345,25 @@ public class ProductMaterialServiceImpl extends ProductServiceSupport implements
         } catch (Exception ignored) {
             return "system";
         }
+    }
+
+    private void recordMaterialChange(Long materialId, String materialCode, String actionType,
+                                      ProductMaterial before, ProductMaterial after) {
+        changeLogService.record("BASE_INFO", "MATERIAL", materialId, materialCode, actionType, before, after, null);
+    }
+
+    private ProductMaterial copyStatusSnapshot(ProductMaterial source) {
+        if (source == null) {
+            return null;
+        }
+        ProductMaterial target = new ProductMaterial();
+        target.setMaterialId(source.getMaterialId());
+        target.setMaterialCode(source.getMaterialCode());
+        target.setMaterialNameCn(source.getMaterialNameCn());
+        target.setStatus(source.getStatus());
+        target.setAuditBy(source.getAuditBy());
+        target.setAuditTime(source.getAuditTime());
+        return target;
     }
 
     private List<ProductMaterialAttributeVo> queryAttributes(Long materialId) {

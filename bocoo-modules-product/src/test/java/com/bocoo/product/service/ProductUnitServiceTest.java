@@ -4,8 +4,6 @@ import com.bocoo.common.core.exception.ServiceException;
 import com.bocoo.product.domain.bo.ProductUnitBo;
 import com.bocoo.product.domain.entity.ProductUnit;
 import com.bocoo.product.domain.vo.ReferenceCheckResultVo;
-import com.bocoo.product.mapper.ProductComponentItemMapper;
-import com.bocoo.product.mapper.ProductComponentMapper;
 import com.bocoo.product.mapper.ProductMaterialAttributeMapper;
 import com.bocoo.product.mapper.ProductMaterialMapper;
 import com.bocoo.product.mapper.ProductUnitMapper;
@@ -30,10 +28,6 @@ class ProductUnitServiceTest {
     private ProductMaterialMapper materialMapper;
     @Mock
     private ProductMaterialAttributeMapper materialAttributeMapper;
-    @Mock
-    private ProductComponentMapper componentMapper;
-    @Mock
-    private ProductComponentItemMapper componentItemMapper;
 
     private ProductUnitServiceImpl productUnitService;
 
@@ -42,9 +36,7 @@ class ProductUnitServiceTest {
         productUnitService = new ProductUnitServiceImpl(
             unitMapper,
             materialMapper,
-            materialAttributeMapper,
-            componentMapper,
-            componentItemMapper
+            materialAttributeMapper
         );
     }
 
@@ -56,15 +48,13 @@ class ProductUnitServiceTest {
         when(unitMapper.selectById(3001L)).thenReturn(unit);
         when(materialMapper.selectCount(any())).thenReturn(1L);
         when(materialAttributeMapper.selectCount(any())).thenReturn(4L);
-        when(componentMapper.selectCount(any())).thenReturn(2L);
-        when(componentItemMapper.selectCount(any())).thenReturn(3L);
 
         ReferenceCheckResultVo result = productUnitService.checkReferences(3001L);
 
         assertThat(result.getAllowed()).isFalse();
-        assertThat(result.getReferenceCount()).isEqualTo(10L);
+        assertThat(result.getReferenceCount()).isEqualTo(5L);
         assertThat(result.getBlockerReasonKey()).isEqualTo("product.unit.hasReferences");
-        assertThat(result.getReferenceSummaries()).containsExactly("Unit code references: 10");
+        assertThat(result.getReferenceSummaries()).containsExactly("Unit code references: 5");
     }
 
     @Test

@@ -8,14 +8,12 @@ import com.bocoo.common.core.utils.StringUtils;
 import com.bocoo.common.mybatis.core.page.PageQuery;
 import com.bocoo.common.mybatis.core.page.TableDataInfo;
 import com.bocoo.product.domain.bo.ProductMaterialTypeBo;
-import com.bocoo.product.domain.entity.FabricSeries;
 import com.bocoo.product.domain.entity.ProductMaterial;
 import com.bocoo.product.domain.entity.ProductMaterialType;
 import com.bocoo.product.domain.entity.ProductMaterialTypeGroup;
 import com.bocoo.product.domain.vo.BaseEditCheckResultVo;
 import com.bocoo.product.domain.vo.ProductMaterialTypeVo;
 import com.bocoo.product.domain.vo.ReferenceCheckResultVo;
-import com.bocoo.product.mapper.FabricSeriesMapper;
 import com.bocoo.product.mapper.ProductMaterialMapper;
 import com.bocoo.product.mapper.ProductMaterialTypeGroupMapper;
 import com.bocoo.product.mapper.ProductMaterialTypeMapper;
@@ -33,7 +31,6 @@ public class ProductMaterialTypeServiceImpl extends ProductServiceSupport implem
     private final ProductMaterialTypeMapper materialTypeMapper;
     private final ProductMaterialTypeGroupMapper materialTypeGroupMapper;
     private final ProductMaterialMapper materialMapper;
-    private final FabricSeriesMapper fabricSeriesMapper;
 
     @Override
     public TableDataInfo<ProductMaterialTypeVo> queryPageList(ProductMaterialTypeBo bo, PageQuery pageQuery) {
@@ -128,13 +125,9 @@ public class ProductMaterialTypeServiceImpl extends ProductServiceSupport implem
             return referenceResult(0, null, null);
         }
         long materialCount = materialMapper.selectCount(activeQuery(ProductMaterial.class).eq("material_type_id", materialTypeId));
-        long seriesCount = fabricSeriesMapper.selectCount(activeQuery(FabricSeries.class).eq("material_type_code", current.getMaterialTypeCode()));
-        ReferenceCheckResultVo result = referenceResult(materialCount + seriesCount, "product.materialType.hasReferences", null);
+        ReferenceCheckResultVo result = referenceResult(materialCount, "product.materialType.hasReferences", null);
         if (materialCount > 0) {
             result.getReferenceSummaries().add("Materials: " + materialCount);
-        }
-        if (seriesCount > 0) {
-            result.getReferenceSummaries().add("Fabric series: " + seriesCount);
         }
         return result;
     }

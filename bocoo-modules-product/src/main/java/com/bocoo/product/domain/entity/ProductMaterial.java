@@ -124,12 +124,6 @@ public class ProductMaterial extends BaseEntity {
     @Schema(description = "单价")
     private BigDecimal unitPrice;
 
-    @Schema(description = "审核状态：DRAFT 未审核，AUDITED 已审核")
-    private String auditStatus;
-
-    @Schema(description = "审核人ID")
-    private Long auditById;
-
     @Schema(description = "审核人")
     private String auditBy;
 
@@ -140,9 +134,9 @@ public class ProductMaterial extends BaseEntity {
     private Integer sortOrder;
 
     /**
-     * 状态：1正常，0停用
+     * 状态：ENABLED 已审核，DISABLED 未审核
      */
-    @Schema(description = "状态：1正常，0停用")
+    @Schema(description = "状态：ENABLED 已审核，DISABLED 未审核")
     private String status;
 
     /**

@@ -1,6 +1,8 @@
 import { request, requestPage } from '@/utils/request'
 import type {
   ProductCrudApi,
+  ProductChangeLogQuery,
+  ProductChangeLogVO,
   EditCheckResult,
   ProductMaterialAttributeQuery,
   ProductMaterialAttributeVO,
@@ -26,10 +28,12 @@ export const productMaterialApi: ProductCrudApi<ProductMaterialVO, ProductMateri
   superUpdate: (data: ProductMaterialVO) => request({ url: '/product-capability/materials/super-update', method: 'put', data }),
   remove: (ids: Array<string | number> | string | number) => request({ url: '/product-capability/materials/' + ids, method: 'delete' }),
   changeStatus: (id: string | number, status: string) => request({ url: '/product-capability/materials/change-status/' + id + '/' + status, method: 'put' }),
-  audit: (id: string | number) => request({ url: '/product-capability/materials/audit/' + id, method: 'put' }),
-  unaudit: (id: string | number) => request({ url: '/product-capability/materials/unaudit/' + id, method: 'put' }),
   editCheck: (id: string | number) => editCheckApi('/product-capability/materials/' + id + '/edit-check'),
   references: (id: string | number) => referencesApi('/product-capability/materials/' + id + '/references')
+}
+
+export const productChangeLogApi = {
+  list: (query?: ProductChangeLogQuery) => requestPage<ProductChangeLogVO>({ url: '/product-capability/change-logs/list', method: 'get', params: query })
 }
 
 export const productMaterialAttributeApi: ProductCrudApi<ProductMaterialAttributeVO, ProductMaterialAttributeQuery> & {

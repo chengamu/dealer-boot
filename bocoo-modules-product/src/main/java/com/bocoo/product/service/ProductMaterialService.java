@@ -27,10 +27,6 @@ public interface ProductMaterialService {
 
     Boolean updateStatus(Long id, String status);
 
-    Boolean audit(Long id);
-
-    Boolean unaudit(Long id);
-
     BaseEditCheckResultVo checkEditAllowed(Long id);
 
     ReferenceCheckResultVo checkReferences(Long materialId);

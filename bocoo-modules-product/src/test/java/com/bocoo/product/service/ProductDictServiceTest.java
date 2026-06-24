@@ -10,7 +10,6 @@ import com.bocoo.product.domain.vo.ProductDictItemVo;
 import com.bocoo.product.domain.vo.ProductDictOptionVo;
 import com.bocoo.product.domain.vo.ReferenceCheckResultVo;
 import com.bocoo.product.mapper.ProductCategoryMapper;
-import com.bocoo.product.mapper.ProductComponentMapper;
 import com.bocoo.product.mapper.ProductDictItemMapper;
 import com.bocoo.product.mapper.ProductDictTypeMapper;
 import com.bocoo.product.mapper.ProductMaterialMapper;
@@ -47,8 +46,6 @@ class ProductDictServiceTest {
     @Mock
     private ProductCategoryMapper categoryMapper;
     @Mock
-    private ProductComponentMapper componentMapper;
-    @Mock
     private ProductMediaAssetMapper mediaAssetMapper;
     private ProductDictTypeServiceImpl dictTypeService;
     private ProductDictItemServiceImpl dictItemService;
@@ -62,7 +59,6 @@ class ProductDictServiceTest {
             unitMapper,
             materialMapper,
             categoryMapper,
-            componentMapper,
             mediaAssetMapper
         );
     }

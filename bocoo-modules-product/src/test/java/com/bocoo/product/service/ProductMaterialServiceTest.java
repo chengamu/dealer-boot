@@ -5,7 +5,7 @@ import com.bocoo.product.domain.bo.ProductMaterialBo;
 import com.bocoo.product.domain.entity.ProductMaterial;
 import com.bocoo.product.domain.entity.ProductMaterialType;
 import com.bocoo.product.domain.vo.BaseEditCheckResultVo;
-import com.bocoo.product.mapper.ProductComponentItemMapper;
+import com.bocoo.product.domain.vo.ReferenceCheckResultVo;
 import com.bocoo.product.mapper.ProductMaterialAttributeMapper;
 import com.bocoo.product.mapper.ProductMaterialMapper;
 import com.bocoo.product.mapper.ProductMediaBindingMapper;
@@ -34,11 +34,11 @@ class ProductMaterialServiceTest {
     @Mock
     private ProductMaterialAttributeMapper materialAttributeMapper;
     @Mock
-    private ProductComponentItemMapper componentItemMapper;
-    @Mock
     private ProductMaterialTypeMapper materialTypeMapper;
     @Mock
     private ProductMediaBindingMapper mediaBindingMapper;
+    @Mock
+    private ProductChangeLogService changeLogService;
 
     private ProductMaterialServiceImpl productMaterialService;
 
@@ -48,9 +48,9 @@ class ProductMaterialServiceTest {
         productMaterialService = new ProductMaterialServiceImpl(
             materialMapper,
             materialAttributeMapper,
-            componentItemMapper,
             materialTypeMapper,
-            mediaBindingMapper
+            mediaBindingMapper,
+            changeLogService
         );
     }
 
@@ -71,8 +71,7 @@ class ProductMaterialServiceTest {
 
         assertThat(bo.getAttributeGroupCode()).isEqualTo("ALUMINUM");
         assertThat(bo.getSpecModelText()).isEqualTo("型号：HC-IV-25；规格：25mm / 米色 / 遮光");
-        assertThat(bo.getAuditStatus()).isEqualTo("DRAFT");
-        assertThat(bo.getStatus()).isEqualTo("ENABLED");
+        assertThat(bo.getStatus()).isEqualTo("DISABLED");
     }
 
     @Test
@@ -80,20 +79,6 @@ class ProductMaterialServiceTest {
         ProductMaterial entity = new ProductMaterial();
         entity.setMaterialId(1001L);
         entity.setStatus("ENABLED");
-        when(materialMapper.selectById(1001L)).thenReturn(entity);
-
-        BaseEditCheckResultVo result = productMaterialService.checkEditAllowed(1001L);
-
-        assertThat(result.getEditable()).isFalse();
-        assertThat(result.getReasonKey()).isEqualTo("product.base.edit.enabledDenied");
-    }
-
-    @Test
-    void editCheckRejectsAuditedMaterialBeforeOpeningEditor() {
-        ProductMaterial entity = new ProductMaterial();
-        entity.setMaterialId(1001L);
-        entity.setStatus("DISABLED");
-        entity.setAuditStatus("AUDITED");
         when(materialMapper.selectById(1001L)).thenReturn(entity);
 
         BaseEditCheckResultVo result = productMaterialService.checkEditAllowed(1001L);
@@ -125,6 +110,13 @@ class ProductMaterialServiceTest {
 
     @Test
     void superUpdateAllowsEnabledMaterial() {
+        ProductMaterial current = new ProductMaterial();
+        current.setMaterialId(1001L);
+        current.setMaterialCode("MOTOR_001");
+        current.setMaterialNameCn("电机");
+        current.setStatus("ENABLED");
+        when(materialMapper.selectById(1001L)).thenReturn(current);
+
         ProductMaterialBo bo = new ProductMaterialBo();
         bo.setMaterialId(1001L);
         bo.setMaterialCode("MOTOR_001");
@@ -136,7 +128,16 @@ class ProductMaterialServiceTest {
         when(materialMapper.updateById(any())).thenReturn(1);
 
         assertThat(productMaterialService.superUpdateByBo(bo)).isTrue();
-        verify(materialMapper, never()).selectById(1001L);
+        verify(changeLogService).record(
+            org.mockito.ArgumentMatchers.eq("BASE_INFO"),
+            org.mockito.ArgumentMatchers.eq("MATERIAL"),
+            org.mockito.ArgumentMatchers.eq(1001L),
+            org.mockito.ArgumentMatchers.eq("MOTOR_001"),
+            org.mockito.ArgumentMatchers.eq("SUPER_UPDATE"),
+            org.mockito.ArgumentMatchers.eq(current),
+            any(),
+            org.mockito.ArgumentMatchers.isNull()
+        );
     }
 
     @Test
@@ -185,13 +186,62 @@ class ProductMaterialServiceTest {
     }
 
     @Test
-    void auditAndUnauditUpdateAuditStatus() {
+    void changeStatusAuditsAndUnauditsMaterial() {
+        ProductMaterial current = new ProductMaterial();
+        current.setMaterialId(1001L);
+        current.setMaterialCode("MOTOR_001");
+        current.setMaterialNameCn("电机");
+        current.setStatus("DISABLED");
+        when(materialMapper.selectById(1001L)).thenReturn(current);
         when(materialMapper.update(any(), any())).thenReturn(1);
 
-        assertThat(productMaterialService.audit(1001L)).isTrue();
-        assertThat(productMaterialService.unaudit(1001L)).isTrue();
+        assertThat(productMaterialService.updateStatus(1001L, "ENABLED")).isTrue();
+        assertThat(productMaterialService.updateStatus(1001L, "DISABLED")).isTrue();
 
         verify(materialMapper, org.mockito.Mockito.times(2)).update(any(), any());
+        verify(changeLogService).record(
+            org.mockito.ArgumentMatchers.eq("BASE_INFO"),
+            org.mockito.ArgumentMatchers.eq("MATERIAL"),
+            org.mockito.ArgumentMatchers.eq(1001L),
+            org.mockito.ArgumentMatchers.eq("MOTOR_001"),
+            org.mockito.ArgumentMatchers.eq("AUDIT"),
+            any(),
+            any(),
+            org.mockito.ArgumentMatchers.isNull()
+        );
+        verify(changeLogService).record(
+            org.mockito.ArgumentMatchers.eq("BASE_INFO"),
+            org.mockito.ArgumentMatchers.eq("MATERIAL"),
+            org.mockito.ArgumentMatchers.eq(1001L),
+            org.mockito.ArgumentMatchers.eq("MOTOR_001"),
+            org.mockito.ArgumentMatchers.eq("UNAUDIT"),
+            any(),
+            any(),
+            org.mockito.ArgumentMatchers.isNull()
+        );
+    }
+
+    @Test
+    void materialReferencesBlockDeleteButAllowUnaudit() {
+        when(materialAttributeMapper.selectCount(any())).thenReturn(1L);
+        when(mediaBindingMapper.selectCount(any())).thenReturn(1L);
+
+        ReferenceCheckResultVo result = productMaterialService.checkReferences(1001L);
+
+        assertThat(result.getReferenceCount()).isEqualTo(2L);
+        assertThat(result.getCanRemove()).isFalse();
+        assertThat(result.getCanDisable()).isTrue();
+        assertThat(result.getBlockerReasonKey()).isEqualTo("product.material.hasReferences");
+    }
+
+    @Test
+    void deleteRejectsReferencedMaterial() {
+        when(materialAttributeMapper.selectCount(any())).thenReturn(1L);
+        when(mediaBindingMapper.selectCount(any())).thenReturn(0L);
+
+        assertThatThrownBy(() -> productMaterialService.deleteWithValidByIds(new Long[] {1001L}))
+            .isInstanceOf(ServiceException.class);
+        verify(materialMapper, never()).deleteBatchIds(any());
     }
 
     private ProductMaterialBo validMaterialBo() {

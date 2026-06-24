@@ -11,10 +11,8 @@ import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 import { useProductDict } from '@/hooks/useProductDict'
 import { productCategoryApi, productMaterialTypeApi, productUnitApi } from '@/api/product-capability/base'
-import { productComponentApi } from '@/api/product-capability/component'
 import { engineeringApi, engineeringPlanApi } from '@/api/product-capability/engineering'
 import { productMaterialApi } from '@/api/product-capability/material'
-import { fabricSeriesApi } from '@/api/product-capability/fabric'
 import { productMediaAssetApi } from '@/api/product-capability/asset'
 import type { ProductRecord } from '@/api/product-capability/types'
 import ProductEntityGridPage, { type ProductGridConfig } from '@/pages/product-center/components/ProductEntityGridPage.vue'
@@ -31,8 +29,7 @@ const { options: productDictOptions } = useProductDict(
   'engineering_rule_action',
   'engineering_output_type',
   'engineering_qty_mode',
-  'engineering_severity',
-  'product_component_type'
+  'engineering_severity'
 )
 
 const yesNoOptions = computed(() => [
@@ -101,22 +98,10 @@ async function loadCategoryOptions() {
   return rows.map((row) => ({ value: row.categoryCode, label: labelOf(row, 'categoryCode', 'categoryNameCn', 'categoryNameEn'), record: optionRecord(row, 'categoryCode', 'categoryNameCn', 'categoryNameEn') }))
 }
 
-async function loadSeriesOptions() {
-  const response = await fabricSeriesApi.options?.({ status: 'ENABLED', pageNum: 1, pageSize: 500 })
-  const rows = Array.isArray(response) ? response : response?.data || []
-  return rows.map((row) => ({ value: row.seriesCode, label: labelOf(row, 'seriesCode', 'seriesNameCn', 'seriesNameEn'), record: optionRecord(row, 'seriesCode', 'seriesNameCn', 'seriesNameEn') }))
-}
-
 async function loadMaterialOptions() {
   const response = await productMaterialApi.options?.({ status: 'ENABLED', pageNum: 1, pageSize: 500 })
   const rows = Array.isArray(response) ? response : response?.data || []
   return rows.map((row) => ({ value: row.materialCode, label: labelOf(row, 'materialCode', 'materialNameCn', 'materialNameEn'), record: optionRecord(row, 'materialCode', 'materialNameCn', 'materialNameEn') }))
-}
-
-async function loadComponentOptions() {
-  const response = await productComponentApi.options?.({ status: 'ENABLED', pageNum: 1, pageSize: 500 })
-  const rows = Array.isArray(response) ? response : response?.data || []
-  return rows.map((row) => ({ value: row.componentCode, label: labelOf(row, 'componentCode', 'componentNameCn', 'componentNameEn'), record: optionRecord(row, 'componentCode', 'componentNameCn', 'componentNameEn') }))
 }
 
 async function loadMediaOptions() {
@@ -134,10 +119,7 @@ async function loadUnitOptions() {
 function scopeObjectLoader(form: ProductRecord) {
   const type = String(form.scopeType || form.sourceType || form.outputType || '')
   if (type === 'MATERIAL_TYPE') return Promise.resolve(productMaterialTypeOptions())
-  if (type === 'COMPONENT_TYPE') return Promise.resolve(componentTypeOptions())
-  if (type === 'FABRIC_SERIES') return loadSeriesOptions()
   if (type === 'MATERIAL_CODE' || type === 'MATERIAL') return loadMaterialOptions()
-  if (type === 'COMPONENT_CODE' || type === 'COMPONENT') return loadComponentOptions()
   if (type === 'MEDIA_CODE' || type === 'MEDIA' || type === 'MEDIA_TYPE') return loadMediaOptions()
   return Promise.resolve([])
 }
@@ -151,10 +133,6 @@ function productMaterialTypeOptions() {
       record: optionRecord(row, 'materialTypeCode', 'materialTypeNameCn', 'materialTypeNameEn')
     }))
   }) || Promise.resolve([])
-}
-
-function componentTypeOptions() {
-  return productDictOptions.value.product_component_type || []
 }
 
 function sharedEngineeringOptionLoaders() {
@@ -182,8 +160,6 @@ const configs = computed<Record<string, ProductGridConfig>>(() => ({
       { prop: 'planNameEn', labelKey: 'productCenter.engineering.planNameEn', table: false, sectionKey: 'basic' },
       { prop: 'categoryCode', labelKey: 'productCenter.category.code', type: 'remote-select', optionLoader: loadCategoryOptions, fillFields: { categoryNameCn: 'categoryNameCn', categoryNameEn: 'categoryNameEn', categoryId: 'categoryId' }, search: true, sectionKey: 'series', sectionLabelKey: 'productCenter.engineering.seriesScope' },
       { prop: 'categoryNameCn', labelKey: 'productCenter.category.name', table: false, form: false },
-      { prop: 'seriesCode', labelKey: 'productCenter.fabricSeries.code', type: 'remote-select', optionLoader: loadSeriesOptions, fillFields: { seriesNameCn: 'seriesNameCn', seriesNameEn: 'seriesNameEn', seriesId: 'seriesId' }, search: true, required: true, sectionKey: 'series' },
-      { prop: 'seriesNameCn', labelKey: 'productCenter.fabricSeries.name', required: true, form: false },
       { prop: 'currentVersionId', labelKey: 'productCenter.engineering.currentVersion', type: 'remote-select', optionLoader: loadVersionOptions, fillFields: { currentVersionNo: 'versionNo' }, table: false, sectionKey: 'version', sectionLabelKey: 'productCenter.engineering.activeVersion' },
       { prop: 'currentVersionNo', labelKey: 'productCenter.engineering.versionNo' },
       { prop: 'bizStatus', labelKey: 'productCenter.common.bizStatus', type: 'select', options: bizStatusOptions.value, search: true, sectionKey: 'version' },

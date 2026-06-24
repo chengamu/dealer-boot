@@ -71,6 +71,8 @@ abstract class ProductServiceSupport {
         ReferenceCheckResultVo vo = new ReferenceCheckResultVo();
         vo.setReferenceCount(count);
         vo.setAllowed(count <= 0);
+        vo.setCanRemove(count <= 0);
+        vo.setCanDisable(count <= 0);
         if (count > 0) {
             vo.setBlockerReasonKey(blockerKey);
             if (StringUtils.isNotBlank(summary)) {

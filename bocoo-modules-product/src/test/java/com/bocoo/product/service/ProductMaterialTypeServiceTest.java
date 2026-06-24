@@ -4,7 +4,6 @@ import com.bocoo.common.core.exception.ServiceException;
 import com.bocoo.product.domain.bo.ProductMaterialTypeBo;
 import com.bocoo.product.domain.entity.ProductMaterialType;
 import com.bocoo.product.domain.entity.ProductMaterialTypeGroup;
-import com.bocoo.product.mapper.FabricSeriesMapper;
 import com.bocoo.product.mapper.ProductMaterialMapper;
 import com.bocoo.product.mapper.ProductMaterialTypeGroupMapper;
 import com.bocoo.product.mapper.ProductMaterialTypeMapper;
@@ -31,15 +30,13 @@ class ProductMaterialTypeServiceTest {
     private ProductMaterialTypeGroupMapper groupMapper;
     @Mock
     private ProductMaterialMapper materialMapper;
-    @Mock
-    private FabricSeriesMapper fabricSeriesMapper;
 
     private ProductMaterialTypeServiceImpl service;
 
     @BeforeEach
     void setUp() {
         ProductServiceTestSupport.prepareMapperAndConverter();
-        service = new ProductMaterialTypeServiceImpl(typeMapper, groupMapper, materialMapper, fabricSeriesMapper);
+        service = new ProductMaterialTypeServiceImpl(typeMapper, groupMapper, materialMapper);
     }
 
     @Test

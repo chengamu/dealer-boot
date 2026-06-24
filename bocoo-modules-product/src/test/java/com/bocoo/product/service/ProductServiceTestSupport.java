@@ -4,14 +4,11 @@ import cn.hutool.extra.spring.SpringUtil;
 import com.baomidou.mybatisplus.core.MybatisConfiguration;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.bocoo.product.domain.bo.ProductCategoryBo;
-import com.bocoo.product.domain.bo.ProductComponentBo;
-import com.bocoo.product.domain.bo.ProductComponentItemBo;
 import com.bocoo.product.domain.bo.ProductMaterialBo;
 import com.bocoo.product.domain.bo.ProductMaterialTypeBo;
 import com.bocoo.product.domain.bo.ProductMaterialTypeGroupBo;
 import com.bocoo.product.domain.entity.ProductCategory;
-import com.bocoo.product.domain.entity.ProductComponent;
-import com.bocoo.product.domain.entity.ProductComponentItem;
+import com.bocoo.product.domain.entity.ProductChangeLog;
 import com.bocoo.product.domain.entity.ProductMaterial;
 import com.bocoo.product.domain.entity.ProductMaterialType;
 import com.bocoo.product.domain.entity.ProductMaterialTypeGroup;
@@ -33,8 +30,7 @@ final class ProductServiceTestSupport {
 
     static synchronized void prepareMapperAndConverter() {
         prepareTableInfo(ProductCategory.class);
-        prepareTableInfo(ProductComponent.class);
-        prepareTableInfo(ProductComponentItem.class);
+        prepareTableInfo(ProductChangeLog.class);
         prepareTableInfo(ProductMaterial.class);
         prepareTableInfo(ProductMaterialType.class);
         prepareTableInfo(ProductMaterialTypeGroup.class);
@@ -48,25 +44,6 @@ final class ProductServiceTestSupport {
             target.setCategoryId(source.getCategoryId());
             target.setCategoryCode(source.getCategoryCode());
             target.setCategoryNameCn(source.getCategoryNameCn());
-            target.setStatus(source.getStatus());
-            return target;
-        });
-        lenient().when(converter.convert(any(ProductComponentBo.class), eq(ProductComponent.class))).thenAnswer(invocation -> {
-            ProductComponentBo source = invocation.getArgument(0);
-            ProductComponent target = new ProductComponent();
-            target.setComponentId(source.getComponentId());
-            target.setComponentCode(source.getComponentCode());
-            target.setComponentNameCn(source.getComponentNameCn());
-            target.setStatus(source.getStatus());
-            return target;
-        });
-        lenient().when(converter.convert(any(ProductComponentItemBo.class), eq(ProductComponentItem.class))).thenAnswer(invocation -> {
-            ProductComponentItemBo source = invocation.getArgument(0);
-            ProductComponentItem target = new ProductComponentItem();
-            target.setComponentItemId(source.getComponentItemId());
-            target.setComponentId(source.getComponentId());
-            target.setMaterialId(source.getMaterialId());
-            target.setSortOrder(source.getSortOrder());
             target.setStatus(source.getStatus());
             return target;
         });
@@ -95,8 +72,6 @@ final class ProductServiceTestSupport {
             target.setColorName(source.getColorName());
             target.setWeightValue(source.getWeightValue());
             target.setUnitPrice(source.getUnitPrice());
-            target.setAuditStatus(source.getAuditStatus());
-            target.setAuditById(source.getAuditById());
             target.setAuditBy(source.getAuditBy());
             target.setAuditTime(source.getAuditTime());
             target.setSortOrder(source.getSortOrder());

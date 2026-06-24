@@ -245,8 +245,6 @@ export interface ProductCrudApi<TRecord extends ProductRecord = ProductRecord, T
   superUpdate?: (data: TRecord) => Promise<unknown>
   remove: (ids: Array<string | number> | string | number) => Promise<unknown>
   changeStatus?: (id: string | number, status: string) => Promise<unknown>
-  audit?: (id: string | number) => Promise<unknown>
-  unaudit?: (id: string | number) => Promise<unknown>
   editCheck?: (id: string | number) => Promise<{ data?: EditCheckResult }>
   references?: (id: string | number) => Promise<{ data?: ReferenceCheckResult }>
 }
@@ -414,8 +412,6 @@ export interface ProductMaterialVO extends ProductRecord {
   colorName?: string
   weightValue?: number
   unitPrice?: number
-  auditStatus?: string
-  auditById?: number
   auditBy?: string
   auditTime?: string
   sortOrder?: number
@@ -435,9 +431,34 @@ export interface ProductMaterialQuery extends ProductPageQuery {
   manufacturerItemNo?: string
   model?: string
   spec?: string
-  specModelText?: string
-  auditStatus?: string
   status?: string
+}
+
+export interface ProductChangeLogVO extends ProductRecord {
+  changeLogId?: number
+  tenantId?: number
+  bizModule?: string
+  bizType?: string
+  bizId?: number
+  bizCode?: string
+  actionType?: string
+  actionName?: string
+  beforeJson?: string
+  afterJson?: string
+  diffJson?: string
+  operatorId?: number
+  operatorName?: string
+  operateTime?: string
+  remark?: string
+}
+
+export interface ProductChangeLogQuery extends ProductPageQuery {
+  bizModule?: string
+  bizType?: string
+  bizId?: number | string
+  bizCode?: string
+  actionType?: string
+  operatorName?: string
 }
 
 export interface EngineeringPlanVO extends ProductRecord {

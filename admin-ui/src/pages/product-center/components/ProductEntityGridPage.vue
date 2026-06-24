@@ -2,7 +2,7 @@
     <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true" label-width="72px" class="product-grid-page__search">
       <el-form-item v-for="field in searchFields" :key="field.prop" :label="t(field.labelKey)" :prop="field.prop">
         <el-select
-          v-if="field.type === 'status' || field.type === 'select' || field.type === 'boolean'"
+          v-if="field.type === 'status' || field.type === 'select' || field.type === 'remote-select' || field.type === 'boolean'"
           v-model="queryParams[field.prop]"
           :placeholder="t('productCenter.common.selectPlaceholder')"
           clearable
@@ -18,7 +18,7 @@
             <el-option :label="t('common.no')" :value="false" />
           </template>
           <template v-else>
-            <el-option v-for="option in field.options || []" :key="String(option.value)" :label="option.label" :value="option.value" />
+            <el-option v-for="option in fieldOptions(field)" :key="String(option.value)" :label="option.label" :value="option.value" />
           </template>
         </el-select>
         <el-input
@@ -63,11 +63,16 @@
         </el-button>
       </el-col>
       <el-col v-if="isSingleRowActions && !isTreeGrid && !config.hideReference" :span="1.5">
-        <el-button type="info" plain icon="View" :disabled="single" @click="handleSelectedReference" v-hasPermi="[config.permissions.reference]">
+        <el-button type="success" plain icon="View" :disabled="single" @click="handleSelectedReference" v-hasPermi="[config.permissions.reference]">
           {{ t('productCenter.common.references') }}
         </el-button>
       </el-col>
-      <el-col v-for="action in singleRowToolbarActions" :key="action.labelKey" :span="1.5">
+      <el-col v-if="isSingleRowActions && !isTreeGrid && config.changeLog" :span="1.5">
+        <el-button type="primary" plain icon="Clock" :disabled="single" @click="handleSelectedChangeLog" v-hasPermi="[config.changeLog.permission]">
+          {{ t(config.changeLog.titleKey || 'productCenter.changeLog.title') }}
+        </el-button>
+      </el-col>
+      <el-col v-for="action in visibleSingleRowToolbarActions" :key="action.labelKey" :span="1.5">
         <el-button
           :type="action.type || 'primary'"
           plain
@@ -88,11 +93,6 @@
       <el-col v-if="config.closePath" :span="1.5">
         <el-button type="warning" plain icon="Close" @click="handleClosePage">
           {{ t('common.close') }}
-        </el-button>
-      </el-col>
-      <el-col v-if="isComponentItemGrid && !config.readonly" :span="1.5">
-        <el-button type="warning" plain icon="Grid" @click="openBatchEntry" v-hasPermi="[config.permissions.add]">
-          {{ t('productCenter.componentItem.batchEntry') }}
         </el-button>
       </el-col>
       <right-toolbar v-if="!isTreeGrid" v-model:showSearch="showSearch" @queryTable="getList" />
@@ -141,6 +141,7 @@
           />
           <span v-else-if="field.type === 'select'">{{ optionLabel(field, row[field.prop]) }}</span>
           <span v-else-if="field.type === 'boolean'">{{ booleanLabel(row[field.prop]) }}</span>
+          <span v-else-if="field.type === 'date'">{{ formatUtc(row[field.prop] as string | undefined, 'YYYY-MM-DD') }}</span>
           <span v-else-if="field.type === 'datetime'">{{ formatUtc(row[field.prop] as string | undefined) }}</span>
           <el-link v-else-if="field.type === 'url' && row[field.prop]" type="primary" :href="String(row[field.prop])" target="_blank">
             {{ t('productCenter.common.open') }}
@@ -174,7 +175,7 @@
           <el-tooltip v-if="!config.hideReference && isTreeGrid" :content="t('productCenter.common.references')" placement="top">
             <el-button link type="primary" icon="View" :aria-label="t('productCenter.common.references')" @click="handleReference(row)" v-hasPermi="[config.permissions.reference]" />
           </el-tooltip>
-          <el-tooltip v-for="action in config.rowActions || []" :key="action.labelKey" :content="t(action.labelKey)" placement="top">
+          <el-tooltip v-for="action in visibleRowActions(row)" :key="action.labelKey" :content="t(action.labelKey)" placement="top">
             <el-button
               link
               :type="action.type || 'primary'"
@@ -198,7 +199,17 @@
       @pagination="getList"
     />
 
-    <el-drawer v-model="open" :title="drawerTitle" size="84%" append-to-body destroy-on-close @closed="reset">
+    <el-drawer
+      v-model="open"
+      :title="drawerTitle"
+      size="84%"
+      append-to-body
+      destroy-on-close
+      :close-on-click-modal="false"
+      :close-on-press-escape="false"
+      :before-close="handleDrawerBeforeClose"
+      @closed="handleDrawerClosed"
+    >
       <el-form ref="formRef" :model="form" :rules="rules" label-width="136px" class="product-grid-page__form">
         <template v-for="section in formSections" :key="section.key">
           <div v-if="section.labelKey" class="product-grid-page__section-title">{{ t(section.labelKey) }}</div>
@@ -317,7 +328,12 @@
           <div v-else-if="field.type === 'material-attributes'" class="product-grid-page__builder product-grid-page__material-attributes">
             <el-alert :title="t('productCenter.material.typeAttributeHint')" type="info" show-icon :closable="false" />
             <el-empty v-if="!materialAttributeRows(field).length" :description="t('productCenter.material.noTypeAttributes')" />
-            <div v-for="row in materialAttributeRows(field)" :key="String(row.attributeCode)" class="product-grid-page__material-attribute-row">
+            <div
+              v-for="row in materialAttributeRows(field)"
+              :key="String(row.attributeCode)"
+              class="product-grid-page__material-attribute-row"
+              :class="{ 'product-grid-page__material-attribute-row--number': row.valueType === 'NUMBER' }"
+            >
               <span class="product-grid-page__material-attribute-label">{{ displayValue(row.attributeNameCn || row.attributeCode) }}</span>
               <el-input-number
                 v-if="row.valueType === 'NUMBER'"
@@ -401,21 +417,13 @@
       </template>
     </el-drawer>
 
-    <ProductComponentItemBatchEntry
-      v-if="isComponentItemGrid"
-      v-model="batchEntryOpen"
-      :config="config"
-      :query-params="{ ...queryParams }"
-      @saved="getList"
-    />
-
     <el-drawer v-model="referenceOpen" :title="t('productCenter.common.references')" size="420px" append-to-body>
       <el-descriptions :column="1" border>
         <el-descriptions-item :label="t('productCenter.common.canRemove')">
-          {{ referenceAllowed ? t('common.yes') : t('common.no') }}
+          {{ referenceCanRemove ? t('common.yes') : t('common.no') }}
         </el-descriptions-item>
         <el-descriptions-item :label="t('productCenter.common.canDisable')">
-          {{ referenceAllowed ? t('common.yes') : t('common.no') }}
+          {{ referenceCanDisable ? t('common.yes') : t('common.no') }}
         </el-descriptions-item>
         <el-descriptions-item :label="t('productCenter.common.referenceCount')">
           {{ referenceResult.referenceCount ?? 0 }}
@@ -435,24 +443,45 @@
       </el-table>
       <el-empty v-else :description="t('productCenter.common.noReferences')" />
     </el-drawer>
+
+    <el-drawer v-model="changeLogOpen" :title="t(config.changeLog?.titleKey || 'productCenter.changeLog.title')" size="720px" append-to-body>
+      <el-table v-if="changeLogRows.length" v-loading="changeLogLoading" :data="changeLogRows" border>
+        <el-table-column type="index" :label="t('common.index')" width="64" align="center" />
+        <el-table-column :label="t('productCenter.changeLog.action')" prop="actionName" width="116" show-overflow-tooltip />
+        <el-table-column :label="t('productCenter.changeLog.operator')" prop="operatorName" width="128" show-overflow-tooltip />
+        <el-table-column :label="t('productCenter.changeLog.operateTime')" width="152" align="center">
+          <template #default="{ row }">
+            {{ formatUtc(row.operateTime as string | undefined, 'YYYY-MM-DD HH:mm') }}
+          </template>
+        </el-table-column>
+        <el-table-column :label="t('productCenter.changeLog.diff')" min-width="280">
+          <template #default="{ row }">
+            <pre class="product-grid-page__change-log-diff">{{ formatChangeDiff(row.diffJson) }}</pre>
+          </template>
+        </el-table-column>
+      </el-table>
+      <el-empty v-else v-loading="changeLogLoading" :description="t('productCenter.changeLog.empty')" />
+    </el-drawer>
 </template>
 
 <script setup lang="ts">
-import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules, type UploadRawFile, type UploadRequestOptions } from 'element-plus'
 import { formatUtc } from '@/utils/datetime'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
+import { productChangeLogApi } from '@/api/product-capability/material'
 import { productMediaAssetApi, productMediaBindingApi } from '@/api/product-capability/asset'
-import type { ProductPageQuery, ProductRecord, ReferenceCheckResult } from '@/api/product-capability/types'
+import type { ProductChangeLogVO, ProductPageQuery, ProductRecord, ReferenceCheckResult } from '@/api/product-capability/types'
 import service from '@/utils/request'
 import { getApiBaseUrl } from '@/utils/config'
+import { useUnsavedChangesGuard } from '@/composables/useUnsavedChangesGuard'
 
 export interface ProductFieldConfig {
   prop: string
   labelKey: string
-  type?: 'text' | 'textarea' | 'number' | 'status' | 'datetime' | 'url' | 'select' | 'boolean' | 'remote-select' | 'tree-select' | 'rule-condition' | 'rule-action' | 'fixed-items' | 'case-input' | 'expected-result' | 'material-attributes'
+  type?: 'text' | 'textarea' | 'number' | 'status' | 'date' | 'datetime' | 'url' | 'select' | 'boolean' | 'remote-select' | 'tree-select' | 'rule-condition' | 'rule-action' | 'fixed-items' | 'case-input' | 'expected-result' | 'material-attributes'
   options?: Array<{ label?: string; value?: string | number; record?: ProductRecord }>
   optionLoader?: (form: ProductRecord) => Promise<Array<{ label?: string; value?: string | number; record?: ProductRecord }>>
   fillFields?: Record<string, string | undefined>
@@ -501,6 +530,12 @@ export interface ProductGridConfig {
     targetCodeField: string
     defaultUsageType?: string
   }
+  changeLog?: {
+    bizModule?: string
+    bizType: string
+    permission: string
+    titleKey?: string
+  }
   hideReference?: boolean
   showDetail?: boolean
   closePath?: string
@@ -509,6 +544,7 @@ export interface ProductGridConfig {
     icon?: string
     type?: 'primary' | 'success' | 'warning' | 'danger' | 'info'
     permission: string
+    visible?: (row: ProductRecord) => boolean
     disabled?: (row: ProductRecord) => boolean
     handler: (row: ProductRecord) => void | Promise<void>
   }>
@@ -543,7 +579,6 @@ const props = defineProps<{
   config: ProductGridConfig
 }>()
 
-const ProductComponentItemBatchEntry = defineAsyncComponent(() => import('./ProductComponentItemBatchEntry.vue'))
 const route = useRoute()
 const router = useRouter()
 const localeStore = useLocaleStore()
@@ -559,6 +594,8 @@ const submitLoading = ref(false)
 const showSearch = ref(true)
 const open = ref(false)
 const referenceOpen = ref(false)
+const changeLogOpen = ref(false)
+const changeLogLoading = ref(false)
 const drawerReadonly = ref(false)
 const superEditMode = ref(false)
 const rowActionLoading = ref('')
@@ -566,6 +603,7 @@ const ids = ref<Array<string | number>>([])
 const total = ref(0)
 const form = ref<ProductRecord>({})
 const referenceResult = ref<ReferenceCheckResult>({})
+const changeLogRows = ref<ProductChangeLogVO[]>([])
 const attachmentRows = ref<ProductRecord[]>([])
 const attachmentLoading = ref(false)
 const isExpandAll = ref(true)
@@ -586,7 +624,11 @@ const caseInputDraft = ref<Record<string, unknown>>({})
 const expectedDraft = ref<Record<string, unknown>>({ resultStatus: 'OK' })
 const materialAttributeDrafts = ref<Record<string, ProductRecord[]>>({})
 const materialAttributeDraftKeys = ref<Record<string, string>>({})
-const batchEntryOpen = ref(false)
+const unsavedChangesGuard = useUnsavedChangesGuard({
+  enabled: () => open.value && !drawerReadonly.value,
+  getSnapshot: () => JSON.stringify(form.value || {}),
+  confirmDiscard: confirmDiscardChanges
+})
 
 const defaultSortParams = computed(() => {
   const field = props.config.fields.find((item) => item.prop === props.config.defaultSort?.prop)
@@ -596,7 +638,7 @@ const defaultSortParams = computed(() => {
 })
 const searchFields = computed(() => props.config.fields.filter((field) => field.search))
 const tableFields = computed(() => props.config.fields.filter((field) => field.table !== false))
-const allFormFields = computed(() => props.config.fields.filter((field) => field.form !== false && field.type !== 'datetime' && field.type !== 'status'))
+const allFormFields = computed(() => props.config.fields.filter((field) => field.form !== false && field.type !== 'date' && field.type !== 'datetime' && field.type !== 'status'))
 const formFields = computed(() => allFormFields.value.filter((field) => !field.visible || field.visible(form.value)))
 const formSections = computed(() => {
   const sections: Array<{ key: string; labelKey?: string; fields: ProductFieldConfig[] }> = []
@@ -614,9 +656,14 @@ const formSections = computed(() => {
 })
 const single = computed(() => ids.value.length !== 1)
 const multiple = computed(() => ids.value.length === 0)
-const referenceAllowed = computed(() => {
-  if (referenceResult.value.allowed != null) return referenceResult.value.allowed
+const referenceCanRemove = computed(() => {
   if (referenceResult.value.canRemove != null) return referenceResult.value.canRemove
+  if (referenceResult.value.allowed != null) return referenceResult.value.allowed
+  return Number(referenceResult.value.referenceCount || 0) <= 0
+})
+const referenceCanDisable = computed(() => {
+  if (referenceResult.value.canDisable != null) return referenceResult.value.canDisable
+  if (referenceResult.value.allowed != null) return referenceResult.value.allowed
   return Number(referenceResult.value.referenceCount || 0) <= 0
 })
 const referenceSummaries = computed(() => {
@@ -630,11 +677,14 @@ const drawerTitle = computed(() => {
   return form.value[props.config.idKey] ? t('productCenter.common.editTitle', { name: t(props.config.titleKey) }) : t('productCenter.common.addTitle', { name: t(props.config.titleKey) })
 })
 const attachmentEnabled = computed(() => Boolean(props.config.attachments))
-const isComponentItemGrid = computed(() => props.config.key === 'componentItem')
 const isTreeGrid = computed(() => Boolean(props.config.tree))
 const isSingleRowActions = computed(() => isTreeGrid.value || Boolean(props.config.singleRowActions))
 const singleRowToolbarActions = computed(() => isSingleRowActions.value && !isTreeGrid.value ? props.config.rowActions || [] : [])
 const selectedRow = computed(() => currentRow.value || rows.value.find((row) => row[props.config.idKey] === ids.value[0]))
+const visibleSingleRowToolbarActions = computed(() => {
+  const row = selectedRow.value
+  return singleRowToolbarActions.value.filter((action) => !row || action.visible?.(row) !== false)
+})
 const showOperationColumn = computed(() => {
   return isSingleRowActions.value ? isTreeGrid.value : true
 })
@@ -685,6 +735,23 @@ function displayValue(value: unknown) {
   if (Array.isArray(value)) return value.length ? value.join(', ') : '-'
   if (value && typeof value === 'object') return JSON.stringify(value)
   return String(value ?? '-')
+}
+
+const CHANGE_LOG_HIDDEN_FIELDS = new Set([
+  'createBy',
+  'createById',
+  'createTime',
+  'updateBy',
+  'updateById',
+  'updateTime'
+])
+const ISO_DATETIME_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})?$/
+
+function displayChangeValue(value: unknown) {
+  if (typeof value === 'string' && ISO_DATETIME_PATTERN.test(value.trim())) {
+    return formatUtc(value)
+  }
+  return displayValue(value)
 }
 
 function normalizeNumberValue(value: unknown) {
@@ -784,6 +851,10 @@ function isCancelError(error: unknown) {
 
 function rowActionKey(action: NonNullable<ProductGridConfig['rowActions']>[number], row: ProductRecord) {
   return `${action.labelKey}:${String(row[props.config.idKey] ?? '')}`
+}
+
+function visibleRowActions(row: ProductRecord) {
+  return (props.config.rowActions || []).filter((action) => action.visible?.(row) !== false)
 }
 
 function reset() {
@@ -918,6 +989,7 @@ function handleAdd(parentRow?: ProductRecord) {
     lockedTreeParentId.value = isRecordId(parentId) ? parentId : null
   }
   drawerReadonly.value = false
+  unsavedChangesGuard.markPristine()
   open.value = true
   loadRemoteOptions()
 }
@@ -961,6 +1033,7 @@ async function openEditor(id: string | number, isSuperEdit: boolean) {
   form.value = normalizeFormRecord(response.data)
   hydrateBuilderDrafts()
   await loadAttachments(form.value)
+  unsavedChangesGuard.markPristine()
   open.value = true
   await loadRemoteOptions()
 }
@@ -974,6 +1047,7 @@ async function handleDetail(row: ProductRecord) {
   form.value = normalizeFormRecord(response.data)
   hydrateBuilderDrafts()
   await loadAttachments(form.value)
+  unsavedChangesGuard.markPristine()
   open.value = true
   await loadRemoteOptions()
 }
@@ -1028,6 +1102,48 @@ async function handleReference(row: ProductRecord) {
 
 async function handleSelectedReference() {
   if (selectedRow.value) await handleReference(selectedRow.value)
+}
+
+async function handleChangeLog(row: ProductRecord) {
+  const config = props.config.changeLog
+  const id = row[props.config.idKey]
+  if (!config || !isRecordId(id)) return
+  changeLogOpen.value = true
+  changeLogLoading.value = true
+  try {
+    const response = await productChangeLogApi.list({
+      bizModule: config.bizModule || 'BASE_INFO',
+      bizType: config.bizType,
+      bizId: id,
+      pageNum: 1,
+      pageSize: 50
+    })
+    changeLogRows.value = response.rows || []
+  } finally {
+    changeLogLoading.value = false
+  }
+}
+
+async function handleSelectedChangeLog() {
+  if (selectedRow.value) await handleChangeLog(selectedRow.value)
+}
+
+function formatChangeDiff(value: unknown) {
+  if (!value) return '-'
+  try {
+    const parsed = typeof value === 'string' ? JSON.parse(value) : value
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return displayValue(parsed)
+    const lines = Object.entries(parsed as Record<string, { before?: unknown; after?: unknown }>).map(([field, item]) => {
+      if (CHANGE_LOG_HIDDEN_FIELDS.has(field)) return ''
+      const beforeText = displayChangeValue(item?.before)
+      const afterText = displayChangeValue(item?.after)
+      if (beforeText === afterText) return ''
+      return `${field}: ${beforeText} -> ${afterText}`
+    }).filter(Boolean)
+    return lines.length ? lines.join('\n') : '-'
+  } catch {
+    return String(value)
+  }
 }
 
 async function handleStatusChange(row: ProductRecord, field: ProductFieldConfig, value: unknown) {
@@ -1146,17 +1262,11 @@ function materialAttributeRows(field: ProductFieldConfig): ProductRecord[] {
   })
   materialAttributeDrafts.value[field.prop] = rows
   materialAttributeDraftKeys.value[field.prop] = optionKey
-  form.value[field.prop] = rows
   return rows
 }
 
 function handleClosePage() {
   if (props.config.closePath) router.push(props.config.closePath)
-}
-
-async function openBatchEntry() {
-  if (!isComponentItemGrid.value) return
-  batchEntryOpen.value = true
 }
 
 function syncMaterialAttributes(field: ProductFieldConfig) {
@@ -1284,16 +1394,45 @@ const actionNeedsItem = computed(() => ['DISABLE_OPTION', 'REQUIRE_ITEM'].includ
 const actionNeedsScope = computed(() => String(actionDraft.value.type || '') === 'DISABLE_OPTION')
 const actionNeedsAsset = computed(() => String(actionDraft.value.type || '') === 'MEDIA_HINT')
 
-function cancel() {
-  open.value = false
-  drawerReadonly.value = false
+async function confirmDiscardChanges() {
+  try {
+    await ElMessageBox.confirm(t('common.unsavedChangesConfirm'), t('common.prompt'), {
+      confirmButtonText: t('common.confirm'),
+      cancelButtonText: t('common.cancel'),
+      type: 'warning'
+    })
+    return true
+  } catch {
+    return false
+  }
+}
+
+async function closeDrawerWithGuard() {
+  await unsavedChangesGuard.closeWithGuard(() => {
+    open.value = false
+    drawerReadonly.value = false
+  })
+}
+
+function handleDrawerBeforeClose(done: () => void) {
+  unsavedChangesGuard.canClose().then((allowed) => {
+    if (allowed) done()
+  })
+}
+
+function handleDrawerClosed() {
   reset()
+  unsavedChangesGuard.resetPristine()
+}
+
+function cancel() {
+  closeDrawerWithGuard()
 }
 
 function handleDrawerShortcut(event: KeyboardEvent) {
-  if (event.key !== 'Escape' || !open.value || !drawerReadonly.value) return
+  if (event.key !== 'Escape' || !open.value) return
   event.preventDefault()
-  cancel()
+  closeDrawerWithGuard()
 }
 
 onMounted(() => {
@@ -1361,6 +1500,7 @@ async function submitForm() {
       await props.config.api.add(submitPayload())
       ElMessage.success(t('common.addSuccess'))
     }
+    unsavedChangesGuard.markPristine()
     open.value = false
     await getList()
   } finally {
@@ -1445,6 +1585,7 @@ watch(() => [props.config.key, route.fullPath], () => {
   resetQueryParams()
   applyRouteQuery()
   reset()
+  loadRemoteOptions()
   getList()
 }, { immediate: true })
 
@@ -1524,6 +1665,38 @@ defineExpose({
   width: 100%;
 }
 
+.product-grid-page__material-attributes {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.product-grid-page__material-attribute-row {
+  display: grid;
+  grid-template-columns: 140px minmax(0, 1fr);
+  align-items: center;
+  column-gap: 18px;
+}
+
+.product-grid-page__material-attribute-row--number {
+  grid-template-columns: 140px 180px 220px;
+}
+
+.product-grid-page__material-attribute-label {
+  color: var(--el-text-color-regular);
+  line-height: 32px;
+  text-align: right;
+}
+
+.product-grid-page__material-attribute-row :deep(.el-input),
+.product-grid-page__material-attribute-row :deep(.el-select) {
+  width: 100%;
+}
+
+.product-grid-page__material-attribute-row :deep(.el-input-number) {
+  width: 180px;
+}
+
 .product-grid-page__builder-row {
   display: grid;
   gap: 10px;
@@ -1566,6 +1739,14 @@ defineExpose({
   margin-top: 12px;
 }
 
+.product-grid-page__change-log-diff {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: inherit;
+  line-height: 1.5;
+}
+
 @media (max-width: 720px) {
   .product-grid-page__form {
     grid-template-columns: 1fr;
@@ -1573,8 +1754,14 @@ defineExpose({
 
   .product-grid-page__builder-row--condition,
   .product-grid-page__builder-row--action,
-  .product-grid-page__builder--case {
+  .product-grid-page__builder--case,
+  .product-grid-page__material-attribute-row,
+  .product-grid-page__material-attribute-row--number {
     grid-template-columns: 1fr;
+  }
+
+  .product-grid-page__material-attribute-label {
+    text-align: left;
   }
 }
 </style>

@@ -21,6 +21,12 @@ public class ReferenceCheckResultVo implements Serializable {
     @Schema(description = "是否允许操作")
     private Boolean allowed = Boolean.TRUE;
 
+    @Schema(description = "是否允许删除")
+    private Boolean canRemove = Boolean.TRUE;
+
+    @Schema(description = "是否允许停用或取消审核")
+    private Boolean canDisable = Boolean.TRUE;
+
     @Schema(description = "引用数量")
     private Long referenceCount = 0L;
 

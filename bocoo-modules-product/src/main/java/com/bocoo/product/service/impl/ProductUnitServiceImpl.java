@@ -8,16 +8,12 @@ import com.bocoo.common.core.utils.StringUtils;
 import com.bocoo.common.mybatis.core.page.PageQuery;
 import com.bocoo.common.mybatis.core.page.TableDataInfo;
 import com.bocoo.product.domain.bo.ProductUnitBo;
-import com.bocoo.product.domain.entity.ProductComponent;
-import com.bocoo.product.domain.entity.ProductComponentItem;
 import com.bocoo.product.domain.entity.ProductMaterial;
 import com.bocoo.product.domain.entity.ProductMaterialAttribute;
 import com.bocoo.product.domain.entity.ProductUnit;
 import com.bocoo.product.domain.vo.BaseEditCheckResultVo;
 import com.bocoo.product.domain.vo.ProductUnitVo;
 import com.bocoo.product.domain.vo.ReferenceCheckResultVo;
-import com.bocoo.product.mapper.ProductComponentItemMapper;
-import com.bocoo.product.mapper.ProductComponentMapper;
 import com.bocoo.product.mapper.ProductMaterialAttributeMapper;
 import com.bocoo.product.mapper.ProductMaterialMapper;
 import com.bocoo.product.mapper.ProductUnitMapper;
@@ -36,8 +32,6 @@ public class ProductUnitServiceImpl extends ProductServiceSupport implements Pro
     private final ProductUnitMapper unitMapper;
     private final ProductMaterialMapper materialMapper;
     private final ProductMaterialAttributeMapper materialAttributeMapper;
-    private final ProductComponentMapper componentMapper;
-    private final ProductComponentItemMapper componentItemMapper;
 
     @Override
     public TableDataInfo<ProductUnitVo> queryPageList(ProductUnitBo bo, PageQuery pageQuery) {
@@ -113,9 +107,7 @@ public class ProductUnitServiceImpl extends ProductServiceSupport implements Pro
         String code = unit.getUnitCode();
         long count = materialMapper.selectCount(activeQuery(ProductMaterial.class)
             .and(q -> q.eq("unit_code", code).or().eq("secondary_unit_code", code)))
-            + materialAttributeMapper.selectCount(activeQuery(ProductMaterialAttribute.class).eq("value_unit_code", code))
-            + componentMapper.selectCount(activeQuery(ProductComponent.class).eq("unit_code", code))
-            + componentItemMapper.selectCount(activeQuery(ProductComponentItem.class).eq("unit_code", code));
+            + materialAttributeMapper.selectCount(activeQuery(ProductMaterialAttribute.class).eq("value_unit_code", code));
         return referenceResult(count, "product.unit.hasReferences", "Unit code references: " + count);
     }
 
