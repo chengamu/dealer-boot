@@ -10,11 +10,13 @@ import com.bocoo.common.mybatis.core.page.TableDataInfo;
 import com.bocoo.product.domain.bo.ProductBaseAttributeBo;
 import com.bocoo.product.domain.entity.ProductBaseAttribute;
 import com.bocoo.product.domain.entity.ProductMaterialAttribute;
+import com.bocoo.product.domain.entity.ProductMaterialTypeGroup;
 import com.bocoo.product.domain.vo.BaseEditCheckResultVo;
 import com.bocoo.product.domain.vo.ProductBaseAttributeVo;
 import com.bocoo.product.domain.vo.ReferenceCheckResultVo;
 import com.bocoo.product.mapper.ProductBaseAttributeMapper;
 import com.bocoo.product.mapper.ProductMaterialAttributeMapper;
+import com.bocoo.product.mapper.ProductMaterialTypeGroupMapper;
 import com.bocoo.product.service.ProductBaseAttributeService;
 import com.bocoo.product.service.ProductEntityDefaults;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +30,7 @@ public class ProductBaseAttributeServiceImpl extends ProductServiceSupport imple
 
     private final ProductBaseAttributeMapper baseAttributeMapper;
     private final ProductMaterialAttributeMapper materialAttributeMapper;
+    private final ProductMaterialTypeGroupMapper materialTypeGroupMapper;
 
     @Override
     public TableDataInfo<ProductBaseAttributeVo> queryPageList(ProductBaseAttributeBo bo, PageQuery pageQuery) {
@@ -103,12 +106,11 @@ public class ProductBaseAttributeServiceImpl extends ProductServiceSupport imple
     private QueryWrapper<ProductBaseAttribute> buildQueryWrapper(ProductBaseAttributeBo bo) {
         QueryWrapper<ProductBaseAttribute> q = activeQuery(ProductBaseAttribute.class);
         if (bo != null) {
-            eq(q, "attribute_group", bo.getAttributeGroup());
+            eq(q, "attribute_group_code", bo.getAttributeGroupCode());
             like(q, "attribute_code", bo.getAttributeCode());
             if (StringUtils.isNotBlank(bo.getAttributeNameCn())) {
                 q.and(wrapper -> wrapper.like("attribute_name_cn", bo.getAttributeNameCn()).or().like("attribute_name_en", bo.getAttributeNameCn()));
             }
-            like(q, "material_types", bo.getMaterialTypes());
             eq(q, "status", bo.getStatus());
         }
         return q;
@@ -118,9 +120,15 @@ public class ProductBaseAttributeServiceImpl extends ProductServiceSupport imple
         if (bo == null) {
             return;
         }
-        if (StringUtils.isBlank(bo.getAttributeGroup())) {
+        if (StringUtils.isBlank(bo.getAttributeGroupCode())) {
             throw ServiceException.ofMessageKey("product.baseAttribute.groupRequired");
         }
+        ProductMaterialTypeGroup group = materialTypeGroupMapper.selectOne(activeQuery(ProductMaterialTypeGroup.class).eq("group_code", bo.getAttributeGroupCode()));
+        if (group == null) {
+            throw ServiceException.ofMessageKey("product.baseAttribute.groupNotFound");
+        }
+        bo.setAttributeGroupCode(group.getGroupCode());
+        bo.setAttributeGroupNameCn(group.getGroupNameCn());
         if (StringUtils.isBlank(bo.getValueType())) {
             bo.setValueType("TEXT");
         } else {
@@ -132,11 +140,11 @@ public class ProductBaseAttributeServiceImpl extends ProductServiceSupport imple
     }
 
     private void validateBaseAttributeUnique(ProductBaseAttributeBo bo) {
-        if (bo == null || StringUtils.isBlank(bo.getAttributeGroup()) || StringUtils.isBlank(bo.getAttributeCode())) {
+        if (bo == null || StringUtils.isBlank(bo.getAttributeGroupCode()) || StringUtils.isBlank(bo.getAttributeCode())) {
             return;
         }
         long count = baseAttributeMapper.selectCount(activeQuery(ProductBaseAttribute.class)
-            .eq("attribute_group", bo.getAttributeGroup())
+            .eq("attribute_group_code", bo.getAttributeGroupCode())
             .eq("attribute_code", bo.getAttributeCode())
             .ne(bo.getAttributeId() != null, "attribute_id", bo.getAttributeId()));
         if (count > 0) {

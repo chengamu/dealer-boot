@@ -2,8 +2,10 @@ package com.bocoo.product.service;
 
 import com.bocoo.common.core.exception.ServiceException;
 import com.bocoo.product.domain.bo.ProductBaseAttributeBo;
+import com.bocoo.product.domain.entity.ProductMaterialTypeGroup;
 import com.bocoo.product.mapper.ProductBaseAttributeMapper;
 import com.bocoo.product.mapper.ProductMaterialAttributeMapper;
+import com.bocoo.product.mapper.ProductMaterialTypeGroupMapper;
 import com.bocoo.product.service.impl.ProductBaseAttributeServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,12 +26,14 @@ class ProductBaseAttributeServiceTest {
     private ProductBaseAttributeMapper baseAttributeMapper;
     @Mock
     private ProductMaterialAttributeMapper materialAttributeMapper;
+    @Mock
+    private ProductMaterialTypeGroupMapper materialTypeGroupMapper;
 
     private ProductBaseAttributeServiceImpl productBaseAttributeService;
 
     @BeforeEach
     void setUp() {
-        productBaseAttributeService = new ProductBaseAttributeServiceImpl(baseAttributeMapper, materialAttributeMapper);
+        productBaseAttributeService = new ProductBaseAttributeServiceImpl(baseAttributeMapper, materialAttributeMapper, materialTypeGroupMapper);
     }
 
     @Test
@@ -45,11 +49,16 @@ class ProductBaseAttributeServiceTest {
     @Test
     void normalizeBaseAttributeClearsUnitForNonNumberValueType() throws Exception {
         ProductBaseAttributeBo bo = new ProductBaseAttributeBo();
-        bo.setAttributeGroup("FABRIC");
+        bo.setAttributeGroupCode("FABRIC");
         bo.setAttributeCode("COLOR");
         bo.setAttributeNameCn("颜色");
         bo.setValueType("text");
         bo.setUnitCode("M");
+        ProductMaterialTypeGroup group = new ProductMaterialTypeGroup();
+        group.setGroupId(1L);
+        group.setGroupCode("FABRIC");
+        group.setGroupNameCn("面料");
+        org.mockito.Mockito.when(materialTypeGroupMapper.selectOne(org.mockito.ArgumentMatchers.any())).thenReturn(group);
 
         Method normalize = ProductBaseAttributeServiceImpl.class.getDeclaredMethod("normalizeBaseAttribute", ProductBaseAttributeBo.class);
         normalize.setAccessible(true);

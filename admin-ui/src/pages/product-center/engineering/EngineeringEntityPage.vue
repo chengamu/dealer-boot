@@ -10,7 +10,7 @@ import { useRoute } from 'vue-router'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 import { useProductDict } from '@/hooks/useProductDict'
-import { productCategoryApi, productUnitApi } from '@/api/product-capability/base'
+import { productCategoryApi, productMaterialTypeApi, productUnitApi } from '@/api/product-capability/base'
 import { productComponentApi } from '@/api/product-capability/component'
 import { engineeringApi, engineeringPlanApi } from '@/api/product-capability/engineering'
 import { productMaterialApi } from '@/api/product-capability/material'
@@ -32,7 +32,6 @@ const { options: productDictOptions } = useProductDict(
   'engineering_output_type',
   'engineering_qty_mode',
   'engineering_severity',
-  'product_material_type',
   'product_component_type'
 )
 
@@ -144,7 +143,14 @@ function scopeObjectLoader(form: ProductRecord) {
 }
 
 function productMaterialTypeOptions() {
-  return productDictOptions.value.product_material_type || []
+  return productMaterialTypeApi.options?.({ status: 'ENABLED', pageNum: 1, pageSize: 500 }).then((response) => {
+    const rows = Array.isArray(response) ? response : response?.data || []
+    return rows.map((row) => ({
+      value: row.materialTypeCode,
+      label: labelOf(row, 'materialTypeCode', 'materialTypeNameCn', 'materialTypeNameEn'),
+      record: optionRecord(row, 'materialTypeCode', 'materialTypeNameCn', 'materialTypeNameEn')
+    }))
+  }) || Promise.resolve([])
 }
 
 function componentTypeOptions() {

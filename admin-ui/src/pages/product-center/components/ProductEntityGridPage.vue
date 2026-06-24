@@ -128,7 +128,7 @@
         :align="field.align || 'center'"
         :sortable="field.sortable ? 'custom' : false"
         :sort-by="field.sortProp || field.prop"
-        :show-overflow-tooltip="field.type !== 'status' && field.type !== 'url'"
+        :show-overflow-tooltip="!field.multiline && field.type !== 'status' && field.type !== 'url'"
       >
         <template #default="{ row }">
           <el-switch
@@ -145,6 +145,9 @@
           <el-link v-else-if="field.type === 'url' && row[field.prop]" type="primary" :href="String(row[field.prop])" target="_blank">
             {{ t('productCenter.common.open') }}
           </el-link>
+          <span v-else-if="field.multiline" class="product-grid-page__multiline-cell" :title="displayValue(row[field.prop])">
+            {{ displayValue(row[field.prop]) }}
+          </span>
           <span v-else>{{ displayValue(row[field.prop]) }}</span>
         </template>
       </el-table-column>
@@ -463,6 +466,7 @@ export interface ProductFieldConfig {
   width?: number | string
   minWidth?: number | string
   align?: 'left' | 'center' | 'right'
+  multiline?: boolean
   sortable?: boolean
   sortProp?: string
   search?: boolean
@@ -1462,6 +1466,16 @@ defineExpose({
   :deep(.el-table__body tr) {
     cursor: pointer;
   }
+}
+
+.product-grid-page__multiline-cell {
+  display: -webkit-box;
+  overflow: hidden;
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.45;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
 }
 
 .product-grid-page__drawer-actions {

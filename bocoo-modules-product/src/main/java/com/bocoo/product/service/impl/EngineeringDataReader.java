@@ -80,7 +80,7 @@ public class EngineeringDataReader extends ProductServiceSupport {
         String type = String.valueOf(scope.getScopeType());
         String code = scope.getScopeCode();
         if ("MATERIAL_TYPE".equals(type)) {
-            return materialMapper.selectList(activeQuery(ProductMaterial.class).eq("material_type", code).eq("status", "ENABLED")).stream().map(this::materialOption).toList();
+            return materialMapper.selectList(activeQuery(ProductMaterial.class).eq("material_type_code", code).eq("status", "ENABLED")).stream().map(this::materialOption).toList();
         }
         if ("MATERIAL_CODE".equals(type)) {
             return materialMapper.selectList(activeQuery(ProductMaterial.class).eq("material_code", code).eq("status", "ENABLED")).stream().map(this::materialOption).toList();
@@ -103,8 +103,8 @@ public class EngineeringDataReader extends ProductServiceSupport {
         option.put("nameCn", row.getMaterialNameCn());
         option.put("nameEn", row.getMaterialNameEn());
         option.put("sourceType", "MATERIAL");
-        option.put("materialType", row.getMaterialType());
-        option.put("specSummary", row.getSpecSummary());
+        option.put("materialType", row.getMaterialTypeCode());
+        option.put("specModelText", row.getSpecModelText());
         return option;
     }
 

@@ -46,26 +46,26 @@ public class ProductMaterialVo implements Serializable {
     @Schema(description = "物料英文名称")
     private String materialNameEn;
 
-    /**
-     * 物料类型
-     */
-    @Schema(description = "物料类型")
+    @Schema(description = "物料类型ID")
+    private Long materialTypeId;
+
+    @Schema(description = "物料类型编码")
+    private String materialTypeCode;
+
+    @Schema(description = "物料类型中文名称")
+    private String materialTypeNameCn;
+
+    @Schema(description = "属性分组ID")
+    private Long attributeGroupId;
+
+    @Schema(description = "属性分组编码")
+    private String attributeGroupCode;
+
+    @Schema(description = "属性分组中文名称")
+    private String attributeGroupNameCn;
+
+    @Schema(description = "物料类型编码查询别名")
     private String materialType;
-
-    @Schema(description = "面料系列ID")
-    private Long fabricSeriesId;
-
-    @Schema(description = "面料系列编码")
-    private String fabricSeriesCode;
-
-    @Schema(description = "面料系列中文名称")
-    private String fabricSeriesNameCn;
-
-    /**
-     * 业务口径类型
-     */
-    @Schema(description = "业务口径类型")
-    private String businessType;
 
     /**
      * 单位编码
@@ -73,98 +73,71 @@ public class ProductMaterialVo implements Serializable {
     @Schema(description = "单位编码")
     private String unitCode;
 
-    @Schema(description = "采购单位编码")
-    private String purchaseUnitCode;
-
-    @Schema(description = "库存单位编码")
-    private String inventoryUnitCode;
-
-    @Schema(description = "工程使用单位编码")
-    private String usageUnitCode;
+    @Schema(description = "副单位编码")
+    private String secondaryUnitCode;
 
     /**
-     * 供应商编码
+     * 厂家编码
      */
-    @Schema(description = "供应商编码")
-    private String supplierCode;
+    @Schema(description = "厂家编码")
+    private String manufacturerCode;
 
     /**
-     * 供应商名称
+     * 厂家名称
      */
-    @Schema(description = "供应商名称")
-    private String supplierName;
+    @Schema(description = "厂家名称")
+    private String manufacturerName;
 
     /**
-     * 工厂型号
+     * 厂家料号
      */
-    @Schema(description = "工厂型号")
-    private String factoryModel;
+    @Schema(description = "厂家料号")
+    private String manufacturerItemNo;
 
     /**
-     * 样册编号
+     * 型号
      */
-    @Schema(description = "样册编号")
-    private String sampleBookNo;
+    @Schema(description = "型号")
+    private String model;
 
     /**
-     * 供应商料号
+     * 规格
      */
-    @Schema(description = "供应商料号")
-    private String vendorItemNo;
+    @Schema(description = "规格")
+    private String spec;
+
+    @Schema(description = "规格型号展示文本")
+    private String specModelText;
 
     /**
-     * 主规格
+     * 颜色
      */
-    @Schema(description = "主规格")
-    private String primarySpec;
-
-    @Schema(description = "规格摘要")
-    private String specSummary;
+    @Schema(description = "颜色")
+    private String colorName;
 
     /**
-     * 主颜色
+     * 克重/重量
      */
-    @Schema(description = "主颜色")
-    private String primaryColor;
+    @Schema(description = "克重/重量")
+    private BigDecimal weightValue;
 
-    /**
-     * 主重量
-     */
-    @Schema(description = "主重量")
-    private BigDecimal primaryWeight;
+    @Schema(description = "单价")
+    private BigDecimal unitPrice;
 
-    @Schema(description = "是否可采购")
-    private Boolean purchaseEnabled;
+    @Schema(description = "审核状态：DRAFT 未审核，AUDITED 已审核")
+    private String auditStatus;
 
-    @Schema(description = "是否入库")
-    private Boolean inventoryEnabled;
+    @Schema(description = "审核人ID")
+    private Long auditById;
 
-    @Schema(description = "采购单价")
-    private BigDecimal purchaseUnitPrice;
+    @Schema(description = "审核人")
+    private String auditBy;
 
-    @Schema(description = "成本单价")
-    private BigDecimal costUnitPrice;
+    @Schema(description = "审核时间")
+    private LocalDateTime auditTime;
 
-    @Schema(description = "价格币种")
-    private String priceCurrencyCode;
-
-    /**
-     * 属性摘要
-     */
-    @Schema(description = "属性摘要")
-    private String attributeSummary;
-
-    /**
-     * 老系统来源
-     */
-    @Schema(description = "老系统来源")
-    private String legacySource;
-
-    /**
-     * 老系统编号
-     */
-    @Schema(description = "老系统编号")
-    private String legacyId;
+    @Schema(description = "排序")
+    private Integer sortOrder;
 
     /**
      * 状态：1正常，0停用
@@ -177,12 +150,6 @@ public class ProductMaterialVo implements Serializable {
      */
     @Schema(description = "删除标志：0存在，2删除")
     private String delFlag;
-
-    /**
-     * 物料属性JSON
-     */
-    @Schema(description = "物料属性JSON")
-    private String attributeJson;
 
     @Schema(description = "物料属性值列表")
     private List<ProductMaterialAttributeVo> attributeList;

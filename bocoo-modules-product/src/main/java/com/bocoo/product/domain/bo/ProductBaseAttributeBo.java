@@ -8,19 +8,22 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 /**
- * 产品基础属性业务对象
+ * 物料属性业务对象
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
 @AutoMapper(target = ProductBaseAttribute.class, reverseConvertGenerate = false)
-@Schema(description = "产品基础属性业务对象")
+@Schema(description = "物料属性业务对象")
 public class ProductBaseAttributeBo extends BaseBo {
 
     @Schema(description = "属性ID")
     private Long attributeId;
 
-    @Schema(description = "属性组")
-    private String attributeGroup;
+    @Schema(description = "属性分组编码")
+    private String attributeGroupCode;
+
+    @Schema(description = "属性分组中文名称")
+    private String attributeGroupNameCn;
 
     @Schema(description = "属性编码")
     private String attributeCode;
@@ -36,9 +39,6 @@ public class ProductBaseAttributeBo extends BaseBo {
 
     @Schema(description = "默认单位编码")
     private String unitCode;
-
-    @Schema(description = "适用物料类型")
-    private String materialTypes;
 
     @Schema(description = "扩展配置JSON")
     private String extraJson;

@@ -112,7 +112,7 @@ public class ProductUnitServiceImpl extends ProductServiceSupport implements Pro
         }
         String code = unit.getUnitCode();
         long count = materialMapper.selectCount(activeQuery(ProductMaterial.class)
-            .and(q -> q.eq("unit_code", code).or().eq("purchase_unit_code", code).or().eq("inventory_unit_code", code).or().eq("usage_unit_code", code)))
+            .and(q -> q.eq("unit_code", code).or().eq("secondary_unit_code", code)))
             + materialAttributeMapper.selectCount(activeQuery(ProductMaterialAttribute.class).eq("value_unit_code", code))
             + componentMapper.selectCount(activeQuery(ProductComponent.class).eq("unit_code", code))
             + componentItemMapper.selectCount(activeQuery(ProductComponentItem.class).eq("unit_code", code));

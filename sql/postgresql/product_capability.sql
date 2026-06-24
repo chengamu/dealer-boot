@@ -155,16 +155,69 @@ DROP INDEX IF EXISTS uk_pc_product_dict_item_value_active;
 CREATE INDEX IF NOT EXISTS idx_pc_product_dict_item_value_active ON pc_product_dict_item (tenant_id, dict_type_code, dict_item_value) WHERE del_flag = '0';
 CREATE INDEX IF NOT EXISTS idx_pc_product_dict_item_type_status ON pc_product_dict_item (tenant_id, dict_type_code, status, sort_order);
 
+CREATE TABLE IF NOT EXISTS pc_material_type_group (
+    group_id bigint PRIMARY KEY,
+    tenant_id bigint NOT NULL DEFAULT 1 CHECK (tenant_id <> 0),
+    group_code varchar(80) NOT NULL,
+    group_name_cn varchar(200) NOT NULL,
+    group_name_en varchar(200),
+    system_flag boolean NOT NULL DEFAULT false,
+    editable_flag boolean NOT NULL DEFAULT true,
+    status varchar(20) NOT NULL DEFAULT 'ENABLED',
+    sort_order integer DEFAULT 0,
+    remark varchar(500),
+    del_flag varchar(1) NOT NULL DEFAULT '0',
+    create_by_id bigint,
+    create_by varchar(64),
+    create_time timestamptz,
+    update_by varchar(64),
+    update_time timestamptz
+);
+COMMENT ON TABLE pc_material_type_group IS '物料属性分组主数据表';
+COMMENT ON COLUMN pc_material_type_group.group_code IS '属性分组编码';
+COMMENT ON COLUMN pc_material_type_group.group_name_cn IS '属性分组中文名称';
+DROP INDEX IF EXISTS uk_pc_material_type_group_code_active;
+CREATE INDEX IF NOT EXISTS idx_pc_material_type_group_code_active ON pc_material_type_group (tenant_id, group_code) WHERE del_flag = '0';
+CREATE INDEX IF NOT EXISTS idx_pc_material_type_group_status ON pc_material_type_group (tenant_id, status, sort_order);
+
+CREATE TABLE IF NOT EXISTS pc_material_type (
+    material_type_id bigint PRIMARY KEY,
+    tenant_id bigint NOT NULL DEFAULT 1 CHECK (tenant_id <> 0),
+    material_type_code varchar(80) NOT NULL,
+    material_type_name_cn varchar(200) NOT NULL,
+    material_type_name_en varchar(200),
+    attribute_group_id bigint NOT NULL,
+    attribute_group_code varchar(80) NOT NULL,
+    attribute_group_name_cn varchar(200) NOT NULL,
+    system_flag boolean NOT NULL DEFAULT false,
+    editable_flag boolean NOT NULL DEFAULT true,
+    status varchar(20) NOT NULL DEFAULT 'ENABLED',
+    sort_order integer DEFAULT 0,
+    remark varchar(500),
+    del_flag varchar(1) NOT NULL DEFAULT '0',
+    create_by_id bigint,
+    create_by varchar(64),
+    create_time timestamptz,
+    update_by varchar(64),
+    update_time timestamptz
+);
+COMMENT ON TABLE pc_material_type IS '物料类型主数据表';
+COMMENT ON COLUMN pc_material_type.material_type_code IS '物料类型编码';
+COMMENT ON COLUMN pc_material_type.attribute_group_code IS '所属属性分组编码';
+DROP INDEX IF EXISTS uk_pc_material_type_code_active;
+CREATE INDEX IF NOT EXISTS idx_pc_material_type_code_active ON pc_material_type (tenant_id, material_type_code) WHERE del_flag = '0';
+CREATE INDEX IF NOT EXISTS idx_pc_material_type_group_status ON pc_material_type (tenant_id, attribute_group_code, status, sort_order);
+
 CREATE TABLE IF NOT EXISTS pc_base_attribute (
     attribute_id bigint PRIMARY KEY,
     tenant_id bigint NOT NULL DEFAULT 1 CHECK (tenant_id <> 0),
-    attribute_group varchar(80) NOT NULL,
+    attribute_group_code varchar(80) NOT NULL,
+    attribute_group_name_cn varchar(200),
     attribute_code varchar(80) NOT NULL,
     attribute_name_cn varchar(200) NOT NULL,
     attribute_name_en varchar(200),
     value_type varchar(40) NOT NULL,
     unit_code varchar(80),
-    material_types varchar(500),
     extra_json jsonb,
     sort_order integer DEFAULT 0,
     status varchar(20) NOT NULL DEFAULT 'ENABLED',
@@ -177,16 +230,31 @@ CREATE TABLE IF NOT EXISTS pc_base_attribute (
     update_time timestamptz
 );
 
+ALTER TABLE IF EXISTS pc_base_attribute
+    ADD COLUMN IF NOT EXISTS attribute_group_code varchar(80),
+    ADD COLUMN IF NOT EXISTS attribute_group_name_cn varchar(200),
+    DROP COLUMN IF EXISTS material_types;
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'pc_base_attribute' AND column_name = 'attribute_group'
+    ) THEN
+        EXECUTE 'UPDATE pc_base_attribute SET attribute_group_code = COALESCE(attribute_group_code, attribute_group) WHERE attribute_group_code IS NULL';
+    END IF;
+END $$;
+ALTER TABLE IF EXISTS pc_base_attribute DROP COLUMN IF EXISTS attribute_group;
+
 COMMENT ON TABLE pc_base_attribute IS '物料属性表';
 COMMENT ON COLUMN pc_base_attribute.attribute_id IS '属性定义ID';
 COMMENT ON COLUMN pc_base_attribute.tenant_id IS '租户ID';
-COMMENT ON COLUMN pc_base_attribute.attribute_group IS '属性分组';
+COMMENT ON COLUMN pc_base_attribute.attribute_group_code IS '属性分组编码';
+COMMENT ON COLUMN pc_base_attribute.attribute_group_name_cn IS '属性分组中文名称快照';
 COMMENT ON COLUMN pc_base_attribute.attribute_code IS '属性编码';
 COMMENT ON COLUMN pc_base_attribute.attribute_name_cn IS '属性中文名称';
 COMMENT ON COLUMN pc_base_attribute.attribute_name_en IS '属性英文名称';
 COMMENT ON COLUMN pc_base_attribute.value_type IS '值类型';
 COMMENT ON COLUMN pc_base_attribute.unit_code IS '默认单位编码';
-COMMENT ON COLUMN pc_base_attribute.material_types IS '适用物料类型列表';
 COMMENT ON COLUMN pc_base_attribute.extra_json IS '扩展配置JSON';
 COMMENT ON COLUMN pc_base_attribute.sort_order IS '排序';
 COMMENT ON COLUMN pc_base_attribute.status IS '状态：建议 ENABLED 启用，DISABLED 停用';
@@ -198,8 +266,9 @@ COMMENT ON COLUMN pc_base_attribute.create_time IS '创建时间，UTC timestamp
 COMMENT ON COLUMN pc_base_attribute.update_by IS '更新者';
 COMMENT ON COLUMN pc_base_attribute.update_time IS '更新时间，UTC timestamptz';
 DROP INDEX IF EXISTS uk_pc_base_attribute_code_active;
-CREATE INDEX IF NOT EXISTS idx_pc_base_attribute_code_active ON pc_base_attribute (tenant_id, attribute_group, attribute_code) WHERE del_flag = '0';
-CREATE INDEX IF NOT EXISTS idx_pc_base_attribute_group_status ON pc_base_attribute (tenant_id, attribute_group, status);
+DROP INDEX IF EXISTS idx_pc_base_attribute_code_active;
+CREATE INDEX IF NOT EXISTS idx_pc_base_attribute_code_active ON pc_base_attribute (tenant_id, attribute_group_code, attribute_code) WHERE del_flag = '0';
+CREATE INDEX IF NOT EXISTS idx_pc_base_attribute_group_status ON pc_base_attribute (tenant_id, attribute_group_code, status);
 
 CREATE TABLE IF NOT EXISTS pc_material (
     material_id bigint PRIMARY KEY,
@@ -207,35 +276,30 @@ CREATE TABLE IF NOT EXISTS pc_material (
     material_code varchar(80) NOT NULL,
     material_name_cn varchar(200) NOT NULL,
     material_name_en varchar(200),
-    material_type varchar(80),
-    fabric_series_id bigint,
-    fabric_series_code varchar(80),
-    fabric_series_name_cn varchar(200),
-    business_type varchar(80),
-    unit_code varchar(80),
-    purchase_unit_code varchar(80),
-    inventory_unit_code varchar(80),
-    usage_unit_code varchar(80),
-    supplier_code varchar(80),
-    supplier_name varchar(200),
-    factory_model varchar(120),
-    sample_book_no varchar(120),
-    vendor_item_no varchar(120),
-    primary_spec varchar(200),
-    spec_summary varchar(1000),
-    primary_color varchar(120),
-    primary_weight numeric(18,6),
-    purchase_enabled boolean NOT NULL DEFAULT false,
-    inventory_enabled boolean NOT NULL DEFAULT false,
-    purchase_unit_price numeric(18,4),
-    cost_unit_price numeric(18,4),
-    price_currency_code varchar(12) DEFAULT 'CNY',
-    attribute_summary varchar(1000),
-    legacy_source varchar(80),
-    legacy_id varchar(120),
+    material_type_id bigint NOT NULL,
+    material_type_code varchar(80) NOT NULL,
+    material_type_name_cn varchar(200),
+    attribute_group_id bigint,
+    attribute_group_code varchar(80),
+    attribute_group_name_cn varchar(200),
+    unit_code varchar(80) NOT NULL,
+    secondary_unit_code varchar(80),
+    manufacturer_code varchar(80),
+    manufacturer_name varchar(200),
+    manufacturer_item_no varchar(120),
+    model varchar(120),
+    spec varchar(300) NOT NULL,
+    spec_model_text varchar(1000),
+    color_name varchar(120),
+    weight_value numeric(18,6),
+    unit_price numeric(18,4),
+    audit_status varchar(20) NOT NULL DEFAULT 'DRAFT',
+    audit_by_id bigint,
+    audit_by varchar(64),
+    audit_time timestamptz,
+    sort_order int NOT NULL DEFAULT 0,
     status varchar(20) NOT NULL DEFAULT 'ENABLED',
     del_flag varchar(1) NOT NULL DEFAULT '0',
-    attribute_json jsonb,
     remark varchar(500),
     create_by_id bigint,
     create_by varchar(64),
@@ -245,9 +309,55 @@ CREATE TABLE IF NOT EXISTS pc_material (
 );
 
 ALTER TABLE IF EXISTS pc_material
-    ADD COLUMN IF NOT EXISTS fabric_series_id bigint,
-    ADD COLUMN IF NOT EXISTS fabric_series_code varchar(80),
-    ADD COLUMN IF NOT EXISTS fabric_series_name_cn varchar(200);
+    ADD COLUMN IF NOT EXISTS material_type_id bigint,
+    ADD COLUMN IF NOT EXISTS material_type_code varchar(80),
+    ADD COLUMN IF NOT EXISTS material_type_name_cn varchar(200),
+    ADD COLUMN IF NOT EXISTS attribute_group_id bigint,
+    ADD COLUMN IF NOT EXISTS attribute_group_code varchar(80),
+    ADD COLUMN IF NOT EXISTS attribute_group_name_cn varchar(200),
+    ADD COLUMN IF NOT EXISTS unit_code varchar(80),
+    ADD COLUMN IF NOT EXISTS secondary_unit_code varchar(80),
+    ADD COLUMN IF NOT EXISTS manufacturer_code varchar(80),
+    ADD COLUMN IF NOT EXISTS manufacturer_name varchar(200),
+    ADD COLUMN IF NOT EXISTS manufacturer_item_no varchar(120),
+    ADD COLUMN IF NOT EXISTS model varchar(120),
+    ADD COLUMN IF NOT EXISTS spec varchar(300),
+    ADD COLUMN IF NOT EXISTS spec_model_text varchar(1000),
+    ADD COLUMN IF NOT EXISTS color_name varchar(120),
+    ADD COLUMN IF NOT EXISTS weight_value numeric(18,6),
+    ADD COLUMN IF NOT EXISTS unit_price numeric(18,4),
+    ADD COLUMN IF NOT EXISTS audit_status varchar(20) NOT NULL DEFAULT 'DRAFT',
+    ADD COLUMN IF NOT EXISTS audit_by_id bigint,
+    ADD COLUMN IF NOT EXISTS audit_by varchar(64),
+    ADD COLUMN IF NOT EXISTS audit_time timestamptz,
+    ADD COLUMN IF NOT EXISTS sort_order int NOT NULL DEFAULT 0;
+ALTER TABLE IF EXISTS pc_material
+    DROP COLUMN IF EXISTS material_type,
+    DROP COLUMN IF EXISTS fabric_series_id,
+    DROP COLUMN IF EXISTS fabric_series_code,
+    DROP COLUMN IF EXISTS fabric_series_name_cn,
+    DROP COLUMN IF EXISTS business_type,
+    DROP COLUMN IF EXISTS purchase_unit_code,
+    DROP COLUMN IF EXISTS inventory_unit_code,
+    DROP COLUMN IF EXISTS usage_unit_code,
+    DROP COLUMN IF EXISTS supplier_code,
+    DROP COLUMN IF EXISTS supplier_name,
+    DROP COLUMN IF EXISTS factory_model,
+    DROP COLUMN IF EXISTS sample_book_no,
+    DROP COLUMN IF EXISTS vendor_item_no,
+    DROP COLUMN IF EXISTS primary_spec,
+    DROP COLUMN IF EXISTS spec_summary,
+    DROP COLUMN IF EXISTS primary_color,
+    DROP COLUMN IF EXISTS primary_weight,
+    DROP COLUMN IF EXISTS purchase_enabled,
+    DROP COLUMN IF EXISTS inventory_enabled,
+    DROP COLUMN IF EXISTS purchase_unit_price,
+    DROP COLUMN IF EXISTS cost_unit_price,
+    DROP COLUMN IF EXISTS price_currency_code,
+    DROP COLUMN IF EXISTS attribute_summary,
+    DROP COLUMN IF EXISTS legacy_source,
+    DROP COLUMN IF EXISTS legacy_id,
+    DROP COLUMN IF EXISTS attribute_json;
 
 COMMENT ON TABLE pc_material IS '产品物料表';
 COMMENT ON COLUMN pc_material.material_id IS '产品物料ID';
@@ -255,35 +365,30 @@ COMMENT ON COLUMN pc_material.tenant_id IS '租户ID';
 COMMENT ON COLUMN pc_material.material_code IS '物料编码';
 COMMENT ON COLUMN pc_material.material_name_cn IS '物料中文名称';
 COMMENT ON COLUMN pc_material.material_name_en IS '物料英文名称';
-COMMENT ON COLUMN pc_material.material_type IS '物料类型';
-COMMENT ON COLUMN pc_material.fabric_series_id IS '面料系列ID，仅面料物料使用';
-COMMENT ON COLUMN pc_material.fabric_series_code IS '面料系列编码，仅面料物料使用';
-COMMENT ON COLUMN pc_material.fabric_series_name_cn IS '面料系列中文名称快照，仅面料物料使用';
-COMMENT ON COLUMN pc_material.business_type IS '业务口径类型';
-COMMENT ON COLUMN pc_material.unit_code IS '单位编码';
-COMMENT ON COLUMN pc_material.purchase_unit_code IS '采购单位编码';
-COMMENT ON COLUMN pc_material.inventory_unit_code IS '库存单位编码';
-COMMENT ON COLUMN pc_material.usage_unit_code IS '工程使用单位编码';
-COMMENT ON COLUMN pc_material.supplier_code IS '供应商编码快照';
-COMMENT ON COLUMN pc_material.supplier_name IS '供应商名称';
-COMMENT ON COLUMN pc_material.factory_model IS '工厂型号';
-COMMENT ON COLUMN pc_material.sample_book_no IS '样册编号';
-COMMENT ON COLUMN pc_material.vendor_item_no IS '供应商料号';
-COMMENT ON COLUMN pc_material.primary_spec IS '主规格摘要';
-COMMENT ON COLUMN pc_material.spec_summary IS '规格摘要：标准规格 + 高频补充属性';
-COMMENT ON COLUMN pc_material.primary_color IS '主颜色摘要';
-COMMENT ON COLUMN pc_material.primary_weight IS '主重量/克重数值';
-COMMENT ON COLUMN pc_material.purchase_enabled IS '是否可采购主数据标记';
-COMMENT ON COLUMN pc_material.inventory_enabled IS '是否入库主数据标记';
-COMMENT ON COLUMN pc_material.purchase_unit_price IS '采购单价';
-COMMENT ON COLUMN pc_material.cost_unit_price IS '成本单价';
-COMMENT ON COLUMN pc_material.price_currency_code IS '价格币种，默认 CNY';
-COMMENT ON COLUMN pc_material.attribute_summary IS '属性摘要';
-COMMENT ON COLUMN pc_material.legacy_source IS '旧系统来源';
-COMMENT ON COLUMN pc_material.legacy_id IS '旧系统对象ID';
+COMMENT ON COLUMN pc_material.material_type_id IS '物料类型ID';
+COMMENT ON COLUMN pc_material.material_type_code IS '物料类型编码';
+COMMENT ON COLUMN pc_material.material_type_name_cn IS '物料类型中文名称快照';
+COMMENT ON COLUMN pc_material.attribute_group_id IS '属性分组ID';
+COMMENT ON COLUMN pc_material.attribute_group_code IS '属性分组编码';
+COMMENT ON COLUMN pc_material.attribute_group_name_cn IS '属性分组中文名称快照';
+COMMENT ON COLUMN pc_material.unit_code IS '主单位编码';
+COMMENT ON COLUMN pc_material.secondary_unit_code IS '副单位编码';
+COMMENT ON COLUMN pc_material.manufacturer_code IS '厂家编码';
+COMMENT ON COLUMN pc_material.manufacturer_name IS '厂家名称';
+COMMENT ON COLUMN pc_material.manufacturer_item_no IS '厂家料号/供应商料号';
+COMMENT ON COLUMN pc_material.model IS '型号';
+COMMENT ON COLUMN pc_material.spec IS '规格';
+COMMENT ON COLUMN pc_material.spec_model_text IS '规格型号展示文本，普通文本';
+COMMENT ON COLUMN pc_material.color_name IS '颜色';
+COMMENT ON COLUMN pc_material.weight_value IS '克重/重量';
+COMMENT ON COLUMN pc_material.unit_price IS '单价';
+COMMENT ON COLUMN pc_material.audit_status IS '审核状态：DRAFT 未审核，AUDITED 已审核';
+COMMENT ON COLUMN pc_material.audit_by_id IS '审核人ID';
+COMMENT ON COLUMN pc_material.audit_by IS '审核人';
+COMMENT ON COLUMN pc_material.audit_time IS '审核时间，UTC timestamptz';
+COMMENT ON COLUMN pc_material.sort_order IS '排序';
 COMMENT ON COLUMN pc_material.status IS '状态：建议 ENABLED 启用，DISABLED 停用';
 COMMENT ON COLUMN pc_material.del_flag IS '删除标志：0存在，2删除';
-COMMENT ON COLUMN pc_material.attribute_json IS '低频兼容属性JSON';
 COMMENT ON COLUMN pc_material.remark IS '备注';
 COMMENT ON COLUMN pc_material.create_by_id IS '创建者ID';
 COMMENT ON COLUMN pc_material.create_by IS '创建者';
@@ -292,16 +397,17 @@ COMMENT ON COLUMN pc_material.update_by IS '更新者';
 COMMENT ON COLUMN pc_material.update_time IS '更新时间，UTC timestamptz';
 DROP INDEX IF EXISTS uk_pc_material_material_code_active;
 DROP INDEX IF EXISTS uk_pc_material_code_active;
+DROP INDEX IF EXISTS idx_pc_material_type_status;
+DROP INDEX IF EXISTS idx_pc_material_fabric_series_status;
+DROP INDEX IF EXISTS idx_pc_material_supplier_code;
+DROP INDEX IF EXISTS idx_pc_material_vendor_item_no;
+DROP INDEX IF EXISTS idx_pc_material_sample_book_no;
 CREATE INDEX IF NOT EXISTS idx_pc_material_code_active ON pc_material (tenant_id, material_code) WHERE del_flag = '0';
-CREATE INDEX IF NOT EXISTS idx_pc_material_type_status ON pc_material (tenant_id, material_type, status);
-CREATE INDEX IF NOT EXISTS idx_pc_material_fabric_series_status ON pc_material (tenant_id, fabric_series_code, status);
-CREATE INDEX IF NOT EXISTS idx_pc_material_supplier_code ON pc_material (tenant_id, supplier_code);
-CREATE INDEX IF NOT EXISTS idx_pc_material_vendor_item_no ON pc_material (tenant_id, vendor_item_no);
-CREATE INDEX IF NOT EXISTS idx_pc_material_sample_book_no ON pc_material (tenant_id, sample_book_no);
-
-UPDATE pc_material
-SET spec_summary = COALESCE(NULLIF(spec_summary, ''), NULLIF(attribute_summary, ''), primary_spec)
-WHERE spec_summary IS NULL OR spec_summary = '';
+CREATE INDEX IF NOT EXISTS idx_pc_material_type_status ON pc_material (tenant_id, material_type_code, status);
+CREATE INDEX IF NOT EXISTS idx_pc_material_group_status ON pc_material (tenant_id, attribute_group_code, status);
+CREATE INDEX IF NOT EXISTS idx_pc_material_manufacturer_name ON pc_material (tenant_id, manufacturer_name);
+CREATE INDEX IF NOT EXISTS idx_pc_material_audit_status ON pc_material (tenant_id, audit_status);
+CREATE INDEX IF NOT EXISTS idx_pc_material_spec_model ON pc_material (tenant_id, model, spec);
 
 CREATE TABLE IF NOT EXISTS pc_fabric_series (
     series_id bigint PRIMARY KEY,
@@ -309,7 +415,7 @@ CREATE TABLE IF NOT EXISTS pc_fabric_series (
     series_code varchar(80) NOT NULL,
     series_name_cn varchar(200) NOT NULL,
     series_name_en varchar(200),
-    material_type varchar(80),
+    material_type_code varchar(80),
     default_thickness_unit varchar(80),
     default_thickness_value numeric(18,6),
     thickness_rule_enabled boolean NOT NULL DEFAULT false,
@@ -331,13 +437,25 @@ CREATE TABLE IF NOT EXISTS pc_fabric_series (
     update_time timestamptz
 );
 
+ALTER TABLE IF EXISTS pc_fabric_series ADD COLUMN IF NOT EXISTS material_type_code varchar(80);
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'pc_fabric_series' AND column_name = 'material_type'
+    ) THEN
+        EXECUTE 'UPDATE pc_fabric_series SET material_type_code = COALESCE(material_type_code, material_type) WHERE material_type_code IS NULL';
+    END IF;
+END $$;
+ALTER TABLE IF EXISTS pc_fabric_series DROP COLUMN IF EXISTS material_type;
+
 COMMENT ON TABLE pc_fabric_series IS '面料系列表';
 COMMENT ON COLUMN pc_fabric_series.series_id IS '面料系列ID';
 COMMENT ON COLUMN pc_fabric_series.tenant_id IS '租户ID';
 COMMENT ON COLUMN pc_fabric_series.series_code IS '面料系列编码';
 COMMENT ON COLUMN pc_fabric_series.series_name_cn IS '面料系列中文名称';
 COMMENT ON COLUMN pc_fabric_series.series_name_en IS '面料系列英文名称';
-COMMENT ON COLUMN pc_fabric_series.material_type IS '适用物料类型';
+COMMENT ON COLUMN pc_fabric_series.material_type_code IS '适用物料类型编码';
 COMMENT ON COLUMN pc_fabric_series.default_thickness_unit IS '默认厚度单位';
 COMMENT ON COLUMN pc_fabric_series.default_thickness_value IS '默认厚度值';
 COMMENT ON COLUMN pc_fabric_series.thickness_rule_enabled IS '是否启用厚度规则';
@@ -358,8 +476,9 @@ COMMENT ON COLUMN pc_fabric_series.create_time IS '创建时间，UTC timestampt
 COMMENT ON COLUMN pc_fabric_series.update_by IS '更新者';
 COMMENT ON COLUMN pc_fabric_series.update_time IS '更新时间，UTC timestamptz';
 DROP INDEX IF EXISTS uk_pc_fabric_series_code_active;
+DROP INDEX IF EXISTS idx_pc_fabric_series_type_status;
 CREATE INDEX IF NOT EXISTS idx_pc_fabric_series_code_active ON pc_fabric_series (tenant_id, series_code) WHERE del_flag = '0';
-CREATE INDEX IF NOT EXISTS idx_pc_fabric_series_type_status ON pc_fabric_series (tenant_id, material_type, status);
+CREATE INDEX IF NOT EXISTS idx_pc_fabric_series_type_status ON pc_fabric_series (tenant_id, material_type_code, status);
 
 CREATE TABLE IF NOT EXISTS pc_material_attribute (
     material_attribute_id bigint PRIMARY KEY,
@@ -684,16 +803,71 @@ INSERT INTO pc_unit (
     (110008, 1, 'KG', '千克', 'Kilogram', 'WEIGHT', 3, 'HALF_UP', 'KG', 1.000000, 'ENABLED', '0', 70, '重量单位', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00')
 ON CONFLICT (unit_id) DO NOTHING;
 
+DELETE FROM pc_product_dict_item
+WHERE dict_type_code IN ('product_material_type', 'product_attribute_group');
+DELETE FROM pc_product_dict_type
+WHERE dict_type_code IN ('product_material_type', 'product_attribute_group');
+
+INSERT INTO pc_material_type_group (
+    group_id, tenant_id, group_code, group_name_cn, group_name_en, system_flag, editable_flag,
+    status, sort_order, remark, del_flag, create_by, create_time, update_by, update_time
+) VALUES
+    (121001, 1, 'FABRIC', '面料', 'Fabric', true, false, 'ENABLED', 10, '面料属性分组', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
+    (121002, 1, 'ALUMINUM', '铝材', 'Aluminum', true, false, 'ENABLED', 20, '铝材、下杆、轨道属性分组', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
+    (121003, 1, 'CONTROL', '控制系统', 'Control System', true, false, 'ENABLED', 30, '电机、遥控、拉珠等控制系统属性分组', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
+    (121004, 1, 'HARDWARE', '五金配件', 'Hardware', true, false, 'ENABLED', 40, '安装件、支架、螺丝等五金属性分组', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
+    (121005, 1, 'PACKAGING', '包装参数', 'Packaging', true, false, 'ENABLED', 50, '包装相关属性分组', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00')
+ON CONFLICT (group_id) DO UPDATE
+SET group_code = EXCLUDED.group_code,
+    group_name_cn = EXCLUDED.group_name_cn,
+    group_name_en = EXCLUDED.group_name_en,
+    system_flag = EXCLUDED.system_flag,
+    editable_flag = EXCLUDED.editable_flag,
+    status = EXCLUDED.status,
+    sort_order = EXCLUDED.sort_order,
+    remark = EXCLUDED.remark,
+    update_by = 'system',
+    update_time = now();
+
+INSERT INTO pc_material_type (
+    material_type_id, tenant_id, material_type_code, material_type_name_cn, material_type_name_en,
+    attribute_group_id, attribute_group_code, attribute_group_name_cn, system_flag, editable_flag,
+    status, sort_order, remark, del_flag, create_by, create_time, update_by, update_time
+) VALUES
+    (122001, 1, 'FABRIC', '面料', 'Fabric', 121001, 'FABRIC', '面料', true, false, 'ENABLED', 10, '面料物料', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
+    (122002, 1, 'PROFILE', '铝材/型材', 'Profile', 121002, 'ALUMINUM', '铝材', true, false, 'ENABLED', 20, '型材物料', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
+    (122003, 1, 'BOTTOM_RAIL', '下杆', 'Bottom Rail', 121002, 'ALUMINUM', '铝材', true, false, 'ENABLED', 30, '下杆物料', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
+    (122004, 1, 'TRACK', '轨道', 'Track', 121002, 'ALUMINUM', '铝材', true, false, 'ENABLED', 40, '轨道物料', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
+    (122005, 1, 'MOTOR', '电机', 'Motor', 121003, 'CONTROL', '控制系统', true, false, 'ENABLED', 50, '电机物料', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
+    (122006, 1, 'REMOTE', '遥控器', 'Remote', 121003, 'CONTROL', '控制系统', true, false, 'ENABLED', 60, '遥控器物料', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
+    (122007, 1, 'CHAIN', '拉珠', 'Chain', 121003, 'CONTROL', '控制系统', true, false, 'ENABLED', 70, '拉珠/链条物料', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
+    (122008, 1, 'SOLAR_PANEL', '太阳能板', 'Solar Panel', 121003, 'CONTROL', '控制系统', true, false, 'ENABLED', 80, '太阳能板物料', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
+    (122009, 1, 'HARDWARE', '五金配件', 'Hardware', 121004, 'HARDWARE', '五金配件', true, false, 'ENABLED', 90, '五金配件物料', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
+    (122010, 1, 'INSTALL_PART', '安装件', 'Install Part', 121004, 'HARDWARE', '五金配件', true, false, 'ENABLED', 100, '安装件物料', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
+    (122011, 1, 'PACKAGING', '包装件', 'Packaging', 121005, 'PACKAGING', '包装参数', true, false, 'ENABLED', 110, '包装件物料', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00')
+ON CONFLICT (material_type_id) DO UPDATE
+SET material_type_code = EXCLUDED.material_type_code,
+    material_type_name_cn = EXCLUDED.material_type_name_cn,
+    material_type_name_en = EXCLUDED.material_type_name_en,
+    attribute_group_id = EXCLUDED.attribute_group_id,
+    attribute_group_code = EXCLUDED.attribute_group_code,
+    attribute_group_name_cn = EXCLUDED.attribute_group_name_cn,
+    system_flag = EXCLUDED.system_flag,
+    editable_flag = EXCLUDED.editable_flag,
+    status = EXCLUDED.status,
+    sort_order = EXCLUDED.sort_order,
+    remark = EXCLUDED.remark,
+    update_by = 'system',
+    update_time = now();
+
 INSERT INTO pc_product_dict_type (
     dict_type_id, tenant_id, dict_type_code, dict_type_name_cn, dict_type_name_en, business_domain,
     system_flag, editable_flag, status, sort_order, remark, del_flag, create_by, create_time, update_by, update_time
 ) VALUES
     (118001, 1, 'product_unit_type', '单位类型', 'Unit Type', 'BASE', true, true, 'ENABLED', 10, '单位分类枚举，具体单位仍维护在 pc_unit', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
-    (118002, 1, 'product_material_type', '物料类型', 'Material Type', 'BASE', true, true, 'ENABLED', 20, '产品物料类型', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
     (118003, 1, 'product_business_type', '业务类型', 'Business Type', 'BASE', true, true, 'ENABLED', 30, '产品业务口径类型', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
     (118004, 1, 'product_component_type', '组件包类型', 'Component Pack Type', 'BASE', true, true, 'ENABLED', 40, '组件包类型', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
     (118005, 1, 'product_asset_type', '资料类型', 'Asset Type', 'BASE', true, true, 'ENABLED', 50, '资料资产类型', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
-    (118006, 1, 'product_attribute_group', '物料属性分组', 'Material Attribute Group', 'BASE', true, false, 'ENABLED', 60, '物料属性系统分组', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
     (118101, 1, 'engineering_item_type', '工程构成项类型', 'Engineering Item Type', 'ENGINEERING', true, true, 'ENABLED', 110, '工程构成项类型', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
     (118102, 1, 'engineering_scope_type', '可选范围类型', 'Engineering Scope Type', 'ENGINEERING', true, true, 'ENABLED', 120, '工程可选范围类型', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
     (118103, 1, 'engineering_rule_source', '规则条件来源', 'Engineering Rule Source', 'ENGINEERING', true, true, 'ENABLED', 130, '工程规则条件来源', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
@@ -727,19 +901,6 @@ INSERT INTO pc_product_dict_item (
     (119003, 1, 'product_unit_type', 'AREA', '面积', 'Area', NULL, true, true, 'ENABLED', 30, '面积单位分类', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
     (119004, 1, 'product_unit_type', 'WEIGHT', '重量', 'Weight', NULL, true, true, 'ENABLED', 40, '重量单位分类', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
     (119005, 1, 'product_unit_type', 'VOLUME', '体积', 'Volume', NULL, true, true, 'ENABLED', 50, '体积单位分类', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
-    (119101, 1, 'product_material_type', 'FABRIC', '面料', 'Fabric', NULL, true, true, 'ENABLED', 10, '面料', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
-    (119102, 1, 'product_material_type', 'PROFILE', '铝材/型材', 'Profile', NULL, true, true, 'ENABLED', 20, '型材', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
-    (119103, 1, 'product_material_type', 'BOTTOM_RAIL', '下杆', 'Bottom Rail', NULL, true, true, 'ENABLED', 30, '下杆', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
-    (119104, 1, 'product_material_type', 'TRACK', '轨道', 'Track', NULL, true, true, 'ENABLED', 40, '轨道', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
-    (119105, 1, 'product_material_type', 'MOTOR', '电机', 'Motor', NULL, true, true, 'ENABLED', 50, '电机', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
-    (119106, 1, 'product_material_type', 'REMOTE', '遥控器', 'Remote', NULL, true, true, 'ENABLED', 60, '遥控器', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
-    (119107, 1, 'product_material_type', 'CHAIN', '拉珠', 'Chain', NULL, true, true, 'ENABLED', 70, '拉珠/链条', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
-    (119108, 1, 'product_material_type', 'SOLAR_PANEL', '太阳能板', 'Solar Panel', NULL, true, true, 'ENABLED', 80, '太阳能板', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
-    (119109, 1, 'product_material_type', 'HARDWARE', '配件', 'Hardware', NULL, true, true, 'ENABLED', 90, '配件/五金', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
-    (119110, 1, 'product_material_type', 'INSTALL_PART', '安装件', 'Install Part', NULL, true, true, 'ENABLED', 100, '安装件', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
-    (119111, 1, 'product_material_type', 'PACKAGING', '包装件', 'Packaging', NULL, true, true, 'ENABLED', 110, '包装件', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
-    (119112, 1, 'product_material_type', 'FINISHED_GOOD', '标准成品', 'Finished Good', NULL, true, true, 'ENABLED', 120, '标准成品', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
-    (119113, 1, 'product_material_type', 'SERVICE', '服务项', 'Service', NULL, true, true, 'ENABLED', 130, '服务项预留', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
     (119201, 1, 'product_business_type', 'ROLLER_SHADE', '卷帘', 'Roller Shade', NULL, true, true, 'ENABLED', 10, '卷帘', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
     (119202, 1, 'product_business_type', 'ZEBRA_SHADE', '斑马帘/柔纱帘', 'Zebra Shade', NULL, true, true, 'ENABLED', 20, '斑马帘/柔纱帘', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
     (119203, 1, 'product_business_type', 'OUTDOOR_SHADE', '户外遮阳', 'Outdoor Shade', NULL, true, true, 'ENABLED', 30, '户外遮阳', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
@@ -755,11 +916,6 @@ INSERT INTO pc_product_dict_item (
     (119404, 1, 'product_asset_type', 'INSTALL_GUIDE', '安装说明', 'Installation Guide', NULL, true, true, 'ENABLED', 40, '安装说明', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
     (119405, 1, 'product_asset_type', 'DRAWING', '图纸', 'Drawing', NULL, true, true, 'ENABLED', 50, '图纸', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
     (119406, 1, 'product_asset_type', 'OTHER', '其他', 'Other', NULL, true, true, 'ENABLED', 90, '其他资料', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
-    (119451, 1, 'product_attribute_group', 'FABRIC', '面料', 'Fabric', NULL, true, false, 'ENABLED', 10, '面料属性分组', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
-    (119452, 1, 'product_attribute_group', 'ALUMINUM', '铝材', 'Aluminum', NULL, true, false, 'ENABLED', 20, '铝材属性分组', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
-    (119453, 1, 'product_attribute_group', 'CONTROL', '控制系统', 'Control System', NULL, true, false, 'ENABLED', 30, '电机、遥控、拉珠等控制系统属性分组', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
-    (119454, 1, 'product_attribute_group', 'HARDWARE', '五金配件', 'Hardware', NULL, true, false, 'ENABLED', 40, '五金配件属性分组', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
-    (119455, 1, 'product_attribute_group', 'PACKAGING', '包装参数', 'Packaging', NULL, true, false, 'ENABLED', 50, '包装参数属性分组', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
     (119501, 1, 'engineering_item_type', 'MAIN_FABRIC', '主面料', 'Main Fabric', NULL, true, true, 'ENABLED', 10, '主面料构成项', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
     (119502, 1, 'engineering_item_type', 'SECONDARY_FABRIC', '副面料', 'Secondary Fabric', NULL, true, true, 'ENABLED', 20, '副面料构成项', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
     (119503, 1, 'engineering_item_type', 'PROFILE', '铝材/下杆/轨道', 'Profile / Rail / Track', NULL, true, true, 'ENABLED', 30, '型材类构成项', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
@@ -828,85 +984,92 @@ SET dict_item_label_cn = EXCLUDED.dict_item_label_cn,
     update_time = now();
 
 INSERT INTO pc_base_attribute (
-    attribute_id, tenant_id, attribute_group, attribute_code, attribute_name_cn, attribute_name_en, value_type,
-    unit_code, material_types, extra_json, sort_order, status, del_flag, remark, create_by, create_time, update_by, update_time
+    attribute_id, tenant_id, attribute_group_code, attribute_group_name_cn, attribute_code, attribute_name_cn, attribute_name_en, value_type,
+    unit_code, extra_json, sort_order, status, del_flag, remark, create_by, create_time, update_by, update_time
 ) VALUES
-    (120001, 1, 'FABRIC', 'COLOR', '颜色', 'Color', 'TEXT', NULL, 'FABRIC', '{"seed":true}'::jsonb, 10, 'ENABLED', '0', '基础颜色属性', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
-    (120002, 1, 'FABRIC', 'TEXTURE_TYPE', '纹理', 'Texture Type', 'TEXT', NULL, 'FABRIC', '{"seed":true}'::jsonb, 20, 'ENABLED', '0', '面料纹理属性', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
-    (120003, 1, 'FABRIC', 'FINISH_TYPE', '涂层工艺', 'Finish Type', 'TEXT', NULL, 'FABRIC', '{"seed":true}'::jsonb, 30, 'ENABLED', '0', '面料后整理属性', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
-    (120004, 1, 'CONTROL', 'VOLTAGE', '电压', 'Voltage', 'NUMBER', NULL, 'MOTOR', '{"seed":true}'::jsonb, 40, 'ENABLED', '0', '电机电压属性', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
-    (120005, 1, 'CONTROL', 'PROTOCOL', '协议', 'Protocol', 'TEXT', NULL, 'MOTOR,REMOTE', '{"seed":true}'::jsonb, 50, 'ENABLED', '0', '控制协议属性', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
-    (120006, 1, 'CONTROL', 'CHANNEL_COUNT', '通道数', 'Channel Count', 'NUMBER', NULL, 'REMOTE', '{"seed":true}'::jsonb, 60, 'ENABLED', '0', '遥控器通道属性', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
-    (120007, 1, 'HARDWARE', 'MATERIAL_COMPOSITION', '材质', 'Material Composition', 'TEXT', NULL, 'HARDWARE,TRACK', '{"seed":true}'::jsonb, 70, 'ENABLED', '0', '五金材质属性', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
-    (120008, 1, 'HARDWARE', 'MOUNT_TYPE', '安装方式', 'Mount Type', 'TEXT', NULL, 'HARDWARE', '{"seed":true}'::jsonb, 80, 'ENABLED', '0', '安装码属性', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
-    (120009, 1, 'HARDWARE', 'WEIGHT', '重量', 'Weight', 'NUMBER', 'KG', 'HARDWARE', '{"seed":true}'::jsonb, 90, 'ENABLED', '0', '配重条属性', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
-    (120010, 1, 'TRACK', 'LENGTH_SPEC', '长度规格', 'Length Spec', 'TEXT', NULL, 'TRACK', '{"seed":true}'::jsonb, 100, 'ENABLED', '0', '轨道长度规格属性', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00')
-ON CONFLICT (attribute_id) DO NOTHING;
+    (120001, 1, 'FABRIC', '面料', 'COLOR', '颜色', 'Color', 'TEXT', NULL, '{"seed":true}'::jsonb, 10, 'ENABLED', '0', '基础颜色属性', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
+    (120002, 1, 'FABRIC', '面料', 'TEXTURE_TYPE', '纹理', 'Texture Type', 'TEXT', NULL, '{"seed":true}'::jsonb, 20, 'ENABLED', '0', '面料纹理属性', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
+    (120003, 1, 'FABRIC', '面料', 'FINISH_TYPE', '涂层工艺', 'Finish Type', 'TEXT', NULL, '{"seed":true}'::jsonb, 30, 'ENABLED', '0', '面料后整理属性', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
+    (120004, 1, 'CONTROL', '控制系统', 'VOLTAGE', '电压', 'Voltage', 'NUMBER', NULL, '{"seed":true}'::jsonb, 40, 'ENABLED', '0', '控制系统电压属性', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
+    (120005, 1, 'CONTROL', '控制系统', 'PROTOCOL', '协议', 'Protocol', 'TEXT', NULL, '{"seed":true}'::jsonb, 50, 'ENABLED', '0', '控制协议属性', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
+    (120006, 1, 'CONTROL', '控制系统', 'CHANNEL_COUNT', '通道数', 'Channel Count', 'NUMBER', NULL, '{"seed":true}'::jsonb, 60, 'ENABLED', '0', '控制通道属性', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
+    (120007, 1, 'HARDWARE', '五金配件', 'MATERIAL_COMPOSITION', '材质', 'Material Composition', 'TEXT', NULL, '{"seed":true}'::jsonb, 70, 'ENABLED', '0', '五金材质属性', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
+    (120008, 1, 'HARDWARE', '五金配件', 'MOUNT_TYPE', '安装方式', 'Mount Type', 'TEXT', NULL, '{"seed":true}'::jsonb, 80, 'ENABLED', '0', '安装码属性', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
+    (120009, 1, 'HARDWARE', '五金配件', 'WEIGHT', '重量', 'Weight', 'NUMBER', 'KG', '{"seed":true}'::jsonb, 90, 'ENABLED', '0', '配重条属性', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
+    (120010, 1, 'ALUMINUM', '铝材', 'LENGTH_SPEC', '长度规格', 'Length Spec', 'TEXT', NULL, '{"seed":true}'::jsonb, 100, 'ENABLED', '0', '铝材长度规格属性', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00')
+ON CONFLICT (attribute_id) DO UPDATE
+SET attribute_group_code = EXCLUDED.attribute_group_code,
+    attribute_group_name_cn = EXCLUDED.attribute_group_name_cn,
+    attribute_code = EXCLUDED.attribute_code,
+    attribute_name_cn = EXCLUDED.attribute_name_cn,
+    attribute_name_en = EXCLUDED.attribute_name_en,
+    value_type = EXCLUDED.value_type,
+    unit_code = EXCLUDED.unit_code,
+    extra_json = EXCLUDED.extra_json,
+    sort_order = EXCLUDED.sort_order,
+    status = EXCLUDED.status,
+    remark = EXCLUDED.remark,
+    update_by = 'system',
+    update_time = now();
 
 INSERT INTO pc_material (
-    material_id, tenant_id, material_code, material_name_cn, material_name_en, material_type, fabric_series_id, fabric_series_code, fabric_series_name_cn, business_type, unit_code,
-    supplier_code, supplier_name, factory_model, sample_book_no, vendor_item_no, primary_spec, primary_color, primary_weight,
-    attribute_summary, legacy_source, legacy_id, status, del_flag, attribute_json, remark, create_by, create_time, update_by, update_time
+    material_id, tenant_id, material_code, material_name_cn, material_name_en,
+    material_type_id, material_type_code, material_type_name_cn, attribute_group_id, attribute_group_code, attribute_group_name_cn,
+    unit_code, secondary_unit_code, manufacturer_code, manufacturer_name, manufacturer_item_no,
+    model, spec, spec_model_text, color_name, weight_value, unit_price, audit_status, sort_order,
+    status, del_flag, remark, create_by, create_time, update_by, update_time
 ) VALUES
-    (130001, 1, 'FABRIC_BASIC_WHITE', '白色基础涂层布', 'Basic White Coated Fabric', 'FABRIC', 140001, 'FS_BASIC_COATED', '基础涂层布系列', 'ROLLER_SHADE', 'SQM', 'SUP-ROLLER', 'Hangzhou Fabric Lab', 'BW-280', 'SB-ROLLER-01', 'V-BW-280', '2800mm / 0.38mm / 320gsm', 'White', 320.000000, 'ROLLER_SHADE_BASIC fabric', 'OFBIZ', 'PRODUCT:ROLLER_SHADE_BASIC_FABRIC', 'ENABLED', '0', '{"sample":"ROLLER_SHADE_BASIC"}'::jsonb, 'Sample: ROLLER_SHADE_BASIC', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
-    (130002, 1, 'MOTOR_AOK_45_ZIGBEE', '奥克45管状电机', 'AOK 45 Tubular Motor', 'MOTOR', NULL, NULL, NULL, 'ROLLER_SHADE', 'PCS', 'SUP-AOK', 'AOK Motion', 'AOK-45-ZB', NULL, 'AOK45-ZB', '45mm Zigbee motor', 'Black', NULL, 'ROLLER_SHADE_MOTOR motor', 'OFBIZ', 'PRODUCT:ROLLER_SHADE_MOTOR', 'ENABLED', '0', '{"sample":"ROLLER_SHADE_MOTOR"}'::jsonb, 'Sample: ROLLER_SHADE_MOTOR', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
-    (130003, 1, 'REMOTE_15CH_WHITE', '15通道白色遥控器', '15 Channel White Remote', 'REMOTE', NULL, NULL, NULL, 'ROLLER_SHADE', 'PCS', 'SUP-AOK', 'AOK Motion', 'RMT-15-WH', NULL, 'RMT15-WH', '15 channel hand remote', 'White', NULL, 'ROLLER_SHADE_MOTOR remote', 'OFBIZ', 'PRODUCT:ROLLER_SHADE_REMOTE', 'ENABLED', '0', '{"sample":"ROLLER_SHADE_MOTOR"}'::jsonb, 'Sample: ROLLER_SHADE_MOTOR', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
-    (130004, 1, 'FABRIC_ZEBRA_IVORY', '象牙白双层柔纱布', 'Ivory Zebra Dual Fabric', 'FABRIC', 140002, 'FS_ZEBRA_DUAL', '双层柔纱布系列', 'ZEBRA_SHADE', 'SQM', 'SUP-ZEBRA', 'Ningbo Zebra Textile', 'ZB-IV-300', 'SB-ZEBRA-03', 'ZB-IV-300', '3000mm / dual layer', 'Ivory', 185.000000, 'ZEBRA_SHADE_BASIC fabric', 'OFBIZ', 'PRODUCT:ZEBRA_SHADE_BASIC_FABRIC', 'ENABLED', '0', '{"sample":"ZEBRA_SHADE_BASIC"}'::jsonb, 'Sample: ZEBRA_SHADE_BASIC', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
-    (130005, 1, 'FABRIC_OUTDOOR_CHARCOAL', '深灰户外遮阳布', 'Outdoor Charcoal Solar Fabric', 'FABRIC', 140003, 'FS_OUTDOOR_SOLAR', '户外遮阳布系列', 'OUTDOOR_SHADE', 'SQM', 'SUP-OUT', 'SolarTex Outdoor', 'OD-CH-320', 'SB-OUT-08', 'OD-CH-320', '3200mm / PVC coated', 'Charcoal', 460.000000, 'OUTDOOR_SHADE fabric', 'OFBIZ', 'PRODUCT:OUTDOOR_SHADE_FABRIC', 'ENABLED', '0', '{"sample":"OUTDOOR_SHADE"}'::jsonb, 'Sample: OUTDOOR_SHADE', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
-    (130006, 1, 'GLUE_TAPE_PET_20', 'PET胶条20mm', 'PET Glue Tape 20mm', 'HARDWARE', NULL, NULL, NULL, 'ROLLER_SHADE', 'M', 'SUP-HW', 'Hardware Supply Co', 'PET-20', NULL, 'GT-PET-20', '20mm adhesive tape', 'Transparent', NULL, 'ROLLER_SHADE_BASIC hardware', 'OFBIZ', 'PRODUCT:GLUE_TAPE', 'ENABLED', '0', '{"sample":"ROLLER_SHADE_BASIC"}'::jsonb, 'Sample: ROLLER_SHADE_BASIC', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
-    (130007, 1, 'BRACKET_STD_PAIR', '标准安装码对装', 'Standard Bracket Pair', 'HARDWARE', NULL, NULL, NULL, 'ROLLER_SHADE', 'SET', 'SUP-HW', 'Hardware Supply Co', 'BRK-STD', NULL, 'BRK-STD', 'Standard wall/ceiling bracket pair', 'Silver', NULL, 'ROLLER_SHADE_BASIC bracket', 'OFBIZ', 'PRODUCT:BRACKET_STD', 'ENABLED', '0', '{"sample":"ROLLER_SHADE_BASIC"}'::jsonb, 'Sample: ROLLER_SHADE_BASIC', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
-    (130008, 1, 'HEM_BAR_ALU_32', '32mm铝合金配重条', '32mm Aluminum Hem Bar', 'HARDWARE', NULL, NULL, NULL, 'ROLLER_SHADE', 'M', 'SUP-HW', 'Hardware Supply Co', 'HB-32', NULL, 'HB-32', '32mm aluminum hem bar', 'Silver', NULL, 'ROLLER_SHADE_BASIC hem bar', 'OFBIZ', 'PRODUCT:HEM_BAR', 'ENABLED', '0', '{"sample":"ROLLER_SHADE_BASIC"}'::jsonb, 'Sample: ROLLER_SHADE_BASIC', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
-    (130009, 1, 'BRACKET_OUTDOOR_HD', '户外重载安装码', 'Outdoor Heavy Duty Bracket', 'HARDWARE', NULL, NULL, NULL, 'OUTDOOR_SHADE', 'SET', 'SUP-OUT', 'Outdoor Hardware Inc', 'OD-BRK-HD', NULL, 'OD-BRK-HD', 'Heavy duty outdoor bracket', 'Black', NULL, 'OUTDOOR_SHADE bracket', 'OFBIZ', 'PRODUCT:OUTDOOR_BRACKET', 'ENABLED', '0', '{"sample":"OUTDOOR_SHADE"}'::jsonb, 'Sample: OUTDOOR_SHADE', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
-    (130010, 1, 'CHAIN_OUTDOOR_SS', '户外不锈钢拉珠链', 'Outdoor Stainless Chain', 'HARDWARE', NULL, NULL, NULL, 'OUTDOOR_SHADE', 'M', 'SUP-OUT', 'Outdoor Hardware Inc', 'OD-CHAIN-SS', NULL, 'OD-CHAIN-SS', 'Outdoor stainless control chain', 'Steel', NULL, 'OUTDOOR_SHADE chain', 'OFBIZ', 'PRODUCT:OUTDOOR_CHAIN', 'ENABLED', '0', '{"sample":"OUTDOOR_SHADE"}'::jsonb, 'Sample: OUTDOOR_SHADE', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
-    (130011, 1, 'TRACK_ALU_WAVE_32', '32型铝轨道', '32mm Aluminum Track', 'TRACK', NULL, NULL, NULL, 'CURTAIN_TRACK', 'M', 'SUP-TRACK', 'Track Systems Ltd', 'TRK-32', NULL, 'TRK-32', '32mm wave curtain track', 'White', NULL, 'CURTAIN_TRACK_SAMPLE track', 'OFBIZ', 'PRODUCT:CURTAIN_TRACK', 'ENABLED', '0', '{"sample":"CURTAIN_TRACK_SAMPLE"}'::jsonb, 'Sample: CURTAIN_TRACK_SAMPLE', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
-    (130012, 1, 'MOTOR_TRACK_AC', '轨道交流电机', 'Track AC Motor', 'MOTOR', NULL, NULL, NULL, 'CURTAIN_TRACK', 'PCS', 'SUP-TRACK', 'Track Systems Ltd', 'TRK-MOTOR-AC', NULL, 'TRK-MOTOR-AC', 'AC curtain track motor', 'White', NULL, 'CURTAIN_TRACK_SAMPLE motor', 'OFBIZ', 'PRODUCT:CURTAIN_TRACK_MOTOR', 'ENABLED', '0', '{"sample":"CURTAIN_TRACK_SAMPLE"}'::jsonb, 'Sample: CURTAIN_TRACK_SAMPLE', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
-    (130013, 1, 'REMOTE_TRACK_5CH', '轨道5通道遥控器', 'Track 5 Channel Remote', 'REMOTE', NULL, NULL, NULL, 'CURTAIN_TRACK', 'PCS', 'SUP-TRACK', 'Track Systems Ltd', 'TRK-RMT-5', NULL, 'TRK-RMT-5', '5 channel curtain track remote', 'White', NULL, 'CURTAIN_TRACK_SAMPLE remote', 'OFBIZ', 'PRODUCT:CURTAIN_TRACK_REMOTE', 'ENABLED', '0', '{"sample":"CURTAIN_TRACK_SAMPLE"}'::jsonb, 'Sample: CURTAIN_TRACK_SAMPLE', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
-    (130014, 1, 'CHAIN_ROLLER_WHITE', '卷帘白色拉珠链', 'Roller White Chain', 'CHAIN', NULL, NULL, NULL, 'ROLLER_SHADE', 'M', 'SUP-HW', 'Hardware Supply Co', 'CHAIN-WH', NULL, 'CHAIN-WH', 'White roller control chain', 'White', NULL, 'ROLLER_SHADE chain', 'OFBIZ', 'PRODUCT:ROLLER_CHAIN', 'ENABLED', '0', '{"sample":"ROLLER_SHADE_BASIC"}'::jsonb, 'Sample: ROLLER_SHADE_BASIC', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00')
-ON CONFLICT (material_id) DO NOTHING;
-
-INSERT INTO pc_material (
-    material_id, tenant_id, material_code, material_name_cn, material_name_en, material_type, fabric_series_id, fabric_series_code, fabric_series_name_cn, business_type, unit_code,
-    supplier_code, supplier_name, factory_model, sample_book_no, vendor_item_no, primary_spec, primary_color, primary_weight,
-    attribute_summary, legacy_source, legacy_id, status, del_flag, attribute_json, remark, create_by, create_time, update_by, update_time
-) VALUES
-    (130101, 1, 'FABRIC_HONEYCOMB_IVORY', '象牙白蜂巢布', 'Ivory Honeycomb Fabric', 'FABRIC', 140101, 'FS_HONEYCOMB_25', '25mm蜂巢布系列', 'HONEYCOMB_SHADE', 'SQM', 'SUP-HONEY', 'Honeycomb Textile', 'HC-IV-25', 'SB-HONEY-01', 'HC-IV-25', '25mm cell / 0.45mm / 210gsm', 'Ivory', 210.000000, 'HONEYCOMB_SHADE fabric', 'OFBIZ', 'PRODUCT:HONEYCOMB_FABRIC_IVORY', 'ENABLED', '0', '{"sample":"HONEYCOMB_SHADE"}'::jsonb, 'Sample: HONEYCOMB_SHADE', 'system', '2026-06-14 00:00:00+00', 'system', '2026-06-14 00:00:00+00'),
-    (130102, 1, 'FABRIC_HONEYCOMB_GREY', '浅灰蜂巢布', 'Light Grey Honeycomb Fabric', 'FABRIC', 140101, 'FS_HONEYCOMB_25', '25mm蜂巢布系列', 'HONEYCOMB_SHADE', 'SQM', 'SUP-HONEY', 'Honeycomb Textile', 'HC-GY-25', 'SB-HONEY-01', 'HC-GY-25', '25mm cell / 0.48mm / 220gsm', 'Grey', 220.000000, 'HONEYCOMB_SHADE fabric', 'OFBIZ', 'PRODUCT:HONEYCOMB_FABRIC_GREY', 'ENABLED', '0', '{"sample":"HONEYCOMB_SHADE"}'::jsonb, 'Sample: HONEYCOMB_SHADE', 'system', '2026-06-14 00:00:00+00', 'system', '2026-06-14 00:00:00+00'),
-    (130103, 1, 'PROFILE_HONEYCOMB_HEADRAIL', '蜂巢帘上轨', 'Honeycomb Headrail', 'PROFILE', NULL, NULL, NULL, 'HONEYCOMB_SHADE', 'M', 'SUP-HW', 'Hardware Supply Co', 'HC-HR-55', NULL, 'HC-HR-55', '55mm aluminum headrail', 'White', NULL, 'HONEYCOMB_SHADE profile', 'OFBIZ', 'PRODUCT:HONEYCOMB_HEADRAIL', 'ENABLED', '0', '{"sample":"HONEYCOMB_SHADE"}'::jsonb, 'Sample: HONEYCOMB_SHADE', 'system', '2026-06-14 00:00:00+00', 'system', '2026-06-14 00:00:00+00'),
-    (130104, 1, 'BOTTOM_RAIL_HONEYCOMB_WHITE', '蜂巢帘白色下杆', 'Honeycomb White Bottom Rail', 'BOTTOM_RAIL', NULL, NULL, NULL, 'HONEYCOMB_SHADE', 'M', 'SUP-HW', 'Hardware Supply Co', 'HC-BR-WH', NULL, 'HC-BR-WH', 'White bottom rail', 'White', NULL, 'HONEYCOMB_SHADE bottom rail', 'OFBIZ', 'PRODUCT:HONEYCOMB_BOTTOM_RAIL', 'ENABLED', '0', '{"sample":"HONEYCOMB_SHADE"}'::jsonb, 'Sample: HONEYCOMB_SHADE', 'system', '2026-06-14 00:00:00+00', 'system', '2026-06-14 00:00:00+00'),
-    (130105, 1, 'CHAIN_HONEYCOMB_WHITE', '蜂巢帘白色拉珠链', 'Honeycomb White Chain', 'CHAIN', NULL, NULL, NULL, 'HONEYCOMB_SHADE', 'M', 'SUP-HW', 'Hardware Supply Co', 'HC-CHAIN-WH', NULL, 'HC-CHAIN-WH', 'White honeycomb control chain', 'White', NULL, 'HONEYCOMB_SHADE chain', 'OFBIZ', 'PRODUCT:HONEYCOMB_CHAIN', 'ENABLED', '0', '{"sample":"HONEYCOMB_SHADE"}'::jsonb, 'Sample: HONEYCOMB_SHADE', 'system', '2026-06-14 00:00:00+00', 'system', '2026-06-14 00:00:00+00'),
-    (130106, 1, 'REMOTE_6CH_WHITE', '6通道白色遥控器', '6 Channel White Remote', 'REMOTE', NULL, NULL, NULL, 'HONEYCOMB_SHADE', 'PCS', 'SUP-AOK', 'AOK Motion', 'RMT-6-WH', NULL, 'RMT6-WH', '6 channel hand remote', 'White', NULL, 'HONEYCOMB_SHADE remote', 'OFBIZ', 'PRODUCT:REMOTE_6CH', 'ENABLED', '0', '{"sample":"HONEYCOMB_SHADE"}'::jsonb, 'Sample: HONEYCOMB_SHADE', 'system', '2026-06-14 00:00:00+00', 'system', '2026-06-14 00:00:00+00'),
-    (130107, 1, 'SOLAR_PANEL_STD', '标准太阳能板', 'Standard Solar Panel', 'SOLAR_PANEL', NULL, NULL, NULL, 'HONEYCOMB_SHADE', 'PCS', 'SUP-AOK', 'AOK Motion', 'SOLAR-STD', NULL, 'SOLAR-STD', 'Window shade solar panel', 'Black', NULL, 'HONEYCOMB_SHADE solar panel', 'OFBIZ', 'PRODUCT:SOLAR_PANEL', 'ENABLED', '0', '{"sample":"HONEYCOMB_SHADE"}'::jsonb, 'Sample: HONEYCOMB_SHADE', 'system', '2026-06-14 00:00:00+00', 'system', '2026-06-14 00:00:00+00'),
-    (130108, 1, 'BOX_ROLLER_STD', '卷帘标准纸箱', 'Roller Standard Carton', 'PACKAGING', NULL, NULL, NULL, 'ROLLER_SHADE', 'PCS', 'SUP-PACK', 'Packing Supply', 'BOX-RL-STD', NULL, 'BOX-RL-STD', 'Roller shade carton', 'Kraft', NULL, 'ROLLER_SHADE packaging', 'OFBIZ', 'PRODUCT:BOX_ROLLER_STD', 'ENABLED', '0', '{"sample":"ROLLER_SHADE_BASIC"}'::jsonb, 'Sample: ROLLER_SHADE_BASIC', 'system', '2026-06-14 00:00:00+00', 'system', '2026-06-14 00:00:00+00'),
-    (130109, 1, 'BOX_HONEYCOMB_STD', '蜂巢帘标准纸箱', 'Honeycomb Standard Carton', 'PACKAGING', NULL, NULL, NULL, 'HONEYCOMB_SHADE', 'PCS', 'SUP-PACK', 'Packing Supply', 'BOX-HC-STD', NULL, 'BOX-HC-STD', 'Honeycomb shade carton', 'Kraft', NULL, 'HONEYCOMB_SHADE packaging', 'OFBIZ', 'PRODUCT:BOX_HONEYCOMB_STD', 'ENABLED', '0', '{"sample":"HONEYCOMB_SHADE"}'::jsonb, 'Sample: HONEYCOMB_SHADE', 'system', '2026-06-14 00:00:00+00', 'system', '2026-06-14 00:00:00+00')
+    (130001, 1, 'FABRIC_BASIC_WHITE', '白色基础涂层布', 'Basic White Coated Fabric', 122001, 'FABRIC', '面料', 121001, 'FABRIC', '面料', 'SQM', NULL, 'SUP-ROLLER', 'Hangzhou Fabric Lab', 'V-BW-280', 'BW-280', '2800mm / 0.38mm / 320gsm', '型号：BW-280；规格：2800mm / 0.38mm / 320gsm', 'White', 320.000000, NULL, 'DRAFT', 10, 'ENABLED', '0', 'Sample: ROLLER_SHADE_BASIC', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
+    (130002, 1, 'MOTOR_AOK_45_ZIGBEE', '奥克45管状电机', 'AOK 45 Tubular Motor', 122005, 'MOTOR', '电机', 121003, 'CONTROL', '控制系统', 'PCS', NULL, 'SUP-AOK', 'AOK Motion', 'AOK45-ZB', 'AOK-45-ZB', '45mm Zigbee motor', '型号：AOK-45-ZB；规格：45mm Zigbee motor', 'Black', NULL, NULL, 'DRAFT', 20, 'ENABLED', '0', 'Sample: ROLLER_SHADE_MOTOR', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
+    (130003, 1, 'REMOTE_15CH_WHITE', '15通道白色遥控器', '15 Channel White Remote', 122006, 'REMOTE', '遥控器', 121003, 'CONTROL', '控制系统', 'PCS', NULL, 'SUP-AOK', 'AOK Motion', 'RMT15-WH', 'RMT-15-WH', '15 channel hand remote', '型号：RMT-15-WH；规格：15 channel hand remote', 'White', NULL, NULL, 'DRAFT', 30, 'ENABLED', '0', 'Sample: ROLLER_SHADE_MOTOR', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
+    (130004, 1, 'FABRIC_ZEBRA_IVORY', '象牙白双层柔纱布', 'Ivory Zebra Dual Fabric', 122001, 'FABRIC', '面料', 121001, 'FABRIC', '面料', 'SQM', NULL, 'SUP-ZEBRA', 'Ningbo Zebra Textile', 'ZB-IV-300', 'ZB-IV-300', '3000mm / dual layer', '型号：ZB-IV-300；规格：3000mm / dual layer', 'Ivory', 185.000000, NULL, 'DRAFT', 40, 'ENABLED', '0', 'Sample: ZEBRA_SHADE_BASIC', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
+    (130005, 1, 'FABRIC_OUTDOOR_CHARCOAL', '深灰户外遮阳布', 'Outdoor Charcoal Solar Fabric', 122001, 'FABRIC', '面料', 121001, 'FABRIC', '面料', 'SQM', NULL, 'SUP-OUT', 'SolarTex Outdoor', 'OD-CH-320', 'OD-CH-320', '3200mm / PVC coated', '型号：OD-CH-320；规格：3200mm / PVC coated', 'Charcoal', 460.000000, NULL, 'DRAFT', 50, 'ENABLED', '0', 'Sample: OUTDOOR_SHADE', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
+    (130006, 1, 'GLUE_TAPE_PET_20', 'PET胶条20mm', 'PET Glue Tape 20mm', 122009, 'HARDWARE', '五金配件', 121004, 'HARDWARE', '五金配件', 'M', NULL, 'SUP-HW', 'Hardware Supply Co', 'GT-PET-20', 'PET-20', '20mm adhesive tape', '型号：PET-20；规格：20mm adhesive tape', 'Transparent', NULL, NULL, 'DRAFT', 60, 'ENABLED', '0', 'Sample: ROLLER_SHADE_BASIC', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
+    (130007, 1, 'BRACKET_STD_PAIR', '标准安装码对装', 'Standard Bracket Pair', 122009, 'HARDWARE', '五金配件', 121004, 'HARDWARE', '五金配件', 'SET', NULL, 'SUP-HW', 'Hardware Supply Co', 'BRK-STD', 'BRK-STD', 'Standard wall/ceiling bracket pair', '型号：BRK-STD；规格：Standard wall/ceiling bracket pair', 'Silver', NULL, NULL, 'DRAFT', 70, 'ENABLED', '0', 'Sample: ROLLER_SHADE_BASIC', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
+    (130008, 1, 'HEM_BAR_ALU_32', '32mm铝合金配重条', '32mm Aluminum Hem Bar', 122003, 'BOTTOM_RAIL', '下杆', 121002, 'ALUMINUM', '铝材', 'M', NULL, 'SUP-HW', 'Hardware Supply Co', 'HB-32', 'HB-32', '32mm aluminum hem bar', '型号：HB-32；规格：32mm aluminum hem bar', 'Silver', NULL, NULL, 'DRAFT', 80, 'ENABLED', '0', 'Sample: ROLLER_SHADE_BASIC', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
+    (130009, 1, 'BRACKET_OUTDOOR_HD', '户外重载安装码', 'Outdoor Heavy Duty Bracket', 122009, 'HARDWARE', '五金配件', 121004, 'HARDWARE', '五金配件', 'SET', NULL, 'SUP-OUT', 'Outdoor Hardware Inc', 'OD-BRK-HD', 'OD-BRK-HD', 'Heavy duty outdoor bracket', '型号：OD-BRK-HD；规格：Heavy duty outdoor bracket', 'Black', NULL, NULL, 'DRAFT', 90, 'ENABLED', '0', 'Sample: OUTDOOR_SHADE', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
+    (130010, 1, 'CHAIN_OUTDOOR_SS', '户外不锈钢拉珠链', 'Outdoor Stainless Chain', 122007, 'CHAIN', '拉珠', 121003, 'CONTROL', '控制系统', 'M', NULL, 'SUP-OUT', 'Outdoor Hardware Inc', 'OD-CHAIN-SS', 'OD-CHAIN-SS', 'Outdoor stainless control chain', '型号：OD-CHAIN-SS；规格：Outdoor stainless control chain', 'Steel', NULL, NULL, 'DRAFT', 100, 'ENABLED', '0', 'Sample: OUTDOOR_SHADE', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
+    (130011, 1, 'TRACK_ALU_WAVE_32', '32型铝轨道', '32mm Aluminum Track', 122004, 'TRACK', '轨道', 121002, 'ALUMINUM', '铝材', 'M', NULL, 'SUP-TRACK', 'Track Systems Ltd', 'TRK-32', 'TRK-32', '32mm wave curtain track', '型号：TRK-32；规格：32mm wave curtain track', 'White', NULL, NULL, 'DRAFT', 110, 'ENABLED', '0', 'Sample: CURTAIN_TRACK_SAMPLE', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
+    (130012, 1, 'MOTOR_TRACK_AC', '轨道交流电机', 'Track AC Motor', 122005, 'MOTOR', '电机', 121003, 'CONTROL', '控制系统', 'PCS', NULL, 'SUP-TRACK', 'Track Systems Ltd', 'TRK-MOTOR-AC', 'TRK-MOTOR-AC', 'AC curtain track motor', '型号：TRK-MOTOR-AC；规格：AC curtain track motor', 'White', NULL, NULL, 'DRAFT', 120, 'ENABLED', '0', 'Sample: CURTAIN_TRACK_SAMPLE', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
+    (130013, 1, 'REMOTE_TRACK_5CH', '轨道5通道遥控器', 'Track 5 Channel Remote', 122006, 'REMOTE', '遥控器', 121003, 'CONTROL', '控制系统', 'PCS', NULL, 'SUP-TRACK', 'Track Systems Ltd', 'TRK-RMT-5', 'TRK-RMT-5', '5 channel curtain track remote', '型号：TRK-RMT-5；规格：5 channel curtain track remote', 'White', NULL, NULL, 'DRAFT', 130, 'ENABLED', '0', 'Sample: CURTAIN_TRACK_SAMPLE', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
+    (130014, 1, 'CHAIN_ROLLER_WHITE', '卷帘白色拉珠链', 'Roller White Chain', 122007, 'CHAIN', '拉珠', 121003, 'CONTROL', '控制系统', 'M', NULL, 'SUP-HW', 'Hardware Supply Co', 'CHAIN-WH', 'CHAIN-WH', 'White roller control chain', '型号：CHAIN-WH；规格：White roller control chain', 'White', NULL, NULL, 'DRAFT', 140, 'ENABLED', '0', 'Sample: ROLLER_SHADE_BASIC', 'system', '2026-06-11 00:00:00+00', 'system', '2026-06-11 00:00:00+00'),
+    (130101, 1, 'FABRIC_HONEYCOMB_IVORY', '象牙白蜂巢布', 'Ivory Honeycomb Fabric', 122001, 'FABRIC', '面料', 121001, 'FABRIC', '面料', 'SQM', NULL, 'SUP-HONEY', 'Honeycomb Textile', 'HC-IV-25', 'HC-IV-25', '25mm cell / 0.45mm / 210gsm', '型号：HC-IV-25；规格：25mm cell / 0.45mm / 210gsm', 'Ivory', 210.000000, NULL, 'DRAFT', 150, 'ENABLED', '0', 'Sample: HONEYCOMB_SHADE', 'system', '2026-06-14 00:00:00+00', 'system', '2026-06-14 00:00:00+00'),
+    (130102, 1, 'FABRIC_HONEYCOMB_GREY', '浅灰蜂巢布', 'Light Grey Honeycomb Fabric', 122001, 'FABRIC', '面料', 121001, 'FABRIC', '面料', 'SQM', NULL, 'SUP-HONEY', 'Honeycomb Textile', 'HC-GY-25', 'HC-GY-25', '25mm cell / 0.48mm / 220gsm', '型号：HC-GY-25；规格：25mm cell / 0.48mm / 220gsm', 'Grey', 220.000000, NULL, 'DRAFT', 160, 'ENABLED', '0', 'Sample: HONEYCOMB_SHADE', 'system', '2026-06-14 00:00:00+00', 'system', '2026-06-14 00:00:00+00'),
+    (130103, 1, 'PROFILE_HONEYCOMB_HEADRAIL', '蜂巢帘上轨', 'Honeycomb Headrail', 122002, 'PROFILE', '铝材/型材', 121002, 'ALUMINUM', '铝材', 'M', NULL, 'SUP-HW', 'Hardware Supply Co', 'HC-HR-55', 'HC-HR-55', '55mm aluminum headrail', '型号：HC-HR-55；规格：55mm aluminum headrail', 'White', NULL, NULL, 'DRAFT', 170, 'ENABLED', '0', 'Sample: HONEYCOMB_SHADE', 'system', '2026-06-14 00:00:00+00', 'system', '2026-06-14 00:00:00+00'),
+    (130104, 1, 'BOTTOM_RAIL_HONEYCOMB_WHITE', '蜂巢帘白色下杆', 'Honeycomb White Bottom Rail', 122003, 'BOTTOM_RAIL', '下杆', 121002, 'ALUMINUM', '铝材', 'M', NULL, 'SUP-HW', 'Hardware Supply Co', 'HC-BR-WH', 'HC-BR-WH', 'White bottom rail', '型号：HC-BR-WH；规格：White bottom rail', 'White', NULL, NULL, 'DRAFT', 180, 'ENABLED', '0', 'Sample: HONEYCOMB_SHADE', 'system', '2026-06-14 00:00:00+00', 'system', '2026-06-14 00:00:00+00'),
+    (130105, 1, 'CHAIN_HONEYCOMB_WHITE', '蜂巢帘白色拉珠链', 'Honeycomb White Chain', 122007, 'CHAIN', '拉珠', 121003, 'CONTROL', '控制系统', 'M', NULL, 'SUP-HW', 'Hardware Supply Co', 'HC-CHAIN-WH', 'HC-CHAIN-WH', 'White honeycomb control chain', '型号：HC-CHAIN-WH；规格：White honeycomb control chain', 'White', NULL, NULL, 'DRAFT', 190, 'ENABLED', '0', 'Sample: HONEYCOMB_SHADE', 'system', '2026-06-14 00:00:00+00', 'system', '2026-06-14 00:00:00+00'),
+    (130106, 1, 'REMOTE_6CH_WHITE', '6通道白色遥控器', '6 Channel White Remote', 122006, 'REMOTE', '遥控器', 121003, 'CONTROL', '控制系统', 'PCS', NULL, 'SUP-AOK', 'AOK Motion', 'RMT6-WH', 'RMT-6-WH', '6 channel hand remote', '型号：RMT-6-WH；规格：6 channel hand remote', 'White', NULL, NULL, 'DRAFT', 200, 'ENABLED', '0', 'Sample: HONEYCOMB_SHADE', 'system', '2026-06-14 00:00:00+00', 'system', '2026-06-14 00:00:00+00'),
+    (130107, 1, 'SOLAR_PANEL_STD', '标准太阳能板', 'Standard Solar Panel', 122008, 'SOLAR_PANEL', '太阳能板', 121003, 'CONTROL', '控制系统', 'PCS', NULL, 'SUP-AOK', 'AOK Motion', 'SOLAR-STD', 'SOLAR-STD', 'Window shade solar panel', '型号：SOLAR-STD；规格：Window shade solar panel', 'Black', NULL, NULL, 'DRAFT', 210, 'ENABLED', '0', 'Sample: HONEYCOMB_SHADE', 'system', '2026-06-14 00:00:00+00', 'system', '2026-06-14 00:00:00+00'),
+    (130108, 1, 'BOX_ROLLER_STD', '卷帘标准纸箱', 'Roller Standard Carton', 122011, 'PACKAGING', '包装件', 121005, 'PACKAGING', '包装参数', 'PCS', NULL, 'SUP-PACK', 'Packing Supply', 'BOX-RL-STD', 'BOX-RL-STD', 'Roller shade carton', '型号：BOX-RL-STD；规格：Roller shade carton', 'Kraft', NULL, NULL, 'DRAFT', 220, 'ENABLED', '0', 'Sample: ROLLER_SHADE_BASIC', 'system', '2026-06-14 00:00:00+00', 'system', '2026-06-14 00:00:00+00'),
+    (130109, 1, 'BOX_HONEYCOMB_STD', '蜂巢帘标准纸箱', 'Honeycomb Standard Carton', 122011, 'PACKAGING', '包装件', 121005, 'PACKAGING', '包装参数', 'PCS', NULL, 'SUP-PACK', 'Packing Supply', 'BOX-HC-STD', 'BOX-HC-STD', 'Honeycomb shade carton', '型号：BOX-HC-STD；规格：Honeycomb shade carton', 'Kraft', NULL, NULL, 'DRAFT', 230, 'ENABLED', '0', 'Sample: HONEYCOMB_SHADE', 'system', '2026-06-14 00:00:00+00', 'system', '2026-06-14 00:00:00+00')
 ON CONFLICT (material_id) DO UPDATE
 SET material_name_cn = EXCLUDED.material_name_cn,
     material_name_en = EXCLUDED.material_name_en,
-    material_type = EXCLUDED.material_type,
-    fabric_series_id = EXCLUDED.fabric_series_id,
-    fabric_series_code = EXCLUDED.fabric_series_code,
-    fabric_series_name_cn = EXCLUDED.fabric_series_name_cn,
-    business_type = EXCLUDED.business_type,
+    material_type_id = EXCLUDED.material_type_id,
+    material_type_code = EXCLUDED.material_type_code,
+    material_type_name_cn = EXCLUDED.material_type_name_cn,
+    attribute_group_id = EXCLUDED.attribute_group_id,
+    attribute_group_code = EXCLUDED.attribute_group_code,
+    attribute_group_name_cn = EXCLUDED.attribute_group_name_cn,
     unit_code = EXCLUDED.unit_code,
-    primary_spec = EXCLUDED.primary_spec,
-    primary_color = EXCLUDED.primary_color,
-    attribute_summary = EXCLUDED.attribute_summary,
-    legacy_source = EXCLUDED.legacy_source,
-    legacy_id = EXCLUDED.legacy_id,
+    secondary_unit_code = EXCLUDED.secondary_unit_code,
+    manufacturer_code = EXCLUDED.manufacturer_code,
+    manufacturer_name = EXCLUDED.manufacturer_name,
+    manufacturer_item_no = EXCLUDED.manufacturer_item_no,
+    model = EXCLUDED.model,
+    spec = EXCLUDED.spec,
+    spec_model_text = EXCLUDED.spec_model_text,
+    color_name = EXCLUDED.color_name,
+    weight_value = EXCLUDED.weight_value,
+    unit_price = EXCLUDED.unit_price,
+    audit_status = EXCLUDED.audit_status,
+    sort_order = EXCLUDED.sort_order,
     status = EXCLUDED.status,
     update_by = 'system',
     update_time = now();
 
-UPDATE pc_material
-SET spec_summary = COALESCE(NULLIF(spec_summary, ''), NULLIF(attribute_summary, ''), primary_spec),
-    purchase_unit_code = COALESCE(purchase_unit_code, unit_code),
-    inventory_unit_code = COALESCE(inventory_unit_code, unit_code),
-    usage_unit_code = COALESCE(usage_unit_code, unit_code),
-    purchase_enabled = true,
-    inventory_enabled = true
-WHERE tenant_id = 1 AND del_flag = '0';
-
 INSERT INTO pc_fabric_series (
-    series_id, tenant_id, series_code, series_name_cn, series_name_en, material_type, default_thickness_unit,
+    series_id, tenant_id, series_code, series_name_cn, series_name_en, material_type_code, default_thickness_unit,
     default_thickness_value, thickness_rule_enabled, max_thickness_diff, max_combined_thickness, width_rule_enabled,
     available_widths, min_width_value, max_width_value, width_unit, extra_rule_json, status, del_flag, remark,
     create_by, create_time, update_by, update_time
@@ -918,6 +1081,7 @@ INSERT INTO pc_fabric_series (
 ON CONFLICT (series_id) DO UPDATE
 SET series_name_cn = EXCLUDED.series_name_cn,
     series_name_en = EXCLUDED.series_name_en,
+    material_type_code = EXCLUDED.material_type_code,
     max_combined_thickness = EXCLUDED.max_combined_thickness,
     available_widths = EXCLUDED.available_widths,
     status = EXCLUDED.status,
@@ -2036,16 +2200,17 @@ SET tenant_id = EXCLUDED.tenant_id,
 
 INSERT INTO sys_menu (menu_id, tenant_id, parent_id, menu_name, i18n_key, order_num, path, component, query_param, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, update_by, update_time, remark)
 VALUES
-    (24211, 1, 24200, 'Data Entry Guide', 'productCenter.menu.masterGuide', 1, 'guide', 'product-center/master-guide', NULL, '1', '0', 'C', '1', '1', 'product:base:list', 'guide', 'system', now(), NULL, NULL, '基础资料录入向导'),
-    (24212, 1, 24200, 'Product Categories', 'productCenter.menu.categories', 2, 'categories', 'product-center/base', NULL, '1', '0', 'C', '1', '1', 'product:base:list', 'tree-table', 'system', now(), NULL, NULL, '产品分类'),
-    (24201, 1, 24200, 'Fabric Series', 'productCenter.menu.fabricSeries', 3, 'fabric-series', 'product-center/fabric', NULL, '1', '0', 'C', '1', '1', 'product:fabric:list', 'color', 'system', now(), NULL, NULL, '面料系列'),
-    (24213, 1, 24200, 'Product Dictionaries', 'productCenter.menu.productDicts', 4, 'product-dicts', 'product-center/product-dicts', NULL, '1', '0', 'C', '1', '1', 'product:dict:list', 'dict', 'system', now(), NULL, NULL, '产品业务字典'),
-    (24206, 1, 24200, 'Units', 'productCenter.menu.units', 5, 'units', 'product-center/base', NULL, '1', '0', 'C', '1', '1', 'product:unit:list', 'unit', 'system', now(), NULL, NULL, '单位管理'),
-    (24204, 1, 24200, 'Material Attributes', 'productCenter.menu.baseAttributes', 6, 'base-attributes', 'product-center/base', NULL, '1', '0', 'C', '1', '1', 'product:base-attribute:list', 'dict', 'system', now(), NULL, NULL, '物料属性'),
-    (24202, 1, 24200, 'Materials', 'productCenter.menu.materials', 7, 'materials', 'product-center/base', NULL, '1', '0', 'C', '1', '1', 'product:base:list', 'inventory', 'system', now(), NULL, NULL, '物料资料'),
-    (24208, 1, 24200, 'Material Attribute Values', 'productCenter.menu.materialAttributes', 8, 'material-attributes', 'product-center/base', NULL, '1', '0', 'C', '0', '1', 'product:material-attribute:list', 'list', 'system', now(), NULL, NULL, '物料属性值，从物料资料抽屉同步维护'),
-    (24203, 1, 24200, 'Component Packs', 'productCenter.menu.components', 9, 'components', 'product-center/base', NULL, '1', '0', 'C', '1', '1', 'product:base:list', 'component', 'system', now(), NULL, NULL, '组件包'),
-    (24205, 1, 24200, 'Media Assets', 'productCenter.menu.mediaAssets', 10, 'media-assets', 'product-center/assets', NULL, '1', '0', 'C', '1', '1', 'product:asset:list', 'upload', 'system', now(), NULL, NULL, '资料资产'),
+    (24211, 1, 24200, 'Data Entry Guide', 'productCenter.menu.masterGuide', 90, 'guide', 'product-center/master-guide', NULL, '1', '0', 'C', '0', '1', 'product:base:list', 'guide', 'system', now(), NULL, NULL, '基础资料录入向导'),
+    (24212, 1, 24200, 'Product Categories', 'productCenter.menu.categories', 91, 'categories', 'product-center/base', NULL, '1', '0', 'C', '0', '1', 'product:base:list', 'tree-table', 'system', now(), NULL, NULL, '产品分类'),
+    (24201, 1, 24200, 'Fabric Series', 'productCenter.menu.fabricSeries', 92, 'fabric-series', 'product-center/fabric', NULL, '1', '0', 'C', '0', '1', 'product:fabric:list', 'color', 'system', now(), NULL, NULL, '面料系列'),
+    (24213, 1, 24200, 'Base Dictionaries', 'productCenter.menu.productDicts', 1, 'product-dicts', 'product-center/product-dicts', NULL, '1', '0', 'C', '1', '1', 'product:dict:list', 'dict', 'system', now(), NULL, NULL, '基础字典'),
+    (24206, 1, 24200, 'Units', 'productCenter.menu.units', 2, 'units', 'product-center/base', NULL, '1', '0', 'C', '1', '1', 'product:unit:list', 'unit', 'system', now(), NULL, NULL, '单位管理'),
+    (24207, 1, 24200, 'Material Types', 'productCenter.menu.materialTypes', 3, 'material-types', 'product-center/material-types', NULL, '1', '0', 'C', '1', '1', 'product:material-type:list', 'tree-table', 'system', now(), NULL, NULL, '物料类型'),
+    (24204, 1, 24200, 'Material Attributes', 'productCenter.menu.baseAttributes', 4, 'base-attributes', 'product-center/base', NULL, '1', '0', 'C', '1', '1', 'product:base-attribute:list', 'dict', 'system', now(), NULL, NULL, '物料属性'),
+    (24202, 1, 24200, 'Materials', 'productCenter.menu.materials', 5, 'materials', 'product-center/base', NULL, '1', '0', 'C', '1', '1', 'product:base:list', 'inventory', 'system', now(), NULL, NULL, '物料管理'),
+    (24208, 1, 24200, 'Material Attribute Values', 'productCenter.menu.materialAttributes', 89, 'material-attributes', 'product-center/base', NULL, '1', '0', 'C', '0', '1', 'product:material-attribute:list', 'list', 'system', now(), NULL, NULL, '物料属性值，从物料管理抽屉同步维护'),
+    (24203, 1, 24200, 'Component Packs', 'productCenter.menu.components', 93, 'components', 'product-center/base', NULL, '1', '0', 'C', '0', '1', 'product:base:list', 'component', 'system', now(), NULL, NULL, '组件包'),
+    (24205, 1, 24200, 'Media Assets', 'productCenter.menu.mediaAssets', 94, 'media-assets', 'product-center/assets', NULL, '1', '0', 'C', '0', '1', 'product:asset:list', 'upload', 'system', now(), NULL, NULL, '资料资产'),
     (24209, 1, 24200, 'Component Items', 'productCenter.menu.componentItems', 92, 'component-items', 'product-center/base', NULL, '1', '0', 'C', '0', '1', 'product:component-item:list', 'list', 'system', now(), NULL, NULL, '组件明细，从组件包行内入口维护'),
     (24210, 1, 24200, 'Media Bindings', 'productCenter.menu.mediaBindings', 94, 'media-bindings', 'product-center/assets', NULL, '1', '0', 'C', '0', '1', 'product:asset:list', 'link', 'system', now(), NULL, NULL, '资料绑定，附件关联台账，默认不在基础资料一级菜单展示'),
     (24501, 1, 24500, 'Product Engineering Design', 'productCenter.menu.engineeringWorkbench', 1, 'workbench', 'product-engineering/workbench', NULL, '1', '0', 'C', '1', '1', 'product:engineering:list', 'tool', 'system', now(), NULL, NULL, '产品工程设计工作台'),
@@ -2112,16 +2277,25 @@ VALUES
     (24227, 1, 24206, 'Unit Edit', 'common.edit', 3, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:unit:edit', '#', 'system', now(), NULL, NULL, '单位编辑'),
     (24228, 1, 24206, 'Unit Delete', 'common.delete', 4, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:unit:remove', '#', 'system', now(), NULL, NULL, '单位删除'),
     (24229, 1, 24206, 'Unit Reference', 'productCenter.common.references', 5, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:unit:reference', '#', 'system', now(), NULL, NULL, '单位引用检查'),
+    (24285, 1, 24207, 'Material Type Query', 'common.search', 1, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:material-type:list', '#', 'system', now(), NULL, NULL, '物料类型查询'),
+    (24286, 1, 24207, 'Material Type Add', 'common.add', 2, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:material-type:add', '#', 'system', now(), NULL, NULL, '物料类型新增'),
+    (24287, 1, 24207, 'Material Type Edit', 'common.edit', 3, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:material-type:edit', '#', 'system', now(), NULL, NULL, '物料类型编辑'),
+    (24288, 1, 24207, 'Material Type Delete', 'common.delete', 4, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:material-type:remove', '#', 'system', now(), NULL, NULL, '物料类型删除'),
+    (24289, 1, 24207, 'Material Type Reference', 'productCenter.common.references', 5, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:material-type:reference', '#', 'system', now(), NULL, NULL, '物料类型引用检查'),
+    (24295, 1, 24207, 'Material Type Change Status', 'productCenter.common.status', 6, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:material-type:changeStatus', '#', 'system', now(), NULL, NULL, '物料类型状态变更'),
+    (24296, 1, 24207, 'Material Type Export', 'common.export', 7, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:material-type:export', '#', 'system', now(), NULL, NULL, '物料类型导出'),
     (24230, 1, 24204, 'Material Attribute Query', 'common.search', 1, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:base-attribute:list', '#', 'system', now(), NULL, NULL, '物料属性查询'),
     (24231, 1, 24204, 'Material Attribute Add', 'common.add', 2, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:base-attribute:add', '#', 'system', now(), NULL, NULL, '物料属性新增'),
     (24232, 1, 24204, 'Material Attribute Edit', 'common.edit', 3, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:base-attribute:edit', '#', 'system', now(), NULL, NULL, '物料属性编辑'),
     (24233, 1, 24204, 'Material Attribute Delete', 'common.delete', 4, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:base-attribute:remove', '#', 'system', now(), NULL, NULL, '物料属性删除'),
     (24234, 1, 24204, 'Material Attribute Reference', 'productCenter.common.references', 5, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:base-attribute:reference', '#', 'system', now(), NULL, NULL, '物料属性引用检查'),
-    (24235, 1, 24213, 'Product Dictionary Query', 'common.search', 1, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:dict:list', '#', 'system', now(), NULL, NULL, '产品字典查询'),
-    (24236, 1, 24213, 'Product Dictionary Add', 'common.add', 2, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:dict:add', '#', 'system', now(), NULL, NULL, '产品字典新增'),
-    (24237, 1, 24213, 'Product Dictionary Edit', 'common.edit', 3, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:dict:edit', '#', 'system', now(), NULL, NULL, '产品字典编辑'),
-    (24238, 1, 24213, 'Product Dictionary Delete', 'common.delete', 4, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:dict:remove', '#', 'system', now(), NULL, NULL, '产品字典删除'),
-    (24239, 1, 24213, 'Product Dictionary Reference', 'productCenter.common.references', 5, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:dict:reference', '#', 'system', now(), NULL, NULL, '产品字典引用检查'),
+    (24297, 1, 24204, 'Material Attribute Change Status', 'productCenter.common.status', 6, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:base-attribute:changeStatus', '#', 'system', now(), NULL, NULL, '物料属性状态变更'),
+    (24298, 1, 24204, 'Material Attribute Export', 'common.export', 7, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:base-attribute:export', '#', 'system', now(), NULL, NULL, '物料属性导出'),
+    (24235, 1, 24213, 'Base Dictionary Query', 'common.search', 1, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:dict:list', '#', 'system', now(), NULL, NULL, '基础字典查询'),
+    (24236, 1, 24213, 'Base Dictionary Add', 'common.add', 2, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:dict:add', '#', 'system', now(), NULL, NULL, '基础字典新增'),
+    (24237, 1, 24213, 'Base Dictionary Edit', 'common.edit', 3, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:dict:edit', '#', 'system', now(), NULL, NULL, '基础字典编辑'),
+    (24238, 1, 24213, 'Base Dictionary Delete', 'common.delete', 4, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:dict:remove', '#', 'system', now(), NULL, NULL, '基础字典删除'),
+    (24239, 1, 24213, 'Base Dictionary Reference', 'productCenter.common.references', 5, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:dict:reference', '#', 'system', now(), NULL, NULL, '基础字典引用检查'),
     (24240, 1, 24202, 'Material Query', 'common.search', 1, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:base:list', '#', 'system', now(), NULL, NULL, '物料查询'),
     (24241, 1, 24202, 'Material Add', 'common.add', 2, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:base:add', '#', 'system', now(), NULL, NULL, '物料新增'),
     (24242, 1, 24202, 'Material Edit', 'common.edit', 3, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:base:edit', '#', 'system', now(), NULL, NULL, '物料编辑'),
@@ -2241,7 +2415,6 @@ DELETE FROM sys_dict_data
 WHERE dict_type IN (
     'product_unit',
     'product_unit_type',
-    'product_material_type',
     'product_component_type',
     'product_business_type',
     'product_asset_type',
@@ -2267,7 +2440,6 @@ DELETE FROM sys_dict_type
 WHERE dict_type IN (
     'product_unit',
     'product_unit_type',
-    'product_material_type',
     'product_component_type',
     'product_business_type',
     'product_asset_type',

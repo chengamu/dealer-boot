@@ -9,13 +9,11 @@ import com.bocoo.common.mybatis.core.page.PageQuery;
 import com.bocoo.common.mybatis.core.page.TableDataInfo;
 import com.bocoo.product.domain.bo.FabricSeriesBo;
 import com.bocoo.product.domain.entity.FabricSeries;
-import com.bocoo.product.domain.entity.ProductMaterial;
 import com.bocoo.product.domain.entity.ProductMediaBinding;
 import com.bocoo.product.domain.vo.BaseEditCheckResultVo;
 import com.bocoo.product.domain.vo.FabricSeriesVo;
 import com.bocoo.product.domain.vo.ReferenceCheckResultVo;
 import com.bocoo.product.mapper.FabricSeriesMapper;
-import com.bocoo.product.mapper.ProductMaterialMapper;
 import com.bocoo.product.mapper.ProductMediaBindingMapper;
 import com.bocoo.product.service.FabricSeriesService;
 import com.bocoo.product.service.ProductEntityDefaults;
@@ -29,7 +27,6 @@ import java.util.List;
 public class FabricSeriesServiceImpl extends ProductServiceSupport implements FabricSeriesService {
 
     private final FabricSeriesMapper fabricSeriesMapper;
-    private final ProductMaterialMapper materialMapper;
     private final ProductMediaBindingMapper mediaBindingMapper;
 
     @Override
@@ -97,12 +94,8 @@ public class FabricSeriesServiceImpl extends ProductServiceSupport implements Fa
 
     @Override
     public ReferenceCheckResultVo checkReferences(Long seriesId) {
-        long materialCount = materialMapper.selectCount(activeQuery(ProductMaterial.class).eq("fabric_series_id", seriesId));
         long bindingCount = mediaBindingMapper.selectCount(activeQuery(ProductMediaBinding.class).eq("target_type", "FABRIC_SERIES").eq("target_id", seriesId));
-        ReferenceCheckResultVo result = referenceResult(materialCount + bindingCount, "product.fabricSeries.hasReferences", null);
-        if (materialCount > 0) {
-            result.getReferenceSummaries().add("Fabric materials: " + materialCount);
-        }
+        ReferenceCheckResultVo result = referenceResult(bindingCount, "product.fabricSeries.hasReferences", null);
         if (bindingCount > 0) {
             result.getReferenceSummaries().add("Media bindings: " + bindingCount);
         }
@@ -116,7 +109,7 @@ public class FabricSeriesServiceImpl extends ProductServiceSupport implements Fa
             if (StringUtils.isNotBlank(bo.getSeriesNameCn())) {
                 q.and(wrapper -> wrapper.like("series_name_cn", bo.getSeriesNameCn()).or().like("series_name_en", bo.getSeriesNameCn()));
             }
-            eq(q, "material_type", bo.getMaterialType());
+            eq(q, "material_type_code", bo.getMaterialType());
             eq(q, "status", bo.getStatus());
         }
         return q;

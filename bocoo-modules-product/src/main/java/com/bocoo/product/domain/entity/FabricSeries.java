@@ -1,6 +1,7 @@
 package com.bocoo.product.domain.entity;
 
 import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.bocoo.common.mybatis.core.domain.BaseEntity;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -31,7 +32,8 @@ public class FabricSeries extends BaseEntity {
     @Schema(description = "系列英文名称")
     private String seriesNameEn;
 
-    @Schema(description = "物料类型")
+    @TableField("material_type_code")
+    @Schema(description = "物料类型编码")
     private String materialType;
 
     @Schema(description = "默认厚度单位")

@@ -8,21 +8,16 @@ import com.bocoo.common.core.utils.StringUtils;
 import com.bocoo.common.mybatis.core.page.PageQuery;
 import com.bocoo.common.mybatis.core.page.TableDataInfo;
 import com.bocoo.product.domain.bo.ProductDictItemBo;
-import com.bocoo.product.domain.entity.FabricSeries;
-import com.bocoo.product.domain.entity.ProductBaseAttribute;
 import com.bocoo.product.domain.entity.ProductCategory;
 import com.bocoo.product.domain.entity.ProductComponent;
 import com.bocoo.product.domain.entity.ProductDictItem;
 import com.bocoo.product.domain.entity.ProductDictType;
-import com.bocoo.product.domain.entity.ProductMaterial;
 import com.bocoo.product.domain.entity.ProductMediaAsset;
 import com.bocoo.product.domain.entity.ProductUnit;
 import com.bocoo.product.domain.vo.BaseEditCheckResultVo;
 import com.bocoo.product.domain.vo.ProductDictItemVo;
 import com.bocoo.product.domain.vo.ProductDictOptionVo;
 import com.bocoo.product.domain.vo.ReferenceCheckResultVo;
-import com.bocoo.product.mapper.FabricSeriesMapper;
-import com.bocoo.product.mapper.ProductBaseAttributeMapper;
 import com.bocoo.product.mapper.ProductCategoryMapper;
 import com.bocoo.product.mapper.ProductComponentMapper;
 import com.bocoo.product.mapper.ProductDictItemMapper;
@@ -45,11 +40,9 @@ public class ProductDictItemServiceImpl extends ProductServiceSupport implements
     private final ProductDictItemMapper dictItemMapper;
     private final ProductUnitMapper unitMapper;
     private final ProductMaterialMapper materialMapper;
-    private final FabricSeriesMapper fabricSeriesMapper;
     private final ProductCategoryMapper categoryMapper;
     private final ProductComponentMapper componentMapper;
     private final ProductMediaAssetMapper mediaAssetMapper;
-    private final ProductBaseAttributeMapper baseAttributeMapper;
 
     @Override
     public TableDataInfo<ProductDictItemVo> queryPageList(ProductDictItemBo bo, PageQuery pageQuery) {
@@ -204,15 +197,10 @@ public class ProductDictItemServiceImpl extends ProductServiceSupport implements
     private ReferenceCheckResultVo checkBusinessReferences(String dictTypeCode, String value) {
         long count = switch (dictTypeCode) {
             case "product_unit_type" -> unitMapper.selectCount(activeQuery(ProductUnit.class).eq("unit_type", value));
-            case "product_material_type" -> materialMapper.selectCount(activeQuery(ProductMaterial.class).eq("material_type", value))
-                + fabricSeriesMapper.selectCount(activeQuery(FabricSeries.class).eq("material_type", value))
-                + baseAttributeMapper.selectCount(activeQuery(ProductBaseAttribute.class).like("material_types", value));
             case "product_business_type" -> categoryMapper.selectCount(activeQuery(ProductCategory.class).eq("business_type", value))
-                + materialMapper.selectCount(activeQuery(ProductMaterial.class).eq("business_type", value))
                 + componentMapper.selectCount(activeQuery(ProductComponent.class).eq("business_type", value));
             case "product_component_type" -> componentMapper.selectCount(activeQuery(ProductComponent.class).eq("component_type", value));
             case "product_asset_type" -> mediaAssetMapper.selectCount(activeQuery(ProductMediaAsset.class).eq("asset_type", value));
-            case "product_attribute_group" -> baseAttributeMapper.selectCount(activeQuery(ProductBaseAttribute.class).eq("attribute_group", value));
             default -> 0L;
         };
         return referenceResult(count, "product.dict.itemHasReferences", "Dictionary item references: " + count);

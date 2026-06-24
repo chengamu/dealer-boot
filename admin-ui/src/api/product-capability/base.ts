@@ -5,6 +5,10 @@ import type {
   ProductCategoryVO,
   ProductCrudApi,
   EditCheckResult,
+  ProductMaterialTypeGroupQuery,
+  ProductMaterialTypeGroupVO,
+  ProductMaterialTypeQuery,
+  ProductMaterialTypeVO,
   ProductPageQuery,
   ProductRecord,
   ProductUnitQuery,
@@ -75,4 +79,28 @@ export const productBaseAttributeApi: ProductCrudApi<ProductBaseAttributeVO, Pro
   changeStatus: (id: string | number, status: string) => changeStatusApi('/product-capability/base-attributes/change-status/' + id + '/' + status),
   editCheck: (id: string | number) => editCheckApi('/product-capability/base-attributes/' + id + '/edit-check'),
   references: (id: string | number) => referencesApi('/product-capability/base-attributes/' + id + '/references')
+}
+
+export const productMaterialTypeGroupApi: ProductCrudApi<ProductMaterialTypeGroupVO, ProductMaterialTypeGroupQuery> = {
+  list: (query?: ProductMaterialTypeGroupQuery) => listApi('/product-capability/material-type-groups/list', query),
+  options: (query?: ProductMaterialTypeGroupQuery) => request<ProductMaterialTypeGroupVO[]>({ url: '/product-capability/material-type-groups/options', method: 'get', params: query }),
+  get: (id: string | number) => detailApi<ProductMaterialTypeGroupVO>('/product-capability/material-type-groups/' + id),
+  add: (data: ProductMaterialTypeGroupVO) => saveApi('/product-capability/material-type-groups', 'post', data),
+  update: (data: ProductMaterialTypeGroupVO) => saveApi('/product-capability/material-type-groups', 'put', data),
+  remove: (ids: Array<string | number> | string | number) => removeApi('/product-capability/material-type-groups/' + ids),
+  changeStatus: (id: string | number, status: string) => changeStatusApi('/product-capability/material-type-groups/change-status/' + id + '/' + status),
+  editCheck: (id: string | number) => editCheckApi('/product-capability/material-type-groups/' + id + '/edit-check'),
+  references: (id: string | number) => referencesApi('/product-capability/material-type-groups/' + id + '/references')
+}
+
+export const productMaterialTypeApi: ProductCrudApi<ProductMaterialTypeVO, ProductMaterialTypeQuery> = {
+  list: (query?: ProductMaterialTypeQuery) => listApi('/product-capability/material-types/list', query),
+  options: (query?: ProductMaterialTypeQuery) => request<ProductMaterialTypeVO[]>({ url: '/product-capability/material-types/options', method: 'get', params: query }),
+  get: (id: string | number) => detailApi<ProductMaterialTypeVO>('/product-capability/material-types/' + id),
+  add: (data: ProductMaterialTypeVO) => saveApi('/product-capability/material-types', 'post', data),
+  update: (data: ProductMaterialTypeVO) => saveApi('/product-capability/material-types', 'put', data),
+  remove: (ids: Array<string | number> | string | number) => removeApi('/product-capability/material-types/' + ids),
+  changeStatus: (id: string | number, status: string) => changeStatusApi('/product-capability/material-types/change-status/' + id + '/' + status),
+  editCheck: (id: string | number) => editCheckApi('/product-capability/material-types/' + id + '/edit-check'),
+  references: (id: string | number) => referencesApi('/product-capability/material-types/' + id + '/references')
 }

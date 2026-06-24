@@ -5,23 +5,25 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.bocoo.common.core.exception.ServiceException;
 import com.bocoo.common.core.utils.MapstructUtils;
 import com.bocoo.common.core.utils.StringUtils;
+import com.bocoo.common.core.utils.TimeUtils;
 import com.bocoo.common.mybatis.core.page.PageQuery;
 import com.bocoo.common.mybatis.core.page.TableDataInfo;
+import com.bocoo.common.satoken.utils.LoginHelper;
 import com.bocoo.product.domain.bo.ProductMaterialBo;
 import com.bocoo.product.domain.bo.ProductMaterialAttributeBo;
-import com.bocoo.product.domain.entity.FabricSeries;
 import com.bocoo.product.domain.entity.ProductComponentItem;
 import com.bocoo.product.domain.entity.ProductMaterial;
 import com.bocoo.product.domain.entity.ProductMaterialAttribute;
+import com.bocoo.product.domain.entity.ProductMaterialType;
 import com.bocoo.product.domain.entity.ProductMediaBinding;
 import com.bocoo.product.domain.vo.BaseEditCheckResultVo;
 import com.bocoo.product.domain.vo.ProductMaterialVo;
 import com.bocoo.product.domain.vo.ProductMaterialAttributeVo;
 import com.bocoo.product.domain.vo.ReferenceCheckResultVo;
-import com.bocoo.product.mapper.FabricSeriesMapper;
 import com.bocoo.product.mapper.ProductComponentItemMapper;
 import com.bocoo.product.mapper.ProductMaterialAttributeMapper;
 import com.bocoo.product.mapper.ProductMaterialMapper;
+import com.bocoo.product.mapper.ProductMaterialTypeMapper;
 import com.bocoo.product.mapper.ProductMediaBindingMapper;
 import com.bocoo.product.service.ProductEntityDefaults;
 import com.bocoo.product.service.ProductMaterialService;
@@ -39,7 +41,7 @@ public class ProductMaterialServiceImpl extends ProductServiceSupport implements
     private final ProductMaterialMapper materialMapper;
     private final ProductMaterialAttributeMapper materialAttributeMapper;
     private final ProductComponentItemMapper componentItemMapper;
-    private final FabricSeriesMapper fabricSeriesMapper;
+    private final ProductMaterialTypeMapper materialTypeMapper;
     private final ProductMediaBindingMapper mediaBindingMapper;
 
     @Override
@@ -93,6 +95,7 @@ public class ProductMaterialServiceImpl extends ProductServiceSupport implements
         if (checkStatus && bo != null && bo.getMaterialId() != null) {
             ProductMaterial current = materialMapper.selectById(bo.getMaterialId());
             if (current != null) {
+                assertNotAudited(current);
                 assertNormalEditable(current.getStatus());
             }
         }
@@ -123,10 +126,33 @@ public class ProductMaterialServiceImpl extends ProductServiceSupport implements
     }
 
     @Override
+    public Boolean audit(Long id) {
+        return materialMapper.update(null, new LambdaUpdateWrapper<ProductMaterial>()
+            .eq(ProductMaterial::getMaterialId, id)
+            .set(ProductMaterial::getAuditStatus, "AUDITED")
+            .set(ProductMaterial::getAuditById, currentUserId())
+            .set(ProductMaterial::getAuditBy, currentUsername())
+            .set(ProductMaterial::getAuditTime, TimeUtils.utcNow())) > 0;
+    }
+
+    @Override
+    public Boolean unaudit(Long id) {
+        return materialMapper.update(null, new LambdaUpdateWrapper<ProductMaterial>()
+            .eq(ProductMaterial::getMaterialId, id)
+            .set(ProductMaterial::getAuditStatus, "DRAFT")
+            .set(ProductMaterial::getAuditById, null)
+            .set(ProductMaterial::getAuditBy, null)
+            .set(ProductMaterial::getAuditTime, null)) > 0;
+    }
+
+    @Override
     public BaseEditCheckResultVo checkEditAllowed(Long id) {
         ProductMaterial material = materialMapper.selectById(id);
         if (material == null) {
             return deniedEditCheck(null, "product.base.edit.notFound", null);
+        }
+        if ("AUDITED".equalsIgnoreCase(material.getAuditStatus())) {
+            return deniedEditCheck(material.getStatus(), "product.material.auditedEditDenied", checkReferences(id));
         }
         return editCheckResult(material.getStatus(), checkReferences(id));
     }
@@ -147,13 +173,15 @@ public class ProductMaterialServiceImpl extends ProductServiceSupport implements
                 q.and(wrapper -> wrapper.like("material_name_cn", bo.getMaterialNameCn()).or().like("material_name_en", bo.getMaterialNameCn()));
             }
             like(q, "material_name_en", bo.getMaterialNameEn());
-            eq(q, "material_type", bo.getMaterialType());
-            eq(q, "business_type", bo.getBusinessType());
-            like(q, "spec_summary", bo.getSpecSummary());
-            like(q, "supplier_code", bo.getSupplierCode());
-            like(q, "supplier_name", bo.getSupplierName());
-            like(q, "vendor_item_no", bo.getVendorItemNo());
-            eq(q, "fabric_series_code", bo.getFabricSeriesCode());
+            eq(q, "material_type_code", materialTypeCodeOf(bo));
+            eq(q, "attribute_group_code", bo.getAttributeGroupCode());
+            like(q, "model", bo.getModel());
+            like(q, "spec", bo.getSpec());
+            like(q, "spec_model_text", bo.getSpecModelText());
+            like(q, "manufacturer_code", bo.getManufacturerCode());
+            like(q, "manufacturer_name", bo.getManufacturerName());
+            like(q, "manufacturer_item_no", bo.getManufacturerItemNo());
+            eq(q, "audit_status", bo.getAuditStatus());
             eq(q, "status", bo.getStatus());
         }
         return q;
@@ -163,55 +191,55 @@ public class ProductMaterialServiceImpl extends ProductServiceSupport implements
         if (bo == null) {
             return;
         }
-        if (StringUtils.isBlank(bo.getSpecSummary())) {
-            bo.setSpecSummary(StringUtils.blankToDefault(bo.getAttributeSummary(), bo.getPrimarySpec()));
+        trimMaterialFields(bo);
+        validateRequiredFields(bo);
+        if (StringUtils.isBlank(bo.getAuditStatus())) {
+            bo.setAuditStatus("DRAFT");
         }
-        if (StringUtils.isBlank(bo.getPurchaseUnitCode())) {
-            bo.setPurchaseUnitCode(bo.getUnitCode());
+        if (StringUtils.isBlank(bo.getStatus())) {
+            bo.setStatus("ENABLED");
         }
-        if (StringUtils.isBlank(bo.getInventoryUnitCode())) {
-            bo.setInventoryUnitCode(bo.getUnitCode());
+        if (StringUtils.isBlank(bo.getSpecModelText())) {
+            bo.setSpecModelText(buildSpecModelText(bo.getModel(), bo.getSpec()));
         }
-        if (StringUtils.isBlank(bo.getUsageUnitCode())) {
-            bo.setUsageUnitCode(bo.getUnitCode());
-        }
-        if (bo.getPurchaseEnabled() == null) {
-            bo.setPurchaseEnabled(Boolean.FALSE);
-        }
-        if (bo.getInventoryEnabled() == null) {
-            bo.setInventoryEnabled(Boolean.FALSE);
-        }
-        if (StringUtils.isBlank(bo.getPriceCurrencyCode())) {
-            bo.setPriceCurrencyCode("CNY");
-        }
-        normalizeFabricSeries(bo);
+        normalizeMaterialType(bo);
     }
 
-    private void normalizeFabricSeries(ProductMaterialBo bo) {
-        if (!"FABRIC".equalsIgnoreCase(bo.getMaterialType())) {
-            bo.setFabricSeriesId(null);
-            bo.setFabricSeriesCode(null);
-            bo.setFabricSeriesNameCn(null);
-            return;
+    private void normalizeMaterialType(ProductMaterialBo bo) {
+        String code = materialTypeCodeOf(bo);
+        if (StringUtils.isNotBlank(code)) {
+            code = code.trim().toUpperCase();
         }
-        FabricSeries series = null;
-        if (StringUtils.isNotBlank(bo.getFabricSeriesCode())) {
-            series = fabricSeriesMapper.selectOne(activeQuery(FabricSeries.class).eq("series_code", bo.getFabricSeriesCode()));
-        } else if (bo.getFabricSeriesId() != null) {
-            series = fabricSeriesMapper.selectById(bo.getFabricSeriesId());
-            if (series != null && !"0".equals(series.getDelFlag())) {
-                series = null;
+        if (StringUtils.isBlank(code)) {
+            throw ServiceException.ofMessageKey("product.material.materialTypeRequired");
+        }
+        ProductMaterialType type = null;
+        if (bo.getMaterialTypeId() != null) {
+            type = materialTypeMapper.selectById(bo.getMaterialTypeId());
+            if (type != null && StringUtils.isNotBlank(type.getDelFlag()) && !"0".equals(type.getDelFlag())) {
+                type = null;
             }
         }
-        if (series == null) {
-            if (StringUtils.isBlank(bo.getFabricSeriesCode()) && bo.getFabricSeriesId() == null) {
-                throw ServiceException.ofMessageKey("product.material.fabricSeriesRequired");
-            }
-            throw ServiceException.ofMessageKey("product.material.fabricSeriesNotFound");
+        if (type == null) {
+            type = materialTypeMapper.selectOne(activeQuery(ProductMaterialType.class).eq("material_type_code", code));
         }
-        bo.setFabricSeriesId(series.getSeriesId());
-        bo.setFabricSeriesCode(series.getSeriesCode());
-        bo.setFabricSeriesNameCn(series.getSeriesNameCn());
+        if (type == null) {
+            throw ServiceException.ofMessageKey("product.material.materialTypeNotFound");
+        }
+        bo.setMaterialTypeId(type.getMaterialTypeId());
+        bo.setMaterialTypeCode(type.getMaterialTypeCode());
+        bo.setMaterialTypeNameCn(type.getMaterialTypeNameCn());
+        bo.setAttributeGroupId(type.getAttributeGroupId());
+        bo.setAttributeGroupCode(type.getAttributeGroupCode());
+        bo.setAttributeGroupNameCn(type.getAttributeGroupNameCn());
+        bo.setMaterialType(type.getMaterialTypeCode());
+    }
+
+    private String materialTypeCodeOf(ProductMaterialBo bo) {
+        if (bo == null) {
+            return null;
+        }
+        return StringUtils.blankToDefault(bo.getMaterialTypeCode(), bo.getMaterialType());
     }
 
     private void validateMaterialUnique(ProductMaterialBo bo) {
@@ -235,25 +263,95 @@ public class ProductMaterialServiceImpl extends ProductServiceSupport implements
     }
 
     private void validateMaterialNaturalKeyUnique(ProductMaterialBo bo) {
-        if (StringUtils.isBlank(bo.getMaterialNameCn()) || StringUtils.isBlank(bo.getPrimarySpec())) {
-            return;
-        }
-        boolean hasSupplierCode = StringUtils.isNotBlank(bo.getSupplierCode());
-        boolean hasSupplierName = StringUtils.isNotBlank(bo.getSupplierName());
-        if (!hasSupplierCode && !hasSupplierName) {
+        if (StringUtils.isBlank(bo.getMaterialNameCn()) || StringUtils.isBlank(bo.getSpec())) {
             return;
         }
         QueryWrapper<ProductMaterial> q = activeQuery(ProductMaterial.class)
             .eq("material_name_cn", bo.getMaterialNameCn())
-            .eq("primary_spec", bo.getPrimarySpec())
+            .eq("spec", bo.getSpec())
             .ne(bo.getMaterialId() != null, "material_id", bo.getMaterialId());
-        if (hasSupplierCode) {
-            q.eq("supplier_code", bo.getSupplierCode());
+        if (StringUtils.isNotBlank(bo.getModel())) {
+            q.eq("model", bo.getModel());
         } else {
-            q.eq("supplier_name", bo.getSupplierName());
+            q.and(wrapper -> wrapper.isNull("model").or().eq("model", ""));
+        }
+        if (StringUtils.isNotBlank(bo.getManufacturerName())) {
+            q.eq("manufacturer_name", bo.getManufacturerName());
+        } else {
+            q.and(wrapper -> wrapper.isNull("manufacturer_name").or().eq("manufacturer_name", ""));
         }
         if (materialMapper.selectCount(q) > 0) {
             throw ServiceException.ofMessageKey("product.material.naturalKeyExists");
+        }
+    }
+
+    private void validateRequiredFields(ProductMaterialBo bo) {
+        if (StringUtils.isBlank(bo.getMaterialCode())) {
+            throw ServiceException.ofMessageKey("product.material.codeRequired");
+        }
+        if (StringUtils.isBlank(bo.getMaterialNameCn())) {
+            throw ServiceException.ofMessageKey("product.material.nameRequired");
+        }
+        if (StringUtils.isBlank(bo.getSpec())) {
+            throw ServiceException.ofMessageKey("product.material.specRequired");
+        }
+        if (StringUtils.isBlank(materialTypeCodeOf(bo))) {
+            throw ServiceException.ofMessageKey("product.material.materialTypeRequired");
+        }
+        if (StringUtils.isBlank(bo.getUnitCode())) {
+            throw ServiceException.ofMessageKey("product.material.unitRequired");
+        }
+    }
+
+    private void trimMaterialFields(ProductMaterialBo bo) {
+        bo.setMaterialCode(trimToNull(bo.getMaterialCode()));
+        bo.setMaterialNameCn(trimToNull(bo.getMaterialNameCn()));
+        bo.setMaterialNameEn(trimToNull(bo.getMaterialNameEn()));
+        bo.setMaterialTypeCode(trimToNull(bo.getMaterialTypeCode()));
+        bo.setMaterialType(trimToNull(bo.getMaterialType()));
+        bo.setUnitCode(trimToNull(bo.getUnitCode()));
+        bo.setSecondaryUnitCode(trimToNull(bo.getSecondaryUnitCode()));
+        bo.setManufacturerCode(trimToNull(bo.getManufacturerCode()));
+        bo.setManufacturerName(trimToNull(bo.getManufacturerName()));
+        bo.setManufacturerItemNo(trimToNull(bo.getManufacturerItemNo()));
+        bo.setModel(trimToNull(bo.getModel()));
+        bo.setSpec(trimToNull(bo.getSpec()));
+        bo.setSpecModelText(trimToNull(bo.getSpecModelText()));
+        bo.setColorName(trimToNull(bo.getColorName()));
+        bo.setAuditStatus(trimToNull(bo.getAuditStatus()));
+        bo.setStatus(trimToNull(bo.getStatus()));
+    }
+
+    private String trimToNull(String value) {
+        return StringUtils.isBlank(value) ? null : value.trim();
+    }
+
+    private String buildSpecModelText(String model, String spec) {
+        if (StringUtils.isBlank(model)) {
+            return spec;
+        }
+        return "型号：" + model + "；规格：" + spec;
+    }
+
+    private void assertNotAudited(ProductMaterial current) {
+        if (current != null && "AUDITED".equalsIgnoreCase(current.getAuditStatus())) {
+            throw ServiceException.ofMessageKey("product.material.auditedEditDenied");
+        }
+    }
+
+    private Long currentUserId() {
+        try {
+            return LoginHelper.getUserId();
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    private String currentUsername() {
+        try {
+            return LoginHelper.getUsername();
+        } catch (Exception ignored) {
+            return "system";
         }
     }
 

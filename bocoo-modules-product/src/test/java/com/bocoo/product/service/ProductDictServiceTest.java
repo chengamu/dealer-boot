@@ -9,8 +9,6 @@ import com.bocoo.product.domain.vo.BaseEditCheckResultVo;
 import com.bocoo.product.domain.vo.ProductDictItemVo;
 import com.bocoo.product.domain.vo.ProductDictOptionVo;
 import com.bocoo.product.domain.vo.ReferenceCheckResultVo;
-import com.bocoo.product.mapper.FabricSeriesMapper;
-import com.bocoo.product.mapper.ProductBaseAttributeMapper;
 import com.bocoo.product.mapper.ProductCategoryMapper;
 import com.bocoo.product.mapper.ProductComponentMapper;
 import com.bocoo.product.mapper.ProductDictItemMapper;
@@ -47,16 +45,11 @@ class ProductDictServiceTest {
     @Mock
     private ProductMaterialMapper materialMapper;
     @Mock
-    private FabricSeriesMapper fabricSeriesMapper;
-    @Mock
     private ProductCategoryMapper categoryMapper;
     @Mock
     private ProductComponentMapper componentMapper;
     @Mock
     private ProductMediaAssetMapper mediaAssetMapper;
-    @Mock
-    private ProductBaseAttributeMapper baseAttributeMapper;
-
     private ProductDictTypeServiceImpl dictTypeService;
     private ProductDictItemServiceImpl dictItemService;
 
@@ -68,18 +61,16 @@ class ProductDictServiceTest {
             dictItemMapper,
             unitMapper,
             materialMapper,
-            fabricSeriesMapper,
             categoryMapper,
             componentMapper,
-            mediaAssetMapper,
-            baseAttributeMapper
+            mediaAssetMapper
         );
     }
 
     @Test
     void insertDictTypeRejectsDuplicateCode() {
         ProductDictTypeBo bo = new ProductDictTypeBo();
-        bo.setDictTypeCode("product_material_type");
+        bo.setDictTypeCode("product_business_type");
         when(dictTypeMapper.selectCount(any())).thenReturn(1L);
 
         assertThatThrownBy(() -> dictTypeService.insertByBo(bo))
@@ -90,7 +81,7 @@ class ProductDictServiceTest {
     void deleteDictTypeRejectsSystemTypeBeforeRemoving() {
         ProductDictType entity = new ProductDictType();
         entity.setDictTypeId(1001L);
-        entity.setDictTypeCode("product_material_type");
+        entity.setDictTypeCode("product_business_type");
         entity.setSystemFlag(Boolean.TRUE);
         when(dictTypeMapper.selectById(1001L)).thenReturn(entity);
 
@@ -102,7 +93,7 @@ class ProductDictServiceTest {
     void dictTypeReferenceCheckCountsItems() {
         ProductDictType entity = new ProductDictType();
         entity.setDictTypeId(1001L);
-        entity.setDictTypeCode("product_material_type");
+        entity.setDictTypeCode("product_business_type");
         when(dictTypeMapper.selectById(1001L)).thenReturn(entity);
         when(dictItemMapper.selectCount(any())).thenReturn(2L);
 
@@ -117,8 +108,8 @@ class ProductDictServiceTest {
     @Test
     void insertDictItemRequiresExistingTypeAndUniqueValue() {
         ProductDictItemBo bo = new ProductDictItemBo();
-        bo.setDictTypeCode("product_material_type");
-        bo.setDictItemValue("FABRIC");
+        bo.setDictTypeCode("product_business_type");
+        bo.setDictItemValue("SALES");
         when(dictTypeMapper.selectCount(any())).thenReturn(1L);
         when(dictItemMapper.selectCount(any())).thenReturn(1L);
 
@@ -129,21 +120,21 @@ class ProductDictServiceTest {
     @Test
     void dictItemOptionsUseEnabledRowsFromProductDict() {
         ProductDictItemVo row = new ProductDictItemVo();
-        row.setDictTypeCode("product_material_type");
-        row.setDictItemValue("FABRIC");
-        row.setDictItemLabelCn("面料");
-        row.setDictItemLabelEn("Fabric");
-        row.setParentValue("MATERIAL");
+        row.setDictTypeCode("product_business_type");
+        row.setDictItemValue("SALES");
+        row.setDictItemLabelCn("销售");
+        row.setDictItemLabelEn("Sales");
+        row.setParentValue("BASE");
         when(dictItemMapper.selectVoList(any())).thenReturn(List.of(row));
 
-        List<ProductDictOptionVo> options = dictItemService.queryOptionsByType("product_material_type");
+        List<ProductDictOptionVo> options = dictItemService.queryOptionsByType("product_business_type");
 
         assertThat(options).singleElement().satisfies(option -> {
-            assertThat(option.getValue()).isEqualTo("FABRIC");
-            assertThat(option.getLabel()).isEqualTo("面料");
-            assertThat(option.getLabelCn()).isEqualTo("面料");
-            assertThat(option.getLabelEn()).isEqualTo("Fabric");
-            assertThat(option.getParentValue()).isEqualTo("MATERIAL");
+            assertThat(option.getValue()).isEqualTo("SALES");
+            assertThat(option.getLabel()).isEqualTo("销售");
+            assertThat(option.getLabelCn()).isEqualTo("销售");
+            assertThat(option.getLabelEn()).isEqualTo("Sales");
+            assertThat(option.getParentValue()).isEqualTo("BASE");
         });
     }
 

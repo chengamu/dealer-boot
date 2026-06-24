@@ -103,6 +103,22 @@ public class ProductMaterialController extends BaseController {
         return toAjax(productMaterialService.updateStatus(id, status));
     }
 
+    @SaCheckPermission("product:base:edit")
+    @Log(title = "审核产品物料", businessType = BusinessType.UPDATE)
+    @PutMapping("/materials/audit/{id}")
+    @Operation(summary = "审核产品物料")
+    public R<Void> auditProductMaterial(@PathVariable Long id) {
+        return toAjax(productMaterialService.audit(id));
+    }
+
+    @SaCheckPermission("product:base:edit")
+    @Log(title = "取消审核产品物料", businessType = BusinessType.UPDATE)
+    @PutMapping("/materials/unaudit/{id}")
+    @Operation(summary = "取消审核产品物料")
+    public R<Void> unauditProductMaterial(@PathVariable Long id) {
+        return toAjax(productMaterialService.unaudit(id));
+    }
+
     @SaCheckPermission("product:base:remove")
     @Log(title = "产品物料", businessType = BusinessType.DELETE)
     @DeleteMapping("/materials/{ids}")

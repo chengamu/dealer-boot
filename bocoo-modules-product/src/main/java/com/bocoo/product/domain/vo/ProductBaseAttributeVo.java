@@ -10,11 +10,11 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
- * 产品基础属性视图对象
+ * 物料属性视图对象
  */
 @Data
 @AutoMapper(target = ProductBaseAttribute.class)
-@Schema(description = "产品基础属性视图对象")
+@Schema(description = "物料属性视图对象")
 public class ProductBaseAttributeVo implements Serializable {
 
     @Serial
@@ -23,8 +23,11 @@ public class ProductBaseAttributeVo implements Serializable {
     @Schema(description = "属性ID")
     private Long attributeId;
 
-    @Schema(description = "属性组")
-    private String attributeGroup;
+    @Schema(description = "属性分组编码")
+    private String attributeGroupCode;
+
+    @Schema(description = "属性分组中文名称")
+    private String attributeGroupNameCn;
 
     @Schema(description = "属性编码")
     private String attributeCode;
@@ -40,9 +43,6 @@ public class ProductBaseAttributeVo implements Serializable {
 
     @Schema(description = "默认单位编码")
     private String unitCode;
-
-    @Schema(description = "适用物料类型")
-    private String materialTypes;
 
     @Schema(description = "扩展配置JSON")
     private String extraJson;

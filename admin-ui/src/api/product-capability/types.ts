@@ -245,6 +245,8 @@ export interface ProductCrudApi<TRecord extends ProductRecord = ProductRecord, T
   superUpdate?: (data: TRecord) => Promise<unknown>
   remove: (ids: Array<string | number> | string | number) => Promise<unknown>
   changeStatus?: (id: string | number, status: string) => Promise<unknown>
+  audit?: (id: string | number) => Promise<unknown>
+  unaudit?: (id: string | number) => Promise<unknown>
   editCheck?: (id: string | number) => Promise<{ data?: EditCheckResult }>
   references?: (id: string | number) => Promise<{ data?: ReferenceCheckResult }>
 }
@@ -306,13 +308,13 @@ export interface ProductUnitQuery extends ProductPageQuery {
 
 export interface ProductBaseAttributeVO extends ProductRecord {
   attributeId?: number
-  attributeGroup?: string
+  attributeGroupCode?: string
+  attributeGroupNameCn?: string
   attributeCode?: string
   attributeNameCn?: string
   attributeNameEn?: string
   valueType?: string
   unitCode?: string
-  materialTypes?: string
   extraJson?: string
   sortOrder?: number
   status?: string
@@ -320,9 +322,49 @@ export interface ProductBaseAttributeVO extends ProductRecord {
 }
 
 export interface ProductBaseAttributeQuery extends ProductPageQuery {
-  attributeGroup?: string
+  attributeGroupCode?: string
   attributeCode?: string
   attributeNameCn?: string
+  status?: string
+}
+
+export interface ProductMaterialTypeGroupVO extends ProductRecord {
+  groupId?: number
+  groupCode?: string
+  groupNameCn?: string
+  groupNameEn?: string
+  systemFlag?: boolean
+  editableFlag?: boolean
+  sortOrder?: number
+  status?: string
+  remark?: string
+}
+
+export interface ProductMaterialTypeGroupQuery extends ProductPageQuery {
+  groupCode?: string
+  groupNameCn?: string
+  status?: string
+}
+
+export interface ProductMaterialTypeVO extends ProductRecord {
+  materialTypeId?: number
+  materialTypeCode?: string
+  materialTypeNameCn?: string
+  materialTypeNameEn?: string
+  attributeGroupId?: number
+  attributeGroupCode?: string
+  attributeGroupNameCn?: string
+  systemFlag?: boolean
+  editableFlag?: boolean
+  sortOrder?: number
+  status?: string
+  remark?: string
+}
+
+export interface ProductMaterialTypeQuery extends ProductPageQuery {
+  materialTypeCode?: string
+  materialTypeNameCn?: string
+  attributeGroupCode?: string
   status?: string
 }
 
@@ -355,31 +397,28 @@ export interface ProductMaterialVO extends ProductRecord {
   materialNameCn?: string
   materialNameEn?: string
   materialType?: string
-  fabricSeriesId?: number
-  fabricSeriesCode?: string
-  fabricSeriesNameCn?: string
-  businessType?: string
+  materialTypeId?: number
+  materialTypeCode?: string
+  materialTypeNameCn?: string
+  attributeGroupId?: number
+  attributeGroupCode?: string
+  attributeGroupNameCn?: string
   unitCode?: string
-  purchaseUnitCode?: string
-  inventoryUnitCode?: string
-  usageUnitCode?: string
-  supplierCode?: string
-  supplierName?: string
-  factoryModel?: string
-  sampleBookNo?: string
-  vendorItemNo?: string
-  primarySpec?: string
-  specSummary?: string
-  primaryColor?: string
-  primaryWeight?: string
-  purchaseEnabled?: string | boolean
-  inventoryEnabled?: string | boolean
-  purchaseUnitPrice?: number
-  costUnitPrice?: number
-  priceCurrencyCode?: string
-  attributeSummary?: string
-  legacySource?: string
-  legacyId?: string
+  secondaryUnitCode?: string
+  manufacturerCode?: string
+  manufacturerName?: string
+  manufacturerItemNo?: string
+  model?: string
+  spec?: string
+  specModelText?: string
+  colorName?: string
+  weightValue?: number
+  unitPrice?: number
+  auditStatus?: string
+  auditById?: number
+  auditBy?: string
+  auditTime?: string
+  sortOrder?: number
   status?: string
   remark?: string
   attributeList?: ProductMaterialAttributeVO[]
@@ -389,12 +428,15 @@ export interface ProductMaterialQuery extends ProductPageQuery {
   materialCode?: string
   materialNameCn?: string
   materialType?: string
-  fabricSeriesCode?: string
-  businessType?: string
-  supplierCode?: string
-  sampleBookNo?: string
-  vendorItemNo?: string
-  specSummary?: string
+  materialTypeCode?: string
+  attributeGroupCode?: string
+  manufacturerCode?: string
+  manufacturerName?: string
+  manufacturerItemNo?: string
+  model?: string
+  spec?: string
+  specModelText?: string
+  auditStatus?: string
   status?: string
 }
 
