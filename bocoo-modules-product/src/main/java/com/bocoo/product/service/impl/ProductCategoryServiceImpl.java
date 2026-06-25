@@ -10,26 +10,25 @@ import com.bocoo.common.mybatis.core.page.TableDataInfo;
 import com.bocoo.product.domain.bo.ProductCategoryBo;
 import com.bocoo.product.domain.entity.ProductCategory;
 import com.bocoo.product.domain.entity.ProductMediaBinding;
-import com.bocoo.product.domain.entity.SalesProduct;
 import com.bocoo.product.domain.vo.BaseEditCheckResultVo;
 import com.bocoo.product.domain.vo.ProductCategoryVo;
 import com.bocoo.product.domain.vo.ReferenceCheckResultVo;
 import com.bocoo.product.mapper.ProductCategoryMapper;
 import com.bocoo.product.mapper.ProductMediaBindingMapper;
-import com.bocoo.product.mapper.SalesProductMapper;
 import com.bocoo.product.service.ProductCategoryService;
 import com.bocoo.product.service.ProductEntityDefaults;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
 public class ProductCategoryServiceImpl extends ProductServiceSupport implements ProductCategoryService {
 
     private final ProductCategoryMapper categoryMapper;
-    private final SalesProductMapper salesProductMapper;
     private final ProductMediaBindingMapper mediaBindingMapper;
 
     @Override
@@ -76,6 +75,10 @@ public class ProductCategoryServiceImpl extends ProductServiceSupport implements
     @Override
     public Boolean deleteWithValidByIds(Long[] ids) {
         for (Long id : ids) {
+            ProductCategory current = categoryMapper.selectById(id);
+            if (current != null) {
+                assertDisabledBeforeDelete(current.getStatus());
+            }
             assertNoReferences(checkReferences(id));
         }
         return remove(categoryMapper, ids);
@@ -104,14 +107,10 @@ public class ProductCategoryServiceImpl extends ProductServiceSupport implements
             return referenceResult(0, null, null);
         }
         long childCount = categoryMapper.selectCount(activeQuery(ProductCategory.class).eq("parent_id", categoryId));
-        long salesProductCount = salesProductMapper.selectCount(activeQuery(SalesProduct.class).eq("category_id", categoryId));
         long bindingCount = mediaBindingMapper.selectCount(activeQuery(ProductMediaBinding.class).eq("target_type", "CATEGORY").eq("target_id", categoryId));
-        ReferenceCheckResultVo result = referenceResult(childCount + salesProductCount + bindingCount, "product.category.hasReferences", null);
+        ReferenceCheckResultVo result = referenceResult(childCount + bindingCount, "product.category.hasReferences", null);
         if (childCount > 0) {
             result.getReferenceSummaries().add("Child categories: " + childCount);
-        }
-        if (salesProductCount > 0) {
-            result.getReferenceSummaries().add("Sales products: " + salesProductCount);
         }
         if (bindingCount > 0) {
             result.getReferenceSummaries().add("Media bindings: " + bindingCount);
@@ -150,9 +149,28 @@ public class ProductCategoryServiceImpl extends ProductServiceSupport implements
         if (parent == null || !"0".equals(parent.getDelFlag())) {
             throw ServiceException.ofMessageKey("product.category.parentNotFound");
         }
+        assertParentIsNotDescendant(bo.getCategoryId(), parent);
         bo.setCategoryLevel((parent.getCategoryLevel() == null ? 1 : parent.getCategoryLevel()) + 1);
         String parentPath = StringUtils.blankToDefault(parent.getCategoryPath(), parent.getCategoryCode());
         bo.setCategoryPath(parentPath + "/" + bo.getCategoryCode());
+    }
+
+    private void assertParentIsNotDescendant(Long categoryId, ProductCategory parent) {
+        if (categoryId == null || parent == null) {
+            return;
+        }
+        Set<Long> visited = new HashSet<>();
+        ProductCategory cursor = parent;
+        while (cursor != null && cursor.getParentId() != null && cursor.getParentId() > 0) {
+            Long cursorId = cursor.getCategoryId();
+            if (cursorId != null && !visited.add(cursorId)) {
+                throw ServiceException.ofMessageKey("product.category.parentCannotSelf");
+            }
+            if (categoryId.equals(cursor.getParentId())) {
+                throw ServiceException.ofMessageKey("product.category.parentCannotSelf");
+            }
+            cursor = categoryMapper.selectById(cursor.getParentId());
+        }
     }
 
     private void validateCategoryCodeUnique(ProductCategoryBo bo) {

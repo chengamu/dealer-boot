@@ -77,6 +77,12 @@ public class ProductMaterialVo implements Serializable {
     private String secondaryUnitCode;
 
     /**
+     * 厂家ID
+     */
+    @Schema(description = "厂家ID")
+    private Long manufacturerId;
+
+    /**
      * 厂家编码
      */
     @Schema(description = "厂家编码")
@@ -89,9 +95,9 @@ public class ProductMaterialVo implements Serializable {
     private String manufacturerName;
 
     /**
-     * 厂家料号
+     * 厂家物料编码
      */
-    @Schema(description = "厂家料号")
+    @Schema(description = "厂家物料编码")
     private String manufacturerItemNo;
 
     /**

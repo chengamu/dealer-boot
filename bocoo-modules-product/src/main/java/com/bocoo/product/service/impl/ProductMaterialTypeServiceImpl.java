@@ -89,6 +89,9 @@ public class ProductMaterialTypeServiceImpl extends ProductServiceSupport implem
             if (current != null && Boolean.TRUE.equals(current.getSystemFlag())) {
                 throw ServiceException.ofMessageKey("product.materialType.systemCannotDelete");
             }
+            if (current != null) {
+                assertDisabledBeforeDelete(current.getStatus());
+            }
             assertNoReferences(checkReferences(id));
         }
         return remove(materialTypeMapper, ids);

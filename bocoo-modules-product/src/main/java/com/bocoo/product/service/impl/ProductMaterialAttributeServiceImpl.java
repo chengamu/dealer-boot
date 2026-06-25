@@ -68,6 +68,10 @@ public class ProductMaterialAttributeServiceImpl extends ProductServiceSupport i
     @Override
     public Boolean deleteWithValidByIds(Long[] ids) {
         for (Long id : ids) {
+            ProductMaterialAttribute current = materialAttributeMapper.selectById(id);
+            if (current != null) {
+                assertDisabledBeforeDelete(current.getStatus());
+            }
             assertNoReferences(checkReferences(id));
         }
         return remove(materialAttributeMapper, ids);

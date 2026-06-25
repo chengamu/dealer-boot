@@ -84,6 +84,9 @@ public class ProductMaterialTypeGroupServiceImpl extends ProductServiceSupport i
             if (current != null && Boolean.TRUE.equals(current.getSystemFlag())) {
                 throw ServiceException.ofMessageKey("product.materialTypeGroup.systemCannotDelete");
             }
+            if (current != null) {
+                assertDisabledBeforeDelete(current.getStatus());
+            }
             assertNoReferences(checkReferences(id));
         }
         return remove(materialTypeGroupMapper, ids);

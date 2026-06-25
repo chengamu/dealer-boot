@@ -71,6 +71,10 @@ public class ProductMediaAssetServiceImpl extends ProductServiceSupport implemen
     @Override
     public Boolean deleteWithValidByIds(Long[] ids) {
         for (Long id : ids) {
+            ProductMediaAsset current = mediaAssetMapper.selectById(id);
+            if (current != null) {
+                assertDisabledBeforeDelete(current.getStatus());
+            }
             assertNoReferences(checkReferences(id));
         }
         return remove(mediaAssetMapper, ids);

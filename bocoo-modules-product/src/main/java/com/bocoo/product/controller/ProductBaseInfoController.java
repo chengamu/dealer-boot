@@ -2,6 +2,7 @@ package com.bocoo.product.controller;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import com.bocoo.common.core.domain.R;
+import com.bocoo.common.excel.utils.ExcelUtil;
 import com.bocoo.common.log.annotation.Log;
 import com.bocoo.common.log.enums.BusinessType;
 import com.bocoo.common.mybatis.core.page.PageQuery;
@@ -11,22 +12,26 @@ import com.bocoo.product.domain.bo.ProductBaseAttributeBo;
 import com.bocoo.product.domain.bo.ProductCategoryBo;
 import com.bocoo.product.domain.bo.ProductMaterialTypeBo;
 import com.bocoo.product.domain.bo.ProductMaterialTypeGroupBo;
+import com.bocoo.product.domain.bo.ProductManufacturerBo;
 import com.bocoo.product.domain.bo.ProductUnitBo;
 import com.bocoo.product.domain.vo.BaseEditCheckResultVo;
 import com.bocoo.product.domain.vo.ProductBaseAttributeVo;
 import com.bocoo.product.domain.vo.ProductCategoryVo;
 import com.bocoo.product.domain.vo.ProductMaterialTypeGroupVo;
 import com.bocoo.product.domain.vo.ProductMaterialTypeVo;
+import com.bocoo.product.domain.vo.ProductManufacturerVo;
 import com.bocoo.product.domain.vo.ProductUnitVo;
 import com.bocoo.product.domain.vo.ReferenceCheckResultVo;
 import com.bocoo.product.service.ProductBaseAttributeService;
 import com.bocoo.product.service.ProductCategoryService;
 import com.bocoo.product.service.ProductMaterialTypeGroupService;
 import com.bocoo.product.service.ProductMaterialTypeService;
+import com.bocoo.product.service.ProductManufacturerService;
 import com.bocoo.product.service.ProductUnitService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
@@ -51,6 +56,7 @@ public class ProductBaseInfoController extends BaseController {
 
     private final ProductCategoryService productCategoryService;
     private final ProductUnitService productUnitService;
+    private final ProductManufacturerService productManufacturerService;
     private final ProductMaterialTypeGroupService productMaterialTypeGroupService;
     private final ProductMaterialTypeService productMaterialTypeService;
     private final ProductBaseAttributeService productBaseAttributeService;
@@ -194,6 +200,82 @@ public class ProductBaseInfoController extends BaseController {
     @Operation(summary = "检查产品单位引用")
     public R<ReferenceCheckResultVo> checkProductUnitReferences(@PathVariable Long id) {
         return R.ok(productUnitService.checkReferences(id));
+    }
+
+    @SaCheckPermission("product:manufacturer:list")
+    @GetMapping("/manufacturers/list")
+    @Operation(summary = "分页查询厂家列表")
+    public TableDataInfo<ProductManufacturerVo> listProductManufacturer(ProductManufacturerBo bo, PageQuery pageQuery) {
+        return productManufacturerService.queryPageList(bo, pageQuery);
+    }
+
+    @Log(title = "厂家管理", businessType = BusinessType.EXPORT)
+    @SaCheckPermission("product:manufacturer:export")
+    @PostMapping("/manufacturers/export")
+    @Operation(summary = "导出厂家列表")
+    public void exportProductManufacturer(ProductManufacturerBo bo, HttpServletResponse response) {
+        java.util.List<ProductManufacturerVo> list = productManufacturerService.queryList(bo);
+        ExcelUtil.exportExcel(list, "厂家数据", ProductManufacturerVo.class, response);
+    }
+
+    @SaCheckPermission("product:manufacturer:list")
+    @GetMapping("/manufacturers/options")
+    @Operation(summary = "查询厂家选项")
+    public R<java.util.List<ProductManufacturerVo>> optionsProductManufacturer(ProductManufacturerBo bo) {
+        return R.ok(productManufacturerService.queryList(bo));
+    }
+
+    @SaCheckPermission("product:manufacturer:list")
+    @GetMapping("/manufacturers/{id}")
+    @Operation(summary = "获取厂家详情")
+    public R<ProductManufacturerVo> getProductManufacturer(@PathVariable Long id) {
+        return R.ok(productManufacturerService.queryById(id));
+    }
+
+    @SaCheckPermission("product:manufacturer:edit")
+    @GetMapping("/manufacturers/{id}/edit-check")
+    @Operation(summary = "检查厂家是否可修改")
+    public R<BaseEditCheckResultVo> checkProductManufacturerEdit(@PathVariable Long id) {
+        return R.ok(productManufacturerService.checkEditAllowed(id));
+    }
+
+    @SaCheckPermission("product:manufacturer:add")
+    @Log(title = "厂家管理", businessType = BusinessType.INSERT)
+    @PostMapping("/manufacturers")
+    @Operation(summary = "新增厂家")
+    public R<Void> addProductManufacturer(@Validated @RequestBody ProductManufacturerBo bo) {
+        return toAjax(productManufacturerService.insertByBo(bo));
+    }
+
+    @SaCheckPermission("product:manufacturer:edit")
+    @Log(title = "厂家管理", businessType = BusinessType.UPDATE)
+    @PutMapping("/manufacturers")
+    @Operation(summary = "修改厂家")
+    public R<Void> editProductManufacturer(@Validated @RequestBody ProductManufacturerBo bo) {
+        return toAjax(productManufacturerService.updateByBo(bo));
+    }
+
+    @SaCheckPermission("product:manufacturer:changeStatus")
+    @Log(title = "修改厂家状态", businessType = BusinessType.UPDATE)
+    @PutMapping("/manufacturers/change-status/{id}/{status}")
+    @Operation(summary = "修改厂家状态")
+    public R<Void> changeProductManufacturerStatus(@PathVariable Long id, @PathVariable String status) {
+        return toAjax(productManufacturerService.updateStatus(id, status));
+    }
+
+    @SaCheckPermission("product:manufacturer:remove")
+    @Log(title = "厂家管理", businessType = BusinessType.DELETE)
+    @DeleteMapping("/manufacturers/{ids}")
+    @Operation(summary = "删除厂家")
+    public R<Void> removeProductManufacturer(@NotEmpty(message = "{gen.validation.pk.required}") @PathVariable Long[] ids) {
+        return toAjax(productManufacturerService.deleteWithValidByIds(ids));
+    }
+
+    @SaCheckPermission("product:manufacturer:reference")
+    @GetMapping("/manufacturers/{id}/references")
+    @Operation(summary = "检查厂家引用")
+    public R<ReferenceCheckResultVo> checkProductManufacturerReferences(@PathVariable Long id) {
+        return R.ok(productManufacturerService.checkReferences(id));
     }
 
     @SaCheckPermission("product:material-type:list")

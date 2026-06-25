@@ -54,6 +54,9 @@ importers:
       nprogress:
         specifier: ^0.2.0
         version: 0.2.0
+      page-agent:
+        specifier: ^1.10.0
+        version: 1.10.0(zod@4.4.3)
       pinia:
         specifier: ^2.3.0
         version: 2.3.1(typescript@5.7.2)(vue@3.5.34(typescript@5.7.2))
@@ -353,6 +356,22 @@ packages:
   '@nodelib/fs.walk@1.2.8':
     resolution: {integrity: sha512-oGB+UxlgWcgQkgwo8GcEGwemoTFt3FIO9ababBmaGwXIoBKZ+GTy0pP185beGg7Llih/NSHSV2XAs1lnznocSg==}
     engines: {node: '>= 8'}
+
+  '@page-agent/core@1.10.0':
+    resolution: {integrity: sha512-A4bJNFeQJH7RX/sKDTp72Ckn7cXf2VxqHTGRF53e188piH9JgX1iRJsb+QJspd2PD8YmkXiG6okypE+IY6UVVg==}
+    peerDependencies:
+      zod: ^3.25.0 || ^4.0.0
+
+  '@page-agent/llms@1.10.0':
+    resolution: {integrity: sha512-NMS8OqoQp23jxOf0N+j2xHiUELiMSfaLDwUTFb+BMijXJ7FSmTTnAMjO1wQhNMkfTm0E7ZIomXsLWNMGx5dDkg==}
+    peerDependencies:
+      zod: ^3.25.0 || ^4.0.0
+
+  '@page-agent/page-controller@1.10.0':
+    resolution: {integrity: sha512-Nm8sH2503+qaz2BAOLz/xYZ1dr3rPTqqBPo7q1LtkCcOrU2+YeTgvgQbwAikLHWDRxv+1jfA5Y/3Cf9XsvYWFw==}
+
+  '@page-agent/ui@1.10.0':
+    resolution: {integrity: sha512-jh0mkASUZGv3IpC5x82BzogjHeBDQVgXrH0Z4YA8R6kWLDEYeEjxcCM1J0Wf9s+FsY6jknpwUuscxDo6wy5puw==}
 
   '@parcel/watcher-android-arm64@2.5.6':
     resolution: {integrity: sha512-YQxSS34tPF/6ZG7r/Ih9xy+kP/WwediEUsqmtf0cuCV5TPPKw/PQHRhueUo6JdeFJaqV3pyjm0GdYjZotbRt/A==}
@@ -713,6 +732,9 @@ packages:
     resolution: {integrity: sha512-j1Q7cSCqN+AwrmDd+pzgqc0/NpC655x2bUf5ZjRIO77DcNBFmh+OgRNzF6OKdCC9RSCb19fGd99+bhXFdkRNqw==}
     engines: {node: '>= 6.0.0'}
 
+  ai-motion@0.4.8:
+    resolution: {integrity: sha512-9nQVjf8lrYQWSW0sZdb9bES4x8Ei1w9C0S62po2KvRbMjslmjm0WMeszyW771SEauDnu4YGWqurLZ/gCkCTosQ==}
+
   alien-signals@0.4.9:
     resolution: {integrity: sha512-piRGlMgQ65uRiY06mGU7I432AwPwAGf64TK1RXtM1Px4pPfLMTGI9TmsHTfioW1GukZRsNzkVQ/uHjhhd231Ow==}
 
@@ -779,6 +801,10 @@ packages:
   call-bound@1.0.4:
     resolution: {integrity: sha512-+ys997U96po4Kx/ABpBCqhA9EuxJaQWDQg7295H4hBphv3IZg0boBKuwYpt4YXp6MZ5AmZQnU/tyMTlRpaSejg==}
     engines: {node: '>= 0.4'}
+
+  chalk@5.6.2:
+    resolution: {integrity: sha512-7NzBL0rN6fMUW+f7A6Io4h40qQlG+xGmtMxfbnH/K7TAtt8JQWVQK+6g0UXKMeVJoyV5EkkNsErQ8pVD3bLHbA==}
+    engines: {node: ^12.17.0 || ^14.13 || >=16.0.0}
 
   chokidar@3.6.0:
     resolution: {integrity: sha512-7VT13fmjotKpGipCW9JEQAusEPE+Ei8nl6/g4FBAmIm0GOOLMua9NDDo/DWp0ZAxCr3cPq5ZpBqmPAQgDda2Pw==}
@@ -1407,6 +1433,11 @@ packages:
     resolution: {integrity: sha512-qFOyK5PjiWZd+QQIh+1jhdb9LpxTF0qs7Pm8o5QHYZ0M3vKqSqzsZaEB6oWlxZ+q2sJBMI/Ktgd2N5ZwQoRHfg==}
     engines: {node: '>= 0.4'}
 
+  page-agent@1.10.0:
+    resolution: {integrity: sha512-jqDrTHgKT0mRSKCd7kFt3gUPgafczrAWqV/Ki7bBaLo8JsG1zzGnUW2wVftM3hTW9u47txv+JDlESz/2FX2B2A==}
+    peerDependencies:
+      zod: ^3.25.0 || ^4.0.0
+
   parchment@1.1.4:
     resolution: {integrity: sha512-J5FBQt/pM2inLzg4hEWmzQx/8h8D0CiDxaG3vyp9rKrQRSDgBlhjdP5jQGgosEajXPSQouXGHOmVdgo7QmJuOg==}
 
@@ -1860,6 +1891,9 @@ packages:
   xe-utils@4.0.9:
     resolution: {integrity: sha512-LLO3Otzg2i9ArUoBdsjse9Tw7cwE0XvvoP98IMjoqL8l4UELO/a8c041Mq9cAfaUdd6ksamSvGF5luZkwVArqw==}
 
+  zod@4.4.3:
+    resolution: {integrity: sha512-ytENFjIJFl2UwYglde2jchW2Hwm4GJFLDiSXWdTrJQBIN9Fcyp7n4DhxJEiWNAJMV1/BqWfW/kkg71UDcHJyTQ==}
+
   zrender@6.1.0:
     resolution: {integrity: sha512-oEGMDB6pOP2S6OwRR4PdVv610zrjnA3Bh+JnSG12fYJlBKjtNAoEb5fSUoCOOINlH96I2fU38/A2UpRKs67xYQ==}
 
@@ -2015,6 +2049,24 @@ snapshots:
     dependencies:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.20.1
+
+  '@page-agent/core@1.10.0(zod@4.4.3)':
+    dependencies:
+      '@page-agent/llms': 1.10.0(zod@4.4.3)
+      '@page-agent/page-controller': 1.10.0
+      chalk: 5.6.2
+      zod: 4.4.3
+
+  '@page-agent/llms@1.10.0(zod@4.4.3)':
+    dependencies:
+      chalk: 5.6.2
+      zod: 4.4.3
+
+  '@page-agent/page-controller@1.10.0':
+    dependencies:
+      ai-motion: 0.4.8
+
+  '@page-agent/ui@1.10.0': {}
 
   '@parcel/watcher-android-arm64@2.5.6':
     optional: true
@@ -2310,6 +2362,8 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  ai-motion@0.4.8: {}
+
   alien-signals@0.4.9: {}
 
   anymatch@3.1.3:
@@ -2386,6 +2440,8 @@ snapshots:
     dependencies:
       call-bind-apply-helpers: 1.0.2
       get-intrinsic: 1.3.0
+
+  chalk@5.6.2: {}
 
   chokidar@3.6.0:
     dependencies:
@@ -3102,6 +3158,15 @@ snapshots:
       object-keys: 1.1.1
       safe-push-apply: 1.0.0
 
+  page-agent@1.10.0(zod@4.4.3):
+    dependencies:
+      '@page-agent/core': 1.10.0(zod@4.4.3)
+      '@page-agent/llms': 1.10.0(zod@4.4.3)
+      '@page-agent/page-controller': 1.10.0
+      '@page-agent/ui': 1.10.0
+      chalk: 5.6.2
+      zod: 4.4.3
+
   parchment@1.1.4: {}
 
   path-browserify@1.0.1: {}
@@ -3694,6 +3759,8 @@ snapshots:
       has-tostringtag: 1.0.2
 
   xe-utils@4.0.9: {}
+
+  zod@4.4.3: {}
 
   zrender@6.1.0:
     dependencies:

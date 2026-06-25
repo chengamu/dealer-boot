@@ -77,6 +77,10 @@ public class ProductUnitServiceImpl extends ProductServiceSupport implements Pro
     @Override
     public Boolean deleteWithValidByIds(Long[] ids) {
         for (Long id : ids) {
+            ProductUnit current = unitMapper.selectById(id);
+            if (current != null) {
+                assertDisabledBeforeDelete(current.getStatus());
+            }
             assertNoReferences(checkReferences(id));
         }
         return remove(unitMapper, ids);

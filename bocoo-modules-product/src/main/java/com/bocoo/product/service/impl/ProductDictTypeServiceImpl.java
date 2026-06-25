@@ -76,6 +76,9 @@ public class ProductDictTypeServiceImpl extends ProductServiceSupport implements
             if (entity != null && Boolean.TRUE.equals(entity.getSystemFlag())) {
                 throw ServiceException.ofMessageKey("product.dict.systemTypeCannotDelete");
             }
+            if (entity != null) {
+                assertDisabledBeforeDelete(entity.getStatus());
+            }
             long itemCount = dictItemMapper.selectCount(activeQuery(ProductDictItem.class)
                 .eq("dict_type_code", entity == null ? null : entity.getDictTypeCode()));
             if (itemCount > 0) {

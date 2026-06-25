@@ -4,12 +4,14 @@ import com.bocoo.common.core.exception.ServiceException;
 import com.bocoo.product.domain.bo.ProductMaterialBo;
 import com.bocoo.product.domain.entity.ProductMaterial;
 import com.bocoo.product.domain.entity.ProductMaterialType;
+import com.bocoo.product.domain.entity.ProductManufacturer;
 import com.bocoo.product.domain.vo.BaseEditCheckResultVo;
 import com.bocoo.product.domain.vo.ReferenceCheckResultVo;
 import com.bocoo.product.mapper.ProductMaterialAttributeMapper;
 import com.bocoo.product.mapper.ProductMaterialMapper;
 import com.bocoo.product.mapper.ProductMediaBindingMapper;
 import com.bocoo.product.mapper.ProductMaterialTypeMapper;
+import com.bocoo.product.mapper.ProductManufacturerMapper;
 import com.bocoo.product.service.impl.ProductMaterialServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -36,6 +38,8 @@ class ProductMaterialServiceTest {
     @Mock
     private ProductMaterialTypeMapper materialTypeMapper;
     @Mock
+    private ProductManufacturerMapper manufacturerMapper;
+    @Mock
     private ProductMediaBindingMapper mediaBindingMapper;
     @Mock
     private ProductChangeLogService changeLogService;
@@ -49,6 +53,7 @@ class ProductMaterialServiceTest {
             materialMapper,
             materialAttributeMapper,
             materialTypeMapper,
+            manufacturerMapper,
             mediaBindingMapper,
             changeLogService
         );
@@ -72,6 +77,22 @@ class ProductMaterialServiceTest {
         assertThat(bo.getAttributeGroupCode()).isEqualTo("ALUMINUM");
         assertThat(bo.getSpecModelText()).isEqualTo("型号：HC-IV-25；规格：25mm / 米色 / 遮光");
         assertThat(bo.getStatus()).isEqualTo("DISABLED");
+    }
+
+    @Test
+    void normalizeProductMaterialFillsManufacturerSnapshot() throws Exception {
+        ProductMaterialBo bo = validMaterialBo();
+        bo.setManufacturerId(900L);
+        when(materialTypeMapper.selectOne(any())).thenReturn(materialType("MOTOR", "电机", "CONTROL", "控制系统"));
+        when(manufacturerMapper.selectById(900L)).thenReturn(manufacturer(900L, "900", "通用厂家/暂无厂家"));
+
+        Method normalize = ProductMaterialServiceImpl.class.getDeclaredMethod("normalizeMaterial", ProductMaterialBo.class);
+        normalize.setAccessible(true);
+        normalize.invoke(productMaterialService, bo);
+
+        assertThat(bo.getManufacturerId()).isEqualTo(900L);
+        assertThat(bo.getManufacturerCode()).isEqualTo("900");
+        assertThat(bo.getManufacturerName()).isEqualTo("通用厂家/暂无厂家");
     }
 
     @Test
@@ -154,8 +175,9 @@ class ProductMaterialServiceTest {
     @Test
     void insertRejectsDuplicateNaturalKeyWithManufacturer() {
         ProductMaterialBo bo = validMaterialBo();
-        bo.setManufacturerName("AOK Motion");
+        bo.setManufacturerId(900L);
         when(materialTypeMapper.selectOne(any())).thenReturn(materialType("MOTOR", "电机", "CONTROL", "控制系统"));
+        when(manufacturerMapper.selectById(900L)).thenReturn(manufacturer(900L, "900", "通用厂家/暂无厂家"));
         when(materialMapper.selectCount(any())).thenReturn(0L, 1L);
 
         assertThatThrownBy(() -> productMaterialService.insertByBo(bo))
@@ -236,8 +258,24 @@ class ProductMaterialServiceTest {
 
     @Test
     void deleteRejectsReferencedMaterial() {
+        ProductMaterial current = new ProductMaterial();
+        current.setMaterialId(1001L);
+        current.setStatus("DISABLED");
+        when(materialMapper.selectById(1001L)).thenReturn(current);
         when(materialAttributeMapper.selectCount(any())).thenReturn(1L);
         when(mediaBindingMapper.selectCount(any())).thenReturn(0L);
+
+        assertThatThrownBy(() -> productMaterialService.deleteWithValidByIds(new Long[] {1001L}))
+            .isInstanceOf(ServiceException.class);
+        verify(materialMapper, never()).deleteBatchIds(any());
+    }
+
+    @Test
+    void deleteRejectsAuditedMaterial() {
+        ProductMaterial current = new ProductMaterial();
+        current.setMaterialId(1001L);
+        current.setStatus("ENABLED");
+        when(materialMapper.selectById(1001L)).thenReturn(current);
 
         assertThatThrownBy(() -> productMaterialService.deleteWithValidByIds(new Long[] {1001L}))
             .isInstanceOf(ServiceException.class);
@@ -265,5 +303,15 @@ class ProductMaterialServiceTest {
         type.setAttributeGroupNameCn(groupName);
         type.setDelFlag("0");
         return type;
+    }
+
+    private ProductManufacturer manufacturer(Long id, String code, String name) {
+        ProductManufacturer manufacturer = new ProductManufacturer();
+        manufacturer.setManufacturerId(id);
+        manufacturer.setManufacturerCode(code);
+        manufacturer.setManufacturerName(name);
+        manufacturer.setDelFlag("0");
+        manufacturer.setStatus("ENABLED");
+        return manufacturer;
     }
 }

@@ -1,23 +1,23 @@
 <template>
-  <div class="app-container material-type-page">
+  <div class="app-container material-type-page" data-agent-scope="product-base-page" data-agent-entity="material-type">
     <div class="material-type-page__search-bar">
-      <el-form :model="groupQuery" :inline="true" class="material-type-page__search">
-        <el-form-item :label="t('productCenter.materialType.groupName')">
-          <el-input v-model="groupQuery.groupNameCn" clearable :placeholder="t('productCenter.common.inputPlaceholder')" @keyup.enter="loadGroups" />
+      <el-form :model="groupQuery" :inline="true" class="material-type-page__search" data-agent-scope="material-type-group-search">
+        <el-form-item :label="t('productCenter.materialType.groupName')" data-agent-field="groupNameCn">
+          <el-input v-model="groupQuery.groupNameCn" clearable :placeholder="t('productCenter.common.inputPlaceholder')" :aria-label="t('productCenter.materialType.groupName')" :data-agent-label="t('productCenter.materialType.groupName')" @keyup.enter="loadGroups" />
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" icon="Search" @click="loadGroups">{{ t('common.search') }}</el-button>
-          <el-button icon="Refresh" @click="resetGroupQuery">{{ t('common.reset') }}</el-button>
+          <el-button type="primary" icon="Search" :aria-label="t('common.search')" :data-agent-label="t('common.search')" @click="loadGroups">{{ t('common.search') }}</el-button>
+          <el-button icon="Refresh" :aria-label="t('common.reset')" :data-agent-label="t('common.reset')" @click="resetGroupQuery">{{ t('common.reset') }}</el-button>
         </el-form-item>
       </el-form>
 
-      <el-form :model="typeQuery" :inline="true" class="material-type-page__search">
-        <el-form-item :label="t('productCenter.materialType.name')">
-          <el-input v-model="typeQuery.materialTypeNameCn" clearable :placeholder="t('productCenter.common.inputPlaceholder')" :disabled="!selectedGroup" @keyup.enter="loadTypes" />
+      <el-form :model="typeQuery" :inline="true" class="material-type-page__search" data-agent-scope="material-type-search">
+        <el-form-item :label="t('productCenter.materialType.name')" data-agent-field="materialTypeNameCn">
+          <el-input v-model="typeQuery.materialTypeNameCn" clearable :placeholder="t('productCenter.common.inputPlaceholder')" :disabled="!selectedGroup" :aria-label="t('productCenter.materialType.name')" :data-agent-label="t('productCenter.materialType.name')" @keyup.enter="loadTypes" />
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" icon="Search" :disabled="!selectedGroup" @click="loadTypes">{{ t('common.search') }}</el-button>
-          <el-button icon="Refresh" :disabled="!selectedGroup" @click="resetTypeQuery">{{ t('common.reset') }}</el-button>
+          <el-button type="primary" icon="Search" :disabled="!selectedGroup" :aria-label="t('common.search')" :data-agent-label="t('common.search')" @click="loadTypes">{{ t('common.search') }}</el-button>
+          <el-button icon="Refresh" :disabled="!selectedGroup" :aria-label="t('common.reset')" :data-agent-label="t('common.reset')" @click="resetTypeQuery">{{ t('common.reset') }}</el-button>
         </el-form-item>
       </el-form>
     </div>
@@ -29,9 +29,9 @@
             <strong>{{ t('productCenter.materialType.group') }}</strong>
           </div>
           <div class="material-type-page__actions">
-            <el-button type="primary" plain icon="Plus" @click="openGroupForm()" v-hasPermi="['product:material-type:add']">{{ t('common.add') }}</el-button>
-            <el-button type="success" plain icon="Edit" :disabled="!selectedGroup" @click="openGroupForm(selectedGroup)" v-hasPermi="['product:material-type:edit']">{{ t('common.edit') }}</el-button>
-            <el-button type="danger" plain icon="Delete" :disabled="!selectedGroup" @click="removeGroup" v-hasPermi="['product:material-type:remove']">{{ t('common.delete') }}</el-button>
+            <el-button type="primary" plain icon="Plus" :aria-label="t('common.add')" :data-agent-label="t('common.add')" @click="openGroupForm()" v-hasPermi="['product:material-type:add']">{{ t('common.add') }}</el-button>
+            <el-button type="success" plain icon="Edit" :disabled="!selectedGroup" :aria-label="t('common.edit')" :data-agent-label="t('common.edit')" @click="openGroupForm(selectedGroup)" v-hasPermi="['product:material-type:edit']">{{ t('common.edit') }}</el-button>
+            <el-button type="danger" plain icon="Delete" :disabled="!selectedGroup" :aria-label="t('common.delete')" :data-agent-label="t('common.delete')" data-agent-danger="delete" @click="removeGroup" v-hasPermi="['product:material-type:remove']">{{ t('common.delete') }}</el-button>
           </div>
         </div>
         <el-table
@@ -66,10 +66,10 @@
             <span v-if="selectedGroup">{{ selectedGroup.groupNameCn }} / {{ selectedGroup.groupCode }}</span>
           </div>
           <div class="material-type-page__actions">
-            <el-button type="primary" plain icon="Plus" :disabled="!selectedGroup" @click="openTypeForm()" v-hasPermi="['product:material-type:add']">{{ t('common.add') }}</el-button>
-            <el-button type="success" plain icon="Edit" :disabled="!selectedType" @click="openTypeForm(selectedType)" v-hasPermi="['product:material-type:edit']">{{ t('common.edit') }}</el-button>
-            <el-button type="danger" plain icon="Delete" :disabled="!selectedType" @click="removeType" v-hasPermi="['product:material-type:remove']">{{ t('common.delete') }}</el-button>
-            <el-button type="info" plain icon="View" :disabled="!selectedType" @click="openReference('type')" v-hasPermi="['product:material-type:reference']">{{ t('productCenter.common.references') }}</el-button>
+            <el-button type="primary" plain icon="Plus" :disabled="!selectedGroup" :aria-label="t('common.add')" :data-agent-label="t('common.add')" @click="openTypeForm()" v-hasPermi="['product:material-type:add']">{{ t('common.add') }}</el-button>
+            <el-button type="success" plain icon="Edit" :disabled="!selectedType" :aria-label="t('common.edit')" :data-agent-label="t('common.edit')" @click="openTypeForm(selectedType)" v-hasPermi="['product:material-type:edit']">{{ t('common.edit') }}</el-button>
+            <el-button type="danger" plain icon="Delete" :disabled="!selectedType" :aria-label="t('common.delete')" :data-agent-label="t('common.delete')" data-agent-danger="delete" @click="removeType" v-hasPermi="['product:material-type:remove']">{{ t('common.delete') }}</el-button>
+            <el-button type="info" plain icon="View" :disabled="!selectedType" :aria-label="t('productCenter.common.references')" :data-agent-label="t('productCenter.common.references')" @click="openReference('type')" v-hasPermi="['product:material-type:reference']">{{ t('productCenter.common.references') }}</el-button>
           </div>
         </div>
         <el-alert
@@ -127,7 +127,7 @@
       </el-form>
       <template #footer>
         <el-button @click="groupOpen = false">{{ t('common.cancel') }}</el-button>
-        <el-button type="primary" :loading="submitLoading" @click="submitGroup">{{ t('common.confirm') }}</el-button>
+        <el-button type="primary" :loading="submitLoading" data-agent-danger="save" @click="submitGroup">{{ t('common.confirm') }}</el-button>
       </template>
     </el-drawer>
 
@@ -154,7 +154,7 @@
       </el-form>
       <template #footer>
         <el-button @click="typeOpen = false">{{ t('common.cancel') }}</el-button>
-        <el-button type="primary" :loading="submitLoading" @click="submitType">{{ t('common.confirm') }}</el-button>
+        <el-button type="primary" :loading="submitLoading" data-agent-danger="save" @click="submitType">{{ t('common.confirm') }}</el-button>
       </template>
     </el-drawer>
 

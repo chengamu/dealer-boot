@@ -11,3 +11,10 @@ declare module '*.vue' {
 }
 
 declare module 'virtual:svg-icons-register'
+
+declare module 'page-agent' {
+  export class PageAgent {
+    constructor(options: Record<string, unknown>)
+    execute(task: string): Promise<unknown>
+  }
+}

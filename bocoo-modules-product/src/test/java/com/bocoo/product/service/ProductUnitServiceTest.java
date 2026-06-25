@@ -17,6 +17,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -83,5 +85,17 @@ class ProductUnitServiceTest {
 
         assertThatThrownBy(() -> productUnitService.insertByBo(bo))
             .isInstanceOf(ServiceException.class);
+    }
+
+    @Test
+    void deleteUnitRejectsEnabledStatus() {
+        ProductUnit unit = new ProductUnit();
+        unit.setUnitId(3001L);
+        unit.setStatus("ENABLED");
+        when(unitMapper.selectById(3001L)).thenReturn(unit);
+
+        assertThatThrownBy(() -> productUnitService.deleteWithValidByIds(new Long[]{3001L}))
+            .isInstanceOf(ServiceException.class);
+        verify(unitMapper, never()).deleteBatchIds(any());
     }
 }

@@ -14,6 +14,7 @@ import com.bocoo.product.domain.bo.ProductMaterialAttributeBo;
 import com.bocoo.product.domain.entity.ProductMaterial;
 import com.bocoo.product.domain.entity.ProductMaterialAttribute;
 import com.bocoo.product.domain.entity.ProductMaterialType;
+import com.bocoo.product.domain.entity.ProductManufacturer;
 import com.bocoo.product.domain.entity.ProductMediaBinding;
 import com.bocoo.product.domain.vo.BaseEditCheckResultVo;
 import com.bocoo.product.domain.vo.ProductMaterialVo;
@@ -22,6 +23,7 @@ import com.bocoo.product.domain.vo.ReferenceCheckResultVo;
 import com.bocoo.product.mapper.ProductMaterialAttributeMapper;
 import com.bocoo.product.mapper.ProductMaterialMapper;
 import com.bocoo.product.mapper.ProductMaterialTypeMapper;
+import com.bocoo.product.mapper.ProductManufacturerMapper;
 import com.bocoo.product.mapper.ProductMediaBindingMapper;
 import com.bocoo.product.service.ProductChangeLogService;
 import com.bocoo.product.service.ProductEntityDefaults;
@@ -40,6 +42,7 @@ public class ProductMaterialServiceImpl extends ProductServiceSupport implements
     private final ProductMaterialMapper materialMapper;
     private final ProductMaterialAttributeMapper materialAttributeMapper;
     private final ProductMaterialTypeMapper materialTypeMapper;
+    private final ProductManufacturerMapper manufacturerMapper;
     private final ProductMediaBindingMapper mediaBindingMapper;
     private final ProductChangeLogService changeLogService;
 
@@ -114,6 +117,10 @@ public class ProductMaterialServiceImpl extends ProductServiceSupport implements
     @Override
     public Boolean deleteWithValidByIds(Long[] ids) {
         for (Long id : ids) {
+            ProductMaterial current = materialMapper.selectById(id);
+            if (current != null) {
+                assertDisabledBeforeDelete(current.getStatus());
+            }
             assertNoReferences(checkReferences(id));
         }
         return remove(materialMapper, ids);
@@ -183,6 +190,7 @@ public class ProductMaterialServiceImpl extends ProductServiceSupport implements
             eq(q, "attribute_group_code", bo.getAttributeGroupCode());
             like(q, "model", bo.getModel());
             like(q, "spec", bo.getSpec());
+            eq(q, "manufacturer_id", bo.getManufacturerId());
             like(q, "manufacturer_code", bo.getManufacturerCode());
             like(q, "manufacturer_name", bo.getManufacturerName());
             like(q, "manufacturer_item_no", bo.getManufacturerItemNo());
@@ -204,6 +212,7 @@ public class ProductMaterialServiceImpl extends ProductServiceSupport implements
             bo.setSpecModelText(buildSpecModelText(bo.getModel(), bo.getSpec()));
         }
         normalizeMaterialType(bo);
+        normalizeManufacturer(bo);
     }
 
     private void normalizeMaterialType(ProductMaterialBo bo) {
@@ -276,10 +285,10 @@ public class ProductMaterialServiceImpl extends ProductServiceSupport implements
         } else {
             q.and(wrapper -> wrapper.isNull("model").or().eq("model", ""));
         }
-        if (StringUtils.isNotBlank(bo.getManufacturerName())) {
-            q.eq("manufacturer_name", bo.getManufacturerName());
+        if (bo.getManufacturerId() != null) {
+            q.eq("manufacturer_id", bo.getManufacturerId());
         } else {
-            q.and(wrapper -> wrapper.isNull("manufacturer_name").or().eq("manufacturer_name", ""));
+            q.and(wrapper -> wrapper.isNull("manufacturer_id").or().eq("manufacturer_id", 0));
         }
         if (materialMapper.selectCount(q) > 0) {
             throw ServiceException.ofMessageKey("product.material.naturalKeyExists");
@@ -320,6 +329,28 @@ public class ProductMaterialServiceImpl extends ProductServiceSupport implements
         bo.setSpecModelText(trimToNull(bo.getSpecModelText()));
         bo.setColorName(trimToNull(bo.getColorName()));
         bo.setStatus(trimToNull(bo.getStatus()));
+    }
+
+    private void normalizeManufacturer(ProductMaterialBo bo) {
+        ProductManufacturer manufacturer = null;
+        if (bo.getManufacturerId() != null) {
+            manufacturer = manufacturerMapper.selectById(bo.getManufacturerId());
+            if (manufacturer != null && StringUtils.isNotBlank(manufacturer.getDelFlag()) && !"0".equals(manufacturer.getDelFlag())) {
+                manufacturer = null;
+            }
+        }
+        if (manufacturer == null && StringUtils.isNotBlank(bo.getManufacturerCode())) {
+            manufacturer = manufacturerMapper.selectOne(activeQuery(ProductManufacturer.class).eq("manufacturer_code", bo.getManufacturerCode()));
+        }
+        if (manufacturer == null) {
+            bo.setManufacturerId(null);
+            bo.setManufacturerCode(null);
+            bo.setManufacturerName(null);
+            return;
+        }
+        bo.setManufacturerId(manufacturer.getManufacturerId());
+        bo.setManufacturerCode(manufacturer.getManufacturerCode());
+        bo.setManufacturerName(manufacturer.getManufacturerName());
     }
 
     private String trimToNull(String value) {

@@ -18,6 +18,7 @@ import { useProductDict } from '@/hooks/useProductDict'
 import {
   productBaseAttributeApi,
   productCategoryApi,
+  productManufacturerApi,
   productMaterialTypeApi,
   productMaterialTypeGroupApi,
   productUnitApi
@@ -41,6 +42,7 @@ const routeTabMap: Record<string, string> = {
   materials: 'material',
   'base-attributes': 'baseAttribute',
   'material-types': 'materialType',
+  manufacturers: 'manufacturer',
   units: 'unit',
   'material-attributes': 'materialAttribute'
 }
@@ -126,6 +128,16 @@ async function loadMaterialTypeGroupOptions() {
   const response = await productMaterialTypeGroupApi.options?.({ status: 'ENABLED', pageNum: 1, pageSize: 500 })
   const rows = Array.isArray(response) ? response : response?.data || []
   return rows.map((row) => ({ value: row.groupCode, label: labelOf(row, 'groupCode', 'groupNameCn', 'groupNameEn'), record: row }))
+}
+
+async function loadManufacturerOptions() {
+  const response = await productManufacturerApi.options?.({ status: 'ENABLED', pageNum: 1, pageSize: 500 })
+  const rows = Array.isArray(response) ? response : response?.data || []
+  return rows.map((row) => ({
+    value: row.manufacturerId,
+    label: String(row.manufacturerName || row.manufacturerCode || ''),
+    record: row
+  }))
 }
 
 async function loadUnits() {
@@ -215,12 +227,13 @@ const configs = computed<ProductGridConfig[]>(() => [
       { prop: 'status', labelKey: 'productCenter.material.auditStatus', type: 'select', options: materialStatusOptions.value, search: true, form: false, minWidth: 120 },
       { prop: 'sortOrder', labelKey: 'productCenter.common.sortOrder', type: 'number', sortable: true, table: false, sectionKey: 'manage', sectionLabelKey: 'productCenter.formSection.manage' },
       { prop: 'remark', labelKey: 'productCenter.common.remark', type: 'textarea', table: false, formSpan: 2, sectionKey: 'manage' },
-      { prop: 'manufacturerName', labelKey: 'productCenter.material.manufacturerName', sortable: true, minWidth: 160, sectionKey: 'manufacturer', sectionLabelKey: 'productCenter.formSection.manufacturer' },
+      { prop: 'manufacturerId', labelKey: 'productCenter.material.manufacturerName', type: 'remote-select', optionLoader: loadManufacturerOptions, fillFields: { manufacturerCode: 'manufacturerCode', manufacturerName: 'manufacturerName' }, table: false, sectionKey: 'manufacturer', sectionLabelKey: 'productCenter.formSection.manufacturer' },
+      { prop: 'manufacturerName', labelKey: 'productCenter.material.manufacturerName', form: false, sortable: true, minWidth: 160 },
       { prop: 'auditBy', labelKey: 'productCenter.material.auditBy', form: false, minWidth: 120 },
       { prop: 'auditTime', labelKey: 'productCenter.material.auditDate', type: 'date', form: false, minWidth: 120 },
       { prop: 'createBy', labelKey: 'productCenter.material.createBy', form: false, minWidth: 120 },
       { prop: 'createTime', labelKey: 'productCenter.material.createDate', type: 'date', form: false, minWidth: 120 },
-      { prop: 'manufacturerCode', labelKey: 'productCenter.material.manufacturerCode', table: false, sectionKey: 'manufacturer' },
+      { prop: 'manufacturerCode', labelKey: 'productCenter.material.manufacturerCode', table: false, form: false, sectionKey: 'manufacturer' },
       { prop: 'manufacturerItemNo', labelKey: 'productCenter.material.manufacturerItemNo', table: false, sectionKey: 'manufacturer' }
     ]
   },
@@ -285,6 +298,34 @@ const configs = computed<ProductGridConfig[]>(() => [
       { prop: 'editableFlag', labelKey: 'productCenter.common.editableFlag', type: 'boolean' },
       { prop: 'sortOrder', labelKey: 'productCenter.common.sortOrder', type: 'number', sortable: true },
       { prop: 'status', labelKey: 'productCenter.common.status', type: 'status', search: true },
+      { prop: 'remark', labelKey: 'productCenter.common.remark', type: 'textarea', table: false, formSpan: 2 }
+    ]
+  },
+  {
+    key: 'manufacturer',
+    titleKey: 'productCenter.manufacturer.title',
+    descriptionKey: 'productCenter.manufacturer.description',
+    idKey: 'manufacturerId',
+    permissions: {
+      add: 'product:manufacturer:add',
+      edit: 'product:manufacturer:edit',
+      remove: 'product:manufacturer:remove',
+      reference: 'product:manufacturer:reference'
+    },
+    api: productManufacturerApi,
+    singleRowActions: true,
+    defaultSort: { prop: 'sortOrder', order: 'ascending' },
+    fields: [
+      { prop: 'manufacturerCode', labelKey: 'productCenter.manufacturer.code', search: true, required: true, sortable: true, width: 140 },
+      { prop: 'manufacturerName', labelKey: 'productCenter.manufacturer.name', search: true, required: true, sortable: true, minWidth: 180 },
+      { prop: 'manufacturerShortName', labelKey: 'productCenter.manufacturer.shortName', minWidth: 140 },
+      { prop: 'manufacturerFlag', labelKey: 'productCenter.manufacturer.manufacturerFlag', type: 'boolean', search: true, width: 120 },
+      { prop: 'supplierFlag', labelKey: 'productCenter.manufacturer.supplierFlag', type: 'boolean', search: true, width: 120 },
+      { prop: 'contactName', labelKey: 'productCenter.manufacturer.contactName', minWidth: 140 },
+      { prop: 'contactPhone', labelKey: 'productCenter.manufacturer.contactPhone', minWidth: 150 },
+      { prop: 'address', labelKey: 'productCenter.manufacturer.address', type: 'textarea', minWidth: 220 },
+      { prop: 'status', labelKey: 'productCenter.common.status', type: 'status', search: true },
+      { prop: 'sortOrder', labelKey: 'productCenter.common.sortOrder', type: 'number', sortable: true },
       { prop: 'remark', labelKey: 'productCenter.common.remark', type: 'textarea', table: false, formSpan: 2 }
     ]
   },

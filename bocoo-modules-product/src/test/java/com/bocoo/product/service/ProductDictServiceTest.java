@@ -86,6 +86,19 @@ class ProductDictServiceTest {
     }
 
     @Test
+    void deleteDictTypeRejectsEnabledStatus() {
+        ProductDictType entity = new ProductDictType();
+        entity.setDictTypeId(1001L);
+        entity.setDictTypeCode("product_business_type");
+        entity.setStatus("ENABLED");
+        when(dictTypeMapper.selectById(1001L)).thenReturn(entity);
+
+        assertThatThrownBy(() -> dictTypeService.deleteWithValidByIds(new Long[]{1001L}))
+            .isInstanceOf(ServiceException.class);
+        verify(dictTypeMapper, never()).deleteBatchIds(any());
+    }
+
+    @Test
     void dictTypeReferenceCheckCountsItems() {
         ProductDictType entity = new ProductDictType();
         entity.setDictTypeId(1001L);
@@ -147,6 +160,18 @@ class ProductDictServiceTest {
         assertThat(result.getReferenceCount()).isEqualTo(1L);
         assertThat(result.getBlockerReasonKey()).isEqualTo("product.dict.systemItemCannotDelete");
         assertThat(result.getReferenceSummaries()).containsExactly("System dictionary item");
+    }
+
+    @Test
+    void deleteDictItemRejectsEnabledStatus() {
+        ProductDictItem entity = new ProductDictItem();
+        entity.setDictItemId(2001L);
+        entity.setStatus("ENABLED");
+        when(dictItemMapper.selectById(2001L)).thenReturn(entity);
+
+        assertThatThrownBy(() -> dictItemService.deleteWithValidByIds(new Long[]{2001L}))
+            .isInstanceOf(ServiceException.class);
+        verify(dictItemMapper, never()).deleteBatchIds(any());
     }
 
     @Test

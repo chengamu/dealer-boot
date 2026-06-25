@@ -1,12 +1,23 @@
 <template>
-    <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true" label-width="72px" class="product-grid-page__search">
-      <el-form-item v-for="field in searchFields" :key="field.prop" :label="t(field.labelKey)" :prop="field.prop">
+    <el-form
+      v-show="showSearch"
+      ref="queryRef"
+      :model="queryParams"
+      :inline="true"
+      label-width="72px"
+      class="product-grid-page__search"
+      data-agent-scope="product-base-search"
+      :data-agent-entity="config.key"
+    >
+      <el-form-item v-for="field in searchFields" :key="field.prop" :label="t(field.labelKey)" :prop="field.prop" :data-agent-field="field.prop">
         <el-select
           v-if="field.type === 'status' || field.type === 'select' || field.type === 'remote-select' || field.type === 'boolean'"
           v-model="queryParams[field.prop]"
           :placeholder="t('productCenter.common.selectPlaceholder')"
           clearable
           filterable
+          :aria-label="`${t(field.labelKey)}${t('common.search')}`"
+          :data-agent-label="`${t(field.labelKey)}${t('common.search')}`"
           style="width: 150px"
         >
           <template v-if="field.type === 'status'">
@@ -26,49 +37,51 @@
           v-model="queryParams[field.prop]"
           :placeholder="t('productCenter.common.inputPlaceholder')"
           clearable
+          :aria-label="`${t(field.labelKey)}${t('common.search')}`"
+          :data-agent-label="`${t(field.labelKey)}${t('common.search')}`"
           style="width: 160px"
           @keyup.enter="handleQuery"
         />
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" icon="Search" @click="handleQuery">{{ t('common.search') }}</el-button>
-        <el-button icon="Refresh" @click="resetQuery">{{ t('common.reset') }}</el-button>
+        <el-button type="primary" icon="Search" :aria-label="t('common.search')" :data-agent-label="t('common.search')" @click="handleQuery">{{ t('common.search') }}</el-button>
+        <el-button icon="Refresh" :aria-label="t('common.reset')" :data-agent-label="t('common.reset')" @click="resetQuery">{{ t('common.reset') }}</el-button>
       </el-form-item>
     </el-form>
 
-    <el-row :gutter="10" class="mb8 product-grid-page__toolbar">
+    <el-row :gutter="10" class="mb8 product-grid-page__toolbar" data-agent-scope="product-base-toolbar" :data-agent-entity="config.key">
       <el-col :span="1.5">
-        <el-button v-if="!config.readonly" type="primary" plain icon="Plus" @click="handleAdd()" v-hasPermi="[config.permissions.add]">
+        <el-button v-if="!config.readonly" type="primary" plain icon="Plus" :aria-label="t('common.add')" :data-agent-label="t('common.add')" @click="handleAdd()" v-hasPermi="[config.permissions.add]">
           {{ t('common.add') }}
         </el-button>
       </el-col>
       <el-col v-if="isTreeGrid" :span="1.5">
-        <el-button type="info" plain icon="Sort" @click="toggleExpandAll">
+        <el-button type="info" plain icon="Sort" :aria-label="t('common.expandCollapse')" :data-agent-label="t('common.expandCollapse')" @click="toggleExpandAll">
           {{ t('common.expandCollapse') }}
         </el-button>
       </el-col>
       <el-col v-if="!isTreeGrid" :span="1.5">
-        <el-button v-if="!config.readonly" type="success" plain icon="Edit" :disabled="single" @click="handleUpdate()" v-hasPermi="[config.permissions.edit]">
+        <el-button v-if="!config.readonly" type="success" plain icon="Edit" :disabled="single" :aria-label="t('common.edit')" :data-agent-label="t('common.edit')" @click="handleUpdate()" v-hasPermi="[config.permissions.edit]">
           {{ t('common.edit') }}
         </el-button>
       </el-col>
       <el-col v-if="config.superEditPermission && config.api.superUpdate" :span="1.5">
-        <el-button type="warning" plain icon="EditPen" :disabled="single" @click="handleSuperUpdate()" v-hasPermi="[config.superEditPermission]">
+        <el-button type="warning" plain icon="EditPen" :disabled="single" :aria-label="t('productCenter.common.superEdit')" :data-agent-label="t('productCenter.common.superEdit')" data-agent-danger="super-edit" @click="handleSuperUpdate()" v-hasPermi="[config.superEditPermission]">
           {{ t('productCenter.common.superEdit') }}
         </el-button>
       </el-col>
       <el-col v-if="!isTreeGrid" :span="1.5">
-        <el-button v-if="!config.readonly" type="danger" plain icon="Delete" :disabled="multiple" @click="handleDelete()" v-hasPermi="[config.permissions.remove]">
+        <el-button v-if="!config.readonly" type="danger" plain icon="Delete" :disabled="multiple" :aria-label="t('common.delete')" :data-agent-label="t('common.delete')" data-agent-danger="delete" @click="handleDelete()" v-hasPermi="[config.permissions.remove]">
           {{ t('common.delete') }}
         </el-button>
       </el-col>
       <el-col v-if="isSingleRowActions && !isTreeGrid && !config.hideReference" :span="1.5">
-        <el-button type="success" plain icon="View" :disabled="single" @click="handleSelectedReference" v-hasPermi="[config.permissions.reference]">
+        <el-button type="success" plain icon="View" :disabled="single" :aria-label="t('productCenter.common.references')" :data-agent-label="t('productCenter.common.references')" @click="handleSelectedReference" v-hasPermi="[config.permissions.reference]">
           {{ t('productCenter.common.references') }}
         </el-button>
       </el-col>
       <el-col v-if="isSingleRowActions && !isTreeGrid && config.changeLog" :span="1.5">
-        <el-button type="primary" plain icon="Clock" :disabled="single" @click="handleSelectedChangeLog" v-hasPermi="[config.changeLog.permission]">
+        <el-button type="primary" plain icon="Clock" :disabled="single" :aria-label="t(config.changeLog.titleKey || 'productCenter.changeLog.title')" :data-agent-label="t(config.changeLog.titleKey || 'productCenter.changeLog.title')" @click="handleSelectedChangeLog" v-hasPermi="[config.changeLog.permission]">
           {{ t(config.changeLog.titleKey || 'productCenter.changeLog.title') }}
         </el-button>
       </el-col>
@@ -79,6 +92,8 @@
           :icon="action.icon"
           :disabled="single || Boolean(rowActionLoading)"
           :loading="selectedRow ? rowActionLoading === rowActionKey(action, selectedRow) : false"
+          :aria-label="t(action.labelKey)"
+          :data-agent-label="t(action.labelKey)"
           @click="handleSelectedRowAction(action)"
           v-hasPermi="[action.permission]"
         >
@@ -86,12 +101,12 @@
         </el-button>
       </el-col>
       <el-col v-for="action in config.toolbarActions || []" :key="action.labelKey" :span="1.5">
-        <el-button :type="action.type || 'primary'" plain :icon="action.icon" @click="action.handler" v-hasPermi="[action.permission]">
+        <el-button :type="action.type || 'primary'" plain :icon="action.icon" :aria-label="t(action.labelKey)" :data-agent-label="t(action.labelKey)" @click="action.handler" v-hasPermi="[action.permission]">
           {{ t(action.labelKey) }}
         </el-button>
       </el-col>
       <el-col v-if="config.closePath" :span="1.5">
-        <el-button type="warning" plain icon="Close" @click="handleClosePage">
+        <el-button type="warning" plain icon="Close" :aria-label="t('common.close')" :data-agent-label="t('common.close')" @click="handleClosePage">
           {{ t('common.close') }}
         </el-button>
       </el-col>
@@ -109,6 +124,8 @@
       :default-sort="config.defaultSort"
       :highlight-current-row="isSingleRowActions && !isTreeGrid"
       :data-testid="`product-grid-${config.key}`"
+      data-agent-scope="product-base-table"
+      :data-agent-entity="config.key"
       class="product-grid-page__table"
       @selection-change="handleSelectionChange"
       @row-click="handleRowClick"
@@ -167,10 +184,10 @@
             <el-button link type="primary" icon="Edit" :aria-label="t('common.edit')" @click="handleUpdate(row)" v-hasPermi="[config.permissions.edit]" />
           </el-tooltip>
           <el-tooltip v-if="config.superEditPermission && config.api.superUpdate" :content="t('productCenter.common.superEdit')" placement="top">
-            <el-button link type="warning" icon="EditPen" :aria-label="t('productCenter.common.superEdit')" @click="handleSuperUpdate(row)" v-hasPermi="[config.superEditPermission]" />
+            <el-button link type="warning" icon="EditPen" :aria-label="t('productCenter.common.superEdit')" :data-agent-label="t('productCenter.common.superEdit')" data-agent-danger="super-edit" @click="handleSuperUpdate(row)" v-hasPermi="[config.superEditPermission]" />
           </el-tooltip>
           <el-tooltip v-if="!config.readonly && (!isSingleRowActions || isTreeGrid)" :content="t('common.delete')" placement="top">
-            <el-button link type="primary" icon="Delete" :aria-label="t('common.delete')" @click="handleDelete(row)" v-hasPermi="[config.permissions.remove]" />
+            <el-button link type="primary" icon="Delete" :aria-label="t('common.delete')" :data-agent-label="t('common.delete')" data-agent-danger="delete" @click="handleDelete(row)" v-hasPermi="[config.permissions.remove]" />
           </el-tooltip>
           <el-tooltip v-if="!config.hideReference && isTreeGrid" :content="t('productCenter.common.references')" placement="top">
             <el-button link type="primary" icon="View" :aria-label="t('productCenter.common.references')" @click="handleReference(row)" v-hasPermi="[config.permissions.reference]" />
@@ -208,17 +225,21 @@
       :close-on-click-modal="false"
       :close-on-press-escape="false"
       :before-close="handleDrawerBeforeClose"
+      data-agent-scope="product-base-form-drawer"
+      :data-agent-entity="config.key"
       @closed="handleDrawerClosed"
     >
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="136px" class="product-grid-page__form">
+      <el-form ref="formRef" :model="form" :rules="rules" label-width="136px" class="product-grid-page__form" data-agent-scope="product-base-form" :data-agent-entity="config.key">
         <template v-for="section in formSections" :key="section.key">
           <div v-if="section.labelKey" class="product-grid-page__section-title">{{ t(section.labelKey) }}</div>
-          <el-form-item v-for="field in section.fields" :key="field.prop" :label="t(field.labelKey)" :prop="field.prop" :class="formItemClass(field)">
+          <el-form-item v-for="field in section.fields" :key="field.prop" :label="t(field.labelKey)" :prop="field.prop" :class="formItemClass(field)" :data-agent-field="field.prop">
           <el-input-number
             v-if="field.type === 'number'"
             v-model="form[field.prop] as number"
             :min="0"
             :disabled="drawerReadonly"
+            :aria-label="t(field.labelKey)"
+            :data-agent-label="t(field.labelKey)"
             controls-position="right"
             class="product-grid-page__number"
           />
@@ -236,6 +257,8 @@
             :data="fieldTreeOptions(field)"
             :props="{ label: 'label', value: 'value', children: 'children' }"
             :disabled="drawerReadonly || isTreeParentLocked(field) || field.readonly?.(form)"
+            :aria-label="t(field.labelKey)"
+            :data-agent-label="t(field.labelKey)"
             filterable
             clearable
             check-strictly
@@ -243,88 +266,9 @@
             style="width: 100%"
             @change="handleSelectChange(field, $event)"
           />
-          <el-select v-else-if="field.type === 'select' || field.type === 'remote-select'" v-model="form[field.prop]" :disabled="drawerReadonly || isTreeParentLocked(field) || field.readonly?.(form)" :multiple="field.multiple" filterable clearable style="width: 100%" @change="handleSelectChange(field, $event)">
+          <el-select v-else-if="field.type === 'select' || field.type === 'remote-select'" v-model="form[field.prop]" :disabled="drawerReadonly || isTreeParentLocked(field) || field.readonly?.(form)" :multiple="field.multiple" :aria-label="t(field.labelKey)" :data-agent-label="t(field.labelKey)" filterable clearable style="width: 100%" @change="handleSelectChange(field, $event)">
             <el-option v-for="option in fieldOptions(field)" :key="String(option.value)" :label="option.label" :value="option.value" />
           </el-select>
-          <div v-else-if="field.type === 'rule-condition'" class="product-grid-page__builder">
-            <div v-for="(row, index) in conditionRows(field)" :key="index" class="product-grid-page__builder-row product-grid-page__builder-row--condition">
-              <el-select v-model="row.left" :disabled="drawerReadonly" filterable>
-                <el-option v-for="option in conditionFieldOptions" :key="option.value" :label="option.label" :value="option.value" />
-              </el-select>
-              <el-select v-model="row.op" :disabled="drawerReadonly">
-                <el-option v-for="option in conditionOperatorOptions" :key="option.value" :label="option.label" :value="option.value" />
-              </el-select>
-              <el-input v-model="row.right" :disabled="drawerReadonly" :placeholder="t('productCenter.common.inputPlaceholder')" />
-              <el-button v-if="!drawerReadonly" link type="primary" icon="Delete" @click="removeCondition(field, index)" />
-            </div>
-            <el-button v-if="!drawerReadonly" plain type="primary" icon="Plus" @click="addCondition(field)">{{ t('productCenter.engineering.addCondition') }}</el-button>
-          </div>
-          <div v-else-if="field.type === 'rule-action'" class="product-grid-page__builder">
-            <div class="product-grid-page__builder-row product-grid-page__builder-row--action">
-              <el-select v-model="actionDraft.type" :disabled="drawerReadonly" @change="syncActionJson(field)">
-                <el-option v-for="option in ruleActionOptions" :key="option.value" :label="option.label" :value="option.value" />
-              </el-select>
-              <el-select v-if="actionNeedsItem" v-model="actionDraft.itemCode" :disabled="drawerReadonly" filterable clearable :placeholder="t('productCenter.engineering.selectItem')" @change="syncActionJson(field)">
-                <el-option v-for="option in engineeringItemOptions" :key="String(option.value)" :label="option.label" :value="option.value" />
-              </el-select>
-              <el-select v-if="actionNeedsScope" v-model="actionDraft.scopeCode" :disabled="drawerReadonly" filterable clearable :placeholder="t('productCenter.engineering.selectScope')" @change="syncActionJson(field)">
-                <el-option v-for="option in engineeringScopeOptions" :key="String(option.value)" :label="option.label" :value="option.value" />
-              </el-select>
-              <el-select v-if="actionNeedsAsset" v-model="actionDraft.assetCode" :disabled="drawerReadonly" filterable clearable :placeholder="t('productCenter.engineering.selectMediaAsset')" @change="syncActionAsset(field)">
-                <el-option v-for="option in mediaAssetOptions" :key="String(option.value)" :label="option.label" :value="option.value" />
-              </el-select>
-            </div>
-          </div>
-          <div v-else-if="field.type === 'fixed-items'" class="product-grid-page__builder">
-            <el-table :data="fixedItemRows(field)" border size="small">
-              <el-table-column :label="t('productCenter.engineering.itemType')" min-width="140">
-                <template #default="{ row }">
-                  <el-select v-model="row.itemType" :disabled="drawerReadonly" filterable>
-                    <el-option v-for="option in engineeringItemTypeOptions" :key="String(option.value)" :label="option.label" :value="option.value" />
-                  </el-select>
-                </template>
-              </el-table-column>
-              <el-table-column :label="t('productCenter.engineering.fixedObjectType')" min-width="150">
-                <template #default="{ row }">
-                  <el-select v-model="row.objectType" :disabled="drawerReadonly" filterable>
-                    <el-option v-for="option in outputObjectTypeOptions" :key="String(option.value)" :label="option.label" :value="option.value" />
-                  </el-select>
-                </template>
-              </el-table-column>
-              <el-table-column :label="t('productCenter.engineering.fixedObject')" min-width="220">
-                <template #default="{ row }">
-                  <el-input v-model="row.objectCode" :disabled="drawerReadonly" :placeholder="t('productCenter.engineering.selectOrEnterObject')" />
-                </template>
-              </el-table-column>
-              <el-table-column :label="t('productCenter.engineering.defaultQty')" width="120">
-                <template #default="{ row }">
-                  <el-input-number v-model="row.qty" :disabled="drawerReadonly" :min="0" controls-position="right" />
-                </template>
-              </el-table-column>
-              <el-table-column :label="t('common.operate')" width="88" align="center">
-                <template #default="{ $index }">
-                  <el-button v-if="!drawerReadonly" link type="primary" icon="Delete" @click="removeFixedItem(field, $index)" />
-                </template>
-              </el-table-column>
-            </el-table>
-            <el-button v-if="!drawerReadonly" plain type="primary" icon="Plus" @click="addFixedItem(field)">{{ t('productCenter.engineering.addFixedItem') }}</el-button>
-          </div>
-          <div v-else-if="field.type === 'case-input'" class="product-grid-page__builder product-grid-page__builder--case">
-            <el-input-number v-model="caseInputDraft.width" :disabled="drawerReadonly" :min="0" controls-position="right" :placeholder="t('productCenter.engineering.width')" @change="syncCaseInputJson(field)" />
-            <el-input-number v-model="caseInputDraft.height" :disabled="drawerReadonly" :min="0" controls-position="right" :placeholder="t('productCenter.engineering.height')" @change="syncCaseInputJson(field)" />
-            <el-input-number v-model="caseInputDraft.combinedThickness" :disabled="drawerReadonly" :min="0" controls-position="right" :placeholder="t('productCenter.engineering.combinedThickness')" @change="syncCaseInputJson(field)" />
-            <el-select v-model="caseInputDraft.systemCode" :disabled="drawerReadonly" filterable clearable :placeholder="t('productCenter.engineering.selectedSystem')" @change="syncCaseInputJson(field)">
-              <el-option v-for="option in engineeringScopeOptions" :key="String(option.value)" :label="option.label" :value="option.value" />
-            </el-select>
-          </div>
-          <div v-else-if="field.type === 'expected-result'" class="product-grid-page__builder product-grid-page__builder--case">
-            <el-select v-model="expectedDraft.resultStatus" :disabled="drawerReadonly" :placeholder="t('productCenter.engineering.resultStatus')" @change="syncExpectedJson(field)">
-              <el-option label="OK" value="OK" />
-              <el-option label="WARNING" value="WARNING" />
-              <el-option label="BLOCKER" value="BLOCKER" />
-            </el-select>
-            <el-input v-model="expectedDraft.note" :disabled="drawerReadonly" :placeholder="t('productCenter.common.remark')" @input="syncExpectedJson(field)" />
-          </div>
           <div v-else-if="field.type === 'material-attributes'" class="product-grid-page__builder product-grid-page__material-attributes">
             <el-alert :title="t('productCenter.material.typeAttributeHint')" type="info" show-icon :closable="false" />
             <el-empty v-if="!materialAttributeRows(field).length" :description="t('productCenter.material.noTypeAttributes')" />
@@ -369,8 +313,8 @@
               </el-select>
             </div>
           </div>
-          <el-input v-else-if="field.type === 'textarea'" v-model="form[field.prop] as string" type="textarea" :rows="3" :disabled="drawerReadonly || isTreeParentLocked(field) || field.readonly?.(form)" :placeholder="t('productCenter.common.inputPlaceholder')" />
-          <el-input v-else v-model="form[field.prop] as string" :disabled="drawerReadonly || isTreeParentLocked(field) || field.readonly?.(form)" :placeholder="t('productCenter.common.inputPlaceholder')" />
+          <el-input v-else-if="field.type === 'textarea'" v-model="form[field.prop] as string" type="textarea" :rows="3" :disabled="drawerReadonly || isTreeParentLocked(field) || field.readonly?.(form)" :placeholder="t('productCenter.common.inputPlaceholder')" :aria-label="t(field.labelKey)" :data-agent-label="t(field.labelKey)" />
+          <el-input v-else v-model="form[field.prop] as string" :disabled="drawerReadonly || isTreeParentLocked(field) || field.readonly?.(form)" :placeholder="t('productCenter.common.inputPlaceholder')" :aria-label="t(field.labelKey)" :data-agent-label="t(field.labelKey)" />
         </el-form-item>
         </template>
         <div v-if="attachmentEnabled" v-loading="attachmentLoading" class="product-grid-page__attachments">
@@ -382,7 +326,7 @@
               :http-request="uploadAttachment"
               :before-upload="beforeAttachmentUpload"
             >
-              <el-button type="primary" plain icon="Upload">{{ t('productCenter.common.uploadAttachment') }}</el-button>
+              <el-button type="primary" plain icon="Upload" data-agent-danger="upload">{{ t('productCenter.common.uploadAttachment') }}</el-button>
             </el-upload>
           </div>
           <el-alert
@@ -401,7 +345,7 @@
                   <el-button link type="primary" icon="View" :aria-label="t('productCenter.common.open')" @click="openAttachment(row)" />
                 </el-tooltip>
                 <el-tooltip v-if="!drawerReadonly" :content="t('common.delete')" placement="top">
-                  <el-button link type="primary" icon="Delete" :aria-label="t('common.delete')" @click="removeAttachment(row)" />
+                  <el-button link type="primary" icon="Delete" :aria-label="t('common.delete')" :data-agent-label="t('common.delete')" data-agent-danger="delete-attachment" @click="removeAttachment(row)" />
                 </el-tooltip>
               </template>
             </el-table-column>
@@ -411,8 +355,8 @@
       </el-form>
       <template #footer>
         <div class="product-grid-page__drawer-actions">
-          <el-button @click="cancel">{{ drawerReadonly ? t('common.close') : t('common.cancel') }}</el-button>
-          <el-button v-if="!drawerReadonly" type="primary" :loading="submitLoading" @click="submitForm">{{ t('common.confirm') }}</el-button>
+          <el-button :aria-label="drawerReadonly ? t('common.close') : t('common.cancel')" :data-agent-label="drawerReadonly ? t('common.close') : t('common.cancel')" @click="cancel">{{ drawerReadonly ? t('common.close') : t('common.cancel') }}</el-button>
+          <el-button v-if="!drawerReadonly" type="primary" :loading="submitLoading" :aria-label="t('common.confirm')" :data-agent-label="t('common.confirm')" data-agent-danger="save" @click="submitForm">{{ t('common.confirm') }}</el-button>
         </div>
       </template>
     </el-drawer>
@@ -481,7 +425,7 @@ import { useUnsavedChangesGuard } from '@/composables/useUnsavedChangesGuard'
 export interface ProductFieldConfig {
   prop: string
   labelKey: string
-  type?: 'text' | 'textarea' | 'number' | 'status' | 'date' | 'datetime' | 'url' | 'select' | 'boolean' | 'remote-select' | 'tree-select' | 'rule-condition' | 'rule-action' | 'fixed-items' | 'case-input' | 'expected-result' | 'material-attributes'
+  type?: 'text' | 'textarea' | 'number' | 'status' | 'date' | 'datetime' | 'url' | 'select' | 'boolean' | 'remote-select' | 'tree-select' | 'material-attributes'
   options?: Array<{ label?: string; value?: string | number; record?: ProductRecord }>
   optionLoader?: (form: ProductRecord) => Promise<Array<{ label?: string; value?: string | number; record?: ProductRecord }>>
   fillFields?: Record<string, string | undefined>
@@ -617,11 +561,6 @@ const queryParams = reactive<ProductPageQuery>({
   pageSize: 10
 })
 const remoteOptions = ref<Record<string, Array<{ label?: string; value?: string | number; record?: ProductRecord }>>>({})
-const conditionDrafts = ref<Record<string, Array<{ left: string; op: string; right: string | number }>>>({})
-const fixedItemDrafts = ref<Record<string, Array<Record<string, unknown>>>>({})
-const actionDraft = ref<Record<string, unknown>>({ type: 'WARN' })
-const caseInputDraft = ref<Record<string, unknown>>({})
-const expectedDraft = ref<Record<string, unknown>>({ resultStatus: 'OK' })
 const materialAttributeDrafts = ref<Record<string, ProductRecord[]>>({})
 const materialAttributeDraftKeys = ref<Record<string, string>>({})
 const unsavedChangesGuard = useUnsavedChangesGuard({
@@ -782,7 +721,7 @@ function defaultColumnMinWidth(field: ProductFieldConfig) {
 
 function formItemClass(field: ProductFieldConfig) {
   return {
-    'product-grid-page__form-item--full': field.formSpan === 2 || field.type === 'textarea' || field.type === 'url' || field.type === 'rule-condition' || field.type === 'rule-action' || field.type === 'fixed-items' || field.type === 'case-input' || field.type === 'expected-result' || field.type === 'material-attributes',
+    'product-grid-page__form-item--full': field.formSpan === 2 || field.type === 'textarea' || field.type === 'url' || field.type === 'material-attributes',
     'product-grid-page__form-item--compact': field.type === 'number' || field.type === 'boolean'
   }
 }
@@ -866,11 +805,6 @@ function reset() {
   })
   form.value = next
   attachmentRows.value = []
-  conditionDrafts.value = {}
-  fixedItemDrafts.value = {}
-  actionDraft.value = { type: 'WARN' }
-  caseInputDraft.value = {}
-  expectedDraft.value = { resultStatus: 'OK' }
   materialAttributeDrafts.value = {}
   materialAttributeDraftKeys.value = {}
   superEditMode.value = false
@@ -1210,29 +1144,6 @@ function parseJsonObject(value: unknown) {
 
 function hydrateBuilderDrafts() {
   formFields.value.forEach((field) => {
-    if (field.type === 'rule-condition') {
-      const parsed = parseJsonObject(form.value[field.prop])
-      conditionDrafts.value[field.prop] = Array.isArray(parsed.all) ? parsed.all as Array<{ left: string; op: string; right: string | number }> : []
-    }
-    if (field.type === 'rule-action') {
-      actionDraft.value = { type: 'WARN', ...parseJsonObject(form.value[field.prop]) }
-    }
-    if (field.type === 'fixed-items') {
-      fixedItemDrafts.value[field.prop] = parseJsonArray(form.value[field.prop])
-    }
-    if (field.type === 'case-input') {
-      const parsed = parseJsonObject(form.value[field.prop])
-      const selectedItems = parseJsonObject(parsed.selectedItems)
-      caseInputDraft.value = {
-        width: parsed.width,
-        height: parsed.height,
-        combinedThickness: parsed.combinedThickness,
-        systemCode: selectedItems.SYSTEM
-      }
-    }
-  if (field.type === 'expected-result') {
-      expectedDraft.value = { resultStatus: 'OK', ...parseJsonObject(form.value[field.prop]) }
-    }
   })
 }
 
@@ -1273,126 +1184,6 @@ function syncMaterialAttributes(field: ProductFieldConfig) {
   const rows = materialAttributeRows(field)
   form.value[field.prop] = rows.filter((row) => row.valueText || row.valueNumber !== undefined || row.valueBool !== undefined)
 }
-
-function conditionRows(field: ProductFieldConfig) {
-  if (!conditionDrafts.value[field.prop]) {
-    const parsed = parseJsonObject(form.value[field.prop])
-    conditionDrafts.value[field.prop] = Array.isArray(parsed.all) ? parsed.all as Array<{ left: string; op: string; right: string | number }> : []
-  }
-  return conditionDrafts.value[field.prop]
-}
-
-function syncConditionJson(field: ProductFieldConfig) {
-  form.value[field.prop] = JSON.stringify({ all: conditionRows(field).filter((row) => row.left && row.op) })
-}
-
-function addCondition(field: ProductFieldConfig) {
-  conditionRows(field).push({ left: 'input.width', op: 'GT', right: '' })
-  syncConditionJson(field)
-}
-
-function removeCondition(field: ProductFieldConfig, index: number) {
-  conditionRows(field).splice(index, 1)
-  syncConditionJson(field)
-}
-
-function syncActionJson(field: ProductFieldConfig) {
-  const data: Record<string, unknown> = { type: actionDraft.value.type || 'WARN' }
-  ;['itemCode', 'scopeCode', 'assetCode', 'assetNameCn', 'assetNameEn'].forEach((key) => {
-    if (actionDraft.value[key]) data[key] = actionDraft.value[key]
-  })
-  form.value[field.prop] = JSON.stringify(data)
-}
-
-function syncActionAsset(field: ProductFieldConfig) {
-  const option = mediaAssetOptions.value.find((item) => item.value === actionDraft.value.assetCode)
-  if (option?.record) {
-    actionDraft.value.assetNameCn = option.record.assetNameCn
-    actionDraft.value.assetNameEn = option.record.assetNameEn
-  }
-  syncActionJson(field)
-}
-
-function fixedItemRows(field: ProductFieldConfig) {
-  if (!fixedItemDrafts.value[field.prop]) fixedItemDrafts.value[field.prop] = parseJsonArray(form.value[field.prop])
-  return fixedItemDrafts.value[field.prop]
-}
-
-function syncFixedItemsJson(field: ProductFieldConfig) {
-  form.value[field.prop] = JSON.stringify(fixedItemRows(field).filter((row) => row.itemType || row.objectCode))
-}
-
-function addFixedItem(field: ProductFieldConfig) {
-  fixedItemRows(field).push({ itemType: 'SYSTEM', objectType: 'COMPONENT', qty: 1 })
-  syncFixedItemsJson(field)
-}
-
-function removeFixedItem(field: ProductFieldConfig, index: number) {
-  fixedItemRows(field).splice(index, 1)
-  syncFixedItemsJson(field)
-}
-
-function syncCaseInputJson(field: ProductFieldConfig) {
-  const data: Record<string, unknown> = {}
-  ;['width', 'height', 'combinedThickness'].forEach((key) => {
-    if (caseInputDraft.value[key] !== undefined && caseInputDraft.value[key] !== '') data[key] = caseInputDraft.value[key]
-  })
-  if (caseInputDraft.value.systemCode) data.selectedItems = { SYSTEM: caseInputDraft.value.systemCode }
-  form.value[field.prop] = JSON.stringify(data)
-}
-
-function syncExpectedJson(field: ProductFieldConfig) {
-  const data: Record<string, unknown> = { resultStatus: expectedDraft.value.resultStatus || 'OK' }
-  if (expectedDraft.value.note) data.note = expectedDraft.value.note
-  form.value[field.prop] = JSON.stringify(data)
-}
-
-const conditionFieldOptions = computed(() => [
-  { label: t('productCenter.engineering.conditionWidth'), value: 'input.width' },
-  { label: t('productCenter.engineering.conditionHeight'), value: 'input.height' },
-  { label: t('productCenter.engineering.conditionThickness'), value: 'input.combinedThickness' },
-  { label: t('productCenter.engineering.conditionSystem'), value: 'selected.SYSTEM' },
-  { label: t('productCenter.engineering.conditionMainFabric'), value: 'selected.MAIN_FABRIC' },
-  { label: t('productCenter.engineering.conditionSecondFabric'), value: 'selected.SECOND_FABRIC' }
-])
-
-const fallbackConditionOperatorOptions = computed(() => [
-  { label: t('productCenter.engineering.opEq'), value: 'EQ' },
-  { label: t('productCenter.engineering.opNe'), value: 'NE' },
-  { label: t('productCenter.engineering.opGt'), value: 'GT' },
-  { label: t('productCenter.engineering.opGte'), value: 'GTE' },
-  { label: t('productCenter.engineering.opLt'), value: 'LT' },
-  { label: t('productCenter.engineering.opLte'), value: 'LTE' }
-])
-
-const fallbackRuleActionOptions = computed(() => [
-  { label: t('productCenter.engineering.actionWarn'), value: 'WARN' },
-  { label: t('productCenter.engineering.actionDisableOption'), value: 'DISABLE_OPTION' },
-  { label: t('productCenter.engineering.actionBlock'), value: 'BLOCK' },
-  { label: t('productCenter.engineering.actionRequireItem'), value: 'REQUIRE_ITEM' },
-  { label: t('productCenter.engineering.actionMediaHint'), value: 'MEDIA_HINT' }
-])
-
-const conditionOperatorOptions = computed(() => {
-  const options = remoteOptions.value.__engineeringOperators || []
-  return options.length ? options : fallbackConditionOperatorOptions.value
-})
-const ruleActionOptions = computed(() => {
-  const options = remoteOptions.value.__engineeringActions || []
-  return options.length ? options : fallbackRuleActionOptions.value
-})
-const engineeringItemOptions = computed(() => (remoteOptions.value.__engineeringItems || []).map((item) => ({ ...item, value: String(item.value) })))
-const engineeringScopeOptions = computed(() => (remoteOptions.value.__engineeringScopes || []).map((item) => ({ ...item, value: String(item.value) })))
-const mediaAssetOptions = computed(() => remoteOptions.value.__mediaAssets || [])
-const engineeringItemTypeOptions = computed(() => remoteOptions.value.__engineeringItemTypes || [])
-const outputObjectTypeOptions = computed(() => [
-  { label: t('productCenter.engineering.outputObjectMaterial'), value: 'MATERIAL' },
-  { label: t('productCenter.engineering.outputObjectComponent'), value: 'COMPONENT' },
-  { label: t('productCenter.engineering.outputObjectMedia'), value: 'MEDIA' }
-])
-const actionNeedsItem = computed(() => ['DISABLE_OPTION', 'REQUIRE_ITEM'].includes(String(actionDraft.value.type || '')))
-const actionNeedsScope = computed(() => String(actionDraft.value.type || '') === 'DISABLE_OPTION')
-const actionNeedsAsset = computed(() => String(actionDraft.value.type || '') === 'MEDIA_HINT')
 
 async function confirmDiscardChanges() {
   try {
@@ -1480,11 +1271,6 @@ async function submitForm() {
     }
   })
   formFields.value.forEach((field) => {
-    if (field.type === 'rule-condition') syncConditionJson(field)
-    if (field.type === 'rule-action') syncActionJson(field)
-    if (field.type === 'fixed-items') syncFixedItemsJson(field)
-    if (field.type === 'case-input') syncCaseInputJson(field)
-    if (field.type === 'expected-result') syncExpectedJson(field)
     if (field.type === 'material-attributes') syncMaterialAttributes(field)
   })
   submitLoading.value = true
@@ -1519,48 +1305,62 @@ function beforeAttachmentUpload(file: UploadRawFile) {
 
 async function uploadAttachment(options: UploadRequestOptions) {
   if (!props.config.attachments || !currentRecordId.value) return
-  const formData = new FormData()
-  formData.append(options.filename, options.file)
-  const uploadResponse = await service.post('/system/oss/upload', formData) as unknown as { data?: ProductRecord }
-  const uploadData = uploadResponse.data || {}
-  const assetCode = `ASSET_${props.config.attachments.targetType}_${currentRecordId.value}_${Date.now()}`
-  await productMediaAssetApi.add({
-    assetCode,
-    assetNameCn: String(uploadData.fileName || options.file.name || assetCode),
-    assetNameEn: String(uploadData.fileName || options.file.name || assetCode),
-    assetType: String(options.file.type || '').startsWith('image/') ? 'IMAGE' : 'FILE',
-    usageType: props.config.attachments.defaultUsageType || 'REFERENCE',
-    languageCode: localeStore.language,
-    visibility: 'INTERNAL',
-    ossId: uploadData.ossId,
-    url: uploadData.url,
-    versionNo: 1,
-    status: 'ENABLED',
-    delFlag: '0'
-  })
-  const assetResponse = await productMediaAssetApi.options({ assetCode, status: 'ENABLED' })
-  const assetList = Array.isArray(assetResponse) ? assetResponse : assetResponse.data || []
-  const asset = assetList.find((item) => item.assetCode === assetCode) || assetList[0]
-  if (!asset?.assetId) {
+  let createdAssetId: string | number | undefined
+  try {
+    const formData = new FormData()
+    formData.append(options.filename, options.file)
+    const uploadResponse = await service.post('/system/oss/upload', formData) as unknown as { data?: ProductRecord }
+    const uploadData = uploadResponse.data || {}
+    const assetCode = `ASSET_${props.config.attachments.targetType}_${currentRecordId.value}_${Date.now()}`
+    await productMediaAssetApi.add({
+      assetCode,
+      assetNameCn: String(uploadData.fileName || options.file.name || assetCode),
+      assetNameEn: String(uploadData.fileName || options.file.name || assetCode),
+      assetType: String(options.file.type || '').startsWith('image/') ? 'IMAGE' : 'FILE',
+      usageType: props.config.attachments.defaultUsageType || 'REFERENCE',
+      languageCode: localeStore.language,
+      visibility: 'INTERNAL',
+      ossId: uploadData.ossId,
+      url: uploadData.url,
+      versionNo: 1,
+      status: 'ENABLED',
+      delFlag: '0'
+    })
+    const assetResponse = await productMediaAssetApi.options({ assetCode, status: 'ENABLED' })
+    const assetList = Array.isArray(assetResponse) ? assetResponse : assetResponse.data || []
+    const asset = assetList.find((item) => item.assetCode === assetCode) || assetList[0]
+    if (!asset?.assetId) {
+      ElMessage.error(t('common.upload.failed'))
+      return
+    }
+    createdAssetId = asset.assetId as string | number
+    await productMediaBindingApi.add({
+      assetId: asset.assetId,
+      assetCode,
+      targetType: props.config.attachments.targetType,
+      targetId: currentRecordId.value,
+      targetCode: String(form.value[props.config.attachments.targetCodeField] || ''),
+      usageType: props.config.attachments.defaultUsageType || 'REFERENCE',
+      visibility: 'INTERNAL',
+      languageCode: localeStore.language,
+      requiredForPublish: '0',
+      sortOrder: attachmentRows.value.length + 1,
+      status: 'ENABLED',
+      delFlag: '0'
+    })
+    ElMessage.success(t('common.upload.success'))
+    await loadAttachments(form.value)
+  } catch (error) {
+    if (createdAssetId) {
+      try {
+        await productMediaAssetApi.remove(createdAssetId)
+      } catch (rollbackError) {
+        console.warn('Failed to rollback media asset after binding upload failure.', rollbackError)
+      }
+    }
     ElMessage.error(t('common.upload.failed'))
-    return
+    throw error
   }
-  await productMediaBindingApi.add({
-    assetId: asset?.assetId,
-    assetCode,
-    targetType: props.config.attachments.targetType,
-    targetId: currentRecordId.value,
-    targetCode: String(form.value[props.config.attachments.targetCodeField] || ''),
-    usageType: props.config.attachments.defaultUsageType || 'REFERENCE',
-    visibility: 'INTERNAL',
-    languageCode: localeStore.language,
-    requiredForPublish: '0',
-    sortOrder: attachmentRows.value.length + 1,
-    status: 'ENABLED',
-    delFlag: '0'
-  })
-  ElMessage.success(t('common.upload.success'))
-  await loadAttachments(form.value)
 }
 
 async function openAttachment(row: ProductRecord) {
@@ -1701,17 +1501,7 @@ defineExpose({
   display: grid;
   gap: 10px;
   margin-bottom: 10px;
-}
-
-.product-grid-page__builder-row--condition {
-  grid-template-columns: minmax(0, 1.2fr) 120px minmax(0, 1fr) 36px;
-}
-
-.product-grid-page__builder-row--action {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-.product-grid-page__builder--case {
+}.product-grid-page__builder--case {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
@@ -1752,9 +1542,6 @@ defineExpose({
     grid-template-columns: 1fr;
   }
 
-  .product-grid-page__builder-row--condition,
-  .product-grid-page__builder-row--action,
-  .product-grid-page__builder--case,
   .product-grid-page__material-attribute-row,
   .product-grid-page__material-attribute-row--number {
     grid-template-columns: 1fr;

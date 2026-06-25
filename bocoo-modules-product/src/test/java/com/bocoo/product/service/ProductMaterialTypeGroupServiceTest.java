@@ -94,11 +94,24 @@ class ProductMaterialTypeGroupServiceTest {
         ProductMaterialTypeGroup current = new ProductMaterialTypeGroup();
         current.setGroupId(1L);
         current.setGroupCode("CONTROL");
+        current.setStatus("DISABLED");
         when(groupMapper.selectById(1L)).thenReturn(current);
         when(typeMapper.selectCount(any())).thenReturn(1L);
 
         assertThatThrownBy(() -> service.deleteWithValidByIds(new Long[] {1L}))
             .isInstanceOf(ServiceException.class);
+    }
+
+    @Test
+    void enabledGroupCannotBeDeleted() {
+        ProductMaterialTypeGroup current = new ProductMaterialTypeGroup();
+        current.setGroupId(1L);
+        current.setStatus("ENABLED");
+        when(groupMapper.selectById(1L)).thenReturn(current);
+
+        assertThatThrownBy(() -> service.deleteWithValidByIds(new Long[] {1L}))
+            .isInstanceOf(ServiceException.class);
+        verify(groupMapper, never()).deleteBatchIds(any());
     }
 
     @Test

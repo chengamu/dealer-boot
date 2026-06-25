@@ -68,6 +68,22 @@ export function getGoogleClientId() {
   return getAppConfig<string>('VITE_APP_GOOGLE_CLIENT_ID', '')
 }
 
+export function isPageAgentEnabled() {
+  return String(getAppConfig<string | boolean>('VITE_PAGE_AGENT_ENABLED', false)) === 'true'
+}
+
+export function getPageAgentApiKey() {
+  return getAppConfig<string>('VITE_PAGE_AGENT_API_KEY', '')
+}
+
+export function getPageAgentBaseUrl() {
+  return getAppConfig<string>('VITE_PAGE_AGENT_BASE_URL', '')
+}
+
+export function getPageAgentModel() {
+  return getAppConfig<string>('VITE_PAGE_AGENT_MODEL', '')
+}
+
 export function isProduction() {
   return getAppEnv() === 'production'
 }
@@ -89,6 +105,10 @@ export const AppConfig = {
   getMonitorAdminUrl,
   getXxlJobUrl,
   getGoogleClientId,
+  isPageAgentEnabled,
+  getPageAgentApiKey,
+  getPageAgentBaseUrl,
+  getPageAgentModel,
   isProduction,
   isDevelopment
 }

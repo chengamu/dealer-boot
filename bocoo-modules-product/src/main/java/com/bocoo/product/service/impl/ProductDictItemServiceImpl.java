@@ -96,6 +96,9 @@ public class ProductDictItemServiceImpl extends ProductServiceSupport implements
             if (entity != null && Boolean.TRUE.equals(entity.getSystemFlag())) {
                 throw ServiceException.ofMessageKey("product.dict.systemItemCannotDelete");
             }
+            if (entity != null) {
+                assertDisabledBeforeDelete(entity.getStatus());
+            }
             assertNoReferences(checkReferences(id));
         }
         return remove(dictItemMapper, ids);

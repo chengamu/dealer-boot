@@ -110,6 +110,12 @@ abstract class ProductServiceSupport {
         }
     }
 
+    protected void assertDisabledBeforeDelete(String status) {
+        if (isEnabledStatus(status)) {
+            throw ServiceException.ofMessageKey("product.base.delete.enabledDenied");
+        }
+    }
+
     protected boolean isEnabledStatus(String status) {
         return status != null && STATUS_ENABLED.equalsIgnoreCase(status);
     }

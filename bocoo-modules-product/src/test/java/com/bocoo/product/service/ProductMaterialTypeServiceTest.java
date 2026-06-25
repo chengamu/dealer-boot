@@ -103,11 +103,24 @@ class ProductMaterialTypeServiceTest {
         ProductMaterialType current = new ProductMaterialType();
         current.setMaterialTypeId(1L);
         current.setMaterialTypeCode("FABRIC");
+        current.setStatus("DISABLED");
         when(typeMapper.selectById(1L)).thenReturn(current);
         when(materialMapper.selectCount(any())).thenReturn(1L);
 
         assertThatThrownBy(() -> service.deleteWithValidByIds(new Long[] {1L}))
             .isInstanceOf(ServiceException.class);
+    }
+
+    @Test
+    void enabledTypeCannotBeDeleted() {
+        ProductMaterialType current = new ProductMaterialType();
+        current.setMaterialTypeId(1L);
+        current.setStatus("ENABLED");
+        when(typeMapper.selectById(1L)).thenReturn(current);
+
+        assertThatThrownBy(() -> service.deleteWithValidByIds(new Long[] {1L}))
+            .isInstanceOf(ServiceException.class);
+        verify(typeMapper, never()).deleteBatchIds(any());
     }
 
     private ProductMaterialTypeGroup group() {

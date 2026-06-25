@@ -1,23 +1,23 @@
 <template>
-  <div class="app-container product-center-page product-dict-page">
+  <div class="app-container product-center-page product-dict-page" data-agent-scope="product-base-page" data-agent-entity="product-dict">
     <div class="product-dict-page__search-bar">
-      <el-form ref="typeQueryRef" :model="typeQuery" :inline="true" class="product-dict-page__search">
-        <el-form-item :label="t('productCenter.productDict.typeName')" prop="dictTypeNameCn">
-          <el-input v-model="typeQuery.dictTypeNameCn" :placeholder="t('productCenter.common.inputPlaceholder')" clearable @keyup.enter="queryTypes" />
+      <el-form ref="typeQueryRef" :model="typeQuery" :inline="true" class="product-dict-page__search" data-agent-scope="product-dict-type-search">
+        <el-form-item :label="t('productCenter.productDict.typeName')" prop="dictTypeNameCn" data-agent-field="dictTypeNameCn">
+          <el-input v-model="typeQuery.dictTypeNameCn" :placeholder="t('productCenter.common.inputPlaceholder')" clearable :aria-label="t('productCenter.productDict.typeName')" :data-agent-label="t('productCenter.productDict.typeName')" @keyup.enter="queryTypes" />
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" icon="Search" @click="queryTypes">{{ t('common.search') }}</el-button>
-          <el-button icon="Refresh" @click="resetTypeQuery">{{ t('common.reset') }}</el-button>
+          <el-button type="primary" icon="Search" :aria-label="t('common.search')" :data-agent-label="t('common.search')" @click="queryTypes">{{ t('common.search') }}</el-button>
+          <el-button icon="Refresh" :aria-label="t('common.reset')" :data-agent-label="t('common.reset')" @click="resetTypeQuery">{{ t('common.reset') }}</el-button>
         </el-form-item>
       </el-form>
 
-      <el-form ref="itemQueryRef" :model="itemQuery" :inline="true" class="product-dict-page__search">
-        <el-form-item :label="t('productCenter.productDict.itemLabel')" prop="dictItemLabelCn">
-          <el-input v-model="itemQuery.dictItemLabelCn" :placeholder="t('productCenter.common.inputPlaceholder')" clearable :disabled="!activeType" @keyup.enter="queryItems" />
+      <el-form ref="itemQueryRef" :model="itemQuery" :inline="true" class="product-dict-page__search" data-agent-scope="product-dict-item-search">
+        <el-form-item :label="t('productCenter.productDict.itemLabel')" prop="dictItemLabelCn" data-agent-field="dictItemLabelCn">
+          <el-input v-model="itemQuery.dictItemLabelCn" :placeholder="t('productCenter.common.inputPlaceholder')" clearable :disabled="!activeType" :aria-label="t('productCenter.productDict.itemLabel')" :data-agent-label="t('productCenter.productDict.itemLabel')" @keyup.enter="queryItems" />
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" icon="Search" :disabled="!activeType" @click="queryItems">{{ t('common.search') }}</el-button>
-          <el-button icon="Refresh" :disabled="!activeType" @click="resetItemQuery">{{ t('common.reset') }}</el-button>
+          <el-button type="primary" icon="Search" :disabled="!activeType" :aria-label="t('common.search')" :data-agent-label="t('common.search')" @click="queryItems">{{ t('common.search') }}</el-button>
+          <el-button icon="Refresh" :disabled="!activeType" :aria-label="t('common.reset')" :data-agent-label="t('common.reset')" @click="resetItemQuery">{{ t('common.reset') }}</el-button>
         </el-form-item>
       </el-form>
     </div>
@@ -29,9 +29,9 @@
             <strong>{{ t('productCenter.productDict.typeTitle') }}</strong>
           </div>
           <div class="product-dict-page__actions">
-            <el-button type="primary" plain icon="Plus" @click="addType" v-hasPermi="['product:dict:add']">{{ t('common.add') }}</el-button>
-            <el-button type="success" plain icon="Edit" :disabled="selectedTypeIds.length !== 1" @click="editSelectedType" v-hasPermi="['product:dict:edit']">{{ t('common.edit') }}</el-button>
-            <el-button type="danger" plain icon="Delete" :disabled="!selectedTypeIds.length" @click="deleteSelectedTypes" v-hasPermi="['product:dict:remove']">{{ t('common.delete') }}</el-button>
+            <el-button type="primary" plain icon="Plus" :aria-label="t('common.add')" :data-agent-label="t('common.add')" @click="addType" v-hasPermi="['product:dict:add']">{{ t('common.add') }}</el-button>
+            <el-button type="success" plain icon="Edit" :disabled="selectedTypeIds.length !== 1" :aria-label="t('common.edit')" :data-agent-label="t('common.edit')" @click="editSelectedType" v-hasPermi="['product:dict:edit']">{{ t('common.edit') }}</el-button>
+            <el-button type="danger" plain icon="Delete" :disabled="!selectedTypeIds.length" :aria-label="t('common.delete')" :data-agent-label="t('common.delete')" data-agent-danger="delete" @click="deleteSelectedTypes" v-hasPermi="['product:dict:remove']">{{ t('common.delete') }}</el-button>
           </div>
         </div>
 
@@ -70,9 +70,9 @@
             <span v-if="activeType">{{ activeType.dictTypeNameCn }} / {{ activeType.dictTypeCode }}</span>
           </div>
           <div class="product-dict-page__actions">
-            <el-button type="primary" plain icon="Plus" :disabled="!activeType" @click="addItem" v-hasPermi="['product:dict:add']">{{ t('common.add') }}</el-button>
-            <el-button type="success" plain icon="Edit" :disabled="selectedItemIds.length !== 1" @click="editSelectedItem" v-hasPermi="['product:dict:edit']">{{ t('common.edit') }}</el-button>
-            <el-button type="danger" plain icon="Delete" :disabled="!selectedItemIds.length" @click="deleteSelectedItems" v-hasPermi="['product:dict:remove']">{{ t('common.delete') }}</el-button>
+            <el-button type="primary" plain icon="Plus" :disabled="!activeType" :aria-label="t('common.add')" :data-agent-label="t('common.add')" @click="addItem" v-hasPermi="['product:dict:add']">{{ t('common.add') }}</el-button>
+            <el-button type="success" plain icon="Edit" :disabled="selectedItemIds.length !== 1" :aria-label="t('common.edit')" :data-agent-label="t('common.edit')" @click="editSelectedItem" v-hasPermi="['product:dict:edit']">{{ t('common.edit') }}</el-button>
+            <el-button type="danger" plain icon="Delete" :disabled="!selectedItemIds.length" :aria-label="t('common.delete')" :data-agent-label="t('common.delete')" data-agent-danger="delete" @click="deleteSelectedItems" v-hasPermi="['product:dict:remove']">{{ t('common.delete') }}</el-button>
           </div>
         </div>
 
@@ -135,7 +135,7 @@
       <template #footer>
         <div class="product-dict-page__drawer-actions">
           <el-button @click="typeDrawerOpen = false">{{ t('common.cancel') }}</el-button>
-          <el-button type="primary" :loading="typeSubmitLoading" @click="submitType">{{ t('common.confirm') }}</el-button>
+          <el-button type="primary" :loading="typeSubmitLoading" data-agent-danger="save" @click="submitType">{{ t('common.confirm') }}</el-button>
         </div>
       </template>
     </el-drawer>
@@ -171,7 +171,7 @@
       <template #footer>
         <div class="product-dict-page__drawer-actions">
           <el-button @click="itemDrawerOpen = false">{{ t('common.cancel') }}</el-button>
-          <el-button type="primary" :loading="itemSubmitLoading" @click="submitItem">{{ t('common.confirm') }}</el-button>
+          <el-button type="primary" :loading="itemSubmitLoading" data-agent-danger="save" @click="submitItem">{{ t('common.confirm') }}</el-button>
         </div>
       </template>
     </el-drawer>
@@ -197,9 +197,7 @@ const t = (key: string, params?: Record<string, string | number>) => {
 }
 
 const businessDomainOptions = computed(() => [
-  { label: t('productCenter.productDict.domainBase'), value: 'BASE' },
-  { label: t('productCenter.productDict.domainEngineering'), value: 'ENGINEERING' },
-  { label: t('productCenter.productDict.domainConfig'), value: 'CONFIG' }
+  { label: t('productCenter.productDict.domainBase'), value: 'BASE' }
 ])
 
 const typeRows = ref<ProductDictTypeVO[]>([])

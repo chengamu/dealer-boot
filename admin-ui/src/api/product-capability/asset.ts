@@ -29,6 +29,5 @@ export const productMediaBindingApi = {
   update: (data: ProductRecord) => request({ url: '/product-capability/media-bindings', method: 'put', data }),
   remove: (ids: Array<string | number> | string | number) => request({ url: '/product-capability/media-bindings/' + ids, method: 'delete' }),
   changeStatus: (id: string | number, status: string) => request({ url: '/product-capability/media-bindings/change-status/' + id + '/' + status, method: 'put' }),
-  batchBind: (data: ProductRecord) => request({ url: '/product-capability/media-bindings/batch', method: 'post', data }),
   references: (id: string | number) => referencesApi('/product-capability/media-bindings/' + id + '/references')
 }

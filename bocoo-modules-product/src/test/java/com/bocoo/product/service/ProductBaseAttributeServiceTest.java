@@ -2,6 +2,7 @@ package com.bocoo.product.service;
 
 import com.bocoo.common.core.exception.ServiceException;
 import com.bocoo.product.domain.bo.ProductBaseAttributeBo;
+import com.bocoo.product.domain.entity.ProductBaseAttribute;
 import com.bocoo.product.domain.entity.ProductMaterialTypeGroup;
 import com.bocoo.product.mapper.ProductBaseAttributeMapper;
 import com.bocoo.product.mapper.ProductMaterialAttributeMapper;
@@ -18,6 +19,10 @@ import java.lang.reflect.Method;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ProductBaseAttributeServiceTest {
@@ -44,6 +49,18 @@ class ProductBaseAttributeServiceTest {
 
         assertThatThrownBy(() -> productBaseAttributeService.insertByBo(bo))
             .isInstanceOf(ServiceException.class);
+    }
+
+    @Test
+    void deleteBaseAttributeRejectsEnabledStatus() {
+        ProductBaseAttribute current = new ProductBaseAttribute();
+        current.setAttributeId(1001L);
+        current.setStatus("ENABLED");
+        when(baseAttributeMapper.selectById(1001L)).thenReturn(current);
+
+        assertThatThrownBy(() -> productBaseAttributeService.deleteWithValidByIds(new Long[]{1001L}))
+            .isInstanceOf(ServiceException.class);
+        verify(baseAttributeMapper, never()).deleteBatchIds(any());
     }
 
     @Test

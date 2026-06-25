@@ -76,6 +76,10 @@ public class ProductBaseAttributeServiceImpl extends ProductServiceSupport imple
     @Override
     public Boolean deleteWithValidByIds(Long[] ids) {
         for (Long id : ids) {
+            ProductBaseAttribute current = baseAttributeMapper.selectById(id);
+            if (current != null) {
+                assertDisabledBeforeDelete(current.getStatus());
+            }
             assertNoReferences(checkReferences(id));
         }
         return remove(baseAttributeMapper, ids);

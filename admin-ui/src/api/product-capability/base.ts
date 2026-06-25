@@ -9,6 +9,8 @@ import type {
   ProductMaterialTypeGroupVO,
   ProductMaterialTypeQuery,
   ProductMaterialTypeVO,
+  ProductManufacturerQuery,
+  ProductManufacturerVO,
   ProductPageQuery,
   ProductRecord,
   ProductUnitQuery,
@@ -67,6 +69,18 @@ export const productUnitApi: ProductCrudApi<ProductUnitVO, ProductUnitQuery> = {
   changeStatus: (id: string | number, status: string) => changeStatusApi('/product-capability/units/change-status/' + id + '/' + status),
   editCheck: (id: string | number) => editCheckApi('/product-capability/units/' + id + '/edit-check'),
   references: (id: string | number) => referencesApi('/product-capability/units/' + id + '/references')
+}
+
+export const productManufacturerApi: ProductCrudApi<ProductManufacturerVO, ProductManufacturerQuery> = {
+  list: (query?: ProductManufacturerQuery) => listApi('/product-capability/manufacturers/list', query),
+  options: (query?: ProductManufacturerQuery) => request<ProductManufacturerVO[]>({ url: '/product-capability/manufacturers/options', method: 'get', params: query }),
+  get: (id: string | number) => detailApi<ProductManufacturerVO>('/product-capability/manufacturers/' + id),
+  add: (data: ProductManufacturerVO) => saveApi('/product-capability/manufacturers', 'post', data),
+  update: (data: ProductManufacturerVO) => saveApi('/product-capability/manufacturers', 'put', data),
+  remove: (ids: Array<string | number> | string | number) => removeApi('/product-capability/manufacturers/' + ids),
+  changeStatus: (id: string | number, status: string) => changeStatusApi('/product-capability/manufacturers/change-status/' + id + '/' + status),
+  editCheck: (id: string | number) => editCheckApi('/product-capability/manufacturers/' + id + '/edit-check'),
+  references: (id: string | number) => referencesApi('/product-capability/manufacturers/' + id + '/references')
 }
 
 export const productBaseAttributeApi: ProductCrudApi<ProductBaseAttributeVO, ProductBaseAttributeQuery> = {

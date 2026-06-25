@@ -60,6 +60,12 @@ public class ProductMediaBindingServiceImpl extends ProductServiceSupport implem
 
     @Override
     public Boolean deleteWithValidByIds(Long[] ids) {
+        for (Long id : ids) {
+            ProductMediaBinding current = mediaBindingMapper.selectById(id);
+            if (current != null) {
+                assertDisabledBeforeDelete(current.getStatus());
+            }
+        }
         return remove(mediaBindingMapper, ids);
     }
 

@@ -9,6 +9,7 @@
       </div>
       <app-main />
       <settings ref="settingRef" />
+      <ai-assistant />
     </div>
   </div>
 </template>
@@ -17,6 +18,7 @@
 import { useWindowSize } from '@vueuse/core'
 import Sidebar from './components/Sidebar/index.vue'
 import { AppMain, Navbar, Settings, TagsView } from './components'
+import AiAssistant from '@/components/AiAssistant/index.vue'
 
 import useAppStore from '@/stores/app'
 import useSettingsStore from '@/stores/settings'
