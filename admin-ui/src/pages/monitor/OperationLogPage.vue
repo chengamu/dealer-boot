@@ -53,6 +53,7 @@
           {{ t('common.export') }}
         </el-button>
       </el-col>
+      <span class="selection-count">{{ t('common.selectedCount', { count: ids.length }) }}</span>
       <right-toolbar v-model:showSearch="showSearch" @queryTable="getList" />
     </el-row>
 
@@ -107,14 +108,16 @@
             <el-form-item :label="t('operlog.loginInfo')">{{ form.operName }} / {{ form.deptName }} / {{ form.operIp }} / {{ form.operLocation }}</el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item :label="t('operlog.requestInfo')">{{ form.requestMethod }} {{ form.operUrl }}</el-form-item>
+            <el-form-item :label="t('operlog.requestInfo')">
+              <pre class="log-detail-code">{{ requestInfoText }}</pre>
+            </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item :label="t('operlog.moduleInfo')">{{ form.title }} / {{ typeFormat(form) }}</el-form-item>
           </el-col>
-          <el-col :span="24"><el-form-item :label="t('operlog.method')">{{ form.method }}</el-form-item></el-col>
-          <el-col :span="24"><el-form-item :label="t('operlog.operParam')">{{ form.operParam }}</el-form-item></el-col>
-          <el-col :span="24"><el-form-item :label="t('operlog.jsonResult')">{{ form.jsonResult }}</el-form-item></el-col>
+          <el-col :span="24"><el-form-item :label="t('operlog.method')"><pre class="log-detail-code">{{ codeText(form.method) }}</pre></el-form-item></el-col>
+          <el-col :span="24"><el-form-item :label="t('operlog.operParam')"><pre class="log-detail-code">{{ codeText(form.operParam) }}</pre></el-form-item></el-col>
+          <el-col :span="24"><el-form-item :label="t('operlog.jsonResult')"><pre class="log-detail-code">{{ codeText(form.jsonResult) }}</pre></el-form-item></el-col>
           <el-col :span="6">
             <el-form-item :label="`${t('operlog.operStatus')}:`">
               <div v-if="String(form.status) === '0'">{{ t('dataLabels.normal') }}</div>
@@ -123,7 +126,7 @@
           </el-col>
           <el-col :span="8"><el-form-item :label="`${t('operlog.costTime')}:`">{{ form.costTime }}{{ t('common.milliseconds') }}</el-form-item></el-col>
           <el-col :span="10"><el-form-item :label="`${t('operlog.operDate')}:`">{{ formatUtc(form.operTime) }}</el-form-item></el-col>
-          <el-col v-if="String(form.status) === '1'" :span="24"><el-form-item :label="t('operlog.errorMsg')">{{ form.errorMsg }}</el-form-item></el-col>
+          <el-col v-if="String(form.status) === '1'" :span="24"><el-form-item :label="t('operlog.errorMsg')"><pre class="log-detail-code">{{ codeText(form.errorMsg) }}</pre></el-form-item></el-col>
         </el-row>
       </el-form>
       <template #footer>
@@ -136,7 +139,7 @@
 </template>
 
 <script setup lang="ts" name="OperationLogPage">
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import type { FormInstance } from 'element-plus'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { cleanOperlog, delOperlog, list, type OperLog, type OperLogQuery } from '@/api/monitor/operlog'
@@ -155,7 +158,11 @@ interface DictOption {
 }
 
 const localeStore = useLocaleStore()
-const t = (key: string) => getMessage(key, localeStore.language)
+const t = (key: string, params?: Record<string, string | number>) => {
+  const message = getMessage(key, localeStore.language)
+  if (!params) return message
+  return Object.entries(params).reduce((text, [name, value]) => text.replaceAll(`{${name}}`, String(value)), message)
+}
 const { sys_oper_type, sys_common_status } = useDict('sys_oper_type', 'sys_common_status')
 
 const queryRef = ref<FormInstance>()
@@ -178,6 +185,13 @@ const queryParams = reactive<OperLogQuery>({
   businessType: undefined,
   status: undefined
 })
+
+const requestInfoText = computed(() => `${codeText(form.value.requestMethod)} ${codeText(form.value.operUrl)}`.trim())
+
+function codeText(value: unknown) {
+  if (value === undefined || value === null || value === '') return '-'
+  return String(value)
+}
 
 function withDateRange(params: OperLogQuery) {
   return withUtcDateRangeParams(params, dateRange.value)

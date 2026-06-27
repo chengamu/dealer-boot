@@ -32,6 +32,7 @@
       <el-col :span="1.5">
         <el-button type="danger" plain icon="Delete" :disabled="multiple" @click="handleDelete()" v-hasPermi="['tool:gen:remove']">{{ t('common.delete') }}</el-button>
       </el-col>
+      <span class="selection-count">{{ t('common.selectedCount', { count: ids.length }) }}</span>
       <right-toolbar v-model:showSearch="showSearch" @queryTable="getList" />
     </el-row>
 
@@ -70,6 +71,14 @@
           </el-tooltip>
         </template>
       </el-table-column>
+      <template #empty>
+        <div class="table-empty-action">
+          <el-empty :description="t('gen.emptyTableDescription')" />
+          <el-button type="primary" plain icon="Upload" @click="openImportTable" v-hasPermi="['tool:gen:import']">
+            {{ t('gen.emptyImportAction') }}
+          </el-button>
+        </div>
+      </template>
     </el-table>
 
     <pagination v-show="total > 0" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" :total="total" @pagination="getList" />

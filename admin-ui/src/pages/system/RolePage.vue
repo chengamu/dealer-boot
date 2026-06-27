@@ -42,6 +42,7 @@
       <el-col :span="1.5">
         <el-button type="warning" plain icon="Download" @click="handleExport" v-hasPermi="['system:role:export']">{{ t('common.export') }}</el-button>
       </el-col>
+      <span class="selection-count">{{ t('common.selectedCount', { count: ids.length }) }}</span>
       <right-toolbar v-model:showSearch="showSearch" @queryTable="getList" />
     </el-row>
 
@@ -62,18 +63,20 @@
       </el-table-column>
       <el-table-column :label="t('common.operate')" align="center" width="172" fixed="right" class-name="small-padding fixed-width">
         <template #default="{ row }">
-          <el-tooltip :content="t('common.edit')" placement="top" v-if="row.roleId !== 1">
-            <el-button link type="primary" icon="Edit" :aria-label="t('role.editRole')" :title="t('role.editRole')" @click="handleUpdate(row)" v-hasPermi="['system:role:edit']" />
-          </el-tooltip>
-          <el-tooltip :content="t('common.delete')" placement="top" v-if="row.roleId !== 1">
-            <el-button link type="primary" icon="Delete" :aria-label="t('role.deleteRole')" :title="t('role.deleteRole')" @click="handleDelete(row)" v-hasPermi="['system:role:remove']" />
-          </el-tooltip>
-          <el-tooltip :content="t('role.dataScope')" placement="top" v-if="row.roleId !== 1">
-            <el-button link type="primary" icon="CircleCheck" :aria-label="t('role.setDataScope')" :title="t('role.setDataScope')" @click="handleDataScope(row)" v-hasPermi="['system:role:edit']" />
-          </el-tooltip>
-          <el-tooltip :content="t('role.assignUsers')" placement="top" v-if="row.roleId !== 1">
-            <el-button link type="primary" icon="User" :aria-label="t('role.assignUsers')" :title="t('role.assignUsers')" @click="handleAuthUser(row)" v-hasPermi="['system:role:edit']" />
-          </el-tooltip>
+          <el-dropdown v-if="row.roleId !== 1 && (canEditRole || canRemoveRole)" trigger="click" popper-class="table-row-action-menu">
+            <el-button class="table-row-actions-button" :aria-label="t('common.operate')" :title="t('common.operate')">
+              <el-icon><MoreFilled /></el-icon>
+            </el-button>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item v-if="canEditRole" @click="handleUpdate(row)">{{ t('common.edit') }}</el-dropdown-item>
+                <el-dropdown-item v-if="canEditRole" @click="handleDataScope(row)">{{ t('role.dataScope') }}</el-dropdown-item>
+                <el-dropdown-item v-if="canEditRole" @click="handleAuthUser(row)">{{ t('role.assignUsers') }}</el-dropdown-item>
+                <el-dropdown-item v-if="canRemoveRole" class="is-danger" @click="handleDelete(row)">{{ t('common.delete') }}</el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+          <span v-else>-</span>
         </template>
       </el-table-column>
     </el-table>
@@ -111,9 +114,14 @@
           </el-radio-group>
         </el-form-item>
         <el-form-item :label="t('role.menuPermission')">
-          <el-checkbox v-model="menuExpand" @change="handleCheckedTreeExpand($event, 'menu')">{{ t('common.expandCollapse') }}</el-checkbox>
-          <el-checkbox v-model="menuNodeAll" @change="handleCheckedTreeNodeAll($event, 'menu')">{{ t('role.selectAllNone') }}</el-checkbox>
-          <el-checkbox v-model="form.menuCheckStrictly" @change="handleCheckedTreeConnect($event, 'menu')">{{ t('role.parentChildLink') }}</el-checkbox>
+          <div class="permission-tree-block">
+            <p class="permission-tree-hint">{{ t('role.menuPermissionHint') }}</p>
+            <div class="permission-tree-actions">
+              <el-checkbox v-model="menuExpand" @change="handleCheckedTreeExpand($event, 'menu')">{{ t('common.expandCollapse') }}</el-checkbox>
+              <el-checkbox v-model="menuNodeAll" @change="handleCheckedTreeNodeAll($event, 'menu')">{{ t('role.selectAllNone') }}</el-checkbox>
+              <el-checkbox v-model="form.menuCheckStrictly" @change="handleCheckedTreeConnect($event, 'menu')">{{ t('role.parentChildLink') }}</el-checkbox>
+            </div>
+          </div>
           <el-tree
             ref="menuRef"
             class="tree-border"
@@ -151,9 +159,14 @@
           </el-select>
         </el-form-item>
         <el-form-item v-show="form.dataScope === '2'" :label="t('role.dataPermission')">
-          <el-checkbox v-model="deptExpand" @change="handleCheckedTreeExpand($event, 'dept')">{{ t('common.expandCollapse') }}</el-checkbox>
-          <el-checkbox v-model="deptNodeAll" @change="handleCheckedTreeNodeAll($event, 'dept')">{{ t('role.selectAllNone') }}</el-checkbox>
-          <el-checkbox v-model="form.deptCheckStrictly" @change="handleCheckedTreeConnect($event, 'dept')">{{ t('role.parentChildLink') }}</el-checkbox>
+          <div class="permission-tree-block">
+            <p class="permission-tree-hint">{{ t('role.dataPermissionHint') }}</p>
+            <div class="permission-tree-actions">
+              <el-checkbox v-model="deptExpand" @change="handleCheckedTreeExpand($event, 'dept')">{{ t('common.expandCollapse') }}</el-checkbox>
+              <el-checkbox v-model="deptNodeAll" @change="handleCheckedTreeNodeAll($event, 'dept')">{{ t('role.selectAllNone') }}</el-checkbox>
+              <el-checkbox v-model="form.deptCheckStrictly" @change="handleCheckedTreeConnect($event, 'dept')">{{ t('role.parentChildLink') }}</el-checkbox>
+            </div>
+          </div>
           <el-tree
             ref="deptRef"
             class="tree-border"
@@ -189,6 +202,8 @@ import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 import { useDict } from '@/utils/dict'
 import { runUiAction } from '@/utils/action'
+import { checkPermi } from '@/utils/permission'
+import { MoreFilled } from '@element-plus/icons-vue'
 
 interface DictOption {
   label: string
@@ -205,6 +220,8 @@ const t = (key: string, params?: Record<string, string | number>) => {
   return Object.entries(params).reduce((text, [name, value]) => text.replaceAll(`{${name}}`, String(value)), message)
 }
 const { sys_normal_disable } = useDict('sys_normal_disable')
+const canEditRole = computed(() => checkPermi(['system:role:edit']))
+const canRemoveRole = computed(() => checkPermi(['system:role:remove']))
 
 const roleList = ref<Role[]>([])
 const open = ref(false)

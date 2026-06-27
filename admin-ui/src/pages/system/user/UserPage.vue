@@ -83,6 +83,7 @@
           <el-col :span="1.5">
             <el-button type="warning" plain icon="Download" @click="handleExport" v-hasPermi="['system:user:export']">{{ t('common.export') }}</el-button>
           </el-col>
+          <span class="selection-count">{{ t('common.selectedCount', { count: ids.length }) }}</span>
           <right-toolbar v-model:showSearch="showSearch" :columns="columns" @queryTable="getList" />
         </el-row>
 
