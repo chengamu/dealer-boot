@@ -11,7 +11,6 @@ window.__APP_CONFIG__ = {
 
     VITE_APP_CONTEXT_PATH: '/',
 
-    VITE_APP_MONITRO_ADMIN: '/admin/applications',
     VITE_APP_MONITOR_ADMIN: '/admin/applications',
 
     VITE_APP_XXL_JOB_ADMIN: '/xxl-job-admin',

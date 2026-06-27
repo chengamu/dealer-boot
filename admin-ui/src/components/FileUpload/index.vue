@@ -41,10 +41,10 @@
 
 <script setup lang="ts">
 import { listByIds, delOss } from "@/api/system/oss";
+import { OSS_UPLOAD_URL, uploadOssFile, type OssUploadResponse } from "@/api/system/ossUpload";
 import { getMessage } from "@/locales";
 import { useLocaleStore } from "@/stores/locale";
 import { runUiAction } from "@/utils/action";
-import service from "@/utils/request";
 import type { PropType } from "vue";
 import type { UploadFile, UploadInstance, UploadRawFile, UploadRequestOptions, UploadUserFile } from "element-plus";
 
@@ -54,16 +54,6 @@ type UploadItem = UploadUserFile & {
   ossId?: number | string
   originalName?: string
   url?: string
-}
-
-type UploadResponse = {
-  code: number
-  msg?: string
-  data: {
-    fileName: string
-    url: string
-    ossId: number | string
-  }
 }
 
 type FileUploadProxy = {
@@ -114,7 +104,7 @@ const emit = defineEmits<{
 }>();
 const number = ref(0);
 const uploadList = ref<UploadItem[]>([]);
-const uploadFileUrl = ref("/system/oss/upload"); // 上传文件服务器地址
+const uploadFileUrl = ref(OSS_UPLOAD_URL); // 上传文件服务器地址
 const fileList = ref<UploadItem[]>([]);
 const showTip = computed(
   () => props.isShowTip && (props.fileType || props.fileSize)
@@ -177,9 +167,7 @@ function handleBeforeUpload(file: UploadRawFile) {
 
 // 文件个数超出
 function uploadFile(options: UploadRequestOptions) {
-  const formData = new FormData();
-  formData.append(options.filename, options.file);
-  return service.post(uploadFileUrl.value, formData) as unknown as Promise<UploadResponse>;
+  return uploadOssFile(options.file, options.filename);
 }
 
 function handleExceed() {
@@ -192,7 +180,7 @@ function handleUploadError() {
 }
 
 // 上传成功回调
-function handleUploadSuccess(res: UploadResponse, file: UploadFile) {
+function handleUploadSuccess(res: OssUploadResponse, file: UploadFile) {
   if (res.code === 200) {
     uploadList.value.push({ name: res.data.fileName, url: res.data.url, ossId: res.data.ossId });
     uploadedSuccessfully();

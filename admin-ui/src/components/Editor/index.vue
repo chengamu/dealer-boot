@@ -33,15 +33,7 @@ import type { CSSProperties } from 'vue';
 import type { UploadRawFile, UploadRequestOptions } from 'element-plus';
 import { getMessage } from '@/locales'
 import useLocaleStore from '@/stores/locale'
-import service from '@/utils/request'
-
-type UploadResponse = {
-  code: number
-  msg?: string
-  data: {
-    url: string
-  }
-}
+import { OSS_UPLOAD_URL, uploadOssFile, type OssUploadResponse } from '@/api/system/ossUpload'
 
 type ModalProxy = {
   $modal: {
@@ -109,7 +101,7 @@ const emit = defineEmits<{
   (event: 'update:modelValue', value: string): void
 }>();
 // 上传的图片服务器地址
-const uploadUrl = ref("/system/oss/upload");
+const uploadUrl = ref(OSS_UPLOAD_URL);
 const quillEditorRef = ref<QuillEditorExpose | null>(null);
 
 const options = computed(() => ({
@@ -183,12 +175,10 @@ watch(() => props.modelValue, (v) => {
 
 // 图片上传成功返回图片地址
 function uploadImage(options: UploadRequestOptions) {
-  const formData = new FormData();
-  formData.append(options.filename, options.file);
-  return service.post(uploadUrl.value, formData) as unknown as Promise<UploadResponse>;
+  return uploadOssFile(options.file, options.filename);
 }
 
-function handleUploadSuccess(res: UploadResponse) {
+function handleUploadSuccess(res: OssUploadResponse) {
   // 如果上传成功
   if (res.code == 200) {
     // 获取富文本实例

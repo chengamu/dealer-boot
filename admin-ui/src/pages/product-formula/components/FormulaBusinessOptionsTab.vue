@@ -196,6 +196,7 @@ import { ArrowDown, ArrowUp, Connection, List, Lock, Operation, Plus, WarningFil
 import FormulaOptionTree, { type FormulaOptionTreeViewNode } from './FormulaOptionTree.vue'
 import FormulaOptionValueGrid from './FormulaOptionValueGrid.vue'
 import FormulaRestrictionBand from './FormulaRestrictionBand.vue'
+import { PRODUCT_STATUS_ENABLED } from '@/constants/productStatus'
 import type {
   ProductFormulaMaterialVO,
   ProductFormulaOptionMaterialVO,
@@ -526,7 +527,7 @@ function appendImportedMaterialValues() {
       valueCode: material.materialCode,
       valueNameCn: material.materialNameCn,
       defaultFlag: false,
-      status: 'ENABLED',
+      status: PRODUCT_STATUS_ENABLED,
       sortOrder: props.allOptionValues.length * 10 + 10
     })
     props.allOptionMaterials.push({
@@ -538,7 +539,7 @@ function appendImportedMaterialValues() {
       materialNameCn: material.materialNameCn,
       requiredFlag: true,
       defaultFlag: true,
-      status: 'ENABLED',
+      status: PRODUCT_STATUS_ENABLED,
       sortOrder: props.allOptionMaterials.length * 10 + 10
     })
     selectedValueCode.value = material.materialCode
@@ -614,7 +615,7 @@ function saveValueMaterials() {
       materialNameCn: material.materialNameCn,
       requiredFlag: true,
       defaultFlag: props.allOptionMaterials.filter((row) => row.optionCode === option.optionCode && row.valueCode === value.valueCode).length === 0,
-      status: 'ENABLED',
+      status: PRODUCT_STATUS_ENABLED,
       sortOrder: props.allOptionMaterials.length * 10 + 10
     })
   })

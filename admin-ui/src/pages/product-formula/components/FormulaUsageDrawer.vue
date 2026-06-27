@@ -113,7 +113,7 @@
         </el-table-column>
         <el-table-column :label="t('productCenter.common.status')" width="96" align="center">
           <template #default="{ row }">
-            <el-switch v-model="row.status" active-value="ENABLED" inactive-value="DISABLED" />
+            <el-switch v-model="row.status" :active-value="PRODUCT_STATUS_ENABLED" :inactive-value="PRODUCT_STATUS_DISABLED" />
           </template>
         </el-table-column>
       </el-table>
@@ -145,6 +145,7 @@ import { ElMessage } from 'element-plus'
 import { CopyDocument, Delete, MagicStick, Plus } from '@element-plus/icons-vue'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
+import { PRODUCT_STATUS_DISABLED, PRODUCT_STATUS_ENABLED } from '@/constants/productStatus'
 import {
   conditionExpressionForOption,
   conditionKeyForOption,
@@ -222,7 +223,7 @@ function ensureFixedRule() {
     lossRate: props.usageRow.lossRate ?? 0,
     defaultRuleFlag: true,
     productionRemark: props.usageRow.productionRemark,
-    status: 'ENABLED',
+    status: PRODUCT_STATUS_ENABLED,
     sortOrder: 10
   })
 }
@@ -268,7 +269,7 @@ function addFormulaRule(defaultRule: boolean, value?: ProductFormulaOptionValueV
     lossRate: props.usageRow.lossRate ?? 0,
     defaultRuleFlag: defaultRule,
     productionRemark: props.usageRow.productionRemark,
-    status: 'ENABLED',
+    status: PRODUCT_STATUS_ENABLED,
     sortOrder: next * 10
   }
   props.usageRules.push(rule)

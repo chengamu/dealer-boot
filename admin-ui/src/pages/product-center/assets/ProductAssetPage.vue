@@ -16,7 +16,8 @@ import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 import { useProductDict } from '@/hooks/useProductDict'
 import { productMediaAssetApi, productMediaBindingApi } from '@/api/product-capability/asset'
-import ProductEntityGridPage, { type ProductGridConfig } from '@/pages/product-center/components/ProductEntityGridPage.vue'
+import ProductEntityGridPage from '@/pages/product-center/components/ProductEntityGridPage.vue'
+import type { ProductGridConfig } from '@/pages/product-center/components/productGridTypes'
 
 const localeStore = useLocaleStore()
 const t = (key: string) => getMessage(key, localeStore.language)

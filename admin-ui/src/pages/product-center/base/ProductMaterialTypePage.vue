@@ -62,8 +62,8 @@
             <template #default="{ row }">
               <el-switch
                 :model-value="row.status"
-                active-value="ENABLED"
-                inactive-value="DISABLED"
+                :active-value="PRODUCT_STATUS_ENABLED"
+                :inactive-value="PRODUCT_STATUS_DISABLED"
                 :aria-label="agentStatusLabel(groupLabel(row), row.status)"
                 :data-agent-label="agentStatusLabel(groupLabel(row), row.status)"
                 :data-agent-row="groupLabel(row)"
@@ -116,8 +116,8 @@
             <template #default="{ row }">
               <el-switch
                 :model-value="row.status"
-                active-value="ENABLED"
-                inactive-value="DISABLED"
+                :active-value="PRODUCT_STATUS_ENABLED"
+                :inactive-value="PRODUCT_STATUS_DISABLED"
                 :aria-label="agentStatusLabel(typeLabel(row), row.status)"
                 :data-agent-label="agentStatusLabel(typeLabel(row), row.status)"
                 :data-agent-row="typeLabel(row)"
@@ -217,6 +217,8 @@ import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 import { productMaterialTypeApi, productMaterialTypeGroupApi } from '@/api/product-capability/base'
 import type { ProductMaterialTypeGroupQuery, ProductMaterialTypeGroupVO, ProductMaterialTypeQuery, ProductMaterialTypeVO, ReferenceCheckResult } from '@/api/product-capability/types'
+import { PRODUCT_STATUS_DISABLED, PRODUCT_STATUS_ENABLED, normalizeProductStatus } from '@/constants/productStatus'
+import { compactParts } from '@/utils/productLabels'
 
 const localeStore = useLocaleStore()
 const t = (key: string, params?: Record<string, unknown>) => {
@@ -257,16 +259,12 @@ const selectedGroupLabel = computed(() => selectedGroup.value ? `${selectedGroup
 const referenceAllowed = computed(() => Number(referenceResult.value.referenceCount || 0) <= 0 && referenceResult.value.allowed !== false)
 const referenceSummaries = computed(() => (referenceResult.value.referenceSummaries || []).map((summary) => ({ summary })))
 
-function compactParts(...parts: unknown[]) {
-  return parts.map((part) => String(part ?? '').trim()).filter(Boolean).join(' ')
-}
-
 function normalizeStatus(value: unknown) {
-  return value === 'ENABLED' || value === '1' || value === 'true' || value === true || value === 1 ? 'ENABLED' : 'DISABLED'
+  return normalizeProductStatus(value)
 }
 
 function statusLabel(value: unknown) {
-  return normalizeStatus(value) === 'ENABLED' ? t('productCenter.status.enabled') : t('productCenter.status.disabled')
+  return normalizeStatus(value) === PRODUCT_STATUS_ENABLED ? t('productCenter.status.enabled') : t('productCenter.status.disabled')
 }
 
 function groupLabel(row?: ProductMaterialTypeGroupVO) {
@@ -354,15 +352,17 @@ function assign<T extends Record<string, unknown>>(target: T, source: Record<str
   Object.assign(target, source)
 }
 
-function openGroupForm(row?: ProductMaterialTypeGroupVO) {
-  assign(groupForm, { status: 'ENABLED', systemFlag: false, editableFlag: true, formulaSummaryVisibleFlag: true, sortOrder: 0, ...(row || {}) })
+async function openGroupForm(row?: ProductMaterialTypeGroupVO) {
+  if (row?.groupId && !(await checkBeforeEdit(productMaterialTypeGroupApi.editCheck, row.groupId))) return
+  assign(groupForm, { status: PRODUCT_STATUS_ENABLED, systemFlag: false, editableFlag: true, formulaSummaryVisibleFlag: true, sortOrder: 0, ...(row || {}) })
   groupOpen.value = true
 }
 
-function openTypeForm(row?: ProductMaterialTypeVO) {
+async function openTypeForm(row?: ProductMaterialTypeVO) {
   if (!selectedGroup.value) return
+  if (row?.materialTypeId && !(await checkBeforeEdit(productMaterialTypeApi.editCheck, row.materialTypeId))) return
   assign(typeForm, {
-    status: 'ENABLED',
+    status: PRODUCT_STATUS_ENABLED,
     systemFlag: false,
     editableFlag: true,
     sortOrder: 0,
@@ -372,6 +372,16 @@ function openTypeForm(row?: ProductMaterialTypeVO) {
     ...(row || {})
   })
   typeOpen.value = true
+}
+
+async function checkBeforeEdit(editCheck: typeof productMaterialTypeApi.editCheck, id: string | number) {
+  if (!editCheck) return true
+  const response = await editCheck(id)
+  const result = response.data || {}
+  if (result.editable !== false) return true
+  const reasonKey = result.reasonKey || result.reason || 'productCenter.common.editDenied'
+  ElMessage.warning(t(reasonKey))
+  return false
 }
 
 async function submitGroup() {

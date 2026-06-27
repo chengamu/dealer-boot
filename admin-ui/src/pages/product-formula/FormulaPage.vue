@@ -14,34 +14,30 @@ import { productCategoryApi } from '@/api/product-capability/base'
 import { getProductDictItems } from '@/api/product-capability/product-dict'
 import { productFormulaApi } from '@/api/product-formula/formula'
 import type { ProductDictOption, ProductRecord } from '@/api/product-capability/types'
-import ProductEntityGridPage, { type ProductGridConfig } from '@/pages/product-center/components/ProductEntityGridPage.vue'
+import ProductEntityGridPage from '@/pages/product-center/components/ProductEntityGridPage.vue'
+import type { ProductGridConfig } from '@/pages/product-center/components/productGridTypes'
+import {
+  FORMULA_STATUS,
+  FORMULA_VALIDATION_STATUS,
+  PRODUCT_STATUS_ENABLED,
+  formulaStatusOptions,
+  formulaValidationStatusOptions
+} from '@/constants/productStatus'
+import { compactParts, localizedRecordLabel } from '@/utils/productLabels'
 
 const localeStore = useLocaleStore()
 const router = useRouter()
 const t = (key: string) => getMessage(key, localeStore.language)
 
-const formulaStatusOptions = computed(() => [
-  { label: t('productCenter.formula.status.draft'), value: 'DRAFT' },
-  { label: t('productCenter.formula.status.pendingReview'), value: 'PENDING_REVIEW' },
-  { label: t('productCenter.formula.status.rejected'), value: 'REJECTED' },
-  { label: t('productCenter.formula.status.effective'), value: 'EFFECTIVE' },
-  { label: t('productCenter.formula.status.stopped'), value: 'STOPPED' }
-])
-
-const validationStatusOptions = computed(() => [
-  { label: t('productCenter.formula.validation.notValidated'), value: 'NOT_VALIDATED' },
-  { label: t('productCenter.formula.validation.pass'), value: 'PASS' },
-  { label: t('productCenter.formula.validation.fail'), value: 'FAIL' }
-])
+const formulaStatusOptionList = computed(() => formulaStatusOptions(t))
+const validationStatusOptionList = computed(() => formulaValidationStatusOptions(t))
 
 function labelOf(row: ProductRecord, codeKey: string, cnKey: string, enKey?: string) {
-  const code = String(row[codeKey] || '')
-  const name = localeStore.language === 'zh_CN' ? row[cnKey] : row[enKey || cnKey] || row[cnKey]
-  return `${code} ${String(name || '')}`.trim()
+  return localizedRecordLabel(row, localeStore.language, codeKey, cnKey, enKey)
 }
 
 async function loadCategoryOptions() {
-  const response = await productCategoryApi.options?.({ status: 'ENABLED', pageNum: 1, pageSize: 500 })
+  const response = await productCategoryApi.options?.({ status: PRODUCT_STATUS_ENABLED, pageNum: 1, pageSize: 500 })
   const rows = Array.isArray(response) ? response : response?.data || []
   return rows.map((row) => ({ value: row.categoryId, label: labelOf(row, 'categoryCode', 'categoryNameCn', 'categoryNameEn'), record: row }))
 }
@@ -51,7 +47,7 @@ async function loadProductTypeOptions() {
   const rows = response.data || []
   return rows.map((row: ProductDictOption) => ({
     value: row.value,
-    label: `${row.value} ${localeStore.language === 'zh_CN' ? row.labelCn || row.label : row.labelEn || row.labelCn || row.label}`.trim(),
+    label: compactParts(row.value, localeStore.language === 'zh_CN' ? row.labelCn || row.label : row.labelEn || row.labelCn || row.label),
     record: {
       ...row,
       productTypeNameCn: row.labelCn || row.label
@@ -104,8 +100,8 @@ const formulaConfig = computed<ProductGridConfig>(() => ({
   defaultRecord: {
     configuredFlag: false,
     materialLineCount: 0,
-    latestValidationStatus: 'NOT_VALIDATED',
-    status: 'DRAFT'
+    latestValidationStatus: FORMULA_VALIDATION_STATUS.NOT_VALIDATED,
+    status: FORMULA_STATUS.DRAFT
   },
   submitFields: [
     'formulaId',
@@ -132,9 +128,9 @@ const formulaConfig = computed<ProductGridConfig>(() => ({
     { prop: 'maxHeightInch', labelKey: 'productCenter.formula.maxHeightInch', type: 'number', required: true, minWidth: 160, sortable: true, precision: 2, step: 0.01 },
     { prop: 'sizeSummary', labelKey: 'productCenter.formula.sizeSummary', form: false, minWidth: 140 },
     { prop: 'materialLineCount', labelKey: 'productCenter.formula.materialLineCount', type: 'number', form: false, minWidth: 110 },
-    { prop: 'latestValidationStatus', labelKey: 'productCenter.formula.validationStatus', type: 'select', options: validationStatusOptions.value, form: false, minWidth: 120 },
+    { prop: 'latestValidationStatus', labelKey: 'productCenter.formula.validationStatus', type: 'select', options: validationStatusOptionList.value, form: false, minWidth: 120 },
     { prop: 'currentVersionLabel', labelKey: 'productCenter.formula.currentVersion', form: false, minWidth: 120 },
-    { prop: 'status', labelKey: 'productCenter.formula.status', type: 'select', options: formulaStatusOptions.value, search: true, form: false, minWidth: 120 },
+    { prop: 'status', labelKey: 'productCenter.formula.status', type: 'select', options: formulaStatusOptionList.value, search: true, form: false, minWidth: 120 },
     { prop: 'auditBy', labelKey: 'productCenter.formula.auditBy', form: false, minWidth: 120 },
     { prop: 'auditTime', labelKey: 'productCenter.formula.auditTime', type: 'datetime', form: false, minWidth: 160, sortable: true },
     { prop: 'updateTime', labelKey: 'productCenter.formula.updateTime', type: 'datetime', form: false, minWidth: 160, sortable: true },
@@ -149,7 +145,7 @@ const formulaConfig = computed<ProductGridConfig>(() => ({
       icon: 'Setting',
       type: 'primary',
       permission: 'product:formula:setup',
-      visible: (row) => row.status === 'DRAFT' || row.status === 'REJECTED',
+      visible: (row) => row.status === FORMULA_STATUS.DRAFT || row.status === FORMULA_STATUS.REJECTED,
       handler: openSetup
     },
     {
@@ -157,7 +153,7 @@ const formulaConfig = computed<ProductGridConfig>(() => ({
       icon: 'Promotion',
       type: 'primary',
       permission: 'product:formula:submitReview',
-      visible: (row) => row.status === 'DRAFT' || row.status === 'REJECTED',
+      visible: (row) => row.status === FORMULA_STATUS.DRAFT || row.status === FORMULA_STATUS.REJECTED,
       handler: (row) => runWithConfirm('productCenter.formula.confirm.submitReview', () => productFormulaApi.submitReview(row.formulaId as string | number))
     },
     {
@@ -165,7 +161,7 @@ const formulaConfig = computed<ProductGridConfig>(() => ({
       icon: 'CircleCheck',
       type: 'success',
       permission: 'product:formula:approve',
-      visible: (row) => row.status === 'PENDING_REVIEW',
+      visible: (row) => row.status === FORMULA_STATUS.PENDING_REVIEW,
       handler: (row) => runWithConfirm('productCenter.formula.confirm.approve', () => productFormulaApi.approve(row.formulaId as string | number))
     },
     {
@@ -173,7 +169,7 @@ const formulaConfig = computed<ProductGridConfig>(() => ({
       icon: 'CircleClose',
       type: 'warning',
       permission: 'product:formula:reject',
-      visible: (row) => row.status === 'PENDING_REVIEW',
+      visible: (row) => row.status === FORMULA_STATUS.PENDING_REVIEW,
       handler: rejectFormula
     },
     {
@@ -181,7 +177,7 @@ const formulaConfig = computed<ProductGridConfig>(() => ({
       icon: 'VideoPause',
       type: 'warning',
       permission: 'product:formula:stop',
-      visible: (row) => row.status === 'EFFECTIVE',
+      visible: (row) => row.status === FORMULA_STATUS.EFFECTIVE,
       handler: (row) => runWithConfirm('productCenter.formula.confirm.stop', () => productFormulaApi.stop(row.formulaId as string | number))
     }
   ]

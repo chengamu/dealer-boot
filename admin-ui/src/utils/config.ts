@@ -52,12 +52,8 @@ export function getContextPath() {
   return getAppConfig<string>('VITE_APP_CONTEXT_PATH', '/')
 }
 
-export function getMonitorUrl() {
-  return getAppConfig<string>('VITE_APP_MONITRO_ADMIN', '/admin/applications')
-}
-
 export function getMonitorAdminUrl() {
-  return getAppConfig<string>('VITE_APP_MONITOR_ADMIN', getMonitorUrl())
+  return getAppConfig<string>('VITE_APP_MONITOR_ADMIN', '/admin/applications')
 }
 
 export function getXxlJobUrl() {
@@ -101,7 +97,6 @@ export const AppConfig = {
   getAppTitle,
   getAppEnv,
   getContextPath,
-  getMonitorUrl,
   getMonitorAdminUrl,
   getXxlJobUrl,
   getGoogleClientId,

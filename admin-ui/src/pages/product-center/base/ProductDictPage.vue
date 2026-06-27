@@ -55,8 +55,8 @@
             <template #default="{ row }">
               <el-switch
                 :model-value="row.status"
-                active-value="ENABLED"
-                inactive-value="DISABLED"
+                :active-value="PRODUCT_STATUS_ENABLED"
+                :inactive-value="PRODUCT_STATUS_DISABLED"
                 :aria-label="t('productCenter.common.status')"
                 :data-agent-label="t('productCenter.common.status')"
                 data-agent-risk="confirm-required"
@@ -110,8 +110,8 @@
             <template #default="{ row }">
               <el-switch
                 :model-value="row.status"
-                active-value="ENABLED"
-                inactive-value="DISABLED"
+                :active-value="PRODUCT_STATUS_ENABLED"
+                :inactive-value="PRODUCT_STATUS_DISABLED"
                 :aria-label="t('productCenter.common.status')"
                 :data-agent-label="t('productCenter.common.status')"
                 data-agent-risk="confirm-required"
@@ -206,6 +206,7 @@ import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 import { productDictItemApi, productDictTypeApi } from '@/api/product-capability/product-dict'
 import type { ProductCrudApi, ProductDictItemQuery, ProductDictItemVO, ProductDictTypeQuery, ProductDictTypeVO } from '@/api/product-capability/types'
+import { PRODUCT_STATUS_DISABLED, PRODUCT_STATUS_ENABLED } from '@/constants/productStatus'
 
 const route = useRoute()
 const router = useRouter()
@@ -313,14 +314,6 @@ function startResize(event: PointerEvent) {
   handleResize(event)
 }
 
-function businessDomainLabel(value?: string) {
-  return businessDomainOptions.value.find((item) => item.value === value)?.label || value || '-'
-}
-
-function booleanLabel(value: unknown) {
-  return value === true || value === 'true' || value === '1' || value === 1 ? t('common.yes') : t('common.no')
-}
-
 function parentItemLabel(value?: string) {
   if (!value) return '-'
   return parentItemOptions.value.find((item) => item.value === value)?.label || value
@@ -333,7 +326,7 @@ function isRecordId(value: unknown): value is string | number {
 function resetTypeForm() {
   typeForm.value = {
     businessDomain: 'BASE',
-    status: 'ENABLED',
+    status: PRODUCT_STATUS_ENABLED,
     delFlag: '0',
     systemFlag: false,
     editableFlag: true,
@@ -345,7 +338,7 @@ function resetTypeForm() {
 function resetItemForm() {
   itemForm.value = {
     dictTypeCode: activeType.value?.dictTypeCode,
-    status: 'ENABLED',
+    status: PRODUCT_STATUS_ENABLED,
     delFlag: '0',
     systemFlag: false,
     editableFlag: true,
@@ -508,19 +501,6 @@ async function ensureCanDeleteType(id: string | number) {
   return result.allowed ?? result.canRemove ?? Number(result.referenceCount || 0) <= 0
 }
 
-async function deleteType(row: ProductDictTypeVO) {
-  if (!row.dictTypeId) return
-  if (!(await ensureCanDeleteType(row.dictTypeId))) {
-    ElMessage.warning(t('productCenter.common.hasReferences'))
-    return
-  }
-  await ElMessageBox.confirm(t('productCenter.common.deleteConfirm'), t('common.prompt'), { type: 'warning' })
-  await productDictTypeApi.remove(row.dictTypeId)
-  ElMessage.success(t('common.deleteSuccess'))
-  if (activeType.value?.dictTypeId === row.dictTypeId) activeType.value = undefined
-  await loadTypes()
-}
-
 async function deleteSelectedTypes() {
   if (!selectedTypeIds.value.length) return
   for (const id of selectedTypeIds.value) {
@@ -606,18 +586,6 @@ async function ensureCanDeleteItem(id: string | number) {
   const response = await productDictItemApi.references?.(id)
   const result = response?.data || {}
   return result.allowed ?? result.canRemove ?? Number(result.referenceCount || 0) <= 0
-}
-
-async function deleteItem(row: ProductDictItemVO) {
-  if (!row.dictItemId) return
-  if (!(await ensureCanDeleteItem(row.dictItemId))) {
-    ElMessage.warning(t('productCenter.common.hasReferences'))
-    return
-  }
-  await ElMessageBox.confirm(t('productCenter.common.deleteConfirm'), t('common.prompt'), { type: 'warning' })
-  await productDictItemApi.remove(row.dictItemId)
-  ElMessage.success(t('common.deleteSuccess'))
-  await loadItems()
 }
 
 async function deleteSelectedItems() {

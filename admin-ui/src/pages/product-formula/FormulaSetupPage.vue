@@ -138,6 +138,15 @@ import FormulaSetupHeader from './components/FormulaSetupHeader.vue'
 import FormulaSetupSummary from './components/FormulaSetupSummary.vue'
 import FormulaUsageDrawer from './components/FormulaUsageDrawer.vue'
 import { formatUsageNumber } from './utils/formulaExpression'
+import {
+  PRODUCT_STATUS_DISABLED,
+  PRODUCT_STATUS_ENABLED,
+  formulaStatusTagType,
+  formulaStatusText,
+  formulaValidationStatusText,
+  formulaValidationTagType
+} from '@/constants/productStatus'
+import { localizedRecordLabel } from '@/utils/productLabels'
 import type {
   ProductFormulaMaterialVO,
   ProductFormulaOptionMaterialVO,
@@ -204,7 +213,7 @@ const draftVersionLabel = computed(() => `V${formula.value.draftVersionNo || 1} 
 const groupOptions = computed<ProductOption[]>(() => groupRows.value.map((row) => ({ value: row.groupCode || '', label: labelOf(row, 'groupCode', 'groupNameCn', 'groupNameEn') })).filter((item) => item.value))
 const unitOptions = computed<ProductOption[]>(() => unitRows.value.map((row) => ({ value: row.unitCode || '', label: labelOf(row, 'unitCode', 'unitNameCn', 'unitNameEn') })).filter((item) => item.value))
 const materialGroupCards = computed(() => groupRows.value
-  .filter((group) => group.status === 'ENABLED' && group.formulaSummaryVisibleFlag !== false)
+  .filter((group) => group.status === PRODUCT_STATUS_ENABLED && group.formulaSummaryVisibleFlag !== false)
   .map((group) => ({
     code: group.groupCode || '',
     name: group.groupNameCn || group.groupCode || '-',
@@ -218,7 +227,7 @@ const pickerMaterialTypeOptions = computed<ProductOption[]>(() => materialTypeRo
   .map((row) => ({ value: row.materialTypeCode || '', label: labelOf(row, 'materialTypeCode', 'materialTypeNameCn', 'materialTypeNameEn') }))
   .filter((item) => item.value))
 const filteredMaterialRows = computed(() => materialRows.value.filter((row) => {
-  if (row.status && row.status !== 'ENABLED') return false
+  if (row.status && row.status !== PRODUCT_STATUS_ENABLED) return false
   if (materialPickerQuery.attributeGroupCode && row.attributeGroupCode !== materialPickerQuery.attributeGroupCode) return false
   if (materialPickerQuery.materialTypeCode && row.materialTypeCode !== materialPickerQuery.materialTypeCode) return false
   if (!containsText(row.materialCode, materialPickerQuery.materialCode)) return false
@@ -233,10 +242,10 @@ onMounted(async () => {
 
 async function loadBaseOptions() {
   const [groupResponse, typeResponse, materialResponse, unitResponse] = await Promise.all([
-    productMaterialTypeGroupApi.options?.({ status: 'ENABLED', pageNum: 1, pageSize: 500 }),
-    productMaterialTypeApi.options?.({ status: 'ENABLED', pageNum: 1, pageSize: 500 }),
-    productMaterialApi.options?.({ status: 'ENABLED', pageNum: 1, pageSize: 1000 }),
-    productUnitApi.options?.({ status: 'ENABLED', pageNum: 1, pageSize: 500 })
+    productMaterialTypeGroupApi.options?.({ status: PRODUCT_STATUS_ENABLED, pageNum: 1, pageSize: 500 }),
+    productMaterialTypeApi.options?.({ status: PRODUCT_STATUS_ENABLED, pageNum: 1, pageSize: 500 }),
+    productMaterialApi.options?.({ status: PRODUCT_STATUS_ENABLED, pageNum: 1, pageSize: 1000 }),
+    productUnitApi.options?.({ status: PRODUCT_STATUS_ENABLED, pageNum: 1, pageSize: 500 })
   ])
   groupRows.value = responseRows(groupResponse)
   materialTypeRows.value = responseRows(typeResponse)
@@ -346,7 +355,7 @@ function materialToFormulaMaterial(material: ProductMaterialVO): ProductFormulaM
     lossRate: 0,
     defaultFlag: false,
     requiredFlag: true,
-    status: 'ENABLED',
+    status: PRODUCT_STATUS_ENABLED,
     sortOrder: (setup.materials.length + 1) * 10
   }
 }
@@ -371,7 +380,7 @@ function addOptionRow(parent?: {
     visibleConditionOptionNameCn: parent?.optionNameCn || '',
     visibleConditionValueCode: parent?.valueCode || '',
     visibleConditionValueNameCn: parent?.valueNameCn || '',
-    status: 'ENABLED',
+    status: PRODUCT_STATUS_ENABLED,
     sortOrder: next * 10
   })
   selectedOptionCode.value = code
@@ -385,7 +394,7 @@ function addOptionValueRow() {
     valueCode: `VALUE_${next}`,
     valueNameCn: '',
     defaultFlag: false,
-    status: 'ENABLED',
+    status: PRODUCT_STATUS_ENABLED,
     sortOrder: setup.optionValues.length * 10 + 10
   })
 }
@@ -397,7 +406,7 @@ function addOptionMaterialRow(valueCode?: string) {
     valueCode: valueCode || selectedValues.value[0]?.valueCode,
     requiredFlag: true,
     defaultFlag: true,
-    status: 'ENABLED',
+    status: PRODUCT_STATUS_ENABLED,
     sortOrder: setup.optionMaterials.length * 10 + 10
   })
 }
@@ -409,7 +418,7 @@ function addRestrictionRow() {
     conditionType: 'WIDTH',
     conditionOperator: 'GT',
     actionType: 'DISABLE',
-    status: 'ENABLED',
+    status: PRODUCT_STATUS_ENABLED,
     sortOrder: setup.restrictions.length * 10 + 10
   })
 }
@@ -508,7 +517,7 @@ function syncOptionMaterial(row: ProductFormulaOptionMaterialVO) {
 }
 
 function usageSummary(row: ProductFormulaMaterialVO) {
-  const activeRules = usageRulesFor(row).filter((rule) => rule.status !== 'DISABLED')
+  const activeRules = usageRulesFor(row).filter((rule) => rule.status !== PRODUCT_STATUS_DISABLED)
   if (activeRules.length > 0) {
     const hasDefault = activeRules.some((rule) => rule.defaultRuleFlag)
     const formulaRules = activeRules.filter((rule) => rule.usageMode === 'FORMULA')
@@ -534,7 +543,7 @@ function usageSummary(row: ProductFormulaMaterialVO) {
 }
 
 function isUsageUnset(row: ProductFormulaMaterialVO) {
-  const activeRules = usageRulesFor(row).filter((rule) => rule.status !== 'DISABLED')
+  const activeRules = usageRulesFor(row).filter((rule) => rule.status !== PRODUCT_STATUS_DISABLED)
   if (activeRules.length > 0) {
     const formulaRules = activeRules.filter((rule) => rule.usageMode === 'FORMULA')
     if (formulaRules.length > 0) return !formulaRules.some((rule) => rule.defaultRuleFlag)
@@ -550,36 +559,19 @@ function usageRulesFor(row: ProductFormulaMaterialVO) {
 }
 
 function statusText(status?: string) {
-  const map: Record<string, string> = {
-    DRAFT: t('productCenter.formula.status.draft'),
-    PENDING_REVIEW: t('productCenter.formula.status.pendingReview'),
-    REJECTED: t('productCenter.formula.status.rejected'),
-    EFFECTIVE: t('productCenter.formula.status.effective'),
-    STOPPED: t('productCenter.formula.status.stopped')
-  }
-  return map[status || ''] || '-'
+  return formulaStatusText(status, t)
 }
 
 function validationText(status?: string) {
-  const map: Record<string, string> = {
-    NOT_VALIDATED: t('productCenter.formula.validation.notValidated'),
-    PASS: t('productCenter.formula.validation.pass'),
-    FAIL: t('productCenter.formula.validation.fail')
-  }
-  return map[status || ''] || '-'
+  return formulaValidationStatusText(status, t)
 }
 
 function statusTagType(status?: string) {
-  if (status === 'EFFECTIVE') return 'success'
-  if (status === 'STOPPED' || status === 'REJECTED') return 'danger'
-  if (status === 'PENDING_REVIEW') return 'warning'
-  return 'info'
+  return formulaStatusTagType(status)
 }
 
 function validationTagType(status?: string) {
-  if (status === 'PASS') return 'success'
-  if (status === 'FAIL') return 'danger'
-  return 'warning'
+  return formulaValidationTagType(status)
 }
 
 function materialLabel(row: ProductMaterialVO | ProductFormulaMaterialVO) {
@@ -587,9 +579,7 @@ function materialLabel(row: ProductMaterialVO | ProductFormulaMaterialVO) {
 }
 
 function labelOf(row: ProductRecord, codeKey: string, cnKey: string, enKey?: string) {
-  const code = String(row[codeKey] || '')
-  const name = localeStore.language === 'zh_CN' ? row[cnKey] : row[enKey || cnKey] || row[cnKey]
-  return `${code} ${String(name || '')}`.trim()
+  return localizedRecordLabel(row, localeStore.language, codeKey, cnKey, enKey)
 }
 
 function responseRows<T>(response: { data?: T[] } | T[] | undefined): T[] {

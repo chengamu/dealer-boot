@@ -21,8 +21,8 @@
           style="width: 180px"
         >
           <template v-if="field.type === 'status'">
-            <el-option :label="t('productCenter.status.enabled')" value="ENABLED" />
-            <el-option :label="t('productCenter.status.disabled')" value="DISABLED" />
+            <el-option :label="t('productCenter.status.enabled')" :value="PRODUCT_STATUS_ENABLED" />
+            <el-option :label="t('productCenter.status.disabled')" :value="PRODUCT_STATUS_DISABLED" />
           </template>
           <template v-else-if="field.type === 'boolean'">
             <el-option :label="t('common.yes')" :value="true" />
@@ -155,8 +155,8 @@
           <el-switch
             v-if="field.type === 'status'"
             :model-value="statusSwitchValue(row[field.prop])"
-            active-value="ENABLED"
-            inactive-value="DISABLED"
+            :active-value="PRODUCT_STATUS_ENABLED"
+            :inactive-value="PRODUCT_STATUS_DISABLED"
             :disabled="config.readonly || !config.api.changeStatus"
             :aria-label="agentStatusLabel(row, field)"
             :data-agent-label="agentStatusLabel(row, field)"
@@ -446,108 +446,11 @@ import { useLocaleStore } from '@/stores/locale'
 import { productChangeLogApi } from '@/api/product-capability/material'
 import { productMediaAssetApi, productMediaBindingApi } from '@/api/product-capability/asset'
 import type { ProductChangeLogVO, ProductPageQuery, ProductRecord, ReferenceCheckResult } from '@/api/product-capability/types'
-import service from '@/utils/request'
-import { getApiBaseUrl } from '@/utils/config'
+import { uploadOssFile } from '@/api/system/ossUpload'
 import { useUnsavedChangesGuard } from '@/composables/useUnsavedChangesGuard'
-
-export interface ProductFieldConfig {
-  prop: string
-  labelKey: string
-  type?: 'text' | 'textarea' | 'number' | 'status' | 'date' | 'datetime' | 'url' | 'select' | 'boolean' | 'remote-select' | 'tree-select' | 'material-attributes'
-  options?: Array<{ label?: string; value?: string | number; record?: ProductRecord }>
-  optionLoader?: (form: ProductRecord) => Promise<Array<{ label?: string; value?: string | number; record?: ProductRecord }>>
-  fillFields?: Record<string, string | undefined>
-  clearFields?: string[]
-  multiple?: boolean
-  valueMode?: 'raw' | 'csv'
-  visible?: (form: ProductRecord) => boolean
-  readonly?: (form: ProductRecord) => boolean
-  sectionKey?: string
-  sectionLabelKey?: string
-  width?: number | string
-  minWidth?: number | string
-  align?: 'left' | 'center' | 'right'
-  multiline?: boolean
-  sortable?: boolean
-  sortProp?: string
-  precision?: number
-  step?: number
-  search?: boolean
-  table?: boolean
-  form?: boolean
-  required?: boolean
-  formSpan?: 1 | 2
-  onChange?: (value: unknown, form: ProductRecord) => void
-}
-
-export interface ProductGridConfig {
-  key: string
-  titleKey: string
-  descriptionKey: string
-  idKey: string
-  permissions: {
-    add: string
-    edit: string
-    remove: string
-    reference: string
-  }
-  superEditPermission?: string
-  fields: ProductFieldConfig[]
-  readonly?: boolean
-  singleRowActions?: boolean
-  submitFields?: string[]
-  initialQuery?: ProductPageQuery
-  defaultSort?: { prop: string; order: 'ascending' | 'descending' }
-  defaultRecord?: ProductRecord
-  attachments?: {
-    targetType: string
-    targetCodeField: string
-    defaultUsageType?: string
-  }
-  changeLog?: {
-    bizModule?: string
-    bizType: string
-    permission: string
-    titleKey?: string
-  }
-  hideReference?: boolean
-  showDetail?: boolean
-  closePath?: string
-  rowActions?: Array<{
-    labelKey: string
-    icon?: string
-    type?: 'primary' | 'success' | 'warning' | 'danger' | 'info'
-    permission: string
-    visible?: (row: ProductRecord) => boolean
-    disabled?: (row: ProductRecord) => boolean
-    handler: (row: ProductRecord) => void | Promise<void>
-  }>
-  toolbarActions?: Array<{
-    labelKey: string
-    icon?: string
-    type?: 'primary' | 'success' | 'warning' | 'danger' | 'info'
-    permission: string
-    handler: () => void | Promise<void>
-  }>
-  optionLoaders?: Record<string, (form: ProductRecord) => Promise<Array<{ label?: string; value?: string | number; record?: ProductRecord }>>>
-  tree?: {
-    parentKey: string
-    rowKey?: string
-    rootValue?: string | number
-    treeProps?: { children?: string }
-  }
-  api: {
-    list: (query?: ProductPageQuery) => Promise<{ rows?: ProductRecord[]; total?: number }>
-    get: (id: string | number) => Promise<{ data?: ProductRecord }>
-    add: (data: ProductRecord) => Promise<unknown>
-    update: (data: ProductRecord) => Promise<unknown>
-    superUpdate?: (data: ProductRecord) => Promise<unknown>
-    remove: (ids: Array<string | number> | string | number) => Promise<unknown>
-    changeStatus?: (id: string | number, status: string) => Promise<unknown>
-    editCheck?: (id: string | number) => Promise<{ data?: { editable?: boolean; reason?: string; reasonKey?: string; impactSummary?: string[] } }>
-    references?: (id: string | number) => Promise<{ data?: ReferenceCheckResult }>
-  }
-}
+import type { ProductFieldConfig, ProductGridConfig } from './productGridTypes'
+import { PRODUCT_STATUS_DISABLED, PRODUCT_STATUS_ENABLED, normalizeProductStatus } from '@/constants/productStatus'
+import { compactParts } from '@/utils/productLabels'
 
 const props = defineProps<{
   config: ProductGridConfig
@@ -690,7 +593,7 @@ function fieldTreeOptions(field: ProductFieldConfig) {
 }
 
 function normalizeStatus(value: unknown) {
-  return value === 'ENABLED' || value === '1' || value === 'true' || value === true || value === 1 ? 'ENABLED' : 'DISABLED'
+  return normalizeProductStatus(value)
 }
 
 function statusSwitchValue(value: unknown) {
@@ -705,10 +608,6 @@ function displayValue(value: unknown) {
   if (Array.isArray(value)) return value.length ? value.join(', ') : '-'
   if (value && typeof value === 'object') return JSON.stringify(value)
   return String(value ?? '-')
-}
-
-function compactParts(...parts: unknown[]) {
-  return parts.map((part) => String(part ?? '').trim()).filter(Boolean).join(' ')
 }
 
 function agentRecordLabel(row?: ProductRecord) {
@@ -743,7 +642,7 @@ function agentSelectedActionLabel(action: string) {
 
 function agentStatusLabel(row: ProductRecord, field: ProductFieldConfig) {
   const status = normalizeStatus(row[field.prop])
-  const statusLabel = status === 'ENABLED' ? t('productCenter.status.enabled') : t('productCenter.status.disabled')
+  const statusLabel = status === PRODUCT_STATUS_ENABLED ? t('productCenter.status.enabled') : t('productCenter.status.disabled')
   return compactParts(agentRecordLabel(row), t(field.labelKey), `当前${statusLabel}`, '切换需要确认')
 }
 
@@ -875,7 +774,7 @@ function visibleRowActions(row: ProductRecord) {
 }
 
 function reset() {
-  const next: ProductRecord = { status: 'ENABLED', delFlag: '0', ...(props.config.defaultRecord || {}) }
+  const next: ProductRecord = { status: PRODUCT_STATUS_ENABLED, delFlag: '0', ...(props.config.defaultRecord || {}) }
   allFormFields.value.forEach((field) => {
     if (field.type === 'number') next[field.prop] = 0
     if (field.type === 'boolean') next[field.prop] = false
@@ -1043,7 +942,6 @@ async function openEditor(id: string | number, isSuperEdit: boolean) {
   superEditMode.value = isSuperEdit
   const response = await props.config.api.get(id)
   form.value = normalizeFormRecord(response.data)
-  hydrateBuilderDrafts()
   await loadAttachments(form.value)
   unsavedChangesGuard.markPristine()
   open.value = true
@@ -1057,7 +955,6 @@ async function handleDetail(row: ProductRecord) {
   drawerReadonly.value = true
   const response = await props.config.api.get(id)
   form.value = normalizeFormRecord(response.data)
-  hydrateBuilderDrafts()
   await loadAttachments(form.value)
   unsavedChangesGuard.markPristine()
   open.value = true
@@ -1181,10 +1078,6 @@ function handleNumberInput(field: ProductFieldConfig, value: unknown) {
   form.value[field.prop] = normalizeNumberValue(value)
 }
 
-function handleFieldChange(field: ProductFieldConfig, value: unknown) {
-  field.onChange?.(value, form.value)
-}
-
 function handleSelectChange(field: ProductFieldConfig, value: unknown) {
   const option = fieldOptions(field).find((item) => item.value === value)
   if (field.clearFields?.length) field.clearFields.forEach((prop) => {
@@ -1200,33 +1093,6 @@ function handleSelectChange(field: ProductFieldConfig, value: unknown) {
   }
   field.onChange?.(value, form.value)
   loadRemoteOptions()
-}
-
-function parseJsonArray(value: unknown) {
-  if (Array.isArray(value)) return value as Array<Record<string, unknown>>
-  if (typeof value !== 'string' || !value.trim()) return []
-  try {
-    const parsed = JSON.parse(value)
-    return Array.isArray(parsed) ? parsed : []
-  } catch {
-    return []
-  }
-}
-
-function parseJsonObject(value: unknown) {
-  if (value && typeof value === 'object' && !Array.isArray(value)) return value as Record<string, unknown>
-  if (typeof value !== 'string' || !value.trim()) return {}
-  try {
-    const parsed = JSON.parse(value)
-    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed as Record<string, unknown> : {}
-  } catch {
-    return {}
-  }
-}
-
-function hydrateBuilderDrafts() {
-  formFields.value.forEach((field) => {
-  })
 }
 
 function materialAttributeRows(field: ProductFieldConfig): ProductRecord[] {
@@ -1250,7 +1116,7 @@ function materialAttributeRows(field: ProductFieldConfig): ProductRecord[] {
       valueType,
       valueUnitCode: current.valueUnitCode || definition.unitCode,
       sortOrder: current.sortOrder || definition.sortOrder || index * 10 + 10,
-      status: current.status || 'ENABLED'
+      status: current.status || PRODUCT_STATUS_ENABLED
     }
   })
   materialAttributeDrafts.value[field.prop] = rows
@@ -1389,9 +1255,7 @@ async function uploadAttachment(options: UploadRequestOptions) {
   if (!props.config.attachments || !currentRecordId.value) return
   let createdAssetId: string | number | undefined
   try {
-    const formData = new FormData()
-    formData.append(options.filename, options.file)
-    const uploadResponse = await service.post('/system/oss/upload', formData) as unknown as { data?: ProductRecord }
+    const uploadResponse = await uploadOssFile(options.file, options.filename)
     const uploadData = uploadResponse.data || {}
     const assetCode = `ASSET_${props.config.attachments.targetType}_${currentRecordId.value}_${Date.now()}`
     await productMediaAssetApi.add({
@@ -1405,10 +1269,10 @@ async function uploadAttachment(options: UploadRequestOptions) {
       ossId: uploadData.ossId,
       url: uploadData.url,
       versionNo: 1,
-      status: 'ENABLED',
+      status: PRODUCT_STATUS_ENABLED,
       delFlag: '0'
     })
-    const assetResponse = await productMediaAssetApi.options({ assetCode, status: 'ENABLED' })
+    const assetResponse = await productMediaAssetApi.options({ assetCode, status: PRODUCT_STATUS_ENABLED })
     const assetList = Array.isArray(assetResponse) ? assetResponse : assetResponse.data || []
     const asset = assetList.find((item) => item.assetCode === assetCode) || assetList[0]
     if (!asset?.assetId) {
@@ -1427,7 +1291,7 @@ async function uploadAttachment(options: UploadRequestOptions) {
       languageCode: localeStore.language,
       requiredForPublish: '0',
       sortOrder: attachmentRows.value.length + 1,
-      status: 'ENABLED',
+      status: PRODUCT_STATUS_ENABLED,
       delFlag: '0'
     })
     ElMessage.success(t('common.upload.success'))

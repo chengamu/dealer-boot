@@ -25,7 +25,10 @@ import {
 } from '@/api/product-capability/base'
 import { productMaterialApi, productMaterialAttributeApi } from '@/api/product-capability/material'
 import type { ProductRecord, ProductUnitVO } from '@/api/product-capability/types'
-import ProductEntityGridPage, { type ProductGridConfig } from '@/pages/product-center/components/ProductEntityGridPage.vue'
+import ProductEntityGridPage from '@/pages/product-center/components/ProductEntityGridPage.vue'
+import type { ProductGridConfig } from '@/pages/product-center/components/productGridTypes'
+import { PRODUCT_STATUS_DISABLED, PRODUCT_STATUS_ENABLED } from '@/constants/productStatus'
+import { localizedRecordLabel } from '@/utils/productLabels'
 
 const localeStore = useLocaleStore()
 const t = (key: string) => getMessage(key, localeStore.language)
@@ -63,19 +66,17 @@ function unitOption(unit: ProductUnitVO) {
 const unitOptions = computed(() => unitList.value.map(unitOption))
 const unitTypeOptions = computed(() => productDictOptions.value.product_unit_type || [])
 const materialStatusOptions = computed(() => [
-  { label: t('productCenter.material.auditStatusDraft'), value: 'DISABLED' },
-  { label: t('productCenter.material.auditStatusAudited'), value: 'ENABLED' }
+  { label: t('productCenter.material.auditStatusDraft'), value: PRODUCT_STATUS_DISABLED },
+  { label: t('productCenter.material.auditStatusAudited'), value: PRODUCT_STATUS_ENABLED }
 ])
 
 function labelOf(row: ProductRecord, codeKey: string, cnKey: string, enKey?: string) {
-  const code = String(row[codeKey] || '')
-  const name = localeStore.language === 'zh_CN' ? row[cnKey] : row[enKey || cnKey] || row[cnKey]
-  return `${code} ${String(name || '')}`.trim()
+  return localizedRecordLabel(row, localeStore.language, codeKey, cnKey, enKey)
 }
 
 async function loadMaterialOptions(form?: ProductRecord) {
   const response = await productMaterialApi.options?.({
-    status: 'ENABLED',
+    status: PRODUCT_STATUS_ENABLED,
     materialTypeCode: form?.materialTypeCode as string | undefined,
     pageNum: 1,
     pageSize: 500
@@ -85,23 +86,16 @@ async function loadMaterialOptions(form?: ProductRecord) {
 }
 
 async function loadCategoryOptions() {
-  const response = await productCategoryApi.options?.({ status: 'ENABLED', pageNum: 1, pageSize: 500 })
+  const response = await productCategoryApi.options?.({ status: PRODUCT_STATUS_ENABLED, pageNum: 1, pageSize: 500 })
   const rows = Array.isArray(response) ? response : response?.data || []
   return rows.map((row) => ({ value: row.categoryId, label: labelOf(row, 'categoryCode', 'categoryNameCn', 'categoryNameEn'), record: row }))
-}
-
-async function loadUnitOptions(form?: ProductRecord) {
-  const unitType = form?.unitType as string | undefined
-  return unitList.value
-    .filter((unit) => !unitType || unit.unitType === unitType)
-    .map(unitOption)
 }
 
 async function loadBaseAttributeOptions(form?: ProductRecord) {
   const attributeGroupCode = String(form?.attributeGroupCode || '')
   if (!attributeGroupCode) return []
   const response = await productBaseAttributeApi.options?.({
-    status: 'ENABLED',
+    status: PRODUCT_STATUS_ENABLED,
     attributeGroupCode,
     pageNum: 1,
     pageSize: 500
@@ -115,7 +109,7 @@ async function loadBaseAttributeOptions(form?: ProductRecord) {
 }
 
 async function loadMaterialTypeOptions() {
-  const response = await productMaterialTypeApi.options?.({ status: 'ENABLED', pageNum: 1, pageSize: 500 })
+  const response = await productMaterialTypeApi.options?.({ status: PRODUCT_STATUS_ENABLED, pageNum: 1, pageSize: 500 })
   const rows = Array.isArray(response) ? response : response?.data || []
   return rows.map((row) => ({
     value: row.materialTypeCode,
@@ -125,13 +119,13 @@ async function loadMaterialTypeOptions() {
 }
 
 async function loadMaterialTypeGroupOptions() {
-  const response = await productMaterialTypeGroupApi.options?.({ status: 'ENABLED', pageNum: 1, pageSize: 500 })
+  const response = await productMaterialTypeGroupApi.options?.({ status: PRODUCT_STATUS_ENABLED, pageNum: 1, pageSize: 500 })
   const rows = Array.isArray(response) ? response : response?.data || []
   return rows.map((row) => ({ value: row.groupCode, label: labelOf(row, 'groupCode', 'groupNameCn', 'groupNameEn'), record: row }))
 }
 
 async function loadManufacturerOptions() {
-  const response = await productManufacturerApi.options?.({ status: 'ENABLED', pageNum: 1, pageSize: 500 })
+  const response = await productManufacturerApi.options?.({ status: PRODUCT_STATUS_ENABLED, pageNum: 1, pageSize: 500 })
   const rows = Array.isArray(response) ? response : response?.data || []
   return rows.map((row) => ({
     value: row.manufacturerId,
@@ -141,7 +135,7 @@ async function loadManufacturerOptions() {
 }
 
 async function loadUnits() {
-  const response = await productUnitApi.options?.({ status: 'ENABLED' })
+  const response = await productUnitApi.options?.({ status: PRODUCT_STATUS_ENABLED })
   unitList.value = Array.isArray(response) ? response : response?.data || []
 }
 
@@ -178,7 +172,7 @@ const configs = computed<ProductGridConfig[]>(() => [
     permissions: { add: 'product:base:add', edit: 'product:base:edit', remove: 'product:base:remove', reference: 'product:base:reference' },
     superEditPermission: 'product:base:superEdit',
     singleRowActions: true,
-    defaultRecord: { status: 'DISABLED' },
+    defaultRecord: { status: PRODUCT_STATUS_DISABLED },
     api: productMaterialApi,
     defaultSort: { prop: 'updateTime', order: 'descending' },
     attachments: { targetType: 'MATERIAL', targetCodeField: 'materialCode', defaultUsageType: 'SPEC' },
@@ -189,9 +183,9 @@ const configs = computed<ProductGridConfig[]>(() => [
         icon: 'CircleCheck',
         type: 'success',
         permission: 'product:base:edit',
-        visible: (row) => row.status !== 'ENABLED',
+        visible: (row) => row.status !== PRODUCT_STATUS_ENABLED,
         handler: async (row) => {
-          await productMaterialApi.changeStatus?.(row.materialId as string | number, 'ENABLED')
+          await productMaterialApi.changeStatus?.(row.materialId as string | number, PRODUCT_STATUS_ENABLED)
         }
       },
       {
@@ -199,9 +193,9 @@ const configs = computed<ProductGridConfig[]>(() => [
         icon: 'RefreshLeft',
         type: 'warning',
         permission: 'product:base:edit',
-        visible: (row) => row.status === 'ENABLED',
+        visible: (row) => row.status === PRODUCT_STATUS_ENABLED,
         handler: async (row) => {
-          await productMaterialApi.changeStatus?.(row.materialId as string | number, 'DISABLED')
+          await productMaterialApi.changeStatus?.(row.materialId as string | number, PRODUCT_STATUS_DISABLED)
         }
       }
     ],
