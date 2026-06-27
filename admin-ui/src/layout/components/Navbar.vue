@@ -159,7 +159,7 @@ async function handleLanguage(language: 'zh_CN' | 'en_US') {
 
 <style lang="scss" scoped>
 .navbar {
-  height: 50px;
+  height: 46px;
   overflow: hidden;
   position: relative;
   background: #F8F9FD;
@@ -189,7 +189,7 @@ async function handleLanguage(language: 'zh_CN' | 'en_US') {
   .right-menu {
     float: right;
     height: 100%;
-    line-height: 50px;
+    line-height: 46px;
     display: flex;
 
     &:focus {
@@ -224,10 +224,10 @@ async function handleLanguage(language: 'zh_CN' | 'en_US') {
         display: flex;
         align-items: center;
         gap: 7px;
-        height: 34px;
-        padding: 0 12px;
-        border: 0;
-        border-radius: 12px;
+        height: 30px;
+        padding: 0 10px;
+        border: 1px solid #e6ebf2;
+        border-radius: 10px;
         background: #f5f7fb;
         color: #354052;
         cursor: pointer;
@@ -264,7 +264,7 @@ async function handleLanguage(language: 'zh_CN' | 'en_US') {
     .navbar-icon-button {
       border: 0;
       background: transparent;
-      line-height: 50px;
+      line-height: 46px;
     }
 
     .avatar-container {
@@ -274,9 +274,9 @@ async function handleLanguage(language: 'zh_CN' | 'en_US') {
         display: flex;
         align-items: center;
         gap: 10px;
-        height: 44px;
-        margin-top: 3px;
-        padding: 4px 9px 4px 4px;
+        height: 38px;
+        margin-top: 4px;
+        padding: 3px 8px 3px 3px;
         border: 0;
         border-radius: 16px;
         background: transparent;
@@ -289,9 +289,9 @@ async function handleLanguage(language: 'zh_CN' | 'en_US') {
         }
 
         .user-avatar {
-          width: 36px;
-          height: 36px;
-          border-radius: 12px;
+          width: 32px;
+          height: 32px;
+          border-radius: 10px;
           box-shadow: 0 0 0 1px #dbe5f2;
         }
 

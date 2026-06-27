@@ -26,8 +26,8 @@
   --admin-font-size-small: 13px;
   --admin-shadow: 0 1px 3px rgba(16, 24, 40, 0.06);
   --admin-panel-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
-  --admin-shell-header: 54px;
-  --admin-tags-height: 34px;
+  --admin-shell-header: 46px;
+  --admin-tags-height: 30px;
 
   --el-color-primary: var(--admin-primary);
   --el-color-primary-light-3: #4d94ff;
@@ -93,7 +93,7 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 44px;
+      width: 42px;
       line-height: var(--admin-shell-header) !important;
     }
 
@@ -129,7 +129,7 @@
       align-items: center;
       height: var(--admin-shell-header) !important;
       margin-left: auto;
-      padding-right: 14px;
+      padding-right: 12px;
       line-height: var(--admin-shell-header) !important;
     }
 
@@ -137,10 +137,10 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      height: 32px;
-      min-width: 32px;
+      height: 30px;
+      min-width: 30px;
       margin: 0 3px;
-      padding: 0 8px;
+      padding: 0 7px;
       border-radius: 8px;
       color: var(--admin-muted);
       font-size: 16px;
@@ -156,15 +156,15 @@
     .header-search {
       display: inline-flex;
       align-items: center;
-      height: 32px;
+      height: 30px;
     }
 
     .header-search .header-search-button {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 32px !important;
-      height: 32px !important;
+      width: 30px !important;
+      height: 30px !important;
     }
 
     .language-wrapper,
@@ -173,9 +173,9 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      min-width: 32px;
-      height: 32px !important;
-      line-height: 32px !important;
+      min-width: 30px;
+      height: 30px !important;
+      line-height: 30px !important;
       color: inherit;
       border-radius: 8px;
     }
@@ -204,8 +204,8 @@
         padding: 0 8px !important;
 
         .user-avatar {
-          width: 30px !important;
-          height: 30px !important;
+          width: 28px !important;
+          height: 28px !important;
           border-radius: 8px;
           box-shadow: 0 0 0 1px var(--admin-border-soft);
         }
@@ -317,8 +317,8 @@
 
       &::before {
         position: absolute;
-        top: 9px;
-        bottom: 9px;
+        top: 8px;
+        bottom: 8px;
         left: 0;
         width: 3px;
         border-radius: 999px;
@@ -2246,20 +2246,20 @@ body:not(.login-route-active) {
   .el-drawer__header {
     display: flex;
     align-items: center;
-    min-height: 60px;
+    min-height: 52px;
     margin-bottom: 0;
-    padding: 20px 24px;
+    padding: 14px 20px;
     border-bottom: 1px solid var(--admin-border-soft);
     color: var(--admin-title);
     font-weight: 600;
   }
 
   .el-drawer__body {
-    padding: 22px 24px;
+    padding: 16px 20px;
     background: #f5f7fa;
 
     > .el-form {
-      padding: 18px 18px 4px;
+      padding: 16px 18px 4px;
       border: 1px solid var(--admin-border-soft);
       border-radius: 12px;
       background: #ffffff;
@@ -2270,7 +2270,7 @@ body:not(.login-route-active) {
     display: flex;
     justify-content: flex-end;
     gap: 10px;
-    padding: 16px 24px 20px;
+    padding: 12px 20px;
     border-top: 1px solid var(--admin-border-soft);
     background: #ffffff;
 

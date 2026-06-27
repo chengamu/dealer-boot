@@ -278,7 +278,7 @@ function handleScroll() {
 
 <style lang='scss' scoped>
 .tags-view-container {
-  height: 34px;
+  height: 30px;
   width: 100%;
   background: #F8F9FD;
   border-bottom: 1px solid #d8dce5;
@@ -288,14 +288,14 @@ function handleScroll() {
       position: relative;
       cursor: pointer;
       height: 26px;
-      line-height: 26px;
+      line-height: 24px;
       border: 1px solid #d8dce5;
       color: #495060;
       background: #fff;
       padding: 0 8px;
       font-size: 12px;
       margin-left: 5px;
-      margin-top: 4px;
+      margin-top: 3px;
       &:first-of-type {
         margin-left: 15px;
       }

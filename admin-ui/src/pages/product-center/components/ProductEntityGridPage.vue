@@ -239,6 +239,7 @@
       v-model="open"
       :title="drawerTitle"
       size="84%"
+      class="product-grid-page__drawer"
       append-to-body
       destroy-on-close
       :close-on-click-modal="false"
@@ -1342,14 +1343,45 @@ defineExpose({
 
 <style scoped lang="scss">
 .product-grid-page__search {
-  margin-bottom: 8px;
+  margin-bottom: 6px;
+  padding: 10px 12px 4px;
+  border: 1px solid var(--admin-border-soft, #e8edf5);
+  border-radius: 8px;
+  background: #fff;
+
+  :deep(.el-form-item) {
+    margin-right: 10px;
+    margin-bottom: 6px;
+  }
+
+  :deep(.el-input),
+  :deep(.el-select) {
+    vertical-align: top;
+  }
 }
 
 .product-grid-page__toolbar {
   align-items: center;
+  min-height: 36px;
+  margin-bottom: 8px;
+
+  :deep(.el-col) {
+    flex: 0 0 auto;
+  }
 }
 
 .product-grid-page__table {
+  :deep(.el-table__header th) {
+    background: #f8fafc;
+    color: #344054;
+    font-weight: 600;
+  }
+
+  :deep(.el-table__cell) {
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+
   :deep(.el-table__body tr) {
     cursor: pointer;
   }
@@ -1371,24 +1403,46 @@ defineExpose({
   gap: 8px;
 }
 
+.product-grid-page__drawer {
+  :deep(.el-drawer__header) {
+    margin-bottom: 0;
+    padding: 16px 20px 12px;
+    border-bottom: 1px solid var(--admin-border-soft, #e8edf5);
+  }
+
+  :deep(.el-drawer__body) {
+    padding: 16px 20px 0;
+  }
+
+  :deep(.el-drawer__footer) {
+    position: sticky;
+    bottom: 0;
+    z-index: 1;
+    padding: 12px 20px;
+    border-top: 1px solid var(--admin-border-soft, #e8edf5);
+    background: #fff;
+  }
+}
+
 .product-grid-page__form {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  column-gap: 24px;
+  column-gap: 20px;
   padding-right: 8px;
 
   :deep(.el-form-item) {
-    margin-bottom: 18px;
+    margin-bottom: 14px;
   }
 }
 
 .product-grid-page__section-title {
   grid-column: 1 / -1;
-  margin: 6px 0 14px;
+  margin: 4px 0 10px;
   padding-left: 10px;
   border-left: 3px solid var(--el-color-primary);
   color: var(--el-text-color-primary);
   font-weight: 700;
+  line-height: 20px;
 }
 
 .product-grid-page__form-item--full,
@@ -1459,7 +1513,7 @@ defineExpose({
 
 .product-grid-page__attachments {
   border-top: 1px solid var(--el-border-color-lighter);
-  padding-top: 16px;
+  padding-top: 14px;
 }
 
 .product-grid-page__attachments-head {
@@ -1477,9 +1531,14 @@ defineExpose({
 
 .product-grid-page__change-log-diff {
   margin: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--admin-border-soft, #e8edf5);
+  border-radius: 6px;
+  background: #f8fafc;
   white-space: pre-wrap;
   word-break: break-word;
-  font-family: inherit;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 12px;
   line-height: 1.5;
 }
 
