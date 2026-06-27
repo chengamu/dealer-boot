@@ -75,13 +75,6 @@ import { useLocaleStore } from '@/stores/locale'
 import { useDict } from '@/utils/dict'
 import RoleSelectUser from './RoleSelectUser.vue'
 
-interface DictOption {
-  label: string
-  value: string
-  elTagType?: string
-  elTagClass?: string
-}
-
 const route = useRoute()
 const router = useRouter()
 const localeStore = useLocaleStore()

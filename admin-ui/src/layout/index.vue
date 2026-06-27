@@ -25,7 +25,6 @@ import useSettingsStore from '@/stores/settings'
 
 const settingsStore = useSettingsStore()
 const theme = computed(() => settingsStore.theme);
-const sideTheme = computed(() => settingsStore.sideTheme);
 const sidebar = computed(() => useAppStore().sidebar);
 const device = computed(() => useAppStore().device);
 const needTagsView = computed(() => settingsStore.tagsView);

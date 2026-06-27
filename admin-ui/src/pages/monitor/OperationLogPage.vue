@@ -149,14 +149,6 @@ import { useDict } from '@/utils/dict'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 
-interface DictOption {
-  label: string
-  value: string
-  elTagType?: string
-  elTagClass?: string
-  status?: string
-}
-
 const localeStore = useLocaleStore()
 const t = (key: string, params?: Record<string, string | number>) => {
   const message = getMessage(key, localeStore.language)

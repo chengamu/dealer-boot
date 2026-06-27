@@ -37,7 +37,7 @@ import type { GenTable } from '@/api/tool/gen'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 
-const props = defineProps<{
+defineProps<{
   info: GenTable
 }>()
 

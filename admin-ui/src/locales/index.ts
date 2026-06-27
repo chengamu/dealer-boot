@@ -1,5 +1,5 @@
 import type { App } from 'vue'
-import { getCachedLocaleMessage, normalizeLocale, type AppLocale } from '@/i18n'
+import { getCachedLocaleMessage, normalizeLocale } from '@/i18n'
 import { getLocale } from '@/utils/auth'
 
 function resolveMessage(messages: Record<string, unknown> | undefined, path: string): string | undefined {

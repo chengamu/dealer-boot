@@ -213,13 +213,6 @@ import { useLocaleStore } from '@/stores/locale'
 import { useDict } from '@/utils/dict'
 import { handleTree } from '@/utils/ruoyi'
 
-interface DictOption {
-  label: string
-  value: string
-  elTagType?: string
-  elTagClass?: string
-}
-
 type IconSelectExpose = { reset: () => void }
 
 const localeStore = useLocaleStore()

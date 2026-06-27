@@ -150,13 +150,6 @@ import { useLocaleStore } from '@/stores/locale'
 import { useDict } from '@/utils/dict'
 import { useDictStore } from '@/stores/dict'
 
-interface DictOption {
-  label: string
-  value: string
-  elTagType?: string
-  elTagClass?: string
-}
-
 const route = useRoute()
 const router = useRouter()
 const localeStore = useLocaleStore()

@@ -56,13 +56,6 @@ import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 import { useDict } from '@/utils/dict'
 
-interface DictOption {
-  label: string
-  value: string
-  elTagType?: string
-  elTagClass?: string
-}
-
 const props = defineProps<{
   roleId?: number | string
 }>()

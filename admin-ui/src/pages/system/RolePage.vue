@@ -205,11 +205,6 @@ import { runUiAction } from '@/utils/action'
 import { checkPermi } from '@/utils/permission'
 import { MoreFilled } from '@element-plus/icons-vue'
 
-interface DictOption {
-  label: string
-  value: string
-}
-
 type TreeType = 'menu' | 'dept'
 
 const router = useRouter()
