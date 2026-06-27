@@ -30,6 +30,472 @@ DROP TABLE IF EXISTS pc_sales_product CASCADE;
 DROP TABLE IF EXISTS pc_standard_sku_engineering CASCADE;
 DROP TABLE IF EXISTS pc_standard_sku CASCADE;
 
+CREATE TABLE IF NOT EXISTS pc_formula (
+    formula_id bigint PRIMARY KEY,
+    tenant_id bigint NOT NULL DEFAULT 1 CHECK (tenant_id <> 0),
+    formula_code varchar(80) NOT NULL,
+    formula_name varchar(200) NOT NULL,
+    category_id bigint NOT NULL,
+    category_code varchar(80) NOT NULL,
+    category_name_cn varchar(200) NOT NULL,
+    product_type_code varchar(80) NOT NULL,
+    product_type_name_cn varchar(200) NOT NULL,
+    max_width_inch numeric(18,4) NOT NULL,
+    max_height_inch numeric(18,4) NOT NULL,
+    size_summary varchar(200),
+    material_line_count int NOT NULL DEFAULT 0,
+    configured_flag boolean NOT NULL DEFAULT false,
+    current_version_id bigint,
+    current_version_no int,
+    current_version_label varchar(40),
+    draft_version_no int NOT NULL DEFAULT 1,
+    latest_validation_status varchar(30) NOT NULL DEFAULT 'NOT_VALIDATED',
+    latest_validation_message varchar(500),
+    latest_validation_time timestamptz,
+    status varchar(30) NOT NULL DEFAULT 'DRAFT',
+    audit_by varchar(64),
+    audit_time timestamptz,
+    reject_reason varchar(500),
+    sort_order int NOT NULL DEFAULT 0,
+    del_flag varchar(1) NOT NULL DEFAULT '0',
+    remark varchar(500),
+    create_by_id bigint,
+    create_by varchar(64),
+    create_time timestamptz,
+    update_by varchar(64),
+    update_time timestamptz
+);
+
+ALTER TABLE IF EXISTS pc_formula
+    ADD COLUMN IF NOT EXISTS tenant_id bigint NOT NULL DEFAULT 1 CHECK (tenant_id <> 0),
+    ADD COLUMN IF NOT EXISTS formula_code varchar(80),
+    ADD COLUMN IF NOT EXISTS formula_name varchar(200),
+    ADD COLUMN IF NOT EXISTS category_id bigint,
+    ADD COLUMN IF NOT EXISTS category_code varchar(80),
+    ADD COLUMN IF NOT EXISTS category_name_cn varchar(200),
+    ADD COLUMN IF NOT EXISTS product_type_code varchar(80),
+    ADD COLUMN IF NOT EXISTS product_type_name_cn varchar(200),
+    ADD COLUMN IF NOT EXISTS max_width_inch numeric(18,4),
+    ADD COLUMN IF NOT EXISTS max_height_inch numeric(18,4),
+    ADD COLUMN IF NOT EXISTS size_summary varchar(200),
+    ADD COLUMN IF NOT EXISTS material_line_count int NOT NULL DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS configured_flag boolean NOT NULL DEFAULT false,
+    ADD COLUMN IF NOT EXISTS current_version_id bigint,
+    ADD COLUMN IF NOT EXISTS current_version_no int,
+    ADD COLUMN IF NOT EXISTS current_version_label varchar(40),
+    ADD COLUMN IF NOT EXISTS draft_version_no int NOT NULL DEFAULT 1,
+    ADD COLUMN IF NOT EXISTS latest_validation_status varchar(30) NOT NULL DEFAULT 'NOT_VALIDATED',
+    ADD COLUMN IF NOT EXISTS latest_validation_message varchar(500),
+    ADD COLUMN IF NOT EXISTS latest_validation_time timestamptz,
+    ADD COLUMN IF NOT EXISTS status varchar(30) NOT NULL DEFAULT 'DRAFT',
+    ADD COLUMN IF NOT EXISTS audit_by varchar(64),
+    ADD COLUMN IF NOT EXISTS audit_time timestamptz,
+    ADD COLUMN IF NOT EXISTS reject_reason varchar(500),
+    ADD COLUMN IF NOT EXISTS sort_order int NOT NULL DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS del_flag varchar(1) NOT NULL DEFAULT '0',
+    ADD COLUMN IF NOT EXISTS remark varchar(500);
+
+COMMENT ON TABLE pc_formula IS '产品配方主表';
+COMMENT ON COLUMN pc_formula.formula_id IS '配方ID';
+COMMENT ON COLUMN pc_formula.tenant_id IS '租户ID';
+COMMENT ON COLUMN pc_formula.formula_code IS '配方编号，程序校验唯一';
+COMMENT ON COLUMN pc_formula.formula_name IS '配方名称';
+COMMENT ON COLUMN pc_formula.category_id IS '产品分类ID';
+COMMENT ON COLUMN pc_formula.category_code IS '产品分类编码快照';
+COMMENT ON COLUMN pc_formula.category_name_cn IS '产品分类中文名称快照';
+COMMENT ON COLUMN pc_formula.product_type_code IS '产品类型编码，来源 pc_product_dict_item.product_type';
+COMMENT ON COLUMN pc_formula.product_type_name_cn IS '产品类型中文名称快照';
+COMMENT ON COLUMN pc_formula.max_width_inch IS '最大宽度，单位英寸';
+COMMENT ON COLUMN pc_formula.max_height_inch IS '最大高度，单位英寸';
+COMMENT ON COLUMN pc_formula.size_summary IS '尺寸摘要';
+COMMENT ON COLUMN pc_formula.material_line_count IS '物料行数，设置配方阶段维护';
+COMMENT ON COLUMN pc_formula.configured_flag IS '是否已设置配方明细';
+COMMENT ON COLUMN pc_formula.current_version_id IS '当前生效版本ID';
+COMMENT ON COLUMN pc_formula.current_version_no IS '当前生效版本号';
+COMMENT ON COLUMN pc_formula.current_version_label IS '当前生效版本展示号';
+COMMENT ON COLUMN pc_formula.draft_version_no IS '草稿版本预览号';
+COMMENT ON COLUMN pc_formula.latest_validation_status IS '最近校验状态：NOT_VALIDATED、PASS、FAIL';
+COMMENT ON COLUMN pc_formula.latest_validation_message IS '最近校验消息key';
+COMMENT ON COLUMN pc_formula.latest_validation_time IS '最近校验时间，UTC timestamptz';
+COMMENT ON COLUMN pc_formula.status IS '单状态：DRAFT、PENDING_REVIEW、REJECTED、EFFECTIVE、STOPPED';
+COMMENT ON COLUMN pc_formula.audit_by IS '最后审核人';
+COMMENT ON COLUMN pc_formula.audit_time IS '最后审核时间，UTC timestamptz';
+COMMENT ON COLUMN pc_formula.reject_reason IS '最近驳回原因';
+COMMENT ON COLUMN pc_formula.sort_order IS '排序';
+COMMENT ON COLUMN pc_formula.del_flag IS '删除标志：0存在，2删除';
+COMMENT ON COLUMN pc_formula.remark IS '备注';
+COMMENT ON COLUMN pc_formula.create_by_id IS '创建者ID';
+COMMENT ON COLUMN pc_formula.create_by IS '创建者';
+COMMENT ON COLUMN pc_formula.create_time IS '创建时间，UTC timestamptz';
+COMMENT ON COLUMN pc_formula.update_by IS '更新者';
+COMMENT ON COLUMN pc_formula.update_time IS '更新时间，UTC timestamptz';
+CREATE INDEX IF NOT EXISTS idx_pc_formula_code_active ON pc_formula (tenant_id, formula_code) WHERE del_flag = '0';
+CREATE INDEX IF NOT EXISTS idx_pc_formula_natural_active ON pc_formula (tenant_id, formula_name, category_id, product_type_code, max_width_inch, max_height_inch) WHERE del_flag = '0';
+CREATE INDEX IF NOT EXISTS idx_pc_formula_category_type_status ON pc_formula (tenant_id, category_code, product_type_code, status);
+CREATE INDEX IF NOT EXISTS idx_pc_formula_status_update ON pc_formula (tenant_id, status, update_time DESC);
+
+UPDATE pc_formula
+SET status = CASE status
+    WHEN 'ENABLED' THEN 'EFFECTIVE'
+    WHEN 'DISABLED' THEN 'STOPPED'
+    ELSE status
+END
+WHERE status IN ('ENABLED', 'DISABLED');
+
+DROP TABLE IF EXISTS pc_formula_item;
+
+CREATE TABLE IF NOT EXISTS pc_formula_material (
+    formula_material_id bigint PRIMARY KEY,
+    tenant_id bigint NOT NULL DEFAULT 1 CHECK (tenant_id <> 0),
+    formula_id bigint NOT NULL,
+    line_no int,
+    material_id bigint NOT NULL,
+    material_code varchar(80) NOT NULL,
+    material_name_cn varchar(200) NOT NULL,
+    spec_model_text varchar(500),
+    attribute_group_id bigint,
+    attribute_group_code varchar(80),
+    attribute_group_name_cn varchar(200),
+    material_type_id bigint,
+    material_type_code varchar(80),
+    material_type_name_cn varchar(200),
+    unit_code varchar(80),
+    default_flag boolean NOT NULL DEFAULT false,
+    required_flag boolean NOT NULL DEFAULT true,
+    usage_mode varchar(40) NOT NULL DEFAULT 'FIXED',
+    usage_formula text,
+    fixed_usage_qty numeric(18,6),
+    calculation_unit_code varchar(80),
+    rounding_mode varchar(40),
+    min_usage_qty numeric(18,6),
+    max_usage_qty numeric(18,6),
+    loss_rate numeric(10,6),
+    production_remark varchar(500),
+    status varchar(20) NOT NULL DEFAULT 'ENABLED',
+    del_flag varchar(1) NOT NULL DEFAULT '0',
+    sort_order int NOT NULL DEFAULT 0,
+    remark varchar(500),
+    create_by_id bigint,
+    create_by varchar(64),
+    create_time timestamptz,
+    update_by varchar(64),
+    update_time timestamptz
+);
+
+ALTER TABLE IF EXISTS pc_formula_material
+    ADD COLUMN IF NOT EXISTS tenant_id bigint NOT NULL DEFAULT 1 CHECK (tenant_id <> 0),
+    ADD COLUMN IF NOT EXISTS formula_id bigint,
+    ADD COLUMN IF NOT EXISTS line_no int,
+    ADD COLUMN IF NOT EXISTS material_id bigint,
+    ADD COLUMN IF NOT EXISTS material_code varchar(80),
+    ADD COLUMN IF NOT EXISTS material_name_cn varchar(200),
+    ADD COLUMN IF NOT EXISTS spec_model_text varchar(500),
+    ADD COLUMN IF NOT EXISTS attribute_group_id bigint,
+    ADD COLUMN IF NOT EXISTS attribute_group_code varchar(80),
+    ADD COLUMN IF NOT EXISTS attribute_group_name_cn varchar(200),
+    ADD COLUMN IF NOT EXISTS material_type_id bigint,
+    ADD COLUMN IF NOT EXISTS material_type_code varchar(80),
+    ADD COLUMN IF NOT EXISTS material_type_name_cn varchar(200),
+    ADD COLUMN IF NOT EXISTS unit_code varchar(80),
+    ADD COLUMN IF NOT EXISTS default_flag boolean NOT NULL DEFAULT false,
+    ADD COLUMN IF NOT EXISTS required_flag boolean NOT NULL DEFAULT true,
+    ADD COLUMN IF NOT EXISTS usage_mode varchar(40) NOT NULL DEFAULT 'FIXED',
+    ADD COLUMN IF NOT EXISTS usage_formula text,
+    ADD COLUMN IF NOT EXISTS fixed_usage_qty numeric(18,6),
+    ADD COLUMN IF NOT EXISTS calculation_unit_code varchar(80),
+    ADD COLUMN IF NOT EXISTS rounding_mode varchar(40),
+    ADD COLUMN IF NOT EXISTS min_usage_qty numeric(18,6),
+    ADD COLUMN IF NOT EXISTS max_usage_qty numeric(18,6),
+    ADD COLUMN IF NOT EXISTS loss_rate numeric(10,6),
+    ADD COLUMN IF NOT EXISTS production_remark varchar(500),
+    ADD COLUMN IF NOT EXISTS status varchar(20) NOT NULL DEFAULT 'ENABLED',
+    ADD COLUMN IF NOT EXISTS del_flag varchar(1) NOT NULL DEFAULT '0',
+    ADD COLUMN IF NOT EXISTS sort_order int NOT NULL DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS remark varchar(500);
+
+COMMENT ON TABLE pc_formula_material IS '产品配方原料池草稿表';
+COMMENT ON COLUMN pc_formula_material.formula_material_id IS '配方原料池ID';
+COMMENT ON COLUMN pc_formula_material.formula_id IS '配方ID';
+COMMENT ON COLUMN pc_formula_material.material_code IS '物料编码快照';
+COMMENT ON COLUMN pc_formula_material.attribute_group_code IS '属性分组编码快照';
+COMMENT ON COLUMN pc_formula_material.material_type_code IS '物料类型编码快照';
+COMMENT ON COLUMN pc_formula_material.usage_mode IS '用量方式：FIXED、FORMULA';
+COMMENT ON COLUMN pc_formula_material.usage_formula IS '用量公式';
+COMMENT ON COLUMN pc_formula_material.calculation_unit_code IS '计算单位编码，来源 pc_unit';
+CREATE INDEX IF NOT EXISTS idx_pc_formula_material_formula_sort ON pc_formula_material (tenant_id, formula_id, sort_order, formula_material_id) WHERE del_flag = '0';
+CREATE INDEX IF NOT EXISTS idx_pc_formula_material_code ON pc_formula_material (tenant_id, formula_id, material_code) WHERE del_flag = '0';
+
+CREATE TABLE IF NOT EXISTS pc_formula_usage_rule (
+    usage_rule_id bigint PRIMARY KEY,
+    tenant_id bigint NOT NULL DEFAULT 1 CHECK (tenant_id <> 0),
+    formula_id bigint NOT NULL,
+    formula_material_id bigint,
+    material_id bigint,
+    material_code varchar(80) NOT NULL,
+    material_name_cn varchar(200),
+    rule_name varchar(200),
+    condition_type varchar(40) NOT NULL DEFAULT 'OPTION_VALUE',
+    condition_option_code varchar(80),
+    condition_option_name_cn varchar(200),
+    condition_value_code varchar(80),
+    condition_value_name_cn varchar(200),
+    condition_expression text,
+    condition_text varchar(500),
+    condition_key varchar(300),
+    usage_mode varchar(40) NOT NULL DEFAULT 'FIXED',
+    fixed_usage_qty numeric(18,6),
+    usage_formula text,
+    usage_formula_text text,
+    calculation_unit_code varchar(80),
+    rounding_mode varchar(40),
+    min_usage_qty numeric(18,6),
+    max_usage_qty numeric(18,6),
+    loss_rate numeric(10,6),
+    default_rule_flag boolean NOT NULL DEFAULT false,
+    production_remark varchar(500),
+    status varchar(20) NOT NULL DEFAULT 'ENABLED',
+    del_flag varchar(1) NOT NULL DEFAULT '0',
+    sort_order int NOT NULL DEFAULT 0,
+    remark varchar(500),
+    create_by_id bigint,
+    create_by varchar(64),
+    create_time timestamptz,
+    update_by varchar(64),
+    update_time timestamptz
+);
+
+ALTER TABLE IF EXISTS pc_formula_usage_rule
+    ADD COLUMN IF NOT EXISTS tenant_id bigint NOT NULL DEFAULT 1 CHECK (tenant_id <> 0),
+    ADD COLUMN IF NOT EXISTS formula_id bigint,
+    ADD COLUMN IF NOT EXISTS formula_material_id bigint,
+    ADD COLUMN IF NOT EXISTS material_id bigint,
+    ADD COLUMN IF NOT EXISTS material_code varchar(80),
+    ADD COLUMN IF NOT EXISTS material_name_cn varchar(200),
+    ADD COLUMN IF NOT EXISTS rule_name varchar(200),
+    ADD COLUMN IF NOT EXISTS condition_type varchar(40) NOT NULL DEFAULT 'OPTION_VALUE',
+    ADD COLUMN IF NOT EXISTS condition_option_code varchar(80),
+    ADD COLUMN IF NOT EXISTS condition_option_name_cn varchar(200),
+    ADD COLUMN IF NOT EXISTS condition_value_code varchar(80),
+    ADD COLUMN IF NOT EXISTS condition_value_name_cn varchar(200),
+    ADD COLUMN IF NOT EXISTS condition_expression text,
+    ADD COLUMN IF NOT EXISTS condition_text varchar(500),
+    ADD COLUMN IF NOT EXISTS condition_key varchar(300),
+    ADD COLUMN IF NOT EXISTS usage_mode varchar(40) NOT NULL DEFAULT 'FIXED',
+    ADD COLUMN IF NOT EXISTS fixed_usage_qty numeric(18,6),
+    ADD COLUMN IF NOT EXISTS usage_formula text,
+    ADD COLUMN IF NOT EXISTS usage_formula_text text,
+    ADD COLUMN IF NOT EXISTS calculation_unit_code varchar(80),
+    ADD COLUMN IF NOT EXISTS rounding_mode varchar(40),
+    ADD COLUMN IF NOT EXISTS min_usage_qty numeric(18,6),
+    ADD COLUMN IF NOT EXISTS max_usage_qty numeric(18,6),
+    ADD COLUMN IF NOT EXISTS loss_rate numeric(10,6),
+    ADD COLUMN IF NOT EXISTS default_rule_flag boolean NOT NULL DEFAULT false,
+    ADD COLUMN IF NOT EXISTS production_remark varchar(500),
+    ADD COLUMN IF NOT EXISTS status varchar(20) NOT NULL DEFAULT 'ENABLED',
+    ADD COLUMN IF NOT EXISTS del_flag varchar(1) NOT NULL DEFAULT '0',
+    ADD COLUMN IF NOT EXISTS sort_order int NOT NULL DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS remark varchar(500);
+
+ALTER TABLE IF EXISTS pc_formula_usage_rule
+    DROP COLUMN IF EXISTS width_deduct_mm,
+    DROP COLUMN IF EXISTS height_deduct_mm;
+
+COMMENT ON TABLE pc_formula_usage_rule IS '产品配方条件用量规则草稿表';
+COMMENT ON COLUMN pc_formula_usage_rule.usage_rule_id IS '条件用量规则ID';
+COMMENT ON COLUMN pc_formula_usage_rule.formula_material_id IS '配方原料池ID';
+COMMENT ON COLUMN pc_formula_usage_rule.condition_type IS '条件类型：DEFAULT、OPTION_VALUE、EXPRESSION';
+COMMENT ON COLUMN pc_formula_usage_rule.condition_option_code IS '适用配置项编码，如 FABRIC';
+COMMENT ON COLUMN pc_formula_usage_rule.condition_value_code IS '适用配置项值，如面料物料编码';
+COMMENT ON COLUMN pc_formula_usage_rule.condition_expression IS '内部条件表达式，如 fabric == "XLF241801"';
+COMMENT ON COLUMN pc_formula_usage_rule.condition_text IS '条件展示文本，如 面料 = XLF241801';
+COMMENT ON COLUMN pc_formula_usage_rule.condition_key IS '条件唯一键，默认 DEFAULT 或 OPTION:{option}:{value}';
+COMMENT ON COLUMN pc_formula_usage_rule.usage_mode IS '用量方式：FIXED、FORMULA';
+COMMENT ON COLUMN pc_formula_usage_rule.usage_formula_text IS '用量公式展示文本，保留技术科输入口径';
+COMMENT ON COLUMN pc_formula_usage_rule.default_rule_flag IS '默认规则标记，条件未命中时使用';
+CREATE INDEX IF NOT EXISTS idx_pc_formula_usage_rule_material ON pc_formula_usage_rule (tenant_id, formula_id, formula_material_id, status) WHERE del_flag = '0';
+CREATE INDEX IF NOT EXISTS idx_pc_formula_usage_rule_code ON pc_formula_usage_rule (tenant_id, formula_id, material_code) WHERE del_flag = '0';
+CREATE INDEX IF NOT EXISTS idx_pc_formula_usage_rule_condition ON pc_formula_usage_rule (tenant_id, formula_id, condition_option_code, condition_value_code) WHERE del_flag = '0';
+CREATE INDEX IF NOT EXISTS idx_pc_formula_usage_rule_condition_key ON pc_formula_usage_rule (tenant_id, formula_id, material_code, condition_key, status) WHERE del_flag = '0';
+
+CREATE TABLE IF NOT EXISTS pc_formula_option (
+    option_id bigint PRIMARY KEY,
+    tenant_id bigint NOT NULL DEFAULT 1 CHECK (tenant_id <> 0),
+    formula_id bigint NOT NULL,
+    option_code varchar(80) NOT NULL,
+    option_name_cn varchar(200) NOT NULL,
+    source_type varchar(40) NOT NULL DEFAULT 'MANUAL',
+    source_scope varchar(300),
+    selection_mode varchar(40) NOT NULL DEFAULT 'SINGLE',
+    default_value_code varchar(80),
+    default_value_name_cn varchar(200),
+    visibility_mode varchar(40) NOT NULL DEFAULT 'ALWAYS',
+    visible_condition_option_code varchar(80),
+    visible_condition_option_name_cn varchar(200),
+    visible_condition_value_code varchar(80),
+    visible_condition_value_name_cn varchar(200),
+    required_flag boolean NOT NULL DEFAULT false,
+    business_visible_flag boolean NOT NULL DEFAULT true,
+    status varchar(20) NOT NULL DEFAULT 'ENABLED',
+    del_flag varchar(1) NOT NULL DEFAULT '0',
+    sort_order int NOT NULL DEFAULT 0,
+    remark varchar(500),
+    create_by_id bigint,
+    create_by varchar(64),
+    create_time timestamptz,
+    update_by varchar(64),
+    update_time timestamptz
+);
+
+COMMENT ON TABLE pc_formula_option IS '产品配方业务配置项草稿表';
+ALTER TABLE IF EXISTS pc_formula_option ADD COLUMN IF NOT EXISTS visibility_mode varchar(40) NOT NULL DEFAULT 'ALWAYS';
+ALTER TABLE IF EXISTS pc_formula_option ADD COLUMN IF NOT EXISTS visible_condition_option_code varchar(80);
+ALTER TABLE IF EXISTS pc_formula_option ADD COLUMN IF NOT EXISTS visible_condition_option_name_cn varchar(200);
+ALTER TABLE IF EXISTS pc_formula_option ADD COLUMN IF NOT EXISTS visible_condition_value_code varchar(80);
+ALTER TABLE IF EXISTS pc_formula_option ADD COLUMN IF NOT EXISTS visible_condition_value_name_cn varchar(200);
+COMMENT ON COLUMN pc_formula_option.visibility_mode IS '订单端显示模式：ALWAYS 始终显示，CONDITIONAL 满足条件显示';
+COMMENT ON COLUMN pc_formula_option.visible_condition_option_code IS '条件显示依赖配置项编码';
+COMMENT ON COLUMN pc_formula_option.visible_condition_option_name_cn IS '条件显示依赖配置项名称快照';
+COMMENT ON COLUMN pc_formula_option.visible_condition_value_code IS '条件显示依赖选项值编码';
+COMMENT ON COLUMN pc_formula_option.visible_condition_value_name_cn IS '条件显示依赖选项值名称快照';
+CREATE INDEX IF NOT EXISTS idx_pc_formula_option_formula_sort ON pc_formula_option (tenant_id, formula_id, sort_order, option_id) WHERE del_flag = '0';
+CREATE INDEX IF NOT EXISTS idx_pc_formula_option_code ON pc_formula_option (tenant_id, formula_id, option_code) WHERE del_flag = '0';
+
+CREATE TABLE IF NOT EXISTS pc_formula_option_value (
+    option_value_id bigint PRIMARY KEY,
+    tenant_id bigint NOT NULL DEFAULT 1 CHECK (tenant_id <> 0),
+    formula_id bigint NOT NULL,
+    option_id bigint,
+    option_code varchar(80) NOT NULL,
+    value_code varchar(80) NOT NULL,
+    value_name_cn varchar(200) NOT NULL,
+    default_flag boolean NOT NULL DEFAULT false,
+    status varchar(20) NOT NULL DEFAULT 'ENABLED',
+    del_flag varchar(1) NOT NULL DEFAULT '0',
+    sort_order int NOT NULL DEFAULT 0,
+    remark varchar(500),
+    create_by_id bigint,
+    create_by varchar(64),
+    create_time timestamptz,
+    update_by varchar(64),
+    update_time timestamptz
+);
+
+COMMENT ON TABLE pc_formula_option_value IS '产品配方业务配置项可选值草稿表';
+CREATE INDEX IF NOT EXISTS idx_pc_formula_option_value_formula_sort ON pc_formula_option_value (tenant_id, formula_id, option_code, sort_order, option_value_id) WHERE del_flag = '0';
+
+CREATE TABLE IF NOT EXISTS pc_formula_option_material (
+    option_material_id bigint PRIMARY KEY,
+    tenant_id bigint NOT NULL DEFAULT 1 CHECK (tenant_id <> 0),
+    formula_id bigint NOT NULL,
+    option_id bigint,
+    option_value_id bigint,
+    option_code varchar(80) NOT NULL,
+    value_code varchar(80) NOT NULL,
+    formula_material_id bigint,
+    material_id bigint,
+    material_code varchar(80),
+    material_name_cn varchar(200),
+    required_flag boolean NOT NULL DEFAULT false,
+    default_flag boolean NOT NULL DEFAULT false,
+    status varchar(20) NOT NULL DEFAULT 'ENABLED',
+    del_flag varchar(1) NOT NULL DEFAULT '0',
+    sort_order int NOT NULL DEFAULT 0,
+    remark varchar(500),
+    create_by_id bigint,
+    create_by varchar(64),
+    create_time timestamptz,
+    update_by varchar(64),
+    update_time timestamptz
+);
+
+COMMENT ON TABLE pc_formula_option_material IS '产品配方选项值关联原料池物料草稿表';
+CREATE INDEX IF NOT EXISTS idx_pc_formula_option_material_formula_sort ON pc_formula_option_material (tenant_id, formula_id, option_code, value_code, sort_order, option_material_id) WHERE del_flag = '0';
+
+CREATE TABLE IF NOT EXISTS pc_formula_restriction (
+    restriction_id bigint PRIMARY KEY,
+    tenant_id bigint NOT NULL DEFAULT 1 CHECK (tenant_id <> 0),
+    formula_id bigint NOT NULL,
+    restriction_name varchar(200),
+    target_option_code varchar(80) NOT NULL,
+    condition_type varchar(40) NOT NULL,
+    condition_option_code varchar(80),
+    condition_operator varchar(40) NOT NULL,
+    condition_value_code varchar(80),
+    condition_value_number numeric(18,6),
+    action_type varchar(40) NOT NULL,
+    target_value_code varchar(80),
+    message_text varchar(500),
+    status varchar(20) NOT NULL DEFAULT 'ENABLED',
+    del_flag varchar(1) NOT NULL DEFAULT '0',
+    sort_order int NOT NULL DEFAULT 0,
+    remark varchar(500),
+    create_by_id bigint,
+    create_by varchar(64),
+    create_time timestamptz,
+    update_by varchar(64),
+    update_time timestamptz
+);
+
+COMMENT ON TABLE pc_formula_restriction IS '产品配方限制条件草稿表';
+CREATE INDEX IF NOT EXISTS idx_pc_formula_restriction_formula_sort ON pc_formula_restriction (tenant_id, formula_id, sort_order, restriction_id) WHERE del_flag = '0';
+
+CREATE TABLE IF NOT EXISTS pc_formula_version (
+    version_id bigint PRIMARY KEY,
+    tenant_id bigint NOT NULL DEFAULT 1 CHECK (tenant_id <> 0),
+    formula_id bigint NOT NULL,
+    version_no int NOT NULL,
+    version_label varchar(40) NOT NULL,
+    version_status varchar(30) NOT NULL,
+    formula_snapshot_json text,
+    setup_snapshot_json text,
+    validation_status varchar(30),
+    validation_report_json text,
+    submit_by varchar(64),
+    submit_time timestamptz,
+    audit_by varchar(64),
+    audit_time timestamptz,
+    reject_reason varchar(500),
+    del_flag varchar(1) NOT NULL DEFAULT '0',
+    remark varchar(500),
+    create_by_id bigint,
+    create_by varchar(64),
+    create_time timestamptz,
+    update_by varchar(64),
+    update_time timestamptz
+);
+
+ALTER TABLE IF EXISTS pc_formula_version
+    ADD COLUMN IF NOT EXISTS tenant_id bigint NOT NULL DEFAULT 1 CHECK (tenant_id <> 0),
+    ADD COLUMN IF NOT EXISTS formula_id bigint,
+    ADD COLUMN IF NOT EXISTS version_no int,
+    ADD COLUMN IF NOT EXISTS version_label varchar(40),
+    ADD COLUMN IF NOT EXISTS version_status varchar(30),
+    ADD COLUMN IF NOT EXISTS formula_snapshot_json text,
+    ADD COLUMN IF NOT EXISTS setup_snapshot_json text,
+    ADD COLUMN IF NOT EXISTS validation_status varchar(30),
+    ADD COLUMN IF NOT EXISTS validation_report_json text,
+    ADD COLUMN IF NOT EXISTS submit_by varchar(64),
+    ADD COLUMN IF NOT EXISTS submit_time timestamptz,
+    ADD COLUMN IF NOT EXISTS audit_by varchar(64),
+    ADD COLUMN IF NOT EXISTS audit_time timestamptz,
+    ADD COLUMN IF NOT EXISTS reject_reason varchar(500),
+    ADD COLUMN IF NOT EXISTS del_flag varchar(1) NOT NULL DEFAULT '0',
+    ADD COLUMN IF NOT EXISTS remark varchar(500);
+
+COMMENT ON TABLE pc_formula_version IS '产品配方审核版本快照表';
+COMMENT ON COLUMN pc_formula_version.version_id IS '版本ID';
+COMMENT ON COLUMN pc_formula_version.formula_id IS '配方ID';
+COMMENT ON COLUMN pc_formula_version.version_no IS '版本号，系统按配方递增';
+COMMENT ON COLUMN pc_formula_version.version_label IS '版本展示号，如 V1、V2';
+COMMENT ON COLUMN pc_formula_version.version_status IS '版本状态：EFFECTIVE、STOPPED';
+COMMENT ON COLUMN pc_formula_version.formula_snapshot_json IS '配方主表快照JSON';
+ALTER TABLE IF EXISTS pc_formula_version DROP COLUMN IF EXISTS item_snapshot_json;
+COMMENT ON COLUMN pc_formula_version.setup_snapshot_json IS '配方设置快照JSON';
+COMMENT ON COLUMN pc_formula_version.validation_status IS '审核时校验状态';
+COMMENT ON COLUMN pc_formula_version.validation_report_json IS '审核时校验报告JSON';
+COMMENT ON COLUMN pc_formula_version.audit_time IS '审核时间，UTC timestamptz';
+CREATE INDEX IF NOT EXISTS idx_pc_formula_version_formula_no ON pc_formula_version (tenant_id, formula_id, version_no DESC) WHERE del_flag = '0';
+
 CREATE TABLE IF NOT EXISTS pc_category (
     category_id bigint PRIMARY KEY,
     tenant_id bigint NOT NULL DEFAULT 1 CHECK (tenant_id <> 0),
@@ -191,6 +657,7 @@ CREATE TABLE IF NOT EXISTS pc_material_type_group (
     group_name_en varchar(200),
     system_flag boolean NOT NULL DEFAULT false,
     editable_flag boolean NOT NULL DEFAULT true,
+    formula_summary_visible_flag boolean NOT NULL DEFAULT true,
     status varchar(20) NOT NULL DEFAULT 'ENABLED',
     sort_order integer DEFAULT 0,
     remark varchar(500),
@@ -201,9 +668,12 @@ CREATE TABLE IF NOT EXISTS pc_material_type_group (
     update_by varchar(64),
     update_time timestamptz
 );
+ALTER TABLE IF EXISTS pc_material_type_group
+    ADD COLUMN IF NOT EXISTS formula_summary_visible_flag boolean NOT NULL DEFAULT true;
 COMMENT ON TABLE pc_material_type_group IS '物料属性分组主数据表';
 COMMENT ON COLUMN pc_material_type_group.group_code IS '属性分组编码';
 COMMENT ON COLUMN pc_material_type_group.group_name_cn IS '属性分组中文名称';
+COMMENT ON COLUMN pc_material_type_group.formula_summary_visible_flag IS '是否在配方设置顶部统计卡展示';
 DROP INDEX IF EXISTS uk_pc_material_type_group_code_active;
 CREATE INDEX IF NOT EXISTS idx_pc_material_type_group_code_active ON pc_material_type_group (tenant_id, group_code) WHERE del_flag = '0';
 CREATE INDEX IF NOT EXISTS idx_pc_material_type_group_status ON pc_material_type_group (tenant_id, status, sort_order);
@@ -356,6 +826,7 @@ CREATE TABLE IF NOT EXISTS pc_material (
     color_name varchar(120),
     weight_value numeric(18,6),
     unit_price numeric(18,4),
+    sales_price numeric(18,4),
     audit_by varchar(64),
     audit_time timestamptz,
     sort_order int NOT NULL DEFAULT 0,
@@ -388,6 +859,7 @@ ALTER TABLE IF EXISTS pc_material
     ADD COLUMN IF NOT EXISTS color_name varchar(120),
     ADD COLUMN IF NOT EXISTS weight_value numeric(18,6),
     ADD COLUMN IF NOT EXISTS unit_price numeric(18,4),
+    ADD COLUMN IF NOT EXISTS sales_price numeric(18,4),
     ADD COLUMN IF NOT EXISTS audit_by varchar(64),
     ADD COLUMN IF NOT EXISTS audit_time timestamptz,
     ADD COLUMN IF NOT EXISTS sort_order int NOT NULL DEFAULT 0;
@@ -416,6 +888,7 @@ COMMENT ON COLUMN pc_material.spec_model_text IS '规格型号展示文本，普
 COMMENT ON COLUMN pc_material.color_name IS '颜色';
 COMMENT ON COLUMN pc_material.weight_value IS '克重/重量';
 COMMENT ON COLUMN pc_material.unit_price IS '单价';
+COMMENT ON COLUMN pc_material.sales_price IS '销售价';
 COMMENT ON COLUMN pc_material.audit_by IS '审核人';
 COMMENT ON COLUMN pc_material.audit_time IS '审核时间，UTC timestamptz';
 COMMENT ON COLUMN pc_material.sort_order IS '排序';
@@ -669,12 +1142,12 @@ INSERT INTO pc_material_type_group (
     group_id, tenant_id, group_code, group_name_cn, group_name_en, system_flag, editable_flag,
     status, sort_order, remark, del_flag, create_by, create_time, update_by, update_time
 ) VALUES
-    (121001, 1, 'FABRIC', '面料', 'Fabric', true, false, 'ENABLED', 10, '面料物料大类', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
-    (121002, 1, 'ALUMINUM', '铝材', 'Aluminum', true, false, 'ENABLED', 20, '铝材、下杆、轨道等归入铝材', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
-    (121003, 1, 'SYSTEM', '系统', 'System', true, false, 'ENABLED', 30, '电机、遥控、控制器等归入系统', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
-    (121004, 1, 'ACCESSORY', '配件', 'Accessory', true, false, 'ENABLED', 40, '安装件、支架、胶条等配件', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
-    (121005, 1, 'PART_PACK', '零件包', 'Parts Pack', true, false, 'ENABLED', 50, '配方中的零件包类物料', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
-    (121006, 1, 'PACKAGING', '包装', 'Packaging', true, false, 'ENABLED', 60, '纸箱、PET盒等包装物料', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00')
+    (121001, 1, 'FABRIC', '面料', 'Fabric', false, true, 'ENABLED', 10, '面料物料大类', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
+    (121002, 1, 'ALUMINUM', '铝材', 'Aluminum', false, true, 'ENABLED', 20, '铝材、下杆、轨道等归入铝材', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
+    (121003, 1, 'SYSTEM', '系统', 'System', false, true, 'ENABLED', 30, '电机、遥控、控制器等归入系统', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
+    (121004, 1, 'ACCESSORY', '配件', 'Accessory', false, true, 'ENABLED', 40, '安装件、支架、胶条等配件', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
+    (121005, 1, 'PART_PACK', '零件包', 'Parts Pack', false, true, 'ENABLED', 50, '配方中的零件包类物料', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
+    (121006, 1, 'PACKAGING', '包装', 'Packaging', false, true, 'ENABLED', 60, '纸箱、PET盒等包装物料', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00')
 ON CONFLICT (group_id) DO UPDATE
 SET group_code = EXCLUDED.group_code,
     group_name_cn = EXCLUDED.group_name_cn,
@@ -692,12 +1165,29 @@ INSERT INTO pc_material_type (
     attribute_group_id, attribute_group_code, attribute_group_name_cn, system_flag, editable_flag,
     status, sort_order, remark, del_flag, create_by, create_time, update_by, update_time
 ) VALUES
-    (122001, 1, 'FABRIC', '面料', 'Fabric', 121001, 'FABRIC', '面料', true, false, 'ENABLED', 10, '配方大类：面料', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
-    (122002, 1, 'ALUMINUM', '铝材', 'Aluminum', 121002, 'ALUMINUM', '铝材', true, false, 'ENABLED', 20, '配方大类：铝材', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
-    (122003, 1, 'SYSTEM', '系统', 'System', 121003, 'SYSTEM', '系统', true, false, 'ENABLED', 30, '配方大类：系统', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
-    (122004, 1, 'ACCESSORY', '配件', 'Accessory', 121004, 'ACCESSORY', '配件', true, false, 'ENABLED', 40, '配方大类：配件', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
-    (122005, 1, 'PART_PACK', '零件包', 'Parts Pack', 121005, 'PART_PACK', '零件包', true, false, 'ENABLED', 50, '配方大类：零件包', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
-    (122006, 1, 'PACKAGING', '包装', 'Packaging', 121006, 'PACKAGING', '包装', true, false, 'ENABLED', 60, '配方大类：包装', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00')
+    (122001, 1, 'FABRIC', '面料', 'Fabric', 121001, 'FABRIC', '面料', false, true, 'ENABLED', 10, '布料、纱帘、底布等面料类物料', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
+    (122101, 1, 'BOTTOM_BAR', '下杆', 'Bottom Bar', 121002, 'ALUMINUM', '铝材', false, true, 'ENABLED', 10, '成品或定制帘下杆铝材', '0', 'system', '2026-06-26 00:00:00+00', 'system', '2026-06-26 00:00:00+00'),
+    (122102, 1, 'TOP_TUBE', '上杆/卷管', 'Top Tube', 121002, 'ALUMINUM', '铝材', false, true, 'ENABLED', 20, '上杆、卷管、套管类铝材', '0', 'system', '2026-06-26 00:00:00+00', 'system', '2026-06-26 00:00:00+00'),
+    (122103, 1, 'COVER_SHELL', '罩壳', 'Cover Shell', 121002, 'ALUMINUM', '铝材', false, true, 'ENABLED', 30, '罩壳、外壳类铝材', '0', 'system', '2026-06-26 00:00:00+00', 'system', '2026-06-26 00:00:00+00'),
+    (122104, 1, 'SIDE_COVER', '边盖', 'Side Cover', 121002, 'ALUMINUM', '铝材', false, true, 'ENABLED', 40, '边盖、端盖类铝材', '0', 'system', '2026-06-26 00:00:00+00', 'system', '2026-06-26 00:00:00+00'),
+    (122105, 1, 'CHANNEL', '轨道', 'Channel', 121002, 'ALUMINUM', '铝材', false, true, 'ENABLED', 50, '轨道、槽道类铝材', '0', 'system', '2026-06-26 00:00:00+00', 'system', '2026-06-26 00:00:00+00'),
+    (122201, 1, 'PULL_SYSTEM', '拉珠系统', 'Pull System', 121003, 'SYSTEM', '系统', false, true, 'ENABLED', 10, '拉珠、珠链、制头等手动控制系统', '0', 'system', '2026-06-26 00:00:00+00', 'system', '2026-06-26 00:00:00+00'),
+    (122202, 1, 'MOTOR', '电机', 'Motor', 121003, 'SYSTEM', '系统', false, true, 'ENABLED', 20, '电机、管状电机等电动控制系统', '0', 'system', '2026-06-26 00:00:00+00', 'system', '2026-06-26 00:00:00+00'),
+    (122203, 1, 'REMOTE_CONTROLLER', '遥控器', 'Remote Controller', 121003, 'SYSTEM', '系统', false, true, 'ENABLED', 30, '遥控器、发射器', '0', 'system', '2026-06-26 00:00:00+00', 'system', '2026-06-26 00:00:00+00'),
+    (122204, 1, 'CONTROLLER', '控制器', 'Controller', 121003, 'SYSTEM', '系统', false, true, 'ENABLED', 40, '控制器、接收器、网关', '0', 'system', '2026-06-26 00:00:00+00', 'system', '2026-06-26 00:00:00+00'),
+    (122205, 1, 'LIMITER', '限位器', 'Limiter', 121003, 'SYSTEM', '系统', false, true, 'ENABLED', 50, '限位器、止停件', '0', 'system', '2026-06-26 00:00:00+00', 'system', '2026-06-26 00:00:00+00'),
+    (122301, 1, 'BRACKET', '支架', 'Bracket', 121004, 'ACCESSORY', '配件', false, true, 'ENABLED', 10, '安装支架、托架', '0', 'system', '2026-06-26 00:00:00+00', 'system', '2026-06-26 00:00:00+00'),
+    (122302, 1, 'SCREW', '螺丝', 'Screw', 121004, 'ACCESSORY', '配件', false, true, 'ENABLED', 20, '螺丝、螺钉、螺母', '0', 'system', '2026-06-26 00:00:00+00', 'system', '2026-06-26 00:00:00+00'),
+    (122303, 1, 'GLUE_STRIP', '胶条', 'Glue Strip', 121004, 'ACCESSORY', '配件', false, true, 'ENABLED', 30, '胶条、背胶、粘贴耗材', '0', 'system', '2026-06-26 00:00:00+00', 'system', '2026-06-26 00:00:00+00'),
+    (122304, 1, 'HANDLE', '手柄', 'Handle', 121004, 'ACCESSORY', '配件', false, true, 'ENABLED', 40, '手柄、拉手、操作件', '0', 'system', '2026-06-26 00:00:00+00', 'system', '2026-06-26 00:00:00+00'),
+    (122305, 1, 'INSTALL_CODE', '安装码', 'Install Code', 121004, 'ACCESSORY', '配件', false, true, 'ENABLED', 50, '安装码、固定码、安装配件', '0', 'system', '2026-06-26 00:00:00+00', 'system', '2026-06-26 00:00:00+00'),
+    (122401, 1, 'INSTALL_KIT', '安装包', 'Install Kit', 121005, 'PART_PACK', '零件包', false, true, 'ENABLED', 10, '安装零件包、配件包', '0', 'system', '2026-06-26 00:00:00+00', 'system', '2026-06-26 00:00:00+00'),
+    (122402, 1, 'SPARE_PART_PACK', '备件包', 'Spare Part Pack', 121005, 'PART_PACK', '零件包', false, true, 'ENABLED', 20, '备件包、维修包', '0', 'system', '2026-06-26 00:00:00+00', 'system', '2026-06-26 00:00:00+00'),
+    (122501, 1, 'CARTON', '纸箱', 'Carton', 121006, 'PACKAGING', '包装', false, true, 'ENABLED', 10, '外箱、纸箱包装', '0', 'system', '2026-06-26 00:00:00+00', 'system', '2026-06-26 00:00:00+00'),
+    (122502, 1, 'PET_BOX', 'PET盒', 'PET Box', 121006, 'PACKAGING', '包装', false, true, 'ENABLED', 20, 'PET盒、透明盒', '0', 'system', '2026-06-26 00:00:00+00', 'system', '2026-06-26 00:00:00+00'),
+    (122503, 1, 'MANUAL', '说明书', 'Manual', 121006, 'PACKAGING', '包装', false, true, 'ENABLED', 30, '说明书、资料页', '0', 'system', '2026-06-26 00:00:00+00', 'system', '2026-06-26 00:00:00+00'),
+    (122504, 1, 'LABEL', '标贴', 'Label', 121006, 'PACKAGING', '包装', false, true, 'ENABLED', 40, '标签、标贴、合格证', '0', 'system', '2026-06-26 00:00:00+00', 'system', '2026-06-26 00:00:00+00'),
+    (122505, 1, 'BAG', '包装袋', 'Bag', 121006, 'PACKAGING', '包装', false, true, 'ENABLED', 50, '包装袋、保护袋', '0', 'system', '2026-06-26 00:00:00+00', 'system', '2026-06-26 00:00:00+00')
 ON CONFLICT (material_type_id) DO UPDATE
 SET material_type_code = EXCLUDED.material_type_code,
     material_type_name_cn = EXCLUDED.material_type_name_cn,
@@ -713,14 +1203,22 @@ SET material_type_code = EXCLUDED.material_type_code,
     update_by = 'system',
     update_time = now();
 
+DELETE FROM pc_product_dict_item
+WHERE dict_type_code LIKE 'engineering\_%' ESCAPE '\'
+   OR dict_type_code LIKE 'config\_%' ESCAPE '\';
+
+DELETE FROM pc_product_dict_type
+WHERE dict_type_code LIKE 'engineering\_%' ESCAPE '\'
+   OR dict_type_code LIKE 'config\_%' ESCAPE '\';
 
 INSERT INTO pc_product_dict_type (
     dict_type_id, tenant_id, dict_type_code, dict_type_name_cn, dict_type_name_en, business_domain,
     system_flag, editable_flag, status, sort_order, remark, del_flag, create_by, create_time, update_by, update_time
 ) VALUES
-    (118001, 1, 'product_unit_type', '单位类型', 'Unit Type', 'BASE', true, true, 'ENABLED', 10, '单位分类枚举，具体单位仍维护在 pc_unit', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
-    (118003, 1, 'product_business_type', '业务类型', 'Business Type', 'BASE', true, true, 'ENABLED', 30, '产品业务口径类型', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
-    (118005, 1, 'product_asset_type', '资料类型', 'Asset Type', 'BASE', true, true, 'ENABLED', 50, '资料资产类型', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00')
+    (118001, 1, 'product_unit_type', '单位类型', 'Unit Type', 'BASE', false, true, 'ENABLED', 10, '单位分类枚举，具体单位仍维护在 pc_unit', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
+    (118003, 1, 'product_business_type', '业务类型', 'Business Type', 'BASE', false, true, 'ENABLED', 30, '产品业务口径类型', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
+    (118004, 1, 'product_type', '产品类型', 'Product Type', 'FORMULA', false, true, 'ENABLED', 40, '配方主表产品类型，如成品帘、定制帘', '0', 'system', '2026-06-25 00:00:00+00', 'system', '2026-06-25 00:00:00+00'),
+    (118005, 1, 'product_asset_type', '资料类型', 'Asset Type', 'BASE', false, true, 'ENABLED', 50, '资料资产类型', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00')
 ON CONFLICT (dict_type_id) DO UPDATE
 SET dict_type_name_cn = EXCLUDED.dict_type_name_cn,
     dict_type_name_en = EXCLUDED.dict_type_name_en,
@@ -737,22 +1235,24 @@ INSERT INTO pc_product_dict_item (
     dict_item_id, tenant_id, dict_type_code, dict_item_value, dict_item_label_cn, dict_item_label_en, parent_value,
     system_flag, editable_flag, status, sort_order, remark, del_flag, create_by, create_time, update_by, update_time
 ) VALUES
-    (119001, 1, 'product_unit_type', 'LENGTH', '长度', 'Length', NULL, true, true, 'ENABLED', 10, '长度单位分类', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
-    (119002, 1, 'product_unit_type', 'COUNT', '数量', 'Count', NULL, true, true, 'ENABLED', 20, '计数单位分类', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
-    (119003, 1, 'product_unit_type', 'AREA', '面积', 'Area', NULL, true, true, 'ENABLED', 30, '面积单位分类', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
-    (119004, 1, 'product_unit_type', 'WEIGHT', '重量', 'Weight', NULL, true, true, 'ENABLED', 40, '重量单位分类', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
-    (119005, 1, 'product_unit_type', 'VOLUME', '体积', 'Volume', NULL, true, true, 'ENABLED', 50, '体积单位分类', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
-    (119201, 1, 'product_business_type', 'ROLLER_SHADE', '卷帘', 'Roller Shade', NULL, true, true, 'ENABLED', 10, '卷帘', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
-    (119202, 1, 'product_business_type', 'ZEBRA_SHADE', '斑马帘/柔纱帘', 'Zebra Shade', NULL, true, true, 'ENABLED', 20, '斑马帘/柔纱帘', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
-    (119203, 1, 'product_business_type', 'OUTDOOR_SHADE', '户外遮阳', 'Outdoor Shade', NULL, true, true, 'ENABLED', 30, '户外遮阳', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
-    (119204, 1, 'product_business_type', 'CURTAIN_TRACK', '轨道窗帘', 'Curtain Track', NULL, true, true, 'ENABLED', 40, '轨道窗帘', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
-    (119205, 1, 'product_business_type', 'HONEYCOMB_SHADE', '蜂巢帘', 'Honeycomb Shade', NULL, true, true, 'ENABLED', 50, '蜂巢帘', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
-    (119401, 1, 'product_asset_type', 'IMAGE', '图片', 'Image', NULL, true, true, 'ENABLED', 10, '图片', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
-    (119402, 1, 'product_asset_type', 'PDF', 'PDF', 'PDF', NULL, true, true, 'ENABLED', 20, 'PDF', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
-    (119403, 1, 'product_asset_type', 'SPEC', '规格书', 'Specification', NULL, true, true, 'ENABLED', 30, '规格书', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
-    (119404, 1, 'product_asset_type', 'INSTALL_GUIDE', '安装说明', 'Installation Guide', NULL, true, true, 'ENABLED', 40, '安装说明', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
-    (119405, 1, 'product_asset_type', 'DRAWING', '图纸', 'Drawing', NULL, true, true, 'ENABLED', 50, '图纸', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
-    (119406, 1, 'product_asset_type', 'OTHER', '其他', 'Other', NULL, true, true, 'ENABLED', 90, '其他资料', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00')
+    (119001, 1, 'product_unit_type', 'LENGTH', '长度', 'Length', NULL, false, true, 'ENABLED', 10, '长度单位分类', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
+    (119002, 1, 'product_unit_type', 'COUNT', '数量', 'Count', NULL, false, true, 'ENABLED', 20, '计数单位分类', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
+    (119003, 1, 'product_unit_type', 'AREA', '面积', 'Area', NULL, false, true, 'ENABLED', 30, '面积单位分类', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
+    (119004, 1, 'product_unit_type', 'WEIGHT', '重量', 'Weight', NULL, false, true, 'ENABLED', 40, '重量单位分类', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
+    (119005, 1, 'product_unit_type', 'VOLUME', '体积', 'Volume', NULL, false, true, 'ENABLED', 50, '体积单位分类', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
+    (119201, 1, 'product_business_type', 'ROLLER_SHADE', '卷帘', 'Roller Shade', NULL, false, true, 'ENABLED', 10, '卷帘', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
+    (119202, 1, 'product_business_type', 'ZEBRA_SHADE', '斑马帘/柔纱帘', 'Zebra Shade', NULL, false, true, 'ENABLED', 20, '斑马帘/柔纱帘', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
+    (119203, 1, 'product_business_type', 'OUTDOOR_SHADE', '户外遮阳', 'Outdoor Shade', NULL, false, true, 'ENABLED', 30, '户外遮阳', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
+    (119204, 1, 'product_business_type', 'CURTAIN_TRACK', '轨道窗帘', 'Curtain Track', NULL, false, true, 'ENABLED', 40, '轨道窗帘', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
+    (119205, 1, 'product_business_type', 'HONEYCOMB_SHADE', '蜂巢帘', 'Honeycomb Shade', NULL, false, true, 'ENABLED', 50, '蜂巢帘', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
+    (119301, 1, 'product_type', 'FINISHED_CURTAIN', '成品帘', 'Finished Curtain', NULL, false, true, 'ENABLED', 10, '固定尺寸或标准成品产品', '0', 'system', '2026-06-25 00:00:00+00', 'system', '2026-06-25 00:00:00+00'),
+    (119302, 1, 'product_type', 'CUSTOM_CURTAIN', '定制帘', 'Custom Curtain', NULL, false, true, 'ENABLED', 20, '按订单尺寸和选项定制产品', '0', 'system', '2026-06-25 00:00:00+00', 'system', '2026-06-25 00:00:00+00'),
+    (119401, 1, 'product_asset_type', 'IMAGE', '图片', 'Image', NULL, false, true, 'ENABLED', 10, '图片', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
+    (119402, 1, 'product_asset_type', 'PDF', 'PDF', 'PDF', NULL, false, true, 'ENABLED', 20, 'PDF', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
+    (119403, 1, 'product_asset_type', 'SPEC', '规格书', 'Specification', NULL, false, true, 'ENABLED', 30, '规格书', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
+    (119404, 1, 'product_asset_type', 'INSTALL_GUIDE', '安装说明', 'Installation Guide', NULL, false, true, 'ENABLED', 40, '安装说明', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
+    (119405, 1, 'product_asset_type', 'DRAWING', '图纸', 'Drawing', NULL, false, true, 'ENABLED', 50, '图纸', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00'),
+    (119406, 1, 'product_asset_type', 'OTHER', '其他', 'Other', NULL, false, true, 'ENABLED', 90, '其他资料', '0', 'system', '2026-06-16 00:00:00+00', 'system', '2026-06-16 00:00:00+00')
 ON CONFLICT (dict_item_id) DO UPDATE
 SET dict_item_label_cn = EXCLUDED.dict_item_label_cn,
     dict_item_label_en = EXCLUDED.dict_item_label_en,
@@ -768,7 +1268,7 @@ SET dict_item_label_cn = EXCLUDED.dict_item_label_cn,
 -- =====================================================
 -- 第一阶段正式菜单、按钮和字典归一化
 -- 说明：
--- 1. 正式侧边栏当前只保留基础信息；配方管理后续单独新建。
+-- 1. 正式侧边栏保留基础信息，并新增第一版配方管理主表。
 -- 2. 旧产品工程/配置/报价/发布入口主动删除，不做兼容保留。
 -- 3. 本块必须保持幂等，可重复执行到开发库。
 -- =====================================================
@@ -824,7 +1324,8 @@ WHERE parent_id IN (
 
 INSERT INTO sys_menu (menu_id, tenant_id, parent_id, menu_name, i18n_key, order_num, path, component, query_param, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, update_by, update_time, remark)
 VALUES
-    (24200, 1, 0, 'Basic Information', 'productCenter.menu.masterData', 30, 'product-master', NULL, NULL, '1', '0', 'M', '1', '1', NULL, 'product', 'system', now(), NULL, NULL, '产品能力-基础信息')
+    (24200, 1, 0, 'Basic Information', 'productCenter.menu.masterData', 30, 'product-master', NULL, NULL, '1', '0', 'M', '1', '1', NULL, 'product', 'system', now(), NULL, NULL, '产品能力-基础信息'),
+    (24300, 1, 0, 'Formula Management', 'productCenter.menu.formulaRoot', 31, 'product-formula', NULL, NULL, '1', '0', 'M', '1', '1', NULL, 'tree-table', 'system', now(), NULL, NULL, '产品能力-配方管理')
 ON CONFLICT (menu_id) DO UPDATE
 SET tenant_id = EXCLUDED.tenant_id,
     parent_id = EXCLUDED.parent_id,
@@ -847,6 +1348,7 @@ SET tenant_id = EXCLUDED.tenant_id,
 
 INSERT INTO sys_menu (menu_id, tenant_id, parent_id, menu_name, i18n_key, order_num, path, component, query_param, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, update_by, update_time, remark)
 VALUES
+    (24301, 1, 24300, 'Formulas', 'productCenter.menu.formulas', 1, 'formulas', 'product-formula/formulas', NULL, '1', '0', 'C', '1', '1', 'product:formula:list', 'list', 'system', now(), NULL, NULL, '配方管理主表'),
     (24212, 1, 24200, 'Product Categories', 'productCenter.menu.categories', 1, 'categories', 'product-center/base', NULL, '1', '0', 'C', '1', '1', 'product:base:list', 'tree-table', 'system', now(), NULL, NULL, '产品分类'),
     (24213, 1, 24200, 'Base Dictionaries', 'productCenter.menu.productDicts', 2, 'product-dicts', 'product-center/product-dicts', NULL, '1', '0', 'C', '1', '1', 'product:dict:list', 'dict', 'system', now(), NULL, NULL, '基础字典'),
     (24206, 1, 24200, 'Units', 'productCenter.menu.units', 3, 'units', 'product-center/base', NULL, '1', '0', 'C', '1', '1', 'product:unit:list', 'unit', 'system', now(), NULL, NULL, '单位管理'),
@@ -879,6 +1381,17 @@ SET tenant_id = EXCLUDED.tenant_id,
 
 INSERT INTO sys_menu (menu_id, tenant_id, parent_id, menu_name, i18n_key, order_num, path, component, query_param, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, update_by, update_time, remark)
 VALUES
+    (24310, 1, 24301, 'Formula Query', 'common.search', 1, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:formula:list', '#', 'system', now(), NULL, NULL, '配方查询'),
+    (24311, 1, 24301, 'Formula Detail', 'common.detail', 2, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:formula:query', '#', 'system', now(), NULL, NULL, '配方详情'),
+    (24312, 1, 24301, 'Formula Add', 'common.add', 3, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:formula:add', '#', 'system', now(), NULL, NULL, '配方新增'),
+    (24313, 1, 24301, 'Formula Edit', 'common.edit', 4, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:formula:edit', '#', 'system', now(), NULL, NULL, '配方编辑'),
+    (24314, 1, 24301, 'Formula Delete', 'common.delete', 5, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:formula:remove', '#', 'system', now(), NULL, NULL, '配方删除'),
+    (24315, 1, 24301, 'Formula Setup', 'productCenter.formula.actions.setup', 6, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:formula:setup', '#', 'system', now(), NULL, NULL, '设置配方'),
+    (24316, 1, 24301, 'Formula Submit Review', 'productCenter.formula.actions.submitReview', 7, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:formula:submitReview', '#', 'system', now(), NULL, NULL, '配方提交审核'),
+    (24317, 1, 24301, 'Formula Approve', 'productCenter.formula.actions.approve', 8, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:formula:approve', '#', 'system', now(), NULL, NULL, '配方审核通过'),
+    (24318, 1, 24301, 'Formula Reject', 'productCenter.formula.actions.reject', 9, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:formula:reject', '#', 'system', now(), NULL, NULL, '配方驳回'),
+    (24319, 1, 24301, 'Formula Stop', 'productCenter.formula.actions.stop', 10, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:formula:stop', '#', 'system', now(), NULL, NULL, '配方停用'),
+    (24320, 1, 24301, 'Formula Reference', 'productCenter.common.references', 11, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:formula:reference', '#', 'system', now(), NULL, NULL, '配方引用和变更记录'),
     (24214, 1, 24212, 'Category Query', 'common.search', 1, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:base:list', '#', 'system', now(), NULL, NULL, '产品分类查询'),
     (24215, 1, 24212, 'Category Add', 'common.add', 2, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:base:add', '#', 'system', now(), NULL, NULL, '产品分类新增'),
     (24216, 1, 24212, 'Category Edit', 'common.edit', 3, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:base:edit', '#', 'system', now(), NULL, NULL, '产品分类编辑'),
@@ -959,7 +1472,7 @@ SET tenant_id = EXCLUDED.tenant_id,
 INSERT INTO sys_role_menu (role_id, menu_id, tenant_id)
 SELECT 1, menu_id, 1
 FROM sys_menu
-WHERE menu_id BETWEEN 24200 AND 24299
+WHERE menu_id BETWEEN 24200 AND 24399
 ON CONFLICT (role_id, menu_id) DO NOTHING;
 
 DELETE FROM sys_dict_data
@@ -967,6 +1480,7 @@ WHERE dict_type IN (
     'product_unit',
     'product_unit_type',
     'product_business_type',
+    'product_type',
     'product_asset_type'
 );
 DELETE FROM sys_dict_type
@@ -974,5 +1488,6 @@ WHERE dict_type IN (
     'product_unit',
     'product_unit_type',
     'product_business_type',
+    'product_type',
     'product_asset_type'
 );

@@ -31,6 +31,9 @@ public class ProductMaterialTypeGroupBo extends BaseBo {
     @Schema(description = "允许维护")
     private Boolean editableFlag;
 
+    @Schema(description = "配方统计展示")
+    private Boolean formulaSummaryVisibleFlag;
+
     @Schema(description = "状态")
     private String status;
 

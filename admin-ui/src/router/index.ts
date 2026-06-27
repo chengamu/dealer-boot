@@ -1,14 +1,14 @@
 ﻿import NProgress from 'nprogress'
-import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import { getToken } from '@/utils/auth'
-import { useUserStore } from '@/stores/user'
-import { usePermissionStore } from '@/stores/permission'
+import {createRouter, createWebHistory, type RouteRecordRaw} from 'vue-router'
+import {ElMessage} from 'element-plus'
+import {getToken} from '@/utils/auth'
+import {useUserStore} from '@/stores/user'
+import {usePermissionStore} from '@/stores/permission'
 import Layout from '@/layout/index.vue'
 import LoginPage from '@/pages/auth/LoginPage.vue'
 import MerchantApplyPage from '@/pages/auth/MerchantApplyPage.vue'
 import LegalDocumentViewPage from '@/pages/auth/LegalDocumentViewPage.vue'
-import { getContextPath } from '@/utils/config'
+import {getContextPath} from '@/utils/config'
 
 const hiddenLayoutRoutes: RouteRecordRaw[] = [
   {
@@ -52,6 +52,12 @@ const hiddenLayoutRoutes: RouteRecordRaw[] = [
     name: 'GenEdit',
     component: () => import('@/pages/tool/gen/GenEditPage.vue'),
     meta: { title: 'gen.genInfo', activeMenu: '/tool/gen', hidden: true }
+  },
+  {
+    path: '/product-formula/formulas/:id/setup',
+    name: 'ProductFormulaSetup',
+    component: () => import('@/pages/product-formula/FormulaSetupPage.vue'),
+    meta: { title: 'productCenter.formula.actions.setup', activeMenu: '/product-formula/formulas', hidden: true }
   }
 ]
 
@@ -319,8 +325,7 @@ router.beforeEach(async (to) => {
   const permissionStore = usePermissionStore()
   const token = getToken()
   if (to.path === '/login' && token) {
-    const redirect = typeof to.query.redirect === 'string' ? to.query.redirect : '/index'
-    return redirect
+    return typeof to.query.redirect === 'string' ? to.query.redirect : '/index'
   }
   if (to.meta.public) return true
   if (!token) return `/login?redirect=${encodeURIComponent(to.fullPath)}`

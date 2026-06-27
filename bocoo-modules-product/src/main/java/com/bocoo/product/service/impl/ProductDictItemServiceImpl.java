@@ -11,6 +11,7 @@ import com.bocoo.product.domain.bo.ProductDictItemBo;
 import com.bocoo.product.domain.entity.ProductCategory;
 import com.bocoo.product.domain.entity.ProductDictItem;
 import com.bocoo.product.domain.entity.ProductDictType;
+import com.bocoo.product.domain.entity.ProductFormula;
 import com.bocoo.product.domain.entity.ProductMediaAsset;
 import com.bocoo.product.domain.entity.ProductUnit;
 import com.bocoo.product.domain.vo.BaseEditCheckResultVo;
@@ -20,6 +21,7 @@ import com.bocoo.product.domain.vo.ReferenceCheckResultVo;
 import com.bocoo.product.mapper.ProductCategoryMapper;
 import com.bocoo.product.mapper.ProductDictItemMapper;
 import com.bocoo.product.mapper.ProductDictTypeMapper;
+import com.bocoo.product.mapper.ProductFormulaMapper;
 import com.bocoo.product.mapper.ProductMaterialMapper;
 import com.bocoo.product.mapper.ProductMediaAssetMapper;
 import com.bocoo.product.mapper.ProductUnitMapper;
@@ -40,6 +42,7 @@ public class ProductDictItemServiceImpl extends ProductServiceSupport implements
     private final ProductMaterialMapper materialMapper;
     private final ProductCategoryMapper categoryMapper;
     private final ProductMediaAssetMapper mediaAssetMapper;
+    private final ProductFormulaMapper formulaMapper;
 
     @Override
     public TableDataInfo<ProductDictItemVo> queryPageList(ProductDictItemBo bo, PageQuery pageQuery) {
@@ -199,6 +202,7 @@ public class ProductDictItemServiceImpl extends ProductServiceSupport implements
             case "product_unit_type" -> unitMapper.selectCount(activeQuery(ProductUnit.class).eq("unit_type", value));
             case "product_business_type" -> categoryMapper.selectCount(activeQuery(ProductCategory.class).eq("business_type", value));
             case "product_asset_type" -> mediaAssetMapper.selectCount(activeQuery(ProductMediaAsset.class).eq("asset_type", value));
+            case "product_type" -> formulaMapper.selectCount(activeQuery(ProductFormula.class).eq("product_type_code", value));
             default -> 0L;
         };
         return referenceResult(count, "product.dict.itemHasReferences", "Dictionary item references: " + count);

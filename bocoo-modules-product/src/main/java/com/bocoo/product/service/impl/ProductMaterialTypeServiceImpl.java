@@ -199,4 +199,5 @@ public class ProductMaterialTypeServiceImpl extends ProductServiceSupport implem
     private boolean isEntityLocked(Boolean systemFlag, Boolean editableFlag) {
         return Boolean.TRUE.equals(systemFlag) && Boolean.FALSE.equals(editableFlag);
     }
+
 }

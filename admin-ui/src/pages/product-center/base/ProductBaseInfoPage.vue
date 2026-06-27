@@ -223,6 +223,7 @@ const configs = computed<ProductGridConfig[]>(() => [
       { prop: 'unitCode', labelKey: 'productCenter.common.unitCode', type: 'select', options: unitOptions.value, required: true, sortable: true, minWidth: 120, sectionKey: 'unitPrice', sectionLabelKey: 'productCenter.formSection.unitPrice' },
       { prop: 'secondaryUnitCode', labelKey: 'productCenter.material.secondaryUnitCode', type: 'select', options: unitOptions.value, minWidth: 120, sectionKey: 'unitPrice' },
       { prop: 'unitPrice', labelKey: 'productCenter.material.unitPrice', type: 'number', minWidth: 120, sectionKey: 'unitPrice' },
+      { prop: 'salesPrice', labelKey: 'productCenter.material.salesPrice', type: 'number', minWidth: 120, sectionKey: 'unitPrice' },
       { prop: 'attributeList', labelKey: 'productCenter.material.typeAttributes', type: 'material-attributes', optionLoader: loadBaseAttributeOptions, table: false, formSpan: 2, sectionKey: 'attributes', sectionLabelKey: 'productCenter.formSection.typeAttributes' },
       { prop: 'status', labelKey: 'productCenter.material.auditStatus', type: 'select', options: materialStatusOptions.value, search: true, form: false, minWidth: 120 },
       { prop: 'sortOrder', labelKey: 'productCenter.common.sortOrder', type: 'number', sortable: true, table: false, sectionKey: 'manage', sectionLabelKey: 'productCenter.formSection.manage' },

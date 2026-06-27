@@ -14,6 +14,7 @@ import com.bocoo.product.service.impl.ProductMaterialTypeGroupServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -57,6 +58,20 @@ class ProductMaterialTypeGroupServiceTest {
     }
 
     @Test
+    void insertDefaultsFormulaSummaryVisible() {
+        ProductMaterialTypeGroupBo bo = new ProductMaterialTypeGroupBo();
+        bo.setGroupCode("control");
+        bo.setGroupNameCn("控制系统");
+        when(groupMapper.insert(any())).thenReturn(1);
+
+        assertThat(service.insertByBo(bo)).isTrue();
+
+        ArgumentCaptor<ProductMaterialTypeGroup> captor = ArgumentCaptor.forClass(ProductMaterialTypeGroup.class);
+        verify(groupMapper).insert(captor.capture());
+        assertThat(captor.getValue().getFormulaSummaryVisibleFlag()).isTrue();
+    }
+
+    @Test
     void enabledGroupCannotBeEdited() {
         ProductMaterialTypeGroup current = new ProductMaterialTypeGroup();
         current.setGroupId(1L);
@@ -70,6 +85,38 @@ class ProductMaterialTypeGroupServiceTest {
 
         assertThatThrownBy(() -> service.updateByBo(bo))
             .isInstanceOf(ServiceException.class);
+        verify(groupMapper, never()).updateById(any());
+    }
+
+    @Test
+    void enabledGroupCanToggleFormulaSummaryVisibleOnly() {
+        ProductMaterialTypeGroup current = new ProductMaterialTypeGroup();
+        current.setGroupId(1L);
+        current.setGroupCode("PACKAGING");
+        current.setGroupNameCn("包装");
+        current.setGroupNameEn("Packaging");
+        current.setStatus("ENABLED");
+        current.setSystemFlag(Boolean.FALSE);
+        current.setEditableFlag(Boolean.TRUE);
+        current.setSortOrder(60);
+        current.setRemark("包装");
+        current.setFormulaSummaryVisibleFlag(Boolean.TRUE);
+        when(groupMapper.selectById(1L)).thenReturn(current);
+        when(groupMapper.update(any(), any())).thenReturn(1);
+
+        ProductMaterialTypeGroupBo bo = new ProductMaterialTypeGroupBo();
+        bo.setGroupId(1L);
+        bo.setGroupCode("PACKAGING");
+        bo.setGroupNameCn("包装");
+        bo.setGroupNameEn("Packaging");
+        bo.setStatus("ENABLED");
+        bo.setSystemFlag(Boolean.FALSE);
+        bo.setEditableFlag(Boolean.TRUE);
+        bo.setSortOrder(60);
+        bo.setRemark("包装");
+        bo.setFormulaSummaryVisibleFlag(Boolean.FALSE);
+
+        assertThat(service.updateByBo(bo)).isTrue();
         verify(groupMapper, never()).updateById(any());
     }
 

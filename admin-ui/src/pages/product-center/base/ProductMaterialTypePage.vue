@@ -30,8 +30,8 @@
           </div>
           <div class="material-type-page__actions">
             <el-button type="primary" plain icon="Plus" :aria-label="t('common.add')" :data-agent-label="t('common.add')" @click="openGroupForm()" v-hasPermi="['product:material-type:add']">{{ t('common.add') }}</el-button>
-            <el-button type="success" plain icon="Edit" :disabled="!selectedGroup" :aria-label="t('common.edit')" :data-agent-label="t('common.edit')" @click="openGroupForm(selectedGroup)" v-hasPermi="['product:material-type:edit']">{{ t('common.edit') }}</el-button>
-            <el-button type="danger" plain icon="Delete" :disabled="!selectedGroup" :aria-label="t('common.delete')" :data-agent-label="t('common.delete')" data-agent-danger="delete" @click="removeGroup" v-hasPermi="['product:material-type:remove']">{{ t('common.delete') }}</el-button>
+            <el-button type="success" plain icon="Edit" :disabled="!selectedGroup" :aria-label="agentGroupActionLabel(t('common.edit'))" :data-agent-label="agentGroupActionLabel(t('common.edit'))" data-agent-action="edit-material-type-group" @click="openGroupForm(selectedGroup)" v-hasPermi="['product:material-type:edit']">{{ t('common.edit') }}</el-button>
+            <el-button type="danger" plain icon="Delete" :disabled="!selectedGroup" :aria-label="agentGroupActionLabel(t('common.delete'))" :data-agent-label="agentGroupActionLabel(t('common.delete'))" data-agent-action="delete-material-type-group" data-agent-danger="delete" data-agent-risk="confirm-required" data-agent-confirm-required="true" data-agent-confirm-message="需要用户人工确认后才能删除" @click="removeGroup" v-hasPermi="['product:material-type:remove']">{{ t('common.delete') }}</el-button>
           </div>
         </div>
         <el-table
@@ -46,12 +46,31 @@
           <el-table-column type="index" :label="t('common.index')" width="56" align="center" />
           <el-table-column prop="groupCode" :label="t('productCenter.materialType.groupCode')" min-width="120" show-overflow-tooltip />
           <el-table-column prop="groupNameCn" :label="t('productCenter.materialType.groupName')" min-width="120" show-overflow-tooltip />
+          <el-table-column prop="formulaSummaryVisibleFlag" :label="t('productCenter.materialType.formulaSummaryVisible')" width="112" align="center">
+            <template #default="{ row }">
+              <el-switch
+                :model-value="row.formulaSummaryVisibleFlag !== false"
+                :aria-label="agentRowActionLabel(t('productCenter.materialType.formulaSummaryVisible'), groupLabel(row))"
+                :data-agent-label="agentRowActionLabel(t('productCenter.materialType.formulaSummaryVisible'), groupLabel(row))"
+                :data-agent-row="groupLabel(row)"
+                data-agent-action="change-formula-summary-visible"
+                @change="changeGroupFormulaSummaryVisible(row, $event)"
+              />
+            </template>
+          </el-table-column>
           <el-table-column prop="status" :label="t('productCenter.common.status')" width="88" align="center">
             <template #default="{ row }">
               <el-switch
                 :model-value="row.status"
                 active-value="ENABLED"
                 inactive-value="DISABLED"
+                :aria-label="agentStatusLabel(groupLabel(row), row.status)"
+                :data-agent-label="agentStatusLabel(groupLabel(row), row.status)"
+                :data-agent-row="groupLabel(row)"
+                :data-agent-status="normalizeStatus(row.status)"
+                data-agent-risk="confirm-required"
+                data-agent-confirm-required="true"
+                data-agent-confirm-message="修改状态需要用户人工确认"
                 @change="changeGroupStatus(row, $event)"
               />
             </template>
@@ -67,9 +86,9 @@
           </div>
           <div class="material-type-page__actions">
             <el-button type="primary" plain icon="Plus" :disabled="!selectedGroup" :aria-label="t('common.add')" :data-agent-label="t('common.add')" @click="openTypeForm()" v-hasPermi="['product:material-type:add']">{{ t('common.add') }}</el-button>
-            <el-button type="success" plain icon="Edit" :disabled="!selectedType" :aria-label="t('common.edit')" :data-agent-label="t('common.edit')" @click="openTypeForm(selectedType)" v-hasPermi="['product:material-type:edit']">{{ t('common.edit') }}</el-button>
-            <el-button type="danger" plain icon="Delete" :disabled="!selectedType" :aria-label="t('common.delete')" :data-agent-label="t('common.delete')" data-agent-danger="delete" @click="removeType" v-hasPermi="['product:material-type:remove']">{{ t('common.delete') }}</el-button>
-            <el-button type="info" plain icon="View" :disabled="!selectedType" :aria-label="t('productCenter.common.references')" :data-agent-label="t('productCenter.common.references')" @click="openReference('type')" v-hasPermi="['product:material-type:reference']">{{ t('productCenter.common.references') }}</el-button>
+            <el-button type="success" plain icon="Edit" :disabled="!selectedType" :aria-label="agentTypeActionLabel(t('common.edit'))" :data-agent-label="agentTypeActionLabel(t('common.edit'))" data-agent-action="edit-material-type" @click="openTypeForm(selectedType)" v-hasPermi="['product:material-type:edit']">{{ t('common.edit') }}</el-button>
+            <el-button type="danger" plain icon="Delete" :disabled="!selectedType" :aria-label="agentTypeActionLabel(t('common.delete'))" :data-agent-label="agentTypeActionLabel(t('common.delete'))" data-agent-action="delete-material-type" data-agent-danger="delete" data-agent-risk="confirm-required" data-agent-confirm-required="true" data-agent-confirm-message="需要用户人工确认后才能删除" @click="removeType" v-hasPermi="['product:material-type:remove']">{{ t('common.delete') }}</el-button>
+            <el-button type="info" plain icon="View" :disabled="!selectedType" :aria-label="agentTypeActionLabel(t('productCenter.common.references'))" :data-agent-label="agentTypeActionLabel(t('productCenter.common.references'))" data-agent-action="reference-material-type" @click="openReference('type')" v-hasPermi="['product:material-type:reference']">{{ t('productCenter.common.references') }}</el-button>
           </div>
         </div>
         <el-alert
@@ -99,6 +118,13 @@
                 :model-value="row.status"
                 active-value="ENABLED"
                 inactive-value="DISABLED"
+                :aria-label="agentStatusLabel(typeLabel(row), row.status)"
+                :data-agent-label="agentStatusLabel(typeLabel(row), row.status)"
+                :data-agent-row="typeLabel(row)"
+                :data-agent-status="normalizeStatus(row.status)"
+                data-agent-risk="confirm-required"
+                data-agent-confirm-required="true"
+                data-agent-confirm-message="修改状态需要用户人工确认"
                 @change="changeTypeStatus(row, $event)"
               />
             </template>
@@ -108,53 +134,60 @@
     </div>
 
     <el-drawer v-model="groupOpen" :title="groupForm.groupId ? t('productCenter.common.editTitle', { name: t('productCenter.materialType.group') }) : t('productCenter.common.addTitle', { name: t('productCenter.materialType.group') })" size="640px" append-to-body>
-      <el-form ref="groupFormRef" :model="groupForm" :rules="groupRules" label-width="132px">
-        <el-form-item :label="t('productCenter.materialType.groupCode')" prop="groupCode">
-          <el-input v-model="groupForm.groupCode" />
+      <el-form ref="groupFormRef" :model="groupForm" :rules="groupRules" label-width="132px" data-agent-scope="material-type-group-form">
+        <el-form-item :label="t('productCenter.materialType.groupCode')" prop="groupCode" data-agent-field="groupCode">
+          <el-input v-model="groupForm.groupCode" :aria-label="t('productCenter.materialType.groupCode')" :data-agent-label="t('productCenter.materialType.groupCode')" />
         </el-form-item>
-        <el-form-item :label="t('productCenter.materialType.groupName')" prop="groupNameCn">
-          <el-input v-model="groupForm.groupNameCn" />
+        <el-form-item :label="t('productCenter.materialType.groupName')" prop="groupNameCn" data-agent-field="groupNameCn">
+          <el-input v-model="groupForm.groupNameCn" :aria-label="t('productCenter.materialType.groupName')" :data-agent-label="t('productCenter.materialType.groupName')" />
         </el-form-item>
-        <el-form-item :label="t('productCenter.materialType.groupNameEn')">
-          <el-input v-model="groupForm.groupNameEn" />
+        <el-form-item :label="t('productCenter.materialType.groupNameEn')" data-agent-field="groupNameEn">
+          <el-input v-model="groupForm.groupNameEn" :aria-label="t('productCenter.materialType.groupNameEn')" :data-agent-label="t('productCenter.materialType.groupNameEn')" />
         </el-form-item>
-        <el-form-item :label="t('productCenter.common.sortOrder')">
-          <el-input-number v-model="groupForm.sortOrder" :min="0" controls-position="right" />
+        <el-form-item :label="t('productCenter.common.sortOrder')" data-agent-field="sortOrder">
+          <el-input-number v-model="groupForm.sortOrder" :min="0" controls-position="right" :aria-label="t('productCenter.common.sortOrder')" :data-agent-label="t('productCenter.common.sortOrder')" data-agent-field="sortOrder" data-agent-input-kind="number" />
         </el-form-item>
-        <el-form-item :label="t('productCenter.common.remark')">
-          <el-input v-model="groupForm.remark" type="textarea" :rows="3" />
+        <el-form-item :label="t('productCenter.materialType.formulaSummaryVisible')" data-agent-field="formulaSummaryVisibleFlag">
+          <el-switch
+            v-model="groupForm.formulaSummaryVisibleFlag"
+            :aria-label="t('productCenter.materialType.formulaSummaryVisible')"
+            :data-agent-label="t('productCenter.materialType.formulaSummaryVisible')"
+          />
+        </el-form-item>
+        <el-form-item :label="t('productCenter.common.remark')" data-agent-field="remark">
+          <el-input v-model="groupForm.remark" type="textarea" :rows="3" :aria-label="t('productCenter.common.remark')" :data-agent-label="t('productCenter.common.remark')" />
         </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="groupOpen = false">{{ t('common.cancel') }}</el-button>
-        <el-button type="primary" :loading="submitLoading" data-agent-danger="save" @click="submitGroup">{{ t('common.confirm') }}</el-button>
+        <el-button type="primary" :loading="submitLoading" data-agent-danger="save" data-agent-risk="confirm-required" data-agent-confirm-required="true" data-agent-confirm-message="需要用户人工确认后才能保存" @click="submitGroup">{{ t('common.confirm') }}</el-button>
       </template>
     </el-drawer>
 
     <el-drawer v-model="typeOpen" :title="typeForm.materialTypeId ? t('productCenter.common.editTitle', { name: t('productCenter.materialType.type') }) : t('productCenter.common.addTitle', { name: t('productCenter.materialType.type') })" size="640px" append-to-body>
-      <el-form ref="typeFormRef" :model="typeForm" :rules="typeRules" label-width="132px">
-        <el-form-item :label="t('productCenter.materialType.group')">
-          <el-input :model-value="selectedGroupLabel" disabled />
+      <el-form ref="typeFormRef" :model="typeForm" :rules="typeRules" label-width="132px" data-agent-scope="material-type-form">
+        <el-form-item :label="t('productCenter.materialType.group')" data-agent-field="attributeGroupCode">
+          <el-input :model-value="selectedGroupLabel" disabled :aria-label="t('productCenter.materialType.group')" :data-agent-label="t('productCenter.materialType.group')" />
         </el-form-item>
-        <el-form-item :label="t('productCenter.materialType.code')" prop="materialTypeCode">
-          <el-input v-model="typeForm.materialTypeCode" />
+        <el-form-item :label="t('productCenter.materialType.code')" prop="materialTypeCode" data-agent-field="materialTypeCode">
+          <el-input v-model="typeForm.materialTypeCode" :aria-label="t('productCenter.materialType.code')" :data-agent-label="t('productCenter.materialType.code')" />
         </el-form-item>
-        <el-form-item :label="t('productCenter.materialType.name')" prop="materialTypeNameCn">
-          <el-input v-model="typeForm.materialTypeNameCn" />
+        <el-form-item :label="t('productCenter.materialType.name')" prop="materialTypeNameCn" data-agent-field="materialTypeNameCn">
+          <el-input v-model="typeForm.materialTypeNameCn" :aria-label="t('productCenter.materialType.name')" :data-agent-label="t('productCenter.materialType.name')" />
         </el-form-item>
-        <el-form-item :label="t('productCenter.materialType.nameEn')">
-          <el-input v-model="typeForm.materialTypeNameEn" />
+        <el-form-item :label="t('productCenter.materialType.nameEn')" data-agent-field="materialTypeNameEn">
+          <el-input v-model="typeForm.materialTypeNameEn" :aria-label="t('productCenter.materialType.nameEn')" :data-agent-label="t('productCenter.materialType.nameEn')" />
         </el-form-item>
-        <el-form-item :label="t('productCenter.common.sortOrder')">
-          <el-input-number v-model="typeForm.sortOrder" :min="0" controls-position="right" />
+        <el-form-item :label="t('productCenter.common.sortOrder')" data-agent-field="sortOrder">
+          <el-input-number v-model="typeForm.sortOrder" :min="0" controls-position="right" :aria-label="t('productCenter.common.sortOrder')" :data-agent-label="t('productCenter.common.sortOrder')" data-agent-field="sortOrder" data-agent-input-kind="number" />
         </el-form-item>
-        <el-form-item :label="t('productCenter.common.remark')">
-          <el-input v-model="typeForm.remark" type="textarea" :rows="3" />
+        <el-form-item :label="t('productCenter.common.remark')" data-agent-field="remark">
+          <el-input v-model="typeForm.remark" type="textarea" :rows="3" :aria-label="t('productCenter.common.remark')" :data-agent-label="t('productCenter.common.remark')" />
         </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="typeOpen = false">{{ t('common.cancel') }}</el-button>
-        <el-button type="primary" :loading="submitLoading" data-agent-danger="save" @click="submitType">{{ t('common.confirm') }}</el-button>
+        <el-button type="primary" :loading="submitLoading" data-agent-danger="save" data-agent-risk="confirm-required" data-agent-confirm-required="true" data-agent-confirm-message="需要用户人工确认后才能保存" @click="submitType">{{ t('common.confirm') }}</el-button>
       </template>
     </el-drawer>
 
@@ -224,6 +257,46 @@ const selectedGroupLabel = computed(() => selectedGroup.value ? `${selectedGroup
 const referenceAllowed = computed(() => Number(referenceResult.value.referenceCount || 0) <= 0 && referenceResult.value.allowed !== false)
 const referenceSummaries = computed(() => (referenceResult.value.referenceSummaries || []).map((summary) => ({ summary })))
 
+function compactParts(...parts: unknown[]) {
+  return parts.map((part) => String(part ?? '').trim()).filter(Boolean).join(' ')
+}
+
+function normalizeStatus(value: unknown) {
+  return value === 'ENABLED' || value === '1' || value === 'true' || value === true || value === 1 ? 'ENABLED' : 'DISABLED'
+}
+
+function statusLabel(value: unknown) {
+  return normalizeStatus(value) === 'ENABLED' ? t('productCenter.status.enabled') : t('productCenter.status.disabled')
+}
+
+function groupLabel(row?: ProductMaterialTypeGroupVO) {
+  if (!row) return t('productCenter.materialType.group')
+  const name = localeStore.language === 'zh_CN' ? row.groupNameCn : row.groupNameEn || row.groupNameCn
+  return compactParts(t('productCenter.materialType.group'), row.groupCode, name)
+}
+
+function typeLabel(row?: ProductMaterialTypeVO) {
+  if (!row) return t('productCenter.materialType.type')
+  const name = localeStore.language === 'zh_CN' ? row.materialTypeNameCn : row.materialTypeNameEn || row.materialTypeNameCn
+  return compactParts(t('productCenter.materialType.type'), row.materialTypeCode, name)
+}
+
+function agentRowActionLabel(action: string, rowLabel: string) {
+  return compactParts(action, rowLabel)
+}
+
+function agentGroupActionLabel(action: string) {
+  return agentRowActionLabel(action, groupLabel(selectedGroup.value))
+}
+
+function agentTypeActionLabel(action: string) {
+  return agentRowActionLabel(action, typeLabel(selectedType.value))
+}
+
+function agentStatusLabel(rowLabel: string, status: unknown) {
+  return compactParts(rowLabel, t('productCenter.common.status'), `当前${statusLabel(status)}`, '切换需要确认')
+}
+
 async function loadGroups() {
   groupLoading.value = true
   try {
@@ -282,7 +355,7 @@ function assign<T extends Record<string, unknown>>(target: T, source: Record<str
 }
 
 function openGroupForm(row?: ProductMaterialTypeGroupVO) {
-  assign(groupForm, { status: 'ENABLED', systemFlag: false, editableFlag: true, sortOrder: 0, ...(row || {}) })
+  assign(groupForm, { status: 'ENABLED', systemFlag: false, editableFlag: true, formulaSummaryVisibleFlag: true, sortOrder: 0, ...(row || {}) })
   groupOpen.value = true
 }
 
@@ -356,6 +429,20 @@ async function changeGroupStatus(row: ProductMaterialTypeGroupVO, status: string
   if (!row.groupId) return
   await productMaterialTypeGroupApi.changeStatus?.(row.groupId, String(status))
   row.status = String(status)
+}
+
+async function changeGroupFormulaSummaryVisible(row: ProductMaterialTypeGroupVO, value: string | number | boolean) {
+  if (!row.groupId) return
+  const previous = row.formulaSummaryVisibleFlag !== false
+  const nextValue = Boolean(value)
+  row.formulaSummaryVisibleFlag = nextValue
+  try {
+    await productMaterialTypeGroupApi.update({ ...row, formulaSummaryVisibleFlag: nextValue })
+    ElMessage.success(t('common.success'))
+  } catch (error) {
+    row.formulaSummaryVisibleFlag = previous
+    throw error
+  }
 }
 
 async function changeTypeStatus(row: ProductMaterialTypeVO, status: string | number | boolean) {

@@ -130,6 +130,9 @@ public class ProductMaterial extends BaseEntity {
     @Schema(description = "单价")
     private BigDecimal unitPrice;
 
+    @Schema(description = "销售价")
+    private BigDecimal salesPrice;
+
     @Schema(description = "审核人")
     private String auditBy;
 

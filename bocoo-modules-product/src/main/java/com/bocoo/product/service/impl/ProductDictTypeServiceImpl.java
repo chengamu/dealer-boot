@@ -158,4 +158,5 @@ public class ProductDictTypeServiceImpl extends ProductServiceSupport implements
     private boolean isDictLocked(Boolean systemFlag, Boolean editableFlag) {
         return Boolean.TRUE.equals(systemFlag) && Boolean.FALSE.equals(editableFlag);
     }
+
 }

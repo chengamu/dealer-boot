@@ -31,7 +31,7 @@
           <div class="product-dict-page__actions">
             <el-button type="primary" plain icon="Plus" :aria-label="t('common.add')" :data-agent-label="t('common.add')" @click="addType" v-hasPermi="['product:dict:add']">{{ t('common.add') }}</el-button>
             <el-button type="success" plain icon="Edit" :disabled="selectedTypeIds.length !== 1" :aria-label="t('common.edit')" :data-agent-label="t('common.edit')" @click="editSelectedType" v-hasPermi="['product:dict:edit']">{{ t('common.edit') }}</el-button>
-            <el-button type="danger" plain icon="Delete" :disabled="!selectedTypeIds.length" :aria-label="t('common.delete')" :data-agent-label="t('common.delete')" data-agent-danger="delete" @click="deleteSelectedTypes" v-hasPermi="['product:dict:remove']">{{ t('common.delete') }}</el-button>
+            <el-button type="danger" plain icon="Delete" :disabled="!selectedTypeIds.length" :aria-label="t('common.delete')" :data-agent-label="t('common.delete')" data-agent-danger="delete" data-agent-risk="confirm-required" data-agent-confirm-required="true" data-agent-confirm-message="需要用户人工确认后才能删除" @click="deleteSelectedTypes" v-hasPermi="['product:dict:remove']">{{ t('common.delete') }}</el-button>
           </div>
         </div>
 
@@ -53,7 +53,17 @@
           <el-table-column :label="t('productCenter.common.sortOrder')" prop="sortOrder" width="72" align="center" sortable="custom" />
           <el-table-column :label="t('productCenter.common.status')" prop="status" width="88" align="center">
             <template #default="{ row }">
-              <el-switch :model-value="row.status" active-value="ENABLED" inactive-value="DISABLED" @change="changeTypeStatus(row, $event)" />
+              <el-switch
+                :model-value="row.status"
+                active-value="ENABLED"
+                inactive-value="DISABLED"
+                :aria-label="t('productCenter.common.status')"
+                :data-agent-label="t('productCenter.common.status')"
+                data-agent-risk="confirm-required"
+                data-agent-confirm-required="true"
+                data-agent-confirm-message="修改状态需要用户人工确认"
+                @change="changeTypeStatus(row, $event)"
+              />
             </template>
           </el-table-column>
         </el-table>
@@ -72,7 +82,7 @@
           <div class="product-dict-page__actions">
             <el-button type="primary" plain icon="Plus" :disabled="!activeType" :aria-label="t('common.add')" :data-agent-label="t('common.add')" @click="addItem" v-hasPermi="['product:dict:add']">{{ t('common.add') }}</el-button>
             <el-button type="success" plain icon="Edit" :disabled="selectedItemIds.length !== 1" :aria-label="t('common.edit')" :data-agent-label="t('common.edit')" @click="editSelectedItem" v-hasPermi="['product:dict:edit']">{{ t('common.edit') }}</el-button>
-            <el-button type="danger" plain icon="Delete" :disabled="!selectedItemIds.length" :aria-label="t('common.delete')" :data-agent-label="t('common.delete')" data-agent-danger="delete" @click="deleteSelectedItems" v-hasPermi="['product:dict:remove']">{{ t('common.delete') }}</el-button>
+            <el-button type="danger" plain icon="Delete" :disabled="!selectedItemIds.length" :aria-label="t('common.delete')" :data-agent-label="t('common.delete')" data-agent-danger="delete" data-agent-risk="confirm-required" data-agent-confirm-required="true" data-agent-confirm-message="需要用户人工确认后才能删除" @click="deleteSelectedItems" v-hasPermi="['product:dict:remove']">{{ t('common.delete') }}</el-button>
           </div>
         </div>
 
@@ -98,7 +108,17 @@
           <el-table-column :label="t('productCenter.common.sortOrder')" prop="sortOrder" width="72" align="center" sortable="custom" />
           <el-table-column :label="t('productCenter.common.status')" prop="status" width="88" align="center">
             <template #default="{ row }">
-              <el-switch :model-value="row.status" active-value="ENABLED" inactive-value="DISABLED" @change="changeItemStatus(row, $event)" />
+              <el-switch
+                :model-value="row.status"
+                active-value="ENABLED"
+                inactive-value="DISABLED"
+                :aria-label="t('productCenter.common.status')"
+                :data-agent-label="t('productCenter.common.status')"
+                data-agent-risk="confirm-required"
+                data-agent-confirm-required="true"
+                data-agent-confirm-message="修改状态需要用户人工确认"
+                @change="changeItemStatus(row, $event)"
+              />
             </template>
           </el-table-column>
         </el-table>
@@ -124,8 +144,8 @@
             <el-option v-for="option in businessDomainOptions" :key="option.value" :label="option.label" :value="option.value" />
           </el-select>
         </el-form-item>
-        <el-form-item :label="t('productCenter.common.sortOrder')" prop="sortOrder">
-          <el-input-number v-model="typeForm.sortOrder" :min="0" controls-position="right" class="product-dict-page__number" />
+        <el-form-item :label="t('productCenter.common.sortOrder')" prop="sortOrder" data-agent-field="sortOrder">
+          <el-input-number v-model="typeForm.sortOrder" :min="0" controls-position="right" :aria-label="t('productCenter.common.sortOrder')" :data-agent-label="t('productCenter.common.sortOrder')" data-agent-field="sortOrder" data-agent-input-kind="number" class="product-dict-page__number" />
         </el-form-item>
         <div class="product-dict-page__section-title">{{ t('productCenter.formSection.note') }}</div>
         <el-form-item :label="t('productCenter.common.remark')" prop="remark" class="product-dict-page__form-item--full">
@@ -135,7 +155,7 @@
       <template #footer>
         <div class="product-dict-page__drawer-actions">
           <el-button @click="typeDrawerOpen = false">{{ t('common.cancel') }}</el-button>
-          <el-button type="primary" :loading="typeSubmitLoading" data-agent-danger="save" @click="submitType">{{ t('common.confirm') }}</el-button>
+          <el-button type="primary" :loading="typeSubmitLoading" data-agent-danger="save" data-agent-risk="confirm-required" data-agent-confirm-required="true" data-agent-confirm-message="需要用户人工确认后才能保存" @click="submitType">{{ t('common.confirm') }}</el-button>
         </div>
       </template>
     </el-drawer>
@@ -160,8 +180,8 @@
             <el-option v-for="option in parentItemOptions" :key="String(option.value)" :label="option.label" :value="option.value" />
           </el-select>
         </el-form-item>
-        <el-form-item :label="t('productCenter.common.sortOrder')" prop="sortOrder">
-          <el-input-number v-model="itemForm.sortOrder" :min="0" controls-position="right" class="product-dict-page__number" />
+        <el-form-item :label="t('productCenter.common.sortOrder')" prop="sortOrder" data-agent-field="sortOrder">
+          <el-input-number v-model="itemForm.sortOrder" :min="0" controls-position="right" :aria-label="t('productCenter.common.sortOrder')" :data-agent-label="t('productCenter.common.sortOrder')" data-agent-field="sortOrder" data-agent-input-kind="number" class="product-dict-page__number" />
         </el-form-item>
         <div class="product-dict-page__section-title">{{ t('productCenter.formSection.note') }}</div>
         <el-form-item :label="t('productCenter.common.remark')" prop="remark" class="product-dict-page__form-item--full">
@@ -171,7 +191,7 @@
       <template #footer>
         <div class="product-dict-page__drawer-actions">
           <el-button @click="itemDrawerOpen = false">{{ t('common.cancel') }}</el-button>
-          <el-button type="primary" :loading="itemSubmitLoading" data-agent-danger="save" @click="submitItem">{{ t('common.confirm') }}</el-button>
+          <el-button type="primary" :loading="itemSubmitLoading" data-agent-danger="save" data-agent-risk="confirm-required" data-agent-confirm-required="true" data-agent-confirm-message="需要用户人工确认后才能保存" @click="submitItem">{{ t('common.confirm') }}</el-button>
         </div>
       </template>
     </el-drawer>

@@ -18,7 +18,7 @@
           filterable
           :aria-label="`${t(field.labelKey)}${t('common.search')}`"
           :data-agent-label="`${t(field.labelKey)}${t('common.search')}`"
-          style="width: 150px"
+          style="width: 180px"
         >
           <template v-if="field.type === 'status'">
             <el-option :label="t('productCenter.status.enabled')" value="ENABLED" />
@@ -39,7 +39,7 @@
           clearable
           :aria-label="`${t(field.labelKey)}${t('common.search')}`"
           :data-agent-label="`${t(field.labelKey)}${t('common.search')}`"
-          style="width: 160px"
+          style="width: 190px"
           @keyup.enter="handleQuery"
         />
       </el-form-item>
@@ -61,27 +61,27 @@
         </el-button>
       </el-col>
       <el-col v-if="!isTreeGrid" :span="1.5">
-        <el-button v-if="!config.readonly" type="success" plain icon="Edit" :disabled="single" :aria-label="t('common.edit')" :data-agent-label="t('common.edit')" @click="handleUpdate()" v-hasPermi="[config.permissions.edit]">
+        <el-button v-if="!config.readonly" type="success" plain icon="Edit" :disabled="single" :aria-label="agentSelectedActionLabel(t('common.edit'))" :data-agent-label="agentSelectedActionLabel(t('common.edit'))" data-agent-action="edit-selected" @click="handleUpdate()" v-hasPermi="[config.permissions.edit]">
           {{ t('common.edit') }}
         </el-button>
       </el-col>
       <el-col v-if="config.superEditPermission && config.api.superUpdate" :span="1.5">
-        <el-button type="warning" plain icon="EditPen" :disabled="single" :aria-label="t('productCenter.common.superEdit')" :data-agent-label="t('productCenter.common.superEdit')" data-agent-danger="super-edit" @click="handleSuperUpdate()" v-hasPermi="[config.superEditPermission]">
+        <el-button type="warning" plain icon="EditPen" :disabled="single" :aria-label="agentSelectedActionLabel(t('productCenter.common.superEdit'))" :data-agent-label="agentSelectedActionLabel(t('productCenter.common.superEdit'))" data-agent-action="super-edit-selected" data-agent-danger="super-edit" data-agent-risk="confirm-required" data-agent-confirm-required="true" data-agent-confirm-message="超级修改需要用户人工确认" @click="handleSuperUpdate()" v-hasPermi="[config.superEditPermission]">
           {{ t('productCenter.common.superEdit') }}
         </el-button>
       </el-col>
       <el-col v-if="!isTreeGrid" :span="1.5">
-        <el-button v-if="!config.readonly" type="danger" plain icon="Delete" :disabled="multiple" :aria-label="t('common.delete')" :data-agent-label="t('common.delete')" data-agent-danger="delete" @click="handleDelete()" v-hasPermi="[config.permissions.remove]">
+        <el-button v-if="!config.readonly" type="danger" plain icon="Delete" :disabled="multiple" :aria-label="agentSelectedActionLabel(t('common.delete'))" :data-agent-label="agentSelectedActionLabel(t('common.delete'))" data-agent-action="delete-selected" data-agent-danger="delete" data-agent-risk="confirm-required" data-agent-confirm-required="true" data-agent-confirm-message="需要用户人工确认后才能删除" @click="handleDelete()" v-hasPermi="[config.permissions.remove]">
           {{ t('common.delete') }}
         </el-button>
       </el-col>
       <el-col v-if="isSingleRowActions && !isTreeGrid && !config.hideReference" :span="1.5">
-        <el-button type="success" plain icon="View" :disabled="single" :aria-label="t('productCenter.common.references')" :data-agent-label="t('productCenter.common.references')" @click="handleSelectedReference" v-hasPermi="[config.permissions.reference]">
+        <el-button type="success" plain icon="View" :disabled="single" :aria-label="agentSelectedActionLabel(t('productCenter.common.references'))" :data-agent-label="agentSelectedActionLabel(t('productCenter.common.references'))" data-agent-action="reference-selected" @click="handleSelectedReference" v-hasPermi="[config.permissions.reference]">
           {{ t('productCenter.common.references') }}
         </el-button>
       </el-col>
       <el-col v-if="isSingleRowActions && !isTreeGrid && config.changeLog" :span="1.5">
-        <el-button type="primary" plain icon="Clock" :disabled="single" :aria-label="t(config.changeLog.titleKey || 'productCenter.changeLog.title')" :data-agent-label="t(config.changeLog.titleKey || 'productCenter.changeLog.title')" @click="handleSelectedChangeLog" v-hasPermi="[config.changeLog.permission]">
+        <el-button type="primary" plain icon="Clock" :disabled="single" :aria-label="agentSelectedActionLabel(t(config.changeLog.titleKey || 'productCenter.changeLog.title'))" :data-agent-label="agentSelectedActionLabel(t(config.changeLog.titleKey || 'productCenter.changeLog.title'))" data-agent-action="change-log-selected" @click="handleSelectedChangeLog" v-hasPermi="[config.changeLog.permission]">
           {{ t(config.changeLog.titleKey || 'productCenter.changeLog.title') }}
         </el-button>
       </el-col>
@@ -92,8 +92,12 @@
           :icon="action.icon"
           :disabled="single || Boolean(rowActionLoading)"
           :loading="selectedRow ? rowActionLoading === rowActionKey(action, selectedRow) : false"
-          :aria-label="t(action.labelKey)"
-          :data-agent-label="t(action.labelKey)"
+          :aria-label="agentSelectedActionLabel(t(action.labelKey))"
+          :data-agent-label="agentSelectedActionLabel(t(action.labelKey))"
+          data-agent-action="row-toolbar-action"
+          data-agent-risk="confirm-required"
+          data-agent-confirm-required="true"
+          data-agent-confirm-message="业务动作需要用户人工确认"
           @click="handleSelectedRowAction(action)"
           v-hasPermi="[action.permission]"
         >
@@ -154,12 +158,21 @@
             active-value="ENABLED"
             inactive-value="DISABLED"
             :disabled="config.readonly || !config.api.changeStatus"
+            :aria-label="agentStatusLabel(row, field)"
+            :data-agent-label="agentStatusLabel(row, field)"
+            :data-agent-row="agentRecordLabel(row)"
+            :data-agent-field="field.prop"
+            :data-agent-status="normalizeStatus(row[field.prop])"
+            data-agent-risk="confirm-required"
+            data-agent-confirm-required="true"
+            data-agent-confirm-message="修改状态需要用户人工确认"
             @change="handleStatusChange(row, field, $event)"
           />
           <span v-else-if="field.type === 'select'">{{ optionLabel(field, row[field.prop]) }}</span>
           <span v-else-if="field.type === 'boolean'">{{ booleanLabel(row[field.prop]) }}</span>
           <span v-else-if="field.type === 'date'">{{ formatUtc(row[field.prop] as string | undefined, 'YYYY-MM-DD') }}</span>
-          <span v-else-if="field.type === 'datetime'">{{ formatUtc(row[field.prop] as string | undefined) }}</span>
+          <span v-else-if="field.type === 'datetime'">{{ formatUtc(row[field.prop] as string | undefined, 'YYYY-MM-DD HH:mm') }}</span>
+          <span v-else-if="field.type === 'number'">{{ formatNumberValue(field, row[field.prop]) }}</span>
           <el-link v-else-if="field.type === 'url' && row[field.prop]" type="primary" :href="String(row[field.prop])" target="_blank">
             {{ t('productCenter.common.open') }}
           </el-link>
@@ -172,32 +185,38 @@
       <el-table-column v-if="showOperationColumn" :label="t('common.operate')" align="center" width="176" fixed="right" class-name="small-padding fixed-width">
         <template #default="{ row }">
           <el-tooltip v-if="isTreeGrid && !config.readonly" :content="t('common.add')" placement="top">
-            <el-button link type="primary" icon="Plus" :aria-label="t('common.add')" @click="handleAdd(row)" v-hasPermi="[config.permissions.add]" />
+            <el-button link type="primary" icon="Plus" :aria-label="agentActionLabel(t('common.add'), row)" :data-agent-label="agentActionLabel(t('common.add'), row)" :data-agent-row="agentRecordLabel(row)" data-agent-action="add-child" @click="handleAdd(row)" v-hasPermi="[config.permissions.add]" />
           </el-tooltip>
           <el-tooltip v-if="!config.hideReference && !isTreeGrid && !isSingleRowActions" :content="t('productCenter.common.references')" placement="top">
-            <el-button link type="primary" icon="View" :aria-label="t('productCenter.common.references')" @click="handleReference(row)" v-hasPermi="[config.permissions.reference]" />
+            <el-button link type="primary" icon="View" :aria-label="agentActionLabel(t('productCenter.common.references'), row)" :data-agent-label="agentActionLabel(t('productCenter.common.references'), row)" :data-agent-row="agentRecordLabel(row)" data-agent-action="reference" @click="handleReference(row)" v-hasPermi="[config.permissions.reference]" />
           </el-tooltip>
           <el-tooltip v-if="config.showDetail && !isSingleRowActions" :content="t('common.detail')" placement="top">
-            <el-button link type="primary" icon="Document" :aria-label="t('common.detail')" @click="handleDetail(row)" v-hasPermi="[config.permissions.reference]" />
+            <el-button link type="primary" icon="Document" :aria-label="agentActionLabel(t('common.detail'), row)" :data-agent-label="agentActionLabel(t('common.detail'), row)" :data-agent-row="agentRecordLabel(row)" data-agent-action="detail" @click="handleDetail(row)" v-hasPermi="[config.permissions.reference]" />
           </el-tooltip>
           <el-tooltip v-if="!config.readonly && (!isSingleRowActions || isTreeGrid)" :content="t('common.edit')" placement="top">
-            <el-button link type="primary" icon="Edit" :aria-label="t('common.edit')" @click="handleUpdate(row)" v-hasPermi="[config.permissions.edit]" />
+            <el-button link type="primary" icon="Edit" :aria-label="agentActionLabel(t('common.edit'), row)" :data-agent-label="agentActionLabel(t('common.edit'), row)" :data-agent-row="agentRecordLabel(row)" data-agent-action="edit" @click="handleUpdate(row)" v-hasPermi="[config.permissions.edit]" />
           </el-tooltip>
           <el-tooltip v-if="config.superEditPermission && config.api.superUpdate" :content="t('productCenter.common.superEdit')" placement="top">
-            <el-button link type="warning" icon="EditPen" :aria-label="t('productCenter.common.superEdit')" :data-agent-label="t('productCenter.common.superEdit')" data-agent-danger="super-edit" @click="handleSuperUpdate(row)" v-hasPermi="[config.superEditPermission]" />
+            <el-button link type="warning" icon="EditPen" :aria-label="agentActionLabel(t('productCenter.common.superEdit'), row)" :data-agent-label="agentActionLabel(t('productCenter.common.superEdit'), row)" :data-agent-row="agentRecordLabel(row)" data-agent-action="super-edit" data-agent-danger="super-edit" data-agent-risk="confirm-required" data-agent-confirm-required="true" data-agent-confirm-message="超级修改需要用户人工确认" @click="handleSuperUpdate(row)" v-hasPermi="[config.superEditPermission]" />
           </el-tooltip>
           <el-tooltip v-if="!config.readonly && (!isSingleRowActions || isTreeGrid)" :content="t('common.delete')" placement="top">
-            <el-button link type="primary" icon="Delete" :aria-label="t('common.delete')" :data-agent-label="t('common.delete')" data-agent-danger="delete" @click="handleDelete(row)" v-hasPermi="[config.permissions.remove]" />
+            <el-button link type="primary" icon="Delete" :aria-label="agentActionLabel(t('common.delete'), row)" :data-agent-label="agentActionLabel(t('common.delete'), row)" :data-agent-row="agentRecordLabel(row)" data-agent-action="delete" data-agent-danger="delete" data-agent-risk="confirm-required" data-agent-confirm-required="true" data-agent-confirm-message="需要用户人工确认后才能删除" @click="handleDelete(row)" v-hasPermi="[config.permissions.remove]" />
           </el-tooltip>
           <el-tooltip v-if="!config.hideReference && isTreeGrid" :content="t('productCenter.common.references')" placement="top">
-            <el-button link type="primary" icon="View" :aria-label="t('productCenter.common.references')" @click="handleReference(row)" v-hasPermi="[config.permissions.reference]" />
+            <el-button link type="primary" icon="View" :aria-label="agentActionLabel(t('productCenter.common.references'), row)" :data-agent-label="agentActionLabel(t('productCenter.common.references'), row)" :data-agent-row="agentRecordLabel(row)" data-agent-action="reference" @click="handleReference(row)" v-hasPermi="[config.permissions.reference]" />
           </el-tooltip>
           <el-tooltip v-for="action in visibleRowActions(row)" :key="action.labelKey" :content="t(action.labelKey)" placement="top">
             <el-button
               link
               :type="action.type || 'primary'"
               :icon="action.icon"
-              :aria-label="t(action.labelKey)"
+              :aria-label="agentActionLabel(t(action.labelKey), row)"
+              :data-agent-label="agentActionLabel(t(action.labelKey), row)"
+              :data-agent-row="agentRecordLabel(row)"
+              data-agent-action="row-action"
+              data-agent-risk="confirm-required"
+              data-agent-confirm-required="true"
+              data-agent-confirm-message="业务动作需要用户人工确认"
               :loading="rowActionLoading === rowActionKey(action, row)"
               :disabled="Boolean(rowActionLoading) || action.disabled?.(row)"
               @click="handleRowAction(action, row)"
@@ -233,15 +252,20 @@
         <template v-for="section in formSections" :key="section.key">
           <div v-if="section.labelKey" class="product-grid-page__section-title">{{ t(section.labelKey) }}</div>
           <el-form-item v-for="field in section.fields" :key="field.prop" :label="t(field.labelKey)" :prop="field.prop" :class="formItemClass(field)" :data-agent-field="field.prop">
-          <el-input-number
+          <el-input
             v-if="field.type === 'number'"
-            v-model="form[field.prop] as number"
+            :model-value="form[field.prop] as string | number"
+            type="number"
             :min="0"
+            :step="field.step || 1"
             :disabled="drawerReadonly"
+            :placeholder="t('productCenter.common.inputPlaceholder')"
             :aria-label="t(field.labelKey)"
             :data-agent-label="t(field.labelKey)"
-            controls-position="right"
+            :data-agent-field="field.prop"
+            data-agent-input-kind="number"
             class="product-grid-page__number"
+            @update:model-value="handleNumberInput(field, $event)"
           />
           <el-switch
             v-else-if="field.type === 'boolean'"
@@ -284,6 +308,10 @@
                 v-model="row.valueNumber"
                 :disabled="drawerReadonly"
                 :min="0"
+                :aria-label="displayValue(row.attributeNameCn || row.attributeCode)"
+                :data-agent-label="displayValue(row.attributeNameCn || row.attributeCode)"
+                :data-agent-field="String(row.attributeCode || row.attributeNameCn || 'materialAttributeNumber')"
+                data-agent-input-kind="number"
                 controls-position="right"
                 @change="syncMaterialAttributes(field)"
               />
@@ -326,7 +354,7 @@
               :http-request="uploadAttachment"
               :before-upload="beforeAttachmentUpload"
             >
-              <el-button type="primary" plain icon="Upload" data-agent-danger="upload">{{ t('productCenter.common.uploadAttachment') }}</el-button>
+              <el-button type="primary" plain icon="Upload" data-agent-danger="upload" data-agent-risk="confirm-required" data-agent-confirm-required="true" data-agent-confirm-message="上传附件需要用户人工确认">{{ t('productCenter.common.uploadAttachment') }}</el-button>
             </el-upload>
           </div>
           <el-alert
@@ -345,7 +373,7 @@
                   <el-button link type="primary" icon="View" :aria-label="t('productCenter.common.open')" @click="openAttachment(row)" />
                 </el-tooltip>
                 <el-tooltip v-if="!drawerReadonly" :content="t('common.delete')" placement="top">
-                  <el-button link type="primary" icon="Delete" :aria-label="t('common.delete')" :data-agent-label="t('common.delete')" data-agent-danger="delete-attachment" @click="removeAttachment(row)" />
+                  <el-button link type="primary" icon="Delete" :aria-label="t('common.delete')" :data-agent-label="t('common.delete')" data-agent-danger="delete-attachment" data-agent-risk="confirm-required" data-agent-confirm-required="true" data-agent-confirm-message="需要用户人工确认后才能删除附件" @click="removeAttachment(row)" />
                 </el-tooltip>
               </template>
             </el-table-column>
@@ -356,7 +384,7 @@
       <template #footer>
         <div class="product-grid-page__drawer-actions">
           <el-button :aria-label="drawerReadonly ? t('common.close') : t('common.cancel')" :data-agent-label="drawerReadonly ? t('common.close') : t('common.cancel')" @click="cancel">{{ drawerReadonly ? t('common.close') : t('common.cancel') }}</el-button>
-          <el-button v-if="!drawerReadonly" type="primary" :loading="submitLoading" :aria-label="t('common.confirm')" :data-agent-label="t('common.confirm')" data-agent-danger="save" @click="submitForm">{{ t('common.confirm') }}</el-button>
+          <el-button v-if="!drawerReadonly" type="primary" :loading="submitLoading" :aria-label="t('common.confirm')" :data-agent-label="t('common.confirm')" data-agent-danger="save" data-agent-risk="confirm-required" data-agent-confirm-required="true" data-agent-confirm-message="需要用户人工确认后才能保存" @click="submitForm">{{ t('common.confirm') }}</el-button>
         </div>
       </template>
     </el-drawer>
@@ -442,6 +470,8 @@ export interface ProductFieldConfig {
   multiline?: boolean
   sortable?: boolean
   sortProp?: string
+  precision?: number
+  step?: number
   search?: boolean
   table?: boolean
   form?: boolean
@@ -622,7 +652,8 @@ const singleRowToolbarActions = computed(() => isSingleRowActions.value && !isTr
 const selectedRow = computed(() => currentRow.value || rows.value.find((row) => row[props.config.idKey] === ids.value[0]))
 const visibleSingleRowToolbarActions = computed(() => {
   const row = selectedRow.value
-  return singleRowToolbarActions.value.filter((action) => !row || action.visible?.(row) !== false)
+  if (!row) return []
+  return singleRowToolbarActions.value.filter((action) => action.visible?.(row) !== false && action.disabled?.(row) !== true)
 })
 const showOperationColumn = computed(() => {
   return isSingleRowActions.value ? isTreeGrid.value : true
@@ -676,6 +707,53 @@ function displayValue(value: unknown) {
   return String(value ?? '-')
 }
 
+function compactParts(...parts: unknown[]) {
+  return parts.map((part) => String(part ?? '').trim()).filter(Boolean).join(' ')
+}
+
+function agentRecordLabel(row?: ProductRecord) {
+  if (!row) return t(props.config.titleKey)
+  const labelPairs = [
+    ['categoryCode', 'categoryNameCn', 'categoryNameEn'],
+    ['unitCode', 'unitNameCn', 'unitNameEn'],
+    ['materialCode', 'materialNameCn', 'materialNameEn'],
+    ['materialTypeCode', 'materialTypeNameCn', 'materialTypeNameEn'],
+    ['groupCode', 'groupNameCn', 'groupNameEn'],
+    ['attributeCode', 'attributeNameCn', 'attributeNameEn'],
+    ['manufacturerCode', 'manufacturerName', 'manufacturerNameEn'],
+    ['dictTypeCode', 'dictTypeNameCn', 'dictTypeNameEn'],
+    ['dictItemValue', 'dictItemLabelCn', 'dictItemLabelEn']
+  ]
+  for (const [codeKey, nameKey, enKey] of labelPairs) {
+    const code = row[codeKey]
+    const name = localeStore.language === 'zh_CN' ? row[nameKey] : row[enKey] || row[nameKey]
+    const label = compactParts(code, name)
+    if (label) return compactParts(t(props.config.titleKey), label)
+  }
+  return compactParts(t(props.config.titleKey), row[props.config.idKey])
+}
+
+function agentActionLabel(action: string, row?: ProductRecord) {
+  return compactParts(action, agentRecordLabel(row))
+}
+
+function agentSelectedActionLabel(action: string) {
+  return selectedRow.value ? agentActionLabel(action, selectedRow.value) : action
+}
+
+function agentStatusLabel(row: ProductRecord, field: ProductFieldConfig) {
+  const status = normalizeStatus(row[field.prop])
+  const statusLabel = status === 'ENABLED' ? t('productCenter.status.enabled') : t('productCenter.status.disabled')
+  return compactParts(agentRecordLabel(row), t(field.labelKey), `当前${statusLabel}`, '切换需要确认')
+}
+
+function formatNumberValue(field: ProductFieldConfig, value: unknown) {
+  if (value === null || value === undefined || value === '') return '-'
+  const next = Number(value)
+  if (!Number.isFinite(next)) return String(value)
+  return typeof field.precision === 'number' ? next.toFixed(field.precision) : String(value)
+}
+
 const CHANGE_LOG_HIDDEN_FIELDS = new Set([
   'createBy',
   'createById',
@@ -688,7 +766,7 @@ const ISO_DATETIME_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z
 
 function displayChangeValue(value: unknown) {
   if (typeof value === 'string' && ISO_DATETIME_PATTERN.test(value.trim())) {
-    return formatUtc(value)
+    return formatUtc(value, 'YYYY-MM-DD HH:mm')
   }
   return displayValue(value)
 }
@@ -793,7 +871,7 @@ function rowActionKey(action: NonNullable<ProductGridConfig['rowActions']>[numbe
 }
 
 function visibleRowActions(row: ProductRecord) {
-  return (props.config.rowActions || []).filter((action) => action.visible?.(row) !== false)
+  return (props.config.rowActions || []).filter((action) => action.visible?.(row) !== false && action.disabled?.(row) !== true)
 }
 
 function reset() {
@@ -1097,6 +1175,10 @@ async function handleStatusChange(row: ProductRecord, field: ProductFieldConfig,
 
 function handleBooleanChange(field: ProductFieldConfig, value: unknown) {
   form.value[field.prop] = Boolean(value)
+}
+
+function handleNumberInput(field: ProductFieldConfig, value: unknown) {
+  form.value[field.prop] = normalizeNumberValue(value)
 }
 
 function handleFieldChange(field: ProductFieldConfig, value: unknown) {

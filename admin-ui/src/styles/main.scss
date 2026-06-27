@@ -111,3 +111,16 @@ a {
   border-radius: 50%;
   background: currentColor;
 }
+
+#page-agent-runtime_agent-panel {
+  button[title="复制测速日志"],
+  button[title="清空测速日志"],
+  button[title="Copy perf logs"],
+  button[title="Clear perf logs"] {
+    display: none !important;
+  }
+
+  [class*="historyMeta"] {
+    display: none !important;
+  }
+}

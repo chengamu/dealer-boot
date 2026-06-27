@@ -1,14 +1,13 @@
 <template>
-  <div v-if="visible" class="ai-assistant" data-agent-label="基础信息 AI 助手">
+  <div v-if="visible" class="ai-assistant" data-agent-label="基础信息 AI 助手" data-page-agent-ignore="true">
     <el-button
       class="ai-assistant__fab"
       circle
-      type="primary"
       :aria-label="t('aiAssistant.open')"
       :loading="loading"
       @click="openOfficialAgent"
     >
-      <el-icon><ChatDotRound /></el-icon>
+      <img class="ai-assistant__robot" :src="robotImage" alt="" aria-hidden="true" />
     </el-button>
   </div>
 </template>
@@ -16,11 +15,11 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { ElMessage } from 'element-plus'
-import { ChatDotRound } from '@element-plus/icons-vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { openPageAgentPanel } from '@/agent/pageAgent'
 import useUserStore from '@/stores/user'
+import robotImage from '@/assets/ai-assistant/curtain-robot.png'
 
 const route = useRoute()
 const { t } = useI18n()
@@ -68,8 +67,23 @@ async function openOfficialAgent() {
 }
 
 .ai-assistant__fab {
-  width: 48px;
-  height: 48px;
-  box-shadow: 0 10px 28px rgba(25, 93, 194, 0.28);
+  width: 62px;
+  height: 62px;
+  padding: 6px;
+  border: 1px solid rgba(201, 216, 238, 0.92);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 18px 42px rgba(25, 93, 194, 0.22);
+
+  &:hover {
+    background: #ffffff;
+    transform: translateY(-1px);
+  }
+}
+
+.ai-assistant__robot {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
 }
 </style>

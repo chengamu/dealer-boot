@@ -12,6 +12,7 @@ import com.bocoo.product.domain.vo.ReferenceCheckResultVo;
 import com.bocoo.product.mapper.ProductCategoryMapper;
 import com.bocoo.product.mapper.ProductDictItemMapper;
 import com.bocoo.product.mapper.ProductDictTypeMapper;
+import com.bocoo.product.mapper.ProductFormulaMapper;
 import com.bocoo.product.mapper.ProductMaterialMapper;
 import com.bocoo.product.mapper.ProductMediaAssetMapper;
 import com.bocoo.product.mapper.ProductUnitMapper;
@@ -47,11 +48,14 @@ class ProductDictServiceTest {
     private ProductCategoryMapper categoryMapper;
     @Mock
     private ProductMediaAssetMapper mediaAssetMapper;
+    @Mock
+    private ProductFormulaMapper formulaMapper;
     private ProductDictTypeServiceImpl dictTypeService;
     private ProductDictItemServiceImpl dictItemService;
 
     @BeforeEach
     void setUp() {
+        ProductServiceTestSupport.prepareMapperAndConverter();
         dictTypeService = new ProductDictTypeServiceImpl(dictTypeMapper, dictItemMapper);
         dictItemService = new ProductDictItemServiceImpl(
             dictTypeMapper,
@@ -59,7 +63,8 @@ class ProductDictServiceTest {
             unitMapper,
             materialMapper,
             categoryMapper,
-            mediaAssetMapper
+            mediaAssetMapper,
+            formulaMapper
         );
     }
 
@@ -79,10 +84,12 @@ class ProductDictServiceTest {
         entity.setDictTypeId(1001L);
         entity.setDictTypeCode("product_business_type");
         entity.setSystemFlag(Boolean.TRUE);
+        entity.setStatus("DISABLED");
         when(dictTypeMapper.selectById(1001L)).thenReturn(entity);
 
         assertThatThrownBy(() -> dictTypeService.deleteWithValidByIds(new Long[]{1001L}))
             .isInstanceOf(ServiceException.class);
+        verify(dictTypeMapper, never()).deleteBatchIds(any());
     }
 
     @Test
@@ -160,6 +167,22 @@ class ProductDictServiceTest {
         assertThat(result.getReferenceCount()).isEqualTo(1L);
         assertThat(result.getBlockerReasonKey()).isEqualTo("product.dict.systemItemCannotDelete");
         assertThat(result.getReferenceSummaries()).containsExactly("System dictionary item");
+    }
+
+    @Test
+    void productTypeDictItemReferenceCheckCountsFormulas() {
+        ProductDictItem entity = new ProductDictItem();
+        entity.setDictItemId(2002L);
+        entity.setDictTypeCode("product_type");
+        entity.setDictItemValue("CUSTOM_CURTAIN");
+        when(dictItemMapper.selectById(2002L)).thenReturn(entity);
+        when(formulaMapper.selectCount(any())).thenReturn(3L);
+
+        ReferenceCheckResultVo result = dictItemService.checkReferences(2002L);
+
+        assertThat(result.getAllowed()).isFalse();
+        assertThat(result.getReferenceCount()).isEqualTo(3L);
+        assertThat(result.getBlockerReasonKey()).isEqualTo("product.dict.itemHasReferences");
     }
 
     @Test

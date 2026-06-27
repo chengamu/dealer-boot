@@ -49,6 +49,8 @@ const migratedViewModules: Record<string, () => Promise<unknown>> = {
   'product-master/units': () => import('@/pages/product-center/base/ProductBaseInfoPage.vue'),
   'product-master/media-assets': () => import('@/pages/product-center/assets/ProductAssetPage.vue'),
   'product-master/media-bindings': () => import('@/pages/product-center/assets/ProductAssetPage.vue'),
+  'product-formula/formulas': () => import('@/pages/product-formula/FormulaPage.vue'),
+  'product-formula/formulas/setup': () => import('@/pages/product-formula/FormulaSetupPage.vue'),
   'dealer/dashboard': () => import('@/pages/dealer-portal/DealerPortalPage.vue'),
   'dealer/quotes/create': () => import('@/pages/dealer-portal/DealerPortalPage.vue'),
   'dealer/checkout': () => import('@/pages/dealer-portal/DealerPortalPage.vue'),

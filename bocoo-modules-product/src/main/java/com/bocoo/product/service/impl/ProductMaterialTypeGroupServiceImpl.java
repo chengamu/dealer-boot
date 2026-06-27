@@ -25,6 +25,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -58,6 +59,7 @@ public class ProductMaterialTypeGroupServiceImpl extends ProductServiceSupport i
         if (entity == null) {
             return Boolean.FALSE;
         }
+        entity.setFormulaSummaryVisibleFlag(bo.getFormulaSummaryVisibleFlag());
         ProductEntityDefaults.prepareInsert(entity);
         return materialTypeGroupMapper.insert(entity) > 0;
     }
@@ -65,15 +67,24 @@ public class ProductMaterialTypeGroupServiceImpl extends ProductServiceSupport i
     @Override
     public Boolean updateByBo(ProductMaterialTypeGroupBo bo) {
         normalizeGroup(bo);
-        validateGroupCodeUnique(bo);
+        ProductMaterialTypeGroup current = null;
         if (bo != null && bo.getGroupId() != null) {
-            ProductMaterialTypeGroup current = materialTypeGroupMapper.selectById(bo.getGroupId());
+            current = materialTypeGroupMapper.selectById(bo.getGroupId());
             if (current != null) {
                 assertEntityEditable(current.getSystemFlag(), current.getEditableFlag());
+                if (onlyFormulaSummaryVisibleChanged(current, bo)) {
+                    return materialTypeGroupMapper.update(null, new LambdaUpdateWrapper<ProductMaterialTypeGroup>()
+                        .eq(ProductMaterialTypeGroup::getGroupId, bo.getGroupId())
+                        .set(ProductMaterialTypeGroup::getFormulaSummaryVisibleFlag, bo.getFormulaSummaryVisibleFlag())) > 0;
+                }
                 assertNormalEditable(current.getStatus());
             }
         }
+        validateGroupCodeUnique(bo);
         ProductMaterialTypeGroup entity = MapstructUtils.convert(bo, ProductMaterialTypeGroup.class);
+        if (entity != null) {
+            entity.setFormulaSummaryVisibleFlag(bo.getFormulaSummaryVisibleFlag());
+        }
         return entity != null && materialTypeGroupMapper.updateById(entity) > 0;
     }
 
@@ -161,6 +172,9 @@ public class ProductMaterialTypeGroupServiceImpl extends ProductServiceSupport i
         if (bo.getEditableFlag() == null) {
             bo.setEditableFlag(Boolean.TRUE);
         }
+        if (bo.getFormulaSummaryVisibleFlag() == null) {
+            bo.setFormulaSummaryVisibleFlag(Boolean.TRUE);
+        }
     }
 
     private void validateGroupCodeUnique(ProductMaterialTypeGroupBo bo) {
@@ -170,6 +184,18 @@ public class ProductMaterialTypeGroupServiceImpl extends ProductServiceSupport i
         if (count > 0) {
             throw ServiceException.ofMessageKey("product.materialTypeGroup.codeExists");
         }
+    }
+
+    private boolean onlyFormulaSummaryVisibleChanged(ProductMaterialTypeGroup current, ProductMaterialTypeGroupBo bo) {
+        return Objects.equals(current.getGroupCode(), bo.getGroupCode())
+            && Objects.equals(current.getGroupNameCn(), bo.getGroupNameCn())
+            && Objects.equals(current.getGroupNameEn(), bo.getGroupNameEn())
+            && Objects.equals(current.getSystemFlag(), bo.getSystemFlag())
+            && Objects.equals(current.getEditableFlag(), bo.getEditableFlag())
+            && Objects.equals(current.getStatus(), bo.getStatus())
+            && Objects.equals(current.getSortOrder(), bo.getSortOrder())
+            && Objects.equals(current.getRemark(), bo.getRemark())
+            && !Objects.equals(current.getFormulaSummaryVisibleFlag(), bo.getFormulaSummaryVisibleFlag());
     }
 
     private void assertEntityEditable(Boolean systemFlag, Boolean editableFlag) {

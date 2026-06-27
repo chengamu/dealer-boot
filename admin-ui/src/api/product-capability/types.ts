@@ -185,6 +185,7 @@ export interface ProductMaterialTypeGroupVO extends ProductRecord {
   groupNameEn?: string
   systemFlag?: boolean
   editableFlag?: boolean
+  formulaSummaryVisibleFlag?: boolean
   sortOrder?: number
   status?: string
   remark?: string
@@ -216,6 +217,209 @@ export interface ProductMaterialTypeQuery extends ProductPageQuery {
   materialTypeNameCn?: string
   attributeGroupCode?: string
   status?: string
+}
+
+export interface ProductFormulaVO extends ProductRecord {
+  formulaId?: number
+  formulaCode?: string
+  formulaName?: string
+  categoryId?: number
+  categoryCode?: string
+  categoryNameCn?: string
+  productTypeCode?: string
+  productTypeNameCn?: string
+  maxWidthInch?: number
+  maxHeightInch?: number
+  sizeSummary?: string
+  materialLineCount?: number
+  configuredFlag?: boolean
+  currentVersionId?: number
+  currentVersionNo?: number
+  currentVersionLabel?: string
+  draftVersionNo?: number
+  latestValidationStatus?: string
+  latestValidationMessage?: string
+  latestValidationTime?: string
+  status?: string
+  auditBy?: string
+  auditTime?: string
+  rejectReason?: string
+  sortOrder?: number
+  remark?: string
+  createBy?: string
+  createTime?: string
+  updateBy?: string
+  updateTime?: string
+}
+
+export interface ProductFormulaQuery extends ProductPageQuery {
+  formulaCode?: string
+  formulaName?: string
+  categoryId?: number
+  categoryCode?: string
+  productTypeCode?: string
+  status?: string
+}
+
+export interface ProductFormulaMaterialVO extends ProductRecord {
+  formulaMaterialId?: number
+  formulaId?: number
+  lineNo?: number
+  materialId?: number
+  materialCode?: string
+  materialNameCn?: string
+  specModelText?: string
+  attributeGroupId?: number
+  attributeGroupCode?: string
+  attributeGroupNameCn?: string
+  materialTypeId?: number
+  materialTypeCode?: string
+  materialTypeNameCn?: string
+  unitCode?: string
+  defaultFlag?: boolean
+  requiredFlag?: boolean
+  usageMode?: string
+  usageFormula?: string
+  fixedUsageQty?: number
+  calculationUnitCode?: string
+  roundingMode?: string
+  minUsageQty?: number
+  maxUsageQty?: number
+  lossRate?: number
+  productionRemark?: string
+  status?: string
+  sortOrder?: number
+  remark?: string
+}
+
+export interface ProductFormulaOptionVO extends ProductRecord {
+  optionId?: number
+  formulaId?: number
+  optionCode?: string
+  optionNameCn?: string
+  sourceType?: string
+  sourceScope?: string
+  selectionMode?: string
+  defaultValueCode?: string
+  defaultValueNameCn?: string
+  visibilityMode?: string
+  visibleConditionOptionCode?: string
+  visibleConditionOptionNameCn?: string
+  visibleConditionValueCode?: string
+  visibleConditionValueNameCn?: string
+  requiredFlag?: boolean
+  businessVisibleFlag?: boolean
+  status?: string
+  sortOrder?: number
+  remark?: string
+}
+
+export interface ProductFormulaOptionValueVO extends ProductRecord {
+  optionValueId?: number
+  formulaId?: number
+  optionId?: number
+  optionCode?: string
+  valueCode?: string
+  valueNameCn?: string
+  defaultFlag?: boolean
+  status?: string
+  sortOrder?: number
+  remark?: string
+}
+
+export interface ProductFormulaOptionMaterialVO extends ProductRecord {
+  optionMaterialId?: number
+  formulaId?: number
+  optionId?: number
+  optionValueId?: number
+  optionCode?: string
+  valueCode?: string
+  formulaMaterialId?: number
+  materialId?: number
+  materialCode?: string
+  materialNameCn?: string
+  requiredFlag?: boolean
+  defaultFlag?: boolean
+  status?: string
+  sortOrder?: number
+  remark?: string
+}
+
+export interface ProductFormulaRestrictionVO extends ProductRecord {
+  restrictionId?: number
+  formulaId?: number
+  restrictionName?: string
+  targetOptionCode?: string
+  conditionType?: string
+  conditionOptionCode?: string
+  conditionOperator?: string
+  conditionValueCode?: string
+  conditionValueNumber?: number
+  actionType?: string
+  targetValueCode?: string
+  messageText?: string
+  status?: string
+  sortOrder?: number
+  remark?: string
+}
+
+export interface ProductFormulaUsageRuleVO extends ProductRecord {
+  usageRuleId?: number
+  formulaId?: number
+  formulaMaterialId?: number
+  materialId?: number
+  materialCode?: string
+  materialNameCn?: string
+  ruleName?: string
+  conditionType?: string
+  conditionOptionCode?: string
+  conditionOptionNameCn?: string
+  conditionValueCode?: string
+  conditionValueNameCn?: string
+  conditionExpression?: string
+  conditionText?: string
+  conditionKey?: string
+  usageMode?: string
+  fixedUsageQty?: number
+  usageFormula?: string
+  usageFormulaText?: string
+  calculationUnitCode?: string
+  roundingMode?: string
+  minUsageQty?: number
+  maxUsageQty?: number
+  lossRate?: number
+  defaultRuleFlag?: boolean
+  productionRemark?: string
+  status?: string
+  sortOrder?: number
+  remark?: string
+}
+
+export interface ProductFormulaSetupVO extends ProductRecord {
+  formula?: ProductFormulaVO
+  materials?: ProductFormulaMaterialVO[]
+  options?: ProductFormulaOptionVO[]
+  optionValues?: ProductFormulaOptionValueVO[]
+  optionMaterials?: ProductFormulaOptionMaterialVO[]
+  restrictions?: ProductFormulaRestrictionVO[]
+  usageRules?: ProductFormulaUsageRuleVO[]
+}
+
+export interface ProductFormulaVersionVO extends ProductRecord {
+  versionId?: number
+  formulaId?: number
+  versionNo?: number
+  versionLabel?: string
+  versionStatus?: string
+  formulaSnapshotJson?: string
+  setupSnapshotJson?: string
+  validationStatus?: string
+  validationReportJson?: string
+  submitBy?: string
+  submitTime?: string
+  auditBy?: string
+  auditTime?: string
+  rejectReason?: string
 }
 
 export interface ProductMaterialAttributeVO extends ProductRecord {
@@ -265,6 +469,7 @@ export interface ProductMaterialVO extends ProductRecord {
   colorName?: string
   weightValue?: number
   unitPrice?: number
+  salesPrice?: number
   auditBy?: string
   auditTime?: string
   sortOrder?: number
@@ -350,4 +555,3 @@ export interface ProductMediaBindingVO extends ProductRecord {
   status?: string
   remark?: string
 }
-
