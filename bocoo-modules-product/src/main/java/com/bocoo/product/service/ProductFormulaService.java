@@ -30,6 +30,14 @@ public interface ProductFormulaService {
 
     Boolean reject(Long id, String rejectReason);
 
+    TableDataInfo<ProductFormulaVersionVo> queryReviewPage(PageQuery pageQuery);
+
+    ProductFormulaVersionVo queryReviewById(Long reviewId);
+
+    Boolean approveReview(Long reviewId);
+
+    Boolean rejectReview(Long reviewId, String rejectReason);
+
     Boolean stop(Long id);
 
     Boolean validateFormula(Long id);

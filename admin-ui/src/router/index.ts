@@ -54,10 +54,28 @@ const hiddenLayoutRoutes: RouteRecordRaw[] = [
     meta: { title: 'gen.genInfo', activeMenu: '/tool/gen', hidden: true }
   },
   {
-    path: '/product-formula/formulas/:id/setup',
-    name: 'ProductFormulaSetup',
-    component: () => import('@/pages/product-formula/FormulaSetupPage.vue'),
-    meta: { title: 'productCenter.formula.actions.setup', activeMenu: '/product-formula/formulas', hidden: true }
+    path: '/product-formula/formulas/:id/materials',
+    name: 'ProductFormulaMaterials',
+    component: () => import('@/pages/product-formula/FormulaMaterialPage.vue'),
+    meta: { title: 'productCenter.formula.actions.materials', activeMenu: '/product-formula/formulas', hidden: true, setupSection: 'content' }
+  },
+  {
+    path: '/product-formula/formulas/:id/options',
+    name: 'ProductFormulaOptions',
+    component: () => import('@/pages/product-formula/FormulaOptionPage.vue'),
+    meta: { title: 'productCenter.formula.actions.options', activeMenu: '/product-formula/formulas', hidden: true, setupSection: 'options' }
+  },
+  {
+    path: '/product-formula/formulas/:id/simulation',
+    name: 'ProductFormulaSimulation',
+    component: () => import('@/pages/product-formula/FormulaSimulationPage.vue'),
+    meta: { title: 'productCenter.formula.actions.simulation', activeMenu: '/product-formula/formulas', hidden: true }
+  },
+  {
+    path: '/product-formula/reviews/:reviewId',
+    name: 'ProductFormulaReviewDetail',
+    component: () => import('@/pages/product-formula/FormulaReviewDetailPage.vue'),
+    meta: { title: 'productCenter.formulaReview.detailTitle', activeMenu: '/product-formula/reviews', hidden: true }
   }
 ]
 
@@ -115,6 +133,42 @@ const legacyFallbackRoutes: RouteRecordRaw[] = [
     name: 'SystemOss',
     component: () => import('@/pages/system/OssPage.vue'),
     meta: { title: 'legacy.ossTitle' }
+  },
+  {
+    path: '/ai/credentials',
+    name: 'AiCredentials',
+    component: () => import('@/pages/system/AiCredentialPage.vue'),
+    meta: { title: 'ai.menu.credentials' }
+  },
+  {
+    path: '/ai/providers',
+    name: 'AiProviders',
+    component: () => import('@/pages/system/AiProviderPage.vue'),
+    meta: { title: 'ai.menu.providers' }
+  },
+  {
+    path: '/ai/models',
+    name: 'AiModels',
+    component: () => import('@/pages/system/AiModelPage.vue'),
+    meta: { title: 'ai.menu.models' }
+  },
+  {
+    path: '/ai/quotas',
+    name: 'AiQuotas',
+    component: () => import('@/pages/system/AiQuotaPage.vue'),
+    meta: { title: 'ai.menu.quotas' }
+  },
+  {
+    path: '/ai/usage',
+    name: 'AiUsage',
+    component: () => import('@/pages/system/AiUsagePage.vue'),
+    meta: { title: 'ai.menu.usage' }
+  },
+  {
+    path: '/ai/audit',
+    name: 'AiAudit',
+    component: () => import('@/pages/system/AiAuditPage.vue'),
+    meta: { title: 'ai.menu.audit' }
   },
   {
     path: '/system/tenant/applications',

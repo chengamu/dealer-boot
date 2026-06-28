@@ -1,5 +1,6 @@
 import { commonBaseInfoInstruction } from './common'
 import { globalCapabilityInstruction } from './capabilityIndex'
+import { agentSafetyInstruction } from './safety'
 import type { LocalizedInstructionText, PageAgentInstructionLocale, PageAgentPageInstruction } from './types'
 
 interface PageInstructionRoute {
@@ -20,14 +21,44 @@ const pageInstructionRoutes: PageInstructionRoute[] = [
     load: async () => (await import('./unit')).unitInstruction
   },
   {
+    key: 'productDict',
+    routes: ['/product-master/product-dicts'],
+    load: async () => (await import('./productDict')).productDictInstruction
+  },
+  {
     key: 'materialType',
     routes: ['/product-master/material-types'],
     load: async () => (await import('./materialType')).materialTypeInstruction
   },
   {
+    key: 'baseAttribute',
+    routes: ['/product-master/base-attributes'],
+    load: async () => (await import('./baseAttribute')).baseAttributeInstruction
+  },
+  {
+    key: 'materialAttribute',
+    routes: ['/product-master/material-attributes'],
+    load: async () => (await import('./materialAttribute')).materialAttributeInstruction
+  },
+  {
     key: 'material',
     routes: ['/product-master/materials'],
     load: async () => (await import('./material')).materialInstruction
+  },
+  {
+    key: 'manufacturer',
+    routes: ['/product-master/manufacturers'],
+    load: async () => (await import('./manufacturer')).manufacturerInstruction
+  },
+  {
+    key: 'mediaAsset',
+    routes: ['/product-master/media-assets'],
+    load: async () => (await import('./mediaAsset')).mediaAssetInstruction
+  },
+  {
+    key: 'mediaBinding',
+    routes: ['/product-master/media-bindings'],
+    load: async () => (await import('./mediaBinding')).mediaBindingInstruction
   }
 ]
 
@@ -69,6 +100,10 @@ export function normalizeInstructionLocale(locale: string): PageAgentInstruction
 
 export function getGlobalCapabilityInstructions(locale: string = 'zh_CN') {
   return localizedText(globalCapabilityInstruction, normalizeInstructionLocale(locale))
+}
+
+export function getAgentSafetyInstructions(locale: string = 'zh_CN') {
+  return localizedText(agentSafetyInstruction, normalizeInstructionLocale(locale))
 }
 
 function matchPageInstructionRoute(url: string) {

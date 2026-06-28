@@ -22,32 +22,32 @@ import org.springframework.web.bind.annotation.RestController;
 @Validated
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/product-formula/formulas/{id}/setup")
-@Tag(name = "产品配方设置", description = "配方原料池、业务配置项和限制条件接口")
-public class ProductFormulaSetupController extends BaseController {
+@RequestMapping("/product-formula/formulas/{id}/materials")
+@Tag(name = "产品配方原料", description = "配方原料池、生产必带和用量规则接口")
+public class ProductFormulaMaterialController extends BaseController {
 
     private final ProductFormulaSetupService setupService;
 
     @SaCheckPermission("product:formula:setup")
     @GetMapping
-    @Operation(summary = "获取配方设置")
+    @Operation(summary = "获取配方原料")
     public R<ProductFormulaSetupVo> get(@PathVariable Long id) {
         return R.ok(setupService.querySetup(id));
     }
 
     @SaCheckPermission("product:formula:setup")
-    @Log(title = "保存配方设置", businessType = BusinessType.UPDATE)
+    @Log(title = "保存配方原料", businessType = BusinessType.UPDATE)
     @PutMapping
-    @Operation(summary = "保存配方设置")
+    @Operation(summary = "保存配方原料")
     public R<Void> save(@PathVariable Long id, @Validated @RequestBody ProductFormulaSetupBo bo) {
         return toAjax(setupService.saveSetup(id, bo));
     }
 
     @SaCheckPermission("product:formula:setup")
-    @Log(title = "校验配方设置", businessType = BusinessType.UPDATE)
+    @Log(title = "校验配方原料", businessType = BusinessType.UPDATE)
     @PutMapping("/validate")
-    @Operation(summary = "校验配方设置")
-    public R<Void> validateSetup(@PathVariable Long id) {
-        return toAjax(setupService.validateSetup(id));
+    @Operation(summary = "校验配方原料")
+    public R<Void> validateMaterials(@PathVariable Long id) {
+        return toAjax(setupService.validateMaterials(id));
     }
 }

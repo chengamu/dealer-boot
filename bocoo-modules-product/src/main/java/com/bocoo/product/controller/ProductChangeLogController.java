@@ -1,6 +1,7 @@
 package com.bocoo.product.controller;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
+import cn.dev33.satoken.annotation.SaMode;
 import com.bocoo.common.mybatis.core.page.PageQuery;
 import com.bocoo.common.mybatis.core.page.TableDataInfo;
 import com.bocoo.product.domain.bo.ProductChangeLogBo;
@@ -26,7 +27,7 @@ public class ProductChangeLogController {
 
     private final ProductChangeLogService changeLogService;
 
-    @SaCheckPermission("product:base:reference")
+    @SaCheckPermission(value = {"product:base:reference", "product:formula:reference"}, mode = SaMode.OR)
     @GetMapping("/list")
     @Operation(summary = "分页查询产品业务变更流水")
     public TableDataInfo<ProductChangeLogVo> list(ProductChangeLogBo bo, PageQuery pageQuery) {

@@ -7,6 +7,8 @@ This template keeps public port 80 on a dedicated Nginx proxy container. The `ad
 Runtime config and data stay on the host:
 
 - Compose secrets: `.env`
+- Go AI Runtime source lives in the sibling repository `../ai-runtime` relative to `base-boot`.
+- AI Runtime uses the same PostgreSQL instance with a separate runtime database configured by `POSTGRES_RUNTIME_DB`.
 - Spring Boot config: `config/application-prod.yml`
 - PostgreSQL data: `data/postgres`
 - Redis data: `data/redis`
@@ -26,6 +28,7 @@ Runtime config and data stay on the host:
 ## First Deploy
 
 1. Keep `.env` and `config/application-prod.yml` next to `docker-compose.prod.yml`. They contain local deployment secrets and are ignored by git.
+2. Generate the AI service credential from the Java AI settings page, then copy the one-time secret and key version into `AI_SERVICE_SECRET` and `AI_SERVICE_KEY_VERSION`.
 2. Build the backend jar locally or on the server:
 
    ```bash
@@ -39,7 +42,7 @@ Runtime config and data stay on the host:
    docker compose --env-file .env -f docker-compose.prod.yml up -d --build
    ```
 
-5. Initialize PostgreSQL after the database is healthy. Run the SQL files from the repository root, in this order:
+5. Initialize PostgreSQL after the database is healthy. Run the SQL files from the `base-boot` repository root, in this order:
 
    ```bash
    docker compose --env-file deploy/base-boot/.env -f deploy/base-boot/docker-compose.prod.yml exec -T postgres \
@@ -50,6 +53,13 @@ Runtime config and data stay on the host:
    ```
 
 Add `sql/postgresql/pay.sql` only when the payment module is needed.
+
+Initialize the AI runtime database from the sibling `ai-runtime` repository:
+
+```bash
+docker compose --env-file deploy/base-boot/.env -f deploy/base-boot/docker-compose.prod.yml exec -T postgres \
+  sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_RUNTIME_DB"' < ../ai-runtime/schema/postgresql.sql
+```
 
 6. Sync the database OSS config to the local MinIO container credentials:
 

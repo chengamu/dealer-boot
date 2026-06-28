@@ -114,6 +114,15 @@ public class ProductFormulaServiceImpl extends ProductServiceSupport implements 
         entity.setLatestValidationStatus(VALIDATION_NOT_VALIDATED);
         entity.setLatestValidationMessage(null);
         entity.setLatestValidationTime(null);
+        entity.setMaterialValidationStatus(VALIDATION_NOT_VALIDATED);
+        entity.setMaterialValidationMessage(null);
+        entity.setMaterialValidationTime(null);
+        entity.setOptionValidationStatus(VALIDATION_NOT_VALIDATED);
+        entity.setOptionValidationMessage(null);
+        entity.setOptionValidationTime(null);
+        entity.setSimulationValidationStatus(VALIDATION_NOT_VALIDATED);
+        entity.setSimulationValidationMessage(null);
+        entity.setSimulationValidationTime(null);
         boolean updated = formulaMapper.updateById(entity) > 0;
         if (updated) {
             recordFormulaChange(entity.getFormulaId(), entity.getFormulaCode(), "UPDATE", current, entity);
@@ -153,6 +162,15 @@ public class ProductFormulaServiceImpl extends ProductServiceSupport implements 
         if (!VALIDATION_PASS.equals(current.getLatestValidationStatus())) {
             throw ServiceException.ofMessageKey("product.formula.validationRequired");
         }
+        assertStagePassed(current.getMaterialValidationStatus(), "product.formula.materialValidationRequired");
+        assertStagePassed(current.getOptionValidationStatus(), "product.formula.optionValidationRequired");
+        assertStagePassed(current.getSimulationValidationStatus(), "product.formula.simulationValidationRequired");
+        ProductFormulaVersion review = buildReviewSnapshot(current, setupService.snapshot(id));
+        ProductEntityDefaults.prepareInsert(review);
+        boolean inserted = versionMapper.insert(review) > 0;
+        if (!inserted) {
+            return Boolean.FALSE;
+        }
         return updateFormulaStatus(current, STATUS_PENDING_REVIEW, "SUBMIT_REVIEW", null);
     }
 
@@ -163,21 +181,15 @@ public class ProductFormulaServiceImpl extends ProductServiceSupport implements 
         if (!STATUS_PENDING_REVIEW.equals(current.getStatus())) {
             throw ServiceException.ofMessageKey("product.formula.approveDenied");
         }
-        if (setupService.materialCount(id) <= 0) {
-            throw ServiceException.ofMessageKey("product.formula.notConfigured");
-        }
-        String setupMessageKey = setupService.validationMessageKey(id);
-        if (setupMessageKey != null) {
-            throw ServiceException.ofMessageKey(setupMessageKey);
-        }
+        ProductFormulaVersion version = requirePendingReviewVersion(id);
         String auditBy = currentUsername();
         LocalDateTime auditTime = TimeUtils.utcNow();
-        ProductFormulaVersion version = buildApprovedVersion(current, setupService.snapshot(id), auditBy, auditTime);
-        ProductEntityDefaults.prepareInsert(version);
-        boolean inserted = versionMapper.insert(version) > 0;
-        if (!inserted) {
-            return Boolean.FALSE;
-        }
+        versionMapper.update(null, new LambdaUpdateWrapper<ProductFormulaVersion>()
+            .eq(ProductFormulaVersion::getVersionId, version.getVersionId())
+            .set(ProductFormulaVersion::getVersionStatus, STATUS_EFFECTIVE)
+            .set(ProductFormulaVersion::getAuditBy, auditBy)
+            .set(ProductFormulaVersion::getAuditTime, auditTime)
+            .set(ProductFormulaVersion::getRejectReason, null));
         ProductFormula after = copyStatusSnapshot(current);
         after.setStatus(STATUS_EFFECTIVE);
         after.setAuditBy(auditBy);
@@ -211,7 +223,39 @@ public class ProductFormulaServiceImpl extends ProductServiceSupport implements 
         if (StringUtils.isBlank(rejectReason)) {
             throw ServiceException.ofMessageKey("product.formula.rejectReasonRequired");
         }
+        ProductFormulaVersion review = requirePendingReviewVersion(id);
+        versionMapper.update(null, new LambdaUpdateWrapper<ProductFormulaVersion>()
+            .eq(ProductFormulaVersion::getVersionId, review.getVersionId())
+            .set(ProductFormulaVersion::getVersionStatus, STATUS_REJECTED)
+            .set(ProductFormulaVersion::getAuditBy, currentUsername())
+            .set(ProductFormulaVersion::getAuditTime, TimeUtils.utcNow())
+            .set(ProductFormulaVersion::getRejectReason, rejectReason.trim()));
         return updateFormulaStatus(current, STATUS_REJECTED, "REJECT", rejectReason.trim());
+    }
+
+    @Override
+    public TableDataInfo<ProductFormulaVersionVo> queryReviewPage(PageQuery pageQuery) {
+        return page(versionMapper, pageQuery, activeQuery(ProductFormulaVersion.class)
+            .eq("version_status", STATUS_PENDING_REVIEW), q -> q.orderByDesc("submit_time", "version_id"));
+    }
+
+    @Override
+    public ProductFormulaVersionVo queryReviewById(Long reviewId) {
+        return versionMapper.selectVoById(reviewId);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Boolean approveReview(Long reviewId) {
+        ProductFormulaVersion review = requireReview(reviewId);
+        return approve(review.getFormulaId());
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Boolean rejectReview(Long reviewId, String rejectReason) {
+        ProductFormulaVersion review = requireReview(reviewId);
+        return reject(review.getFormulaId(), rejectReason);
     }
 
     @Override
@@ -243,6 +287,7 @@ public class ProductFormulaServiceImpl extends ProductServiceSupport implements 
     public List<ProductFormulaVersionVo> queryVersions(Long formulaId) {
         return versionMapper.selectVoList(activeQuery(ProductFormulaVersion.class)
             .eq("formula_id", formulaId)
+            .in("version_status", List.of(STATUS_EFFECTIVE, STATUS_STOPPED))
             .orderByDesc("version_no", "version_id"));
     }
 
@@ -314,6 +359,7 @@ public class ProductFormulaServiceImpl extends ProductServiceSupport implements 
         if (StringUtils.isBlank(bo.getLatestValidationStatus())) {
             bo.setLatestValidationStatus(VALIDATION_NOT_VALIDATED);
         }
+        defaultValidationStatus(bo);
         if (StringUtils.isBlank(bo.getSizeSummary())) {
             bo.setSizeSummary(buildSizeSummary(bo.getMaxWidthInch(), bo.getMaxHeightInch()));
         }
@@ -406,28 +452,33 @@ public class ProductFormulaServiceImpl extends ProductServiceSupport implements 
         return updated;
     }
 
-    private ProductFormulaVersion buildApprovedVersion(ProductFormula current, Map<String, Object> setupSnapshot, String auditBy, LocalDateTime auditTime) {
+    private ProductFormulaVersion buildReviewSnapshot(ProductFormula current, Map<String, Object> setupSnapshot) {
         int versionNo = nextVersionNo(current.getFormulaId());
         ProductFormulaVersion version = new ProductFormulaVersion();
         version.setTenantId(current.getTenantId());
         version.setFormulaId(current.getFormulaId());
         version.setVersionNo(versionNo);
         version.setVersionLabel(versionLabel(versionNo));
-        version.setVersionStatus(STATUS_EFFECTIVE);
+        version.setVersionStatus(STATUS_PENDING_REVIEW);
         version.setFormulaSnapshotJson(toJson(current));
         version.setSetupSnapshotJson(toJson(setupSnapshot));
         version.setValidationStatus(VALIDATION_PASS);
-        version.setValidationReportJson(toJson(Map.of("status", VALIDATION_PASS, "message", "product.formula.validationPassed")));
-        version.setSubmitBy(current.getUpdateBy());
-        version.setSubmitTime(current.getUpdateTime());
-        version.setAuditBy(auditBy);
-        version.setAuditTime(auditTime);
+        Map<String, Object> validationReport = new LinkedHashMap<>();
+        validationReport.put("status", VALIDATION_PASS);
+        validationReport.put("materialStatus", current.getMaterialValidationStatus());
+        validationReport.put("optionStatus", current.getOptionValidationStatus());
+        validationReport.put("simulationStatus", current.getSimulationValidationStatus());
+        validationReport.put("message", "product.formula.validationPassed");
+        version.setValidationReportJson(toJson(validationReport));
+        version.setSubmitBy(currentUsername());
+        version.setSubmitTime(TimeUtils.utcNow());
         return version;
     }
 
     private int nextVersionNo(Long formulaId) {
         ProductFormulaVersion latest = versionMapper.selectOne(activeQuery(ProductFormulaVersion.class)
             .eq("formula_id", formulaId)
+            .in("version_status", List.of(STATUS_EFFECTIVE, STATUS_STOPPED))
             .orderByDesc("version_no")
             .last("limit 1"));
         return latest == null || latest.getVersionNo() == null ? 1 : latest.getVersionNo() + 1;
@@ -461,6 +512,47 @@ public class ProductFormulaServiceImpl extends ProductServiceSupport implements 
             throw ServiceException.ofMessageKey("product.base.edit.notFound");
         }
         return current;
+    }
+
+    private ProductFormulaVersion requirePendingReviewVersion(Long formulaId) {
+        ProductFormulaVersion review = versionMapper.selectOne(activeQuery(ProductFormulaVersion.class)
+            .eq("formula_id", formulaId)
+            .eq("version_status", STATUS_PENDING_REVIEW)
+            .orderByDesc("version_id")
+            .last("limit 1"));
+        if (review == null) {
+            throw ServiceException.ofMessageKey("product.formula.reviewSnapshotRequired");
+        }
+        return review;
+    }
+
+    private ProductFormulaVersion requireReview(Long reviewId) {
+        ProductFormulaVersion review = reviewId == null ? null : versionMapper.selectById(reviewId);
+        if (review == null || !"0".equals(review.getDelFlag())) {
+            throw ServiceException.ofMessageKey("product.formula.reviewSnapshotRequired");
+        }
+        if (!STATUS_PENDING_REVIEW.equals(review.getVersionStatus())) {
+            throw ServiceException.ofMessageKey("product.formula.reviewSnapshotInvalid");
+        }
+        return review;
+    }
+
+    private void assertStagePassed(String status, String messageKey) {
+        if (!VALIDATION_PASS.equals(status)) {
+            throw ServiceException.ofMessageKey(messageKey);
+        }
+    }
+
+    private void defaultValidationStatus(ProductFormulaBo bo) {
+        if (StringUtils.isBlank(bo.getMaterialValidationStatus())) {
+            bo.setMaterialValidationStatus(VALIDATION_NOT_VALIDATED);
+        }
+        if (StringUtils.isBlank(bo.getOptionValidationStatus())) {
+            bo.setOptionValidationStatus(VALIDATION_NOT_VALIDATED);
+        }
+        if (StringUtils.isBlank(bo.getSimulationValidationStatus())) {
+            bo.setSimulationValidationStatus(VALIDATION_NOT_VALIDATED);
+        }
     }
 
     private String normalizeStatus(String status) {
@@ -516,6 +608,15 @@ public class ProductFormulaServiceImpl extends ProductServiceSupport implements 
         target.setLatestValidationStatus(source.getLatestValidationStatus());
         target.setLatestValidationMessage(source.getLatestValidationMessage());
         target.setLatestValidationTime(source.getLatestValidationTime());
+        target.setMaterialValidationStatus(source.getMaterialValidationStatus());
+        target.setMaterialValidationMessage(source.getMaterialValidationMessage());
+        target.setMaterialValidationTime(source.getMaterialValidationTime());
+        target.setOptionValidationStatus(source.getOptionValidationStatus());
+        target.setOptionValidationMessage(source.getOptionValidationMessage());
+        target.setOptionValidationTime(source.getOptionValidationTime());
+        target.setSimulationValidationStatus(source.getSimulationValidationStatus());
+        target.setSimulationValidationMessage(source.getSimulationValidationMessage());
+        target.setSimulationValidationTime(source.getSimulationValidationTime());
         target.setAuditBy(source.getAuditBy());
         target.setAuditTime(source.getAuditTime());
         target.setRejectReason(source.getRejectReason());

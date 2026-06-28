@@ -72,7 +72,7 @@ abstract class ProductServiceSupport {
         vo.setReferenceCount(count);
         vo.setAllowed(count <= 0);
         vo.setCanRemove(count <= 0);
-        vo.setCanDisable(count <= 0);
+        vo.setCanDisable(Boolean.TRUE);
         if (count > 0) {
             vo.setBlockerReasonKey(blockerKey);
             if (StringUtils.isNotBlank(summary)) {

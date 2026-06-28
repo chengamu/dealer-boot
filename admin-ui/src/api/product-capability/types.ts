@@ -240,6 +240,15 @@ export interface ProductFormulaVO extends ProductRecord {
   latestValidationStatus?: string
   latestValidationMessage?: string
   latestValidationTime?: string
+  materialValidationStatus?: string
+  materialValidationMessage?: string
+  materialValidationTime?: string
+  optionValidationStatus?: string
+  optionValidationMessage?: string
+  optionValidationTime?: string
+  simulationValidationStatus?: string
+  simulationValidationMessage?: string
+  simulationValidationTime?: string
   status?: string
   auditBy?: string
   auditTime?: string
@@ -420,6 +429,44 @@ export interface ProductFormulaVersionVO extends ProductRecord {
   auditBy?: string
   auditTime?: string
   rejectReason?: string
+}
+
+export interface ProductFormulaSimulationBO extends ProductRecord {
+  orderWidth?: number
+  orderHeight?: number
+  selectedOptionValues?: Record<string, string>
+  saveResult?: boolean
+  remark?: string
+}
+
+export interface ProductFormulaSimulationItemVO extends ProductRecord {
+  formulaMaterialId?: number
+  materialId?: number
+  materialCode?: string
+  materialNameCn?: string
+  materialTypeNameCn?: string
+  attributeGroupNameCn?: string
+  specModelText?: string
+  unitCode?: string
+  usageQty?: number
+  lossRate?: number
+  unitPrice?: number
+  salesPrice?: number
+  amount?: number
+  usageSummary?: string
+  productionRemark?: string
+}
+
+export interface ProductFormulaSimulationVO extends ProductRecord {
+  formulaId?: number
+  status?: string
+  message?: string
+  simulationTime?: string
+  orderWidth?: number
+  orderHeight?: number
+  selectedOptionValues?: Record<string, string>
+  items?: ProductFormulaSimulationItemVO[]
+  totalAmount?: number
 }
 
 export interface ProductMaterialAttributeVO extends ProductRecord {

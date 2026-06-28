@@ -1,91 +1,75 @@
 <template>
   <section class="setup-section">
     <div class="setup-section__toolbar">
-      <div>
+      <div class="setup-section__title">
         <h3>{{ t('productCenter.formulaSetup.materialPool') }}</h3>
         <p>{{ t('productCenter.formulaSetup.materialPoolHint') }}</p>
       </div>
-    </div>
-    <div class="material-pool-toolbar">
-      <div class="material-pool-toolbar__left">
-        <el-button type="primary" plain :icon="Connection" @click="$emit('open-picker')">{{ t('productCenter.formulaSetup.batchAddMaterial') }}</el-button>
-        <el-button plain :icon="Setting" :disabled="!selectedRows.length" @click="openBatchUsage">{{ t('productCenter.formulaSetup.batchUsageSetting') }}</el-button>
-        <el-button type="danger" plain :icon="Delete" :disabled="!selectedRows.length" @click="$emit('remove-materials', selectedRows)">{{ t('common.delete') }}</el-button>
-      </div>
-      <div class="material-pool-toolbar__right">
-        <el-select
-          v-model="materialTypeFilter"
-          filterable
-          class="material-type-filter"
-          :aria-label="t('productCenter.formulaSetup.materialTypeFilterAria')"
-          :placeholder="t('productCenter.formulaSetup.filterByMaterialType')"
-          :prefix-icon="Filter"
-        >
-          <el-option :label="t('productCenter.formulaSetup.allMaterialTypes')" :value="MATERIAL_TYPE_ALL" />
-          <el-option v-for="type in materialTypeOptions" :key="type" :label="type" :value="type" />
-        </el-select>
-        <el-input
-          v-model="keyword"
-          clearable
-          :aria-label="t('productCenter.formulaSetup.materialSearchAria')"
-          :placeholder="t('productCenter.formulaSetup.materialSearchPlaceholder')"
-          class="material-pool-toolbar__search"
-          :prefix-icon="Search"
-        />
+      <div class="material-pool-toolbar">
+        <div class="material-pool-toolbar__filters">
+          <el-select
+            v-model="materialTypeFilter"
+            filterable
+            class="material-type-filter"
+            :aria-label="t('productCenter.formulaSetup.materialTypeFilterAria')"
+            :placeholder="t('productCenter.formulaSetup.filterByMaterialType')"
+            :prefix-icon="Filter"
+          >
+            <el-option :label="t('productCenter.formulaSetup.allMaterialTypes')" :value="MATERIAL_TYPE_ALL" />
+            <el-option v-for="type in materialTypeOptions" :key="type" :label="type" :value="type" />
+          </el-select>
+          <el-input
+            v-model="keyword"
+            clearable
+            :aria-label="t('productCenter.formulaSetup.materialSearchAria')"
+            :placeholder="t('productCenter.formulaSetup.materialSearchPlaceholder')"
+            class="material-pool-toolbar__search"
+            :prefix-icon="Search"
+          />
+        </div>
+        <div class="material-pool-toolbar__actions">
+          <el-button type="primary" plain :icon="Connection" @click="$emit('open-picker')">{{ t('productCenter.formulaSetup.batchAddMaterial') }}</el-button>
+          <el-button plain :icon="Setting" :disabled="!selectedRows.length" @click="openBatchUsage">{{ t('productCenter.formulaSetup.batchUsageSetting') }}</el-button>
+          <el-button type="danger" plain :icon="Delete" :disabled="!selectedRows.length" @click="$emit('remove-materials', selectedRows)">{{ t('common.delete') }}</el-button>
+        </div>
       </div>
     </div>
     <el-table v-loading="loading" :data="visibleMaterials" border class="setup-table" row-key="materialCode" @selection-change="selectedRows = $event">
       <el-table-column type="selection" width="48" align="center" />
-      <el-table-column width="38" align="center">
-        <template #default="{ row }">
-          <el-tooltip v-if="usageUnset(row)" :content="t('productCenter.formulaSetup.unsetUsageCount')" placement="top">
-            <el-icon class="row-state row-state--warning"><WarningFilled /></el-icon>
-          </el-tooltip>
-          <el-icon v-else class="row-state"><Rank /></el-icon>
-        </template>
-      </el-table-column>
       <el-table-column type="index" :label="t('common.index')" width="56" align="center" />
-      <el-table-column :label="t('productCenter.formulaSetup.attributeGroup')" min-width="120" show-overflow-tooltip>
+      <el-table-column :label="t('productCenter.formulaSetup.attributeGroup')" width="68">
         <template #default="{ row }">
           <el-tag size="small" :class="`group-tag group-tag--${String(row.attributeGroupCode || '').toLowerCase()}`">{{ row.attributeGroupNameCn || row.attributeGroupCode || '-' }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column :label="t('productCenter.formulaSetup.materialType')" min-width="130" show-overflow-tooltip>
+      <el-table-column :label="t('productCenter.formulaSetup.materialType')" width="88" show-overflow-tooltip>
         <template #default="{ row }">{{ row.materialTypeNameCn || row.materialTypeCode || '-' }}</template>
       </el-table-column>
-      <el-table-column :label="t('productCenter.formulaSetup.materialCode')" prop="materialCode" min-width="130" show-overflow-tooltip />
-      <el-table-column :label="t('productCenter.formulaSetup.materialName')" prop="materialNameCn" min-width="220" show-overflow-tooltip />
-      <el-table-column :label="t('productCenter.formulaSetup.specModel')" min-width="220">
+      <el-table-column :label="t('productCenter.formulaSetup.materialCode')" prop="materialCode" width="96" show-overflow-tooltip />
+      <el-table-column :label="t('productCenter.formulaSetup.materialName')" prop="materialNameCn" min-width="180" show-overflow-tooltip />
+      <el-table-column :label="t('productCenter.formulaSetup.specModel')" min-width="160">
         <template #default="{ row }">
           <span class="spec-model-text">{{ row.specModelText || '-' }}</span>
         </template>
       </el-table-column>
-      <el-table-column :label="t('productCenter.formulaSetup.unit')" prop="unitCode" width="100">
-        <template #default="{ row }">{{ row.unitCode || '-' }}</template>
+      <el-table-column :label="t('productCenter.formulaSetup.unit')" prop="unitCode" width="66">
+        <template #default="{ row }">{{ unitLabel(row.unitCode) }}</template>
       </el-table-column>
-      <el-table-column :label="t('productCenter.formulaSetup.defaultFlag')" width="94" align="center">
-        <template #header>
-          <span>{{ t('productCenter.formulaSetup.defaultFlag') }}</span>
-          <el-tooltip :content="t('productCenter.formulaSetup.defaultFlagHint')" placement="top"><el-icon class="header-help"><InfoFilled /></el-icon></el-tooltip>
-        </template>
+      <el-table-column :label="t('productCenter.formulaSetup.defaultFlag')" width="76" align="center">
         <template #default="{ row }"><el-switch v-model="row.defaultFlag" /></template>
       </el-table-column>
-      <el-table-column :label="t('productCenter.formulaSetup.requiredFlag')" width="94" align="center">
-        <template #header>
-          <span>{{ t('productCenter.formulaSetup.requiredFlag') }}</span>
-          <el-tooltip :content="t('productCenter.formulaSetup.requiredFlagHint')" placement="top"><el-icon class="header-help"><InfoFilled /></el-icon></el-tooltip>
-        </template>
+      <el-table-column :label="t('productCenter.formulaSetup.requiredFlag')" width="76" align="center">
         <template #default="{ row }"><el-switch v-model="row.requiredFlag" /></template>
       </el-table-column>
-      <el-table-column :label="t('productCenter.formulaSetup.usageSummary')" min-width="170">
+      <el-table-column :label="t('productCenter.formulaSetup.usageSummary')" min-width="122">
         <template #default="{ row }">{{ usageSummary(row) }}</template>
       </el-table-column>
-      <el-table-column :label="t('productCenter.formulaSetup.productionRemark')" min-width="180">
+      <el-table-column :label="t('productCenter.formulaSetup.productionRemark')" min-width="128">
         <template #default="{ row }">
           <el-input v-model="row.productionRemark" clearable />
         </template>
       </el-table-column>
-      <el-table-column :label="t('common.operate')" width="150" fixed="right" align="center">
+      <el-table-column :label="t('common.operate')" width="118" fixed="right" align="center">
         <template #default="{ row, $index }">
           <AdminTableActions :actions="[
             { label: t('productCenter.formulaSetup.usageSetting'), icon: 'Setting', onClick: () => $emit('open-usage', row) },
@@ -101,7 +85,7 @@
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 import { computed, ref } from 'vue'
-import { Connection, Delete, Filter, InfoFilled, Rank, Search, Setting, WarningFilled } from '@element-plus/icons-vue'
+import { Connection, Delete, Filter, Search, Setting } from '@element-plus/icons-vue'
 import type { ProductFormulaMaterialVO } from '@/api/product-capability/types'
 
 const props = defineProps<{
@@ -109,6 +93,7 @@ const props = defineProps<{
   materials: ProductFormulaMaterialVO[]
   usageSummary: (row: ProductFormulaMaterialVO) => string
   usageUnset: (row: ProductFormulaMaterialVO) => boolean
+  unitLabel: (unitCode?: string) => string
   materialCount: number
   unsetUsageCount: number
   exceptionCount: number
@@ -123,6 +108,7 @@ const emit = defineEmits<{
 
 const localeStore = useLocaleStore()
 const t = (key: string) => getMessage(key, localeStore.language)
+const unitLabel = (unitCode?: string) => props.unitLabel(unitCode)
 const MATERIAL_TYPE_ALL = '__ALL__'
 const keyword = ref('')
 const materialTypeFilter = ref(MATERIAL_TYPE_ALL)
@@ -152,7 +138,7 @@ function openBatchUsage() {
 <style scoped>
 .setup-section {
   margin-bottom: 12px;
-  padding: 16px;
+  padding: 12px;
   background: #fff;
   border: 1px solid #e6ebf2;
   border-radius: 8px;
@@ -160,21 +146,31 @@ function openBatchUsage() {
 
 .setup-section__toolbar {
   display: flex;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 12px;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.setup-section__title {
+  flex: 0 0 auto;
+  min-width: 112px;
+  max-width: 180px;
 }
 
 .setup-section__toolbar h3 {
   margin: 0 0 4px;
-  font-size: 16px;
+  font-size: 15px;
   color: #111827;
 }
 
 .setup-section__toolbar p {
+  overflow: hidden;
   margin: 0;
   color: #6b7280;
   font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .setup-section__actions {
@@ -186,24 +182,35 @@ function openBatchUsage() {
 .material-pool-toolbar {
   display: flex;
   justify-content: space-between;
-  gap: 16px;
+  gap: 12px;
   align-items: center;
-  margin-bottom: 12px;
+  flex: 1;
+  min-width: 0;
 }
 
-.material-pool-toolbar__left,
-.material-pool-toolbar__right {
+.material-pool-toolbar__filters,
+.material-pool-toolbar__actions {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
+.material-pool-toolbar__filters {
+  flex: 1;
+  min-width: 0;
+}
+
+.material-pool-toolbar__actions {
+  flex: 0 0 auto;
+  justify-content: flex-end;
+}
+
 .material-pool-toolbar__search {
-  width: 360px;
+  width: min(320px, 100%);
 }
 
 .material-type-filter {
-  width: 206px;
+  width: 160px;
 }
 
 .material-pool-toolbar :deep(.el-button) {
@@ -229,7 +236,7 @@ function openBatchUsage() {
 }
 
 .setup-table :deep(.el-table__row td) {
-  height: 62px;
+  height: 56px;
 }
 
 .setup-table :deep(.el-input-number) {
@@ -241,15 +248,6 @@ function openBatchUsage() {
 .setup-table :deep(.el-select .el-select__wrapper) {
   min-height: 32px;
   border-radius: 6px;
-}
-
-.row-state {
-  color: #b9c3d3;
-  font-size: 16px;
-}
-
-.row-state--warning {
-  color: #f59e0b;
 }
 
 .spec-model-text {
@@ -300,9 +298,19 @@ function openBatchUsage() {
   color: #0d9488;
 }
 
-.header-help {
-  margin-left: 4px;
-  color: #9ca3af;
-  vertical-align: -2px;
+@media (max-width: 1280px) {
+  .setup-section__toolbar {
+    flex-wrap: wrap;
+  }
+
+  .material-pool-toolbar {
+    align-items: center;
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  .material-pool-toolbar__actions {
+    justify-content: flex-start;
+  }
 }
 </style>

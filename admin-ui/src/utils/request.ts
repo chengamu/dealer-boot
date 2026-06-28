@@ -11,6 +11,10 @@ import { getApiBaseUrl, getContextPath } from '@/utils/config'
 
 const baseURL = getApiBaseUrl()
 
+export type RequestConfig = AxiosRequestConfig & {
+  silentError?: boolean
+}
+
 const service = axios.create({
   baseURL,
   timeout: 20000,
@@ -67,6 +71,7 @@ service.interceptors.request.use((config) => {
 service.interceptors.response.use(
   (response) => {
     const data = response.data
+    const silentError = Boolean((response.config as RequestConfig).silentError)
     if (response.request?.responseType === 'blob') return data
     const code = data?.code ?? 200
     if (code === 200 || code === 0 || Array.isArray(data?.rows)) return data
@@ -75,11 +80,12 @@ service.interceptors.response.use(
       return Promise.reject(new Error(data?.msg || 'Unauthorized'))
     }
     const message = data?.msg || i18n.global.t('errorCode.default')
-    ElNotification.error({ title: message })
+    if (!silentError) ElNotification.error({ title: message })
     return Promise.reject(new Error(message))
   },
   (error) => {
     const t = i18n.global.t
+    const silentError = Boolean((error.config as RequestConfig | undefined)?.silentError)
     if (error.response?.status === 401) {
       redirectToLogin(error.response?.data?.msg || t('request.invalidSession'))
       return Promise.reject(error)
@@ -89,16 +95,16 @@ service.interceptors.response.use(
       : error.message === 'Network Error'
         ? t('request.networkError')
         : error.message || t('errorCode.default')
-    ElMessage.error(message)
+    if (!silentError) ElMessage.error(message)
     return Promise.reject(error)
   }
 )
 
-export async function request<T = unknown>(config: AxiosRequestConfig) {
+export async function request<T = unknown>(config: RequestConfig) {
   return (await service.request<ApiResult<T>>(config)) as unknown as ApiResult<T>
 }
 
-export async function requestData<T = unknown>(config: AxiosRequestConfig) {
+export async function requestData<T = unknown>(config: RequestConfig) {
   const res = await request<T>(config)
   return res.data
 }

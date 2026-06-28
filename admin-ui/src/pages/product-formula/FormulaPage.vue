@@ -61,25 +61,10 @@ async function runWithConfirm(messageKey: string, action: () => Promise<unknown>
   ElMessage.success(t('common.success'))
 }
 
-async function rejectFormula(row: ProductRecord) {
+async function openFormulaModule(row: ProductRecord, module: 'materials' | 'options' | 'simulation') {
   const id = row.formulaId as string | number | undefined
   if (!id) return
-  const result = await ElMessageBox.prompt(t('productCenter.formula.rejectPrompt'), t('productCenter.formula.actions.reject'), {
-    confirmButtonText: t('common.confirm'),
-    cancelButtonText: t('common.cancel'),
-    customClass: 'admin-message-box--prompt',
-    inputType: 'textarea',
-    inputValidator: (value) => Boolean(value && value.trim()),
-    inputErrorMessage: t('productCenter.formula.rejectReasonRequired')
-  })
-  await productFormulaApi.reject(id, result.value.trim())
-  ElMessage.success(t('common.success'))
-}
-
-async function openSetup(row: ProductRecord) {
-  const id = row.formulaId as string | number | undefined
-  if (!id) return
-  await router.push(`/product-formula/formulas/${id}/setup`)
+  await router.push(`/product-formula/formulas/${id}/${module}`)
 }
 
 const formulaConfig = computed<ProductGridConfig>(() => ({
@@ -142,13 +127,29 @@ const formulaConfig = computed<ProductGridConfig>(() => ({
   ],
   rowActions: [
     {
-      labelKey: 'productCenter.formula.actions.setup',
+      labelKey: 'productCenter.formula.actions.materials',
       icon: 'Setting',
       type: 'primary',
       permission: 'product:formula:setup',
       primary: true,
       visible: (row) => row.status === FORMULA_STATUS.DRAFT || row.status === FORMULA_STATUS.REJECTED,
-      handler: openSetup
+      handler: (row) => openFormulaModule(row, 'materials')
+    },
+    {
+      labelKey: 'productCenter.formula.actions.options',
+      icon: 'Operation',
+      type: 'primary',
+      permission: 'product:formula:setup',
+      visible: (row) => row.status === FORMULA_STATUS.DRAFT || row.status === FORMULA_STATUS.REJECTED,
+      handler: (row) => openFormulaModule(row, 'options')
+    },
+    {
+      labelKey: 'productCenter.formula.actions.simulation',
+      icon: 'DataAnalysis',
+      type: 'primary',
+      permission: 'product:formula:setup',
+      visible: (row) => row.status === FORMULA_STATUS.DRAFT || row.status === FORMULA_STATUS.REJECTED,
+      handler: (row) => openFormulaModule(row, 'simulation')
     },
     {
       labelKey: 'productCenter.formula.actions.submitReview',
@@ -157,22 +158,6 @@ const formulaConfig = computed<ProductGridConfig>(() => ({
       permission: 'product:formula:submitReview',
       visible: (row) => row.status === FORMULA_STATUS.DRAFT || row.status === FORMULA_STATUS.REJECTED,
       handler: (row) => runWithConfirm('productCenter.formula.confirm.submitReview', () => productFormulaApi.submitReview(row.formulaId as string | number))
-    },
-    {
-      labelKey: 'productCenter.formula.actions.approve',
-      icon: 'CircleCheck',
-      type: 'success',
-      permission: 'product:formula:approve',
-      visible: (row) => row.status === FORMULA_STATUS.PENDING_REVIEW,
-      handler: (row) => runWithConfirm('productCenter.formula.confirm.approve', () => productFormulaApi.approve(row.formulaId as string | number))
-    },
-    {
-      labelKey: 'productCenter.formula.actions.reject',
-      icon: 'CircleClose',
-      type: 'warning',
-      permission: 'product:formula:reject',
-      visible: (row) => row.status === FORMULA_STATUS.PENDING_REVIEW,
-      handler: rejectFormula
     },
     {
       labelKey: 'productCenter.formula.actions.stop',

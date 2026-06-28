@@ -8,7 +8,6 @@ import com.bocoo.common.mybatis.core.page.PageQuery;
 import com.bocoo.common.mybatis.core.page.TableDataInfo;
 import com.bocoo.common.web.core.BaseController;
 import com.bocoo.product.domain.bo.ProductFormulaBo;
-import com.bocoo.product.domain.bo.ProductFormulaRejectBo;
 import com.bocoo.product.domain.vo.BaseEditCheckResultVo;
 import com.bocoo.product.domain.vo.ProductFormulaVersionVo;
 import com.bocoo.product.domain.vo.ProductFormulaVo;
@@ -93,22 +92,6 @@ public class ProductFormulaController extends BaseController {
     @Operation(summary = "提交配方审核")
     public R<Void> submitReview(@PathVariable Long id) {
         return toAjax(formulaService.submitReview(id));
-    }
-
-    @SaCheckPermission("product:formula:approve")
-    @Log(title = "审核通过配方", businessType = BusinessType.UPDATE)
-    @PutMapping("/{id}/approve")
-    @Operation(summary = "审核通过配方")
-    public R<Void> approve(@PathVariable Long id) {
-        return toAjax(formulaService.approve(id));
-    }
-
-    @SaCheckPermission("product:formula:reject")
-    @Log(title = "驳回配方", businessType = BusinessType.UPDATE)
-    @PutMapping("/{id}/reject")
-    @Operation(summary = "驳回配方")
-    public R<Void> reject(@PathVariable Long id, @Validated @RequestBody ProductFormulaRejectBo bo) {
-        return toAjax(formulaService.reject(id, bo.getRejectReason()));
     }
 
     @SaCheckPermission("product:formula:stop")

@@ -83,6 +83,33 @@ public class ProductFormula extends BaseEntity {
     @Schema(description = "最近校验时间")
     private LocalDateTime latestValidationTime;
 
+    @Schema(description = "原料校验状态：NOT_VALIDATED、PASS、FAIL")
+    private String materialValidationStatus;
+
+    @Schema(description = "原料校验消息")
+    private String materialValidationMessage;
+
+    @Schema(description = "原料校验时间")
+    private LocalDateTime materialValidationTime;
+
+    @Schema(description = "选项校验状态：NOT_VALIDATED、PASS、FAIL")
+    private String optionValidationStatus;
+
+    @Schema(description = "选项校验消息")
+    private String optionValidationMessage;
+
+    @Schema(description = "选项校验时间")
+    private LocalDateTime optionValidationTime;
+
+    @Schema(description = "模拟校验状态：NOT_VALIDATED、PASS、FAIL")
+    private String simulationValidationStatus;
+
+    @Schema(description = "模拟校验消息")
+    private String simulationValidationMessage;
+
+    @Schema(description = "模拟校验时间")
+    private LocalDateTime simulationValidationTime;
+
     @Schema(description = "状态：DRAFT草稿、PENDING_REVIEW待审核、REJECTED驳回、EFFECTIVE生效、STOPPED停用")
     private String status;
 

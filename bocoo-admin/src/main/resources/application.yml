@@ -44,6 +44,15 @@ bocoo:
       - pc_component
       - pc_media_asset
       - pc_media_binding
+  ai:
+    enabled: ${BOCOO_AI_ENABLED:false}
+    default-model: ${BOCOO_AI_DEFAULT_MODEL:deepseek-v4-flash}
+    page-agent-base-url: ${BOCOO_AI_PAGE_AGENT_BASE_URL:/ai-runtime/page-agent}
+    security:
+      secret-encryption-key: ${BOCOO_AI_SECRET_ENCRYPTION_KEY:}
+      channel-token-secret: ${BOCOO_AI_CHANNEL_TOKEN_SECRET:}
+      channel-token-ttl-seconds: ${BOCOO_AI_CHANNEL_TOKEN_TTL_SECONDS:900}
+      service-signature-ttl-seconds: ${BOCOO_AI_SERVICE_SIGNATURE_TTL_SECONDS:300}
 
 websocket:
   port: ${WEBSOCKET_PORT:2831}
@@ -217,6 +226,8 @@ security:
     # websocket
     - /websocket/**
     - /ws/**
+    # AI runtime internal service APIs are protected by HMAC service signatures.
+    - /internal/ai/**
 
 
 # MyBatisPlus配置

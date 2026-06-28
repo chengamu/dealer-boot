@@ -371,10 +371,6 @@ class ProductFormulaSetupServiceTest {
 
         when(materialMapper.selectList(any())).thenReturn(List.of(formulaMaterial()));
         when(usageRuleMapper.selectList(any())).thenReturn(List.of(usageRule));
-        when(optionMapper.selectList(any())).thenReturn(List.of(option("FABRIC", "面料")));
-        when(optionValueMapper.selectList(any())).thenReturn(List.of(optionValue("FABRIC", "MAT001", "米色斑马帘面料")));
-        when(optionMaterialMapper.selectList(any())).thenReturn(List.of());
-        when(restrictionMapper.selectList(any())).thenReturn(List.of());
 
         assertThat(setupService.validationMessageKey(3001L))
             .isEqualTo("product.formula.usageConditionInvalid");

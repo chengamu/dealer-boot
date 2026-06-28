@@ -23,6 +23,7 @@ services:
       PGTZ: UTC
     volumes:
       - ./data/postgres:/var/lib/postgresql/data
+      - ./postgres/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s
@@ -67,6 +68,8 @@ services:
         condition: service_healthy
       minio:
         condition: service_started
+      ai-runtime:
+        condition: service_started
     environment:
       TZ: UTC
       SPRING_PROFILES_ACTIVE: prod
@@ -80,6 +83,12 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD}
+      BOCOO_AI_ENABLED: ${BOCOO_AI_ENABLED:-false}
+      BOCOO_AI_DEFAULT_MODEL: ${BOCOO_AI_DEFAULT_MODEL:-deepseek-v4-flash}
+      BOCOO_AI_PAGE_AGENT_BASE_URL: /ai-runtime/page-agent
+      BOCOO_AI_SECRET_ENCRYPTION_KEY: ${BOCOO_AI_SECRET_ENCRYPTION_KEY}
+      BOCOO_AI_CHANNEL_TOKEN_SECRET: ${BOCOO_AI_CHANNEL_TOKEN_SECRET}
+      AI_RUNTIME_BASE_URL: http://ai-runtime:18088
     volumes:
       - ./bocoo-admin.jar:/app/bocoo-admin.jar:ro
       - ./config:/config:ro
@@ -96,6 +105,23 @@ services:
       - /app/bocoo-admin.jar
       - --spring.config.additional-location=/config/
 
+  ai-runtime:
+    build:
+      context: ../../../ai-runtime
+      dockerfile: Dockerfile
+    container_name: ai-runtime
+    restart: unless-stopped
+    environment:
+      AI_RUNTIME_ADDR: 0.0.0.0:18088
+      AI_JAVA_INTERNAL_BASE_URL: http://bocoo-admin:8081
+      AI_SERVICE_NAME: ${AI_SERVICE_NAME:-ai-runtime}
+      AI_SERVICE_KEY_VERSION: ${AI_SERVICE_KEY_VERSION}
+      AI_SERVICE_SECRET: ${AI_SERVICE_SECRET}
+      AI_RUNTIME_DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_RUNTIME_DB}?sslmode=disable
+      AI_PROVIDER_TIMEOUT_SECONDS: ${AI_PROVIDER_TIMEOUT_SECONDS:-120}
+    expose:
+      - "18088"
+
   admin-ui:
     image: base-boot-admin-ui:latest
     container_name: admin-ui
@@ -105,6 +131,7 @@ services:
       dockerfile: Dockerfile
     environment:
       API_PROXY_PASS: http://bocoo-admin:8081
+      AI_RUNTIME_PROXY_PASS: http://ai-runtime:18088
     ports:
       - "127.0.0.1:18080:80"
     depends_on:

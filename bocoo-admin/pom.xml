@@ -39,6 +39,13 @@
             <version>${com.bocoo.version}</version>
         </dependency>
 
+        <!-- AI 助手代理与管理接口 -->
+        <dependency>
+            <groupId>com.bocoo</groupId>
+            <artifactId>bocoo-modules-ai</artifactId>
+            <version>${com.bocoo.version}</version>
+        </dependency>
+
         <!-- 代码生成-->
         <dependency>
             <groupId>com.bocoo</groupId>

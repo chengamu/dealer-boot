@@ -52,6 +52,15 @@ CREATE TABLE IF NOT EXISTS pc_formula (
     latest_validation_status varchar(30) NOT NULL DEFAULT 'NOT_VALIDATED',
     latest_validation_message varchar(500),
     latest_validation_time timestamptz,
+    material_validation_status varchar(30) NOT NULL DEFAULT 'NOT_VALIDATED',
+    material_validation_message varchar(500),
+    material_validation_time timestamptz,
+    option_validation_status varchar(30) NOT NULL DEFAULT 'NOT_VALIDATED',
+    option_validation_message varchar(500),
+    option_validation_time timestamptz,
+    simulation_validation_status varchar(30) NOT NULL DEFAULT 'NOT_VALIDATED',
+    simulation_validation_message varchar(500),
+    simulation_validation_time timestamptz,
     status varchar(30) NOT NULL DEFAULT 'DRAFT',
     audit_by varchar(64),
     audit_time timestamptz,
@@ -87,6 +96,15 @@ ALTER TABLE IF EXISTS pc_formula
     ADD COLUMN IF NOT EXISTS latest_validation_status varchar(30) NOT NULL DEFAULT 'NOT_VALIDATED',
     ADD COLUMN IF NOT EXISTS latest_validation_message varchar(500),
     ADD COLUMN IF NOT EXISTS latest_validation_time timestamptz,
+    ADD COLUMN IF NOT EXISTS material_validation_status varchar(30) NOT NULL DEFAULT 'NOT_VALIDATED',
+    ADD COLUMN IF NOT EXISTS material_validation_message varchar(500),
+    ADD COLUMN IF NOT EXISTS material_validation_time timestamptz,
+    ADD COLUMN IF NOT EXISTS option_validation_status varchar(30) NOT NULL DEFAULT 'NOT_VALIDATED',
+    ADD COLUMN IF NOT EXISTS option_validation_message varchar(500),
+    ADD COLUMN IF NOT EXISTS option_validation_time timestamptz,
+    ADD COLUMN IF NOT EXISTS simulation_validation_status varchar(30) NOT NULL DEFAULT 'NOT_VALIDATED',
+    ADD COLUMN IF NOT EXISTS simulation_validation_message varchar(500),
+    ADD COLUMN IF NOT EXISTS simulation_validation_time timestamptz,
     ADD COLUMN IF NOT EXISTS status varchar(30) NOT NULL DEFAULT 'DRAFT',
     ADD COLUMN IF NOT EXISTS audit_by varchar(64),
     ADD COLUMN IF NOT EXISTS audit_time timestamptz,
@@ -117,6 +135,15 @@ COMMENT ON COLUMN pc_formula.draft_version_no IS '草稿版本预览号';
 COMMENT ON COLUMN pc_formula.latest_validation_status IS '最近校验状态：NOT_VALIDATED、PASS、FAIL';
 COMMENT ON COLUMN pc_formula.latest_validation_message IS '最近校验消息key';
 COMMENT ON COLUMN pc_formula.latest_validation_time IS '最近校验时间，UTC timestamptz';
+COMMENT ON COLUMN pc_formula.material_validation_status IS '原料校验状态：NOT_VALIDATED、PASS、FAIL';
+COMMENT ON COLUMN pc_formula.material_validation_message IS '原料校验消息key';
+COMMENT ON COLUMN pc_formula.material_validation_time IS '原料校验时间，UTC timestamptz';
+COMMENT ON COLUMN pc_formula.option_validation_status IS '选项校验状态：NOT_VALIDATED、PASS、FAIL';
+COMMENT ON COLUMN pc_formula.option_validation_message IS '选项校验消息key';
+COMMENT ON COLUMN pc_formula.option_validation_time IS '选项校验时间，UTC timestamptz';
+COMMENT ON COLUMN pc_formula.simulation_validation_status IS '模拟校验状态：NOT_VALIDATED、PASS、FAIL';
+COMMENT ON COLUMN pc_formula.simulation_validation_message IS '模拟校验消息key';
+COMMENT ON COLUMN pc_formula.simulation_validation_time IS '模拟校验时间，UTC timestamptz';
 COMMENT ON COLUMN pc_formula.status IS '单状态：DRAFT、PENDING_REVIEW、REJECTED、EFFECTIVE、STOPPED';
 COMMENT ON COLUMN pc_formula.audit_by IS '最后审核人';
 COMMENT ON COLUMN pc_formula.audit_time IS '最后审核时间，UTC timestamptz';
@@ -487,7 +514,7 @@ COMMENT ON COLUMN pc_formula_version.version_id IS '版本ID';
 COMMENT ON COLUMN pc_formula_version.formula_id IS '配方ID';
 COMMENT ON COLUMN pc_formula_version.version_no IS '版本号，系统按配方递增';
 COMMENT ON COLUMN pc_formula_version.version_label IS '版本展示号，如 V1、V2';
-COMMENT ON COLUMN pc_formula_version.version_status IS '版本状态：EFFECTIVE、STOPPED';
+COMMENT ON COLUMN pc_formula_version.version_status IS '版本状态：PENDING_REVIEW、REJECTED、EFFECTIVE、STOPPED';
 COMMENT ON COLUMN pc_formula_version.formula_snapshot_json IS '配方主表快照JSON';
 ALTER TABLE IF EXISTS pc_formula_version DROP COLUMN IF EXISTS item_snapshot_json;
 COMMENT ON COLUMN pc_formula_version.setup_snapshot_json IS '配方设置快照JSON';
@@ -1348,7 +1375,11 @@ SET tenant_id = EXCLUDED.tenant_id,
 
 INSERT INTO sys_menu (menu_id, tenant_id, parent_id, menu_name, i18n_key, order_num, path, component, query_param, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, update_by, update_time, remark)
 VALUES
-    (24301, 1, 24300, 'Formulas', 'productCenter.menu.formulas', 1, 'formulas', 'product-formula/formulas', NULL, '1', '0', 'C', '1', '1', 'product:formula:list', 'list', 'system', now(), NULL, NULL, '配方管理主表'),
+    (24301, 1, 24300, 'Formula Archives', 'productCenter.menu.formulas', 1, 'formulas', 'product-formula/formulas', NULL, '1', '0', 'C', '1', '1', 'product:formula:list', 'list', 'system', now(), NULL, NULL, '配方档案'),
+    (24302, 1, 24300, 'Formula Reviews', 'productCenter.menu.formulaReviews', 5, 'reviews', 'product-formula/reviews', NULL, '1', '0', 'C', '1', '1', 'product:formula:review', 'audit', 'system', now(), NULL, NULL, '配方审核'),
+    (24303, 1, 24300, 'Formula Materials', 'productCenter.menu.formulaMaterials', 2, 'formulas/:id/materials', 'product-formula/formulas/materials', NULL, '1', '0', 'C', '0', '1', 'product:formula:setup', 'inventory', 'system', now(), NULL, NULL, '配方原料，隐藏功能菜单'),
+    (24304, 1, 24300, 'Formula Options', 'productCenter.menu.formulaOptions', 3, 'formulas/:id/options', 'product-formula/formulas/options', NULL, '1', '0', 'C', '0', '1', 'product:formula:setup', 'tree-table', 'system', now(), NULL, NULL, '配方选项，隐藏功能菜单'),
+    (24305, 1, 24300, 'Formula Simulation', 'productCenter.menu.formulaSimulation', 4, 'formulas/:id/simulation', 'product-formula/formulas/simulation', NULL, '1', '0', 'C', '0', '1', 'product:formula:setup', 'experiment', 'system', now(), NULL, NULL, '配方模拟，隐藏功能菜单'),
     (24212, 1, 24200, 'Product Categories', 'productCenter.menu.categories', 1, 'categories', 'product-center/base', NULL, '1', '0', 'C', '1', '1', 'product:base:list', 'tree-table', 'system', now(), NULL, NULL, '产品分类'),
     (24213, 1, 24200, 'Base Dictionaries', 'productCenter.menu.productDicts', 2, 'product-dicts', 'product-center/product-dicts', NULL, '1', '0', 'C', '1', '1', 'product:dict:list', 'dict', 'system', now(), NULL, NULL, '基础字典'),
     (24206, 1, 24200, 'Units', 'productCenter.menu.units', 3, 'units', 'product-center/base', NULL, '1', '0', 'C', '1', '1', 'product:unit:list', 'unit', 'system', now(), NULL, NULL, '单位管理'),
@@ -1388,10 +1419,12 @@ VALUES
     (24314, 1, 24301, 'Formula Delete', 'common.delete', 5, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:formula:remove', '#', 'system', now(), NULL, NULL, '配方删除'),
     (24315, 1, 24301, 'Formula Setup', 'productCenter.formula.actions.setup', 6, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:formula:setup', '#', 'system', now(), NULL, NULL, '设置配方'),
     (24316, 1, 24301, 'Formula Submit Review', 'productCenter.formula.actions.submitReview', 7, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:formula:submitReview', '#', 'system', now(), NULL, NULL, '配方提交审核'),
-    (24317, 1, 24301, 'Formula Approve', 'productCenter.formula.actions.approve', 8, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:formula:approve', '#', 'system', now(), NULL, NULL, '配方审核通过'),
-    (24318, 1, 24301, 'Formula Reject', 'productCenter.formula.actions.reject', 9, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:formula:reject', '#', 'system', now(), NULL, NULL, '配方驳回'),
+    (24317, 1, 24302, 'Formula Review Query', 'common.search', 1, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:formula:review', '#', 'system', now(), NULL, NULL, '配方审核查询'),
+    (24318, 1, 24302, 'Formula Review Detail', 'common.detail', 2, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:formula:review', '#', 'system', now(), NULL, NULL, '配方审核详情'),
     (24319, 1, 24301, 'Formula Stop', 'productCenter.formula.actions.stop', 10, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:formula:stop', '#', 'system', now(), NULL, NULL, '配方停用'),
     (24320, 1, 24301, 'Formula Reference', 'productCenter.common.references', 11, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:formula:reference', '#', 'system', now(), NULL, NULL, '配方引用和变更记录'),
+    (24321, 1, 24302, 'Formula Review Approve', 'productCenter.formula.actions.approve', 3, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:formula:approve', '#', 'system', now(), NULL, NULL, '配方审核通过'),
+    (24322, 1, 24302, 'Formula Review Reject', 'productCenter.formula.actions.reject', 4, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:formula:reject', '#', 'system', now(), NULL, NULL, '配方驳回'),
     (24214, 1, 24212, 'Category Query', 'common.search', 1, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:base:list', '#', 'system', now(), NULL, NULL, '产品分类查询'),
     (24215, 1, 24212, 'Category Add', 'common.add', 2, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:base:add', '#', 'system', now(), NULL, NULL, '产品分类新增'),
     (24216, 1, 24212, 'Category Edit', 'common.edit', 3, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:base:edit', '#', 'system', now(), NULL, NULL, '产品分类编辑'),

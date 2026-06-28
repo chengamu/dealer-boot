@@ -16,7 +16,7 @@
       @validate="validateSetup"
       @save="saveSetup"
       @submit-review="submitReview"
-      @tab-change="activeTab = $event"
+      @tab-change="switchSection"
     />
 
     <template v-if="activeTab === 'content'">
@@ -34,6 +34,7 @@
         :materials="setup.materials"
         :usage-summary="usageSummary"
         :usage-unset="isUsageUnset"
+        :unit-label="unitLabel"
         :material-count="setup.materials.length"
         :unset-usage-count="unsetUsageCount"
         :exception-count="setup.restrictions.length"
@@ -68,50 +69,14 @@
       @remove-restriction="removeRow(setup.restrictions, $event)"
     />
 
-    <AdminDialog v-model="materialPickerOpen" :title="t('productCenter.formulaSetup.batchAddMaterial')" width="1320px" variant="picker" class="material-picker-dialog">
-      <div class="admin-dialog__toolbar material-picker-search-card">
-        <el-form :model="materialPickerQuery" :inline="true" class="material-picker-filter">
-          <el-form-item :label="t('productCenter.formulaSetup.attributeGroup')">
-            <el-select v-model="materialPickerQuery.attributeGroupCode" clearable filterable @change="handlePickerGroupChange">
-              <el-option v-for="group in groupOptions" :key="String(group.value)" :label="group.label" :value="group.value" />
-            </el-select>
-          </el-form-item>
-          <el-form-item :label="t('productCenter.formulaSetup.materialType')">
-            <el-select v-model="materialPickerQuery.materialTypeCode" clearable filterable>
-              <el-option v-for="type in pickerMaterialTypeOptions" :key="String(type.value)" :label="type.label" :value="type.value" />
-            </el-select>
-          </el-form-item>
-          <el-form-item :label="t('productCenter.formulaSetup.materialCode')">
-            <el-input v-model="materialPickerQuery.materialCode" clearable />
-          </el-form-item>
-          <el-form-item :label="t('productCenter.formulaSetup.materialName')">
-            <el-input v-model="materialPickerQuery.materialNameCn" clearable />
-          </el-form-item>
-          <el-form-item class="material-picker-filter__actions">
-            <el-button type="primary" icon="Search">{{ t('common.search') }}</el-button>
-            <el-button icon="Refresh" @click="resetMaterialPickerQuery">{{ t('common.reset') }}</el-button>
-          </el-form-item>
-        </el-form>
-      </div>
-      <div class="admin-dialog__table material-picker-grid-card">
-        <el-table :data="filteredMaterialRows" border height="100%" class="material-picker-table" @selection-change="selectedMaterials = $event">
-          <el-table-column type="selection" width="48" />
-          <el-table-column prop="attributeGroupNameCn" :label="t('productCenter.formulaSetup.attributeGroup')" width="120" show-overflow-tooltip />
-          <el-table-column prop="materialTypeNameCn" :label="t('productCenter.formulaSetup.materialType')" width="140" show-overflow-tooltip />
-          <el-table-column prop="materialCode" :label="t('productCenter.formulaSetup.materialCode')" width="150" show-overflow-tooltip />
-          <el-table-column prop="materialNameCn" :label="t('productCenter.formulaSetup.materialName')" min-width="260" show-overflow-tooltip />
-          <el-table-column prop="specModelText" :label="t('productCenter.formulaSetup.specModel')" min-width="220" show-overflow-tooltip />
-          <el-table-column prop="unitCode" :label="t('productCenter.formulaSetup.unit')" width="90" />
-          <el-table-column prop="manufacturerName" :label="t('productCenter.formulaSetup.manufacturerName')" min-width="180" show-overflow-tooltip />
-        </el-table>
-      </div>
-      <template #footer>
-        <AdminDialogFooter :status="`${t('productCenter.formulaSetup.selectedMaterialCount')}：${selectedMaterials.length}`">
-          <el-button @click="materialPickerOpen = false">{{ t('common.cancel') }}</el-button>
-          <el-button type="primary" :disabled="selectedMaterials.length === 0" @click="appendSelectedMaterials">{{ t('common.confirm') }}</el-button>
-        </AdminDialogFooter>
-      </template>
-    </AdminDialog>
+    <FormulaMaterialPickerDialog
+      v-model="materialPickerOpen"
+      :material-rows="materialRows"
+      :group-options="groupOptions"
+      :material-type-rows="materialTypeRows"
+      :unit-label="unitLabel"
+      @confirm="appendSelectedMaterials"
+    />
 
     <FormulaUsageDrawer
       v-model="usageDrawerOpen"
@@ -125,7 +90,7 @@
 </template>
 
 <script setup lang="ts" name="ProductFormulaSetupPage">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getMessage } from '@/locales'
@@ -135,6 +100,7 @@ import { productMaterialTypeApi, productMaterialTypeGroupApi, productUnitApi } f
 import { productFormulaApi } from '@/api/product-formula/formula'
 import FormulaBusinessOptionsTab from './components/FormulaBusinessOptionsTab.vue'
 import FormulaMaterialPoolTab from './components/FormulaMaterialPoolTab.vue'
+import FormulaMaterialPickerDialog from './components/FormulaMaterialPickerDialog.vue'
 import FormulaSetupHeader from './components/FormulaSetupHeader.vue'
 import FormulaSetupSummary from './components/FormulaSetupSummary.vue'
 import FormulaUsageDrawer from './components/FormulaUsageDrawer.vue'
@@ -178,9 +144,17 @@ const route = useRoute()
 const router = useRouter()
 const localeStore = useLocaleStore()
 const t = (key: string) => getMessage(key, localeStore.language)
+const props = defineProps<{
+  setupSection?: 'content' | 'options'
+}>()
 
 const formulaId = computed(() => String(route.params.id || ''))
-const activeTab = ref<'content' | 'options'>('content')
+function routeSetupSection() {
+  if (props.setupSection) return props.setupSection
+  return route.meta.setupSection === 'options' ? 'options' : 'content'
+}
+
+const activeTab = ref<'content' | 'options'>(routeSetupSection())
 const loading = ref(false)
 const saving = ref(false)
 const validating = ref(false)
@@ -188,17 +162,10 @@ const materialPickerOpen = ref(false)
 const usageDrawerOpen = ref(false)
 const usageRow = ref<ProductFormulaMaterialVO | null>(null)
 const selectedOptionCode = ref('')
-const selectedMaterials = ref<ProductMaterialVO[]>([])
 const materialRows = ref<ProductMaterialVO[]>([])
 const groupRows = ref<ProductMaterialTypeGroupVO[]>([])
 const materialTypeRows = ref<ProductMaterialTypeVO[]>([])
 const unitRows = ref<ProductUnitVO[]>([])
-const materialPickerQuery = reactive({
-  attributeGroupCode: '',
-  materialTypeCode: '',
-  materialCode: '',
-  materialNameCn: ''
-})
 
 const setup = reactive<SetupState>({
   materials: [],
@@ -223,22 +190,16 @@ const materialGroupCards = computed(() => groupRows.value
     count: setup.materials.filter((row) => row.attributeGroupCode === group.groupCode).length
   })))
 const unsetUsageCount = computed(() => setup.materials.filter((row) => isUsageUnset(row)).length)
-const pickerMaterialTypeOptions = computed<ProductOption[]>(() => materialTypeRows.value
-  .filter((row) => !materialPickerQuery.attributeGroupCode || row.attributeGroupCode === materialPickerQuery.attributeGroupCode)
-  .map((row) => ({ value: row.materialTypeCode || '', label: labelOf(row, 'materialTypeCode', 'materialTypeNameCn', 'materialTypeNameEn') }))
-  .filter((item) => item.value))
-const filteredMaterialRows = computed(() => materialRows.value.filter((row) => {
-  if (row.status && row.status !== PRODUCT_STATUS_ENABLED) return false
-  if (materialPickerQuery.attributeGroupCode && row.attributeGroupCode !== materialPickerQuery.attributeGroupCode) return false
-  if (materialPickerQuery.materialTypeCode && row.materialTypeCode !== materialPickerQuery.materialTypeCode) return false
-  if (!containsText(row.materialCode, materialPickerQuery.materialCode)) return false
-  return containsText(row.materialNameCn, materialPickerQuery.materialNameCn)
-}))
 const selectedValues = computed(() => setup.optionValues.filter((row) => row.optionCode === selectedOptionCode.value))
 const selectedOptionMaterials = computed(() => setup.optionMaterials.filter((row) => row.optionCode === selectedOptionCode.value))
 
 onMounted(async () => {
   await Promise.all([loadBaseOptions(), loadSetup()])
+})
+
+watch([() => route.meta.setupSection, () => props.setupSection, formulaId], async () => {
+  activeTab.value = routeSetupSection()
+  await loadSetup()
 })
 
 async function loadBaseOptions() {
@@ -258,7 +219,9 @@ async function loadSetup() {
   if (!formulaId.value) return
   loading.value = true
   try {
-    const response = await productFormulaApi.setup(formulaId.value)
+    const response = activeTab.value === 'options'
+      ? await productFormulaApi.getFormulaOptions(formulaId.value)
+      : await productFormulaApi.materials(formulaId.value)
     formula.value = response.data?.formula || {}
     setup.materials = response.data?.materials || []
     setup.options = (response.data?.options || []).map((row) => ({
@@ -278,7 +241,11 @@ async function loadSetup() {
 async function saveSetup() {
   saving.value = true
   try {
-    await productFormulaApi.saveSetup(formulaId.value, buildPayload())
+    if (activeTab.value === 'options') {
+      await productFormulaApi.saveOptions(formulaId.value, buildPayload())
+    } else {
+      await productFormulaApi.saveMaterials(formulaId.value, buildPayload())
+    }
     ElMessage.success(t('common.success'))
     await loadSetup()
   } finally {
@@ -289,7 +256,11 @@ async function saveSetup() {
 async function validateSetup() {
   validating.value = true
   try {
-    await productFormulaApi.validateSetup(formulaId.value)
+    if (activeTab.value === 'options') {
+      await productFormulaApi.validateOptions(formulaId.value)
+    } else {
+      await productFormulaApi.validateMaterials(formulaId.value)
+    }
     ElMessage.success(t('productCenter.formula.validation.pass'))
     await loadSetup()
   } finally {
@@ -304,6 +275,11 @@ async function submitReview() {
   await loadSetup()
 }
 
+async function switchSection(tab: 'content' | 'options') {
+  const target = tab === 'options' ? 'options' : 'materials'
+  await router.push(`/product-formula/formulas/${formulaId.value}/${target}`)
+}
+
 function buildPayload(): ProductFormulaSetupVO {
   return {
     materials: setup.materials,
@@ -315,25 +291,14 @@ function buildPayload(): ProductFormulaSetupVO {
   }
 }
 
-function appendSelectedMaterials() {
+function appendSelectedMaterials(selectedMaterials: ProductMaterialVO[]) {
   const existing = new Set(setup.materials.map((row) => row.materialCode))
-  selectedMaterials.value.forEach((material) => {
+  selectedMaterials.forEach((material) => {
     if (!material.materialCode || existing.has(material.materialCode)) return
     setup.materials.push(materialToFormulaMaterial(material))
     existing.add(material.materialCode)
   })
   materialPickerOpen.value = false
-}
-
-function handlePickerGroupChange() {
-  materialPickerQuery.materialTypeCode = ''
-}
-
-function resetMaterialPickerQuery() {
-  materialPickerQuery.attributeGroupCode = ''
-  materialPickerQuery.materialTypeCode = ''
-  materialPickerQuery.materialCode = ''
-  materialPickerQuery.materialNameCn = ''
 }
 
 function materialToFormulaMaterial(material: ProductMaterialVO): ProductFormulaMaterialVO {
@@ -579,17 +544,18 @@ function materialLabel(row: ProductMaterialVO | ProductFormulaMaterialVO) {
   return `${row.materialCode || ''} ${row.materialNameCn || ''}`.trim()
 }
 
+function unitLabel(unitCode?: string) {
+  if (!unitCode) return '-'
+  const unit = unitRows.value.find((row) => row.unitCode === unitCode)
+  return unit ? labelOf(unit, 'unitCode', 'unitNameCn', 'unitNameEn') : unitCode
+}
+
 function labelOf(row: ProductRecord, codeKey: string, cnKey: string, enKey?: string) {
   return localizedRecordLabel(row, localeStore.language, codeKey, cnKey, enKey)
 }
 
 function responseRows<T>(response: { data?: T[] } | T[] | undefined): T[] {
   return Array.isArray(response) ? response : response?.data || []
-}
-
-function containsText(value: unknown, keyword: string) {
-  if (!keyword) return true
-  return String(value || '').toLowerCase().includes(keyword.trim().toLowerCase())
 }
 
 function formatNumber(value?: number | string) {
@@ -609,90 +575,5 @@ function goBack() {
 <style scoped>
 .formula-setup-page {
   background: #f5f7fb;
-}
-
-
-.material-picker-search-card {
-  flex: 0 0 auto;
-  margin-bottom: 12px;
-}
-
-.material-picker-filter {
-  display: grid;
-  grid-template-columns: minmax(190px, 1fr) minmax(200px, 1fr) minmax(180px, 0.9fr) minmax(200px, 1fr) auto;
-  gap: 8px 12px;
-  align-items: center;
-}
-
-.material-picker-filter :deep(.el-form-item) {
-  margin-right: 0;
-  margin-bottom: 0;
-}
-
-.material-picker-filter :deep(.el-form-item__label) {
-  padding-right: 10px;
-  color: #1f2937;
-  font-weight: 600;
-}
-
-.material-picker-filter :deep(.el-select),
-.material-picker-filter :deep(.el-input) {
-  width: 100%;
-}
-
-.material-picker-filter :deep(.el-input__wrapper),
-.material-picker-filter :deep(.el-select__wrapper) {
-  min-height: 34px;
-  border-radius: 8px;
-}
-
-.material-picker-filter__actions {
-  justify-self: end;
-}
-
-.material-picker-filter__actions :deep(.el-form-item__content) {
-  gap: 8px;
-  flex-wrap: nowrap;
-}
-
-.material-picker-grid-card {
-  flex: 1;
-  min-height: 0;
-}
-
-.material-picker-table {
-  height: 100%;
-  border-radius: 0;
-}
-
-.material-picker-table :deep(.el-table__header th) {
-  height: 44px;
-  background: #f7faff !important;
-  color: #1f2937;
-  font-weight: 700;
-}
-
-.material-picker-table :deep(.el-table__row td) {
-  height: 48px;
-}
-
-.material-picker-table :deep(.el-table__body-wrapper),
-.material-picker-table :deep(.el-scrollbar),
-.material-picker-table :deep(.el-scrollbar__wrap) {
-  min-height: 0;
-}
-
-.material-picker-dialog__count {
-  color: #6b7280;
-}
-
-@media (max-width: 1080px) {
-  .material-picker-filter {
-    grid-template-columns: repeat(2, minmax(220px, 1fr));
-  }
-
-  .material-picker-filter__actions {
-    justify-self: start;
-  }
 }
 </style>

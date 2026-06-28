@@ -53,6 +53,8 @@ public class ProductFormulaSetupServiceImpl extends ProductServiceSupport implem
     private static final String STATUS_DRAFT = ProductFormulaServiceImpl.STATUS_DRAFT;
     private static final String STATUS_REJECTED = ProductFormulaServiceImpl.STATUS_REJECTED;
     private static final String VALIDATION_NOT_VALIDATED = "NOT_VALIDATED";
+    private static final String VALIDATION_PASS = "PASS";
+    private static final String VALIDATION_FAIL = "FAIL";
     private static final String VISIBILITY_ALWAYS = "ALWAYS";
     private static final String VISIBILITY_CONDITIONAL = "CONDITIONAL";
 
@@ -113,19 +115,60 @@ public class ProductFormulaSetupServiceImpl extends ProductServiceSupport implem
     @Transactional(rollbackFor = Exception.class, noRollbackFor = ServiceException.class)
     public Boolean validateSetup(Long formulaId) {
         ProductFormula current = requireEditableFormula(formulaId);
-        String messageKey = validationMessageKey(formulaId);
-        String status = messageKey == null ? "PASS" : "FAIL";
+        String materialMessageKey = materialValidationMessageKey(formulaId);
+        String optionMessageKey = optionValidationMessageKey(formulaId);
+        String messageKey = materialMessageKey == null ? optionMessageKey : materialMessageKey;
+        String status = messageKey == null ? VALIDATION_PASS : VALIDATION_FAIL;
+        String materialStatus = materialMessageKey == null ? VALIDATION_PASS : VALIDATION_FAIL;
+        String optionStatus = optionMessageKey == null ? VALIDATION_PASS : VALIDATION_FAIL;
+        var now = TimeUtils.utcNow();
         ProductFormula after = copyStatusSnapshot(current);
         after.setLatestValidationStatus(status);
         after.setLatestValidationMessage(messageKey);
-        after.setLatestValidationTime(TimeUtils.utcNow());
+        after.setLatestValidationTime(now);
+        after.setMaterialValidationStatus(materialStatus);
+        after.setMaterialValidationMessage(materialMessageKey);
+        after.setMaterialValidationTime(now);
+        after.setOptionValidationStatus(optionStatus);
+        after.setOptionValidationMessage(optionMessageKey);
+        after.setOptionValidationTime(now);
         formulaMapper.update(null, new LambdaUpdateWrapper<ProductFormula>()
             .eq(ProductFormula::getFormulaId, formulaId)
             .set(ProductFormula::getLatestValidationStatus, status)
             .set(ProductFormula::getLatestValidationMessage, messageKey)
-            .set(ProductFormula::getLatestValidationTime, after.getLatestValidationTime()));
-        recordFormulaChange(formulaId, current.getFormulaCode(), "PASS".equals(status) ? "VALIDATE_PASS" : "VALIDATE_FAIL", current, after);
-        if (!"PASS".equals(status)) {
+            .set(ProductFormula::getLatestValidationTime, now)
+            .set(ProductFormula::getMaterialValidationStatus, materialStatus)
+            .set(ProductFormula::getMaterialValidationMessage, materialMessageKey)
+            .set(ProductFormula::getMaterialValidationTime, now)
+            .set(ProductFormula::getOptionValidationStatus, optionStatus)
+            .set(ProductFormula::getOptionValidationMessage, optionMessageKey)
+            .set(ProductFormula::getOptionValidationTime, now));
+        recordFormulaChange(formulaId, current.getFormulaCode(), VALIDATION_PASS.equals(status) ? "VALIDATE_PASS" : "VALIDATE_FAIL", current, after);
+        if (!VALIDATION_PASS.equals(status)) {
+            throw ServiceException.ofMessageKey(messageKey);
+        }
+        return Boolean.TRUE;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class, noRollbackFor = ServiceException.class)
+    public Boolean validateMaterials(Long formulaId) {
+        ProductFormula current = requireEditableFormula(formulaId);
+        String messageKey = materialValidationMessageKey(formulaId);
+        updateMaterialValidation(current, messageKey);
+        if (messageKey != null) {
+            throw ServiceException.ofMessageKey(messageKey);
+        }
+        return Boolean.TRUE;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class, noRollbackFor = ServiceException.class)
+    public Boolean validateOptions(Long formulaId) {
+        ProductFormula current = requireEditableFormula(formulaId);
+        String messageKey = optionValidationMessageKey(formulaId);
+        updateOptionValidation(current, messageKey);
+        if (messageKey != null) {
             throw ServiceException.ofMessageKey(messageKey);
         }
         return Boolean.TRUE;
@@ -138,6 +181,12 @@ public class ProductFormulaSetupServiceImpl extends ProductServiceSupport implem
 
     @Override
     public String validationMessageKey(Long formulaId) {
+        String materialMessageKey = materialValidationMessageKey(formulaId);
+        return materialMessageKey == null ? optionValidationMessageKey(formulaId) : materialMessageKey;
+    }
+
+    @Override
+    public String materialValidationMessageKey(Long formulaId) {
         List<ProductFormulaMaterial> materials = activeMaterials(formulaId);
         List<com.bocoo.product.domain.entity.ProductFormulaUsageRule> usageRules = usageRuleService.activeRules(formulaId);
         Map<String, List<com.bocoo.product.domain.entity.ProductFormulaUsageRule>> usageRulesByMaterial = usageRules.stream()
@@ -165,6 +214,19 @@ public class ProductFormulaSetupServiceImpl extends ProductServiceSupport implem
             if ("FIXED".equals(material.getUsageMode()) && material.getFixedUsageQty() == null) {
                 return "product.formula.materialUsageRuleRequired";
             }
+        }
+        String usageRuleMessageKey = usageRuleService.validationMessageKey(materials, activeOptions(formulaId), activeValues(formulaId), usageRules);
+        if (usageRuleMessageKey != null) {
+            return usageRuleMessageKey;
+        }
+        return null;
+    }
+
+    @Override
+    public String optionValidationMessageKey(Long formulaId) {
+        List<ProductFormulaMaterial> materials = activeMaterials(formulaId);
+        if (materials.isEmpty()) {
+            return "product.formula.notConfigured";
         }
         List<ProductFormulaOption> options = activeOptions(formulaId);
         if (options.isEmpty()) {
@@ -214,10 +276,6 @@ public class ProductFormulaSetupServiceImpl extends ProductServiceSupport implem
                 return "product.formula.restrictionTargetInvalid";
             }
         }
-        String usageRuleMessageKey = usageRuleService.validationMessageKey(materials, options, values, usageRules);
-        if (usageRuleMessageKey != null) {
-            return usageRuleMessageKey;
-        }
         return null;
     }
 
@@ -230,6 +288,7 @@ public class ProductFormulaSetupServiceImpl extends ProductServiceSupport implem
         snapshot.put("optionMaterials", activeOptionMaterials(formulaId));
         snapshot.put("restrictions", activeRestrictions(formulaId));
         snapshot.put("usageRules", usageRuleService.activeRules(formulaId));
+        snapshot.put("priceSnapshot", priceSnapshot(formulaId));
         return snapshot;
     }
 
@@ -669,14 +728,111 @@ public class ProductFormulaSetupServiceImpl extends ProductServiceSupport implem
         after.setLatestValidationStatus(VALIDATION_NOT_VALIDATED);
         after.setLatestValidationMessage(null);
         after.setLatestValidationTime(null);
+        after.setMaterialValidationStatus(VALIDATION_NOT_VALIDATED);
+        after.setMaterialValidationMessage(null);
+        after.setMaterialValidationTime(null);
+        after.setOptionValidationStatus(VALIDATION_NOT_VALIDATED);
+        after.setOptionValidationMessage(null);
+        after.setOptionValidationTime(null);
+        after.setSimulationValidationStatus(VALIDATION_NOT_VALIDATED);
+        after.setSimulationValidationMessage(null);
+        after.setSimulationValidationTime(null);
         formulaMapper.update(null, new LambdaUpdateWrapper<ProductFormula>()
             .eq(ProductFormula::getFormulaId, current.getFormulaId())
             .set(ProductFormula::getMaterialLineCount, materialCount)
             .set(ProductFormula::getConfiguredFlag, materialCount > 0)
             .set(ProductFormula::getLatestValidationStatus, VALIDATION_NOT_VALIDATED)
             .set(ProductFormula::getLatestValidationMessage, null)
-            .set(ProductFormula::getLatestValidationTime, null));
+            .set(ProductFormula::getLatestValidationTime, null)
+            .set(ProductFormula::getMaterialValidationStatus, VALIDATION_NOT_VALIDATED)
+            .set(ProductFormula::getMaterialValidationMessage, null)
+            .set(ProductFormula::getMaterialValidationTime, null)
+            .set(ProductFormula::getOptionValidationStatus, VALIDATION_NOT_VALIDATED)
+            .set(ProductFormula::getOptionValidationMessage, null)
+            .set(ProductFormula::getOptionValidationTime, null)
+            .set(ProductFormula::getSimulationValidationStatus, VALIDATION_NOT_VALIDATED)
+            .set(ProductFormula::getSimulationValidationMessage, null)
+            .set(ProductFormula::getSimulationValidationTime, null));
         recordFormulaChange(current.getFormulaId(), current.getFormulaCode(), actionType, current, afterPayload);
+    }
+
+    private void updateMaterialValidation(ProductFormula current, String messageKey) {
+        String status = messageKey == null ? VALIDATION_PASS : VALIDATION_FAIL;
+        var now = TimeUtils.utcNow();
+        ProductFormula after = copyStatusSnapshot(current);
+        after.setMaterialValidationStatus(status);
+        after.setMaterialValidationMessage(messageKey);
+        after.setMaterialValidationTime(now);
+        after.setLatestValidationStatus(overallStatus(status, current.getOptionValidationStatus(), current.getSimulationValidationStatus()));
+        after.setLatestValidationMessage(overallMessage(messageKey, current.getOptionValidationMessage(), current.getSimulationValidationMessage()));
+        after.setLatestValidationTime(now);
+        formulaMapper.update(null, new LambdaUpdateWrapper<ProductFormula>()
+            .eq(ProductFormula::getFormulaId, current.getFormulaId())
+            .set(ProductFormula::getMaterialValidationStatus, status)
+            .set(ProductFormula::getMaterialValidationMessage, messageKey)
+            .set(ProductFormula::getMaterialValidationTime, now)
+            .set(ProductFormula::getLatestValidationStatus, after.getLatestValidationStatus())
+            .set(ProductFormula::getLatestValidationMessage, after.getLatestValidationMessage())
+            .set(ProductFormula::getLatestValidationTime, now));
+        recordFormulaChange(current.getFormulaId(), current.getFormulaCode(),
+            VALIDATION_PASS.equals(status) ? "VALIDATE_MATERIAL_PASS" : "VALIDATE_MATERIAL_FAIL", current, after);
+    }
+
+    private void updateOptionValidation(ProductFormula current, String messageKey) {
+        String status = messageKey == null ? VALIDATION_PASS : VALIDATION_FAIL;
+        var now = TimeUtils.utcNow();
+        ProductFormula after = copyStatusSnapshot(current);
+        after.setOptionValidationStatus(status);
+        after.setOptionValidationMessage(messageKey);
+        after.setOptionValidationTime(now);
+        after.setLatestValidationStatus(overallStatus(current.getMaterialValidationStatus(), status, current.getSimulationValidationStatus()));
+        after.setLatestValidationMessage(overallMessage(current.getMaterialValidationMessage(), messageKey, current.getSimulationValidationMessage()));
+        after.setLatestValidationTime(now);
+        formulaMapper.update(null, new LambdaUpdateWrapper<ProductFormula>()
+            .eq(ProductFormula::getFormulaId, current.getFormulaId())
+            .set(ProductFormula::getOptionValidationStatus, status)
+            .set(ProductFormula::getOptionValidationMessage, messageKey)
+            .set(ProductFormula::getOptionValidationTime, now)
+            .set(ProductFormula::getLatestValidationStatus, after.getLatestValidationStatus())
+            .set(ProductFormula::getLatestValidationMessage, after.getLatestValidationMessage())
+            .set(ProductFormula::getLatestValidationTime, now));
+        recordFormulaChange(current.getFormulaId(), current.getFormulaCode(),
+            VALIDATION_PASS.equals(status) ? "VALIDATE_OPTION_PASS" : "VALIDATE_OPTION_FAIL", current, after);
+    }
+
+    private String overallStatus(String materialStatus, String optionStatus, String simulationStatus) {
+        if (VALIDATION_FAIL.equals(materialStatus) || VALIDATION_FAIL.equals(optionStatus) || VALIDATION_FAIL.equals(simulationStatus)) {
+            return VALIDATION_FAIL;
+        }
+        if (VALIDATION_PASS.equals(materialStatus) && VALIDATION_PASS.equals(optionStatus) && VALIDATION_PASS.equals(simulationStatus)) {
+            return VALIDATION_PASS;
+        }
+        return VALIDATION_NOT_VALIDATED;
+    }
+
+    private String overallMessage(String materialMessage, String optionMessage, String simulationMessage) {
+        if (StringUtils.isNotBlank(materialMessage)) {
+            return materialMessage;
+        }
+        if (StringUtils.isNotBlank(optionMessage)) {
+            return optionMessage;
+        }
+        return simulationMessage;
+    }
+
+    private List<Map<String, Object>> priceSnapshot(Long formulaId) {
+        return activeMaterials(formulaId).stream().map(material -> {
+            Map<String, Object> item = new LinkedHashMap<>();
+            item.put("formulaMaterialId", material.getFormulaMaterialId());
+            item.put("materialId", material.getMaterialId());
+            item.put("materialCode", material.getMaterialCode());
+            item.put("materialNameCn", material.getMaterialNameCn());
+            ProductMaterial master = material.getMaterialId() == null ? null : productMaterialMapper.selectById(material.getMaterialId());
+            item.put("unitPrice", master == null ? null : master.getUnitPrice());
+            item.put("salesPrice", master == null ? null : master.getSalesPrice());
+            item.put("snapshotTime", TimeUtils.utcNow());
+            return item;
+        }).toList();
     }
 
     private void validateUnit(String unitCode, String requiredKey, String notFoundKey) {
@@ -706,6 +862,15 @@ public class ProductFormulaSetupServiceImpl extends ProductServiceSupport implem
         target.setLatestValidationStatus(source.getLatestValidationStatus());
         target.setLatestValidationMessage(source.getLatestValidationMessage());
         target.setLatestValidationTime(source.getLatestValidationTime());
+        target.setMaterialValidationStatus(source.getMaterialValidationStatus());
+        target.setMaterialValidationMessage(source.getMaterialValidationMessage());
+        target.setMaterialValidationTime(source.getMaterialValidationTime());
+        target.setOptionValidationStatus(source.getOptionValidationStatus());
+        target.setOptionValidationMessage(source.getOptionValidationMessage());
+        target.setOptionValidationTime(source.getOptionValidationTime());
+        target.setSimulationValidationStatus(source.getSimulationValidationStatus());
+        target.setSimulationValidationMessage(source.getSimulationValidationMessage());
+        target.setSimulationValidationTime(source.getSimulationValidationTime());
         return target;
     }
 

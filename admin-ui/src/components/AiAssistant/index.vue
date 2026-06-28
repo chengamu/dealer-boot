@@ -1,5 +1,5 @@
 <template>
-  <div v-if="visible" class="ai-assistant" data-agent-label="基础信息 AI 助手" data-page-agent-ignore="true">
+  <div v-if="visible" class="ai-assistant" data-agent-label="智能助手" data-page-agent-ignore="true">
     <el-button
       class="ai-assistant__fab"
       circle
@@ -13,35 +13,29 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { ElMessage } from 'element-plus'
-import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { openPageAgentPanel } from '@/agent/pageAgent'
-import useUserStore from '@/stores/user'
+import { getAiBootstrap } from '@/api/ai'
+import { checkPermi } from '@/utils/permission'
 import robotImage from '@/assets/ai-assistant/curtain-robot.png'
 
-const route = useRoute()
 const { t } = useI18n()
-const userStore = useUserStore()
 const loading = ref(false)
+const visible = ref(false)
 
-const enabledRoutes = [
-  { path: '/product-master/categories', permission: 'product:base:list' },
-  { path: '/product-master/base-attributes', permission: 'product:base:list' },
-  { path: '/product-master/material-attributes', permission: 'product:material-attribute:list' },
-  { path: '/product-master/materials', permission: 'product:base:list' },
-  { path: '/product-master/units', permission: 'product:unit:list' },
-  { path: '/product-master/product-dicts', permission: 'product:dict:list' },
-  { path: '/product-master/material-types', permission: 'product:material-type:list' },
-  { path: '/product-master/media-assets', permission: 'product:asset:list' },
-  { path: '/product-master/media-bindings', permission: 'product:asset:list' }
-]
-
-const visible = computed(() => {
-  const matched = enabledRoutes.find((item) => route.path.startsWith(item.path))
-  if (!matched) return false
-  return userStore.permissions.some((permission) => permission === '*:*:*' || permission === matched.permission)
+onMounted(async () => {
+  if (!checkPermi(['ai:assistant:use'])) {
+    visible.value = false
+    return
+  }
+  try {
+    const bootstrap = await getAiBootstrap()
+    visible.value = bootstrap.enabled
+  } catch {
+    visible.value = false
+  }
 })
 
 async function openOfficialAgent() {

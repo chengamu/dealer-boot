@@ -2,7 +2,7 @@
   <AdminDrawer
     :model-value="modelValue"
     :title="t('productCenter.formulaSetup.usageSetting')"
-    size="1280px"
+    size="1640px"
     append-to-body
     variant="wide"
     class="formula-usage-drawer"
@@ -26,12 +26,30 @@
           <span>{{ t('productCenter.formulaSetup.materialName') }}</span>
           <strong>{{ usageRow.materialNameCn || '-' }}</strong>
         </div>
+        <div class="usage-editor__spec">
+          <span>{{ t('productCenter.formulaSetup.specModel') }}</span>
+          <strong>{{ usageRow.specModelText || '-' }}</strong>
+        </div>
         <div>
           <span>{{ t('productCenter.formulaSetup.unit') }}</span>
-          <strong>{{ usageRow.unitCode || '-' }}</strong>
+          <strong>{{ unitDisplay(usageRow.unitCode) }}</strong>
         </div>
       </div>
 
+      <div class="usage-mode-card">
+        <div>
+          <span class="usage-mode-card__label">{{ t('productCenter.formulaSetup.usageMode') }}</span>
+          <p>{{ t('productCenter.formulaSetup.usageModeHint') }}</p>
+        </div>
+        <el-radio-group class="usage-mode-card__switch" :model-value="usageRow.usageMode || 'FIXED'" @change="handleUsageModeChange">
+          <el-radio label="FIXED" border>{{ t('productCenter.formulaSetup.usageFixedValue') }}</el-radio>
+          <el-radio label="FORMULA" border>{{ t('productCenter.formulaSetup.usageFormulaRules') }}</el-radio>
+        </el-radio-group>
+      </div>
+
+      <FormulaUsageFixedPanel v-if="usageRow.usageMode !== 'FORMULA'" :usage-row="usageRow" @change="syncFixedRuleFromRow" />
+
+      <template v-else>
       <div class="usage-editor__toolbar">
         <div>
           <h3>{{ t('productCenter.formulaSetup.conditionalUsageRules') }}</h3>
@@ -55,70 +73,63 @@
         @current-change="selectedRule = $event"
       >
         <el-table-column type="index" :label="t('common.index')" width="54" align="center" />
-        <el-table-column :label="t('productCenter.formulaSetup.conditionType')" width="130">
+        <el-table-column :label="t('productCenter.formulaSetup.useCondition')" min-width="300">
           <template #default="{ row }">
-            <el-select v-model="row.conditionType" @change="handleConditionTypeChange(row)">
-              <el-option value="DEFAULT" :label="t('productCenter.formulaSetup.defaultUsageRule')" />
-              <el-option value="OPTION_VALUE" :label="t('productCenter.formulaSetup.conditionOptionValue')" />
-              <el-option value="EXPRESSION" :label="t('productCenter.formulaSetup.conditionExpression')" />
-            </el-select>
+            <div class="condition-cell">
+              <el-select v-model="row.conditionType" @change="handleConditionTypeChange(row)">
+                <el-option value="DEFAULT" :label="t('productCenter.formulaSetup.defaultUsageRule')" />
+                <el-option value="OPTION_VALUE" :label="t('productCenter.formulaSetup.conditionOptionValue')" />
+                <el-option value="EXPRESSION" :label="t('productCenter.formulaSetup.conditionExpression')" />
+              </el-select>
+              <div v-if="row.conditionType === 'OPTION_VALUE'" class="condition-cell__selects">
+                <el-select v-model="row.conditionOptionCode" clearable filterable @change="handleConditionOptionChange(row)">
+                  <el-option v-for="option in options" :key="option.optionCode" :label="optionLabel(option)" :value="option.optionCode" />
+                </el-select>
+                <el-select v-model="row.conditionValueCode" clearable filterable @change="syncConditionValueName(row)">
+                  <el-option v-for="value in optionValuesOf(row.conditionOptionCode)" :key="value.valueCode" :label="valueLabel(value)" :value="value.valueCode" />
+                </el-select>
+              </div>
+              <div v-else-if="row.conditionType === 'EXPRESSION'" class="formula-cell">
+                <el-input
+                  v-model="row.conditionText"
+                  clearable
+                  :placeholder="t('productCenter.formulaSetup.conditionExpressionPlaceholder')"
+                  @blur="syncExpressionCondition(row)"
+                />
+                <el-button plain @click="openExpressionEditor(row, 'condition')">{{ t('productCenter.formulaSetup.expressionEditor') }}</el-button>
+              </div>
+              <el-tag v-else effect="plain" type="info">{{ t('productCenter.formulaSetup.defaultUsageRule') }}</el-tag>
+            </div>
           </template>
         </el-table-column>
-        <el-table-column :label="t('productCenter.formulaSetup.conditionOption')" width="150">
+        <el-table-column :label="t('productCenter.formulaSetup.usageFormula')" min-width="320">
           <template #default="{ row }">
-            <el-select v-model="row.conditionOptionCode" clearable filterable :disabled="row.conditionType !== 'OPTION_VALUE'" @change="handleConditionOptionChange(row)">
-              <el-option v-for="option in options" :key="option.optionCode" :label="optionLabel(option)" :value="option.optionCode" />
-            </el-select>
+            <div class="formula-cell">
+              <el-input
+                v-model="row.usageFormulaText"
+                clearable
+                :placeholder="t('productCenter.formulaSetup.usageFormulaPlaceholder')"
+                @blur="syncFormula(row)"
+              />
+              <el-button plain @click="openExpressionEditor(row, 'usage')">{{ t('productCenter.formulaSetup.expressionEditor') }}</el-button>
+            </div>
           </template>
         </el-table-column>
-        <el-table-column :label="t('productCenter.formulaSetup.conditionValue')" width="180">
-          <template #default="{ row }">
-            <el-select v-model="row.conditionValueCode" clearable filterable :disabled="row.conditionType !== 'OPTION_VALUE'" @change="syncConditionValueName(row)">
-              <el-option v-for="value in optionValuesOf(row.conditionOptionCode)" :key="value.valueCode" :label="valueLabel(value)" :value="value.valueCode" />
-            </el-select>
-          </template>
-        </el-table-column>
-        <el-table-column :label="t('productCenter.formulaSetup.conditionExpression')" min-width="210">
-          <template #default="{ row }">
-            <el-input
-              v-model="row.conditionText"
-              :disabled="row.conditionType !== 'EXPRESSION'"
-              clearable
-              :placeholder="t('productCenter.formulaSetup.conditionExpressionPlaceholder')"
-              @blur="syncExpressionCondition(row)"
-            />
-          </template>
-        </el-table-column>
-        <el-table-column :label="t('productCenter.formulaSetup.usageFormula')" min-width="230">
-          <template #default="{ row }">
-            <el-input
-              v-model="row.usageFormulaText"
-              clearable
-              :placeholder="t('productCenter.formulaSetup.usageFormulaPlaceholder')"
-              @blur="syncFormula(row)"
-            />
-          </template>
-        </el-table-column>
-        <el-table-column :label="t('productCenter.formulaSetup.sampleResult')" width="110" align="center">
+        <el-table-column :label="t('productCenter.formulaSetup.sampleResult')" width="98" align="center">
           <template #default="{ row }">
             <el-tag :type="formulaResult(row).valid ? 'success' : 'warning'" effect="plain">
               {{ formulaResultText(row) }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column :label="t('productCenter.formulaSetup.lossRate')" width="112">
+        <el-table-column :label="t('productCenter.formulaSetup.lossRate')" width="96">
           <template #default="{ row }">
             <el-input-number v-model="row.lossRate" :min="0" :precision="2" controls-position="right" />
           </template>
         </el-table-column>
-        <el-table-column :label="t('productCenter.formulaSetup.defaultUsageRule')" width="96" align="center">
+        <el-table-column :label="t('productCenter.formulaSetup.defaultUsageRule')" width="86" align="center">
           <template #default="{ row }">
             <el-switch v-model="row.defaultRuleFlag" @change="handleDefaultRuleChange(row)" />
-          </template>
-        </el-table-column>
-        <el-table-column :label="t('productCenter.common.status')" width="96" align="center">
-          <template #default="{ row }">
-            <el-switch v-model="row.status" :active-value="PRODUCT_STATUS_ENABLED" :inactive-value="PRODUCT_STATUS_DISABLED" />
           </template>
         </el-table-column>
       </el-table>
@@ -137,7 +148,15 @@
           <code>订单宽 * 12 - 2.0</code>
         </div>
       </div>
+      </template>
     </div>
+
+    <FormulaExpressionEditorDialog
+      v-model="expressionEditorOpen"
+      v-model:text="expressionEditorText"
+      :target="expressionEditorTarget"
+      @confirm="confirmExpressionEditor"
+    />
     <template #footer>
       <el-button @click="closeDrawerWithGuard">{{ t('common.cancel') }}</el-button>
       <el-button type="primary" @click="confirmAndClose">{{ t('common.confirm') }}</el-button>
@@ -151,8 +170,10 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { CopyDocument, Delete, MagicStick, Plus } from '@element-plus/icons-vue'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
-import { PRODUCT_STATUS_DISABLED, PRODUCT_STATUS_ENABLED } from '@/constants/productStatus'
+import { PRODUCT_STATUS_ENABLED } from '@/constants/productStatus'
 import { useUnsavedChangesGuard } from '@/composables/useUnsavedChangesGuard'
+import FormulaExpressionEditorDialog from './FormulaExpressionEditorDialog.vue'
+import FormulaUsageFixedPanel from './FormulaUsageFixedPanel.vue'
 import {
   conditionExpressionForOption,
   conditionKeyForOption,
@@ -184,9 +205,24 @@ const emit = defineEmits<{
 }>()
 
 const localeStore = useLocaleStore()
-const t = (key: string) => getMessage(key, localeStore.language)
+const localMessages: Record<string, string> = {
+  'productCenter.formulaSetup.usageFixedValue': '固定值',
+  'productCenter.formulaSetup.usageFormulaRules': '公式规则',
+  'productCenter.formulaSetup.conditionType': '使用条件',
+  'productCenter.formulaSetup.conditionExpression': '表达式条件',
+  'productCenter.formulaSetup.usageFixedShort': '固定',
+  'productCenter.formulaSetup.formulaUsageRuleCount': '公式 {count} 条'
+}
+const t = (key: string) => {
+  const message = getMessage(key, localeStore.language)
+  return message === key ? (localMessages[key] || key) : message
+}
 const selectedRule = ref<ProductFormulaUsageRuleVO | null>(null)
 const variableChips = formulaVariables
+const expressionEditorOpen = ref(false)
+const expressionEditorText = ref('')
+const expressionEditorRow = ref<ProductFormulaUsageRuleVO | null>(null)
+const expressionEditorTarget = ref<'usage' | 'condition'>('usage')
 const usageSnapshot = ref<{
   materialCode?: string
   usageRow: ProductFormulaMaterialVO | null
@@ -305,6 +341,16 @@ function ensureInitialRule() {
   }
 }
 
+function handleUsageModeChange(value: string | number | boolean | undefined) {
+  if (!props.usageRow) return
+  if (value === 'FORMULA') {
+    ensureFormulaMode()
+    ensureDefaultRule()
+  } else {
+    ensureFixedRule()
+  }
+}
+
 function ensureFixedRule() {
   if (!props.usageRow?.materialCode) return
   removeRulesForCurrent()
@@ -332,6 +378,24 @@ function ensureFixedRule() {
     status: PRODUCT_STATUS_ENABLED,
     sortOrder: 10
   })
+}
+
+function syncFixedRuleFromRow() {
+  if (!props.usageRow) return
+  props.usageRow.usageMode = 'FIXED'
+  const rule = currentRules.value.find((item) => item.usageMode === 'FIXED') || currentRules.value[0]
+  if (!rule) {
+    ensureFixedRule()
+    return
+  }
+  const fixedUsageQty = props.usageRow.fixedUsageQty ?? 0
+  rule.usageMode = 'FIXED'
+  rule.fixedUsageQty = fixedUsageQty
+  rule.usageFormula = String(fixedUsageQty)
+  rule.usageFormulaText = formatUsageNumber(fixedUsageQty)
+  rule.lossRate = props.usageRow.lossRate ?? 0
+  rule.defaultRuleFlag = true
+  handleDefaultRuleChange(rule)
 }
 
 function ensureFormulaMode() {
@@ -509,6 +573,28 @@ function insertVariable(label: string) {
   selectedRule.value.usageFormulaText = `${selectedRule.value.usageFormulaText || ''}${label}`
 }
 
+function openExpressionEditor(row: ProductFormulaUsageRuleVO, target: 'usage' | 'condition') {
+  expressionEditorRow.value = row
+  expressionEditorTarget.value = target
+  expressionEditorText.value = target === 'usage'
+    ? ruleFormulaText(row) || ''
+    : row.conditionText || row.conditionExpression || ''
+  expressionEditorOpen.value = true
+}
+
+function confirmExpressionEditor() {
+  const row = expressionEditorRow.value
+  if (!row) return
+  if (expressionEditorTarget.value === 'usage') {
+    row.usageFormulaText = expressionEditorText.value
+    syncFormula(row)
+  } else {
+    row.conditionText = expressionEditorText.value
+    syncExpressionCondition(row)
+  }
+  expressionEditorOpen.value = false
+}
+
 function optionValuesOf(optionCode?: string) {
   return props.optionValues.filter((value) => value.optionCode === optionCode)
 }
@@ -528,7 +614,12 @@ function optionLabel(option: ProductFormulaOptionVO) {
 }
 
 function valueLabel(value: ProductFormulaOptionValueVO) {
-  return `${value.valueCode || ''} ${value.valueNameCn || ''}`.trim()
+  return value.valueNameCn || value.valueCode || '-'
+}
+
+function unitDisplay(unitCode?: string) {
+  if (!unitCode) return '-'
+  return props.unitOptions.find((unit) => unit.value === unitCode)?.label || unitCode
 }
 
 function removeRulesForCurrent() {
@@ -550,9 +641,9 @@ function removeRulesForCurrent() {
 
 .usage-editor__summary {
   display: grid;
-  grid-template-columns: 150px 170px minmax(240px, 1fr) 100px;
+  grid-template-columns: 120px 120px minmax(300px, 1.2fr) minmax(280px, 1fr) 90px;
   gap: 10px;
-  padding: 12px;
+  padding: 10px 12px;
   background: #f7faff;
   border: 1px solid #e5ecf6;
   border-radius: 8px;
@@ -571,11 +662,53 @@ function removeRulesForCurrent() {
   font-weight: 700;
 }
 
-.usage-editor__material strong {
+.usage-editor__material strong,
+.usage-editor__spec strong {
   display: -webkit-box;
   overflow: hidden;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
+}
+
+.usage-mode-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 12px;
+  background: #fff;
+  border: 1px solid #e5ecf6;
+  border-radius: 8px;
+}
+
+.usage-mode-card__label {
+  color: #111827;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.usage-mode-card p {
+  margin: 4px 0 0;
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.usage-mode-card__switch {
+  display: flex;
+  gap: 8px;
+}
+
+.usage-mode-card__switch :deep(.el-radio) {
+  height: 34px;
+  margin-right: 0;
+  padding: 0 14px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.usage-mode-card__switch :deep(.el-radio.is-checked) {
+  border-color: #409eff;
+  background: #eff6ff;
 }
 
 .usage-editor__toolbar {
@@ -605,6 +738,11 @@ function removeRulesForCurrent() {
   gap: 8px;
 }
 
+.usage-editor__actions :deep(.el-button) {
+  height: 34px;
+  border-radius: 6px;
+}
+
 .usage-rule-table {
   border-radius: 8px;
   overflow: hidden;
@@ -619,6 +757,32 @@ function removeRulesForCurrent() {
 .usage-rule-table :deep(.el-input-number),
 .usage-rule-table :deep(.el-select) {
   width: 100%;
+}
+
+.condition-cell,
+.formula-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.condition-cell {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.condition-cell__selects {
+  display: grid;
+  grid-template-columns: minmax(110px, 1fr) minmax(130px, 1fr);
+  gap: 8px;
+}
+
+.formula-cell :deep(.el-input) {
+  flex: 1;
+}
+
+.formula-cell :deep(.el-button) {
+  flex: 0 0 auto;
 }
 
 .usage-editor__helper {
@@ -655,4 +819,5 @@ function removeRulesForCurrent() {
   background: #eef5ff;
   border-radius: 6px;
 }
+
 </style>

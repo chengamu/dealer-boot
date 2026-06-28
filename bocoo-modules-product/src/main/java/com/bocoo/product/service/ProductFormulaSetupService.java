@@ -13,9 +13,17 @@ public interface ProductFormulaSetupService {
 
     Boolean validateSetup(Long formulaId);
 
+    Boolean validateMaterials(Long formulaId);
+
+    Boolean validateOptions(Long formulaId);
+
     int materialCount(Long formulaId);
 
     String validationMessageKey(Long formulaId);
+
+    String materialValidationMessageKey(Long formulaId);
+
+    String optionValidationMessageKey(Long formulaId);
 
     Map<String, Object> snapshot(Long formulaId);
 }

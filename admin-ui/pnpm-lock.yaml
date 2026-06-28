@@ -10,11 +10,11 @@ overrides:
   micromatch: 4.0.8
   nth-check: 2.0.1
   postcss: 8.5.15
-  '@page-agent/core': file:vendor/page-agent/page-agent-core-1.10.0-amu.2.tgz
-  '@page-agent/llms': file:vendor/page-agent/page-agent-llms-1.10.0-amu.2.tgz
-  '@page-agent/page-controller': file:vendor/page-agent/page-agent-page-controller-1.10.0-amu.2.tgz
-  '@page-agent/ui': file:vendor/page-agent/page-agent-ui-1.10.0-amu.2.tgz
-  page-agent: file:vendor/page-agent/page-agent-1.10.0-amu.2.tgz
+  '@page-agent/core': file:vendor/page-agent/page-agent-core-1.10.0-amu.6.tgz
+  '@page-agent/llms': file:vendor/page-agent/page-agent-llms-1.10.0-amu.6.tgz
+  '@page-agent/page-controller': file:vendor/page-agent/page-agent-page-controller-1.10.0-amu.6.tgz
+  '@page-agent/ui': file:vendor/page-agent/page-agent-ui-1.10.0-amu.6.tgz
+  page-agent: file:vendor/page-agent/page-agent-1.10.0-amu.6.tgz
 
 importers:
 
@@ -24,17 +24,17 @@ importers:
         specifier: ^2.3.1
         version: 2.3.2(vue@3.5.34(typescript@5.7.2))
       '@page-agent/core':
-        specifier: file:vendor/page-agent/page-agent-core-1.10.0-amu.2.tgz
-        version: file:vendor/page-agent/page-agent-core-1.10.0-amu.2.tgz(zod@4.4.3)
+        specifier: file:vendor/page-agent/page-agent-core-1.10.0-amu.6.tgz
+        version: file:vendor/page-agent/page-agent-core-1.10.0-amu.6.tgz(zod@4.4.3)
       '@page-agent/llms':
-        specifier: file:vendor/page-agent/page-agent-llms-1.10.0-amu.2.tgz
-        version: file:vendor/page-agent/page-agent-llms-1.10.0-amu.2.tgz(zod@4.4.3)
+        specifier: file:vendor/page-agent/page-agent-llms-1.10.0-amu.6.tgz
+        version: file:vendor/page-agent/page-agent-llms-1.10.0-amu.6.tgz(zod@4.4.3)
       '@page-agent/page-controller':
-        specifier: file:vendor/page-agent/page-agent-page-controller-1.10.0-amu.2.tgz
-        version: file:vendor/page-agent/page-agent-page-controller-1.10.0-amu.2.tgz
+        specifier: file:vendor/page-agent/page-agent-page-controller-1.10.0-amu.6.tgz
+        version: file:vendor/page-agent/page-agent-page-controller-1.10.0-amu.6.tgz
       '@page-agent/ui':
-        specifier: file:vendor/page-agent/page-agent-ui-1.10.0-amu.2.tgz
-        version: file:vendor/page-agent/page-agent-ui-1.10.0-amu.2.tgz
+        specifier: file:vendor/page-agent/page-agent-ui-1.10.0-amu.6.tgz
+        version: file:vendor/page-agent/page-agent-ui-1.10.0-amu.6.tgz
       '@vitejs/plugin-vue':
         specifier: ^5.2.1
         version: 5.2.1(vite@6.4.2(@types/node@22.19.19)(sass@1.99.0))(vue@3.5.34(typescript@5.7.2))
@@ -75,8 +75,8 @@ importers:
         specifier: ^0.2.0
         version: 0.2.0
       page-agent:
-        specifier: file:vendor/page-agent/page-agent-1.10.0-amu.2.tgz
-        version: file:vendor/page-agent/page-agent-1.10.0-amu.2.tgz(zod@4.4.3)
+        specifier: file:vendor/page-agent/page-agent-1.10.0-amu.6.tgz
+        version: file:vendor/page-agent/page-agent-1.10.0-amu.6.tgz(zod@4.4.3)
       pinia:
         specifier: ^2.3.0
         version: 2.3.1(typescript@5.7.2)(vue@3.5.34(typescript@5.7.2))
@@ -377,25 +377,25 @@ packages:
     resolution: {integrity: sha512-oGB+UxlgWcgQkgwo8GcEGwemoTFt3FIO9ababBmaGwXIoBKZ+GTy0pP185beGg7Llih/NSHSV2XAs1lnznocSg==}
     engines: {node: '>= 8'}
 
-  '@page-agent/core@file:vendor/page-agent/page-agent-core-1.10.0-amu.2.tgz':
-    resolution: {integrity: sha512-4wa1D0DcqVqhQrvWj5bcKwd0BmEP6PK3JhL7tRs1R5zi9oXZPUiJEEgsscoMF0DlqT1YAimKIBr2hJt1sZyqdw==, tarball: file:vendor/page-agent/page-agent-core-1.10.0-amu.2.tgz}
-    version: 1.10.0-amu.2
+  '@page-agent/core@file:vendor/page-agent/page-agent-core-1.10.0-amu.6.tgz':
+    resolution: {integrity: sha512-p9ZwW6lNZKbR6DqksRxmKxci+zc7ooOJRx3z/d6U7Bxl1OK9or8dsWM4PhvD2wneBdM/76sdPJTafYYdGbVFbQ==, tarball: file:vendor/page-agent/page-agent-core-1.10.0-amu.6.tgz}
+    version: 1.10.0-amu.6
     peerDependencies:
       zod: ^3.25.0 || ^4.0.0
 
-  '@page-agent/llms@file:vendor/page-agent/page-agent-llms-1.10.0-amu.2.tgz':
-    resolution: {integrity: sha512-Bd88MPox71QjoiCcHUdtHLzVkfo2tukQ0tE7pbJWzX8YT+ywLVFgxd8A3hJtI/f5xftqGsojwLlcy8RsaGwr/g==, tarball: file:vendor/page-agent/page-agent-llms-1.10.0-amu.2.tgz}
-    version: 1.10.0-amu.2
+  '@page-agent/llms@file:vendor/page-agent/page-agent-llms-1.10.0-amu.6.tgz':
+    resolution: {integrity: sha512-1YkvRtWiFL/9fBaaGcDyRf6OkpxgSzIszPh7nzVAMazP+HPGZElR7Cs9e2RKthGgbz37aqZyyO3AzmI5z7THDA==, tarball: file:vendor/page-agent/page-agent-llms-1.10.0-amu.6.tgz}
+    version: 1.10.0-amu.6
     peerDependencies:
       zod: ^3.25.0 || ^4.0.0
 
-  '@page-agent/page-controller@file:vendor/page-agent/page-agent-page-controller-1.10.0-amu.2.tgz':
-    resolution: {integrity: sha512-4Miu9lpWYOjqAS1PrW9QQ9BYmzzy/po8iOO5YgJz65R1j5f1n7TruvL61Sq8SYElyhwCfjG0YmhVqMYmMpEGCQ==, tarball: file:vendor/page-agent/page-agent-page-controller-1.10.0-amu.2.tgz}
-    version: 1.10.0-amu.2
+  '@page-agent/page-controller@file:vendor/page-agent/page-agent-page-controller-1.10.0-amu.6.tgz':
+    resolution: {integrity: sha512-rMzwN5cQVmoKAShBcGrMph/XyjR0itWI4i8A9hJSagqmeaIqZ0TG8M5blAjfT8K/d3XIQWLTj9K7buEf2kIvxQ==, tarball: file:vendor/page-agent/page-agent-page-controller-1.10.0-amu.6.tgz}
+    version: 1.10.0-amu.6
 
-  '@page-agent/ui@file:vendor/page-agent/page-agent-ui-1.10.0-amu.2.tgz':
-    resolution: {integrity: sha512-Vziug2FGhqKAuqbvt1iIbz2HTPTKd75/qt8GO38DmPWDfgBu5Gs7m4HFwJDzSCdyzjB9K+c6Xi+ap3jaX9PCuw==, tarball: file:vendor/page-agent/page-agent-ui-1.10.0-amu.2.tgz}
-    version: 1.10.0-amu.2
+  '@page-agent/ui@file:vendor/page-agent/page-agent-ui-1.10.0-amu.6.tgz':
+    resolution: {integrity: sha512-HzE3DiXtBImF3Selwp31W9QeX8oiHb2MdqgBI/2496x6ciiLddahXv1pxPSIdlaRsjPaU92ffhbCOeFmrJfQbw==, tarball: file:vendor/page-agent/page-agent-ui-1.10.0-amu.6.tgz}
+    version: 1.10.0-amu.6
 
   '@parcel/watcher-android-arm64@2.5.6':
     resolution: {integrity: sha512-YQxSS34tPF/6ZG7r/Ih9xy+kP/WwediEUsqmtf0cuCV5TPPKw/PQHRhueUo6JdeFJaqV3pyjm0GdYjZotbRt/A==}
@@ -1461,9 +1461,9 @@ packages:
     resolution: {integrity: sha512-qFOyK5PjiWZd+QQIh+1jhdb9LpxTF0qs7Pm8o5QHYZ0M3vKqSqzsZaEB6oWlxZ+q2sJBMI/Ktgd2N5ZwQoRHfg==}
     engines: {node: '>= 0.4'}
 
-  page-agent@file:vendor/page-agent/page-agent-1.10.0-amu.2.tgz:
-    resolution: {integrity: sha512-zd310OP2ROZ+xppgg/uLdjSG7ks+m2A0C7VARx1m5Zbubiq7tx7Jq34s0ejV3YNeU8MlRCxTgb2SJhFhZxIBSw==, tarball: file:vendor/page-agent/page-agent-1.10.0-amu.2.tgz}
-    version: 1.10.0-amu.2
+  page-agent@file:vendor/page-agent/page-agent-1.10.0-amu.6.tgz:
+    resolution: {integrity: sha512-Ohz+GyRuPeCvP79p092p8gbUIxuPJJLnEsqdfbjT1M5fkxSWHBfACn+eGJGE0a1GoK2u130ttbQDQv4HAaaSyw==, tarball: file:vendor/page-agent/page-agent-1.10.0-amu.6.tgz}
+    version: 1.10.0-amu.6
     peerDependencies:
       zod: ^3.25.0 || ^4.0.0
 
@@ -2079,23 +2079,23 @@ snapshots:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.20.1
 
-  '@page-agent/core@file:vendor/page-agent/page-agent-core-1.10.0-amu.2.tgz(zod@4.4.3)':
+  '@page-agent/core@file:vendor/page-agent/page-agent-core-1.10.0-amu.6.tgz(zod@4.4.3)':
     dependencies:
-      '@page-agent/llms': file:vendor/page-agent/page-agent-llms-1.10.0-amu.2.tgz(zod@4.4.3)
-      '@page-agent/page-controller': file:vendor/page-agent/page-agent-page-controller-1.10.0-amu.2.tgz
+      '@page-agent/llms': file:vendor/page-agent/page-agent-llms-1.10.0-amu.6.tgz(zod@4.4.3)
+      '@page-agent/page-controller': file:vendor/page-agent/page-agent-page-controller-1.10.0-amu.6.tgz
       chalk: 5.6.2
       zod: 4.4.3
 
-  '@page-agent/llms@file:vendor/page-agent/page-agent-llms-1.10.0-amu.2.tgz(zod@4.4.3)':
+  '@page-agent/llms@file:vendor/page-agent/page-agent-llms-1.10.0-amu.6.tgz(zod@4.4.3)':
     dependencies:
       chalk: 5.6.2
       zod: 4.4.3
 
-  '@page-agent/page-controller@file:vendor/page-agent/page-agent-page-controller-1.10.0-amu.2.tgz':
+  '@page-agent/page-controller@file:vendor/page-agent/page-agent-page-controller-1.10.0-amu.6.tgz':
     dependencies:
       ai-motion: 0.4.8
 
-  '@page-agent/ui@file:vendor/page-agent/page-agent-ui-1.10.0-amu.2.tgz': {}
+  '@page-agent/ui@file:vendor/page-agent/page-agent-ui-1.10.0-amu.6.tgz': {}
 
   '@parcel/watcher-android-arm64@2.5.6':
     optional: true
@@ -3189,12 +3189,12 @@ snapshots:
       object-keys: 1.1.1
       safe-push-apply: 1.0.0
 
-  page-agent@file:vendor/page-agent/page-agent-1.10.0-amu.2.tgz(zod@4.4.3):
+  page-agent@file:vendor/page-agent/page-agent-1.10.0-amu.6.tgz(zod@4.4.3):
     dependencies:
-      '@page-agent/core': file:vendor/page-agent/page-agent-core-1.10.0-amu.2.tgz(zod@4.4.3)
-      '@page-agent/llms': file:vendor/page-agent/page-agent-llms-1.10.0-amu.2.tgz(zod@4.4.3)
-      '@page-agent/page-controller': file:vendor/page-agent/page-agent-page-controller-1.10.0-amu.2.tgz
-      '@page-agent/ui': file:vendor/page-agent/page-agent-ui-1.10.0-amu.2.tgz
+      '@page-agent/core': file:vendor/page-agent/page-agent-core-1.10.0-amu.6.tgz(zod@4.4.3)
+      '@page-agent/llms': file:vendor/page-agent/page-agent-llms-1.10.0-amu.6.tgz(zod@4.4.3)
+      '@page-agent/page-controller': file:vendor/page-agent/page-agent-page-controller-1.10.0-amu.6.tgz
+      '@page-agent/ui': file:vendor/page-agent/page-agent-ui-1.10.0-amu.6.tgz
       chalk: 5.6.2
       zod: 4.4.3
 

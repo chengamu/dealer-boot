@@ -92,7 +92,11 @@ export function validateConditionExpression(input?: string): ExpressionValidatio
   try {
     const node = jsep(expression) as ExpressionNode
     validateConditionNode(node)
-    return { valid: true, expression, sampleValue: evaluate(node) }
+    const sampleValue = evaluate(node)
+    if (typeof sampleValue !== 'boolean') {
+      return { valid: false, expression, message: 'conditionMustBeBoolean' }
+    }
+    return { valid: true, expression, sampleValue }
   } catch (error) {
     return { valid: false, expression, message: error instanceof Error ? error.message : 'invalid' }
   }

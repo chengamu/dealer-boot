@@ -42,6 +42,15 @@ public class ProductFormulaVo implements Serializable {
     private String latestValidationStatus;
     private String latestValidationMessage;
     private LocalDateTime latestValidationTime;
+    private String materialValidationStatus;
+    private String materialValidationMessage;
+    private LocalDateTime materialValidationTime;
+    private String optionValidationStatus;
+    private String optionValidationMessage;
+    private LocalDateTime optionValidationTime;
+    private String simulationValidationStatus;
+    private String simulationValidationMessage;
+    private LocalDateTime simulationValidationTime;
     private String status;
     private String auditBy;
     private LocalDateTime auditTime;

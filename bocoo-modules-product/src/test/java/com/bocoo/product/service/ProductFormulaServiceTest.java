@@ -196,28 +196,18 @@ class ProductFormulaServiceTest {
     }
 
     @Test
-    void approvePendingReviewCreatesVersionV1AndWritesAuditSnapshot() {
+    void approvePendingReviewPromotesReviewSnapshotAndWritesAuditSnapshot() {
         ProductFormula current = configuredFormula("PENDING_REVIEW", "PASS");
+        ProductFormulaVersion review = reviewVersion(9001L, 1, "V1");
         when(formulaMapper.selectById(3001L)).thenReturn(current);
-        when(setupService.materialCount(3001L)).thenReturn(1);
-        when(setupService.validationMessageKey(3001L)).thenReturn(null);
-        when(setupService.snapshot(3001L)).thenReturn(Map.of("materials", List.of("MAT001")));
-        when(versionMapper.selectOne(any())).thenReturn(null);
-        doAnswer(invocation -> {
-            ProductFormulaVersion version = invocation.getArgument(0);
-            version.setVersionId(9001L);
-            return 1;
-        }).when(versionMapper).insert(any());
+        when(versionMapper.selectOne(any())).thenReturn(review);
+        when(versionMapper.update(any(), any())).thenReturn(1);
         when(formulaMapper.update(any(), any())).thenReturn(1);
 
         assertThat(formulaService.approve(3001L)).isTrue();
 
-        verify(versionMapper).insert(argThat(version ->
-            Integer.valueOf(1).equals(version.getVersionNo())
-                && "V1".equals(version.getVersionLabel())
-                && "EFFECTIVE".equals(version.getVersionStatus())
-                && version.getSetupSnapshotJson() != null
-        ));
+        verify(versionMapper, never()).insert(any());
+        verify(versionMapper).update(isNull(), any());
         verify(changeLogService).record(eq("FORMULA"), eq("FORMULA"), eq(3001L), eq("FORMULA_25_ZEBRA"), eq("APPROVE_VERSION"), eq(current),
             argThat(after -> after instanceof ProductFormula formula
                 && "EFFECTIVE".equals(formula.getStatus())
@@ -228,28 +218,23 @@ class ProductFormulaServiceTest {
     }
 
     @Test
-    void approveSecondVersionGeneratesV2() {
+    void approveSecondReviewSnapshotKeepsSubmittedVersionNo() {
         ProductFormula current = configuredFormula("PENDING_REVIEW", "PASS");
-        ProductFormulaVersion latest = new ProductFormulaVersion();
-        latest.setVersionNo(1);
+        ProductFormulaVersion review = reviewVersion(9002L, 2, "V2");
         when(formulaMapper.selectById(3001L)).thenReturn(current);
-        when(setupService.materialCount(3001L)).thenReturn(1);
-        when(setupService.validationMessageKey(3001L)).thenReturn(null);
-        when(setupService.snapshot(3001L)).thenReturn(Map.of("materials", List.of("MAT001")));
-        when(versionMapper.selectOne(any())).thenReturn(latest);
-        doAnswer(invocation -> {
-            ProductFormulaVersion version = invocation.getArgument(0);
-            version.setVersionId(9002L);
-            return 1;
-        }).when(versionMapper).insert(any());
+        when(versionMapper.selectOne(any())).thenReturn(review);
+        when(versionMapper.update(any(), any())).thenReturn(1);
         when(formulaMapper.update(any(), any())).thenReturn(1);
 
         assertThat(formulaService.approve(3001L)).isTrue();
 
-        verify(versionMapper).insert(argThat(version ->
-            Integer.valueOf(2).equals(version.getVersionNo())
-                && "V2".equals(version.getVersionLabel())
-        ));
+        verify(versionMapper, never()).insert(any());
+        verify(changeLogService).record(eq("FORMULA"), eq("FORMULA"), eq(3001L), eq("FORMULA_25_ZEBRA"), eq("APPROVE_VERSION"), eq(current),
+            argThat(after -> after instanceof ProductFormula formula
+                && Long.valueOf(9002L).equals(formula.getCurrentVersionId())
+                && Integer.valueOf(2).equals(formula.getCurrentVersionNo())
+                && "V2".equals(formula.getCurrentVersionLabel())),
+            isNull());
     }
 
     @Test
@@ -276,6 +261,16 @@ class ProductFormulaServiceTest {
         bo.setMaxWidthInch(new BigDecimal("25"));
         bo.setMaxHeightInch(new BigDecimal("72"));
         return bo;
+    }
+
+    private ProductFormulaVersion reviewVersion(Long versionId, Integer versionNo, String versionLabel) {
+        ProductFormulaVersion version = new ProductFormulaVersion();
+        version.setVersionId(versionId);
+        version.setFormulaId(3001L);
+        version.setVersionNo(versionNo);
+        version.setVersionLabel(versionLabel);
+        version.setVersionStatus("PENDING_REVIEW");
+        return version;
     }
 
     private ProductCategory category() {

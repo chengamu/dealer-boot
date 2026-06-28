@@ -39,6 +39,15 @@ public class ProductFormulaBo extends BaseBo {
     private String latestValidationStatus;
     private String latestValidationMessage;
     private java.time.LocalDateTime latestValidationTime;
+    private String materialValidationStatus;
+    private String materialValidationMessage;
+    private java.time.LocalDateTime materialValidationTime;
+    private String optionValidationStatus;
+    private String optionValidationMessage;
+    private java.time.LocalDateTime optionValidationTime;
+    private String simulationValidationStatus;
+    private String simulationValidationMessage;
+    private java.time.LocalDateTime simulationValidationTime;
     private String status;
     private String auditBy;
     private java.time.LocalDateTime auditTime;

@@ -8,6 +8,7 @@ import createSetupExtend from './vite/plugins/setup-extend'
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd())
   const baseApi = env.VITE_APP_BASE_API || '/dev-api'
+  const aiRuntimeApi = '/ai-runtime'
 
   return {
     base: env.VITE_APP_CONTEXT_PATH || '/',
@@ -26,6 +27,11 @@ export default defineConfig(({ mode }) => {
           target: 'http://127.0.0.1:8081',
           changeOrigin: true,
           rewrite: (path) => path.replace(new RegExp(`^${baseApi}`), '')
+        },
+        [aiRuntimeApi]: {
+          target: env.VITE_AI_RUNTIME_PROXY_TARGET || 'http://127.0.0.1:18088',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(new RegExp(`^${aiRuntimeApi}`), '')
         }
       }
     },

@@ -86,8 +86,8 @@ function displayName(card: MaterialGroupCard) {
 
 <style scoped>
 .setup-summary {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(126px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   align-items: stretch;
   gap: 8px;
   margin-top: 12px;
@@ -101,6 +101,7 @@ function displayName(card: MaterialGroupCard) {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex: 0 1 150px;
   min-width: 0;
   min-height: 58px;
   border: 1px solid #e5ecf6;
@@ -156,6 +157,7 @@ function displayName(card: MaterialGroupCard) {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex: 0 1 154px;
   min-width: 0;
   min-height: 58px;
   padding: 9px 10px;
@@ -218,8 +220,9 @@ function displayName(card: MaterialGroupCard) {
 }
 
 @media (max-width: 1440px) {
-  .setup-summary {
-    grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
+  .summary-card,
+  .summary-metric {
+    flex-basis: 138px;
   }
 }
 </style>
