@@ -1,6 +1,7 @@
 <template>
-  <el-dialog v-model="visible" :title="t('gen.importTitle')" width="800px" top="5vh" append-to-body>
-    <el-form ref="queryRef" :model="queryParams" :inline="true">
+  <AdminDialog v-model="visible" :title="t('gen.importTitle')" width="860px" top="5vh" variant="picker" class="admin-selector-dialog" append-to-body>
+    <div class="admin-dialog__toolbar">
+      <el-form ref="queryRef" :model="queryParams" :inline="true" class="admin-selector-dialog__form">
       <el-form-item :label="t('gen.tableName')" prop="tableName">
         <el-input v-model="queryParams.tableName" :placeholder="t('gen.tableNamePlaceholder')" clearable @keyup.enter="handleQuery" />
       </el-form-item>
@@ -11,9 +12,10 @@
         <el-button type="primary" icon="Search" @click="handleQuery">{{ t('common.search') }}</el-button>
         <el-button icon="Refresh" @click="resetQuery">{{ t('common.reset') }}</el-button>
       </el-form-item>
-    </el-form>
-    <el-row>
-      <el-table ref="tableRef" :data="dbTableList" height="260px" @row-click="clickRow" @selection-change="handleSelectionChange">
+      </el-form>
+    </div>
+    <div class="admin-dialog__table admin-selector-dialog__table">
+      <el-table ref="tableRef" :data="dbTableList" height="100%" border @row-click="clickRow" @selection-change="handleSelectionChange">
         <el-table-column type="selection" width="55" />
         <el-table-column prop="tableName" :label="t('gen.tableName')" :show-overflow-tooltip="true" />
         <el-table-column prop="tableComment" :label="t('gen.tableComment')" :show-overflow-tooltip="true" />
@@ -24,19 +26,19 @@
           <template #default="{ row }">{{ formatUtc(row.updateTime) }}</template>
         </el-table-column>
       </el-table>
-      <pagination v-show="total > 0" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" :total="total" @pagination="getList" />
-    </el-row>
+    </div>
+    <pagination v-show="total > 0" class="admin-selector-dialog__pagination" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" :total="total" @pagination="getList" />
     <template #footer>
-      <div class="dialog-footer">
+      <AdminDialogFooter :status="selectedCountText">
         <el-button type="primary" @click="handleImportTable">{{ t('common.confirm') }}</el-button>
         <el-button @click="visible = false">{{ t('common.cancel') }}</el-button>
-      </div>
+      </AdminDialogFooter>
     </template>
-  </el-dialog>
+  </AdminDialog>
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import { ElMessage, type FormInstance } from 'element-plus'
 import { importTable, listDbTable, type GenTable, type GenTableQuery } from '@/api/tool/gen'
 import { getMessage } from '@/locales'
@@ -49,7 +51,11 @@ const emit = defineEmits<{
 }>()
 
 const localeStore = useLocaleStore()
-const t = (key: string) => getMessage(key, localeStore.language)
+const t = (key: string, params?: Record<string, string | number>) => {
+  const message = getMessage(key, localeStore.language)
+  if (!params) return message
+  return Object.entries(params).reduce((text, [name, value]) => text.replaceAll(`{${name}}`, String(value)), message)
+}
 const total = ref(0)
 const visible = ref(false)
 const tables = ref<string[]>([])
@@ -60,6 +66,7 @@ const queryParams = reactive<GenTableQuery>({
   pageNum: 1,
   pageSize: 10
 })
+const selectedCountText = computed(() => t('common.selectedCount', { count: tables.value.length }))
 
 async function show() {
   await runUiAction(async () => {

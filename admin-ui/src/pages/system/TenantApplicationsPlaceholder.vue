@@ -67,53 +67,40 @@
       <el-table-column :label="t('common.createTime')" align="center" prop="createTime" width="180">
         <template #default="{ row }">{{ formatUtc(row.createTime) }}</template>
       </el-table-column>
-      <el-table-column :label="t('common.operate')" align="center" width="230" fixed="right" class-name="small-padding fixed-width">
+      <el-table-column :label="t('common.operate')" align="center" width="150" fixed="right" class-name="small-padding fixed-width">
         <template #default="{ row }">
-          <el-button link type="primary" icon="View" @click="openDetail(row.applyId)" v-hasPermi="['system:tenant:application:query']">
-            {{ t('common.detail') }}
-          </el-button>
-          <el-button
-            v-if="row.status === 'PENDING'"
-            link
-            type="success"
-            icon="CircleCheck"
-            @click="handleApprove(row)"
-            v-hasPermi="['system:tenant:application:approve']"
-          >
-            {{ t('tenant.approve') }}
-          </el-button>
-          <el-button
-            v-if="row.status === 'PENDING'"
-            link
-            type="danger"
-            icon="CircleClose"
-            @click="openReject(row)"
-            v-hasPermi="['system:tenant:application:reject']"
-          >
-            {{ t('tenant.reject') }}
-          </el-button>
+          <AdminTableActions :actions="[
+            { label: t('common.detail'), icon: 'View', permission: 'system:tenant:application:query', primary: true, onClick: () => openDetail(row.applyId) },
+            { label: t('tenant.approve'), icon: 'CircleCheck', type: 'success', permission: 'system:tenant:application:approve', hidden: row.status !== 'PENDING', onClick: () => handleApprove(row) },
+            { label: t('tenant.reject'), icon: 'CircleClose', type: 'danger', permission: 'system:tenant:application:reject', hidden: row.status !== 'PENDING', onClick: () => openReject(row) }
+          ]" />
         </template>
       </el-table-column>
     </el-table>
 
     <pagination v-show="total > 0" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" :total="total" @pagination="getList" />
 
-    <el-drawer v-model="detailOpen" :title="t('tenant.applicationDetail')" size="520px" append-to-body>
-      <el-descriptions v-if="detail" :column="1" border>
-        <el-descriptions-item :label="t('tenant.merchantName')">{{ detail.merchantName }}</el-descriptions-item>
-        <el-descriptions-item :label="t('tenant.companyName')">{{ detail.companyName || '-' }}</el-descriptions-item>
-        <el-descriptions-item :label="t('tenant.contactName')">{{ detail.contactName || '-' }}</el-descriptions-item>
-        <el-descriptions-item :label="t('tenant.email')">{{ detail.email }}</el-descriptions-item>
-        <el-descriptions-item :label="t('tenant.officePhone')">{{ detail.officePhone || '-' }}</el-descriptions-item>
-        <el-descriptions-item :label="t('tenant.mobilePhone')">{{ detail.mobilePhone || '-' }}</el-descriptions-item>
-        <el-descriptions-item :label="t('tenant.country')">{{ detail.country }}</el-descriptions-item>
-        <el-descriptions-item :label="t('tenant.address')">{{ formatAddress(detail) }}</el-descriptions-item>
-        <el-descriptions-item :label="t('tenant.status')">{{ statusText(detail.status) }}</el-descriptions-item>
-        <el-descriptions-item :label="t('tenant.auditBy')">{{ detail.auditBy || '-' }}</el-descriptions-item>
-        <el-descriptions-item :label="t('tenant.auditTime')">{{ formatUtc(detail.auditTime) }}</el-descriptions-item>
-        <el-descriptions-item :label="t('tenant.remark')">{{ detail.remark || '-' }}</el-descriptions-item>
-        <el-descriptions-item :label="t('tenant.rejectReason')">{{ detail.rejectReason || '-' }}</el-descriptions-item>
-      </el-descriptions>
+    <AdminDrawer v-model="detailOpen" :title="t('tenant.applicationDetail')" size="520px" variant="detail" append-to-body>
+      <div v-if="detail" class="admin-detail">
+        <section class="admin-detail__section">
+          <h3 class="admin-detail__section-title">{{ t('tenant.applicationDetail') }}</h3>
+          <dl class="admin-detail__grid">
+            <div class="admin-detail__item"><dt>{{ t('tenant.merchantName') }}</dt><dd>{{ detail.merchantName || '-' }}</dd></div>
+            <div class="admin-detail__item"><dt>{{ t('tenant.companyName') }}</dt><dd>{{ detail.companyName || '-' }}</dd></div>
+            <div class="admin-detail__item"><dt>{{ t('tenant.contactName') }}</dt><dd>{{ detail.contactName || '-' }}</dd></div>
+            <div class="admin-detail__item"><dt>{{ t('tenant.email') }}</dt><dd>{{ detail.email || '-' }}</dd></div>
+            <div class="admin-detail__item"><dt>{{ t('tenant.officePhone') }}</dt><dd>{{ detail.officePhone || '-' }}</dd></div>
+            <div class="admin-detail__item"><dt>{{ t('tenant.mobilePhone') }}</dt><dd>{{ detail.mobilePhone || '-' }}</dd></div>
+            <div class="admin-detail__item"><dt>{{ t('tenant.country') }}</dt><dd>{{ detail.country || '-' }}</dd></div>
+            <div class="admin-detail__item"><dt>{{ t('tenant.status') }}</dt><dd>{{ statusText(detail.status) }}</dd></div>
+            <div class="admin-detail__item admin-detail__item--full"><dt>{{ t('tenant.address') }}</dt><dd>{{ formatAddress(detail) }}</dd></div>
+            <div class="admin-detail__item"><dt>{{ t('tenant.auditBy') }}</dt><dd>{{ detail.auditBy || '-' }}</dd></div>
+            <div class="admin-detail__item"><dt>{{ t('tenant.auditTime') }}</dt><dd>{{ formatUtc(detail.auditTime) }}</dd></div>
+            <div class="admin-detail__item admin-detail__item--full"><dt>{{ t('tenant.remark') }}</dt><dd class="admin-detail__value--long">{{ detail.remark || '-' }}</dd></div>
+            <div class="admin-detail__item admin-detail__item--full"><dt>{{ t('tenant.rejectReason') }}</dt><dd class="admin-detail__value--long">{{ detail.rejectReason || '-' }}</dd></div>
+          </dl>
+        </section>
+      </div>
       <template #footer>
         <div class="tenant-application-page__drawer-footer">
           <el-button @click="detailOpen = false">{{ t('common.close') }}</el-button>
@@ -137,15 +124,19 @@
           </el-button>
         </div>
       </template>
-    </el-drawer>
+    </AdminDrawer>
 
-    <el-dialog v-model="rejectOpen" :title="t('tenant.reject')" width="460px" append-to-body>
-      <el-input v-model="rejectReason" type="textarea" :rows="4" :placeholder="t('tenant.rejectReasonPlaceholder')" />
+    <AdminDialog v-model="rejectOpen" :title="t('tenant.reject')" width="460px" class="admin-reason-dialog" append-to-body :close-on-click-modal="false">
+      <div class="admin-reason-dialog__body">
+        <el-input v-model="rejectReason" type="textarea" :rows="4" :placeholder="t('tenant.rejectReasonPlaceholder')" />
+      </div>
       <template #footer>
-        <el-button @click="rejectOpen = false">{{ t('common.cancel') }}</el-button>
-        <el-button type="primary" @click="handleReject">{{ t('common.confirm') }}</el-button>
+        <AdminDialogFooter>
+          <el-button @click="rejectOpen = false">{{ t('common.cancel') }}</el-button>
+          <el-button type="primary" @click="handleReject">{{ t('common.confirm') }}</el-button>
+        </AdminDialogFooter>
       </template>
-    </el-dialog>
+    </AdminDialog>
   </div>
 </template>
 

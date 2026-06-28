@@ -9,11 +9,11 @@
     @keydown.space.prevent="editCropper"
   >
     <img :src="options.img" :title="t('user.uploadAvatar')" class="img-circle img-lg" :alt="t('user.avatar')" />
-    <el-dialog
+    <AdminDialog
       v-model="open"
       :title="t('user.editAvatar')"
       width="800px"
-      class="avatar-cropper-dialog"
+      class="admin-media-dialog avatar-cropper-dialog"
       append-to-body
       @opened="modalOpened"
       @close="closeDialog"
@@ -39,33 +39,22 @@
           </div>
         </el-col>
       </el-row>
-      <br />
-      <el-row :gutter="8" class="avatar-cropper-dialog__actions">
-        <el-col :lg="4" :md="4">
+      <template #footer>
+        <AdminDialogFooter class="avatar-cropper-dialog__actions">
           <el-upload action="#" :http-request="requestUpload" :show-file-list="false" :before-upload="beforeUpload">
             <el-button>
               {{ t('common.selectPlaceholder') }}
               <el-icon class="el-icon--right"><Upload /></el-icon>
             </el-button>
           </el-upload>
-        </el-col>
-        <el-col :lg="2" :md="2">
-          <el-button icon="Plus" :aria-label="t('user.zoomInAvatar')" :title="t('user.zoomInAvatar')" @click.stop="changeScale(1)" />
-        </el-col>
-        <el-col :lg="2" :md="2">
-          <el-button icon="Minus" :aria-label="t('user.zoomOutAvatar')" :title="t('user.zoomOutAvatar')" @click.stop="changeScale(-1)" />
-        </el-col>
-        <el-col :lg="2" :md="2">
-          <el-button icon="RefreshLeft" :aria-label="t('user.rotateAvatarLeft')" :title="t('user.rotateAvatarLeft')" @click.stop="rotateLeft" />
-        </el-col>
-        <el-col :lg="2" :md="2">
-          <el-button icon="RefreshRight" :aria-label="t('user.rotateAvatarRight')" :title="t('user.rotateAvatarRight')" @click.stop="rotateRight" />
-        </el-col>
-        <el-col :lg="{ span: 4, offset: 6 }" :md="4">
+          <el-button class="avatar-cropper-dialog__icon-button" icon="Plus" :aria-label="t('user.zoomInAvatar')" :title="t('user.zoomInAvatar')" @click.stop="changeScale(1)" />
+          <el-button class="avatar-cropper-dialog__icon-button" icon="Minus" :aria-label="t('user.zoomOutAvatar')" :title="t('user.zoomOutAvatar')" @click.stop="changeScale(-1)" />
+          <el-button class="avatar-cropper-dialog__icon-button" icon="RefreshLeft" :aria-label="t('user.rotateAvatarLeft')" :title="t('user.rotateAvatarLeft')" @click.stop="rotateLeft" />
+          <el-button class="avatar-cropper-dialog__icon-button" icon="RefreshRight" :aria-label="t('user.rotateAvatarRight')" :title="t('user.rotateAvatarRight')" @click.stop="rotateRight" />
           <el-button type="primary" @click.stop="uploadImg">{{ t('common.submit') }}</el-button>
-        </el-col>
-      </el-row>
-    </el-dialog>
+        </AdminDialogFooter>
+      </template>
+    </AdminDialog>
   </div>
 </template>
 

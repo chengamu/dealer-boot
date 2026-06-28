@@ -45,7 +45,7 @@
           :default-sort="typeDefaultSort"
           @current-change="selectType"
           @sort-change="handleTypeSortChange"
-          @row-dblclick="editType"
+          @row-dblclick="openTypeDetail"
         >
           <el-table-column type="index" :index="typeRowIndex" :label="t('common.index')" width="58" align="center" />
           <el-table-column :label="t('productCenter.productDict.typeCode')" prop="dictTypeCode" min-width="180" sortable="custom" show-overflow-tooltip />
@@ -96,7 +96,7 @@
           :default-sort="itemDefaultSort"
           @current-change="selectItem"
           @sort-change="handleItemSortChange"
-          @row-dblclick="editItem"
+          @row-dblclick="openItemDetail"
         >
           <el-table-column type="index" :index="itemRowIndex" :label="t('common.index')" width="58" align="center" />
           <el-table-column :label="t('productCenter.productDict.itemValue')" prop="dictItemValue" min-width="145" sortable="custom" show-overflow-tooltip />
@@ -127,7 +127,17 @@
       </section>
     </div>
 
-    <el-drawer v-model="typeDrawerOpen" :title="typeDrawerTitle" size="72%" append-to-body destroy-on-close @closed="resetTypeForm">
+    <AdminDrawer
+      v-model="typeDrawerOpen"
+      :title="typeDrawerTitle"
+      size="72%"
+      append-to-body
+      destroy-on-close
+      :close-on-click-modal="false"
+      :close-on-press-escape="false"
+      :before-close="handleTypeDrawerBeforeClose"
+      @closed="handleTypeDrawerClosed"
+    >
       <el-form ref="typeFormRef" :model="typeForm" :rules="typeRules" label-width="136px" class="product-dict-page__form">
         <div class="product-dict-page__section-title">{{ t('productCenter.formSection.basic') }}</div>
         <el-form-item :label="t('productCenter.productDict.typeCode')" prop="dictTypeCode">
@@ -154,13 +164,45 @@
       </el-form>
       <template #footer>
         <div class="product-dict-page__drawer-actions">
-          <el-button @click="typeDrawerOpen = false">{{ t('common.cancel') }}</el-button>
+          <el-button @click="closeTypeDrawerWithGuard">{{ t('common.cancel') }}</el-button>
           <el-button type="primary" :loading="typeSubmitLoading" data-agent-danger="save" data-agent-risk="confirm-required" data-agent-confirm-required="true" data-agent-confirm-message="需要用户人工确认后才能保存" @click="submitType">{{ t('common.confirm') }}</el-button>
         </div>
       </template>
-    </el-drawer>
+    </AdminDrawer>
 
-    <el-drawer v-model="itemDrawerOpen" :title="itemDrawerTitle" size="72%" append-to-body destroy-on-close @closed="resetItemForm">
+    <AdminDrawer v-model="typeDetailOpen" :title="t('common.detail')" size="520px" variant="detail" append-to-body destroy-on-close>
+      <div v-if="typeDetail" class="admin-detail">
+        <section class="admin-detail__section">
+          <h3 class="admin-detail__section-title">{{ t('productCenter.productDict.typeTitle') }}</h3>
+          <dl class="admin-detail__grid">
+            <div class="admin-detail__item"><dt>{{ t('productCenter.productDict.typeCode') }}</dt><dd>{{ typeDetail.dictTypeCode || '-' }}</dd></div>
+            <div class="admin-detail__item"><dt>{{ t('productCenter.productDict.typeNameCn') }}</dt><dd>{{ typeDetail.dictTypeNameCn || '-' }}</dd></div>
+            <div class="admin-detail__item"><dt>{{ t('productCenter.productDict.typeNameEn') }}</dt><dd>{{ typeDetail.dictTypeNameEn || '-' }}</dd></div>
+            <div class="admin-detail__item"><dt>{{ t('productCenter.productDict.businessDomain') }}</dt><dd>{{ businessDomainLabel(typeDetail.businessDomain) }}</dd></div>
+            <div class="admin-detail__item"><dt>{{ t('productCenter.common.sortOrder') }}</dt><dd>{{ typeDetail.sortOrder ?? '-' }}</dd></div>
+            <div class="admin-detail__item"><dt>{{ t('productCenter.common.status') }}</dt><dd>{{ statusText(typeDetail.status) }}</dd></div>
+            <div class="admin-detail__item admin-detail__item--full"><dt>{{ t('productCenter.common.remark') }}</dt><dd class="admin-detail__value--long">{{ typeDetail.remark || '-' }}</dd></div>
+          </dl>
+        </section>
+      </div>
+      <template #footer>
+        <div class="product-dict-page__drawer-actions">
+          <el-button @click="typeDetailOpen = false">{{ t('common.close') }}</el-button>
+        </div>
+      </template>
+    </AdminDrawer>
+
+    <AdminDrawer
+      v-model="itemDrawerOpen"
+      :title="itemDrawerTitle"
+      size="72%"
+      append-to-body
+      destroy-on-close
+      :close-on-click-modal="false"
+      :close-on-press-escape="false"
+      :before-close="handleItemDrawerBeforeClose"
+      @closed="handleItemDrawerClosed"
+    >
       <el-form ref="itemFormRef" :model="itemForm" :rules="itemRules" label-width="136px" class="product-dict-page__form">
         <div class="product-dict-page__section-title">{{ t('productCenter.formSection.basic') }}</div>
         <el-form-item :label="t('productCenter.productDict.typeCode')" prop="dictTypeCode">
@@ -190,16 +232,39 @@
       </el-form>
       <template #footer>
         <div class="product-dict-page__drawer-actions">
-          <el-button @click="itemDrawerOpen = false">{{ t('common.cancel') }}</el-button>
+          <el-button @click="closeItemDrawerWithGuard">{{ t('common.cancel') }}</el-button>
           <el-button type="primary" :loading="itemSubmitLoading" data-agent-danger="save" data-agent-risk="confirm-required" data-agent-confirm-required="true" data-agent-confirm-message="需要用户人工确认后才能保存" @click="submitItem">{{ t('common.confirm') }}</el-button>
         </div>
       </template>
-    </el-drawer>
+    </AdminDrawer>
+
+    <AdminDrawer v-model="itemDetailOpen" :title="t('common.detail')" size="520px" variant="detail" append-to-body destroy-on-close>
+      <div v-if="itemDetail" class="admin-detail">
+        <section class="admin-detail__section">
+          <h3 class="admin-detail__section-title">{{ t('productCenter.productDict.itemTitle') }}</h3>
+          <dl class="admin-detail__grid">
+            <div class="admin-detail__item"><dt>{{ t('productCenter.productDict.typeCode') }}</dt><dd>{{ itemDetail.dictTypeCode || '-' }}</dd></div>
+            <div class="admin-detail__item"><dt>{{ t('productCenter.productDict.itemValue') }}</dt><dd>{{ itemDetail.dictItemValue || '-' }}</dd></div>
+            <div class="admin-detail__item"><dt>{{ t('productCenter.productDict.itemLabelCn') }}</dt><dd>{{ itemDetail.dictItemLabelCn || '-' }}</dd></div>
+            <div class="admin-detail__item"><dt>{{ t('productCenter.productDict.itemLabelEn') }}</dt><dd>{{ itemDetail.dictItemLabelEn || '-' }}</dd></div>
+            <div v-if="supportsParentValue" class="admin-detail__item"><dt>{{ t('productCenter.productDict.parentItem') }}</dt><dd>{{ parentItemLabel(itemDetail.parentValue) }}</dd></div>
+            <div class="admin-detail__item"><dt>{{ t('productCenter.common.sortOrder') }}</dt><dd>{{ itemDetail.sortOrder ?? '-' }}</dd></div>
+            <div class="admin-detail__item"><dt>{{ t('productCenter.common.status') }}</dt><dd>{{ statusText(itemDetail.status) }}</dd></div>
+            <div class="admin-detail__item admin-detail__item--full"><dt>{{ t('productCenter.common.remark') }}</dt><dd class="admin-detail__value--long">{{ itemDetail.remark || '-' }}</dd></div>
+          </dl>
+        </section>
+      </div>
+      <template #footer>
+        <div class="product-dict-page__drawer-actions">
+          <el-button @click="itemDetailOpen = false">{{ t('common.close') }}</el-button>
+        </div>
+      </template>
+    </AdminDrawer>
   </div>
 </template>
 
 <script setup lang="ts" name="ProductDictPage">
-import { computed, onBeforeUnmount, reactive, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 import { getMessage } from '@/locales'
@@ -207,6 +272,7 @@ import { useLocaleStore } from '@/stores/locale'
 import { productDictItemApi, productDictTypeApi } from '@/api/product-capability/product-dict'
 import type { ProductCrudApi, ProductDictItemQuery, ProductDictItemVO, ProductDictTypeQuery, ProductDictTypeVO } from '@/api/product-capability/types'
 import { PRODUCT_STATUS_DISABLED, PRODUCT_STATUS_ENABLED } from '@/constants/productStatus'
+import { useUnsavedChangesGuard } from '@/composables/useUnsavedChangesGuard'
 
 const route = useRoute()
 const router = useRouter()
@@ -234,10 +300,14 @@ const typeTotal = ref(0)
 const itemTotal = ref(0)
 const typeDrawerOpen = ref(false)
 const itemDrawerOpen = ref(false)
+const typeDetailOpen = ref(false)
+const itemDetailOpen = ref(false)
 const typeQueryRef = ref<FormInstance>()
 const itemQueryRef = ref<FormInstance>()
 const typeFormRef = ref<FormInstance>()
 const itemFormRef = ref<FormInstance>()
+const typeDetail = ref<ProductDictTypeVO>()
+const itemDetail = ref<ProductDictItemVO>()
 const gridWrapRef = ref<HTMLElement>()
 const leftPanelWidth = ref(560)
 const resizing = ref(false)
@@ -281,6 +351,16 @@ const itemRules = computed<FormRules<ProductDictItemVO>>(() => ({
   dictItemValue: [{ required: true, message: t('productCenter.common.required', { name: t('productCenter.productDict.itemValue') }), trigger: 'blur' }],
   dictItemLabelCn: [{ required: true, message: t('productCenter.common.required', { name: t('productCenter.productDict.itemLabelCn') }), trigger: 'blur' }]
 }))
+const typeUnsavedChangesGuard = useUnsavedChangesGuard({
+  enabled: () => typeDrawerOpen.value,
+  getSnapshot: () => JSON.stringify(typeForm.value || {}),
+  confirmDiscard: confirmDiscardChanges
+})
+const itemUnsavedChangesGuard = useUnsavedChangesGuard({
+  enabled: () => itemDrawerOpen.value,
+  getSnapshot: () => JSON.stringify(itemForm.value || {}),
+  confirmDiscard: confirmDiscardChanges
+})
 
 function typeRowIndex(index: number) {
   return (Number(typeQuery.pageNum || 1) - 1) * Number(typeQuery.pageSize || 10) + index + 1
@@ -319,6 +399,17 @@ function parentItemLabel(value?: string) {
   return parentItemOptions.value.find((item) => item.value === value)?.label || value
 }
 
+function businessDomainLabel(value?: string) {
+  if (!value) return '-'
+  return businessDomainOptions.value.find((item) => item.value === value)?.label || value
+}
+
+function statusText(value?: string) {
+  if (value === PRODUCT_STATUS_ENABLED) return t('productCenter.status.enabled')
+  if (value === PRODUCT_STATUS_DISABLED) return t('productCenter.status.disabled')
+  return value || '-'
+}
+
 function isRecordId(value: unknown): value is string | number {
   return typeof value === 'string' || typeof value === 'number'
 }
@@ -345,6 +436,66 @@ function resetItemForm() {
     sortOrder: 0
   }
   itemFormRef.value?.resetFields()
+}
+
+async function confirmDiscardChanges() {
+  try {
+    await ElMessageBox.confirm(t('common.unsavedChangesConfirm'), t('common.prompt'), {
+      confirmButtonText: t('common.confirm'),
+      cancelButtonText: t('common.cancel'),
+      type: 'warning'
+    })
+    return true
+  } catch {
+    return false
+  }
+}
+
+async function closeTypeDrawerWithGuard() {
+  await typeUnsavedChangesGuard.closeWithGuard(() => {
+    typeDrawerOpen.value = false
+  })
+}
+
+async function closeItemDrawerWithGuard() {
+  await itemUnsavedChangesGuard.closeWithGuard(() => {
+    itemDrawerOpen.value = false
+  })
+}
+
+function handleTypeDrawerBeforeClose(done: () => void) {
+  typeUnsavedChangesGuard.canClose().then((allowed) => {
+    if (allowed) done()
+  })
+}
+
+function handleItemDrawerBeforeClose(done: () => void) {
+  itemUnsavedChangesGuard.canClose().then((allowed) => {
+    if (allowed) done()
+  })
+}
+
+function handleTypeDrawerClosed() {
+  resetTypeForm()
+  typeUnsavedChangesGuard.resetPristine()
+}
+
+function handleItemDrawerClosed() {
+  resetItemForm()
+  itemUnsavedChangesGuard.resetPristine()
+}
+
+function handleDrawerShortcut(event: KeyboardEvent) {
+  if (event.key !== 'Escape') return
+  if (typeDrawerOpen.value) {
+    event.preventDefault()
+    closeTypeDrawerWithGuard()
+    return
+  }
+  if (itemDrawerOpen.value) {
+    event.preventDefault()
+    closeItemDrawerWithGuard()
+  }
 }
 
 function applySort(query: ProductDictTypeQuery | ProductDictItemQuery, defaultSort: typeof typeDefaultSort, prop?: string, order?: 'ascending' | 'descending' | null) {
@@ -459,6 +610,7 @@ function selectItem(row?: ProductDictItemVO) {
 
 function addType() {
   resetTypeForm()
+  typeUnsavedChangesGuard.markPristine()
   typeDrawerOpen.value = true
 }
 
@@ -467,6 +619,7 @@ async function editType(row: ProductDictTypeVO) {
   if (!(await checkDictEdit(productDictTypeApi.editCheck, row.dictTypeId))) return
   const response = await productDictTypeApi.get(row.dictTypeId)
   typeForm.value = { ...response.data }
+  typeUnsavedChangesGuard.markPristine()
   typeDrawerOpen.value = true
 }
 
@@ -474,6 +627,13 @@ function editSelectedType() {
   const id = selectedTypeIds.value[0]
   const row = typeRows.value.find((item) => item.dictTypeId === id)
   if (row) editType(row)
+}
+
+async function openTypeDetail(row: ProductDictTypeVO) {
+  if (!row.dictTypeId) return
+  const response = await productDictTypeApi.get(row.dictTypeId)
+  typeDetail.value = response.data
+  typeDetailOpen.value = true
 }
 
 async function submitType() {
@@ -488,6 +648,7 @@ async function submitType() {
       await productDictTypeApi.add(typeForm.value)
       ElMessage.success(t('common.addSuccess'))
     }
+    typeUnsavedChangesGuard.markPristine()
     typeDrawerOpen.value = false
     await loadTypes()
   } finally {
@@ -533,6 +694,7 @@ async function changeTypeStatus(row: ProductDictTypeVO, value: unknown) {
 function addItem() {
   if (!activeType.value?.dictTypeCode) return
   resetItemForm()
+  itemUnsavedChangesGuard.markPristine()
   itemDrawerOpen.value = true
 }
 
@@ -541,6 +703,7 @@ async function editItem(row: ProductDictItemVO) {
   if (!(await checkDictEdit(productDictItemApi.editCheck, row.dictItemId))) return
   const response = await productDictItemApi.get(row.dictItemId)
   itemForm.value = { ...response.data }
+  itemUnsavedChangesGuard.markPristine()
   itemDrawerOpen.value = true
 }
 
@@ -560,6 +723,13 @@ function editSelectedItem() {
   if (row) editItem(row)
 }
 
+async function openItemDetail(row: ProductDictItemVO) {
+  if (!row.dictItemId) return
+  const response = await productDictItemApi.get(row.dictItemId)
+  itemDetail.value = response.data
+  itemDetailOpen.value = true
+}
+
 async function submitItem() {
   const valid = await itemFormRef.value?.validate().catch(() => false)
   if (!valid) return
@@ -575,6 +745,7 @@ async function submitItem() {
       await productDictItemApi.add(itemForm.value)
       ElMessage.success(t('common.addSuccess'))
     }
+    itemUnsavedChangesGuard.markPristine()
     itemDrawerOpen.value = false
     await loadItems()
   } finally {
@@ -616,7 +787,14 @@ async function changeItemStatus(row: ProductDictItemVO, value: unknown) {
   }
 }
 
-onBeforeUnmount(stopResize)
+onMounted(() => {
+  window.addEventListener('keydown', handleDrawerShortcut)
+})
+
+onBeforeUnmount(() => {
+  stopResize()
+  window.removeEventListener('keydown', handleDrawerShortcut)
+})
 
 loadTypes()
 </script>

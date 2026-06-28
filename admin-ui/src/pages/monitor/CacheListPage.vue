@@ -29,17 +29,20 @@
               <template #default="{ row }">{{ nameFormatter(row) }}</template>
             </el-table-column>
             <el-table-column :label="t('user.remark')" align="center" prop="remark" :show-overflow-tooltip="true" />
-            <el-table-column :label="t('common.operate')" width="80" align="center" class-name="small-padding fixed-width">
+            <el-table-column :label="t('common.operate')" width="120" align="center" class-name="small-padding fixed-width">
               <template #default="{ row }">
-                <el-button
-                  link
-                  type="primary"
-                  icon="Delete"
-                  :aria-label="t('cache.clearCacheName', { name: row.cacheName })"
-                  :title="t('cache.clearCacheName', { name: row.cacheName })"
-                  @click.stop="handleClearCacheName(row)"
-                  v-hasPermi="['monitor:cache:remove']"
-                />
+                <AdminTableActions :actions="[
+                  {
+                    label: t('common.clear'),
+                    ariaLabel: t('cache.clearCacheName', { name: row.cacheName }),
+                    title: t('cache.clearCacheName', { name: row.cacheName }),
+                    icon: 'Delete',
+                    type: 'danger',
+                    permission: 'monitor:cache:remove',
+                    stopPropagation: true,
+                    onClick: () => handleClearCacheName(row)
+                  }
+                ]" />
               </template>
             </el-table-column>
           </el-table>
@@ -73,17 +76,20 @@
             <el-table-column :label="t('cache.cacheKey')" align="center" :show-overflow-tooltip="true">
               <template #default="{ row }">{{ keyFormatter(row) }}</template>
             </el-table-column>
-            <el-table-column :label="t('common.operate')" width="80" align="center" class-name="small-padding fixed-width">
+            <el-table-column :label="t('common.operate')" width="120" align="center" class-name="small-padding fixed-width">
               <template #default="{ row }">
-                <el-button
-                  link
-                  type="primary"
-                  icon="Delete"
-                  :aria-label="t('cache.clearCacheKey', { key: row })"
-                  :title="t('cache.clearCacheKey', { key: row })"
-                  @click.stop="handleClearCacheKey(row)"
-                  v-hasPermi="['monitor:cache:remove']"
-                />
+                <AdminTableActions :actions="[
+                  {
+                    label: t('common.clear'),
+                    ariaLabel: t('cache.clearCacheKey', { key: row }),
+                    title: t('cache.clearCacheKey', { key: row }),
+                    icon: 'Delete',
+                    type: 'danger',
+                    permission: 'monitor:cache:remove',
+                    stopPropagation: true,
+                    onClick: () => handleClearCacheKey(row)
+                  }
+                ]" />
               </template>
             </el-table-column>
           </el-table>

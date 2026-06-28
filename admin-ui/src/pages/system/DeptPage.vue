@@ -55,22 +55,27 @@
           <span>{{ formatUtc(row.createTime) }}</span>
         </template>
       </el-table-column>
-      <el-table-column :label="t('common.operate')" align="center" class-name="small-padding fixed-width">
+      <el-table-column :label="t('common.operate')" align="center" width="150" class-name="small-padding fixed-width">
         <template #default="{ row }">
-          <el-button link type="primary" icon="Edit" @click="handleUpdate(row)" v-hasPermi="['system:dept:edit']">
-            {{ t('common.edit') }}
-          </el-button>
-          <el-button link type="primary" icon="Plus" @click="handleAdd(row)" v-hasPermi="['system:dept:add']">
-            {{ t('common.add') }}
-          </el-button>
-          <el-button v-if="row.parentId !== 0" link type="primary" icon="Delete" @click="handleDelete(row)" v-hasPermi="['system:dept:remove']">
-            {{ t('common.delete') }}
-          </el-button>
+          <AdminTableActions :actions="[
+            { label: t('common.edit'), icon: 'Edit', permission: 'system:dept:edit', primary: true, onClick: () => handleUpdate(row) },
+            { label: t('common.add'), icon: 'Plus', permission: 'system:dept:add', onClick: () => handleAdd(row) },
+            { label: t('common.delete'), icon: 'Delete', type: 'danger', permission: 'system:dept:remove', hidden: row.parentId === 0, onClick: () => handleDelete(row) }
+          ]" />
         </template>
       </el-table-column>
     </el-table>
 
-    <el-drawer v-model="open" :title="title" size="560px" append-to-body destroy-on-close @closed="reset">
+    <AdminDrawer
+      v-model="open"
+      :title="title"
+      size="560px"
+      append-to-body
+      destroy-on-close
+      :close-on-click-modal="false"
+      :before-close="formCloseGuard.beforeClose"
+      @closed="formCloseGuard.handleClosed"
+    >
       <el-form ref="deptRef" :model="form" :rules="rules" label-width="90px">
         <el-row>
           <el-col v-if="form.parentId !== 0" :span="24">
@@ -125,7 +130,7 @@
           <el-button @click="cancel">{{ t('common.cancel') }}</el-button>
         </div>
       </template>
-    </el-drawer>
+    </AdminDrawer>
   </div>
 </template>
 
@@ -138,6 +143,7 @@ import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 import { useDict } from '@/utils/dict'
 import { handleTree } from '@/utils/ruoyi'
+import { useFormCloseGuard } from '@/composables/useFormCloseGuard'
 
 const localeStore = useLocaleStore()
 const t = (key: string, params?: Record<string, string | number>) => {
@@ -167,6 +173,15 @@ const rules = computed<FormRules>(() => ({
   email: [{ type: 'email', message: t('user.emailInvalid'), trigger: ['blur', 'change'] }],
   phone: [{ pattern: /^1[3-9][0-9]\d{8}$/, message: t('user.phonenumberInvalid'), trigger: 'blur' }]
 }))
+const formCloseGuard = useFormCloseGuard({
+  enabled: () => open.value,
+  getSnapshot: () => JSON.stringify(form.value || {}),
+  close: () => {
+    open.value = false
+  },
+  reset,
+  t
+})
 
 function reset() {
   form.value = {
@@ -193,8 +208,7 @@ async function getList() {
 }
 
 function cancel() {
-  open.value = false
-  reset()
+  formCloseGuard.closeWithGuard()
 }
 
 function handleQuery() {
@@ -211,6 +225,7 @@ async function handleAdd(row?: Dept) {
   const rows = await listDept()
   deptOptions.value = handleTree(rows || [], 'deptId') as Dept[]
   form.value.parentId = row?.deptId ?? 0
+  formCloseGuard.markPristine()
   open.value = true
 }
 
@@ -233,6 +248,7 @@ async function handleUpdate(row: Dept) {
     if (!deptOptions.value.length && form.value.parentId) {
       deptOptions.value.push({ deptId: form.value.parentId, deptName: form.value.parentName, children: [] })
     }
+    formCloseGuard.markPristine()
     open.value = true
   } catch {
     // Request interceptor already displays the backend error.
@@ -250,8 +266,8 @@ async function submitForm() {
       await addDept(form.value)
       ElMessage.success(t('common.addSuccess'))
     }
+    formCloseGuard.markPristine()
     open.value = false
-    reset()
     await getList()
   } catch {
     // Request interceptor already displays the backend error.

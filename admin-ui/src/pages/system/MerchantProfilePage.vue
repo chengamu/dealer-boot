@@ -30,25 +30,30 @@
       <el-table-column :label="t('common.createTime')" width="180">
         <template #default="{ row }">{{ formatUtc(row.createTime) }}</template>
       </el-table-column>
-      <el-table-column :label="t('common.operate')" width="180" fixed="right">
+      <el-table-column :label="t('common.operate')" width="150" fixed="right">
         <template #default="{ row }">
-          <el-button link type="primary" icon="View" @click="openDetail(row.merchantId)" v-hasPermi="['system:merchant:profile:query']">
-            {{ t('common.detail') }}
-          </el-button>
-          <el-button link type="primary" icon="Edit" @click="openEdit(row.merchantId)" v-hasPermi="['system:merchant:profile:edit']">
-            {{ t('common.edit') }}
-          </el-button>
+          <AdminTableActions :actions="[
+            { label: t('common.detail'), icon: 'View', permission: 'system:merchant:profile:query', onClick: () => openDetail(row.merchantId) },
+            { label: t('common.edit'), icon: 'Edit', permission: 'system:merchant:profile:edit', onClick: () => openEdit(row.merchantId) }
+          ]" />
         </template>
       </el-table-column>
     </el-table>
 
     <pagination v-show="total > 0" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" :total="total" @pagination="getList" />
 
-    <el-drawer v-model="detailOpen" :title="t('merchantProfile.detailTitle')" size="520px">
+    <AdminDrawer v-model="detailOpen" :title="t('merchantProfile.detailTitle')" size="520px" variant="detail">
       <MerchantProfileDescriptions v-if="detail" :profile="detail" />
-    </el-drawer>
+    </AdminDrawer>
 
-    <el-drawer v-model="editOpen" :title="t('merchantProfile.editTitle')" size="560px">
+    <AdminDrawer
+      v-model="editOpen"
+      :title="t('merchantProfile.editTitle')"
+      size="560px"
+      :close-on-click-modal="false"
+      :before-close="editFormCloseGuard.beforeClose"
+      @closed="editFormCloseGuard.handleClosed"
+    >
       <el-alert :title="t('merchantProfile.lockedHint')" type="info" show-icon :closable="false" class="mb16" />
       <el-form :model="editForm" label-width="120px">
         <el-form-item :label="t('merchantProfile.merchantName')"><el-input v-model="editForm.merchantName" disabled /></el-form-item>
@@ -67,11 +72,11 @@
       </el-form>
       <template #footer>
         <div class="merchant-profile-page__drawer-footer">
-          <el-button @click="editOpen = false">{{ t('common.cancel') }}</el-button>
+          <el-button @click="editFormCloseGuard.closeWithGuard">{{ t('common.cancel') }}</el-button>
           <el-button type="primary" @click="submitEdit">{{ t('common.confirm') }}</el-button>
         </div>
       </template>
-    </el-drawer>
+    </AdminDrawer>
   </div>
 </template>
 
@@ -83,6 +88,7 @@ import { getMerchantProfile, listMerchantProfiles, updateMerchantProfile, type M
 import { formatUtc } from '@/utils/datetime'
 import { useDict } from '@/utils/dict'
 import MerchantProfileDescriptions from '@/pages/merchant/MerchantProfileDescriptions.vue'
+import { useFormCloseGuard } from '@/composables/useFormCloseGuard'
 
 const { t } = useI18n()
 const { sys_normal_disable } = useDict('sys_normal_disable')
@@ -96,6 +102,15 @@ const showSearch = ref(true)
 const total = ref(0)
 const queryParams = reactive<MerchantProfileQuery>({ pageNum: 1, pageSize: 10 })
 const editForm = reactive<MerchantProfile>({})
+const editFormCloseGuard = useFormCloseGuard({
+  enabled: () => editOpen.value,
+  getSnapshot: () => JSON.stringify(editForm),
+  close: () => {
+    editOpen.value = false
+  },
+  reset: resetEditForm,
+  t
+})
 
 async function getList() {
   loading.value = true
@@ -128,8 +143,14 @@ async function openDetail(merchantId?: number) {
 async function openEdit(merchantId?: number) {
   if (!merchantId) return
   const response = await getMerchantProfile(merchantId)
+  resetEditForm()
   Object.assign(editForm, response.data)
+  editFormCloseGuard.markPristine()
   editOpen.value = true
+}
+
+function resetEditForm() {
+  Object.keys(editForm).forEach((key) => delete editForm[key as keyof MerchantProfile])
 }
 
 async function submitEdit() {
@@ -148,6 +169,7 @@ async function submitEdit() {
     remark: editForm.remark
   })
   ElMessage.success(t('common.editSuccess'))
+  editFormCloseGuard.markPristine()
   editOpen.value = false
   await getList()
 }

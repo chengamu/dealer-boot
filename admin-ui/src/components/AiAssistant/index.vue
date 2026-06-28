@@ -69,21 +69,35 @@ async function openOfficialAgent() {
 .ai-assistant__fab {
   width: 62px;
   height: 62px;
-  padding: 6px;
-  border: 1px solid rgba(201, 216, 238, 0.92);
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 18px 42px rgba(25, 93, 194, 0.22);
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+
+  :deep(span) {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
 
   &:hover {
-    background: #ffffff;
+    background: transparent;
     transform: translateY(-1px);
+  }
+
+  &:focus,
+  &:focus-visible {
+    outline: none;
+    box-shadow: none;
   }
 }
 
 .ai-assistant__robot {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   border-radius: 50%;
+  filter: drop-shadow(0 14px 28px rgba(25, 93, 194, 0.24));
 }
 </style>

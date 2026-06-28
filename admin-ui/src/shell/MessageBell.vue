@@ -45,17 +45,11 @@
     </section>
   </el-popover>
 
-  <el-dialog v-model="listOpen" width="720px" class="message-dialog message-list-dialog">
-    <template #header>
-      <div class="message-dialog-head">
-        <span class="message-dialog-head__icon"><el-icon><Bell /></el-icon></span>
-        <span class="message-dialog-head__text">
-          <strong>{{ t('message.notice') }}</strong>
-          <small>{{ total }} / {{ unreadCount }} {{ t('message.unread') }}</small>
-        </span>
-        <span v-if="unreadCount > 0" class="message-dialog-head__pill">{{ unreadCount }}</span>
-      </div>
-    </template>
+  <AdminDialog v-model="listOpen" :title="t('message.notice')" width="720px" variant="detail" class="message-dialog message-list-dialog">
+    <div class="message-dialog-meta">
+      <span>{{ total }} / {{ unreadCount }} {{ t('message.unread') }}</span>
+      <span v-if="unreadCount > 0" class="message-dialog-meta__pill">{{ unreadCount }}</span>
+    </div>
     <section v-loading="loading" class="message-list">
       <button
         v-for="notice in notices"
@@ -76,32 +70,24 @@
       <el-empty v-if="!loading && notices.length === 0" :description="t('message.empty')" />
     </section>
     <template #footer>
-      <div class="dialog-footer">
+      <AdminDialogFooter>
         <el-button v-if="unreadCount > 0" type="primary" plain @click="markAllRead">{{ t('message.markAllRead') }}</el-button>
         <el-button @click="listOpen = false">{{ t('common.close') }}</el-button>
-      </div>
+      </AdminDialogFooter>
     </template>
-  </el-dialog>
+  </AdminDialog>
 
-  <el-dialog v-model="detailOpen" width="720px" class="message-dialog message-detail-dialog">
-    <template #header>
-      <div class="message-dialog-head">
-        <span class="message-dialog-head__icon is-detail"><el-icon><Bell /></el-icon></span>
-        <span class="message-dialog-head__text">
-          <strong>{{ activeNotice.noticeTitle || t('message.notice') }}</strong>
-          <small v-if="activeNotice.createTime">{{ formatUtc(activeNotice.createTime) }}</small>
-        </span>
-      </div>
-    </template>
+  <AdminDialog v-model="detailOpen" :title="activeNotice.noticeTitle || t('message.notice')" width="720px" variant="detail" class="message-dialog message-detail-dialog">
     <article v-loading="detailLoading" class="message-detail">
+      <p v-if="activeNotice.createTime" class="message-dialog-meta">{{ formatUtc(activeNotice.createTime) }}</p>
       <div class="message-detail__content" v-html="activeNotice.noticeContent || '-'" />
     </article>
     <template #footer>
-      <div class="dialog-footer">
+      <AdminDialogFooter>
         <el-button @click="detailOpen = false">{{ t('common.close') }}</el-button>
-      </div>
+      </AdminDialogFooter>
     </template>
-  </el-dialog>
+  </AdminDialog>
 </template>
 
 <script setup lang="ts">
@@ -321,8 +307,7 @@ async function markAllRead() {
 }
 
 .message-item small,
-.message-list__body small,
-.message-dialog-head small {
+.message-list__body small {
   color: #667085;
   font-size: 13px;
 }
@@ -349,54 +334,22 @@ async function markAllRead() {
   overflow: hidden;
 }
 
-.message-dialog-head {
-  display: grid;
-  grid-template-columns: 40px minmax(0, 1fr) auto;
+.message-dialog-meta {
+  display: flex;
   align-items: center;
-  gap: 12px;
-  min-width: 0;
+  gap: 8px;
+  margin: 0 0 10px;
+  color: #667085;
+  font-size: 13px;
+  line-height: 1.4;
 }
 
-.message-dialog-head__icon {
-  display: grid;
-  width: 40px;
-  height: 40px;
-  place-items: center;
-  color: #075cff;
-  border: 1px solid #dbeafe;
-  border-radius: 12px;
-  background: linear-gradient(180deg, #eff6ff 0%, #eaf2ff 100%);
-}
-
-.message-dialog-head__icon.is-detail {
-  color: #ffffff;
-  border-color: #075cff;
-  background: linear-gradient(180deg, #1677ff 0%, #075cff 100%);
-  box-shadow: 0 8px 18px rgba(7, 92, 255, 0.2);
-}
-
-.message-dialog-head__text {
-  display: grid;
-  gap: 2px;
-  min-width: 0;
-}
-
-.message-dialog-head strong {
-  overflow: hidden;
-  color: #111827;
-  font-size: 18px;
-  line-height: 1.25;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.message-dialog-head__pill {
-  min-width: 32px;
-  padding: 5px 10px;
+.message-dialog-meta__pill {
+  min-width: 24px;
+  padding: 2px 8px;
   border-radius: 999px;
   color: #075cff;
-  font-size: 13px;
-  font-weight: 800;
+  font-weight: 700;
   text-align: center;
   background: #eaf2ff;
 }
@@ -455,48 +408,22 @@ async function markAllRead() {
 }
 
 .message-detail {
-  min-height: 200px;
-  border-top: 1px solid #e6edf6;
+  min-height: 0;
 }
 
 .message-detail__content {
-  max-height: 58vh;
+  max-height: 48vh;
+  min-height: 72px;
   overflow: auto;
-  padding: 22px 2px 4px;
+  padding: 16px 18px;
+  border: 1px solid #e6edf6;
+  border-radius: 10px;
+  background: #fbfdff;
   color: #1f2937;
-  font-size: 15px;
-  line-height: 1.75;
+  font-size: 14px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
 }
 
-:global(.message-detail-dialog .el-dialog__header),
-:global(.message-list-dialog .el-dialog__header) {
-  margin-right: 0;
-  padding: 22px 56px 18px 32px;
-  background: #ffffff !important;
-}
-
-:global(.message-detail-dialog.el-dialog),
-:global(.message-list-dialog.el-dialog) {
-  width: min(720px, calc(100vw - 40px));
-  border-color: #dfe8f4;
-  border-radius: 18px;
-  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.2);
-}
-
-:global(.message-detail-dialog .el-dialog__body),
-:global(.message-list-dialog .el-dialog__body) {
-  padding: 0 32px 24px;
-}
-
-:global(.message-detail-dialog .el-dialog__footer),
-:global(.message-list-dialog .el-dialog__footer) {
-  padding: 16px 32px 24px;
-  border-top: 1px solid #e6edf6;
-}
-
-:global(.message-detail-dialog .el-dialog__headerbtn),
-:global(.message-list-dialog .el-dialog__headerbtn) {
-  top: 20px;
-  right: 26px;
-}
 </style>

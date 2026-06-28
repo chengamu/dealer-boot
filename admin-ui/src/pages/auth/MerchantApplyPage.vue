@@ -146,9 +146,14 @@
       <a @click="openLegal('cookie')">{{ t('apply.cookiePolicy') }}</a>
     </footer>
 
-    <el-dialog v-model="legalOpen" :title="legalTitle" class="legal-dialog" width="720px">
+    <AdminDialog v-model="legalOpen" :title="legalTitle" variant="detail" class="legal-dialog" width="720px">
       <div class="legal-content">{{ legalContent }}</div>
-    </el-dialog>
+      <template #footer>
+        <AdminDialogFooter>
+          <el-button @click="legalOpen = false">{{ t('common.close') }}</el-button>
+        </AdminDialogFooter>
+      </template>
+    </AdminDialog>
   </div>
 </template>
 

@@ -137,32 +137,35 @@
     @remove-restriction="$emit('remove-restriction', $event)"
   />
 
-  <el-dialog v-model="valueImportOpen" :title="t('productCenter.formulaSetup.importOptionValues')" width="980px" class="formula-option-dialog">
-    <div class="formula-option-dialog__toolbar">
+  <AdminDialog v-model="valueImportOpen" :title="t('productCenter.formulaSetup.importOptionValues')" width="980px" variant="picker" class="admin-selector-dialog formula-option-dialog">
+    <div class="admin-dialog__toolbar formula-option-dialog__toolbar">
       <div>
         <strong>{{ selectedOption?.optionNameCn || selectedOption?.optionCode || '-' }}</strong>
         <span>{{ sourceText(selectedOption || {}) }}</span>
       </div>
       <el-input v-model="valueImportKeyword" :placeholder="t('productCenter.formulaSetup.materialSearchPlaceholder')" clearable />
     </div>
-    <el-table :data="importableSourceMaterials" border height="430" @selection-change="importMaterialRows = $event">
-      <el-table-column type="selection" width="46" />
-      <el-table-column prop="attributeGroupNameCn" :label="t('productCenter.formulaSetup.attributeGroup')" width="120" show-overflow-tooltip />
-      <el-table-column prop="materialTypeNameCn" :label="t('productCenter.formulaSetup.materialType')" width="140" show-overflow-tooltip />
-      <el-table-column prop="materialCode" :label="t('productCenter.formulaSetup.materialCode')" width="140" show-overflow-tooltip />
-      <el-table-column prop="materialNameCn" :label="t('productCenter.formulaSetup.materialName')" min-width="240" show-overflow-tooltip />
-      <el-table-column prop="specModelText" :label="t('productCenter.formulaSetup.specModel')" min-width="200" show-overflow-tooltip />
-      <el-table-column prop="unitCode" :label="t('productCenter.formulaSetup.unit')" width="90" />
-    </el-table>
+    <div class="admin-dialog__table admin-selector-dialog__table">
+      <el-table :data="importableSourceMaterials" border height="100%" @selection-change="importMaterialRows = $event">
+        <el-table-column type="selection" width="46" />
+        <el-table-column prop="attributeGroupNameCn" :label="t('productCenter.formulaSetup.attributeGroup')" width="120" show-overflow-tooltip />
+        <el-table-column prop="materialTypeNameCn" :label="t('productCenter.formulaSetup.materialType')" width="140" show-overflow-tooltip />
+        <el-table-column prop="materialCode" :label="t('productCenter.formulaSetup.materialCode')" width="140" show-overflow-tooltip />
+        <el-table-column prop="materialNameCn" :label="t('productCenter.formulaSetup.materialName')" min-width="240" show-overflow-tooltip />
+        <el-table-column prop="specModelText" :label="t('productCenter.formulaSetup.specModel')" min-width="200" show-overflow-tooltip />
+        <el-table-column prop="unitCode" :label="t('productCenter.formulaSetup.unit')" width="90" />
+      </el-table>
+    </div>
     <template #footer>
-      <span class="formula-option-dialog__count">{{ t('productCenter.formulaSetup.selectedMaterialCount') }}：{{ importMaterialRows.length }}</span>
-      <el-button @click="valueImportOpen = false">{{ t('common.cancel') }}</el-button>
-      <el-button type="primary" :disabled="!importMaterialRows.length" @click="appendImportedMaterialValues">{{ t('common.confirm') }}</el-button>
+      <AdminDialogFooter :status="`${t('productCenter.formulaSetup.selectedMaterialCount')}：${importMaterialRows.length}`">
+        <el-button @click="valueImportOpen = false">{{ t('common.cancel') }}</el-button>
+        <el-button type="primary" :disabled="!importMaterialRows.length" @click="appendImportedMaterialValues">{{ t('common.confirm') }}</el-button>
+      </AdminDialogFooter>
     </template>
-  </el-dialog>
+  </AdminDialog>
 
-  <el-dialog v-model="valueMaterialOpen" :title="valueMaterialDialogTitle" width="760px" class="formula-option-dialog">
-    <div class="formula-option-dialog__toolbar">
+  <AdminDialog v-model="valueMaterialOpen" :title="valueMaterialDialogTitle" width="760px" class="formula-option-dialog">
+    <div class="admin-dialog__toolbar formula-option-dialog__toolbar">
       <div>
         <strong>{{ selectedValueName }}</strong>
         <span>{{ t('productCenter.formulaSetup.valueMaterialHint') }}</span>
@@ -181,10 +184,12 @@
       <el-option v-for="material in materials" :key="String(material.materialCode)" :label="materialLabel(material)" :value="material.materialCode" />
     </el-select>
     <template #footer>
-      <el-button @click="valueMaterialOpen = false">{{ t('common.cancel') }}</el-button>
-      <el-button type="primary" @click="saveValueMaterials">{{ t('common.confirm') }}</el-button>
+      <AdminDialogFooter :status="t('common.selectedCount', { count: valueMaterialCodes.length })">
+        <el-button @click="valueMaterialOpen = false">{{ t('common.cancel') }}</el-button>
+        <el-button type="primary" @click="saveValueMaterials">{{ t('common.confirm') }}</el-button>
+      </AdminDialogFooter>
     </template>
-  </el-dialog>
+  </AdminDialog>
 </template>
 
 <script setup lang="ts">
@@ -250,7 +255,11 @@ const emit = defineEmits<{
 }>()
 
 const localeStore = useLocaleStore()
-const t = (key: string) => getMessage(key, localeStore.language)
+const t = (key: string, params?: Record<string, string | number>) => {
+  const message = getMessage(key, localeStore.language)
+  if (!params) return message
+  return Object.entries(params).reduce((text, [name, value]) => text.replaceAll(`{${name}}`, String(value)), message)
+}
 const ALL_VALUE_FILTER = '__ALL__'
 const selectedValueCode = ref(ALL_VALUE_FILTER)
 const selectedNodeId = ref('')
@@ -1078,35 +1087,9 @@ function expandNodePath(nodeId: string, includeNode = false) {
   padding: 16px;
 }
 
-.formula-option-dialog :deep(.el-dialog) {
-  border-radius: 10px;
-}
-
-.formula-option-dialog :deep(.el-dialog__header) {
-  padding: 18px 22px 12px;
-  border-bottom: 1px solid #edf1f7;
-}
-
-.formula-option-dialog :deep(.el-dialog__body) {
-  padding: 14px 20px;
-}
-
-.formula-option-dialog :deep(.el-dialog__footer) {
-  padding: 12px 20px 16px;
-  border-top: 1px solid #edf1f7;
-}
-
 .formula-option-dialog__toolbar {
-  display: flex;
-  align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 12px;
-  padding: 10px 12px;
   color: #6b7280;
-  background: #f8fbff;
-  border: 1px solid #e6ebf2;
-  border-radius: 8px;
 }
 
 .formula-option-dialog__toolbar > div {
@@ -1120,12 +1103,6 @@ function expandNodePath(nodeId: string, includeNode = false) {
 
 .formula-option-dialog__toolbar .el-input {
   width: 320px;
-}
-
-.formula-option-dialog__count {
-  float: left;
-  color: #6b7280;
-  line-height: 32px;
 }
 
 .value-material-select {

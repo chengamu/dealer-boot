@@ -68,8 +68,8 @@
       @remove-restriction="removeRow(setup.restrictions, $event)"
     />
 
-    <el-dialog v-model="materialPickerOpen" :title="t('productCenter.formulaSetup.batchAddMaterial')" width="1320px" class="material-picker-dialog">
-      <div class="material-picker-search-card">
+    <AdminDialog v-model="materialPickerOpen" :title="t('productCenter.formulaSetup.batchAddMaterial')" width="1320px" variant="picker" class="material-picker-dialog">
+      <div class="admin-dialog__toolbar material-picker-search-card">
         <el-form :model="materialPickerQuery" :inline="true" class="material-picker-filter">
           <el-form-item :label="t('productCenter.formulaSetup.attributeGroup')">
             <el-select v-model="materialPickerQuery.attributeGroupCode" clearable filterable @change="handlePickerGroupChange">
@@ -93,7 +93,7 @@
           </el-form-item>
         </el-form>
       </div>
-      <div class="material-picker-grid-card">
+      <div class="admin-dialog__table material-picker-grid-card">
         <el-table :data="filteredMaterialRows" border height="100%" class="material-picker-table" @selection-change="selectedMaterials = $event">
           <el-table-column type="selection" width="48" />
           <el-table-column prop="attributeGroupNameCn" :label="t('productCenter.formulaSetup.attributeGroup')" width="120" show-overflow-tooltip />
@@ -106,11 +106,12 @@
         </el-table>
       </div>
       <template #footer>
-        <span class="material-picker-dialog__count">{{ t('productCenter.formulaSetup.selectedMaterialCount') }}：{{ selectedMaterials.length }}</span>
-        <el-button @click="materialPickerOpen = false">{{ t('common.cancel') }}</el-button>
-        <el-button type="primary" @click="appendSelectedMaterials">{{ t('common.confirm') }}</el-button>
+        <AdminDialogFooter :status="`${t('productCenter.formulaSetup.selectedMaterialCount')}：${selectedMaterials.length}`">
+          <el-button @click="materialPickerOpen = false">{{ t('common.cancel') }}</el-button>
+          <el-button type="primary" :disabled="selectedMaterials.length === 0" @click="appendSelectedMaterials">{{ t('common.confirm') }}</el-button>
+        </AdminDialogFooter>
       </template>
-    </el-dialog>
+    </AdminDialog>
 
     <FormulaUsageDrawer
       v-model="usageDrawerOpen"
@@ -611,62 +612,21 @@ function goBack() {
 }
 
 
-.material-picker-dialog :deep(.el-dialog__body) {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  min-height: 0;
-  overflow: hidden;
-  padding: 10px 20px 12px;
-}
-
-.material-picker-dialog :deep(.el-dialog) {
-  display: flex;
-  flex-direction: column;
-  width: min(1380px, calc(100vw - 32px)) !important;
-  height: min(760px, calc(100vh - 72px));
-  max-width: calc(100vw - 32px);
-  border-radius: 10px;
-  overflow: hidden;
-}
-
-.material-picker-dialog :deep(.el-dialog__header) {
-  flex: 0 0 auto;
-  padding: 18px 22px 12px;
-  border-bottom: 1px solid #edf1f7;
-}
-
-.material-picker-dialog :deep(.el-dialog__footer) {
-  flex: 0 0 auto;
-  padding: 12px 20px 16px;
-  border-top: 1px solid #edf1f7;
-}
-
-.material-picker-dialog :deep(.el-dialog__title) {
-  color: #111827;
-  font-size: 18px;
-  font-weight: 700;
-}
-
 .material-picker-search-card {
   flex: 0 0 auto;
-  margin-bottom: 8px;
-  padding: 10px 12px 0;
-  background: #f8fbff;
-  border: 1px solid #e6ebf2;
-  border-radius: 8px;
+  margin-bottom: 12px;
 }
 
 .material-picker-filter {
   display: grid;
-  grid-template-columns: 230px 240px 210px 250px auto;
+  grid-template-columns: minmax(190px, 1fr) minmax(200px, 1fr) minmax(180px, 0.9fr) minmax(200px, 1fr) auto;
   gap: 8px 12px;
   align-items: center;
 }
 
 .material-picker-filter :deep(.el-form-item) {
   margin-right: 0;
-  margin-bottom: 10px;
+  margin-bottom: 0;
 }
 
 .material-picker-filter :deep(.el-form-item__label) {
@@ -698,11 +658,6 @@ function goBack() {
 .material-picker-grid-card {
   flex: 1;
   min-height: 0;
-  padding: 0;
-  background: #fff;
-  border: 1px solid #e6ebf2;
-  border-radius: 8px;
-  overflow: hidden;
 }
 
 .material-picker-table {
@@ -728,12 +683,10 @@ function goBack() {
 }
 
 .material-picker-dialog__count {
-  float: left;
   color: #6b7280;
-  line-height: 32px;
 }
 
-@media (max-width: 1320px) {
+@media (max-width: 1080px) {
   .material-picker-filter {
     grid-template-columns: repeat(2, minmax(220px, 1fr));
   }

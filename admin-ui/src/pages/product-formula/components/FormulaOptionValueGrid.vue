@@ -44,12 +44,12 @@
           <el-switch :model-value="row.defaultFlag" @change="$emit('setDefault', row)" />
         </template>
       </el-table-column>
-      <el-table-column :label="t('common.operate')" width="168" align="center" fixed="right">
+      <el-table-column :label="t('common.operate')" width="170" align="center" fixed="right">
         <template #default="{ row }">
-          <el-button link type="primary" @click.stop="$emit('manageMaterial', row)">
-            {{ t('productCenter.formulaSetup.manageLinkedMaterial') }}
-          </el-button>
-          <el-button link type="danger" @click.stop="$emit('removeValue', row)">{{ t('common.delete') }}</el-button>
+          <AdminTableActions :actions="[
+            { label: t('productCenter.formulaSetup.manageLinkedMaterial'), icon: 'Setting', stopPropagation: true, onClick: () => $emit('manageMaterial', row) },
+            { label: t('common.delete'), icon: 'Delete', type: 'danger', stopPropagation: true, onClick: () => $emit('removeValue', row) }
+          ]" />
         </template>
       </el-table-column>
     </el-table>

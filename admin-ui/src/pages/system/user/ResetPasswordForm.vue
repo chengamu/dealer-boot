@@ -1,5 +1,5 @@
 <template>
-  <el-form ref="pwdRef" :model="user" :rules="rules" label-width="100px">
+  <el-form ref="pwdRef" :model="user" :rules="rules" label-width="150px" class="user-password-form">
     <el-form-item :label="t('user.oldPassword')" prop="oldPassword">
       <el-input v-model="user.oldPassword" :placeholder="t('user.oldPasswordPlaceholder')" type="password" show-password />
     </el-form-item>
@@ -84,3 +84,13 @@ function close() {
   router.push('/')
 }
 </script>
+
+<style scoped lang="scss">
+.user-password-form {
+  max-width: 920px;
+
+  :deep(.el-form-item__label) {
+    white-space: nowrap;
+  }
+}
+</style>

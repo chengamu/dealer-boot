@@ -124,3 +124,17 @@ a {
     display: none !important;
   }
 }
+
+#page-agent-runtime_simulator-mask {
+  background: transparent !important;
+  cursor: default !important;
+
+  > * {
+    opacity: 0.22 !important;
+    filter: hue-rotate(188deg) saturate(0.55) brightness(1.08) !important;
+  }
+}
+
+#playwright-highlight-container {
+  display: none !important;
+}

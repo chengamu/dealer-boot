@@ -19,6 +19,10 @@ import { getConfigKey, updateConfigByKey } from '@/api/system/config'
 import { addDateRange, handleTree, parseTime, resetForm, selectDictLabel, selectDictLabels } from '@/utils/ruoyi'
 import SvgIcon from '@/components/SvgIcon/index.vue'
 import elementIcons from '@/components/SvgIcon/svgicon'
+import AdminDialog from '@/components/AdminDialog/index.vue'
+import AdminDialogFooter from '@/components/AdminDialogFooter/index.vue'
+import AdminDrawer from '@/components/AdminDrawer/index.vue'
+import AdminTableActions from '@/components/AdminTableActions/index.vue'
 import DictTag from '@/components/DictTag/index.vue'
 import Editor from '@/components/Editor/index.vue'
 import FileUpload from '@/components/FileUpload/index.vue'
@@ -44,6 +48,10 @@ async function bootstrap() {
   app.config.globalProperties.selectDictLabel = selectDictLabel
   app.config.globalProperties.selectDictLabels = selectDictLabels
 
+  app.component('AdminDialog', AdminDialog)
+  app.component('AdminDialogFooter', AdminDialogFooter)
+  app.component('AdminDrawer', AdminDrawer)
+  app.component('AdminTableActions', AdminTableActions)
   app.component('DictTag', DictTag)
   app.component('Editor', Editor)
   app.component('FileUpload', FileUpload)

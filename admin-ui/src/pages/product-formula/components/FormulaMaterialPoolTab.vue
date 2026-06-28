@@ -87,8 +87,10 @@
       </el-table-column>
       <el-table-column :label="t('common.operate')" width="150" fixed="right" align="center">
         <template #default="{ row, $index }">
-          <el-button link type="primary" @click="$emit('open-usage', row)">{{ t('productCenter.formulaSetup.usageSetting') }}</el-button>
-          <el-button link type="danger" @click="$emit('remove-material', $index)">{{ t('common.delete') }}</el-button>
+          <AdminTableActions :actions="[
+            { label: t('productCenter.formulaSetup.usageSetting'), icon: 'Setting', onClick: () => $emit('open-usage', row) },
+            { label: t('common.delete'), icon: 'Delete', type: 'danger', onClick: () => $emit('remove-material', $index) }
+          ]" />
         </template>
       </el-table-column>
     </el-table>

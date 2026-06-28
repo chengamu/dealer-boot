@@ -11,14 +11,19 @@
         <el-button circle icon="Menu" :aria-label="t('common.columnVisibility')" :title="t('common.columnVisibility')" @click="showColumn()" />
       </el-tooltip>
     </el-row>
-    <el-dialog v-model="open" :title="title" width="560px" class="column-visibility-dialog" append-to-body>
+    <AdminDialog v-model="open" :title="title" width="560px" class="column-visibility-dialog" append-to-body>
       <el-transfer
         v-model="value"
         :titles="[t('common.show'), t('common.hide')]"
         :data="columns"
         @change="dataChange"
       />
-    </el-dialog>
+      <template #footer>
+        <AdminDialogFooter :status="hiddenCountText">
+          <el-button @click="open = false">{{ t('common.close') }}</el-button>
+        </AdminDialogFooter>
+      </template>
+    </AdminDialog>
   </div>
 </template>
 
@@ -48,11 +53,16 @@ const emits = defineEmits<{
   (e: 'queryTable'): void
 }>()
 const localeStore = useLocaleStore()
-const t = (key: string) => getMessage(key, localeStore.language)
+const t = (key: string, params?: Record<string, string | number>) => {
+  const message = getMessage(key, localeStore.language)
+  if (!params) return message
+  return Object.entries(params).reduce((text, [name, value]) => text.replaceAll(`{${name}}`, String(value)), message)
+}
 
 const value = ref<Array<number | string>>([])
 const title = computed(() => t('common.columnVisibility'))
 const open = ref(false)
+const hiddenCountText = computed(() => `${t('common.hide')}：${value.value.length}`)
 
 const style = computed(() => {
   const ret: Record<string, string> = {}

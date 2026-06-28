@@ -1,5 +1,5 @@
 ﻿<template>
-  <el-form ref="userRef" :model="user" :rules="rules" label-width="90px">
+  <el-form ref="userRef" :model="user" :rules="rules" label-width="130px" class="user-profile-form">
     <el-form-item :label="t('user.nickName')" prop="nickName">
       <el-input v-model="user.nickName" maxlength="30" />
     </el-form-item>
@@ -89,3 +89,19 @@ function close() {
   router.push('/')
 }
 </script>
+
+<style scoped lang="scss">
+.user-profile-form {
+  max-width: 920px;
+
+  :deep(.el-form-item__label) {
+    white-space: nowrap;
+  }
+
+  :deep(.el-radio-group) {
+    min-height: 32px;
+    align-items: center;
+    gap: 18px;
+  }
+}
+</style>

@@ -42,19 +42,11 @@
           <span>{{ formatUtc(scope.row.loginTime) }}</span>
         </template>
       </el-table-column>
-      <el-table-column :label="t('common.operate')" align="center" class-name="small-padding fixed-width">
+      <el-table-column :label="t('common.operate')" align="center" width="130" class-name="small-padding fixed-width">
         <template #default="scope">
-          <el-button
-            v-hasPermi="['monitor:online:forceLogout']"
-            link
-            type="primary"
-            icon="Delete"
-            :aria-label="t('legacy.forceLogout')"
-            :title="t('legacy.forceLogout')"
-            @click="handleForceLogout(scope.row)"
-          >
-            {{ t('legacy.forceLogout') }}
-          </el-button>
+          <AdminTableActions :actions="[
+            { label: t('legacy.forceLogout'), icon: 'Delete', type: 'danger', permission: 'monitor:online:forceLogout', onClick: () => handleForceLogout(scope.row) }
+          ]" />
         </template>
       </el-table-column>
     </el-table>

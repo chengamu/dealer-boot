@@ -53,8 +53,10 @@
       </el-table-column>
       <el-table-column :label="t('common.operate')" align="center" width="150" class-name="small-padding fixed-width">
         <template #default="{ row }">
-          <el-button link type="primary" icon="Edit" @click="handleUpdate(row)" v-hasPermi="['system:oss:edit']">{{ t('common.edit') }}</el-button>
-          <el-button link type="primary" icon="Delete" @click="handleDelete(row)" v-hasPermi="['system:oss:remove']">{{ t('common.delete') }}</el-button>
+          <AdminTableActions :actions="[
+            { label: t('common.edit'), icon: 'Edit', permission: 'system:oss:edit', onClick: () => handleUpdate(row) },
+            { label: t('common.delete'), icon: 'Delete', type: 'danger', permission: 'system:oss:remove', onClick: () => handleDelete(row) }
+          ]" />
         </template>
       </el-table-column>
     </el-table>
@@ -67,7 +69,16 @@
       @pagination="getList"
     />
 
-    <el-drawer v-model="open" :title="title" size="760px" append-to-body destroy-on-close @closed="reset">
+    <AdminDrawer
+      v-model="open"
+      :title="title"
+      size="760px"
+      append-to-body
+      destroy-on-close
+      :close-on-click-modal="false"
+      :before-close="formCloseGuard.beforeClose"
+      @closed="formCloseGuard.handleClosed"
+    >
       <el-form ref="ossConfigRef" :model="form" :rules="rules" label-width="120px">
         <el-form-item :label="t('legacy.configKey')" prop="configKey">
           <el-input v-model="form.configKey" :placeholder="t('legacy.configKeyPlaceholder')" />
@@ -115,7 +126,7 @@
           <el-button @click="cancel">{{ t('common.cancel') }}</el-button>
         </div>
       </template>
-    </el-drawer>
+    </AdminDrawer>
   </div>
 </template>
 
@@ -135,6 +146,7 @@ import {
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 import { useDict } from '@/utils/dict'
+import { useFormCloseGuard } from '@/composables/useFormCloseGuard'
 
 const localeStore = useLocaleStore()
 const t = (key: string, params?: Record<string, string | number>) => {
@@ -196,6 +208,15 @@ const rules = computed<FormRules<OssConfig>>(() => ({
   ],
   accessPolicy: [{ required: true, message: t('legacy.accessPolicyRequired'), trigger: 'blur' }]
 }))
+const formCloseGuard = useFormCloseGuard({
+  enabled: () => open.value,
+  getSnapshot: () => JSON.stringify(form.value || {}),
+  close: () => {
+    open.value = false
+  },
+  reset,
+  t
+})
 
 function reset() {
   form.value = {
@@ -227,8 +248,7 @@ async function getList() {
 }
 
 function cancel() {
-  open.value = false
-  reset()
+  formCloseGuard.closeWithGuard()
 }
 
 function handleQuery() {
@@ -247,6 +267,7 @@ function handleSelectionChange(selection: OssConfig[]) {
 
 function handleAdd() {
   reset()
+  formCloseGuard.markPristine()
   open.value = true
 }
 
@@ -258,6 +279,7 @@ async function handleUpdate(row?: OssConfig) {
   try {
     const response = await getOssConfig(ossConfigId)
     form.value = response.data
+    formCloseGuard.markPristine()
     open.value = true
   } finally {
     loading.value = false
@@ -276,8 +298,8 @@ async function submitForm() {
       await addOssConfig(form.value)
       ElMessage.success(t('common.addSuccess'))
     }
+    formCloseGuard.markPristine()
     open.value = false
-    reset()
     await getList()
   } catch {
     // Request interceptor already displays the backend error.

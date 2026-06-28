@@ -92,49 +92,79 @@
       </el-table-column>
       <el-table-column :label="t('common.operate')" align="center" width="116" fixed="right" class-name="small-padding fixed-width">
         <template #default="scope">
-          <el-button v-hasPermi="['monitor:operlog:query']" link type="primary" icon="View" @click="handleView(scope.row)">
-            {{ t('common.detail') }}
-          </el-button>
+          <AdminTableActions :actions="[
+            { label: t('common.detail'), icon: 'View', permission: 'monitor:operlog:query', onClick: () => handleView(scope.row) }
+          ]" />
         </template>
       </el-table-column>
     </el-table>
 
     <pagination v-show="total > 0" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" :total="total" @pagination="getList" />
 
-    <el-drawer v-model="open" :title="t('operlog.detailTitle')" size="700px" append-to-body destroy-on-close @closed="resetDetail">
-      <el-form :model="form" label-width="100px">
-        <el-row>
-          <el-col :span="24">
-            <el-form-item :label="t('operlog.loginInfo')">{{ form.operName }} / {{ form.deptName }} / {{ form.operIp }} / {{ form.operLocation }}</el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item :label="t('operlog.requestInfo')">
-              <pre class="log-detail-code">{{ requestInfoText }}</pre>
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item :label="t('operlog.moduleInfo')">{{ form.title }} / {{ typeFormat(form) }}</el-form-item>
-          </el-col>
-          <el-col :span="24"><el-form-item :label="t('operlog.method')"><pre class="log-detail-code">{{ codeText(form.method) }}</pre></el-form-item></el-col>
-          <el-col :span="24"><el-form-item :label="t('operlog.operParam')"><pre class="log-detail-code">{{ codeText(form.operParam) }}</pre></el-form-item></el-col>
-          <el-col :span="24"><el-form-item :label="t('operlog.jsonResult')"><pre class="log-detail-code">{{ codeText(form.jsonResult) }}</pre></el-form-item></el-col>
-          <el-col :span="6">
-            <el-form-item :label="`${t('operlog.operStatus')}:`">
-              <div v-if="String(form.status) === '0'">{{ t('dataLabels.normal') }}</div>
-              <div v-else-if="String(form.status) === '1'">{{ t('common.failed') }}</div>
-            </el-form-item>
-          </el-col>
-          <el-col :span="8"><el-form-item :label="`${t('operlog.costTime')}:`">{{ form.costTime }}{{ t('common.milliseconds') }}</el-form-item></el-col>
-          <el-col :span="10"><el-form-item :label="`${t('operlog.operDate')}:`">{{ formatUtc(form.operTime) }}</el-form-item></el-col>
-          <el-col v-if="String(form.status) === '1'" :span="24"><el-form-item :label="t('operlog.errorMsg')"><pre class="log-detail-code">{{ codeText(form.errorMsg) }}</pre></el-form-item></el-col>
-        </el-row>
-      </el-form>
+    <AdminDrawer v-model="open" :title="t('operlog.detailTitle')" size="700px" variant="detail" append-to-body destroy-on-close @closed="resetDetail">
+      <div class="admin-detail operation-log-detail">
+        <section class="admin-detail__section">
+          <div class="admin-detail__section-title">{{ t('operlog.loginInfo') }}</div>
+          <dl class="admin-detail__grid">
+            <div class="admin-detail__item">
+              <dt>{{ t('operlog.loginInfo') }}</dt>
+              <dd>{{ codeText(form.operName) }} / {{ codeText(form.deptName) }}</dd>
+            </div>
+            <div class="admin-detail__item">
+              <dt>IP</dt>
+              <dd>{{ codeText(form.operIp) }} / {{ codeText(form.operLocation) }}</dd>
+            </div>
+            <div class="admin-detail__item">
+              <dt>{{ t('operlog.moduleInfo') }}</dt>
+              <dd>{{ codeText(form.title) }} / {{ typeFormat(form) || '-' }}</dd>
+            </div>
+            <div class="admin-detail__item">
+              <dt>{{ t('operlog.operStatus') }}</dt>
+              <dd>{{ statusText(form.status) }}</dd>
+            </div>
+            <div class="admin-detail__item">
+              <dt>{{ t('operlog.operDate') }}</dt>
+              <dd>{{ formatUtc(form.operTime) }}</dd>
+            </div>
+            <div class="admin-detail__item">
+              <dt>{{ t('operlog.costTime') }}</dt>
+              <dd>{{ codeText(form.costTime) }}{{ t('common.milliseconds') }}</dd>
+            </div>
+          </dl>
+        </section>
+
+        <section class="admin-detail__section">
+          <div class="admin-detail__section-title">{{ t('operlog.requestInfo') }}</div>
+          <dl class="admin-detail__grid">
+            <div class="admin-detail__item admin-detail__item--full">
+              <dt>{{ t('operlog.requestInfo') }}</dt>
+              <dd><pre class="admin-detail__code">{{ requestInfoText }}</pre></dd>
+            </div>
+            <div class="admin-detail__item admin-detail__item--full">
+              <dt>{{ t('operlog.method') }}</dt>
+              <dd><pre class="admin-detail__code">{{ codeText(form.method) }}</pre></dd>
+            </div>
+            <div class="admin-detail__item admin-detail__item--full">
+              <dt>{{ t('operlog.operParam') }}</dt>
+              <dd><pre class="admin-detail__code">{{ codeText(form.operParam) }}</pre></dd>
+            </div>
+            <div class="admin-detail__item admin-detail__item--full">
+              <dt>{{ t('operlog.jsonResult') }}</dt>
+              <dd><pre class="admin-detail__code">{{ codeText(form.jsonResult) }}</pre></dd>
+            </div>
+            <div v-if="String(form.status) === '1'" class="admin-detail__item admin-detail__item--full">
+              <dt>{{ t('operlog.errorMsg') }}</dt>
+              <dd><pre class="admin-detail__code">{{ codeText(form.errorMsg) }}</pre></dd>
+            </div>
+          </dl>
+        </section>
+      </div>
       <template #footer>
         <div class="dialog-footer">
           <el-button @click="open = false">{{ t('common.close') }}</el-button>
         </div>
       </template>
-    </el-drawer>
+    </AdminDrawer>
   </div>
 </template>
 
@@ -202,6 +232,12 @@ async function getList() {
 
 function typeFormat(row: Partial<OperLog>) {
   return sys_oper_type.value.find((item) => String(item.value) === String(row.businessType))?.label || row.businessType || ''
+}
+
+function statusText(value: unknown) {
+  if (String(value) === '0') return t('dataLabels.normal')
+  if (String(value) === '1') return t('common.failed')
+  return codeText(value)
 }
 
 function handleQuery() {

@@ -69,14 +69,12 @@
           <span>{{ formatUtc(row.createTime, 'YYYY-MM-DD') }}</span>
         </template>
       </el-table-column>
-      <el-table-column :label="t('common.operate')" align="center" class-name="small-padding fixed-width">
+      <el-table-column :label="t('common.operate')" align="center" width="150" class-name="small-padding fixed-width">
         <template #default="{ row }">
-          <el-button link type="primary" icon="Edit" @click="handleUpdate(row)" v-hasPermi="['system:notice:edit']">
-            {{ t('common.edit') }}
-          </el-button>
-          <el-button link type="primary" icon="Delete" @click="handleDelete(row)" v-hasPermi="['system:notice:remove']">
-            {{ t('common.delete') }}
-          </el-button>
+          <AdminTableActions :actions="[
+            { label: t('common.edit'), icon: 'Edit', permission: 'system:notice:edit', onClick: () => handleUpdate(row) },
+            { label: t('common.delete'), icon: 'Delete', type: 'danger', permission: 'system:notice:remove', onClick: () => handleDelete(row) }
+          ]" />
         </template>
       </el-table-column>
     </el-table>
@@ -89,7 +87,16 @@
       @pagination="getList"
     />
 
-    <el-drawer v-model="open" :title="title" size="760px" append-to-body destroy-on-close @closed="reset">
+    <AdminDrawer
+      v-model="open"
+      :title="title"
+      size="760px"
+      append-to-body
+      destroy-on-close
+      :close-on-click-modal="false"
+      :before-close="formCloseGuard.beforeClose"
+      @closed="formCloseGuard.handleClosed"
+    >
       <el-form ref="noticeRef" :model="form" :rules="rules" label-width="90px">
         <el-row>
           <el-col :span="24">
@@ -124,7 +131,7 @@
           <el-button @click="cancel">{{ t('common.cancel') }}</el-button>
         </div>
       </template>
-    </el-drawer>
+    </AdminDrawer>
   </div>
 </template>
 
@@ -137,6 +144,7 @@ import { formatUtc } from '@/utils/datetime'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 import { useDict } from '@/utils/dict'
+import { useFormCloseGuard } from '@/composables/useFormCloseGuard'
 
 const localeStore = useLocaleStore()
 const t = (key: string, params?: Record<string, string | number>) => {
@@ -167,6 +175,15 @@ const rules = computed<FormRules<Notice>>(() => ({
   noticeTitle: [{ required: true, message: t('legacy.noticeTitleRequired'), trigger: 'blur' }],
   noticeType: [{ required: true, message: t('legacy.noticeTypeRequired'), trigger: 'change' }]
 }))
+const formCloseGuard = useFormCloseGuard({
+  enabled: () => open.value,
+  getSnapshot: () => JSON.stringify(form.value || {}),
+  close: () => {
+    open.value = false
+  },
+  reset,
+  t
+})
 
 function reset() {
   form.value = {
@@ -190,8 +207,7 @@ async function getList() {
 }
 
 function cancel() {
-  open.value = false
-  reset()
+  formCloseGuard.closeWithGuard()
 }
 
 function handleQuery() {
@@ -210,6 +226,7 @@ function handleSelectionChange(selection: Notice[]) {
 
 function handleAdd() {
   reset()
+  formCloseGuard.markPristine()
   open.value = true
 }
 
@@ -219,6 +236,7 @@ async function handleUpdate(row?: Notice) {
   if (!noticeId) return
   try {
     form.value = await getNotice(noticeId)
+    formCloseGuard.markPristine()
     open.value = true
   } catch {
     // Request interceptor already displays the backend error.
@@ -236,8 +254,8 @@ async function submitForm() {
       await addNotice(form.value)
       ElMessage.success(t('common.addSuccess'))
     }
+    formCloseGuard.markPristine()
     open.value = false
-    reset()
     await getList()
   } catch {
     // Request interceptor already displays the backend error.

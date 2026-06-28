@@ -69,14 +69,12 @@
           <span>{{ formatUtc(row.createTime) }}</span>
         </template>
       </el-table-column>
-      <el-table-column :label="t('common.operate')" width="180" align="center" class-name="small-padding fixed-width">
+      <el-table-column :label="t('common.operate')" width="150" align="center" class-name="small-padding fixed-width">
         <template #default="{ row }">
-          <el-button link type="primary" icon="Edit" @click="handleUpdate(row)" v-hasPermi="['system:post:edit']">
-            {{ t('common.edit') }}
-          </el-button>
-          <el-button link type="primary" icon="Delete" @click="handleDelete(row)" v-hasPermi="['system:post:remove']">
-            {{ t('common.delete') }}
-          </el-button>
+          <AdminTableActions :actions="[
+            { label: t('common.edit'), icon: 'Edit', permission: 'system:post:edit', onClick: () => handleUpdate(row) },
+            { label: t('common.delete'), icon: 'Delete', type: 'danger', permission: 'system:post:remove', onClick: () => handleDelete(row) }
+          ]" />
         </template>
       </el-table-column>
     </el-table>
@@ -89,7 +87,16 @@
       @pagination="getList"
     />
 
-    <el-drawer v-model="open" :title="title" size="520px" append-to-body destroy-on-close @closed="reset">
+    <AdminDrawer
+      v-model="open"
+      :title="title"
+      size="520px"
+      append-to-body
+      destroy-on-close
+      :close-on-click-modal="false"
+      :before-close="formCloseGuard.beforeClose"
+      @closed="formCloseGuard.handleClosed"
+    >
       <el-form ref="postRef" :model="form" :rules="rules" label-width="90px">
         <el-form-item :label="t('legacy.postName')" prop="postName">
           <el-input v-model="form.postName" :placeholder="t('legacy.postNamePlaceholder')" />
@@ -115,7 +122,7 @@
           <el-button @click="cancel">{{ t('common.cancel') }}</el-button>
         </div>
       </template>
-    </el-drawer>
+    </AdminDrawer>
   </div>
 </template>
 
@@ -128,6 +135,7 @@ import { formatUtc } from '@/utils/datetime'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 import { useDict } from '@/utils/dict'
+import { useFormCloseGuard } from '@/composables/useFormCloseGuard'
 
 const localeStore = useLocaleStore()
 const t = (key: string, params?: Record<string, string | number>) => {
@@ -159,6 +167,15 @@ const rules = computed<FormRules<Post>>(() => ({
   postCode: [{ required: true, message: t('legacy.postCodeRequired'), trigger: 'blur' }],
   postSort: [{ required: true, message: t('legacy.postSortRequired'), trigger: 'blur' }]
 }))
+const formCloseGuard = useFormCloseGuard({
+  enabled: () => open.value,
+  getSnapshot: () => JSON.stringify(form.value || {}),
+  close: () => {
+    open.value = false
+  },
+  reset,
+  t
+})
 
 function reset() {
   form.value = {
@@ -183,8 +200,7 @@ async function getList() {
 }
 
 function cancel() {
-  open.value = false
-  reset()
+  formCloseGuard.closeWithGuard()
 }
 
 function handleQuery() {
@@ -203,6 +219,7 @@ function handleSelectionChange(selection: Post[]) {
 
 function handleAdd() {
   reset()
+  formCloseGuard.markPristine()
   open.value = true
 }
 
@@ -212,6 +229,7 @@ async function handleUpdate(row?: Post) {
   if (!postId) return
   try {
     form.value = await getPost(postId)
+    formCloseGuard.markPristine()
     open.value = true
   } catch {
     // Request interceptor already displays the backend error.
@@ -229,8 +247,8 @@ async function submitForm() {
       await addPost(form.value)
       ElMessage.success(t('common.addSuccess'))
     }
+    formCloseGuard.markPristine()
     open.value = false
-    reset()
     await getList()
   } catch {
     // Request interceptor already displays the backend error.

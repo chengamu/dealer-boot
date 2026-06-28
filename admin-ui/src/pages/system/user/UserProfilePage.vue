@@ -1,8 +1,8 @@
 <template>
   <div class="app-container user-profile-page">
-    <el-row :gutter="20">
-      <el-col :span="6" :xs="24">
-        <el-card class="box-card">
+    <el-row :gutter="20" class="user-profile-page__layout">
+      <el-col :span="6" :lg="7" :xl="6" :xs="24">
+        <el-card class="box-card user-profile-page__card">
           <template #header>
             <div class="clearfix">
               <span>{{ t('user.profileTitle') }}</span>
@@ -12,7 +12,7 @@
             <div v-if="state.user.userName !== 'wms2'" class="text-center">
               <user-avatar />
             </div>
-            <ul class="list-group list-group-striped">
+            <ul class="list-group list-group-striped user-profile-page__list">
               <li class="list-group-item">
                 <svg-icon icon-class="user" />{{ t('user.userName') }}
                 <div class="pull-right">{{ state.user.userName }}</div>
@@ -41,8 +41,8 @@
           </div>
         </el-card>
       </el-col>
-      <el-col v-if="state.user.userName !== 'wms2'" :span="18" :xs="24">
-        <el-card>
+      <el-col v-if="state.user.userName !== 'wms2'" :span="18" :lg="17" :xl="18" :xs="24">
+        <el-card class="user-profile-page__main-card">
           <template #header>
             <div class="clearfix">
               <span>{{ t('user.basicProfile') }}</span>
@@ -98,3 +98,62 @@ async function getUser() {
 
 getUser()
 </script>
+
+<style scoped lang="scss">
+.user-profile-page {
+  .user-profile-page__layout {
+    row-gap: 16px;
+  }
+
+  .user-profile-page__card,
+  .user-profile-page__main-card {
+    border-radius: 8px;
+  }
+
+  .user-profile-page__main-card {
+    min-height: 420px;
+  }
+
+  :deep(.el-card__header) {
+    font-weight: 600;
+  }
+
+  :deep(.el-tabs__nav-wrap::after) {
+    height: 1px;
+  }
+
+  :deep(.el-tabs__content) {
+    padding: 22px 24px 8px;
+  }
+
+  .user-profile-page__list {
+    margin: 18px 16px 16px;
+    border: 1px solid var(--el-border-color-lighter);
+    border-radius: 8px;
+    overflow: hidden;
+
+    .list-group-item {
+      display: grid;
+      grid-template-columns: 24px minmax(86px, 1fr) minmax(120px, auto);
+      column-gap: 8px;
+      align-items: center;
+      min-height: 54px;
+      padding: 10px 16px;
+      word-break: break-word;
+    }
+
+    .svg-icon {
+      color: var(--el-color-primary);
+    }
+
+    .pull-right {
+      float: none;
+      min-width: 0;
+      text-align: right;
+      font-weight: 600;
+      color: var(--el-text-color-primary);
+      overflow-wrap: anywhere;
+    }
+  }
+}
+</style>

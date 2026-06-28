@@ -44,11 +44,11 @@
           <span>{{ formatUtc(row.createTime) }}</span>
         </template>
       </el-table-column>
-      <el-table-column :label="t('common.operate')" align="center" class-name="small-padding fixed-width">
+      <el-table-column :label="t('common.operate')" align="center" width="140" class-name="small-padding fixed-width">
         <template #default="{ row }">
-          <el-button link type="primary" icon="CircleClose" @click="cancelAuthUser(row)" v-hasPermi="['system:role:remove']">
-            {{ t('role.cancelAuth') }}
-          </el-button>
+          <AdminTableActions :actions="[
+            { label: t('role.cancelAuth'), icon: 'CircleClose', type: 'danger', permission: 'system:role:remove', onClick: () => cancelAuthUser(row) }
+          ]" />
         </template>
       </el-table-column>
     </el-table>

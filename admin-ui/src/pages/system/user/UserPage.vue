@@ -119,22 +119,9 @@
               <span>{{ formatUtc(row.createTime) }}</span>
             </template>
           </el-table-column>
-          <el-table-column :label="t('common.operate')" align="center" width="96" fixed="right" class-name="small-padding fixed-width">
+          <el-table-column v-if="showOperationColumn" :label="t('common.operate')" align="center" width="150" fixed="right" class-name="small-padding fixed-width">
             <template #default="{ row }">
-              <el-dropdown v-if="row.userId !== 1" trigger="click" popper-class="user-action-menu">
-                <el-button class="user-actions-button" :aria-label="t('common.operate')" :title="t('common.operate')">
-                  <el-icon><MoreFilled /></el-icon>
-                </el-button>
-                <template #dropdown>
-                  <el-dropdown-menu>
-                    <el-dropdown-item @click="handleUpdate(row)" v-hasPermi="['system:user:edit']">{{ t('common.edit') }}</el-dropdown-item>
-                    <el-dropdown-item @click="handleResetPwd(row)" v-hasPermi="['system:user:resetPwd']">{{ t('user.resetPassword') }}</el-dropdown-item>
-                    <el-dropdown-item @click="handleAuthRole(row)" v-hasPermi="['system:user:edit']">{{ t('user.assignRole') }}</el-dropdown-item>
-                    <el-dropdown-item class="is-danger" @click="handleDelete(row)" v-hasPermi="['system:user:remove']">{{ t('common.delete') }}</el-dropdown-item>
-                  </el-dropdown-menu>
-                </template>
-              </el-dropdown>
-              <span v-else class="user-actions-placeholder">-</span>
+              <AdminTableActions :actions="userRowActions(row)" />
             </template>
           </el-table-column>
         </el-table>
@@ -143,7 +130,17 @@
       </el-col>
     </el-row>
 
-    <el-drawer v-model="open" :title="title" size="720px" class="user-edit-dialog" append-to-body destroy-on-close @closed="reset">
+    <AdminDrawer
+      v-model="open"
+      :title="title"
+      size="720px"
+      class="user-edit-dialog"
+      append-to-body
+      destroy-on-close
+      :close-on-click-modal="false"
+      :before-close="formCloseGuard.beforeClose"
+      @closed="formCloseGuard.handleClosed"
+    >
       <el-form ref="userRef" :model="form" :rules="rules" label-width="112px" class="user-dialog">
         <div class="user-dialog__intro">
           <span>{{ form.userId === undefined ? t('common.add') : t('common.edit') }}</span>
@@ -262,9 +259,9 @@
           <el-button @click="cancel">{{ t('common.cancel') }}</el-button>
         </div>
       </template>
-    </el-drawer>
+    </AdminDrawer>
 
-    <el-dialog v-model="upload.open" :title="upload.title" width="420px" append-to-body destroy-on-close @closed="resetUpload">
+    <AdminDialog v-model="upload.open" :title="upload.title" width="480px" class="admin-upload-dialog" append-to-body destroy-on-close @closed="resetUpload">
       <el-upload
         ref="uploadRef"
         :limit="1"
@@ -290,12 +287,12 @@
         </template>
       </el-upload>
       <template #footer>
-        <div class="dialog-footer">
+        <AdminDialogFooter>
           <el-button type="primary" :loading="upload.isUploading" @click="submitFileForm">{{ t('common.confirm') }}</el-button>
           <el-button @click="upload.open = false">{{ t('common.cancel') }}</el-button>
-        </div>
+        </AdminDialogFooter>
       </template>
-    </el-dialog>
+    </AdminDialog>
   </div>
 </template>
 
@@ -303,7 +300,7 @@
 import { computed, h, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules, type UploadInstance, type UploadProgressEvent, type UploadRawFile, type UploadRequestOptions } from 'element-plus'
-import { Briefcase, MoreFilled } from '@element-plus/icons-vue'
+import { Briefcase } from '@element-plus/icons-vue'
 import { addUser, changeUserStatus, delUser, deptTreeSelect, getInitPassword, getUser, listUser, resetUserPwd, updateUser, type SysUser, type TreeOption, type UserOptionPost, type UserOptionRole, type UserQuery } from '@/api/system/user'
 import { download, request } from '@/utils/request'
 import { formatUtc, withUtcDateRange } from '@/utils/datetime'
@@ -311,6 +308,7 @@ import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 import { useDict } from '@/utils/dict'
 import { runUiAction } from '@/utils/action'
+import { useFormCloseGuard } from '@/composables/useFormCloseGuard'
 
 interface DictOption {
   label?: string
@@ -375,6 +373,7 @@ const upload = reactive({
 
 const single = computed(() => ids.value.length !== 1)
 const multiple = computed(() => ids.value.length === 0)
+const showOperationColumn = computed(() => userList.value.some((row) => userRowActions(row).some((action) => !action.hidden)))
 const title = computed(() => (form.value.userId ? t('user.editTitle') : t('user.addTitle')))
 const userSexLabelKeys: Record<string, string> = {
   '0': 'user.sexMale',
@@ -397,6 +396,15 @@ const rules = computed<FormRules<SysUser>>(() => ({
   ],
   phonenumber: [{ pattern: /^1[3-9][0-9]\d{8}$/, message: t('user.phonenumberInvalid'), trigger: 'blur' }]
 }))
+const formCloseGuard = useFormCloseGuard({
+  enabled: () => open.value,
+  getSnapshot: () => JSON.stringify(form.value || {}),
+  close: () => {
+    open.value = false
+  },
+  reset,
+  t
+})
 
 function getUserSexLabel(dict: DictOption) {
   return dict.value && userSexLabelKeys[dict.value] ? t(userSexLabelKeys[dict.value]) : dict.label || ''
@@ -430,6 +438,16 @@ function getStatusLabel(row: SysUser) {
 
 function getStatusTone(row: SysUser) {
   return String(row.status) === '1' ? 'active' : 'inactive'
+}
+
+function userRowActions(row: SysUser) {
+  const hidden = row.userId === 1
+  return [
+    { label: t('common.edit'), icon: 'Edit', permission: 'system:user:edit', hidden, primary: true, onClick: () => handleUpdate(row) },
+    { label: t('user.resetPassword'), icon: 'Key', permission: 'system:user:resetPwd', hidden, onClick: () => handleResetPwd(row) },
+    { label: t('user.assignRole'), icon: 'UserFilled', permission: 'system:user:edit', hidden, onClick: () => handleAuthRole(row) },
+    { label: t('common.delete'), icon: 'Delete', type: 'danger' as const, permission: 'system:user:remove', hidden, onClick: () => handleDelete(row) }
+  ]
 }
 
 function getDeptTone(level: number) {
@@ -523,6 +541,7 @@ async function handleAdd() {
     roleOptions.value = response.data.roles || []
     const initPasswordResponse = await getInitPassword()
     form.value.password = initPasswordResponse.data || initPasswordResponse.msg || ''
+    formCloseGuard.markPristine()
     open.value = true
   })
 }
@@ -538,13 +557,13 @@ async function handleUpdate(row?: SysUser) {
     roleOptions.value = response.data.roles || []
     form.value.postIds = response.data.postIds || []
     form.value.roleIds = response.data.roleIds || []
+    formCloseGuard.markPristine()
     open.value = true
   })
 }
 
 function cancel() {
-  open.value = false
-  reset()
+  formCloseGuard.closeWithGuard()
 }
 
 async function submitForm() {
@@ -560,8 +579,8 @@ async function submitForm() {
       await addUser(form.value)
       ElMessage.success(t('common.addSuccess'))
     }
+    formCloseGuard.markPristine()
     open.value = false
-    reset()
     await getList()
   } catch {
     // Request interceptor already displays the backend error.
@@ -607,6 +626,7 @@ async function handleResetPwd(row: SysUser) {
     const result = await ElMessageBox.prompt(t('user.resetPasswordPrompt', { name: row.userName || '' }), t('common.prompt'), {
       confirmButtonText: t('common.confirm'),
       cancelButtonText: t('common.cancel'),
+      customClass: 'admin-message-box--prompt',
       closeOnClickModal: false,
       inputPattern: /^.{5,20}$/,
       inputErrorMessage: t('user.passwordLength')
@@ -662,8 +682,9 @@ function handleFileSuccess(response: { msg?: string }, file: UploadRawFile) {
   upload.isUploading = false
   uploadRef.value?.handleRemove(file)
   ElMessageBox.alert(
-    h('div', { style: 'overflow: auto; overflow-x: hidden; max-height: 70vh; padding: 10px 20px 0; white-space: pre-wrap;' }, response.msg || ''),
-    t('user.importResult')
+    h('div', { class: 'admin-message-result' }, response.msg || ''),
+    t('user.importResult'),
+    { customClass: 'admin-message-box--result' }
   )
   getList()
 }
@@ -804,46 +825,6 @@ getList()
 
 .user-status-pill.is-inactive i {
   background: #ff4d4f;
-}
-
-.user-actions-button {
-  width: 36px;
-  height: 36px;
-  padding: 0;
-  border-color: #e1e8f2;
-  border-radius: 9px;
-  color: #53627c;
-  background: #ffffff;
-}
-
-.user-actions-button:hover,
-.user-actions-button:focus {
-  border-color: #b8d2ff;
-  color: #1677ff;
-  background: #f7faff;
-}
-
-.user-actions-placeholder {
-  color: #a0a8b5;
-}
-
-:global(.user-action-menu .el-dropdown-menu) {
-  padding: 6px;
-}
-
-:global(.user-action-menu .el-dropdown-menu__item) {
-  min-width: 128px;
-  border-radius: 6px;
-  font-size: 13px;
-}
-
-:global(.user-action-menu .el-dropdown-menu__item.is-danger) {
-  color: #ff4d4f;
-}
-
-:global(.user-action-menu .el-dropdown-menu__item.is-danger:hover) {
-  background: #fff1f1;
-  color: #e5484d;
 }
 
 .user-page__dept-card {

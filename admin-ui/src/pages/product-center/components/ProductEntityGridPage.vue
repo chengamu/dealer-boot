@@ -182,47 +182,9 @@
           <span v-else>{{ displayValue(row[field.prop]) }}</span>
         </template>
       </el-table-column>
-      <el-table-column v-if="showOperationColumn" :label="t('common.operate')" align="center" width="176" fixed="right" class-name="small-padding fixed-width">
+      <el-table-column v-if="showOperationColumn" :label="t('common.operate')" align="center" width="150" fixed="right" class-name="small-padding fixed-width">
         <template #default="{ row }">
-          <el-tooltip v-if="isTreeGrid && !config.readonly" :content="t('common.add')" placement="top">
-            <el-button link type="primary" icon="Plus" :aria-label="agentActionLabel(t('common.add'), row)" :data-agent-label="agentActionLabel(t('common.add'), row)" :data-agent-row="agentRecordLabel(row)" data-agent-action="add-child" @click="handleAdd(row)" v-hasPermi="[config.permissions.add]" />
-          </el-tooltip>
-          <el-tooltip v-if="!config.hideReference && !isTreeGrid && !isSingleRowActions" :content="t('productCenter.common.references')" placement="top">
-            <el-button link type="primary" icon="View" :aria-label="agentActionLabel(t('productCenter.common.references'), row)" :data-agent-label="agentActionLabel(t('productCenter.common.references'), row)" :data-agent-row="agentRecordLabel(row)" data-agent-action="reference" @click="handleReference(row)" v-hasPermi="[config.permissions.reference]" />
-          </el-tooltip>
-          <el-tooltip v-if="config.showDetail && !isSingleRowActions" :content="t('common.detail')" placement="top">
-            <el-button link type="primary" icon="Document" :aria-label="agentActionLabel(t('common.detail'), row)" :data-agent-label="agentActionLabel(t('common.detail'), row)" :data-agent-row="agentRecordLabel(row)" data-agent-action="detail" @click="handleDetail(row)" v-hasPermi="[config.permissions.reference]" />
-          </el-tooltip>
-          <el-tooltip v-if="!config.readonly && (!isSingleRowActions || isTreeGrid)" :content="t('common.edit')" placement="top">
-            <el-button link type="primary" icon="Edit" :aria-label="agentActionLabel(t('common.edit'), row)" :data-agent-label="agentActionLabel(t('common.edit'), row)" :data-agent-row="agentRecordLabel(row)" data-agent-action="edit" @click="handleUpdate(row)" v-hasPermi="[config.permissions.edit]" />
-          </el-tooltip>
-          <el-tooltip v-if="config.superEditPermission && config.api.superUpdate" :content="t('productCenter.common.superEdit')" placement="top">
-            <el-button link type="warning" icon="EditPen" :aria-label="agentActionLabel(t('productCenter.common.superEdit'), row)" :data-agent-label="agentActionLabel(t('productCenter.common.superEdit'), row)" :data-agent-row="agentRecordLabel(row)" data-agent-action="super-edit" data-agent-danger="super-edit" data-agent-risk="confirm-required" data-agent-confirm-required="true" data-agent-confirm-message="超级修改需要用户人工确认" @click="handleSuperUpdate(row)" v-hasPermi="[config.superEditPermission]" />
-          </el-tooltip>
-          <el-tooltip v-if="!config.readonly && (!isSingleRowActions || isTreeGrid)" :content="t('common.delete')" placement="top">
-            <el-button link type="primary" icon="Delete" :aria-label="agentActionLabel(t('common.delete'), row)" :data-agent-label="agentActionLabel(t('common.delete'), row)" :data-agent-row="agentRecordLabel(row)" data-agent-action="delete" data-agent-danger="delete" data-agent-risk="confirm-required" data-agent-confirm-required="true" data-agent-confirm-message="需要用户人工确认后才能删除" @click="handleDelete(row)" v-hasPermi="[config.permissions.remove]" />
-          </el-tooltip>
-          <el-tooltip v-if="!config.hideReference && isTreeGrid" :content="t('productCenter.common.references')" placement="top">
-            <el-button link type="primary" icon="View" :aria-label="agentActionLabel(t('productCenter.common.references'), row)" :data-agent-label="agentActionLabel(t('productCenter.common.references'), row)" :data-agent-row="agentRecordLabel(row)" data-agent-action="reference" @click="handleReference(row)" v-hasPermi="[config.permissions.reference]" />
-          </el-tooltip>
-          <el-tooltip v-for="action in visibleRowActions(row)" :key="action.labelKey" :content="t(action.labelKey)" placement="top">
-            <el-button
-              link
-              :type="action.type || 'primary'"
-              :icon="action.icon"
-              :aria-label="agentActionLabel(t(action.labelKey), row)"
-              :data-agent-label="agentActionLabel(t(action.labelKey), row)"
-              :data-agent-row="agentRecordLabel(row)"
-              data-agent-action="row-action"
-              data-agent-risk="confirm-required"
-              data-agent-confirm-required="true"
-              data-agent-confirm-message="业务动作需要用户人工确认"
-              :loading="rowActionLoading === rowActionKey(action, row)"
-              :disabled="Boolean(rowActionLoading) || action.disabled?.(row)"
-              @click="handleRowAction(action, row)"
-              v-hasPermi="[action.permission]"
-            />
-          </el-tooltip>
+          <AdminTableActions :actions="rowOperationActions(row)" />
         </template>
       </el-table-column>
     </el-table>
@@ -235,7 +197,7 @@
       @pagination="getList"
     />
 
-    <el-drawer
+    <AdminDrawer
       v-model="open"
       :title="drawerTitle"
       size="84%"
@@ -249,7 +211,35 @@
       :data-agent-entity="config.key"
       @closed="handleDrawerClosed"
     >
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="136px" class="product-grid-page__form" data-agent-scope="product-base-form" :data-agent-entity="config.key">
+      <div v-if="drawerReadonly" class="product-grid-page__detail admin-detail">
+        <section v-for="section in detailSections" :key="section.key" class="admin-detail__section">
+          <div v-if="section.labelKey" class="admin-detail__section-title">{{ t(section.labelKey) }}</div>
+          <dl class="admin-detail__grid">
+            <div v-for="field in section.fields" :key="field.prop" class="admin-detail__item" :class="detailItemClass(field)">
+              <dt>{{ t(field.labelKey) }}</dt>
+              <dd :class="{ 'admin-detail__value--long': isLongDetailField(field) }">{{ detailFieldValue(field) }}</dd>
+            </div>
+          </dl>
+        </section>
+
+        <section v-if="attachmentEnabled" v-loading="attachmentLoading" class="admin-detail__section">
+          <div class="admin-detail__section-title">{{ t('productCenter.common.attachments') }}</div>
+          <el-table v-if="attachmentRows.length" :data="attachmentRows" border size="small" class="product-grid-page__detail-table">
+            <el-table-column :label="t('productCenter.asset.code')" prop="assetCode" min-width="160" show-overflow-tooltip />
+            <el-table-column :label="t('productCenter.asset.usageType')" prop="usageType" width="120" align="center" />
+            <el-table-column :label="t('common.operate')" width="110" align="center">
+              <template #default="{ row }">
+                <AdminTableActions :actions="[
+                  { label: t('productCenter.common.open'), icon: 'View', onClick: () => openAttachment(row) }
+                ]" />
+              </template>
+            </el-table-column>
+          </el-table>
+          <el-empty v-else :description="t('productCenter.common.noAttachments')" />
+        </section>
+      </div>
+
+      <el-form v-else ref="formRef" :model="form" :rules="rules" label-width="136px" class="product-grid-page__form" data-agent-scope="product-base-form" :data-agent-entity="config.key">
         <template v-for="section in formSections" :key="section.key">
           <div v-if="section.labelKey" class="product-grid-page__section-title">{{ t(section.labelKey) }}</div>
           <el-form-item v-for="field in section.fields" :key="field.prop" :label="t(field.labelKey)" :prop="field.prop" :class="formItemClass(field)" :data-agent-field="field.prop">
@@ -368,14 +358,25 @@
           <el-table v-else-if="attachmentRows.length" :data="attachmentRows" border size="small">
             <el-table-column :label="t('productCenter.asset.code')" prop="assetCode" min-width="160" show-overflow-tooltip />
             <el-table-column :label="t('productCenter.asset.usageType')" prop="usageType" width="120" align="center" />
-            <el-table-column :label="t('common.operate')" width="120" align="center">
+            <el-table-column :label="t('common.operate')" width="150" align="center">
               <template #default="{ row }">
-                <el-tooltip :content="t('productCenter.common.open')" placement="top">
-                  <el-button link type="primary" icon="View" :aria-label="t('productCenter.common.open')" @click="openAttachment(row)" />
-                </el-tooltip>
-                <el-tooltip v-if="!drawerReadonly" :content="t('common.delete')" placement="top">
-                  <el-button link type="primary" icon="Delete" :aria-label="t('common.delete')" :data-agent-label="t('common.delete')" data-agent-danger="delete-attachment" data-agent-risk="confirm-required" data-agent-confirm-required="true" data-agent-confirm-message="需要用户人工确认后才能删除附件" @click="removeAttachment(row)" />
-                </el-tooltip>
+                <AdminTableActions :actions="[
+                  { label: t('productCenter.common.open'), icon: 'View', onClick: () => openAttachment(row) },
+                  {
+                    label: t('common.delete'),
+                    icon: 'Delete',
+                    type: 'danger',
+                    hidden: drawerReadonly,
+                    attrs: {
+                      'data-agent-label': t('common.delete'),
+                      'data-agent-danger': 'delete-attachment',
+                      'data-agent-risk': 'confirm-required',
+                      'data-agent-confirm-required': 'true',
+                      'data-agent-confirm-message': '需要用户人工确认后才能删除附件'
+                    },
+                    onClick: () => removeAttachment(row)
+                  }
+                ]" />
               </template>
             </el-table-column>
           </el-table>
@@ -388,37 +389,37 @@
           <el-button v-if="!drawerReadonly" type="primary" :loading="submitLoading" :aria-label="t('common.confirm')" :data-agent-label="t('common.confirm')" data-agent-danger="save" data-agent-risk="confirm-required" data-agent-confirm-required="true" data-agent-confirm-message="需要用户人工确认后才能保存" @click="submitForm">{{ t('common.confirm') }}</el-button>
         </div>
       </template>
-    </el-drawer>
+    </AdminDrawer>
 
-    <el-drawer v-model="referenceOpen" :title="t('productCenter.common.references')" size="420px" append-to-body>
-      <el-descriptions :column="1" border>
-        <el-descriptions-item :label="t('productCenter.common.canRemove')">
-          {{ referenceCanRemove ? t('common.yes') : t('common.no') }}
-        </el-descriptions-item>
-        <el-descriptions-item :label="t('productCenter.common.canDisable')">
-          {{ referenceCanDisable ? t('common.yes') : t('common.no') }}
-        </el-descriptions-item>
-        <el-descriptions-item :label="t('productCenter.common.referenceCount')">
-          {{ referenceResult.referenceCount ?? 0 }}
-        </el-descriptions-item>
-      </el-descriptions>
-      <el-alert
-        v-if="referenceResult.blockerReasonKey"
-        class="product-grid-page__reference-alert"
-        :title="t(referenceResult.blockerReasonKey)"
-        type="warning"
-        show-icon
-        :closable="false"
-      />
-      <el-table v-if="referenceSummaries.length" :data="referenceSummaries" border class="product-grid-page__reference-table">
-        <el-table-column type="index" :label="t('common.index')" width="64" align="center" />
-        <el-table-column :label="t('productCenter.common.referenceSummary')" prop="summary" show-overflow-tooltip />
-      </el-table>
-      <el-empty v-else :description="t('productCenter.common.noReferences')" />
-    </el-drawer>
+    <AdminDrawer v-model="referenceOpen" :title="t('productCenter.common.references')" size="420px" variant="detail" append-to-body>
+      <div class="admin-reference">
+        <div class="admin-reference__summary">
+          <div class="admin-reference__metric">
+            <span>{{ t('productCenter.common.canRemove') }}</span>
+            <strong :class="referenceCanRemove ? 'is-success' : 'is-danger'">{{ referenceCanRemove ? t('common.yes') : t('common.no') }}</strong>
+          </div>
+          <div class="admin-reference__metric">
+            <span>{{ t('productCenter.common.canDisable') }}</span>
+            <strong :class="referenceCanDisable ? 'is-success' : 'is-danger'">{{ referenceCanDisable ? t('common.yes') : t('common.no') }}</strong>
+          </div>
+          <div class="admin-reference__metric">
+            <span>{{ t('productCenter.common.referenceCount') }}</span>
+            <strong>{{ referenceResult.referenceCount ?? 0 }}</strong>
+          </div>
+        </div>
+        <el-alert v-if="referenceResult.blockerReasonKey" :title="t(referenceResult.blockerReasonKey)" type="warning" show-icon :closable="false" />
+        <div v-if="referenceSummaries.length" class="admin-reference__list">
+          <div v-for="(item, index) in referenceSummaries" :key="`${index}-${item.summary}`" class="admin-reference__item">
+            <span>{{ index + 1 }}</span>
+            <p>{{ item.summary }}</p>
+          </div>
+        </div>
+        <el-empty v-else :description="t('productCenter.common.noReferences')" />
+      </div>
+    </AdminDrawer>
 
-    <el-drawer v-model="changeLogOpen" :title="t(config.changeLog?.titleKey || 'productCenter.changeLog.title')" size="720px" append-to-body>
-      <el-table v-if="changeLogRows.length" v-loading="changeLogLoading" :data="changeLogRows" border>
+    <AdminDrawer v-model="changeLogOpen" :title="t(config.changeLog?.titleKey || 'productCenter.changeLog.title')" size="720px" variant="detail" append-to-body>
+      <el-table v-if="changeLogRows.length" v-loading="changeLogLoading" :data="changeLogRows" border class="admin-change-log">
         <el-table-column type="index" :label="t('common.index')" width="64" align="center" />
         <el-table-column :label="t('productCenter.changeLog.action')" prop="actionName" width="116" show-overflow-tooltip />
         <el-table-column :label="t('productCenter.changeLog.operator')" prop="operatorName" width="128" show-overflow-tooltip />
@@ -429,12 +430,12 @@
         </el-table-column>
         <el-table-column :label="t('productCenter.changeLog.diff')" min-width="280">
           <template #default="{ row }">
-            <pre class="product-grid-page__change-log-diff">{{ formatChangeDiff(row.diffJson) }}</pre>
+            <pre class="admin-detail__code admin-change-log__diff">{{ formatChangeDiff(row.diffJson) }}</pre>
           </template>
         </el-table-column>
       </el-table>
       <el-empty v-else v-loading="changeLogLoading" :description="t('productCenter.changeLog.empty')" />
-    </el-drawer>
+    </AdminDrawer>
 </template>
 
 <script setup lang="ts">
@@ -527,6 +528,21 @@ const formSections = computed(() => {
   })
   return sections
 })
+const detailFields = computed(() => props.config.fields.filter((field) => field.form !== false && (!field.visible || field.visible(form.value))))
+const detailSections = computed(() => {
+  const sections: Array<{ key: string; labelKey?: string; fields: ProductFieldConfig[] }> = []
+  detailFields.value.forEach((field) => {
+    const key = field.sectionKey || 'default'
+    let section = sections.find((item) => item.key === key)
+    if (!section) {
+      section = { key, labelKey: field.sectionLabelKey, fields: [] }
+      sections.push(section)
+    }
+    if (!section.labelKey && field.sectionLabelKey) section.labelKey = field.sectionLabelKey
+    section.fields.push(field)
+  })
+  return sections
+})
 const single = computed(() => ids.value.length !== 1)
 const multiple = computed(() => ids.value.length === 0)
 const referenceCanRemove = computed(() => {
@@ -560,7 +576,8 @@ const visibleSingleRowToolbarActions = computed(() => {
   return singleRowToolbarActions.value.filter((action) => action.visible?.(row) !== false && action.disabled?.(row) !== true)
 })
 const showOperationColumn = computed(() => {
-  return isSingleRowActions.value ? isTreeGrid.value : true
+  if (!rows.value.length) return false
+  return rows.value.some((row) => rowOperationActions(row).length > 0)
 })
 const currentRecordId = computed(() => {
   const value = form.value[props.config.idKey]
@@ -583,6 +600,17 @@ function isRecordId(value: unknown): value is string | number {
 function optionLabel(field: ProductFieldConfig, value: unknown) {
   const option = fieldOptions(field).find((item) => item.value === value)
   return option?.label || String(value ?? '-')
+}
+
+function optionDisplayValue(field: ProductFieldConfig, value: unknown) {
+  if (Array.isArray(value)) {
+    return value.length ? value.map((item) => optionLabel(field, item)).join(', ') : '-'
+  }
+  if (field.valueMode === 'csv' && typeof value === 'string') {
+    const values = value.split(',').map((item) => item.trim()).filter(Boolean)
+    return values.length ? values.map((item) => optionLabel(field, item)).join(', ') : '-'
+  }
+  return optionLabel(field, value)
 }
 
 function fieldOptions(field: ProductFieldConfig) {
@@ -609,6 +637,28 @@ function displayValue(value: unknown) {
   if (Array.isArray(value)) return value.length ? value.join(', ') : '-'
   if (value && typeof value === 'object') return JSON.stringify(value)
   return String(value ?? '-')
+}
+
+function detailFieldValue(field: ProductFieldConfig) {
+  const value = form.value[field.prop]
+  if (field.type === 'select' || field.type === 'remote-select' || field.type === 'tree-select') return optionDisplayValue(field, value)
+  if (field.type === 'boolean') return booleanLabel(value)
+  if (field.type === 'status') {
+    return normalizeStatus(value) === PRODUCT_STATUS_ENABLED ? t('productCenter.status.enabled') : t('productCenter.status.disabled')
+  }
+  if (field.type === 'number') return formatNumberValue(field, value)
+  if (field.type === 'date' || field.type === 'datetime') return value ? formatUtc(String(value), field.type === 'date' ? 'YYYY-MM-DD' : 'YYYY-MM-DD HH:mm') : '-'
+  return displayValue(value)
+}
+
+function isLongDetailField(field: ProductFieldConfig) {
+  return field.type === 'textarea' || field.type === 'url' || field.multiline || field.formSpan === 2
+}
+
+function detailItemClass(field: ProductFieldConfig) {
+  return {
+    'admin-detail__item--full': isLongDetailField(field) || field.type === 'material-attributes'
+  }
 }
 
 function agentRecordLabel(row?: ProductRecord) {
@@ -772,6 +822,143 @@ function rowActionKey(action: NonNullable<ProductGridConfig['rowActions']>[numbe
 
 function visibleRowActions(row: ProductRecord) {
   return (props.config.rowActions || []).filter((action) => action.visible?.(row) !== false && action.disabled?.(row) !== true)
+}
+
+function rowActionAttrs(action: string, label: string, row: ProductRecord, extra?: Record<string, string | boolean>) {
+  return {
+    'data-agent-label': agentActionLabel(label, row),
+    'data-agent-row': agentRecordLabel(row),
+    'data-agent-action': action,
+    ...extra
+  }
+}
+
+function rowOperationActions(row: ProductRecord) {
+  const actions = []
+  const customRowActions = visibleRowActions(row)
+  const hasPrimaryCustomAction = customRowActions.some((action) => action.primary)
+  if (isTreeGrid.value && !props.config.readonly) {
+    const label = t('common.add')
+    actions.push({
+      label,
+      ariaLabel: agentActionLabel(label, row),
+      icon: 'Plus',
+      permission: props.config.permissions.add,
+      attrs: rowActionAttrs('add-child', label, row),
+      onClick: () => handleAdd(row)
+    })
+  }
+  if (!props.config.hideReference && !isTreeGrid.value) {
+    const label = t('productCenter.common.references')
+    actions.push({
+      label,
+      ariaLabel: agentActionLabel(label, row),
+      icon: 'View',
+      permission: props.config.permissions.reference,
+      attrs: rowActionAttrs('reference', label, row),
+      onClick: () => handleReference(row)
+    })
+  }
+  if (props.config.showDetail) {
+    const label = t('common.detail')
+    actions.push({
+      label,
+      ariaLabel: agentActionLabel(label, row),
+      icon: 'Document',
+      permission: props.config.permissions.reference,
+      primary: !hasPrimaryCustomAction,
+      attrs: rowActionAttrs('detail', label, row),
+      onClick: () => handleDetail(row)
+    })
+  }
+  if (!props.config.readonly) {
+    const label = t('common.edit')
+    actions.push({
+      label,
+      ariaLabel: agentActionLabel(label, row),
+      icon: 'Edit',
+      permission: props.config.permissions.edit,
+      primary: !props.config.showDetail,
+      attrs: rowActionAttrs('edit', label, row),
+      onClick: () => handleUpdate(row)
+    })
+  }
+  if (props.config.superEditPermission && props.config.api.superUpdate) {
+    const label = t('productCenter.common.superEdit')
+    actions.push({
+      label,
+      ariaLabel: agentActionLabel(label, row),
+      icon: 'EditPen',
+      type: 'warning',
+      permission: props.config.superEditPermission,
+      attrs: rowActionAttrs('super-edit', label, row, {
+        'data-agent-danger': 'super-edit',
+        'data-agent-risk': 'confirm-required',
+        'data-agent-confirm-required': 'true',
+        'data-agent-confirm-message': '超级修改需要用户人工确认'
+      }),
+      onClick: () => handleSuperUpdate(row)
+    })
+  }
+  if (!props.config.readonly) {
+    const label = t('common.delete')
+    actions.push({
+      label,
+      ariaLabel: agentActionLabel(label, row),
+      icon: 'Delete',
+      type: 'danger',
+      permission: props.config.permissions.remove,
+      attrs: rowActionAttrs('delete', label, row, {
+        'data-agent-danger': 'delete',
+        'data-agent-risk': 'confirm-required',
+        'data-agent-confirm-required': 'true',
+        'data-agent-confirm-message': '需要用户人工确认后才能删除'
+      }),
+      onClick: () => handleDelete(row)
+    })
+  }
+  if (!isTreeGrid.value && props.config.changeLog) {
+    const label = t(props.config.changeLog.titleKey || 'productCenter.changeLog.title')
+    actions.push({
+      label,
+      ariaLabel: agentActionLabel(label, row),
+      icon: 'Clock',
+      permission: props.config.changeLog.permission,
+      attrs: rowActionAttrs('change-log', label, row),
+      onClick: () => handleChangeLog(row)
+    })
+  }
+  if (!props.config.hideReference && isTreeGrid.value) {
+    const label = t('productCenter.common.references')
+    actions.push({
+      label,
+      ariaLabel: agentActionLabel(label, row),
+      icon: 'View',
+      permission: props.config.permissions.reference,
+      attrs: rowActionAttrs('reference', label, row),
+      onClick: () => handleReference(row)
+    })
+  }
+  customRowActions.forEach((action) => {
+    const label = t(action.labelKey)
+    actions.push({
+      label,
+      ariaLabel: agentActionLabel(label, row),
+      icon: action.icon,
+      type: action.type,
+      permission: action.permission,
+      primary: action.primary,
+      loading: rowActionLoading.value === rowActionKey(action, row),
+      disabled: Boolean(rowActionLoading.value) || action.disabled?.(row),
+      attrs: rowActionAttrs('row-action', label, row, {
+        'data-agent-risk': 'confirm-required',
+        'data-agent-confirm-required': 'true',
+        'data-agent-confirm-message': '业务动作需要用户人工确认'
+      }),
+      onClick: () => handleRowAction(action, row)
+    })
+  })
+  return actions
 }
 
 function reset() {
@@ -1461,6 +1648,15 @@ defineExpose({
   width: 100%;
 }
 
+.product-grid-page__detail {
+  padding-right: 8px;
+}
+
+.product-grid-page__detail-table {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
 .product-grid-page__builder {
   width: 100%;
 }
@@ -1522,24 +1718,6 @@ defineExpose({
   justify-content: space-between;
   margin-bottom: 12px;
   font-weight: 600;
-}
-
-.product-grid-page__reference-alert,
-.product-grid-page__reference-table {
-  margin-top: 12px;
-}
-
-.product-grid-page__change-log-diff {
-  margin: 0;
-  padding: 10px 12px;
-  border: 1px solid var(--admin-border-soft, #e8edf5);
-  border-radius: 6px;
-  background: #f8fafc;
-  white-space: pre-wrap;
-  word-break: break-word;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-  font-size: 12px;
-  line-height: 1.5;
 }
 
 @media (max-width: 720px) {

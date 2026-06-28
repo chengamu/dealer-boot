@@ -32,18 +32,24 @@
       {{ t('upload.fileSuffix') }}
     </div>
 
-    <el-dialog
+    <AdminDialog
       v-model="dialogVisible"
       :title="t('common.preview')"
       width="800px"
-      class="image-upload-preview-dialog"
+      variant="detail"
+      class="admin-media-dialog image-upload-preview-dialog"
       append-to-body
     >
       <img
         :src="dialogImageUrl"
         class="image-upload-preview-dialog__image"
       />
-    </el-dialog>
+      <template #footer>
+        <AdminDialogFooter>
+          <el-button @click="dialogVisible = false">{{ t('common.close') }}</el-button>
+        </AdminDialogFooter>
+      </template>
+    </AdminDialog>
   </div>
 </template>
 

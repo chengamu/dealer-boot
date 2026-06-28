@@ -133,7 +133,16 @@
       </section>
     </div>
 
-    <el-drawer v-model="groupOpen" :title="groupForm.groupId ? t('productCenter.common.editTitle', { name: t('productCenter.materialType.group') }) : t('productCenter.common.addTitle', { name: t('productCenter.materialType.group') })" size="640px" append-to-body>
+    <AdminDrawer
+      v-model="groupOpen"
+      :title="groupForm.groupId ? t('productCenter.common.editTitle', { name: t('productCenter.materialType.group') }) : t('productCenter.common.addTitle', { name: t('productCenter.materialType.group') })"
+      size="640px"
+      append-to-body
+      :close-on-click-modal="false"
+      :close-on-press-escape="false"
+      :before-close="handleGroupDrawerBeforeClose"
+      @closed="handleGroupDrawerClosed"
+    >
       <el-form ref="groupFormRef" :model="groupForm" :rules="groupRules" label-width="132px" data-agent-scope="material-type-group-form">
         <el-form-item :label="t('productCenter.materialType.groupCode')" prop="groupCode" data-agent-field="groupCode">
           <el-input v-model="groupForm.groupCode" :aria-label="t('productCenter.materialType.groupCode')" :data-agent-label="t('productCenter.materialType.groupCode')" />
@@ -159,12 +168,21 @@
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="groupOpen = false">{{ t('common.cancel') }}</el-button>
+        <el-button @click="closeGroupDrawerWithGuard">{{ t('common.cancel') }}</el-button>
         <el-button type="primary" :loading="submitLoading" data-agent-danger="save" data-agent-risk="confirm-required" data-agent-confirm-required="true" data-agent-confirm-message="需要用户人工确认后才能保存" @click="submitGroup">{{ t('common.confirm') }}</el-button>
       </template>
-    </el-drawer>
+    </AdminDrawer>
 
-    <el-drawer v-model="typeOpen" :title="typeForm.materialTypeId ? t('productCenter.common.editTitle', { name: t('productCenter.materialType.type') }) : t('productCenter.common.addTitle', { name: t('productCenter.materialType.type') })" size="640px" append-to-body>
+    <AdminDrawer
+      v-model="typeOpen"
+      :title="typeForm.materialTypeId ? t('productCenter.common.editTitle', { name: t('productCenter.materialType.type') }) : t('productCenter.common.addTitle', { name: t('productCenter.materialType.type') })"
+      size="640px"
+      append-to-body
+      :close-on-click-modal="false"
+      :close-on-press-escape="false"
+      :before-close="handleTypeDrawerBeforeClose"
+      @closed="handleTypeDrawerClosed"
+    >
       <el-form ref="typeFormRef" :model="typeForm" :rules="typeRules" label-width="132px" data-agent-scope="material-type-form">
         <el-form-item :label="t('productCenter.materialType.group')" data-agent-field="attributeGroupCode">
           <el-input :model-value="selectedGroupLabel" disabled :aria-label="t('productCenter.materialType.group')" :data-agent-label="t('productCenter.materialType.group')" />
@@ -186,32 +204,38 @@
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="typeOpen = false">{{ t('common.cancel') }}</el-button>
+        <el-button @click="closeTypeDrawerWithGuard">{{ t('common.cancel') }}</el-button>
         <el-button type="primary" :loading="submitLoading" data-agent-danger="save" data-agent-risk="confirm-required" data-agent-confirm-required="true" data-agent-confirm-message="需要用户人工确认后才能保存" @click="submitType">{{ t('common.confirm') }}</el-button>
       </template>
-    </el-drawer>
+    </AdminDrawer>
 
-    <el-drawer v-model="referenceOpen" :title="t('productCenter.common.references')" size="420px" append-to-body>
-      <el-descriptions :column="1" border>
-        <el-descriptions-item :label="t('productCenter.common.canRemove')">
-          {{ referenceAllowed ? t('common.yes') : t('common.no') }}
-        </el-descriptions-item>
-        <el-descriptions-item :label="t('productCenter.common.referenceCount')">
-          {{ referenceResult.referenceCount ?? 0 }}
-        </el-descriptions-item>
-      </el-descriptions>
-      <el-alert v-if="referenceResult.blockerReasonKey" class="material-type-page__hint" :title="t(referenceResult.blockerReasonKey)" type="warning" show-icon :closable="false" />
-      <el-table v-if="referenceSummaries.length" :data="referenceSummaries" border class="material-type-page__reference-table">
-        <el-table-column type="index" :label="t('common.index')" width="64" align="center" />
-        <el-table-column :label="t('productCenter.common.referenceSummary')" prop="summary" show-overflow-tooltip />
-      </el-table>
-      <el-empty v-else :description="t('productCenter.common.noReferences')" />
-    </el-drawer>
+    <AdminDrawer v-model="referenceOpen" :title="t('productCenter.common.references')" size="420px" variant="detail" append-to-body>
+      <div class="admin-reference">
+        <div class="admin-reference__summary">
+          <div class="admin-reference__metric">
+            <span>{{ t('productCenter.common.canRemove') }}</span>
+            <strong :class="referenceAllowed ? 'is-success' : 'is-danger'">{{ referenceAllowed ? t('common.yes') : t('common.no') }}</strong>
+          </div>
+          <div class="admin-reference__metric">
+            <span>{{ t('productCenter.common.referenceCount') }}</span>
+            <strong>{{ referenceResult.referenceCount ?? 0 }}</strong>
+          </div>
+        </div>
+        <el-alert v-if="referenceResult.blockerReasonKey" :title="t(referenceResult.blockerReasonKey)" type="warning" show-icon :closable="false" />
+        <div v-if="referenceSummaries.length" class="admin-reference__list">
+          <div v-for="(item, index) in referenceSummaries" :key="`${index}-${item.summary}`" class="admin-reference__item">
+            <span>{{ index + 1 }}</span>
+            <p>{{ item.summary }}</p>
+          </div>
+        </div>
+        <el-empty v-else :description="t('productCenter.common.noReferences')" />
+      </div>
+    </AdminDrawer>
   </div>
 </template>
 
 <script setup lang="ts" name="ProductMaterialTypePage">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
@@ -219,6 +243,7 @@ import { productMaterialTypeApi, productMaterialTypeGroupApi } from '@/api/produ
 import type { ProductMaterialTypeGroupQuery, ProductMaterialTypeGroupVO, ProductMaterialTypeQuery, ProductMaterialTypeVO, ReferenceCheckResult } from '@/api/product-capability/types'
 import { PRODUCT_STATUS_DISABLED, PRODUCT_STATUS_ENABLED, normalizeProductStatus } from '@/constants/productStatus'
 import { compactParts } from '@/utils/productLabels'
+import { useUnsavedChangesGuard } from '@/composables/useUnsavedChangesGuard'
 
 const localeStore = useLocaleStore()
 const t = (key: string, params?: Record<string, unknown>) => {
@@ -258,6 +283,16 @@ const typeRules = computed<FormRules>(() => ({
 const selectedGroupLabel = computed(() => selectedGroup.value ? `${selectedGroup.value.groupCode || ''} ${selectedGroup.value.groupNameCn || ''}`.trim() : '')
 const referenceAllowed = computed(() => Number(referenceResult.value.referenceCount || 0) <= 0 && referenceResult.value.allowed !== false)
 const referenceSummaries = computed(() => (referenceResult.value.referenceSummaries || []).map((summary) => ({ summary })))
+const groupUnsavedChangesGuard = useUnsavedChangesGuard({
+  enabled: () => groupOpen.value,
+  getSnapshot: () => JSON.stringify(groupForm || {}),
+  confirmDiscard: confirmDiscardChanges
+})
+const typeUnsavedChangesGuard = useUnsavedChangesGuard({
+  enabled: () => typeOpen.value,
+  getSnapshot: () => JSON.stringify(typeForm || {}),
+  confirmDiscard: confirmDiscardChanges
+})
 
 function normalizeStatus(value: unknown) {
   return normalizeProductStatus(value)
@@ -355,6 +390,7 @@ function assign<T extends Record<string, unknown>>(target: T, source: Record<str
 async function openGroupForm(row?: ProductMaterialTypeGroupVO) {
   if (row?.groupId && !(await checkBeforeEdit(productMaterialTypeGroupApi.editCheck, row.groupId))) return
   assign(groupForm, { status: PRODUCT_STATUS_ENABLED, systemFlag: false, editableFlag: true, formulaSummaryVisibleFlag: true, sortOrder: 0, ...(row || {}) })
+  groupUnsavedChangesGuard.markPristine()
   groupOpen.value = true
 }
 
@@ -371,7 +407,66 @@ async function openTypeForm(row?: ProductMaterialTypeVO) {
     attributeGroupNameCn: selectedGroup.value.groupNameCn,
     ...(row || {})
   })
+  typeUnsavedChangesGuard.markPristine()
   typeOpen.value = true
+}
+
+async function confirmDiscardChanges() {
+  try {
+    await ElMessageBox.confirm(t('common.unsavedChangesConfirm'), t('common.prompt'), {
+      confirmButtonText: t('common.confirm'),
+      cancelButtonText: t('common.cancel'),
+      type: 'warning'
+    })
+    return true
+  } catch {
+    return false
+  }
+}
+
+async function closeGroupDrawerWithGuard() {
+  await groupUnsavedChangesGuard.closeWithGuard(() => {
+    groupOpen.value = false
+  })
+}
+
+async function closeTypeDrawerWithGuard() {
+  await typeUnsavedChangesGuard.closeWithGuard(() => {
+    typeOpen.value = false
+  })
+}
+
+function handleGroupDrawerBeforeClose(done: () => void) {
+  groupUnsavedChangesGuard.canClose().then((allowed) => {
+    if (allowed) done()
+  })
+}
+
+function handleTypeDrawerBeforeClose(done: () => void) {
+  typeUnsavedChangesGuard.canClose().then((allowed) => {
+    if (allowed) done()
+  })
+}
+
+function handleGroupDrawerClosed() {
+  groupUnsavedChangesGuard.resetPristine()
+}
+
+function handleTypeDrawerClosed() {
+  typeUnsavedChangesGuard.resetPristine()
+}
+
+function handleDrawerShortcut(event: KeyboardEvent) {
+  if (event.key !== 'Escape') return
+  if (groupOpen.value) {
+    event.preventDefault()
+    closeGroupDrawerWithGuard()
+    return
+  }
+  if (typeOpen.value) {
+    event.preventDefault()
+    closeTypeDrawerWithGuard()
+  }
 }
 
 async function checkBeforeEdit(editCheck: typeof productMaterialTypeApi.editCheck, id: string | number) {
@@ -393,6 +488,7 @@ async function submitGroup() {
     } else {
       await productMaterialTypeGroupApi.add(groupForm)
     }
+    groupUnsavedChangesGuard.markPristine()
     groupOpen.value = false
     ElMessage.success(t('common.success'))
     await loadGroups()
@@ -410,6 +506,7 @@ async function submitType() {
     } else {
       await productMaterialTypeApi.add(typeForm)
     }
+    typeUnsavedChangesGuard.markPristine()
     typeOpen.value = false
     ElMessage.success(t('common.success'))
     await loadTypes()
@@ -479,7 +576,14 @@ function unwrapReferenceResponse(response: unknown): ReferenceCheckResult {
   return response as ReferenceCheckResult
 }
 
-onMounted(loadGroups)
+onMounted(() => {
+  window.addEventListener('keydown', handleDrawerShortcut)
+  loadGroups()
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleDrawerShortcut)
+})
 </script>
 
 <style scoped lang="scss">
@@ -577,14 +681,6 @@ onMounted(loadGroups)
   :deep(.el-table__cell) {
     padding: 10px 0;
   }
-}
-
-.material-type-page__hint {
-  margin-bottom: 8px;
-}
-
-.material-type-page__reference-table {
-  margin-top: 12px;
 }
 
 @media (max-width: 1200px) {

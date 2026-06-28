@@ -61,22 +61,9 @@
           <span>{{ formatUtc(row.createTime) }}</span>
         </template>
       </el-table-column>
-      <el-table-column :label="t('common.operate')" align="center" width="172" fixed="right" class-name="small-padding fixed-width">
+      <el-table-column v-if="showOperationColumn" :label="t('common.operate')" align="center" width="150" fixed="right" class-name="small-padding fixed-width">
         <template #default="{ row }">
-          <el-dropdown v-if="row.roleId !== 1 && (canEditRole || canRemoveRole)" trigger="click" popper-class="table-row-action-menu">
-            <el-button class="table-row-actions-button" :aria-label="t('common.operate')" :title="t('common.operate')">
-              <el-icon><MoreFilled /></el-icon>
-            </el-button>
-            <template #dropdown>
-              <el-dropdown-menu>
-                <el-dropdown-item v-if="canEditRole" @click="handleUpdate(row)">{{ t('common.edit') }}</el-dropdown-item>
-                <el-dropdown-item v-if="canEditRole" @click="handleDataScope(row)">{{ t('role.dataScope') }}</el-dropdown-item>
-                <el-dropdown-item v-if="canEditRole" @click="handleAuthUser(row)">{{ t('role.assignUsers') }}</el-dropdown-item>
-                <el-dropdown-item v-if="canRemoveRole" class="is-danger" @click="handleDelete(row)">{{ t('common.delete') }}</el-dropdown-item>
-              </el-dropdown-menu>
-            </template>
-          </el-dropdown>
-          <span v-else>-</span>
+          <AdminTableActions :actions="roleRowActions(row)" />
         </template>
       </el-table-column>
     </el-table>
@@ -89,7 +76,16 @@
       @pagination="getList"
     />
 
-    <el-drawer v-model="open" :title="title" size="560px" append-to-body destroy-on-close @closed="reset">
+    <AdminDrawer
+      v-model="open"
+      :title="title"
+      size="560px"
+      append-to-body
+      destroy-on-close
+      :close-on-click-modal="false"
+      :before-close="formCloseGuard.beforeClose"
+      @closed="formCloseGuard.handleClosed"
+    >
       <el-form ref="roleRef" :model="form" :rules="rules" label-width="100px">
         <el-form-item :label="t('role.roleName')" prop="roleName">
           <el-input v-model="form.roleName" :placeholder="t('role.roleNamePlaceholder')" />
@@ -143,9 +139,18 @@
           <el-button @click="cancel">{{ t('common.cancel') }}</el-button>
         </div>
       </template>
-    </el-drawer>
+    </AdminDrawer>
 
-    <el-drawer v-model="openDataScope" :title="t('role.assignDataScope')" size="560px" append-to-body destroy-on-close @closed="reset">
+    <AdminDrawer
+      v-model="openDataScope"
+      :title="t('role.assignDataScope')"
+      size="560px"
+      append-to-body
+      destroy-on-close
+      :close-on-click-modal="false"
+      :before-close="dataScopeCloseGuard.beforeClose"
+      @closed="dataScopeCloseGuard.handleClosed"
+    >
       <el-form :model="form" label-width="90px">
         <el-form-item :label="t('role.roleName')">
           <el-input v-model="form.roleName" disabled />
@@ -186,7 +191,7 @@
           <el-button @click="cancelDataScope">{{ t('common.cancel') }}</el-button>
         </div>
       </template>
-    </el-drawer>
+    </AdminDrawer>
   </div>
 </template>
 
@@ -202,8 +207,7 @@ import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 import { useDict } from '@/utils/dict'
 import { runUiAction } from '@/utils/action'
-import { checkPermi } from '@/utils/permission'
-import { MoreFilled } from '@element-plus/icons-vue'
+import { useFormCloseGuard } from '@/composables/useFormCloseGuard'
 
 type TreeType = 'menu' | 'dept'
 
@@ -215,8 +219,6 @@ const t = (key: string, params?: Record<string, string | number>) => {
   return Object.entries(params).reduce((text, [name, value]) => text.replaceAll(`{${name}}`, String(value)), message)
 }
 const { sys_normal_disable } = useDict('sys_normal_disable')
-const canEditRole = computed(() => checkPermi(['system:role:edit']))
-const canRemoveRole = computed(() => checkPermi(['system:role:remove']))
 
 const roleList = ref<Role[]>([])
 const open = ref(false)
@@ -251,12 +253,37 @@ const dataScopeOptions = computed(() => [
 ])
 const single = computed(() => ids.value.length !== 1)
 const multiple = computed(() => ids.value.length === 0)
+const showOperationColumn = computed(() => roleList.value.some((row) => roleRowActions(row).some((action) => !action.hidden)))
 const title = computed(() => (form.value.roleId ? t('role.editRole') : t('role.addRole')))
 const rules = computed<FormRules<Role>>(() => ({
   roleName: [{ required: true, message: t('role.roleNameRequired'), trigger: 'blur' }],
   roleKey: [{ required: true, message: t('role.roleKeyRequired'), trigger: 'blur' }],
   roleSort: [{ required: true, message: t('role.roleSortRequired'), trigger: 'blur' }]
 }))
+const formCloseGuard = useFormCloseGuard({
+  enabled: () => open.value,
+  getSnapshot: () => JSON.stringify({
+    form: form.value || {},
+    menuIds: getCheckedKeys(menuRef.value || {})
+  }),
+  close: () => {
+    open.value = false
+  },
+  reset,
+  t
+})
+const dataScopeCloseGuard = useFormCloseGuard({
+  enabled: () => openDataScope.value,
+  getSnapshot: () => JSON.stringify({
+    form: form.value || {},
+    deptIds: getCheckedKeys(deptRef.value || {})
+  }),
+  close: () => {
+    openDataScope.value = false
+  },
+  reset,
+  t
+})
 
 function withDateRange(query: RoleQuery) {
   return withUtcDateRange(query, dateRange.value)
@@ -295,6 +322,16 @@ async function handleDelete(row?: Role) {
   } catch {
     // User cancelled or the request interceptor already displayed the backend error.
   }
+}
+
+function roleRowActions(row: Role) {
+  const hidden = row.roleId === 1
+  return [
+    { label: t('common.edit'), icon: 'Edit', permission: 'system:role:edit', hidden, primary: true, onClick: () => handleUpdate(row) },
+    { label: t('role.dataScope'), icon: 'Connection', permission: 'system:role:edit', hidden, onClick: () => handleDataScope(row) },
+    { label: t('role.assignUsers'), icon: 'UserFilled', permission: 'system:role:edit', hidden, onClick: () => handleAuthUser(row) },
+    { label: t('common.delete'), icon: 'Delete', type: 'danger' as const, permission: 'system:role:remove', hidden, onClick: () => handleDelete(row) }
+  ]
 }
 
 function handleExport() {
@@ -359,6 +396,7 @@ async function handleAdd() {
   reset()
   await runUiAction(async () => {
     await getMenuTreeselect()
+    formCloseGuard.markPristine()
     open.value = true
   })
 }
@@ -381,6 +419,7 @@ async function handleUpdate(row?: Role) {
     checkedKeys.forEach((key: number | string) => {
       menuRef.value?.setChecked(key, true, false)
     })
+    formCloseGuard.markPristine()
   })
 }
 
@@ -435,8 +474,8 @@ async function submitForm() {
       await addRole(form.value)
       ElMessage.success(t('common.addSuccess'))
     }
+    formCloseGuard.markPristine()
     open.value = false
-    reset()
     await getList()
   } catch {
     // Request interceptor already displays the backend error.
@@ -444,8 +483,7 @@ async function submitForm() {
 }
 
 function cancel() {
-  open.value = false
-  reset()
+  formCloseGuard.closeWithGuard()
 }
 
 function dataScopeSelectChange(value: string) {
@@ -464,6 +502,7 @@ async function handleDataScope(row: Role) {
     await nextTick()
     const deptTreeResponse = await deptTree
     deptRef.value?.setCheckedKeys(deptTreeResponse.data?.checkedKeys || [])
+    dataScopeCloseGuard.markPristine()
   })
 }
 
@@ -473,8 +512,8 @@ async function submitDataScope() {
   try {
     await dataScope(form.value)
     ElMessage.success(t('common.editSuccess'))
+    dataScopeCloseGuard.markPristine()
     openDataScope.value = false
-    reset()
     await getList()
   } catch {
     // Request interceptor already displays the backend error.
@@ -482,8 +521,7 @@ async function submitDataScope() {
 }
 
 function cancelDataScope() {
-  openDataScope.value = false
-  reset()
+  dataScopeCloseGuard.closeWithGuard()
 }
 
 getList()

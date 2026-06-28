@@ -55,6 +55,7 @@ const modal = {
     return ElMessageBox.prompt(content, t('common.systemPrompt'), {
       confirmButtonText: t('common.confirm'),
       cancelButtonText: t('common.cancel'),
+      customClass: 'admin-message-box--prompt',
       type: 'warning'
     })
   },

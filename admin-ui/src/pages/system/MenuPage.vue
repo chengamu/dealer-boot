@@ -52,16 +52,27 @@
           <span>{{ formatUtc(row.createTime) }}</span>
         </template>
       </el-table-column>
-      <el-table-column :label="t('common.operate')" align="center" width="220" fixed="right" class-name="small-padding fixed-width">
+      <el-table-column :label="t('common.operate')" align="center" width="150" fixed="right" class-name="small-padding fixed-width">
         <template #default="{ row }">
-          <el-button link type="primary" icon="Edit" @click="handleUpdate(row)" v-hasPermi="['system:menu:edit']">{{ t('common.edit') }}</el-button>
-          <el-button link type="primary" icon="Plus" @click="handleAdd(row)" v-hasPermi="['system:menu:add']">{{ t('common.add') }}</el-button>
-          <el-button link type="primary" icon="Delete" @click="handleDelete(row)" v-hasPermi="['system:menu:remove']">{{ t('common.delete') }}</el-button>
+          <AdminTableActions :actions="[
+            { label: t('common.edit'), icon: 'Edit', permission: 'system:menu:edit', primary: true, onClick: () => handleUpdate(row) },
+            { label: t('common.add'), icon: 'Plus', permission: 'system:menu:add', onClick: () => handleAdd(row) },
+            { label: t('common.delete'), icon: 'Delete', type: 'danger', permission: 'system:menu:remove', onClick: () => handleDelete(row) }
+          ]" />
         </template>
       </el-table-column>
     </el-table>
 
-    <el-drawer v-model="open" :title="title" size="720px" append-to-body destroy-on-close @closed="reset">
+    <AdminDrawer
+      v-model="open"
+      :title="title"
+      size="720px"
+      append-to-body
+      destroy-on-close
+      :close-on-click-modal="false"
+      :before-close="formCloseGuard.beforeClose"
+      @closed="formCloseGuard.handleClosed"
+    >
       <el-form ref="menuRef" :model="form" :rules="rules" label-width="110px">
         <el-row>
           <el-col :span="24">
@@ -197,7 +208,7 @@
           <el-button @click="cancel">{{ t('common.cancel') }}</el-button>
         </div>
       </template>
-    </el-drawer>
+    </AdminDrawer>
   </div>
 </template>
 
@@ -212,6 +223,7 @@ import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 import { useDict } from '@/utils/dict'
 import { handleTree } from '@/utils/ruoyi'
+import { useFormCloseGuard } from '@/composables/useFormCloseGuard'
 
 type IconSelectExpose = { reset: () => void }
 
@@ -243,6 +255,15 @@ const rules = computed<FormRules>(() => ({
   orderNum: [{ required: true, message: t('menu.orderNumRequired'), trigger: 'blur' }],
   path: [{ required: true, message: t('menu.pathRequired'), trigger: 'blur' }]
 }))
+const formCloseGuard = useFormCloseGuard({
+  enabled: () => open.value,
+  getSnapshot: () => JSON.stringify(form.value || {}),
+  close: () => {
+    open.value = false
+  },
+  reset,
+  t
+})
 
 function reset() {
   form.value = {
@@ -276,8 +297,7 @@ async function getTreeselect() {
 }
 
 function cancel() {
-  open.value = false
-  reset()
+  formCloseGuard.closeWithGuard()
 }
 
 function showSelectIcon() {
@@ -309,6 +329,7 @@ async function handleAdd(row?: Menu) {
   try {
     await getTreeselect()
     form.value.parentId = row?.menuId ?? 0
+    formCloseGuard.markPristine()
     open.value = true
   } catch {
     // Request interceptor already displays the backend error.
@@ -330,6 +351,7 @@ async function handleUpdate(row: Menu) {
     if (!row.menuId) return
     const response = await getMenu(row.menuId)
     form.value = response.data || {}
+    formCloseGuard.markPristine()
     open.value = true
   } catch {
     // Request interceptor already displays the backend error.
@@ -347,8 +369,8 @@ async function submitForm() {
       await addMenu(form.value)
       ElMessage.success(t('common.addSuccess'))
     }
+    formCloseGuard.markPristine()
     open.value = false
-    reset()
     await getList()
   } catch {
     // Request interceptor already displays the backend error.

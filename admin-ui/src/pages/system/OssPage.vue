@@ -88,14 +88,12 @@
       </el-table-column>
       <el-table-column :label="t('legacy.createBy')" align="center" prop="createBy" />
       <el-table-column :label="t('legacy.provider')" align="center" prop="service" sortable="custom" />
-      <el-table-column :label="t('common.operate')" align="center" class-name="small-padding fixed-width">
+      <el-table-column :label="t('common.operate')" align="center" width="160" class-name="small-padding fixed-width">
         <template #default="{ row }">
-          <el-button link type="primary" icon="Download" @click="handleDownload(row)" v-hasPermi="['system:oss:download']">
-            {{ t('legacy.download') }}
-          </el-button>
-          <el-button link type="primary" icon="Delete" @click="handleDelete(row)" v-hasPermi="['system:oss:remove']">
-            {{ t('common.delete') }}
-          </el-button>
+          <AdminTableActions :actions="[
+            { label: t('legacy.download'), icon: 'Download', permission: 'system:oss:download', onClick: () => handleDownload(row) },
+            { label: t('common.delete'), icon: 'Delete', type: 'danger', permission: 'system:oss:remove', onClick: () => handleDelete(row) }
+          ]" />
         </template>
       </el-table-column>
     </el-table>
@@ -108,7 +106,16 @@
       @pagination="getList"
     />
 
-    <el-dialog v-model="open" :title="title" width="520px" append-to-body destroy-on-close @closed="reset">
+    <AdminDialog
+      v-model="open"
+      :title="title"
+      width="520px"
+      append-to-body
+      destroy-on-close
+      :close-on-click-modal="false"
+      :before-close="formCloseGuard.beforeClose"
+      @closed="formCloseGuard.handleClosed"
+    >
       <el-form ref="ossRef" :model="form" :rules="rules" label-width="90px">
         <el-form-item :label="t('legacy.fileName')" prop="file">
           <FileUpload v-if="uploadType === 0" v-model="form.file" />
@@ -116,12 +123,12 @@
         </el-form-item>
       </el-form>
       <template #footer>
-        <div class="dialog-footer">
+        <AdminDialogFooter>
           <el-button :loading="buttonLoading" type="primary" @click="submitForm">{{ t('common.confirm') }}</el-button>
           <el-button @click="cancel">{{ t('common.cancel') }}</el-button>
-        </div>
+        </AdminDialogFooter>
       </template>
-    </el-dialog>
+    </AdminDialog>
   </div>
 </template>
 
@@ -138,6 +145,7 @@ import ImagePreview from '@/components/ImagePreview/index.vue'
 import FileUpload from '@/components/FileUpload/index.vue'
 import ImageUpload from '@/components/ImageUpload/index.vue'
 import rawDownload from '@/plugins/download'
+import { useFormCloseGuard } from '@/composables/useFormCloseGuard'
 
 interface UploadForm {
   file?: string | unknown[] | Record<string, unknown>
@@ -185,6 +193,15 @@ const title = computed(() => (uploadType.value === 1 ? t('legacy.uploadImage') :
 const rules = computed<FormRules<UploadForm>>(() => ({
   file: [{ required: true, message: t('legacy.fileRequired'), trigger: 'blur' }]
 }))
+const formCloseGuard = useFormCloseGuard({
+  enabled: () => open.value,
+  getSnapshot: () => JSON.stringify(form.value || {}),
+  close: () => {
+    open.value = false
+  },
+  reset,
+  t
+})
 
 function withDateRange(query: OssQuery) {
   return withUtcDateRangeParams(query, dateRange.value, 'beginCreateTime', 'endCreateTime')
@@ -209,8 +226,7 @@ function checkFileSuffix(fileSuffix?: string) {
 }
 
 function cancel() {
-  open.value = false
-  reset()
+  formCloseGuard.closeWithGuard()
 }
 
 function reset() {
@@ -286,12 +302,14 @@ function handleOssConfig() {
 function handleFile() {
   reset()
   uploadType.value = 0
+  formCloseGuard.markPristine()
   open.value = true
 }
 
 function handleImage() {
   reset()
   uploadType.value = 1
+  formCloseGuard.markPristine()
   open.value = true
 }
 
@@ -299,8 +317,8 @@ async function submitForm() {
   const valid = await ossRef.value?.validate().catch(() => false)
   if (!valid) return
   try {
+    formCloseGuard.markPristine()
     open.value = false
-    reset()
     await getList()
   } catch {
     // Request interceptor already displays the backend error.

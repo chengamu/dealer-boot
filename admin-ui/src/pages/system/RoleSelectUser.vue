@@ -1,19 +1,21 @@
 ﻿<template>
-  <el-dialog v-model="visible" :title="t('role.selectUser')" width="800px" top="5vh" append-to-body>
-    <el-form ref="queryRef" :model="queryParams" :inline="true">
+  <AdminDialog v-model="visible" :title="t('role.selectUser')" width="920px" top="5vh" variant="picker" class="admin-selector-dialog" append-to-body>
+    <div class="admin-dialog__toolbar">
+      <el-form ref="queryRef" :model="queryParams" :inline="true" class="admin-selector-dialog__form">
       <el-form-item :label="t('user.userName')" prop="userName">
-        <el-input v-model="queryParams.userName" :placeholder="t('user.userNamePlaceholder')" clearable style="width: 200px" @keyup.enter="handleQuery" />
+        <el-input v-model="queryParams.userName" :placeholder="t('user.userNamePlaceholder')" clearable @keyup.enter="handleQuery" />
       </el-form-item>
       <el-form-item :label="t('user.phonenumber')" prop="phonenumber">
-        <el-input v-model="queryParams.phonenumber" :placeholder="t('user.phonenumberPlaceholder')" clearable style="width: 200px" @keyup.enter="handleQuery" />
+        <el-input v-model="queryParams.phonenumber" :placeholder="t('user.phonenumberPlaceholder')" clearable @keyup.enter="handleQuery" />
       </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="Search" @click="handleQuery">{{ t('common.search') }}</el-button>
         <el-button icon="Refresh" @click="resetQuery">{{ t('common.reset') }}</el-button>
       </el-form-item>
-    </el-form>
-    <el-row>
-      <el-table ref="tableRef" :data="userList" height="260px" @row-click="clickRow" @selection-change="handleSelectionChange">
+      </el-form>
+    </div>
+    <div class="admin-dialog__table admin-selector-dialog__table">
+      <el-table ref="tableRef" :data="userList" height="100%" border @row-click="clickRow" @selection-change="handleSelectionChange">
         <el-table-column type="selection" width="55" />
         <el-table-column :label="t('user.userName')" prop="userName" :show-overflow-tooltip="true" />
         <el-table-column :label="t('user.nickName')" prop="nickName" :show-overflow-tooltip="true" />
@@ -30,25 +32,26 @@
           </template>
         </el-table-column>
       </el-table>
-      <pagination
-        v-show="total > 0"
-        v-model:page="queryParams.pageNum"
-        v-model:limit="queryParams.pageSize"
-        :total="total"
-        @pagination="getList"
-      />
-    </el-row>
+    </div>
+    <pagination
+      v-show="total > 0"
+      class="admin-selector-dialog__pagination"
+      v-model:page="queryParams.pageNum"
+      v-model:limit="queryParams.pageSize"
+      :total="total"
+      @pagination="getList"
+    />
     <template #footer>
-      <div class="dialog-footer">
+      <AdminDialogFooter :status="selectedCountText">
         <el-button type="primary" @click="handleSelectUser">{{ t('common.confirm') }}</el-button>
         <el-button @click="visible = false">{{ t('common.cancel') }}</el-button>
-      </div>
+      </AdminDialogFooter>
     </template>
-  </el-dialog>
+  </AdminDialog>
 </template>
 
 <script setup lang="ts" name="RoleSelectUser">
-import { reactive, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import { ElMessage, type FormInstance } from 'element-plus'
 import { authUserSelectAll, unallocatedUserList, type RoleUser, type RoleUserQuery } from '@/api/system/role'
 import { formatUtc } from '@/utils/datetime'
@@ -81,6 +84,7 @@ const queryParams = reactive<RoleUserQuery>({
   pageNum: 1,
   pageSize: 10
 })
+const selectedCountText = computed(() => t('common.selectedCount', { count: userIds.value.length }))
 
 async function show() {
   queryParams.roleId = props.roleId

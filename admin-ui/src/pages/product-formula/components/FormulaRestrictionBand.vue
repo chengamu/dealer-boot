@@ -65,9 +65,11 @@
       <el-table-column :label="t('productCenter.formulaSetup.messageText')" min-width="240">
         <template #default="{ row }"><el-input v-model="row.messageText" clearable /></template>
       </el-table-column>
-      <el-table-column :label="t('common.operate')" width="100" align="center">
+      <el-table-column :label="t('common.operate')" width="110" align="center">
         <template #default="{ $index }">
-          <el-button link type="danger" @click="$emit('removeRestriction', $index)">{{ t('common.delete') }}</el-button>
+          <AdminTableActions :actions="[
+            { label: t('common.delete'), icon: 'Delete', type: 'danger', onClick: () => $emit('removeRestriction', $index) }
+          ]" />
         </template>
       </el-table-column>
     </el-table>

@@ -78,24 +78,28 @@
           <span>{{ formatUtc(row.createTime) }}</span>
         </template>
       </el-table-column>
-      <el-table-column :label="t('common.operate')" align="center" width="120" fixed="right">
+      <el-table-column :label="t('common.operate')" align="center" width="150" fixed="right">
         <template #default="{ row }">
-          <el-dropdown trigger="click">
-            <el-button :aria-label="t('common.operate')" :title="t('common.operate')" icon="MoreFilled" />
-            <template #dropdown>
-              <el-dropdown-menu>
-                <el-dropdown-item @click="handleUpdate(row)" v-hasPermi="['merchant:user:edit']">{{ t('common.edit') }}</el-dropdown-item>
-                <el-dropdown-item class="is-danger" @click="handleDelete(row)" v-hasPermi="['merchant:user:remove']">{{ t('common.delete') }}</el-dropdown-item>
-              </el-dropdown-menu>
-            </template>
-          </el-dropdown>
+          <AdminTableActions :actions="[
+            { label: t('common.edit'), icon: 'Edit', permission: 'merchant:user:edit', onClick: () => handleUpdate(row) },
+            { label: t('common.delete'), icon: 'Delete', type: 'danger', permission: 'merchant:user:remove', onClick: () => handleDelete(row) }
+          ]" />
         </template>
       </el-table-column>
     </el-table>
 
     <pagination v-show="total > 0" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" :total="total" @pagination="getList" />
 
-    <el-drawer v-model="open" :title="title" size="640px" append-to-body destroy-on-close @closed="reset">
+    <AdminDrawer
+      v-model="open"
+      :title="title"
+      size="640px"
+      append-to-body
+      destroy-on-close
+      :close-on-click-modal="false"
+      :before-close="formCloseGuard.beforeClose"
+      @closed="formCloseGuard.handleClosed"
+    >
       <el-form ref="userRef" :model="form" :rules="rules" label-width="112px">
         <el-row :gutter="16">
           <el-col :span="24">
@@ -154,7 +158,7 @@
           <el-button @click="cancel">{{ t('common.cancel') }}</el-button>
         </div>
       </template>
-    </el-drawer>
+    </AdminDrawer>
   </div>
 </template>
 
@@ -170,6 +174,7 @@ import { useLocaleStore } from '@/stores/locale'
 import { useDict } from '@/utils/dict'
 import { runUiAction } from '@/utils/action'
 import { getInitPassword } from '@/api/system/user'
+import { useFormCloseGuard } from '@/composables/useFormCloseGuard'
 
 interface DictOption {
   label?: string
@@ -250,6 +255,15 @@ const rules = computed<FormRules<SysUser>>(() => ({
   ],
   email: [{ type: 'email', message: t('user.emailInvalid'), trigger: ['blur', 'change'] }]
 }))
+const formCloseGuard = useFormCloseGuard({
+  enabled: () => open.value,
+  getSnapshot: () => JSON.stringify(form.value || {}),
+  close: () => {
+    open.value = false
+  },
+  reset,
+  t
+})
 
 function getUserSexLabel(dict: DictOption) {
   return dict.value && userSexLabelKeys[dict.value] ? t(userSexLabelKeys[dict.value]) : dict.label || ''
@@ -329,6 +343,7 @@ async function handleAdd() {
     form.value.roleIds = response.data.roleIds || []
     const initPasswordResponse = await getInitPassword()
     form.value.password = initPasswordResponse.data || initPasswordResponse.msg || ''
+    formCloseGuard.markPristine()
     open.value = true
   })
 }
@@ -346,13 +361,13 @@ async function handleUpdate(row?: SysUser) {
     }
     form.value.roleIds = response.data.roleIds || []
     form.value.postIds = []
+    formCloseGuard.markPristine()
     open.value = true
   })
 }
 
 function cancel() {
-  open.value = false
-  reset()
+  formCloseGuard.closeWithGuard()
 }
 
 async function submitForm() {
@@ -371,8 +386,8 @@ async function submitForm() {
       await addMerchantUser(form.value)
       ElMessage.success(t('common.addSuccess'))
     }
+    formCloseGuard.markPristine()
     open.value = false
-    reset()
     await getList()
   } catch {
     // Request interceptor already displays the backend error.

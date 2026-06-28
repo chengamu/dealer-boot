@@ -33,17 +33,26 @@
       <el-table-column :label="t('legal.publishedTime')" width="180">
         <template #default="{ row }">{{ formatUtc(row.publishedTime) }}</template>
       </el-table-column>
-      <el-table-column :label="t('common.operate')" width="160" fixed="right">
+      <el-table-column :label="t('common.operate')" width="150" fixed="right">
         <template #default="{ row }">
-          <el-button link type="primary" icon="Edit" @click="openForm(row)" v-hasPermi="['system:legal:document:edit']">{{ t('common.edit') }}</el-button>
-          <el-button link type="danger" icon="Delete" @click="handleDelete(row)" v-hasPermi="['system:legal:document:remove']">{{ t('common.delete') }}</el-button>
+          <AdminTableActions :actions="[
+            { label: t('common.edit'), icon: 'Edit', permission: 'system:legal:document:edit', onClick: () => openForm(row) },
+            { label: t('common.delete'), icon: 'Delete', type: 'danger', permission: 'system:legal:document:remove', onClick: () => handleDelete(row) }
+          ]" />
         </template>
       </el-table-column>
     </el-table>
 
     <pagination v-show="total > 0" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" :total="total" @pagination="getList" />
 
-    <el-drawer v-model="open" :title="form.documentId ? t('common.edit') : t('common.add')" size="720px">
+    <AdminDrawer
+      v-model="open"
+      :title="form.documentId ? t('common.edit') : t('common.add')"
+      size="720px"
+      :close-on-click-modal="false"
+      :before-close="formCloseGuard.beforeClose"
+      @closed="formCloseGuard.handleClosed"
+    >
       <el-form :model="form" label-width="120px">
         <el-form-item :label="t('legal.documentType')"><el-select v-model="form.documentType"><el-option v-for="item in documentTypeOptions" :key="item.value" :label="item.label" :value="item.value" /></el-select></el-form-item>
         <el-form-item :label="t('legal.locale')"><el-select v-model="form.locale"><el-option v-for="item in localeOptions" :key="item.value" :label="item.label" :value="item.value" /></el-select></el-form-item>
@@ -52,10 +61,12 @@
         <el-form-item :label="t('legal.content')"><el-input v-model="form.content" type="textarea" :rows="18" /></el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="open = false">{{ t('common.cancel') }}</el-button>
-        <el-button type="primary" @click="submitForm">{{ t('common.confirm') }}</el-button>
+        <AdminDialogFooter>
+          <el-button @click="formCloseGuard.closeWithGuard">{{ t('common.cancel') }}</el-button>
+          <el-button type="primary" @click="submitForm">{{ t('common.confirm') }}</el-button>
+        </AdminDialogFooter>
       </template>
-    </el-drawer>
+    </AdminDrawer>
   </div>
 </template>
 
@@ -65,6 +76,7 @@ import { ElMessage, ElMessageBox, type FormInstance } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import { addLegalDocument, deleteLegalDocument, listLegalDocuments, updateLegalDocument, type LegalDocument, type LegalDocumentQuery } from '@/api/system/legalDocument'
 import { formatUtc } from '@/utils/datetime'
+import { useFormCloseGuard } from '@/composables/useFormCloseGuard'
 
 const { t } = useI18n()
 const queryRef = ref<FormInstance>()
@@ -74,6 +86,15 @@ const open = ref(false)
 const total = ref(0)
 const queryParams = reactive<LegalDocumentQuery>({ pageNum: 1, pageSize: 10 })
 const form = reactive<LegalDocument>({ status: 'DRAFT', locale: 'en_US' })
+const formCloseGuard = useFormCloseGuard({
+  enabled: () => open.value,
+  getSnapshot: () => JSON.stringify(form),
+  close: () => {
+    open.value = false
+  },
+  reset: resetForm,
+  t
+})
 const documentTypeOptions = computed(() => [
   { label: t('legal.typePrivacy'), value: 'privacy' },
   { label: t('legal.typeTerms'), value: 'terms' },
@@ -112,8 +133,15 @@ function resetQuery() {
   handleQuery()
 }
 
+function resetForm() {
+  Object.keys(form).forEach((key) => delete form[key as keyof LegalDocument])
+  Object.assign(form, { documentId: undefined, documentType: 'privacy', locale: 'en_US', title: '', content: '', version: '', status: 'PUBLISHED' })
+}
+
 function openForm(row?: LegalDocument) {
-  Object.assign(form, { documentId: undefined, documentType: 'privacy', locale: 'en_US', title: '', content: '', version: '', status: 'PUBLISHED' }, row || {})
+  resetForm()
+  Object.assign(form, row || {})
+  formCloseGuard.markPristine()
   open.value = true
 }
 
@@ -126,6 +154,7 @@ async function submitForm() {
     await addLegalDocument(form)
     ElMessage.success(t('common.addSuccess'))
   }
+  formCloseGuard.markPristine()
   open.value = false
   await getList()
 }

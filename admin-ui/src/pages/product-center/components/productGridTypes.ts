@@ -68,6 +68,7 @@ export interface ProductGridConfig {
     icon?: string
     type?: 'primary' | 'success' | 'warning' | 'danger' | 'info'
     permission: string
+    primary?: boolean
     visible?: (row: ProductRecord) => boolean
     disabled?: (row: ProductRecord) => boolean
     handler: (row: ProductRecord) => void | Promise<void>

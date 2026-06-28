@@ -52,23 +52,15 @@
       <el-table-column :label="t('common.updateTime')" align="center" prop="updateTime" width="170">
         <template #default="{ row }">{{ formatUtc(row.updateTime) }}</template>
       </el-table-column>
-      <el-table-column :label="t('common.operate')" align="center" width="330" class-name="small-padding fixed-width">
+      <el-table-column :label="t('common.operate')" align="center" width="150" class-name="small-padding fixed-width">
         <template #default="{ row }">
-          <el-tooltip :content="t('common.preview')" placement="top">
-            <el-button link type="primary" icon="View" :aria-label="t('common.preview')" :title="t('common.preview')" @click="handlePreview(row)" v-hasPermi="['tool:gen:preview']" />
-          </el-tooltip>
-          <el-tooltip :content="t('common.edit')" placement="top">
-            <el-button link type="primary" icon="Edit" :aria-label="t('common.edit')" :title="t('common.edit')" @click="handleEditTable(row)" v-hasPermi="['tool:gen:edit']" />
-          </el-tooltip>
-          <el-tooltip :content="t('common.delete')" placement="top">
-            <el-button link type="primary" icon="Delete" :aria-label="t('common.delete')" :title="t('common.delete')" @click="handleDelete(row)" v-hasPermi="['tool:gen:remove']" />
-          </el-tooltip>
-          <el-tooltip :content="t('common.sync')" placement="top">
-            <el-button link type="primary" icon="Refresh" :aria-label="t('common.sync')" :title="t('common.sync')" @click="handleSynchDb(row)" v-hasPermi="['tool:gen:edit']" />
-          </el-tooltip>
-          <el-tooltip :content="t('gen.generateCode')" placement="top">
-            <el-button link type="primary" icon="Download" :aria-label="t('gen.generateCode')" :title="t('gen.generateCode')" @click="handleGenTable(row)" v-hasPermi="['tool:gen:code']" />
-          </el-tooltip>
+          <AdminTableActions :actions="[
+            { label: t('common.preview'), icon: 'View', permission: 'tool:gen:preview', onClick: () => handlePreview(row) },
+            { label: t('common.edit'), icon: 'Edit', permission: 'tool:gen:edit', primary: true, onClick: () => handleEditTable(row) },
+            { label: t('common.delete'), icon: 'Delete', type: 'danger', permission: 'tool:gen:remove', onClick: () => handleDelete(row) },
+            { label: t('common.sync'), icon: 'Refresh', permission: 'tool:gen:edit', onClick: () => handleSynchDb(row) },
+            { label: t('gen.generateCode'), icon: 'Download', permission: 'tool:gen:code', onClick: () => handleGenTable(row) }
+          ]" />
         </template>
       </el-table-column>
       <template #empty>
@@ -83,14 +75,22 @@
 
     <pagination v-show="total > 0" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" :total="total" @pagination="getList" />
 
-    <el-dialog v-model="preview.open" :title="preview.title" width="80%" top="5vh" append-to-body class="gen-preview-dialog scrollbar">
+    <AdminDialog v-model="preview.open" :title="preview.title" width="80%" top="5vh" variant="detail" append-to-body class="gen-preview-dialog scrollbar">
       <el-tabs v-model="preview.activeName">
         <el-tab-pane v-for="[key, value] in previewEntries" :key="key" :label="previewName(key)" :name="previewName(key)">
-          <el-link :underline="false" icon="DocumentCopy" class="gen-preview-dialog__copy" v-copyText="value" v-copyText:callback="copyTextSuccess">&nbsp;{{ t('common.copy') }}</el-link>
-          <pre>{{ value }}</pre>
+          <div class="gen-preview-dialog__toolbar">
+            <span>{{ previewName(key) }}</span>
+            <el-link :underline="false" icon="DocumentCopy" class="gen-preview-dialog__copy" v-copyText="value" v-copyText:callback="copyTextSuccess">&nbsp;{{ t('common.copy') }}</el-link>
+          </div>
+          <pre class="admin-detail__code gen-preview-dialog__code">{{ value }}</pre>
         </el-tab-pane>
       </el-tabs>
-    </el-dialog>
+      <template #footer>
+        <AdminDialogFooter>
+          <el-button @click="preview.open = false">{{ t('common.close') }}</el-button>
+        </AdminDialogFooter>
+      </template>
+    </AdminDialog>
 
     <import-table-dialog ref="importRef" @ok="handleQuery" />
   </div>

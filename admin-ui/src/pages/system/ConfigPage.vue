@@ -88,12 +88,10 @@
       </el-table-column>
       <el-table-column :label="t('common.operate')" align="center" width="150" class-name="small-padding fixed-width">
         <template #default="{ row }">
-          <el-button link type="primary" icon="Edit" @click="handleUpdate(row)" v-hasPermi="['system:config:edit']">
-            {{ t('common.edit') }}
-          </el-button>
-          <el-button link type="primary" icon="Delete" @click="handleDelete(row)" v-hasPermi="['system:config:remove']">
-            {{ t('common.delete') }}
-          </el-button>
+          <AdminTableActions :actions="[
+            { label: t('common.edit'), icon: 'Edit', permission: 'system:config:edit', onClick: () => handleUpdate(row) },
+            { label: t('common.delete'), icon: 'Delete', type: 'danger', permission: 'system:config:remove', onClick: () => handleDelete(row) }
+          ]" />
         </template>
       </el-table-column>
     </el-table>
@@ -106,7 +104,16 @@
       @pagination="getList"
     />
 
-    <el-drawer v-model="open" :title="title" size="520px" append-to-body destroy-on-close @closed="reset">
+    <AdminDrawer
+      v-model="open"
+      :title="title"
+      size="520px"
+      append-to-body
+      destroy-on-close
+      :close-on-click-modal="false"
+      :before-close="formCloseGuard.beforeClose"
+      @closed="formCloseGuard.handleClosed"
+    >
       <el-form ref="configRef" :model="form" :rules="rules" label-width="90px">
         <el-form-item :label="t('legacy.configName')" prop="configName">
           <el-input v-model="form.configName" :placeholder="t('legacy.configNamePlaceholder')" />
@@ -132,7 +139,7 @@
           <el-button @click="cancel">{{ t('common.cancel') }}</el-button>
         </div>
       </template>
-    </el-drawer>
+    </AdminDrawer>
   </div>
 </template>
 
@@ -145,6 +152,7 @@ import { formatUtc, withUtcDateRange } from '@/utils/datetime'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 import { useDict } from '@/utils/dict'
+import { useFormCloseGuard } from '@/composables/useFormCloseGuard'
 
 const localeStore = useLocaleStore()
 const t = (key: string, params?: Record<string, string | number>) => {
@@ -177,6 +185,15 @@ const rules = computed<FormRules<Config>>(() => ({
   configKey: [{ required: true, message: t('legacy.configKeyRequired'), trigger: 'blur' }],
   configValue: [{ required: true, message: t('legacy.configValueRequired'), trigger: 'blur' }]
 }))
+const formCloseGuard = useFormCloseGuard({
+  enabled: () => open.value,
+  getSnapshot: () => JSON.stringify(form.value || {}),
+  close: () => {
+    open.value = false
+  },
+  reset,
+  t
+})
 
 function withDateRange(query: ConfigQuery) {
   return withUtcDateRange(query, dateRange.value)
@@ -205,8 +222,7 @@ async function getList() {
 }
 
 function cancel() {
-  open.value = false
-  reset()
+  formCloseGuard.closeWithGuard()
 }
 
 function handleQuery() {
@@ -226,6 +242,7 @@ function handleSelectionChange(selection: Config[]) {
 
 function handleAdd() {
   reset()
+  formCloseGuard.markPristine()
   open.value = true
 }
 
@@ -235,6 +252,7 @@ async function handleUpdate(row?: Config) {
   if (!configId) return
   try {
     form.value = await getConfig(configId)
+    formCloseGuard.markPristine()
     open.value = true
   } catch {
     // Request interceptor already displays the backend error.
@@ -252,8 +270,8 @@ async function submitForm() {
       await addConfig(form.value)
       ElMessage.success(t('common.addSuccess'))
     }
+    formCloseGuard.markPristine()
     open.value = false
-    reset()
     await getList()
   } catch {
     // Request interceptor already displays the backend error.

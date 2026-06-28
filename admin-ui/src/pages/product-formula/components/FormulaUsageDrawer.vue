@@ -1,11 +1,16 @@
 <template>
-  <el-drawer
+  <AdminDrawer
     :model-value="modelValue"
     :title="t('productCenter.formulaSetup.usageSetting')"
     size="1280px"
     append-to-body
+    variant="wide"
     class="formula-usage-drawer"
+    :close-on-click-modal="false"
+    :close-on-press-escape="false"
+    :before-close="handleDrawerBeforeClose"
     @update:model-value="$emit('update:modelValue', $event)"
+    @closed="handleDrawerClosed"
   >
     <div v-if="usageRow" class="usage-editor">
       <div class="usage-editor__summary">
@@ -134,18 +139,20 @@
       </div>
     </div>
     <template #footer>
-      <el-button @click="$emit('update:modelValue', false)">{{ t('common.close') }}</el-button>
+      <el-button @click="closeDrawerWithGuard">{{ t('common.cancel') }}</el-button>
+      <el-button type="primary" @click="confirmAndClose">{{ t('common.confirm') }}</el-button>
     </template>
-  </el-drawer>
+  </AdminDrawer>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
-import { ElMessage } from 'element-plus'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { CopyDocument, Delete, MagicStick, Plus } from '@element-plus/icons-vue'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 import { PRODUCT_STATUS_DISABLED, PRODUCT_STATUS_ENABLED } from '@/constants/productStatus'
+import { useUnsavedChangesGuard } from '@/composables/useUnsavedChangesGuard'
 import {
   conditionExpressionForOption,
   conditionKeyForOption,
@@ -172,7 +179,7 @@ const props = defineProps<{
   unitOptions: ProductOption[]
 }>()
 
-defineEmits<{
+const emit = defineEmits<{
   'update:modelValue': [value: boolean]
 }>()
 
@@ -180,14 +187,113 @@ const localeStore = useLocaleStore()
 const t = (key: string) => getMessage(key, localeStore.language)
 const selectedRule = ref<ProductFormulaUsageRuleVO | null>(null)
 const variableChips = formulaVariables
+const usageSnapshot = ref<{
+  materialCode?: string
+  usageRow: ProductFormulaMaterialVO | null
+  rules: ProductFormulaUsageRuleVO[]
+} | null>(null)
 
 const currentRules = computed(() => props.usageRules.filter((rule) => rule.materialCode === props.usageRow?.materialCode))
+const unsavedChangesGuard = useUnsavedChangesGuard({
+  enabled: () => props.modelValue && Boolean(props.usageRow),
+  getSnapshot: () => JSON.stringify(createUsageSnapshot()),
+  confirmDiscard: confirmDiscardChanges
+})
 
 watch(() => props.modelValue, (open) => {
   if (open && props.usageRow) {
     ensureInitialRule()
+    selectedRule.value = null
+    captureUsageSnapshot()
+    window.addEventListener('keydown', handleDrawerShortcut)
+  } else {
+    window.removeEventListener('keydown', handleDrawerShortcut)
+    handleDrawerClosed()
   }
 })
+
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleDrawerShortcut)
+})
+
+function cloneValue<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value)) as T
+}
+
+function createUsageSnapshot() {
+  return {
+    materialCode: props.usageRow?.materialCode,
+    usageRow: props.usageRow ? cloneValue(props.usageRow) : null,
+    rules: cloneValue(currentRules.value)
+  }
+}
+
+function captureUsageSnapshot() {
+  usageSnapshot.value = createUsageSnapshot()
+  unsavedChangesGuard.markPristine()
+}
+
+function restoreUsageSnapshot() {
+  const snapshot = usageSnapshot.value
+  if (!snapshot) return
+  const materialCode = snapshot.materialCode || props.usageRow?.materialCode
+  if (props.usageRow && snapshot.usageRow) {
+    const target = props.usageRow as Record<string, unknown>
+    Object.keys(target).forEach((key) => delete target[key])
+    Object.assign(target, cloneValue(snapshot.usageRow))
+  }
+  if (!materialCode) return
+  for (let index = props.usageRules.length - 1; index >= 0; index--) {
+    if (props.usageRules[index].materialCode === materialCode) {
+      props.usageRules.splice(index, 1)
+    }
+  }
+  props.usageRules.push(...cloneValue(snapshot.rules))
+}
+
+async function confirmDiscardChanges() {
+  try {
+    await ElMessageBox.confirm(t('common.unsavedChangesConfirm'), t('common.prompt'), {
+      confirmButtonText: t('common.confirm'),
+      cancelButtonText: t('common.cancel'),
+      type: 'warning'
+    })
+    restoreUsageSnapshot()
+    unsavedChangesGuard.markPristine()
+    return true
+  } catch {
+    return false
+  }
+}
+
+async function closeDrawerWithGuard() {
+  await unsavedChangesGuard.closeWithGuard(() => {
+    emit('update:modelValue', false)
+  })
+}
+
+function confirmAndClose() {
+  unsavedChangesGuard.markPristine()
+  emit('update:modelValue', false)
+}
+
+function handleDrawerBeforeClose(done: () => void) {
+  unsavedChangesGuard.canClose().then((allowed) => {
+    if (allowed) done()
+  })
+}
+
+function handleDrawerClosed() {
+  selectedRule.value = null
+  usageSnapshot.value = null
+  unsavedChangesGuard.resetPristine()
+}
+
+function handleDrawerShortcut(event: KeyboardEvent) {
+  if (event.key !== 'Escape' || !props.modelValue) return
+  event.preventDefault()
+  closeDrawerWithGuard()
+}
 
 function ensureInitialRule() {
   if (!props.usageRow) return

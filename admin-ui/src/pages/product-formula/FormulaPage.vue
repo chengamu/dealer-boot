@@ -67,6 +67,7 @@ async function rejectFormula(row: ProductRecord) {
   const result = await ElMessageBox.prompt(t('productCenter.formula.rejectPrompt'), t('productCenter.formula.actions.reject'), {
     confirmButtonText: t('common.confirm'),
     cancelButtonText: t('common.cancel'),
+    customClass: 'admin-message-box--prompt',
     inputType: 'textarea',
     inputValidator: (value) => Boolean(value && value.trim()),
     inputErrorMessage: t('productCenter.formula.rejectReasonRequired')
@@ -145,6 +146,7 @@ const formulaConfig = computed<ProductGridConfig>(() => ({
       icon: 'Setting',
       type: 'primary',
       permission: 'product:formula:setup',
+      primary: true,
       visible: (row) => row.status === FORMULA_STATUS.DRAFT || row.status === FORMULA_STATUS.REJECTED,
       handler: openSetup
     },
