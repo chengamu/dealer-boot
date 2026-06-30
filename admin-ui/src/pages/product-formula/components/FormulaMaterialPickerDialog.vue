@@ -34,15 +34,15 @@
     <div class="admin-dialog__table material-picker-grid-card">
       <el-table :data="filteredMaterialRows" border height="100%" class="material-picker-table" @selection-change="handleSelectionChange">
         <el-table-column type="selection" width="48" />
-        <el-table-column prop="attributeGroupNameCn" :label="t('productCenter.formulaSetup.attributeGroup')" width="120" show-overflow-tooltip />
-        <el-table-column prop="materialTypeNameCn" :label="t('productCenter.formulaSetup.materialType')" width="140" show-overflow-tooltip />
-        <el-table-column prop="materialCode" :label="t('productCenter.formulaSetup.materialCode')" width="150" show-overflow-tooltip />
-        <el-table-column prop="materialNameCn" :label="t('productCenter.formulaSetup.materialName')" min-width="260" show-overflow-tooltip />
-        <el-table-column prop="specModelText" :label="t('productCenter.formulaSetup.specModel')" min-width="220" show-overflow-tooltip />
+        <el-table-column prop="attributeGroupNameCn" :label="t('productCenter.formulaSetup.attributeGroup')" width="112" />
+        <el-table-column prop="materialTypeNameCn" :label="t('productCenter.formulaSetup.materialType')" width="132" />
+        <el-table-column prop="materialCode" :label="t('productCenter.formulaSetup.materialCode')" width="132" />
+        <el-table-column prop="materialNameCn" :label="t('productCenter.formulaSetup.materialName')" min-width="270" />
+        <el-table-column prop="specModelText" :label="t('productCenter.formulaSetup.specModel')" min-width="240" />
         <el-table-column prop="unitCode" :label="t('productCenter.formulaSetup.unit')" width="110">
           <template #default="{ row }">{{ unitLabel(row.unitCode) }}</template>
         </el-table-column>
-        <el-table-column prop="manufacturerName" :label="t('productCenter.formulaSetup.manufacturerName')" min-width="180" show-overflow-tooltip />
+        <el-table-column prop="manufacturerName" :label="t('productCenter.formulaSetup.manufacturerName')" min-width="160" />
       </el-table>
     </div>
 
@@ -202,7 +202,14 @@ function containsText(value: unknown, keyword: string) {
 }
 
 .material-picker-table :deep(.el-table__row td) {
-  height: 48px;
+  min-height: 48px;
+  padding: 7px 0;
+}
+
+.material-picker-table :deep(.cell) {
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.35;
 }
 
 .material-picker-table :deep(.el-table__body-wrapper),

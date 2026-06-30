@@ -21,6 +21,7 @@ import com.bocoo.ai.mapper.AiUsageDailyMapper;
 import com.bocoo.ai.mapper.AiUsageLedgerMapper;
 import com.bocoo.ai.mapper.AiUserQuotaMapper;
 import com.bocoo.ai.service.AiUsageService;
+import com.bocoo.common.core.context.TenantContextHolder;
 import com.bocoo.common.core.exception.ServiceException;
 import com.bocoo.common.core.utils.MapstructUtils;
 import com.bocoo.common.core.utils.StringUtils;
@@ -34,6 +35,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -47,6 +49,9 @@ import java.util.stream.Collectors;
 public class AiUsageServiceImpl implements AiUsageService {
 
     private static final String STATUS_ENABLED = "1";
+    private static final long DEFAULT_DAILY_REQUEST_LIMIT = 500L;
+    private static final long DEFAULT_DAILY_TOKEN_LIMIT = 10_000_000L;
+    private static final BigDecimal DEFAULT_DAILY_COST_LIMIT = BigDecimal.valueOf(5).setScale(2, RoundingMode.HALF_UP);
 
     private final AiUsageLedgerMapper usageLedgerMapper;
     private final AiAuditSummaryMapper auditSummaryMapper;
@@ -72,6 +77,7 @@ public class AiUsageServiceImpl implements AiUsageService {
     public Boolean insertUserQuota(AiUserQuotaBo bo) {
         Long tenantId = resolveTenantId(bo.getTenantId());
         assertQuotaUnique(null, tenantId, bo.getUserId());
+        applyQuotaDefaults(bo);
         AiUserQuota quota = MapstructUtils.convert(bo, AiUserQuota.class);
         if (quota == null) {
             throw ServiceException.ofMessageKey("ai.quota.invalid");
@@ -95,6 +101,7 @@ public class AiUsageServiceImpl implements AiUsageService {
         if (quota == null) {
             throw ServiceException.ofMessageKey("ai.quota.notFound");
         }
+        applyQuotaDefaults(bo);
         quota.setTenantId(tenantId);
         quota.setUserId(bo.getUserId());
         quota.setDailyRequestLimit(bo.getDailyRequestLimit());
@@ -153,71 +160,77 @@ public class AiUsageServiceImpl implements AiUsageService {
 
     @Override
     public String quotaDenyReason(Long tenantId, Long userId) {
-        AiUserQuota quota = findActiveQuota(tenantId, userId);
-        if (quota == null) {
+        return TenantContextHolder.callWithTenant(tenantId, () -> {
+            AiUserQuota quota = findActiveQuota(tenantId, userId);
+            if (quota == null) {
+                return null;
+            }
+            AiUsageDaily usage = findTodayUsage(tenantId, userId);
+            if (quota.getDailyRequestLimit() != null && safeLong(usage.getRequestCount()) >= quota.getDailyRequestLimit()) {
+                return "Daily request quota exceeded";
+            }
+            long usedTokens = safeLong(usage.getInputTokens()) + safeLong(usage.getOutputTokens());
+            if (quota.getDailyTokenLimit() != null && usedTokens >= quota.getDailyTokenLimit()) {
+                return "Daily token quota exceeded";
+            }
+            if (quota.getDailyCostLimit() != null && safeDecimal(usage.getCostAmount()).compareTo(quota.getDailyCostLimit()) >= 0) {
+                return "Daily cost quota exceeded";
+            }
             return null;
-        }
-        AiUsageDaily usage = findTodayUsage(tenantId, userId);
-        if (quota.getDailyRequestLimit() != null && safeLong(usage.getRequestCount()) >= quota.getDailyRequestLimit()) {
-            return "Daily request quota exceeded";
-        }
-        long usedTokens = safeLong(usage.getInputTokens()) + safeLong(usage.getOutputTokens());
-        if (quota.getDailyTokenLimit() != null && usedTokens >= quota.getDailyTokenLimit()) {
-            return "Daily token quota exceeded";
-        }
-        if (quota.getDailyCostLimit() != null && safeDecimal(usage.getCostAmount()).compareTo(quota.getDailyCostLimit()) >= 0) {
-            return "Daily cost quota exceeded";
-        }
-        return null;
+        });
     }
 
     @Override
     public void reportUsage(AiUsageReportBo bo) {
-        if (bo.getProviderCallId() != null && existsUsage(bo.getProviderCallId())) {
-            return;
-        }
-        AiUsageLedger ledger = new AiUsageLedger();
-        ledger.setUsageId(IdUtil.getSnowflakeNextId());
-        ledger.setTenantId(bo.getTenantId());
-        ledger.setUserId(bo.getUserId());
-        ledger.setSessionId(bo.getSessionId());
-        ledger.setRequestId(bo.getRequestId());
-        ledger.setProviderCallId(bo.getProviderCallId());
-        ledger.setProvider(bo.getProvider());
-        ledger.setModel(bo.getModel());
-        ledger.setInputTokens(bo.getInputTokens());
-        ledger.setOutputTokens(bo.getOutputTokens());
-        ledger.setCostAmount(bo.getCostAmount());
-        ledger.setLatencyMs(bo.getLatencyMs());
-        ledger.setStatus(bo.getStatus());
-        ledger.setCreatedTime(TimeUtils.utcNow());
-        usageLedgerMapper.insert(ledger);
-        usageDailyMapper.increment(
-            bo.getTenantId(),
-            bo.getUserId(),
-            LocalDate.now(TimeUtils.UTC),
-            safeLong(bo.getInputTokens()),
-            safeLong(bo.getOutputTokens()),
-            safeDecimal(bo.getCostAmount())
-        );
+        TenantContextHolder.runWithTenant(bo.getTenantId(), () -> {
+            if (bo.getProviderCallId() != null && existsUsage(bo.getProviderCallId())) {
+                return;
+            }
+            AiUsageLedger ledger = new AiUsageLedger();
+            ledger.setUsageId(IdUtil.getSnowflakeNextId());
+            ledger.setTenantId(bo.getTenantId());
+            ledger.setUserId(bo.getUserId());
+            ledger.setSessionId(bo.getSessionId());
+            ledger.setRequestId(bo.getRequestId());
+            ledger.setProviderCallId(bo.getProviderCallId());
+            ledger.setProvider(bo.getProvider());
+            ledger.setModel(bo.getModel());
+            ledger.setInputTokens(bo.getInputTokens());
+            ledger.setOutputTokens(bo.getOutputTokens());
+            ledger.setCostAmount(bo.getCostAmount());
+            ledger.setLatencyMs(bo.getLatencyMs());
+            ledger.setStatus(bo.getStatus());
+            ledger.setCreatedTime(TimeUtils.utcNow());
+            usageLedgerMapper.insert(ledger);
+            usageDailyMapper.increment(
+                bo.getTenantId(),
+                bo.getUserId(),
+                LocalDate.now(TimeUtils.UTC),
+                safeLong(bo.getInputTokens()),
+                safeLong(bo.getOutputTokens()),
+                safeDecimal(bo.getCostAmount())
+            );
+        });
     }
 
     @Override
     public void reportAudit(AiAuditReportBo bo) {
-        AiAuditSummary audit = new AiAuditSummary();
-        audit.setAuditId(IdUtil.getSnowflakeNextId());
-        audit.setTenantId(bo.getTenantId());
-        audit.setUserId(bo.getUserId());
-        audit.setSessionId(bo.getSessionId());
-        audit.setRequestId(bo.getRequestId());
-        audit.setActionType(bo.getActionType());
-        audit.setToolCode(bo.getToolCode());
-        audit.setBusinessTarget(bo.getBusinessTarget());
-        audit.setRiskLevel(bo.getRiskLevel());
-        audit.setApprovalStatus(bo.getApprovalStatus());
-        audit.setStatus(bo.getStatus());
-        audit.setCreatedTime(TimeUtils.utcNow());
-        auditSummaryMapper.insert(audit);
+        TenantContextHolder.runWithTenant(bo.getTenantId(), () -> {
+            AiAuditSummary audit = new AiAuditSummary();
+            audit.setAuditId(IdUtil.getSnowflakeNextId());
+            audit.setTenantId(bo.getTenantId());
+            audit.setUserId(bo.getUserId());
+            audit.setSessionId(bo.getSessionId());
+            audit.setRequestId(bo.getRequestId());
+            audit.setActionType(bo.getActionType());
+            audit.setToolCode(bo.getToolCode());
+            audit.setBusinessTarget(bo.getBusinessTarget());
+            audit.setRiskLevel(bo.getRiskLevel());
+            audit.setApprovalStatus(bo.getApprovalStatus());
+            audit.setStatus(bo.getStatus());
+            audit.setCreatedTime(TimeUtils.utcNow());
+            auditSummaryMapper.insert(audit);
+        });
     }
 
     private void assertQuotaUnique(Long quotaId, Long tenantId, Long userId) {
@@ -226,6 +239,20 @@ public class AiUsageServiceImpl implements AiUsageService {
             .eq(AiUserQuota::getUserId, userId), false);
         if (existing != null && !existing.getQuotaId().equals(quotaId)) {
             throw ServiceException.ofMessageKey("ai.quota.user.exists");
+        }
+    }
+
+    private void applyQuotaDefaults(AiUserQuotaBo bo) {
+        if (bo.getDailyRequestLimit() == null) {
+            bo.setDailyRequestLimit(DEFAULT_DAILY_REQUEST_LIMIT);
+        }
+        if (bo.getDailyTokenLimit() == null) {
+            bo.setDailyTokenLimit(DEFAULT_DAILY_TOKEN_LIMIT);
+        }
+        if (bo.getDailyCostLimit() == null) {
+            bo.setDailyCostLimit(DEFAULT_DAILY_COST_LIMIT);
+        } else {
+            bo.setDailyCostLimit(bo.getDailyCostLimit().setScale(2, RoundingMode.HALF_UP));
         }
     }
 

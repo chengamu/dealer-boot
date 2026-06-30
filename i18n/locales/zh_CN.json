@@ -1638,6 +1638,7 @@
   "productCenter.formulaSetup.usageMode": "用量模式",
   "productCenter.formulaSetup.usageQuantity": "用量数量",
   "productCenter.formulaSetup.quantityFormula": "数量公式",
+  "productCenter.formulaSetup.usage": "用量",
   "productCenter.formulaSetup.usageSetting": "用量设置",
   "productCenter.formulaSetup.usageSummary": "用量汇总",
   "productCenter.formulaSetup.usageWidth": "用量宽度",

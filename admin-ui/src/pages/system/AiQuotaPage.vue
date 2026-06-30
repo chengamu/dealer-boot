@@ -22,7 +22,7 @@
 
     <el-row :gutter="10" class="mb8">
       <el-col :span="1.5">
-        <el-button type="primary" plain icon="Plus" @click="addUserSelectorRef?.show()" v-hasPermi="['ai:quota:add']">
+        <el-button type="primary" plain icon="Plus" @click="openAddUserSelector" v-hasPermi="['ai:quota:add']">
           {{ t('ai.settings.addUserQuota') }}
         </el-button>
       </el-col>
@@ -36,7 +36,9 @@
       </el-table-column>
       <el-table-column :label="t('ai.settings.dailyRequestLimit')" prop="dailyRequestLimit" min-width="150" />
       <el-table-column :label="t('ai.settings.dailyTokenLimit')" prop="dailyTokenLimit" min-width="150" />
-      <el-table-column :label="t('ai.settings.dailyCostLimit')" prop="dailyCostLimit" min-width="150" />
+      <el-table-column :label="t('ai.settings.dailyCostLimit')" prop="dailyCostLimit" min-width="150">
+        <template #default="{ row }">{{ formatAmount(row.dailyCostLimit) }}</template>
+      </el-table-column>
       <el-table-column :label="t('common.status')" prop="status" width="100" align="center">
         <template #default="{ row }">
           <el-tag :type="row.status === '1' ? 'success' : 'info'">{{ row.status === '1' ? t('common.normal') : t('common.disabled') }}</el-tag>
@@ -70,7 +72,7 @@
           <el-input-number v-model="quotaForm.dailyTokenLimit" :min="0" controls-position="right" />
         </el-form-item>
         <el-form-item :label="t('ai.settings.dailyCostLimit')" prop="dailyCostLimit">
-          <el-input-number v-model="quotaForm.dailyCostLimit" :min="0" :precision="6" controls-position="right" />
+          <el-input-number v-model="quotaForm.dailyCostLimit" :min="0" :precision="2" :step="0.01" controls-position="right" />
         </el-form-item>
         <el-form-item :label="t('common.status')" prop="status">
           <el-radio-group v-model="quotaForm.status">
@@ -87,7 +89,7 @@
       </template>
     </AdminDrawer>
 
-    <AiUserSelectorDialog ref="addUserSelectorRef" :title="t('ai.settings.selectQuotaUsers')" @confirm="openAddQuotaDrawer" />
+    <AiUserSelectorDialog ref="addUserSelectorRef" :title="t('ai.settings.selectQuotaUsers')" :exclude-user-keys="quotaUserKeys" @confirm="openAddQuotaDrawer" />
     <AiUserSelectorDialog ref="queryUserSelectorRef" :multiple="false" :title="t('ai.settings.selectUser')" @confirm="selectQueryUser" />
   </div>
 </template>
@@ -115,6 +117,11 @@ const quotaRef = ref<FormInstance>()
 const drawerOpen = ref(false)
 const addUserSelectorRef = ref<InstanceType<typeof AiUserSelectorDialog>>()
 const queryUserSelectorRef = ref<InstanceType<typeof AiUserSelectorDialog>>()
+const quotaUserKeys = ref<string[]>([])
+
+const DEFAULT_DAILY_REQUEST_LIMIT = 500
+const DEFAULT_DAILY_TOKEN_LIMIT = 10000000
+const DEFAULT_DAILY_COST_LIMIT = 5
 
 const queryParams = reactive<AiTenantUserQuery>({
   pageNum: 1,
@@ -125,7 +132,12 @@ const quotaForm = reactive<AiUserQuota>(emptyQuota())
 const rules = computed<FormRules>(() => ({}))
 
 function emptyQuota(): AiUserQuota {
-  return { status: '1' }
+  return {
+    dailyRequestLimit: DEFAULT_DAILY_REQUEST_LIMIT,
+    dailyTokenLimit: DEFAULT_DAILY_TOKEN_LIMIT,
+    dailyCostLimit: DEFAULT_DAILY_COST_LIMIT,
+    status: '1'
+  }
 }
 
 function userLabel(row: AiUserQuota) {
@@ -136,6 +148,10 @@ function userLabel(row: AiUserQuota) {
 function displayUser(user: SysUser | AiUserQuota) {
   const name = user.nickName || user.userName
   return name ? `${name}${user.userName && user.userName !== name ? ` / ${user.userName}` : ''}` : '-'
+}
+
+function formatAmount(value?: number) {
+  return value == null ? '-' : Number(value).toFixed(2)
 }
 
 async function getList() {
@@ -172,6 +188,19 @@ function selectQueryUser(users: SysUser[]) {
   queryParams.userId = Number(user.userId)
   queryParams.tenantId = user.tenantId ? Number(user.tenantId) : undefined
   queryUserLabel.value = displayUser(user)
+}
+
+async function openAddUserSelector() {
+  await refreshQuotaUserKeys()
+  addUserSelectorRef.value?.show()
+}
+
+async function refreshQuotaUserKeys() {
+  const res = await listAiUserQuotas({
+    pageNum: 1,
+    pageSize: 10000
+  })
+  quotaUserKeys.value = (res.rows || []).map((quota) => `${quota.tenantId || ''}:${quota.userId || ''}`)
 }
 
 function openAddQuotaDrawer(users: SysUser[]) {

@@ -1638,6 +1638,7 @@
   "productCenter.formulaSetup.usageMode": "Usage Mode",
   "productCenter.formulaSetup.usageQuantity": "Usage Quantity",
   "productCenter.formulaSetup.quantityFormula": "Qty Formula",
+  "productCenter.formulaSetup.usage": "Usage",
   "productCenter.formulaSetup.usageSetting": "Usage Setting",
   "productCenter.formulaSetup.usageSummary": "Usage Summary",
   "productCenter.formulaSetup.usageWidth": "Usage Width",

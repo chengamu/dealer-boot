@@ -30,6 +30,8 @@ public class ProductFormulaVo implements Serializable {
     private String categoryNameCn;
     private String productTypeCode;
     private String productTypeNameCn;
+    private BigDecimal minWidthInch;
+    private BigDecimal minHeightInch;
     private BigDecimal maxWidthInch;
     private BigDecimal maxHeightInch;
     private String sizeSummary;

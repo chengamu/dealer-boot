@@ -154,7 +154,7 @@
           <el-input v-model="groupForm.groupNameEn" :aria-label="t('productCenter.materialType.groupNameEn')" :data-agent-label="t('productCenter.materialType.groupNameEn')" />
         </el-form-item>
         <el-form-item :label="t('productCenter.common.sortOrder')" data-agent-field="sortOrder">
-          <el-input-number v-model="groupForm.sortOrder" :min="0" controls-position="right" :aria-label="t('productCenter.common.sortOrder')" :data-agent-label="t('productCenter.common.sortOrder')" data-agent-field="sortOrder" data-agent-input-kind="number" />
+          <el-input v-model="groupForm.sortOrder" inputmode="numeric" class="material-type-page__sort-input" :aria-label="t('productCenter.common.sortOrder')" :data-agent-label="t('productCenter.common.sortOrder')" data-agent-field="sortOrder" data-agent-input-kind="number" @keyup.enter="submitGroup" />
         </el-form-item>
         <el-form-item :label="t('productCenter.materialType.formulaSummaryVisible')" data-agent-field="formulaSummaryVisibleFlag">
           <el-switch
@@ -197,7 +197,7 @@
           <el-input v-model="typeForm.materialTypeNameEn" :aria-label="t('productCenter.materialType.nameEn')" :data-agent-label="t('productCenter.materialType.nameEn')" />
         </el-form-item>
         <el-form-item :label="t('productCenter.common.sortOrder')" data-agent-field="sortOrder">
-          <el-input-number v-model="typeForm.sortOrder" :min="0" controls-position="right" :aria-label="t('productCenter.common.sortOrder')" :data-agent-label="t('productCenter.common.sortOrder')" data-agent-field="sortOrder" data-agent-input-kind="number" />
+          <el-input v-model="typeForm.sortOrder" inputmode="numeric" class="material-type-page__sort-input" :aria-label="t('productCenter.common.sortOrder')" :data-agent-label="t('productCenter.common.sortOrder')" data-agent-field="sortOrder" data-agent-input-kind="number" @keyup.enter="submitType" />
         </el-form-item>
         <el-form-item :label="t('productCenter.common.remark')" data-agent-field="remark">
           <el-input v-model="typeForm.remark" type="textarea" :rows="3" :aria-label="t('productCenter.common.remark')" :data-agent-label="t('productCenter.common.remark')" />
@@ -481,6 +481,7 @@ async function checkBeforeEdit(editCheck: typeof productMaterialTypeApi.editChec
 
 async function submitGroup() {
   await groupFormRef.value?.validate()
+  groupForm.sortOrder = normalizeSortOrder(groupForm.sortOrder)
   submitLoading.value = true
   try {
     if (groupForm.groupId) {
@@ -499,6 +500,7 @@ async function submitGroup() {
 
 async function submitType() {
   await typeFormRef.value?.validate()
+  typeForm.sortOrder = normalizeSortOrder(typeForm.sortOrder)
   submitLoading.value = true
   try {
     if (typeForm.materialTypeId) {
@@ -513,6 +515,13 @@ async function submitType() {
   } finally {
     submitLoading.value = false
   }
+}
+
+function normalizeSortOrder(value: unknown) {
+  const text = String(value ?? '').trim()
+  if (!text) return 0
+  const parsed = Number(text)
+  return Number.isFinite(parsed) ? parsed : 0
 }
 
 async function removeGroup() {
@@ -681,6 +690,10 @@ onBeforeUnmount(() => {
   :deep(.el-table__cell) {
     padding: 10px 0;
   }
+}
+
+.material-type-page__sort-input {
+  width: 220px;
 }
 
 @media (max-width: 1200px) {

@@ -355,7 +355,9 @@ public class ProductFormulaServiceImpl extends ProductServiceSupport implements 
         bo.setStatus(trimToNull(bo.getStatus()));
         bo.setRejectReason(trimToNull(bo.getRejectReason()));
         bo.setRemark(trimToNull(bo.getRemark()));
+        normalizeSizeRange(bo);
         validateRequiredFields(bo);
+        validateSizeRange(bo);
         normalizeCategory(bo);
         normalizeProductType(bo);
         if (bo.getConfiguredFlag() == null) {
@@ -371,9 +373,7 @@ public class ProductFormulaServiceImpl extends ProductServiceSupport implements 
             bo.setLatestValidationStatus(VALIDATION_NOT_VALIDATED);
         }
         defaultValidationStatus(bo);
-        if (StringUtils.isBlank(bo.getSizeSummary())) {
-            bo.setSizeSummary(buildSizeSummary(bo.getMaxWidthInch(), bo.getMaxHeightInch()));
-        }
+        bo.setSizeSummary(buildSizeSummary(bo.getMinWidthInch(), bo.getMaxWidthInch(), bo.getMinHeightInch(), bo.getMaxHeightInch()));
         if (insert || StringUtils.isBlank(bo.getStatus())) {
             bo.setStatus(STATUS_DRAFT);
         } else {
@@ -396,6 +396,24 @@ public class ProductFormulaServiceImpl extends ProductServiceSupport implements 
         }
         if (bo.getMaxWidthInch() == null || bo.getMaxHeightInch() == null) {
             throw ServiceException.ofMessageKey("product.formula.sizeRequired");
+        }
+    }
+
+    private void normalizeSizeRange(ProductFormulaBo bo) {
+        if (bo.getMinWidthInch() == null) {
+            bo.setMinWidthInch(BigDecimal.ZERO);
+        }
+        if (bo.getMinHeightInch() == null) {
+            bo.setMinHeightInch(BigDecimal.ZERO);
+        }
+    }
+
+    private void validateSizeRange(ProductFormulaBo bo) {
+        if (bo.getMinWidthInch().compareTo(bo.getMaxWidthInch()) > 0) {
+            throw ServiceException.ofMessageKey("product.formula.minWidthGreaterThanMax");
+        }
+        if (bo.getMinHeightInch().compareTo(bo.getMaxHeightInch()) > 0) {
+            throw ServiceException.ofMessageKey("product.formula.minHeightGreaterThanMax");
         }
     }
 
@@ -441,6 +459,8 @@ public class ProductFormulaServiceImpl extends ProductServiceSupport implements 
             .eq("formula_name", bo.getFormulaName())
             .eq("category_id", bo.getCategoryId())
             .eq("product_type_code", bo.getProductTypeCode())
+            .eq("min_width_inch", bo.getMinWidthInch())
+            .eq("min_height_inch", bo.getMinHeightInch())
             .eq("max_width_inch", bo.getMaxWidthInch())
             .eq("max_height_inch", bo.getMaxHeightInch())
             .ne(bo.getFormulaId() != null, "formula_id", bo.getFormulaId());
@@ -579,8 +599,8 @@ public class ProductFormulaServiceImpl extends ProductServiceSupport implements 
         return StringUtils.isBlank(value) ? null : value.trim();
     }
 
-    private String buildSizeSummary(BigDecimal width, BigDecimal height) {
-        return "W≤" + strip(width) + "in, H≤" + strip(height) + "in";
+    private String buildSizeSummary(BigDecimal minWidth, BigDecimal maxWidth, BigDecimal minHeight, BigDecimal maxHeight) {
+        return strip(minWidth) + "≤W≤" + strip(maxWidth) + "in, " + strip(minHeight) + "≤H≤" + strip(maxHeight) + "in";
     }
 
     private String strip(BigDecimal value) {
@@ -649,6 +669,8 @@ public class ProductFormulaServiceImpl extends ProductServiceSupport implements 
                 snapshot.put("categoryNameCn", formula.getCategoryNameCn());
                 snapshot.put("productTypeCode", formula.getProductTypeCode());
                 snapshot.put("productTypeNameCn", formula.getProductTypeNameCn());
+                snapshot.put("minWidthInch", formula.getMinWidthInch());
+                snapshot.put("minHeightInch", formula.getMinHeightInch());
                 snapshot.put("maxWidthInch", formula.getMaxWidthInch());
                 snapshot.put("maxHeightInch", formula.getMaxHeightInch());
                 snapshot.put("sizeSummary", formula.getSizeSummary());

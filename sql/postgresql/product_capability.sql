@@ -40,6 +40,8 @@ CREATE TABLE IF NOT EXISTS pc_formula (
     category_name_cn varchar(200) NOT NULL,
     product_type_code varchar(80) NOT NULL,
     product_type_name_cn varchar(200) NOT NULL,
+    min_width_inch numeric(18,4) NOT NULL DEFAULT 0,
+    min_height_inch numeric(18,4) NOT NULL DEFAULT 0,
     max_width_inch numeric(18,4) NOT NULL,
     max_height_inch numeric(18,4) NOT NULL,
     size_summary varchar(200),
@@ -84,6 +86,8 @@ ALTER TABLE IF EXISTS pc_formula
     ADD COLUMN IF NOT EXISTS category_name_cn varchar(200),
     ADD COLUMN IF NOT EXISTS product_type_code varchar(80),
     ADD COLUMN IF NOT EXISTS product_type_name_cn varchar(200),
+    ADD COLUMN IF NOT EXISTS min_width_inch numeric(18,4) NOT NULL DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS min_height_inch numeric(18,4) NOT NULL DEFAULT 0,
     ADD COLUMN IF NOT EXISTS max_width_inch numeric(18,4),
     ADD COLUMN IF NOT EXISTS max_height_inch numeric(18,4),
     ADD COLUMN IF NOT EXISTS size_summary varchar(200),
@@ -123,6 +127,8 @@ COMMENT ON COLUMN pc_formula.category_code IS '产品分类编码快照';
 COMMENT ON COLUMN pc_formula.category_name_cn IS '产品分类中文名称快照';
 COMMENT ON COLUMN pc_formula.product_type_code IS '产品类型编码，来源 pc_product_dict_item.product_type';
 COMMENT ON COLUMN pc_formula.product_type_name_cn IS '产品类型中文名称快照';
+COMMENT ON COLUMN pc_formula.min_width_inch IS '最小宽度，单位英寸';
+COMMENT ON COLUMN pc_formula.min_height_inch IS '最小高度，单位英寸';
 COMMENT ON COLUMN pc_formula.max_width_inch IS '最大宽度，单位英寸';
 COMMENT ON COLUMN pc_formula.max_height_inch IS '最大高度，单位英寸';
 COMMENT ON COLUMN pc_formula.size_summary IS '尺寸摘要';
@@ -157,9 +163,18 @@ COMMENT ON COLUMN pc_formula.create_time IS '创建时间，UTC timestamptz';
 COMMENT ON COLUMN pc_formula.update_by IS '更新者';
 COMMENT ON COLUMN pc_formula.update_time IS '更新时间，UTC timestamptz';
 CREATE INDEX IF NOT EXISTS idx_pc_formula_code_active ON pc_formula (tenant_id, formula_code) WHERE del_flag = '0';
-CREATE INDEX IF NOT EXISTS idx_pc_formula_natural_active ON pc_formula (tenant_id, formula_name, category_id, product_type_code, max_width_inch, max_height_inch) WHERE del_flag = '0';
+DROP INDEX IF EXISTS idx_pc_formula_natural_active;
+CREATE INDEX IF NOT EXISTS idx_pc_formula_natural_active ON pc_formula (tenant_id, formula_name, category_id, product_type_code, min_width_inch, min_height_inch, max_width_inch, max_height_inch) WHERE del_flag = '0';
 CREATE INDEX IF NOT EXISTS idx_pc_formula_category_type_status ON pc_formula (tenant_id, category_code, product_type_code, status);
 CREATE INDEX IF NOT EXISTS idx_pc_formula_status_update ON pc_formula (tenant_id, status, update_time DESC);
+
+UPDATE pc_formula
+SET size_summary = trim(trailing '.' from trim(trailing '0' from min_width_inch::text))
+    || '≤W≤' || trim(trailing '.' from trim(trailing '0' from max_width_inch::text))
+    || 'in, ' || trim(trailing '.' from trim(trailing '0' from min_height_inch::text))
+    || '≤H≤' || trim(trailing '.' from trim(trailing '0' from max_height_inch::text)) || 'in'
+WHERE max_width_inch IS NOT NULL
+  AND max_height_inch IS NOT NULL;
 
 UPDATE pc_formula
 SET status = CASE status
@@ -1401,8 +1416,8 @@ INSERT INTO sys_menu (menu_id, tenant_id, parent_id, menu_name, i18n_key, order_
 VALUES
     (24301, 1, 24300, 'Formula Archives', 'productCenter.menu.formulas', 1, 'formulas', 'product-formula/formulas', NULL, '1', '0', 'C', '1', '1', 'product:formula:list', 'pc-formula-archive', 'system', now(), NULL, NULL, '配方档案'),
     (24302, 1, 24300, 'Formula Reviews', 'productCenter.menu.formulaReviews', 5, 'reviews', 'product-formula/reviews', NULL, '1', '0', 'C', '1', '1', 'product:formula:review', 'pc-formula-review', 'system', now(), NULL, NULL, '配方审核'),
-    (24303, 1, 24300, 'Formula Materials', 'productCenter.menu.formulaMaterials', 2, 'formulas/:id/materials', 'product-formula/formulas/materials', NULL, '1', '0', 'C', '1', '1', 'product:formula:setup', 'pc-formula-material', 'system', now(), NULL, NULL, '配方原料'),
-    (24304, 1, 24300, 'Formula Options', 'productCenter.menu.formulaOptions', 3, 'formulas/:id/options', 'product-formula/formulas/options', NULL, '1', '0', 'C', '1', '1', 'product:formula:setup', 'pc-formula-option', 'system', now(), NULL, NULL, '配方选项'),
+    (24303, 1, 24300, 'Formula Materials', 'productCenter.menu.formulaMaterials', 2, 'formulas/materials', 'product-formula/formulas/materials', NULL, '1', '0', 'C', '1', '1', 'product:formula:setup', 'pc-formula-material', 'system', now(), NULL, NULL, '配方原料'),
+    (24304, 1, 24300, 'Formula Options', 'productCenter.menu.formulaOptions', 3, 'formulas/options', 'product-formula/formulas/options', NULL, '1', '0', 'C', '1', '1', 'product:formula:setup', 'pc-formula-option', 'system', now(), NULL, NULL, '配方选项'),
     (24305, 1, 24300, 'Formula Simulation', 'productCenter.menu.formulaSimulation', 4, 'formulas/:id/simulation', 'product-formula/formulas/simulation', NULL, '1', '0', 'C', '1', '1', 'product:formula:setup', 'pc-formula-simulation', 'system', now(), NULL, NULL, '配方模拟'),
     (24212, 1, 24200, 'Product Categories', 'productCenter.menu.categories', 1, 'categories', 'product-center/base', NULL, '1', '0', 'C', '1', '1', 'product:base:list', 'pc-category', 'system', now(), NULL, NULL, '产品分类'),
     (24213, 1, 24200, 'Base Dictionaries', 'productCenter.menu.productDicts', 2, 'product-dicts', 'product-center/product-dicts', NULL, '1', '0', 'C', '1', '1', 'product:dict:list', 'pc-dict', 'system', now(), NULL, NULL, '基础字典'),

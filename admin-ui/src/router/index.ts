@@ -54,13 +54,13 @@ const hiddenLayoutRoutes: RouteRecordRaw[] = [
     meta: { title: 'gen.genInfo', activeMenu: '/tool/gen', hidden: true }
   },
   {
-    path: '/product-formula/formulas/:id/materials',
+    path: '/product-formula/formulas/materials',
     name: 'ProductFormulaMaterials',
     component: () => import('@/pages/product-formula/FormulaMaterialPage.vue'),
     meta: { title: 'productCenter.formula.actions.materials', activeMenu: '/product-formula/formulas', hidden: true, setupSection: 'content' }
   },
   {
-    path: '/product-formula/formulas/:id/options',
+    path: '/product-formula/formulas/options',
     name: 'ProductFormulaOptions',
     component: () => import('@/pages/product-formula/FormulaOptionPage.vue'),
     meta: { title: 'productCenter.formula.actions.options', activeMenu: '/product-formula/formulas', hidden: true, setupSection: 'options' }

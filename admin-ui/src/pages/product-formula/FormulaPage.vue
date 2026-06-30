@@ -79,6 +79,8 @@ const formulaConfig = computed<ProductGridConfig>(() => ({
   defaultRecord: {
     configuredFlag: false,
     materialLineCount: 0,
+    minWidthInch: 0,
+    minHeightInch: 0,
     latestValidationStatus: FORMULA_VALIDATION_STATUS.NOT_VALIDATED,
     status: FORMULA_STATUS.DRAFT
   },
@@ -91,6 +93,8 @@ const formulaConfig = computed<ProductGridConfig>(() => ({
     'categoryNameCn',
     'productTypeCode',
     'productTypeNameCn',
+    'minWidthInch',
+    'minHeightInch',
     'maxWidthInch',
     'maxHeightInch',
     'sortOrder',
@@ -103,6 +107,8 @@ const formulaConfig = computed<ProductGridConfig>(() => ({
     { prop: 'categoryNameCn', labelKey: 'productCenter.formula.category', form: false, minWidth: 140 },
     { prop: 'productTypeCode', labelKey: 'productCenter.formula.productType', type: 'remote-select', optionLoader: loadProductTypeOptions, fillFields: { productTypeNameCn: 'productTypeNameCn' }, search: true, required: true, table: false },
     { prop: 'productTypeNameCn', labelKey: 'productCenter.formula.productType', form: false, minWidth: 120 },
+    { prop: 'minWidthInch', labelKey: 'productCenter.formula.minWidthInch', type: 'number', required: true, minWidth: 160, sortable: true, precision: 2, step: 0.01 },
+    { prop: 'minHeightInch', labelKey: 'productCenter.formula.minHeightInch', type: 'number', required: true, minWidth: 160, sortable: true, precision: 2, step: 0.01 },
     { prop: 'maxWidthInch', labelKey: 'productCenter.formula.maxWidthInch', type: 'number', required: true, minWidth: 160, sortable: true, precision: 2, step: 0.01 },
     { prop: 'maxHeightInch', labelKey: 'productCenter.formula.maxHeightInch', type: 'number', required: true, minWidth: 160, sortable: true, precision: 2, step: 0.01 },
     { prop: 'sizeSummary', labelKey: 'productCenter.formula.sizeSummary', form: false, minWidth: 140 },

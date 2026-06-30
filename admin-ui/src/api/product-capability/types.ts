@@ -228,6 +228,8 @@ export interface ProductFormulaVO extends ProductRecord {
   categoryNameCn?: string
   productTypeCode?: string
   productTypeNameCn?: string
+  minWidthInch?: number
+  minHeightInch?: number
   maxWidthInch?: number
   maxHeightInch?: number
   sizeSummary?: string

@@ -32,6 +32,8 @@
         <span>{{ t('productCenter.formula.code') }}：{{ formula.formulaCode || '-' }}</span>
         <span>{{ t('productCenter.formula.category') }}：{{ formula.categoryNameCn || '-' }}</span>
         <span>{{ t('productCenter.formula.productType') }}：{{ formula.productTypeNameCn || '-' }}</span>
+        <span>{{ t('productCenter.formula.minWidthInch') }}：{{ formatNumber(formula.minWidthInch) }}</span>
+        <span>{{ t('productCenter.formula.minHeightInch') }}：{{ formatNumber(formula.minHeightInch) }}</span>
         <span>{{ t('productCenter.formula.maxWidthInch') }}：{{ formatNumber(formula.maxWidthInch) }}</span>
         <span>{{ t('productCenter.formula.maxHeightInch') }}：{{ formatNumber(formula.maxHeightInch) }}</span>
         <span>{{ t('productCenter.formula.updateTime') }}：{{ formatMinute(formula.updateTime) }}</span>

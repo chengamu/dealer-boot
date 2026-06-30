@@ -44,11 +44,13 @@
         :usage-summary="usageSummary"
         :usage-unset="isUsageUnset"
         :unit-label="unitLabel"
+        :group-sort-map="groupSortMap"
         :material-count="setup.materials.length"
         :unset-usage-count="unsetUsageCount"
         :exception-count="setup.restrictions.length"
         @open-picker="materialPickerOpen = true"
         @open-usage="openUsage"
+        @open-batch-usage="openBatchUsage"
         @remove-material="removeMaterial"
         @remove-materials="removeMaterials"
       />
@@ -90,10 +92,12 @@
     <FormulaUsageDrawer
       v-model="usageDrawerOpen"
       :usage-row="usageRow"
+      :usage-rows="usageRows"
       :usage-rules="setup.usageRules"
       :options="setup.options"
       :option-values="setup.optionValues"
       :unit-options="unitOptions"
+      @select-usage-row="selectUsageRow"
     />
   </div>
 </template>
@@ -176,6 +180,7 @@ const formulaSelecting = ref(false)
 const materialPickerOpen = ref(false)
 const usageDrawerOpen = ref(false)
 const usageRow = ref<ProductFormulaMaterialVO | null>(null)
+const usageRows = ref<ProductFormulaMaterialVO[]>([])
 const selectedOptionCode = ref('')
 const materialRows = ref<ProductMaterialVO[]>([])
 const groupRows = ref<ProductMaterialTypeGroupVO[]>([])
@@ -199,6 +204,14 @@ const editableFormulaOptions = computed(() => editableFormulas.value.map((row) =
   label: compactFormulaLabel(row)
 })).filter((item) => item.value))
 const groupOptions = computed<ProductOption[]>(() => groupRows.value.map((row) => ({ value: row.groupCode || '', label: labelOf(row, 'groupCode', 'groupNameCn', 'groupNameEn') })).filter((item) => item.value))
+const groupSortMap = computed<Record<string, number>>(() => {
+  const result: Record<string, number> = {}
+  groupRows.value.forEach((row, index) => {
+    if (!row.groupCode) return
+    result[row.groupCode] = index + 1
+  })
+  return result
+})
 const unitOptions = computed<ProductOption[]>(() => unitRows.value.map((row) => ({ value: row.unitCode || '', label: labelOf(row, 'unitCode', 'unitNameCn', 'unitNameEn') })).filter((item) => item.value))
 const materialGroupCards = computed(() => groupRows.value
   .filter((group) => group.status === PRODUCT_STATUS_ENABLED && group.formulaSummaryVisibleFlag !== false)
@@ -386,8 +399,20 @@ function materialToFormulaMaterial(material: ProductMaterialVO): ProductFormulaM
     defaultFlag: false,
     requiredFlag: true,
     status: PRODUCT_STATUS_ENABLED,
-    sortOrder: (setup.materials.length + 1) * 10
+    sortOrder: nextMaterialSortOrder(material)
   }
+}
+
+function nextMaterialSortOrder(material: ProductMaterialVO) {
+  const groupRank = Math.max(1, groupSortMap.value[material.attributeGroupCode || ''] || groupRows.value.length + 1)
+  const base = groupRank * 100
+  const used = new Set(setup.materials
+    .filter((row) => row.attributeGroupCode === material.attributeGroupCode)
+    .map((row) => Number(row.sortOrder || 0))
+    .filter((value) => value >= base && value < base + 100))
+  let next = base + used.size + 1
+  while (used.has(next)) next += 1
+  return next
 }
 
 function addOptionRow(parent?: {
@@ -536,7 +561,18 @@ function moveOption(optionCode: string, direction: 'UP' | 'DOWN') {
 
 function openUsage(row: ProductFormulaMaterialVO) {
   usageRow.value = row
+  usageRows.value = [row]
   usageDrawerOpen.value = true
+}
+
+function openBatchUsage(rows: ProductFormulaMaterialVO[]) {
+  usageRows.value = rows
+  usageRow.value = rows[0] || null
+  usageDrawerOpen.value = true
+}
+
+function selectUsageRow(row: ProductFormulaMaterialVO) {
+  usageRow.value = row
 }
 
 function syncOptionMaterial(row: ProductFormulaOptionMaterialVO) {

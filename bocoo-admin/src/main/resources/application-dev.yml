@@ -21,6 +21,7 @@ captcha:
 
 bocoo:
   ai:
+    enabled: ${BOCOO_AI_ENABLED:true}
     security:
       # 本地开发也走环境变量；Docker/IDE 启动时注入 BOCOO_AI_SECRET_ENCRYPTION_KEY。
       # 这里的默认值只用于本机 dev profile 测试，生产环境必须通过 Docker/环境变量覆盖。

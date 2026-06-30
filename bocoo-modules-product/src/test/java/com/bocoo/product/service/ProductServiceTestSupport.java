@@ -127,6 +127,8 @@ final class ProductServiceTestSupport {
             target.setCategoryNameCn(source.getCategoryNameCn());
             target.setProductTypeCode(source.getProductTypeCode());
             target.setProductTypeNameCn(source.getProductTypeNameCn());
+            target.setMinWidthInch(source.getMinWidthInch());
+            target.setMinHeightInch(source.getMinHeightInch());
             target.setMaxWidthInch(source.getMaxWidthInch());
             target.setMaxHeightInch(source.getMaxHeightInch());
             target.setSizeSummary(source.getSizeSummary());

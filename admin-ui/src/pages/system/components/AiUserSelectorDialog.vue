@@ -77,9 +77,11 @@ import { useAiI18n } from '../useAiI18n'
 const props = withDefaults(defineProps<{
   multiple?: boolean
   title?: string
+  excludeUserKeys?: string[]
 }>(), {
   multiple: true,
-  title: ''
+  title: '',
+  excludeUserKeys: () => []
 })
 
 const emit = defineEmits<{
@@ -104,6 +106,7 @@ const queryParams = reactive<UserQuery>({
 const title = computed(() => props.title || t('ai.settings.selectUser'))
 const singleUserId = computed(() => singleUser.value?.userId)
 const selectedCountText = computed(() => t('common.selectedCount', { count: props.multiple ? selectedUsers.value.length : singleUser.value ? 1 : 0 }))
+const excludeUserKeySet = computed(() => new Set(props.excludeUserKeys))
 
 async function show() {
   selectedUsers.value = []
@@ -116,11 +119,15 @@ async function getList() {
   loading.value = true
   try {
     const res = await listUser(queryParams)
-    userList.value = res.rows || []
-    total.value = res.total || 0
+    userList.value = (res.rows || []).filter((user) => !excludeUserKeySet.value.has(userKey(user)))
+    total.value = Math.max(0, (res.total || 0) - props.excludeUserKeys.length)
   } finally {
     loading.value = false
   }
+}
+
+function userKey(user: SysUser) {
+  return `${user.tenantId || ''}:${user.userId || ''}`
 }
 
 function clickRow(row: SysUser) {

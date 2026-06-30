@@ -13,26 +13,44 @@
     @closed="handleDrawerClosed"
   >
     <div v-if="usageRow" class="usage-editor">
-      <div class="usage-editor__summary">
-        <div>
-          <span>{{ t('productCenter.formulaSetup.materialType') }}</span>
-          <strong>{{ usageRow.materialTypeNameCn || usageRow.materialTypeCode || '-' }}</strong>
+      <div class="usage-editor__materials">
+        <div class="usage-editor__materials-head">
+          <div>
+            <span class="usage-editor__materials-kicker">{{ t('productCenter.formulaSetup.selectedMaterialCount') }}</span>
+            <strong>{{ t('common.selectedCount').replace('{count}', String(currentUsageRows.length)) }}</strong>
+          </div>
+          <el-button
+            plain
+            size="small"
+            :icon="summaryCollapsed ? ArrowDown : ArrowUp"
+            @click="summaryCollapsed = !summaryCollapsed"
+          >
+            {{ summaryCollapsed ? t('legacy.expand') : t('legacy.collapse') }}
+          </el-button>
         </div>
-        <div>
-          <span>{{ t('productCenter.formulaSetup.materialCode') }}</span>
-          <strong>{{ usageRow.materialCode || '-' }}</strong>
-        </div>
-        <div class="usage-editor__material">
-          <span>{{ t('productCenter.formulaSetup.materialName') }}</span>
+
+        <div v-if="summaryCollapsed" class="usage-editor__current">
+          <span>{{ usageRow.materialCode || '-' }}</span>
           <strong>{{ usageRow.materialNameCn || '-' }}</strong>
+          <em>{{ usageRow.specModelText || '-' }}</em>
+          <span>{{ unitDisplay(usageRow.unitCode) }}</span>
         </div>
-        <div class="usage-editor__spec">
-          <span>{{ t('productCenter.formulaSetup.specModel') }}</span>
-          <strong>{{ usageRow.specModelText || '-' }}</strong>
-        </div>
-        <div>
-          <span>{{ t('productCenter.formulaSetup.unit') }}</span>
-          <strong>{{ unitDisplay(usageRow.unitCode) }}</strong>
+
+        <div v-else class="usage-editor__material-list">
+          <button
+            v-for="row in currentUsageRows"
+            :key="row.materialCode || row.materialId || row.lineNo"
+            type="button"
+            class="usage-editor__material-row"
+            :class="{ 'is-active': row.materialCode === usageRow.materialCode }"
+            @click="$emit('select-usage-row', row)"
+          >
+            <span class="usage-editor__material-type">{{ row.materialTypeNameCn || row.materialTypeCode || '-' }}</span>
+            <span class="usage-editor__material-code">{{ row.materialCode || '-' }}</span>
+            <strong>{{ row.materialNameCn || '-' }}</strong>
+            <em>{{ row.specModelText || '-' }}</em>
+            <span>{{ unitDisplay(row.unitCode) }}</span>
+          </button>
         </div>
       </div>
 
@@ -176,7 +194,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { CopyDocument, Delete, MagicStick, Plus } from '@element-plus/icons-vue'
+import { ArrowDown, ArrowUp, CopyDocument, Delete, MagicStick, Plus } from '@element-plus/icons-vue'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 import { PRODUCT_STATUS_ENABLED } from '@/constants/productStatus'
@@ -203,6 +221,7 @@ import type {
 const props = defineProps<{
   modelValue: boolean
   usageRow: ProductFormulaMaterialVO | null
+  usageRows?: ProductFormulaMaterialVO[]
   usageRules: ProductFormulaUsageRuleVO[]
   options: ProductFormulaOptionVO[]
   optionValues: ProductFormulaOptionValueVO[]
@@ -211,6 +230,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
+  'select-usage-row': [row: ProductFormulaMaterialVO]
 }>()
 
 const localeStore = useLocaleStore()
@@ -219,6 +239,7 @@ const t = (key: string) => {
   return message
 }
 const selectedRule = ref<ProductFormulaUsageRuleVO | null>(null)
+const summaryCollapsed = ref(false)
 const variableChips = formulaVariables
 const expressionEditorOpen = ref(false)
 const expressionEditorText = ref('')
@@ -242,11 +263,15 @@ const formulaFields: FormulaField[] = [
 
 const expressionEditorTarget = ref<ExpressionTarget>('usage')
 const usageSnapshot = ref<{
-  materialCode?: string
-  usageRow: ProductFormulaMaterialVO | null
+  materialCodes: string[]
+  usageRows: ProductFormulaMaterialVO[]
   rules: ProductFormulaUsageRuleVO[]
 } | null>(null)
 
+const currentUsageRows = computed(() => {
+  if (props.usageRows?.length) return props.usageRows
+  return props.usageRow ? [props.usageRow] : []
+})
 const currentRules = computed(() => props.usageRules.filter((rule) => rule.materialCode === props.usageRow?.materialCode))
 const unsavedChangesGuard = useUnsavedChangesGuard({
   enabled: () => props.modelValue && Boolean(props.usageRow),
@@ -256,6 +281,7 @@ const unsavedChangesGuard = useUnsavedChangesGuard({
 
 watch(() => props.modelValue, (open) => {
   if (open && props.usageRow) {
+    summaryCollapsed.value = false
     ensureInitialRule()
     selectedRule.value = null
     captureUsageSnapshot()
@@ -264,6 +290,12 @@ watch(() => props.modelValue, (open) => {
     window.removeEventListener('keydown', handleDrawerShortcut)
     handleDrawerClosed()
   }
+})
+
+watch(() => props.usageRow?.materialCode, () => {
+  if (!props.modelValue || !props.usageRow) return
+  ensureInitialRule()
+  selectedRule.value = null
 })
 
 onBeforeUnmount(() => {
@@ -275,10 +307,11 @@ function cloneValue<T>(value: T): T {
 }
 
 function createUsageSnapshot() {
+  const materialCodes = currentUsageRows.value.map((row) => row.materialCode).filter(Boolean) as string[]
   return {
-    materialCode: props.usageRow?.materialCode,
-    usageRow: props.usageRow ? cloneValue(props.usageRow) : null,
-    rules: cloneValue(currentRules.value)
+    materialCodes,
+    usageRows: cloneValue(currentUsageRows.value),
+    rules: cloneValue(props.usageRules.filter((rule) => materialCodes.includes(String(rule.materialCode || ''))))
   }
 }
 
@@ -290,15 +323,17 @@ function captureUsageSnapshot() {
 function restoreUsageSnapshot() {
   const snapshot = usageSnapshot.value
   if (!snapshot) return
-  const materialCode = snapshot.materialCode || props.usageRow?.materialCode
-  if (props.usageRow && snapshot.usageRow) {
-    const target = props.usageRow as Record<string, unknown>
+  snapshot.usageRows.forEach((snapshotRow) => {
+    const targetRow = currentUsageRows.value.find((row) => row.materialCode === snapshotRow.materialCode)
+    if (!targetRow) return
+    const target = targetRow as Record<string, unknown>
     Object.keys(target).forEach((key) => delete target[key])
-    Object.assign(target, cloneValue(snapshot.usageRow))
-  }
-  if (!materialCode) return
+    Object.assign(target, cloneValue(snapshotRow))
+  })
+  const materialCodes = new Set(snapshot.materialCodes)
+  if (!materialCodes.size) return
   for (let index = props.usageRules.length - 1; index >= 0; index--) {
-    if (props.usageRules[index].materialCode === materialCode) {
+    if (materialCodes.has(String(props.usageRules[index].materialCode || ''))) {
       props.usageRules.splice(index, 1)
     }
   }
@@ -672,35 +707,93 @@ function removeRulesForCurrent() {
   gap: 12px;
 }
 
-.usage-editor__summary {
-  display: grid;
-  grid-template-columns: 120px 120px minmax(300px, 1.2fr) minmax(280px, 1fr) 90px;
-  gap: 10px;
+.usage-editor__materials {
   padding: 10px 12px;
   background: #f7faff;
   border: 1px solid #e5ecf6;
   border-radius: 8px;
 }
 
-.usage-editor__summary span {
+.usage-editor__materials-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.usage-editor__materials-head strong {
+  color: #111827;
+  font-size: 14px;
+}
+
+.usage-editor__materials-kicker {
   display: block;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
   color: #6b7280;
   font-size: 12px;
 }
 
-.usage-editor__summary strong {
-  color: #1f2937;
-  font-size: 13px;
+.usage-editor__material-list {
+  display: grid;
+  gap: 6px;
+  max-height: 180px;
+  overflow: auto;
+}
+
+.usage-editor__material-row {
+  display: grid;
+  grid-template-columns: 110px 110px minmax(220px, 1.2fr) minmax(220px, 1fr) 80px;
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+  padding: 8px 10px;
+  color: #374151;
+  text-align: left;
+  cursor: pointer;
+  background: #fff;
+  border: 1px solid #e5ecf6;
+  border-radius: 6px;
+}
+
+.usage-editor__material-row.is-active {
+  background: #ecf5ff;
+  border-color: #409eff;
+}
+
+.usage-editor__material-row strong,
+.usage-editor__material-row em,
+.usage-editor__current strong,
+.usage-editor__current em {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.usage-editor__material-row em,
+.usage-editor__current em {
+  color: #6b7280;
+  font-style: normal;
+}
+
+.usage-editor__material-type {
+  color: #2563eb;
   font-weight: 700;
 }
 
-.usage-editor__material strong,
-.usage-editor__spec strong {
-  display: -webkit-box;
-  overflow: hidden;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+.usage-editor__material-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+}
+
+.usage-editor__current {
+  display: grid;
+  grid-template-columns: 120px minmax(240px, 1fr) minmax(240px, 1fr) 80px;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 10px;
+  background: #fff;
+  border: 1px solid #e5ecf6;
+  border-radius: 6px;
 }
 
 .usage-mode-card {

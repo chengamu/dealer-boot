@@ -87,9 +87,19 @@ class ProductFormulaServiceTest {
                 && Integer.valueOf(0).equals(entity.getMaterialLineCount())
                 && Integer.valueOf(1).equals(entity.getDraftVersionNo())
                 && "NOT_VALIDATED".equals(entity.getLatestValidationStatus())
-                && "W≤25in, H≤72in".equals(entity.getSizeSummary())
+                && "0≤W≤25in, 0≤H≤72in".equals(entity.getSizeSummary())
         ));
         verify(changeLogService).record(eq("FORMULA"), eq("FORMULA"), eq(3001L), eq("FORMULA_25_ZEBRA"), eq("CREATE"), isNull(), any(), isNull());
+    }
+
+    @Test
+    void insertRejectsInvalidSizeRange() {
+        ProductFormulaBo bo = validFormulaBo();
+        bo.setMinWidthInch(new BigDecimal("30"));
+
+        assertThatThrownBy(() -> formulaService.insertByBo(bo))
+            .isInstanceOf(ServiceException.class);
+        verify(formulaMapper, never()).insert(any());
     }
 
     @Test
@@ -282,6 +292,8 @@ class ProductFormulaServiceTest {
         bo.setFormulaName("25英寸 9.5斑马帘标准配方");
         bo.setCategoryId(1001L);
         bo.setProductTypeCode("CUSTOM_CURTAIN");
+        bo.setMinWidthInch(new BigDecimal("0"));
+        bo.setMinHeightInch(new BigDecimal("0"));
         bo.setMaxWidthInch(new BigDecimal("25"));
         bo.setMaxHeightInch(new BigDecimal("72"));
         return bo;

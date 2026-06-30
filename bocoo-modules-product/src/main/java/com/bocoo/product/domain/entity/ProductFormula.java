@@ -47,6 +47,12 @@ public class ProductFormula extends BaseEntity {
     @Schema(description = "产品类型中文名称")
     private String productTypeNameCn;
 
+    @Schema(description = "最小宽度，英寸")
+    private BigDecimal minWidthInch;
+
+    @Schema(description = "最小高度，英寸")
+    private BigDecimal minHeightInch;
+
     @Schema(description = "最大宽度，英寸")
     private BigDecimal maxWidthInch;
 

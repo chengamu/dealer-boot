@@ -3,7 +3,7 @@
     <div class="setup-section__toolbar">
       <div class="setup-section__title">
         <h3>{{ t('productCenter.formulaSetup.materialPool') }}</h3>
-        <p>{{ t('productCenter.formulaSetup.materialPoolHint') }}</p>
+        <span>{{ t('productCenter.formulaSetup.materialPoolHint') }}</span>
       </div>
       <div class="material-pool-toolbar">
         <div class="material-pool-toolbar__filters">
@@ -37,27 +37,39 @@
     <el-table v-loading="loading" :data="visibleMaterials" border class="setup-table" row-key="materialCode" @selection-change="selectedRows = $event">
       <el-table-column type="selection" width="48" align="center" />
       <el-table-column type="index" :label="t('common.index')" width="56" align="center" />
-      <el-table-column :label="t('productCenter.formulaSetup.attributeGroup')" width="92">
+      <el-table-column :label="t('productCenter.common.sortOrder')" width="96" align="center">
+        <template #default="{ row }">
+          <el-input
+            :model-value="sortOrderInputValue(row)"
+            class="sort-order-input"
+            inputmode="numeric"
+            @input="updateSortOrderDraft(row, $event)"
+            @blur="commitSortOrder(row)"
+            @keyup.enter="commitSortOrder(row)"
+          />
+        </template>
+      </el-table-column>
+      <el-table-column :label="t('productCenter.formulaSetup.attributeGroup')" width="82">
         <template #default="{ row }">
           <el-tag size="small" :class="`group-tag group-tag--${String(row.attributeGroupCode || '').toLowerCase()}`">{{ row.attributeGroupNameCn || row.attributeGroupCode || '-' }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column :label="t('productCenter.formulaSetup.materialType')" width="112">
+      <el-table-column :label="t('productCenter.formulaSetup.materialType')" width="96">
         <template #default="{ row }">
           <span class="material-cell-text material-cell-text--compact">{{ row.materialTypeNameCn || row.materialTypeCode || '-' }}</span>
         </template>
       </el-table-column>
-      <el-table-column :label="t('productCenter.formulaSetup.materialCode')" prop="materialCode" width="132">
+      <el-table-column :label="t('productCenter.formulaSetup.materialCode')" prop="materialCode" width="112">
         <template #default="{ row }">
           <span class="material-cell-text material-code-text">{{ row.materialCode || '-' }}</span>
         </template>
       </el-table-column>
-      <el-table-column :label="t('productCenter.formulaSetup.materialName')" prop="materialNameCn" min-width="260">
+      <el-table-column :label="t('productCenter.formulaSetup.materialName')" prop="materialNameCn" min-width="240">
         <template #default="{ row }">
           <span class="material-cell-text material-name-text">{{ row.materialNameCn || '-' }}</span>
         </template>
       </el-table-column>
-      <el-table-column :label="t('productCenter.formulaSetup.specModel')" min-width="220">
+      <el-table-column :label="t('productCenter.formulaSetup.specModel')" min-width="190">
         <template #default="{ row }">
           <span class="material-cell-text spec-model-text">{{ row.specModelText || '-' }}</span>
         </template>
@@ -76,16 +88,16 @@
       <el-table-column :label="t('productCenter.formulaSetup.usageSummary')" min-width="122">
         <template #default="{ row }">{{ usageSummary(row) }}</template>
       </el-table-column>
-      <el-table-column :label="t('productCenter.formulaSetup.productionRemark')" min-width="112">
+      <el-table-column :label="t('productCenter.formulaSetup.productionRemark')" min-width="100">
         <template #default="{ row }">
           <el-input v-model="row.productionRemark" clearable />
         </template>
       </el-table-column>
-      <el-table-column :label="t('common.operate')" width="118" fixed="right" align="center">
+      <el-table-column :label="t('common.operate')" width="176" fixed="right" align="center" class-name="material-actions-column">
         <template #default="{ row, $index }">
           <AdminTableActions :actions="[
-            { label: t('productCenter.formulaSetup.usageSetting'), icon: 'Setting', onClick: () => $emit('open-usage', row) },
-            { label: t('common.delete'), icon: 'Delete', type: 'danger', onClick: () => $emit('remove-material', $index) }
+            { label: t('productCenter.formulaSetup.usage'), icon: Setting, onClick: () => $emit('open-usage', row) },
+            { label: t('common.delete'), icon: Delete, type: 'danger', onClick: () => $emit('remove-material', $index) }
           ]" />
         </template>
       </el-table-column>
@@ -96,7 +108,7 @@
 <script setup lang="ts">
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
-import { computed, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import { Connection, Delete, Filter, Search, Setting } from '@element-plus/icons-vue'
 import type { ProductFormulaMaterialVO } from '@/api/product-capability/types'
 
@@ -106,6 +118,7 @@ const props = defineProps<{
   usageSummary: (row: ProductFormulaMaterialVO) => string
   usageUnset: (row: ProductFormulaMaterialVO) => boolean
   unitLabel: (unitCode?: string) => string
+  groupSortMap?: Record<string, number>
   materialCount: number
   unsetUsageCount: number
   exceptionCount: number
@@ -114,6 +127,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   'open-picker': []
   'open-usage': [row: ProductFormulaMaterialVO]
+  'open-batch-usage': [rows: ProductFormulaMaterialVO[]]
   'remove-material': [index: number]
   'remove-materials': [rows: ProductFormulaMaterialVO[]]
 }>()
@@ -125,6 +139,7 @@ const MATERIAL_TYPE_ALL = '__ALL__'
 const keyword = ref('')
 const materialTypeFilter = ref(MATERIAL_TYPE_ALL)
 const selectedRows = ref<ProductFormulaMaterialVO[]>([])
+const sortOrderDrafts = reactive<Record<string, string>>({})
 const materialTypeOptions = computed(() => Array.from(new Set(props.materials
   .map((row) => row.materialTypeNameCn || row.materialTypeCode || '')
   .filter(Boolean))))
@@ -135,14 +150,43 @@ const visibleMaterials = computed(() => {
     if (!value) return true
     return [row.materialCode, row.materialNameCn, row.specModelText, row.materialTypeNameCn]
       .some((field) => String(field || '').toLowerCase().includes(value))
-  })
+  }).slice().sort(compareMaterialRows)
 })
 
+function compareMaterialRows(left: ProductFormulaMaterialVO, right: ProductFormulaMaterialVO) {
+  const leftGroup = props.groupSortMap?.[left.attributeGroupCode || ''] ?? Number.MAX_SAFE_INTEGER
+  const rightGroup = props.groupSortMap?.[right.attributeGroupCode || ''] ?? Number.MAX_SAFE_INTEGER
+  if (leftGroup !== rightGroup) return leftGroup - rightGroup
+  const leftSort = Number(left.sortOrder || left.lineNo || 0)
+  const rightSort = Number(right.sortOrder || right.lineNo || 0)
+  if (leftSort !== rightSort) return leftSort - rightSort
+  return String(left.materialCode || '').localeCompare(String(right.materialCode || ''))
+}
+
+function sortOrderInputValue(row: ProductFormulaMaterialVO) {
+  const key = sortOrderDraftKey(row)
+  if (sortOrderDrafts[key] !== undefined) return sortOrderDrafts[key]
+  return row.sortOrder === undefined || row.sortOrder === null ? '' : String(row.sortOrder)
+}
+
+function updateSortOrderDraft(row: ProductFormulaMaterialVO, value: string | number) {
+  sortOrderDrafts[sortOrderDraftKey(row)] = String(value ?? '')
+}
+
+function commitSortOrder(row: ProductFormulaMaterialVO) {
+  const key = sortOrderDraftKey(row)
+  if (sortOrderDrafts[key] === undefined) return
+  const parsed = Number(sortOrderDrafts[key].trim())
+  row.sortOrder = Number.isFinite(parsed) ? parsed : 0
+  delete sortOrderDrafts[key]
+}
+
+function sortOrderDraftKey(row: ProductFormulaMaterialVO) {
+  return String(row.materialCode || row.materialId || row.lineNo || '')
+}
+
 function openBatchUsage() {
-  const row = selectedRows.value[0]
-  if (row) {
-    emit('open-usage', row)
-  }
+  if (selectedRows.value.length) emit('open-batch-usage', selectedRows.value)
 }
 
 </script>
@@ -160,24 +204,33 @@ function openBatchUsage() {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 12px;
+  gap: 8px;
   margin-bottom: 8px;
 }
 
 .setup-section__title {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
   width: 100%;
+  min-width: 0;
 }
 
 .setup-section__toolbar h3 {
-  margin: 0 0 4px;
+  flex: 0 0 auto;
+  margin: 0;
   font-size: 15px;
   color: #111827;
 }
 
-.setup-section__toolbar p {
+.setup-section__toolbar span {
+  min-width: 0;
   margin: 0;
   color: #6b7280;
   font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .setup-section__actions {
@@ -250,11 +303,33 @@ function openBatchUsage() {
   width: 100%;
 }
 
+.sort-order-input {
+  width: 72px;
+}
+
+.sort-order-input :deep(.el-input__inner) {
+  text-align: center;
+}
+
 .setup-table :deep(.el-input-number .el-input__wrapper),
 .setup-table :deep(.el-input .el-input__wrapper),
 .setup-table :deep(.el-select .el-select__wrapper) {
   min-height: 32px;
   border-radius: 6px;
+}
+
+.setup-table :deep(.material-actions-column .cell) {
+  padding: 0 8px;
+}
+
+.setup-table :deep(.material-actions-column .admin-table-actions) {
+  justify-content: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.setup-table :deep(.material-actions-column .admin-table-actions__button) {
+  margin: 0;
 }
 
 .header-help {
