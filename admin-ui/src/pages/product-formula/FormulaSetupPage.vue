@@ -45,6 +45,7 @@
         :usage-unset="isUsageUnset"
         :unit-label="unitLabel"
         :group-sort-map="groupSortMap"
+        :material-group-cards="materialGroupCards"
         :material-count="setup.materials.length"
         :unset-usage-count="unsetUsageCount"
         :exception-count="setup.restrictions.length"
@@ -582,30 +583,83 @@ function syncOptionMaterial(row: ProductFormulaOptionMaterialVO) {
   row.materialNameCn = material?.materialNameCn
 }
 
-function usageSummary(row: ProductFormulaMaterialVO) {
+function usageSummary(row: ProductFormulaMaterialVO): string {
   const activeRules = usageRulesFor(row).filter((rule) => rule.status !== PRODUCT_STATUS_DISABLED)
   if (activeRules.length > 0) {
-    const hasDefault = activeRules.some((rule) => rule.defaultRuleFlag)
     const formulaRules = activeRules.filter((rule) => rule.usageMode === 'FORMULA')
     const fixedRule = activeRules.find((rule) => rule.usageMode === 'FIXED')
     if (formulaRules.length > 0) {
-      const fabricRuleCount = formulaRules.filter((rule) => rule.conditionOptionCode === 'FABRIC' || String(rule.conditionKey || '').includes('FABRIC')).length
-      const label = fabricRuleCount > 0
-        ? t('productCenter.formulaSetup.fabricUsageRuleCount').replace('{count}', String(formulaRules.length))
-        : t('productCenter.formulaSetup.formulaUsageRuleCount').replace('{count}', String(formulaRules.length))
-      return hasDefault ? label : `${label} / ${t('productCenter.formulaSetup.defaultRuleMissing')}`
+      const lines = formulaRules
+        .slice()
+        .sort((left, right) => Number(left.sortOrder || 0) - Number(right.sortOrder || 0))
+        .map(usageRuleSummary)
+      return lines.join('\n')
     }
     if (fixedRule) {
-      return `${t('productCenter.formulaSetup.usageFixedShort')} ${formatUsageNumber(fixedRule.fixedUsageQty)}`
+      return `${textOf(t('productCenter.formulaSetup.usageFixedShort'))} ${formatUsageNumber(fixedRule.fixedUsageQty)}`
     }
   }
   if (row.usageMode === 'FIXED' && row.fixedUsageQty !== undefined && row.fixedUsageQty !== null) {
-    return `${t('productCenter.formulaSetup.usageFixedShort')} ${formatUsageNumber(row.fixedUsageQty)}`
+    return `${textOf(t('productCenter.formulaSetup.usageFixedShort'))} ${formatUsageNumber(row.fixedUsageQty)}`
   }
   if (row.usageMode === 'FORMULA' && hasAnyUsageFormula(row)) {
-    return t('productCenter.formulaSetup.formulaUsageRuleCount').replace('{count}', '1')
+    return usageRuleSummary(row)
   }
-  return t('productCenter.formulaSetup.usageNotSet')
+  return textOf(t('productCenter.formulaSetup.usageNotSet'))
+}
+
+function usageRuleSummary(rule: ProductFormulaUsageRuleVO | ProductFormulaMaterialVO): string {
+  const condition = usageConditionText(rule)
+  const formulas = usageFormulaParts(rule)
+  return formulas.length ? `${condition}：\n${formulas.join('\n')}` : condition
+}
+
+function usageConditionText(rule: ProductFormulaUsageRuleVO | ProductFormulaMaterialVO): string {
+  if ('defaultRuleFlag' in rule && rule.defaultRuleFlag) return textOf(t('productCenter.formulaSetup.defaultUsageRule'))
+  if ('conditionText' in rule && rule.conditionText) return textOf(rule.conditionText)
+  if ('conditionOptionNameCn' in rule && (rule.conditionOptionNameCn || rule.conditionOptionCode)) {
+    const optionName = rule.conditionOptionNameCn || rule.conditionOptionCode
+    const valueName = rule.conditionValueNameCn || rule.conditionValueCode || '-'
+    return `${optionName} = ${valueName}`
+  }
+  if ('conditionExpression' in rule && rule.conditionExpression) return textOf(rule.conditionExpression)
+  return textOf(t('productCenter.formulaSetup.defaultUsageRule'))
+}
+
+function usageFormulaParts(rule: ProductFormulaUsageRuleVO | ProductFormulaMaterialVO): string[] {
+  const parts: string[] = []
+  appendUsageFormulaPart(parts, textOf(t('productCenter.formulaSetup.lengthFormula')), summaryFormulaValue(rule.lengthFormulaText || rule.lengthFormula))
+  appendUsageFormulaPart(parts, textOf(t('productCenter.formulaSetup.widthFormula')), summaryFormulaValue(rule.widthFormulaText || rule.widthFormula))
+  appendUsageFormulaPart(parts, textOf(t('productCenter.formulaSetup.heightFormula')), summaryFormulaValue(rule.heightFormulaText || rule.heightFormula))
+  appendUsageFormulaPart(parts, textOf(t('productCenter.formulaSetup.weightFormula')), summaryFormulaValue(rule.weightFormulaText || rule.weightFormula))
+  const quantityFormula = summaryFormulaValue(rule.usageFormulaText || rule.usageFormula)
+  if (quantityFormula && !(parts.length > 0 && isDefaultQuantityFormula(quantityFormula))) {
+    appendUsageFormulaPart(parts, textOf(t('productCenter.formulaSetup.quantityFormula')), quantityFormula)
+  }
+  if (!parts.length && rule.fixedUsageQty !== undefined && rule.fixedUsageQty !== null) {
+    parts.push(`${textOf(t('productCenter.formulaSetup.usageFixedShort'))} ${formatUsageNumber(rule.fixedUsageQty)}`)
+  }
+  return parts
+}
+
+function appendUsageFormulaPart(parts: string[], label: string, value?: string) {
+  if (!value) return
+  parts.push(`${label} ${value}`)
+}
+
+function summaryFormulaValue(value: unknown): string {
+  const text = textOf(value).trim()
+  if (!text) return ''
+  const numeric = Number(text)
+  return Number.isFinite(numeric) && /^-?\d+(\.\d+)?$/.test(text) ? numeric.toFixed(2) : text
+}
+
+function isDefaultQuantityFormula(value: string) {
+  return Number(value) === 1 && /^1(\.0+)?$/.test(value)
+}
+
+function textOf(value: unknown): string {
+  return value === undefined || value === null ? '' : String(value)
 }
 
 function isUsageUnset(row: ProductFormulaMaterialVO) {

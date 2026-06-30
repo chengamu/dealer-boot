@@ -13,17 +13,22 @@ import {
   normalizeInstructionLocale,
   preloadBaseInfoPageInstructions
 } from './pageInstructions'
+import { bindPanelActivity, installPageAgentPanelEnhancer } from './panelEnhancer'
 
 type PageAgentInstance = {
   panel?: {
     show: () => void
+    expand?: () => void
   }
+  addEventListener?: EventTarget['addEventListener']
+  stop?: () => Promise<void>
   dispose?: () => void
 }
 
 let pageAgent: PageAgentInstance | null = null
 let pageAgentLocale = ''
 let pageInstructionWatcherInstalled = false
+let pageAgentEmergencyStopInstalled = false
 let aiBootstrapCache: AiBootstrap | null = null
 let aiBootstrapLoadedAt = 0
 const pageAgentAttributes = [
@@ -72,55 +77,6 @@ If the user asks how to do something, explain the steps in English. If the user 
 `.trim()
 }
 
-function sanitizePageAgentPanelText(text: string) {
-  return text
-    .replace(/TypeError:\s*Cannot create property 'action' on string .*/g, '工具响应格式异常，已自动重试。')
-    .replace(/InvokeError:\s*Tool arguments validation failed/g, '工具参数校验失败，已自动重试')
-    .replace(/LLM retry attempt \d+ of \d+ \(\d+\/\d+\)/g, '正在自动重试')
-    .replace(/正在点击元素\s*\[\d+\]\.\.\./g, '正在点击页面控件...')
-    .replace(/正在输入文本到元素\s*\[\d+\]\.\.\./g, '正在填写页面字段...')
-    .replace(/✅\s*Clicked element\s*\(\[\d+\][^)]+\)\.?/g, '✅ 已完成页面点击。')
-    .replace(/✅\s*Clicked element\s*\(\d+\)\.?/g, '✅ 已完成页面点击。')
-    .replace(/✅\s*Input text\s*\((.*?)\)\s*into element\s*\(\[\d+\][^)]+\)\.?/g, '✅ 已填写 $1。')
-    .replace(/✅\s*Input text\s*\((.*?)\)\s*into element\s*\(\d+\)\.?/g, '✅ 已填写 $1。')
-    .replace(/✅\s*已点击元素\s*\[\d+\]/g, '✅ 已完成页面点击')
-    .replace(/element\s*\(\d+\)/g, 'field')
-    .replace(/步骤\s*\d+/g, '')
-    .replace(/Step\s*\d+/g, '')
-}
-
-function cleanPageAgentPanel(root: HTMLElement) {
-  root
-    .querySelectorAll<HTMLElement>('button[title="复制测速日志"], button[title="清空测速日志"], button[title="Copy perf logs"], button[title="Clear perf logs"]')
-    .forEach((button) => {
-      button.style.display = 'none'
-    })
-
-  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT)
-  const textNodes: Text[] = []
-  while (walker.nextNode()) {
-    textNodes.push(walker.currentNode as Text)
-  }
-  textNodes.forEach((node) => {
-    const nextText = sanitizePageAgentPanelText(node.nodeValue || '')
-    if (nextText !== node.nodeValue) node.nodeValue = nextText
-  })
-}
-
-function installPageAgentPanelCleanup() {
-  const root = document.getElementById('page-agent-runtime_agent-panel')
-  if (!root || root.dataset.bocooCleanupInstalled === 'true') return
-
-  root.dataset.bocooCleanupInstalled = 'true'
-  cleanPageAgentPanel(root)
-  const observer = new MutationObserver(() => cleanPageAgentPanel(root))
-  observer.observe(root, {
-    childList: true,
-    subtree: true,
-    characterData: true
-  })
-}
-
 function installPageInstructionPreloadWatcher() {
   if (pageInstructionWatcherInstalled) return
   pageInstructionWatcherInstalled = true
@@ -145,6 +101,27 @@ function installPageInstructionPreloadWatcher() {
   wrapHistoryMethod('pushState')
   wrapHistoryMethod('replaceState')
   window.addEventListener('popstate', preloadCurrentPage)
+}
+
+function installPageAgentEmergencyStop() {
+  if (pageAgentEmergencyStopInstalled) return
+  pageAgentEmergencyStopInstalled = true
+  window.addEventListener(
+    'keydown',
+    (event) => {
+      if (event.key !== 'Escape') return
+      const hasAgentUi =
+        Boolean(document.getElementById('page-agent-runtime_agent-panel')) ||
+        Boolean(document.getElementById('page-agent-runtime_simulator-mask'))
+      if (!hasAgentUi || !pageAgent) return
+
+      event.preventDefault()
+      event.stopPropagation()
+      event.stopImmediatePropagation()
+      void pageAgent.stop?.()
+    },
+    true
+  )
 }
 
 async function loadAiBootstrap() {
@@ -231,16 +208,24 @@ export async function openPageAgentPanel() {
   const bootstrap = await loadAiBootstrap()
   assertPageAgentConfig(bootstrap)
   installPageInstructionPreloadWatcher()
+  installPageAgentEmergencyStop()
   await preloadBaseInfoPageInstructions(window.location.href)
   const language = currentPageAgentLanguage()
   if (pageAgent && pageAgentLocale !== language) {
     pageAgent.dispose?.()
     pageAgent = null
   }
+  if (pageAgent && !document.getElementById('page-agent-runtime_agent-panel')) {
+    pageAgent = null
+  }
   if (!pageAgent) {
     pageAgent = await createPageAgent(bootstrap)
     pageAgentLocale = language
   }
+  if (pageAgent.addEventListener) {
+    bindPanelActivity(pageAgent as PageAgentInstance & EventTarget)
+  }
   pageAgent.panel?.show()
-  installPageAgentPanelCleanup()
+  pageAgent.panel?.expand?.()
+  installPageAgentPanelEnhancer()
 }

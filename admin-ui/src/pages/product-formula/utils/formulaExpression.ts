@@ -41,19 +41,21 @@ const VARIABLE_ALIASES: Record<string, string> = {
   重量: 'orderWeight',
   订单面积: 'orderArea',
   面积: 'orderArea',
+  店铺: 'store',
   面料: 'fabric',
   产品类型: 'productType',
   配置项值: 'optionValue'
 }
 
 const FORMULA_VARIABLES = new Set(['orderLength', 'orderWidth', 'orderHeight', 'orderWeight', 'orderArea'])
-const CONDITION_VARIABLES = new Set(['orderLength', 'orderWidth', 'orderHeight', 'orderWeight', 'orderArea', 'fabric', 'productType', 'optionValue'])
+const CONDITION_VARIABLES = new Set(['orderLength', 'orderWidth', 'orderHeight', 'orderWeight', 'orderArea', 'store', 'fabric', 'productType', 'optionValue'])
 const SAMPLE_CONTEXT: Record<string, number | string> = {
   orderLength: 18,
   orderWidth: 12,
   orderHeight: 20,
   orderWeight: 3,
   orderArea: 240,
+  store: 'SHOP_A',
   fabric: 'XLF241801',
   productType: 'CUSTOM_CURTAIN',
   optionValue: 'MOTOR'

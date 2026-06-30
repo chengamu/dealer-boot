@@ -36,6 +36,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -133,15 +134,14 @@ public class ProductFormulaServiceImpl extends ProductServiceSupport implements 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Boolean deleteWithValidByIds(Long[] ids) {
-        for (Long id : ids) {
-            ProductFormula current = formulaMapper.selectById(id);
+        List<ProductFormula> formulas = formulaMapper.selectBatchIds(Arrays.asList(ids));
+        for (ProductFormula current : formulas) {
             if (current != null && !STATUS_DRAFT.equals(current.getStatus())) {
                 throw ServiceException.ofMessageKey("product.formula.deleteOnlyDraft");
             }
-            assertNoReferences(checkReferences(id));
+            assertNoReferences(checkReferences(current.getFormulaId()));
         }
-        for (Long id : ids) {
-            ProductFormula current = formulaMapper.selectById(id);
+        for (ProductFormula current : formulas) {
             if (current != null) {
                 recordFormulaChange(current.getFormulaId(), current.getFormulaCode(), "DELETE", current, null);
             }

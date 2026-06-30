@@ -1,13 +1,24 @@
 <template>
-  <div v-if="visible" class="ai-assistant" data-agent-label="智能助手" data-page-agent-ignore="true">
+  <div
+    v-if="visible"
+    class="ai-assistant"
+    :class="{ 'is-dragging': floating.isDragging.value }"
+    :style="floating.style.value"
+    data-agent-label="智能助手"
+    data-page-agent-ignore="true"
+    @pointerdown="floating.onPointerDown"
+  >
     <el-button
       class="ai-assistant__fab"
       circle
       :aria-label="t('aiAssistant.open')"
       :loading="loading"
-      @click="openOfficialAgent"
+      @click.prevent.stop
+      @dragstart.prevent
+      @keydown.enter.prevent="openOfficialAgent"
+      @keydown.space.prevent="openOfficialAgent"
     >
-      <img class="ai-assistant__robot" :src="robotImage" alt="" aria-hidden="true" />
+      <img class="ai-assistant__robot" :src="robotImage" alt="" aria-hidden="true" draggable="false" />
     </el-button>
   </div>
 </template>
@@ -20,10 +31,16 @@ import { openPageAgentPanel } from '@/agent/pageAgent'
 import { getAiBootstrap } from '@/api/ai'
 import { checkPermi } from '@/utils/permission'
 import robotImage from '@/assets/ai-assistant/curtain-robot.png'
+import { useFloatingDrag } from './useFloatingDrag'
 
 const { t } = useI18n()
 const loading = ref(false)
 const visible = ref(false)
+const floating = useFloatingDrag({
+  storageKey: 'bocoo:ai-assistant-position',
+  size: 44,
+  onTap: openOfficialAgent
+})
 
 onMounted(async () => {
   if (!checkPermi(['ai:assistant:use'])) {
@@ -55,19 +72,37 @@ async function openOfficialAgent() {
 <style scoped lang="scss">
 .ai-assistant {
   position: fixed;
-  right: 24px;
-  bottom: 24px;
+  top: 0;
+  left: 0;
   z-index: 1200;
+  width: 44px;
+  height: 44px;
+  will-change: transform;
+
+  &.is-dragging {
+    z-index: 3000;
+  }
+
+  &.is-dragging .ai-assistant__fab {
+    cursor: grabbing;
+    transform: scale(1.06);
+  }
 }
 
 .ai-assistant__fab {
-  width: 62px;
-  height: 62px;
+  width: 44px !important;
+  height: 44px !important;
   padding: 0;
   overflow: visible;
   border: 0;
   background: transparent;
   box-shadow: none;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  transition:
+    transform 0.12s ease,
+    filter 0.12s ease;
 
   :deep(span) {
     display: block;

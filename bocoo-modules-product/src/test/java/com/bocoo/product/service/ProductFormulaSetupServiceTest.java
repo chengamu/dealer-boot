@@ -26,7 +26,13 @@ import com.bocoo.product.mapper.ProductFormulaRestrictionMapper;
 import com.bocoo.product.mapper.ProductFormulaUsageRuleMapper;
 import com.bocoo.product.mapper.ProductMaterialMapper;
 import com.bocoo.product.mapper.ProductUnitMapper;
+import com.bocoo.product.service.impl.ProductFormulaMaterialSnapshotResolver;
+import com.bocoo.product.service.impl.ProductFormulaRestrictionNormalizer;
+import com.bocoo.product.service.impl.ProductFormulaSetupNormalizer;
+import com.bocoo.product.service.impl.ProductFormulaSetupReader;
 import com.bocoo.product.service.impl.ProductFormulaSetupServiceImpl;
+import com.bocoo.product.service.impl.ProductFormulaSetupValidator;
+import com.bocoo.product.service.impl.ProductFormulaSetupWriter;
 import com.bocoo.product.service.impl.ProductFormulaUsageRuleServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -80,7 +86,9 @@ class ProductFormulaSetupServiceTest {
     void setUp() {
         ProductServiceTestSupport.prepareMapperAndConverter();
         usageRuleService = new ProductFormulaUsageRuleServiceImpl(usageRuleMapper);
-        setupService = new ProductFormulaSetupServiceImpl(
+        ProductFormulaMaterialSnapshotResolver materialSnapshotResolver =
+            new ProductFormulaMaterialSnapshotResolver(productMaterialMapper, unitMapper);
+        ProductFormulaSetupReader setupReader = new ProductFormulaSetupReader(
             formulaMapper,
             materialMapper,
             optionMapper,
@@ -88,9 +96,27 @@ class ProductFormulaSetupServiceTest {
             optionMaterialMapper,
             restrictionMapper,
             productMaterialMapper,
-            unitMapper,
-            changeLogService,
             usageRuleService
+        );
+        ProductFormulaSetupValidator setupValidator = new ProductFormulaSetupValidator(usageRuleService);
+        ProductFormulaRestrictionNormalizer restrictionNormalizer = new ProductFormulaRestrictionNormalizer(setupValidator);
+        ProductFormulaSetupNormalizer setupNormalizer =
+            new ProductFormulaSetupNormalizer(materialSnapshotResolver, restrictionNormalizer, usageRuleService);
+        ProductFormulaSetupWriter setupWriter = new ProductFormulaSetupWriter(
+            materialMapper,
+            optionMapper,
+            optionValueMapper,
+            optionMaterialMapper,
+            restrictionMapper,
+            usageRuleService
+        );
+        setupService = new ProductFormulaSetupServiceImpl(
+            formulaMapper,
+            changeLogService,
+            setupReader,
+            setupValidator,
+            setupNormalizer,
+            setupWriter
         );
     }
 
@@ -109,8 +135,7 @@ class ProductFormulaSetupServiceTest {
         ProductFormulaSetupBo bo = validSetup();
         bo.setMaterials(List.of(materialBo(4001L), materialBo(4001L)));
         when(formulaMapper.selectById(3001L)).thenReturn(formula("DRAFT"));
-        when(productMaterialMapper.selectById(4001L)).thenReturn(material(4001L, "MAT001"));
-        when(unitMapper.selectOne(any())).thenReturn(unit());
+        stubMaterialSnapshot();
 
         assertThatThrownBy(() -> setupService.saveSetup(3001L, bo))
             .isInstanceOf(ServiceException.class);
@@ -121,8 +146,7 @@ class ProductFormulaSetupServiceTest {
     @Test
     void saveSetupWritesSeparatedSetupTablesAndResetsValidation() {
         when(formulaMapper.selectById(3001L)).thenReturn(formula("DRAFT"));
-        when(productMaterialMapper.selectById(4001L)).thenReturn(material(4001L, "MAT001"));
-        when(unitMapper.selectOne(any())).thenReturn(unit());
+        stubMaterialSnapshot();
         when(formulaMapper.update(any(), any())).thenReturn(1);
         doAnswer(invocation -> {
             ProductFormulaMaterial row = invocation.getArgument(0);
@@ -172,8 +196,7 @@ class ProductFormulaSetupServiceTest {
         ProductFormulaSetupBo bo = validSetup();
         bo.setUsageRules(List.of(usageRuleBo(false), usageRuleBo(false)));
         when(formulaMapper.selectById(3001L)).thenReturn(formula("DRAFT"));
-        when(productMaterialMapper.selectById(4001L)).thenReturn(material(4001L, "MAT001"));
-        when(unitMapper.selectOne(any())).thenReturn(unit());
+        stubMaterialSnapshot();
 
         assertThatThrownBy(() -> setupService.saveSetup(3001L, bo))
             .isInstanceOf(ServiceException.class);
@@ -186,8 +209,7 @@ class ProductFormulaSetupServiceTest {
         ProductFormulaSetupBo bo = validSetup();
         bo.setUsageRules(List.of(fixedUsageRuleBo(), fixedUsageRuleBo()));
         when(formulaMapper.selectById(3001L)).thenReturn(formula("DRAFT"));
-        when(productMaterialMapper.selectById(4001L)).thenReturn(material(4001L, "MAT001"));
-        when(unitMapper.selectOne(any())).thenReturn(unit());
+        stubMaterialSnapshot();
 
         assertThatThrownBy(() -> setupService.saveSetup(3001L, bo))
             .isInstanceOf(ServiceException.class);
@@ -200,8 +222,7 @@ class ProductFormulaSetupServiceTest {
         ProductFormulaSetupBo bo = validSetup();
         bo.setUsageRules(List.of(usageRuleBo(false)));
         when(formulaMapper.selectById(3001L)).thenReturn(formula("DRAFT"));
-        when(productMaterialMapper.selectById(4001L)).thenReturn(material(4001L, "MAT001"));
-        when(unitMapper.selectOne(any())).thenReturn(unit());
+        stubMaterialSnapshot();
 
         assertThatThrownBy(() -> setupService.saveSetup(3001L, bo))
             .isInstanceOf(ServiceException.class);
@@ -219,8 +240,7 @@ class ProductFormulaSetupServiceTest {
         bo.setOptions(List.of(optionBo(), motorModel));
         bo.setOptionValues(List.of(optionValueBo(), optionValueBo("MOTOR_MODEL", "MOTOR_A", "A款电机")));
         when(formulaMapper.selectById(3001L)).thenReturn(formula("DRAFT"));
-        when(productMaterialMapper.selectById(4001L)).thenReturn(material(4001L, "MAT001"));
-        when(unitMapper.selectOne(any())).thenReturn(unit());
+        stubMaterialSnapshot();
         when(formulaMapper.update(any(), any())).thenReturn(1);
         doAnswer(invocation -> {
             ProductFormulaMaterial row = invocation.getArgument(0);
@@ -259,8 +279,7 @@ class ProductFormulaSetupServiceTest {
         option.setVisibleConditionValueCode("MAT001");
         bo.setOptions(List.of(option));
         when(formulaMapper.selectById(3001L)).thenReturn(formula("DRAFT"));
-        when(productMaterialMapper.selectById(4001L)).thenReturn(material(4001L, "MAT001"));
-        when(unitMapper.selectOne(any())).thenReturn(unit());
+        stubMaterialSnapshot();
 
         assertThatThrownBy(() -> setupService.saveSetup(3001L, bo))
             .isInstanceOf(ServiceException.class);
@@ -278,8 +297,7 @@ class ProductFormulaSetupServiceTest {
         bo.setOptions(List.of(optionBo(), motorModel));
         bo.setOptionValues(List.of(optionValueBo(), optionValueBo("MOTOR_MODEL", "MOTOR_A", "A款电机")));
         when(formulaMapper.selectById(3001L)).thenReturn(formula("DRAFT"));
-        when(productMaterialMapper.selectById(4001L)).thenReturn(material(4001L, "MAT001"));
-        when(unitMapper.selectOne(any())).thenReturn(unit());
+        stubMaterialSnapshot();
 
         assertThatThrownBy(() -> setupService.saveSetup(3001L, bo))
             .isInstanceOf(ServiceException.class);
@@ -296,8 +314,7 @@ class ProductFormulaSetupServiceTest {
         usageRule.setUsageFormula("width - 1");
         bo.setUsageRules(List.of(usageRule));
         when(formulaMapper.selectById(3001L)).thenReturn(formula("DRAFT"));
-        when(productMaterialMapper.selectById(4001L)).thenReturn(material(4001L, "MAT001"));
-        when(unitMapper.selectOne(any())).thenReturn(unit());
+        stubMaterialSnapshot();
 
         assertThatThrownBy(() -> setupService.saveSetup(3001L, bo))
             .isInstanceOf(ServiceException.class);
@@ -314,8 +331,7 @@ class ProductFormulaSetupServiceTest {
         restriction.setConditionValueCode("MAT001");
         bo.setRestrictions(List.of(restriction));
         when(formulaMapper.selectById(3001L)).thenReturn(formula("DRAFT"));
-        when(productMaterialMapper.selectById(4001L)).thenReturn(material(4001L, "MAT001"));
-        when(unitMapper.selectOne(any())).thenReturn(unit());
+        stubMaterialSnapshot();
 
         assertThatThrownBy(() -> setupService.saveSetup(3001L, bo))
             .isInstanceOf(ServiceException.class);
@@ -385,6 +401,11 @@ class ProductFormulaSetupServiceTest {
         bo.setRestrictions(List.of(restrictionBo()));
         bo.setUsageRules(List.of(usageRuleBo(true)));
         return bo;
+    }
+
+    private void stubMaterialSnapshot() {
+        when(productMaterialMapper.selectList(any())).thenReturn(List.of(material(4001L, "MAT001")));
+        when(unitMapper.selectList(any())).thenReturn(List.of(unit()));
     }
 
     private ProductFormulaMaterialBo materialBo(Long materialId) {

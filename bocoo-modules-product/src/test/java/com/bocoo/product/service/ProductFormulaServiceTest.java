@@ -144,6 +144,7 @@ class ProductFormulaServiceTest {
         when(dictItemMapper.selectOne(any())).thenReturn(productType());
         when(formulaMapper.selectCount(any())).thenReturn(0L, 0L);
         when(formulaMapper.selectById(3001L)).thenReturn(current);
+        when(formulaMapper.selectBatchIds(List.of(3001L))).thenReturn(List.of(current));
 
         ProductFormulaBo bo = validFormulaBo();
         bo.setFormulaId(3001L);
@@ -276,6 +277,7 @@ class ProductFormulaServiceTest {
         ProductFormula current = formula(3001L, "EFFECTIVE");
         current.setCurrentVersionId(9001L);
         when(formulaMapper.selectById(3001L)).thenReturn(current, formula(3001L, "STOPPED"));
+        when(formulaMapper.selectBatchIds(List.of(3001L))).thenReturn(List.of(current));
         when(formulaMapper.update(any(), any())).thenReturn(1);
         when(versionMapper.update(any(), any())).thenReturn(1);
 

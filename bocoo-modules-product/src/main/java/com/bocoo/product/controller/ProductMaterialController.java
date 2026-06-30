@@ -8,13 +8,10 @@ import com.bocoo.common.log.enums.BusinessType;
 import com.bocoo.common.mybatis.core.page.PageQuery;
 import com.bocoo.common.mybatis.core.page.TableDataInfo;
 import com.bocoo.common.web.core.BaseController;
-import com.bocoo.product.domain.bo.ProductMaterialAttributeBo;
 import com.bocoo.product.domain.bo.ProductMaterialBo;
 import com.bocoo.product.domain.vo.BaseEditCheckResultVo;
-import com.bocoo.product.domain.vo.ProductMaterialAttributeVo;
 import com.bocoo.product.domain.vo.ProductMaterialVo;
 import com.bocoo.product.domain.vo.ReferenceCheckResultVo;
-import com.bocoo.product.service.ProductMaterialAttributeService;
 import com.bocoo.product.service.ProductMaterialService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -32,17 +29,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * 产品物料和物料属性接口。
+ * 产品物料接口。
  */
 @Validated
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/product-capability")
-@Tag(name = "产品物料", description = "物料主档和通用物料属性接口")
+@Tag(name = "产品物料", description = "物料主档接口")
 public class ProductMaterialController extends BaseController {
 
     private final ProductMaterialService productMaterialService;
-    private final ProductMaterialAttributeService productMaterialAttributeService;
 
     @SaCheckPermission("product:base:list")
     @GetMapping("/materials/list")
@@ -120,72 +116,5 @@ public class ProductMaterialController extends BaseController {
     @Operation(summary = "检查产品物料引用")
     public R<ReferenceCheckResultVo> checkProductMaterialReferences(@PathVariable Long id) {
         return R.ok(productMaterialService.checkReferences(id));
-    }
-
-    @SaCheckPermission("product:material-attribute:list")
-    @GetMapping("/material-attributes/list")
-    @Operation(summary = "分页查询物料属性值列表")
-    public TableDataInfo<ProductMaterialAttributeVo> listProductMaterialAttribute(ProductMaterialAttributeBo bo, PageQuery pageQuery) {
-        return productMaterialAttributeService.queryPageList(bo, pageQuery);
-    }
-
-    @SaCheckPermission("product:material-attribute:list")
-    @GetMapping("/material-attributes/options")
-    @Operation(summary = "查询物料属性值选项")
-    public R<java.util.List<ProductMaterialAttributeVo>> optionsProductMaterialAttribute(ProductMaterialAttributeBo bo) {
-        return R.ok(productMaterialAttributeService.queryList(bo));
-    }
-
-    @SaCheckPermission("product:material-attribute:list")
-    @GetMapping("/material-attributes/{id}")
-    @Operation(summary = "获取物料属性值详情")
-    public R<ProductMaterialAttributeVo> getProductMaterialAttribute(@Parameter(description = "物料属性值ID", required = true) @PathVariable Long id) {
-        return R.ok(productMaterialAttributeService.queryById(id));
-    }
-
-    @SaCheckPermission("product:material-attribute:edit")
-    @GetMapping("/material-attributes/{id}/edit-check")
-    @Operation(summary = "检查物料属性值是否可修改")
-    public R<BaseEditCheckResultVo> checkProductMaterialAttributeEdit(@PathVariable Long id) {
-        return R.ok(productMaterialAttributeService.checkEditAllowed(id));
-    }
-
-    @SaCheckPermission("product:material-attribute:add")
-    @Log(title = "物料属性值", businessType = BusinessType.INSERT)
-    @PostMapping("/material-attributes")
-    @Operation(summary = "新增物料属性值")
-    public R<Void> addProductMaterialAttribute(@Validated @RequestBody ProductMaterialAttributeBo bo) {
-        return toAjax(productMaterialAttributeService.insertByBo(bo));
-    }
-
-    @SaCheckPermission("product:material-attribute:edit")
-    @Log(title = "物料属性值", businessType = BusinessType.UPDATE)
-    @PutMapping("/material-attributes")
-    @Operation(summary = "修改物料属性值")
-    public R<Void> editProductMaterialAttribute(@Validated @RequestBody ProductMaterialAttributeBo bo) {
-        return toAjax(productMaterialAttributeService.updateByBo(bo));
-    }
-
-    @SaCheckPermission("product:material-attribute:edit")
-    @Log(title = "修改物料属性值状态", businessType = BusinessType.UPDATE)
-    @PutMapping("/material-attributes/change-status/{id}/{status}")
-    @Operation(summary = "修改物料属性值状态")
-    public R<Void> changeProductMaterialAttributeStatus(@PathVariable Long id, @PathVariable String status) {
-        return toAjax(productMaterialAttributeService.updateStatus(id, status));
-    }
-
-    @SaCheckPermission("product:material-attribute:remove")
-    @Log(title = "物料属性值", businessType = BusinessType.DELETE)
-    @DeleteMapping("/material-attributes/{ids}")
-    @Operation(summary = "删除物料属性值")
-    public R<Void> removeProductMaterialAttribute(@NotEmpty(message = "{gen.validation.pk.required}") @PathVariable Long[] ids) {
-        return toAjax(productMaterialAttributeService.deleteWithValidByIds(ids));
-    }
-
-    @SaCheckPermission("product:material-attribute:reference")
-    @GetMapping("/material-attributes/{id}/references")
-    @Operation(summary = "检查物料属性值引用")
-    public R<ReferenceCheckResultVo> checkProductMaterialAttributeReferences(@PathVariable Long id) {
-        return R.ok(productMaterialAttributeService.checkReferences(id));
     }
 }

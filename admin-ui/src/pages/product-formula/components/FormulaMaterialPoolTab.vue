@@ -8,15 +8,15 @@
       <div class="material-pool-toolbar">
         <div class="material-pool-toolbar__filters">
           <el-select
-            v-model="materialTypeFilter"
+            v-model="attributeGroupFilter"
             filterable
             class="material-type-filter"
             :aria-label="t('productCenter.formulaSetup.materialTypeFilterAria')"
-            :placeholder="t('productCenter.formulaSetup.filterByMaterialType')"
+            :placeholder="t('productCenter.formulaSetup.attributeGroup')"
             :prefix-icon="Filter"
           >
-            <el-option :label="t('productCenter.formulaSetup.allMaterialTypes')" :value="MATERIAL_TYPE_ALL" />
-            <el-option v-for="type in materialTypeOptions" :key="type" :label="type" :value="type" />
+            <el-option :label="localeStore.language === 'zh_CN' ? '全部' : 'All'" :value="MATERIAL_TYPE_ALL" />
+            <el-option v-for="group in materialGroupCards" :key="group.code" :label="displayGroupName(group)" :value="group.code" />
           </el-select>
           <el-input
             v-model="keyword"
@@ -37,18 +37,6 @@
     <el-table v-loading="loading" :data="visibleMaterials" border class="setup-table" row-key="materialCode" @selection-change="selectedRows = $event">
       <el-table-column type="selection" width="48" align="center" />
       <el-table-column type="index" :label="t('common.index')" width="56" align="center" />
-      <el-table-column :label="t('productCenter.common.sortOrder')" width="96" align="center">
-        <template #default="{ row }">
-          <el-input
-            :model-value="sortOrderInputValue(row)"
-            class="sort-order-input"
-            inputmode="numeric"
-            @input="updateSortOrderDraft(row, $event)"
-            @blur="commitSortOrder(row)"
-            @keyup.enter="commitSortOrder(row)"
-          />
-        </template>
-      </el-table-column>
       <el-table-column :label="t('productCenter.formulaSetup.attributeGroup')" width="82">
         <template #default="{ row }">
           <el-tag size="small" :class="`group-tag group-tag--${String(row.attributeGroupCode || '').toLowerCase()}`">{{ row.attributeGroupNameCn || row.attributeGroupCode || '-' }}</el-tag>
@@ -77,6 +65,37 @@
       <el-table-column :label="t('productCenter.formulaSetup.unit')" prop="unitCode" width="66">
         <template #default="{ row }">{{ unitLabel(row.unitCode) }}</template>
       </el-table-column>
+      <el-table-column :label="t('productCenter.formulaSetup.usageSummary')" min-width="280">
+        <template #default="{ row }">
+          <div class="usage-summary-lines">
+            <div
+              v-for="(line, lineIndex) in usageSummaryLines(row)"
+              :key="`${row.materialCode || row.lineNo || ''}-${lineIndex}`"
+              class="usage-summary-line"
+              :class="{ 'usage-summary-line--condition': isUsageConditionLine(line) }"
+            >
+              {{ line }}
+            </div>
+          </div>
+        </template>
+      </el-table-column>
+      <el-table-column :label="t('productCenter.formulaSetup.productionRemark')" min-width="160">
+        <template #default="{ row }">
+          <el-input v-model="row.productionRemark" clearable />
+        </template>
+      </el-table-column>
+      <el-table-column :label="t('productCenter.common.sortOrder')" width="96" align="center">
+        <template #default="{ row }">
+          <el-input
+            :model-value="sortOrderInputValue(row)"
+            class="sort-order-input"
+            inputmode="numeric"
+            @input="updateSortOrderDraft(row, $event)"
+            @blur="commitSortOrder(row)"
+            @keyup.enter="commitSortOrder(row)"
+          />
+        </template>
+      </el-table-column>
       <el-table-column width="88" align="center">
         <template #header>
           <el-tooltip :content="t('productCenter.formulaSetup.requiredFlagHint')" placement="top">
@@ -84,14 +103,6 @@
           </el-tooltip>
         </template>
         <template #default="{ row }"><el-switch v-model="row.requiredFlag" /></template>
-      </el-table-column>
-      <el-table-column :label="t('productCenter.formulaSetup.usageSummary')" min-width="122">
-        <template #default="{ row }">{{ usageSummary(row) }}</template>
-      </el-table-column>
-      <el-table-column :label="t('productCenter.formulaSetup.productionRemark')" min-width="100">
-        <template #default="{ row }">
-          <el-input v-model="row.productionRemark" clearable />
-        </template>
       </el-table-column>
       <el-table-column :label="t('common.operate')" width="176" fixed="right" align="center" class-name="material-actions-column">
         <template #default="{ row, $index }">
@@ -112,6 +123,12 @@ import { computed, reactive, ref } from 'vue'
 import { Connection, Delete, Filter, Search, Setting } from '@element-plus/icons-vue'
 import type { ProductFormulaMaterialVO } from '@/api/product-capability/types'
 
+interface MaterialGroupCard {
+  code: string
+  name: string
+  nameEn?: string
+}
+
 const props = defineProps<{
   loading: boolean
   materials: ProductFormulaMaterialVO[]
@@ -119,6 +136,7 @@ const props = defineProps<{
   usageUnset: (row: ProductFormulaMaterialVO) => boolean
   unitLabel: (unitCode?: string) => string
   groupSortMap?: Record<string, number>
+  materialGroupCards: MaterialGroupCard[]
   materialCount: number
   unsetUsageCount: number
   exceptionCount: number
@@ -137,21 +155,31 @@ const t = (key: string) => getMessage(key, localeStore.language)
 const unitLabel = (unitCode?: string) => props.unitLabel(unitCode)
 const MATERIAL_TYPE_ALL = '__ALL__'
 const keyword = ref('')
-const materialTypeFilter = ref(MATERIAL_TYPE_ALL)
+const attributeGroupFilter = ref(MATERIAL_TYPE_ALL)
 const selectedRows = ref<ProductFormulaMaterialVO[]>([])
 const sortOrderDrafts = reactive<Record<string, string>>({})
-const materialTypeOptions = computed(() => Array.from(new Set(props.materials
-  .map((row) => row.materialTypeNameCn || row.materialTypeCode || '')
-  .filter(Boolean))))
+const materialGroupCards = computed(() => props.materialGroupCards.filter((group) => group.code))
 const visibleMaterials = computed(() => {
   const value = keyword.value.trim().toLowerCase()
   return props.materials.filter((row) => {
-    if (materialTypeFilter.value !== MATERIAL_TYPE_ALL && (row.materialTypeNameCn || row.materialTypeCode) !== materialTypeFilter.value) return false
+    if (attributeGroupFilter.value !== MATERIAL_TYPE_ALL && row.attributeGroupCode !== attributeGroupFilter.value) return false
     if (!value) return true
     return [row.materialCode, row.materialNameCn, row.specModelText, row.materialTypeNameCn]
       .some((field) => String(field || '').toLowerCase().includes(value))
   }).slice().sort(compareMaterialRows)
 })
+
+function displayGroupName(group: MaterialGroupCard) {
+  return localeStore.language === 'zh_CN' ? group.name || group.code : group.nameEn || group.name || group.code
+}
+
+function usageSummaryLines(row: ProductFormulaMaterialVO) {
+  return props.usageSummary(row).split('\n').map((line) => line.trim()).filter(Boolean)
+}
+
+function isUsageConditionLine(line: string) {
+  return line.endsWith('：') || line.endsWith(':')
+}
 
 function compareMaterialRows(left: ProductFormulaMaterialVO, right: ProductFormulaMaterialVO) {
   const leftGroup = props.groupSortMap?.[left.attributeGroupCode || ''] ?? Number.MAX_SAFE_INTEGER
@@ -296,7 +324,9 @@ function openBatchUsage() {
 }
 
 .setup-table :deep(.el-table__row td) {
-  height: 64px;
+  height: auto;
+  min-height: 64px;
+  padding: 8px 0;
 }
 
 .setup-table :deep(.el-input-number) {
@@ -334,6 +364,35 @@ function openBatchUsage() {
 
 .header-help {
   cursor: help;
+}
+
+.usage-summary-lines {
+  color: #374151;
+  font-size: 13px;
+  line-height: 1.55;
+  word-break: break-word;
+}
+
+.usage-summary-line {
+  margin-top: 2px;
+}
+
+.usage-summary-line:first-child {
+  margin-top: 0;
+}
+
+.usage-summary-line--condition {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: #eff6ff;
+  color: #2563eb;
+  font-weight: 600;
+}
+
+.usage-summary-line--condition:first-child {
+  margin-top: 0;
 }
 
 .material-cell-text {
