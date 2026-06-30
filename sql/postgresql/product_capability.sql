@@ -271,6 +271,14 @@ CREATE TABLE IF NOT EXISTS pc_formula_usage_rule (
     condition_key varchar(300),
     usage_mode varchar(40) NOT NULL DEFAULT 'FIXED',
     fixed_usage_qty numeric(18,6),
+    length_formula text,
+    length_formula_text text,
+    width_formula text,
+    width_formula_text text,
+    height_formula text,
+    height_formula_text text,
+    weight_formula text,
+    weight_formula_text text,
     usage_formula text,
     usage_formula_text text,
     calculation_unit_code varchar(80),
@@ -309,6 +317,14 @@ ALTER TABLE IF EXISTS pc_formula_usage_rule
     ADD COLUMN IF NOT EXISTS condition_key varchar(300),
     ADD COLUMN IF NOT EXISTS usage_mode varchar(40) NOT NULL DEFAULT 'FIXED',
     ADD COLUMN IF NOT EXISTS fixed_usage_qty numeric(18,6),
+    ADD COLUMN IF NOT EXISTS length_formula text,
+    ADD COLUMN IF NOT EXISTS length_formula_text text,
+    ADD COLUMN IF NOT EXISTS width_formula text,
+    ADD COLUMN IF NOT EXISTS width_formula_text text,
+    ADD COLUMN IF NOT EXISTS height_formula text,
+    ADD COLUMN IF NOT EXISTS height_formula_text text,
+    ADD COLUMN IF NOT EXISTS weight_formula text,
+    ADD COLUMN IF NOT EXISTS weight_formula_text text,
     ADD COLUMN IF NOT EXISTS usage_formula text,
     ADD COLUMN IF NOT EXISTS usage_formula_text text,
     ADD COLUMN IF NOT EXISTS calculation_unit_code varchar(80),
@@ -337,6 +353,14 @@ COMMENT ON COLUMN pc_formula_usage_rule.condition_expression IS '内部条件表
 COMMENT ON COLUMN pc_formula_usage_rule.condition_text IS '条件展示文本，如 面料 = XLF241801';
 COMMENT ON COLUMN pc_formula_usage_rule.condition_key IS '条件唯一键，默认 DEFAULT 或 OPTION:{option}:{value}';
 COMMENT ON COLUMN pc_formula_usage_rule.usage_mode IS '用量方式：FIXED、FORMULA';
+COMMENT ON COLUMN pc_formula_usage_rule.length_formula IS '长度公式内部表达式';
+COMMENT ON COLUMN pc_formula_usage_rule.length_formula_text IS '长度公式展示文本';
+COMMENT ON COLUMN pc_formula_usage_rule.width_formula IS '宽度公式内部表达式';
+COMMENT ON COLUMN pc_formula_usage_rule.width_formula_text IS '宽度公式展示文本';
+COMMENT ON COLUMN pc_formula_usage_rule.height_formula IS '高度或厚度公式内部表达式';
+COMMENT ON COLUMN pc_formula_usage_rule.height_formula_text IS '高度或厚度公式展示文本';
+COMMENT ON COLUMN pc_formula_usage_rule.weight_formula IS '重量公式内部表达式';
+COMMENT ON COLUMN pc_formula_usage_rule.weight_formula_text IS '重量公式展示文本';
 COMMENT ON COLUMN pc_formula_usage_rule.usage_formula_text IS '用量公式展示文本，保留技术科输入口径';
 COMMENT ON COLUMN pc_formula_usage_rule.default_rule_flag IS '默认规则标记，条件未命中时使用';
 CREATE INDEX IF NOT EXISTS idx_pc_formula_usage_rule_material ON pc_formula_usage_rule (tenant_id, formula_id, formula_material_id, status) WHERE del_flag = '0';
@@ -1351,8 +1375,8 @@ WHERE parent_id IN (
 
 INSERT INTO sys_menu (menu_id, tenant_id, parent_id, menu_name, i18n_key, order_num, path, component, query_param, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, update_by, update_time, remark)
 VALUES
-    (24200, 1, 0, 'Basic Information', 'productCenter.menu.masterData', 30, 'product-master', NULL, NULL, '1', '0', 'M', '1', '1', NULL, 'product', 'system', now(), NULL, NULL, '产品能力-基础信息'),
-    (24300, 1, 0, 'Formula Management', 'productCenter.menu.formulaRoot', 31, 'product-formula', NULL, NULL, '1', '0', 'M', '1', '1', NULL, 'tree-table', 'system', now(), NULL, NULL, '产品能力-配方管理')
+    (24200, 1, 0, 'Basic Information', 'productCenter.menu.masterData', 30, 'product-master', NULL, NULL, '1', '0', 'M', '1', '1', NULL, 'pc-master', 'system', now(), NULL, NULL, '产品能力-基础信息'),
+    (24300, 1, 0, 'Formula Management', 'productCenter.menu.formulaRoot', 31, 'product-formula', NULL, NULL, '1', '0', 'M', '1', '1', NULL, 'pc-formula', 'system', now(), NULL, NULL, '产品能力-配方管理')
 ON CONFLICT (menu_id) DO UPDATE
 SET tenant_id = EXCLUDED.tenant_id,
     parent_id = EXCLUDED.parent_id,
@@ -1375,21 +1399,21 @@ SET tenant_id = EXCLUDED.tenant_id,
 
 INSERT INTO sys_menu (menu_id, tenant_id, parent_id, menu_name, i18n_key, order_num, path, component, query_param, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, update_by, update_time, remark)
 VALUES
-    (24301, 1, 24300, 'Formula Archives', 'productCenter.menu.formulas', 1, 'formulas', 'product-formula/formulas', NULL, '1', '0', 'C', '1', '1', 'product:formula:list', 'list', 'system', now(), NULL, NULL, '配方档案'),
-    (24302, 1, 24300, 'Formula Reviews', 'productCenter.menu.formulaReviews', 5, 'reviews', 'product-formula/reviews', NULL, '1', '0', 'C', '1', '1', 'product:formula:review', 'audit', 'system', now(), NULL, NULL, '配方审核'),
-    (24303, 1, 24300, 'Formula Materials', 'productCenter.menu.formulaMaterials', 2, 'formulas/:id/materials', 'product-formula/formulas/materials', NULL, '1', '0', 'C', '0', '1', 'product:formula:setup', 'inventory', 'system', now(), NULL, NULL, '配方原料，隐藏功能菜单'),
-    (24304, 1, 24300, 'Formula Options', 'productCenter.menu.formulaOptions', 3, 'formulas/:id/options', 'product-formula/formulas/options', NULL, '1', '0', 'C', '0', '1', 'product:formula:setup', 'tree-table', 'system', now(), NULL, NULL, '配方选项，隐藏功能菜单'),
-    (24305, 1, 24300, 'Formula Simulation', 'productCenter.menu.formulaSimulation', 4, 'formulas/:id/simulation', 'product-formula/formulas/simulation', NULL, '1', '0', 'C', '0', '1', 'product:formula:setup', 'experiment', 'system', now(), NULL, NULL, '配方模拟，隐藏功能菜单'),
-    (24212, 1, 24200, 'Product Categories', 'productCenter.menu.categories', 1, 'categories', 'product-center/base', NULL, '1', '0', 'C', '1', '1', 'product:base:list', 'tree-table', 'system', now(), NULL, NULL, '产品分类'),
-    (24213, 1, 24200, 'Base Dictionaries', 'productCenter.menu.productDicts', 2, 'product-dicts', 'product-center/product-dicts', NULL, '1', '0', 'C', '1', '1', 'product:dict:list', 'dict', 'system', now(), NULL, NULL, '基础字典'),
-    (24206, 1, 24200, 'Units', 'productCenter.menu.units', 3, 'units', 'product-center/base', NULL, '1', '0', 'C', '1', '1', 'product:unit:list', 'unit', 'system', now(), NULL, NULL, '单位管理'),
-    (24209, 1, 24200, 'Manufacturers', 'productCenter.menu.manufacturers', 4, 'manufacturers', 'product-center/base', NULL, '1', '0', 'C', '1', '1', 'product:manufacturer:list', 'company', 'system', now(), NULL, NULL, '厂家管理'),
-    (24207, 1, 24200, 'Material Types', 'productCenter.menu.materialTypes', 5, 'material-types', 'product-center/material-types', NULL, '1', '0', 'C', '1', '1', 'product:material-type:list', 'tree-table', 'system', now(), NULL, NULL, '物料类型'),
-    (24204, 1, 24200, 'Material Attributes', 'productCenter.menu.baseAttributes', 6, 'base-attributes', 'product-center/base', NULL, '1', '0', 'C', '1', '1', 'product:base-attribute:list', 'dict', 'system', now(), NULL, NULL, '物料属性'),
-    (24202, 1, 24200, 'Materials', 'productCenter.menu.materials', 7, 'materials', 'product-center/base', NULL, '1', '0', 'C', '1', '1', 'product:base:list', 'inventory', 'system', now(), NULL, NULL, '物料管理'),
-    (24208, 1, 24200, 'Material Attribute Values', 'productCenter.menu.materialAttributes', 89, 'material-attributes', 'product-center/base', NULL, '1', '0', 'C', '0', '1', 'product:material-attribute:list', 'list', 'system', now(), NULL, NULL, '物料属性值，从物料管理抽屉同步维护'),
-    (24205, 1, 24200, 'Media Assets', 'productCenter.menu.mediaAssets', 94, 'media-assets', 'product-center/assets', NULL, '1', '0', 'C', '0', '1', 'product:asset:list', 'upload', 'system', now(), NULL, NULL, '资料资产'),
-    (24210, 1, 24200, 'Media Bindings', 'productCenter.menu.mediaBindings', 94, 'media-bindings', 'product-center/assets', NULL, '1', '0', 'C', '0', '1', 'product:asset:list', 'link', 'system', now(), NULL, NULL, '资料绑定，附件关联台账，默认不在基础资料一级菜单展示')
+    (24301, 1, 24300, 'Formula Archives', 'productCenter.menu.formulas', 1, 'formulas', 'product-formula/formulas', NULL, '1', '0', 'C', '1', '1', 'product:formula:list', 'pc-formula-archive', 'system', now(), NULL, NULL, '配方档案'),
+    (24302, 1, 24300, 'Formula Reviews', 'productCenter.menu.formulaReviews', 5, 'reviews', 'product-formula/reviews', NULL, '1', '0', 'C', '1', '1', 'product:formula:review', 'pc-formula-review', 'system', now(), NULL, NULL, '配方审核'),
+    (24303, 1, 24300, 'Formula Materials', 'productCenter.menu.formulaMaterials', 2, 'formulas/:id/materials', 'product-formula/formulas/materials', NULL, '1', '0', 'C', '1', '1', 'product:formula:setup', 'pc-formula-material', 'system', now(), NULL, NULL, '配方原料'),
+    (24304, 1, 24300, 'Formula Options', 'productCenter.menu.formulaOptions', 3, 'formulas/:id/options', 'product-formula/formulas/options', NULL, '1', '0', 'C', '1', '1', 'product:formula:setup', 'pc-formula-option', 'system', now(), NULL, NULL, '配方选项'),
+    (24305, 1, 24300, 'Formula Simulation', 'productCenter.menu.formulaSimulation', 4, 'formulas/:id/simulation', 'product-formula/formulas/simulation', NULL, '1', '0', 'C', '1', '1', 'product:formula:setup', 'pc-formula-simulation', 'system', now(), NULL, NULL, '配方模拟'),
+    (24212, 1, 24200, 'Product Categories', 'productCenter.menu.categories', 1, 'categories', 'product-center/base', NULL, '1', '0', 'C', '1', '1', 'product:base:list', 'pc-category', 'system', now(), NULL, NULL, '产品分类'),
+    (24213, 1, 24200, 'Base Dictionaries', 'productCenter.menu.productDicts', 2, 'product-dicts', 'product-center/product-dicts', NULL, '1', '0', 'C', '1', '1', 'product:dict:list', 'pc-dict', 'system', now(), NULL, NULL, '基础字典'),
+    (24206, 1, 24200, 'Units', 'productCenter.menu.units', 3, 'units', 'product-center/base', NULL, '1', '0', 'C', '1', '1', 'product:unit:list', 'pc-unit', 'system', now(), NULL, NULL, '单位管理'),
+    (24209, 1, 24200, 'Manufacturers', 'productCenter.menu.manufacturers', 4, 'manufacturers', 'product-center/base', NULL, '1', '0', 'C', '1', '1', 'product:manufacturer:list', 'pc-manufacturer', 'system', now(), NULL, NULL, '厂家管理'),
+    (24207, 1, 24200, 'Material Types', 'productCenter.menu.materialTypes', 5, 'material-types', 'product-center/material-types', NULL, '1', '0', 'C', '1', '1', 'product:material-type:list', 'pc-material-type', 'system', now(), NULL, NULL, '物料类型'),
+    (24204, 1, 24200, 'Material Attributes', 'productCenter.menu.baseAttributes', 6, 'base-attributes', 'product-center/base', NULL, '1', '0', 'C', '1', '1', 'product:base-attribute:list', 'pc-attribute', 'system', now(), NULL, NULL, '物料属性'),
+    (24202, 1, 24200, 'Materials', 'productCenter.menu.materials', 7, 'materials', 'product-center/base', NULL, '1', '0', 'C', '1', '1', 'product:base:list', 'pc-material', 'system', now(), NULL, NULL, '物料管理'),
+    (24208, 1, 24200, 'Material Attribute Values', 'productCenter.menu.materialAttributes', 89, 'material-attributes', 'product-center/base', NULL, '1', '0', 'C', '0', '1', 'product:material-attribute:list', 'pc-attribute', 'system', now(), NULL, NULL, '物料属性值，从物料管理抽屉同步维护'),
+    (24205, 1, 24200, 'Media Assets', 'productCenter.menu.mediaAssets', 94, 'media-assets', 'product-center/assets', NULL, '1', '0', 'C', '0', '1', 'product:asset:list', 'pc-media', 'system', now(), NULL, NULL, '资料资产'),
+    (24210, 1, 24200, 'Media Bindings', 'productCenter.menu.mediaBindings', 94, 'media-bindings', 'product-center/assets', NULL, '1', '0', 'C', '0', '1', 'product:asset:list', 'pc-media-link', 'system', now(), NULL, NULL, '资料绑定，附件关联台账，默认不在基础资料一级菜单展示')
 ON CONFLICT (menu_id) DO UPDATE
 SET tenant_id = EXCLUDED.tenant_id,
     parent_id = EXCLUDED.parent_id,

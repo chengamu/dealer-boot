@@ -38,5 +38,10 @@
             <groupId>com.bocoo</groupId>
             <artifactId>bocoo-common-log</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.bocoo</groupId>
+            <artifactId>bocoo-modules-system</artifactId>
+            <version>${revision}</version>
+        </dependency>
     </dependencies>
 </project>

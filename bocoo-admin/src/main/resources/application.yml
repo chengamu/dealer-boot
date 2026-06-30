@@ -49,7 +49,10 @@ bocoo:
     default-model: ${BOCOO_AI_DEFAULT_MODEL:deepseek-v4-flash}
     page-agent-base-url: ${BOCOO_AI_PAGE_AGENT_BASE_URL:/ai-runtime/page-agent}
     security:
+      # AI 敏感密钥加密主密钥。只从环境变量注入，不在仓库配置明文值。
+      # 用于加密服务密钥、Provider API Key 等数据库密文。
       secret-encryption-key: ${BOCOO_AI_SECRET_ENCRYPTION_KEY:}
+      # Page Agent 短期 channel token 签名密钥。只从环境变量注入。
       channel-token-secret: ${BOCOO_AI_CHANNEL_TOKEN_SECRET:}
       channel-token-ttl-seconds: ${BOCOO_AI_CHANNEL_TOKEN_TTL_SECONDS:900}
       service-signature-ttl-seconds: ${BOCOO_AI_SERVICE_SIGNATURE_TTL_SECONDS:300}

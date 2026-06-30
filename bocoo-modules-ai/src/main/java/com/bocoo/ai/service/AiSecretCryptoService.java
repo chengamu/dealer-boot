@@ -38,7 +38,7 @@ public class AiSecretCryptoService {
 
     public String encrypt(String plaintext) {
         if (plaintext == null || plaintext.isBlank()) {
-            throw new ServiceException("AI secret cannot be blank");
+            throw ServiceException.ofMessageKey("ai.secret.blank");
         }
         try {
             byte[] iv = new byte[12];
@@ -48,7 +48,7 @@ public class AiSecretCryptoService {
             byte[] ciphertext = cipher.doFinal(plaintext.getBytes(StandardCharsets.UTF_8));
             return "v1:" + BASE64_ENCODER.encodeToString(iv) + ":" + BASE64_ENCODER.encodeToString(ciphertext);
         } catch (Exception e) {
-            throw new ServiceException("Failed to encrypt AI secret");
+            throw ServiceException.ofMessageKey("ai.secret.encrypt.failed");
         }
     }
 
@@ -56,7 +56,7 @@ public class AiSecretCryptoService {
         try {
             String[] parts = value == null ? new String[0] : value.split(":");
             if (parts.length != 3 || !"v1".equals(parts[0])) {
-                throw new ServiceException("Invalid AI secret ciphertext");
+                throw ServiceException.ofMessageKey("ai.secret.ciphertext.invalid");
             }
             Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
             cipher.init(Cipher.DECRYPT_MODE, key(), new GCMParameterSpec(128, BASE64_DECODER.decode(parts[1])));
@@ -64,7 +64,7 @@ public class AiSecretCryptoService {
         } catch (ServiceException e) {
             throw e;
         } catch (Exception e) {
-            throw new ServiceException("Failed to decrypt AI secret");
+            throw ServiceException.ofMessageKey("ai.secret.decrypt.failed");
         }
     }
 
@@ -73,20 +73,20 @@ public class AiSecretCryptoService {
             byte[] digest = MessageDigest.getInstance("SHA-256").digest(secret.getBytes(StandardCharsets.UTF_8));
             return HexFormat.of().formatHex(digest).substring(0, 16);
         } catch (Exception e) {
-            throw new ServiceException("Failed to fingerprint AI secret");
+            throw ServiceException.ofMessageKey("ai.secret.fingerprint.failed");
         }
     }
 
     private SecretKeySpec key() {
         String raw = properties.getSecurity().getSecretEncryptionKey();
         if (raw == null || raw.isBlank()) {
-            throw new ServiceException("AI secret encryption key is not configured");
+            throw ServiceException.ofMessageKey("ai.secret.encryptionKey.missing");
         }
         try {
             byte[] digest = MessageDigest.getInstance("SHA-256").digest(raw.getBytes(StandardCharsets.UTF_8));
             return new SecretKeySpec(digest, "AES");
         } catch (Exception e) {
-            throw new ServiceException("Invalid AI secret encryption key");
+            throw ServiceException.ofMessageKey("ai.secret.encryptionKey.invalid");
         }
     }
 }

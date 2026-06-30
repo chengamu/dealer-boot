@@ -36,3 +36,347 @@
 2026-06-29 06:34:18 [http-nio-8081-exec-5] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /ai/admin/audit-summaries],耗时:[5]毫秒
 2026-06-29 06:34:19 [http-nio-8081-exec-4] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /ai/admin/usage-ledgers],参数类型[param],参数:[{"limit":["200"]}]
 2026-06-29 06:34:19 [http-nio-8081-exec-4] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /ai/admin/usage-ledgers],耗时:[4]毫秒
+2026-06-29 06:45:19 [http-nio-8081-exec-9] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /getInfo],无参数
+2026-06-29 06:45:19 [http-nio-8081-exec-9] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /getInfo],耗时:[15]毫秒
+2026-06-29 06:45:19 [http-nio-8081-exec-10] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /getRouters],无参数
+2026-06-29 06:45:19 [http-nio-8081-exec-10] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /getRouters],耗时:[6]毫秒
+2026-06-29 06:45:19 [http-nio-8081-exec-1] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /system/notice/my/unread-count],无参数
+2026-06-29 06:45:19 [http-nio-8081-exec-6] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /ai/bootstrap],无参数
+2026-06-29 06:45:19 [http-nio-8081-exec-8] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /product-capability/materials/options],参数类型[param],参数:[{"status":["ENABLED"],"pageNum":["1"],"pageSize":["1000"]}]
+2026-06-29 06:45:19 [http-nio-8081-exec-3] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /product-capability/units/options],参数类型[param],参数:[{"status":["ENABLED"],"pageNum":["1"],"pageSize":["500"]}]
+2026-06-29 06:45:19 [http-nio-8081-exec-2] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /product-capability/material-type-groups/options],参数类型[param],参数:[{"status":["ENABLED"],"pageNum":["1"],"pageSize":["500"]}]
+2026-06-29 06:45:19 [http-nio-8081-exec-7] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /product-formula/formulas/1/materials],无参数
+2026-06-29 06:45:19 [http-nio-8081-exec-1] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /system/notice/my/unread-count],耗时:[6]毫秒
+2026-06-29 06:45:19 [http-nio-8081-exec-6] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /ai/bootstrap],耗时:[8]毫秒
+2026-06-29 06:45:19 [http-nio-8081-exec-5] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /product-capability/material-types/options],参数类型[param],参数:[{"status":["ENABLED"],"pageNum":["1"],"pageSize":["500"]}]
+2026-06-29 06:45:19 [http-nio-8081-exec-2] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /product-capability/material-type-groups/options],耗时:[19]毫秒
+2026-06-29 06:45:19 [http-nio-8081-exec-3] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /product-capability/units/options],耗时:[22]毫秒
+2026-06-29 06:45:19 [http-nio-8081-exec-5] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /product-capability/material-types/options],耗时:[10]毫秒
+2026-06-29 06:45:19 [http-nio-8081-exec-7] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /product-formula/formulas/1/materials],耗时:[31]毫秒
+2026-06-29 06:45:19 [http-nio-8081-exec-8] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /product-capability/materials/options],耗时:[46]毫秒
+2026-06-29 06:53:09 [http-nio-8081-exec-4] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /getInfo],无参数
+2026-06-29 06:53:09 [http-nio-8081-exec-4] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /getInfo],耗时:[17]毫秒
+2026-06-29 06:53:09 [http-nio-8081-exec-9] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /getRouters],无参数
+2026-06-29 06:53:09 [http-nio-8081-exec-9] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /getRouters],耗时:[16]毫秒
+2026-06-29 06:53:09 [http-nio-8081-exec-10] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /getInfo],无参数
+2026-06-29 06:53:09 [http-nio-8081-exec-10] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /getInfo],耗时:[8]毫秒
+2026-06-29 06:53:09 [http-nio-8081-exec-1] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /getRouters],无参数
+2026-06-29 06:53:09 [http-nio-8081-exec-1] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /getRouters],耗时:[6]毫秒
+2026-06-29 06:53:09 [http-nio-8081-exec-6] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /system/notice/my/unread-count],无参数
+2026-06-29 06:53:09 [http-nio-8081-exec-7] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /product-formula/formulas/1/materials],无参数
+2026-06-29 06:53:09 [http-nio-8081-exec-3] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /product-capability/material-types/options],参数类型[param],参数:[{"status":["ENABLED"],"pageNum":["1"],"pageSize":["500"]}]
+2026-06-29 06:53:09 [http-nio-8081-exec-2] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /product-capability/material-type-groups/options],参数类型[param],参数:[{"status":["ENABLED"],"pageNum":["1"],"pageSize":["500"]}]
+2026-06-29 06:53:09 [http-nio-8081-exec-8] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /product-capability/units/options],参数类型[param],参数:[{"status":["ENABLED"],"pageNum":["1"],"pageSize":["500"]}]
+2026-06-29 06:53:09 [http-nio-8081-exec-5] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /product-capability/materials/options],参数类型[param],参数:[{"status":["ENABLED"],"pageNum":["1"],"pageSize":["1000"]}]
+2026-06-29 06:53:09 [http-nio-8081-exec-2] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /product-capability/material-type-groups/options],耗时:[6]毫秒
+2026-06-29 06:53:09 [http-nio-8081-exec-3] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /product-capability/material-types/options],耗时:[23]毫秒
+2026-06-29 06:53:09 [http-nio-8081-exec-6] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /system/notice/my/unread-count],耗时:[30]毫秒
+2026-06-29 06:53:09 [http-nio-8081-exec-8] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /product-capability/units/options],耗时:[32]毫秒
+2026-06-29 06:53:09 [http-nio-8081-exec-4] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /ai/bootstrap],无参数
+2026-06-29 06:53:09 [http-nio-8081-exec-5] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /product-capability/materials/options],耗时:[47]毫秒
+2026-06-29 06:53:09 [http-nio-8081-exec-4] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /ai/bootstrap],耗时:[13]毫秒
+2026-06-29 06:53:09 [http-nio-8081-exec-7] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /product-formula/formulas/1/materials],耗时:[65]毫秒
+2026-06-29 06:53:09 [http-nio-8081-exec-1] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /ai/bootstrap],无参数
+2026-06-29 06:53:09 [http-nio-8081-exec-9] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /system/notice/my/unread-count],无参数
+2026-06-29 06:53:09 [http-nio-8081-exec-10] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /ai/admin/usage-ledgers],参数类型[param],参数:[{"limit":["200"]}]
+2026-06-29 06:53:09 [http-nio-8081-exec-10] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /ai/admin/usage-ledgers],耗时:[5]毫秒
+2026-06-29 06:53:09 [http-nio-8081-exec-9] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /system/notice/my/unread-count],耗时:[10]毫秒
+2026-06-29 06:53:09 [http-nio-8081-exec-1] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /ai/bootstrap],耗时:[10]毫秒
+2026-06-29 06:53:09 [http-nio-8081-exec-2] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /getInfo],无参数
+2026-06-29 06:53:09 [http-nio-8081-exec-2] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /getInfo],耗时:[4]毫秒
+2026-06-29 06:53:09 [http-nio-8081-exec-3] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /getRouters],无参数
+2026-06-29 06:53:09 [http-nio-8081-exec-3] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /getRouters],耗时:[4]毫秒
+2026-06-29 06:53:09 [http-nio-8081-exec-6] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /system/notice/my/unread-count],无参数
+2026-06-29 06:53:09 [http-nio-8081-exec-8] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /ai/bootstrap],无参数
+2026-06-29 06:53:09 [http-nio-8081-exec-6] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /system/notice/my/unread-count],耗时:[5]毫秒
+2026-06-29 06:53:09 [http-nio-8081-exec-8] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /ai/bootstrap],耗时:[5]毫秒
+2026-06-29 07:37:10 [http-nio-8081-exec-5] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /getInfo],无参数
+2026-06-29 07:37:10 [http-nio-8081-exec-5] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /getInfo],耗时:[12]毫秒
+2026-06-29 07:37:10 [http-nio-8081-exec-4] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /getRouters],无参数
+2026-06-29 07:37:10 [http-nio-8081-exec-4] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /getRouters],耗时:[7]毫秒
+2026-06-29 07:37:10 [http-nio-8081-exec-7] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /system/notice/my/unread-count],无参数
+2026-06-29 07:37:10 [http-nio-8081-exec-10] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /product-capability/material-type-groups/options],参数类型[param],参数:[{"status":["ENABLED"],"pageNum":["1"],"pageSize":["500"]}]
+2026-06-29 07:37:10 [http-nio-8081-exec-1] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /product-capability/material-types/options],参数类型[param],参数:[{"status":["ENABLED"],"pageNum":["1"],"pageSize":["500"]}]
+2026-06-29 07:37:10 [http-nio-8081-exec-3] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /product-formula/formulas/1/materials],无参数
+2026-06-29 07:37:10 [http-nio-8081-exec-9] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /product-capability/units/options],参数类型[param],参数:[{"status":["ENABLED"],"pageNum":["1"],"pageSize":["500"]}]
+2026-06-29 07:37:10 [http-nio-8081-exec-2] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /product-capability/materials/options],参数类型[param],参数:[{"status":["ENABLED"],"pageNum":["1"],"pageSize":["1000"]}]
+2026-06-29 07:37:10 [http-nio-8081-exec-7] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /system/notice/my/unread-count],耗时:[24]毫秒
+2026-06-29 07:37:10 [http-nio-8081-exec-10] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /product-capability/material-type-groups/options],耗时:[20]毫秒
+2026-06-29 07:37:10 [http-nio-8081-exec-9] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /product-capability/units/options],耗时:[23]毫秒
+2026-06-29 07:37:10 [http-nio-8081-exec-1] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /product-capability/material-types/options],耗时:[27]毫秒
+2026-06-29 07:37:10 [http-nio-8081-exec-6] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /ai/bootstrap],无参数
+2026-06-29 07:37:10 [http-nio-8081-exec-6] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /ai/bootstrap],耗时:[11]毫秒
+2026-06-29 07:37:10 [http-nio-8081-exec-2] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /product-capability/materials/options],耗时:[42]毫秒
+2026-06-29 07:37:10 [http-nio-8081-exec-3] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /product-formula/formulas/1/materials],耗时:[42]毫秒
+2026-06-29 07:37:10 [http-nio-8081-exec-8] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /getInfo],无参数
+2026-06-29 07:37:10 [http-nio-8081-exec-8] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /getInfo],耗时:[10]毫秒
+2026-06-29 07:37:10 [http-nio-8081-exec-5] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /getRouters],无参数
+2026-06-29 07:37:10 [http-nio-8081-exec-5] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /getRouters],耗时:[3]毫秒
+2026-06-29 07:37:10 [http-nio-8081-exec-7] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /ai/bootstrap],无参数
+2026-06-29 07:37:10 [http-nio-8081-exec-4] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /system/notice/my/unread-count],无参数
+2026-06-29 07:37:10 [http-nio-8081-exec-10] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /ai/admin/usage-ledgers],参数类型[param],参数:[{"limit":["200"]}]
+2026-06-29 07:37:10 [http-nio-8081-exec-10] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /ai/admin/usage-ledgers],耗时:[2]毫秒
+2026-06-29 07:37:10 [http-nio-8081-exec-4] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /system/notice/my/unread-count],耗时:[5]毫秒
+2026-06-29 07:37:10 [http-nio-8081-exec-7] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /ai/bootstrap],耗时:[5]毫秒
+2026-06-29 07:37:10 [http-nio-8081-exec-9] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /getInfo],无参数
+2026-06-29 07:37:10 [http-nio-8081-exec-9] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /getInfo],耗时:[5]毫秒
+2026-06-29 07:37:10 [http-nio-8081-exec-1] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /getRouters],无参数
+2026-06-29 07:37:10 [http-nio-8081-exec-1] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /getRouters],耗时:[5]毫秒
+2026-06-29 07:37:10 [http-nio-8081-exec-2] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /ai/bootstrap],无参数
+2026-06-29 07:37:10 [http-nio-8081-exec-6] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /system/notice/my/unread-count],无参数
+2026-06-29 07:37:10 [http-nio-8081-exec-6] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /system/notice/my/unread-count],耗时:[7]毫秒
+2026-06-29 07:37:10 [http-nio-8081-exec-2] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /ai/bootstrap],耗时:[8]毫秒
+2026-06-29 08:29:13 [http-nio-8081-exec-3] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /ai/admin/usage-ledgers/list],参数类型[param],参数:[{"limit":["200"]}]
+2026-06-29 08:29:13 [http-nio-8081-exec-3] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /ai/admin/usage-ledgers/list],耗时:[4]毫秒
+2026-06-29 08:30:02 [http-nio-8081-exec-8] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /getInfo],无参数
+2026-06-29 08:30:02 [http-nio-8081-exec-8] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /getInfo],耗时:[11]毫秒
+2026-06-29 08:30:02 [http-nio-8081-exec-5] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /getRouters],无参数
+2026-06-29 08:30:02 [http-nio-8081-exec-5] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /getRouters],耗时:[3]毫秒
+2026-06-29 08:30:02 [http-nio-8081-exec-10] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /system/notice/my/unread-count],无参数
+2026-06-29 08:30:02 [http-nio-8081-exec-1] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /ai/bootstrap],无参数
+2026-06-29 08:30:02 [http-nio-8081-exec-6] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /product-formula/formulas/2070153961905676289/materials],无参数
+2026-06-29 08:30:02 [http-nio-8081-exec-7] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /product-capability/material-types/options],参数类型[param],参数:[{"status":["ENABLED"],"pageNum":["1"],"pageSize":["500"]}]
+2026-06-29 08:30:02 [http-nio-8081-exec-9] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /product-capability/units/options],参数类型[param],参数:[{"status":["ENABLED"],"pageNum":["1"],"pageSize":["500"]}]
+2026-06-29 08:30:02 [http-nio-8081-exec-4] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /product-capability/materials/options],参数类型[param],参数:[{"status":["ENABLED"],"pageNum":["1"],"pageSize":["1000"]}]
+2026-06-29 08:30:02 [http-nio-8081-exec-9] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /product-capability/units/options],耗时:[4]毫秒
+2026-06-29 08:30:02 [http-nio-8081-exec-7] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /product-capability/material-types/options],耗时:[6]毫秒
+2026-06-29 08:30:02 [http-nio-8081-exec-10] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /system/notice/my/unread-count],耗时:[8]毫秒
+2026-06-29 08:30:02 [http-nio-8081-exec-1] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /ai/bootstrap],耗时:[9]毫秒
+2026-06-29 08:30:02 [http-nio-8081-exec-2] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /product-capability/material-type-groups/options],参数类型[param],参数:[{"status":["ENABLED"],"pageNum":["1"],"pageSize":["500"]}]
+2026-06-29 08:30:02 [http-nio-8081-exec-2] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /product-capability/material-type-groups/options],耗时:[4]毫秒
+2026-06-29 08:30:02 [http-nio-8081-exec-4] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /product-capability/materials/options],耗时:[19]毫秒
+2026-06-29 08:30:02 [http-nio-8081-exec-6] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /product-formula/formulas/2070153961905676289/materials],耗时:[48]毫秒
+2026-06-29 08:33:48 [http-nio-8081-exec-3] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /ai/admin/usage-ledgers/list],参数类型[param],参数:[{"limit":["200"]}]
+2026-06-29 08:33:48 [http-nio-8081-exec-3] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /ai/admin/usage-ledgers/list],耗时:[3]毫秒
+2026-06-29 08:35:32 [http-nio-8081-exec-8] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /getInfo],无参数
+2026-06-29 08:35:32 [http-nio-8081-exec-8] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /getInfo],耗时:[8]毫秒
+2026-06-29 08:35:32 [http-nio-8081-exec-5] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /getRouters],无参数
+2026-06-29 08:35:32 [http-nio-8081-exec-5] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /getRouters],耗时:[4]毫秒
+2026-06-29 08:35:32 [http-nio-8081-exec-2] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /ai/bootstrap],无参数
+2026-06-29 08:35:32 [http-nio-8081-exec-9] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /system/notice/my/unread-count],无参数
+2026-06-29 08:35:32 [http-nio-8081-exec-10] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /product-capability/material-types/options],参数类型[param],参数:[{"status":["ENABLED"],"pageNum":["1"],"pageSize":["500"]}]
+2026-06-29 08:35:32 [http-nio-8081-exec-7] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /product-capability/material-type-groups/options],参数类型[param],参数:[{"status":["ENABLED"],"pageNum":["1"],"pageSize":["500"]}]
+2026-06-29 08:35:32 [http-nio-8081-exec-1] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /product-capability/units/options],参数类型[param],参数:[{"status":["ENABLED"],"pageNum":["1"],"pageSize":["500"]}]
+2026-06-29 08:35:32 [http-nio-8081-exec-4] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /product-capability/materials/options],参数类型[param],参数:[{"status":["ENABLED"],"pageNum":["1"],"pageSize":["1000"]}]
+2026-06-29 08:35:32 [http-nio-8081-exec-1] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /product-capability/units/options],耗时:[3]毫秒
+2026-06-29 08:35:32 [http-nio-8081-exec-7] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /product-capability/material-type-groups/options],耗时:[4]毫秒
+2026-06-29 08:35:32 [http-nio-8081-exec-10] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /product-capability/material-types/options],耗时:[5]毫秒
+2026-06-29 08:35:32 [http-nio-8081-exec-2] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /ai/bootstrap],耗时:[6]毫秒
+2026-06-29 08:35:32 [http-nio-8081-exec-9] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /system/notice/my/unread-count],耗时:[8]毫秒
+2026-06-29 08:35:32 [http-nio-8081-exec-6] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /product-formula/formulas/2070153961905676289/materials],无参数
+2026-06-29 08:35:32 [http-nio-8081-exec-4] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /product-capability/materials/options],耗时:[17]毫秒
+2026-06-29 08:35:32 [http-nio-8081-exec-6] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /product-formula/formulas/2070153961905676289/materials],耗时:[29]毫秒
+2026-06-29 08:39:43 [http-nio-8081-exec-3] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /ai/admin/usage-ledgers/list],参数类型[param],参数:[{"pageNum":["1"],"pageSize":["10"]}]
+2026-06-29 08:39:43 [http-nio-8081-exec-3] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /ai/admin/usage-ledgers/list],耗时:[3]毫秒
+2026-06-29 08:49:40 [http-nio-8081-exec-8] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /getInfo],无参数
+2026-06-29 08:49:40 [http-nio-8081-exec-8] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /getInfo],耗时:[12]毫秒
+2026-06-29 08:49:40 [http-nio-8081-exec-5] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /getRouters],无参数
+2026-06-29 08:49:40 [http-nio-8081-exec-5] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /getRouters],耗时:[4]毫秒
+2026-06-29 08:49:40 [http-nio-8081-exec-1] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /system/notice/my/unread-count],无参数
+2026-06-29 08:49:40 [http-nio-8081-exec-4] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /ai/bootstrap],无参数
+2026-06-29 08:49:40 [http-nio-8081-exec-9] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /product-formula/formulas/2070153961905676289/materials],无参数
+2026-06-29 08:49:40 [http-nio-8081-exec-10] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /product-capability/material-types/options],参数类型[param],参数:[{"status":["ENABLED"],"pageNum":["1"],"pageSize":["500"]}]
+2026-06-29 08:49:40 [http-nio-8081-exec-7] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /product-capability/material-type-groups/options],参数类型[param],参数:[{"status":["ENABLED"],"pageNum":["1"],"pageSize":["500"]}]
+2026-06-29 08:49:40 [http-nio-8081-exec-2] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /product-capability/materials/options],参数类型[param],参数:[{"status":["ENABLED"],"pageNum":["1"],"pageSize":["1000"]}]
+2026-06-29 08:49:40 [http-nio-8081-exec-7] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /product-capability/material-type-groups/options],耗时:[6]毫秒
+2026-06-29 08:49:40 [http-nio-8081-exec-1] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /system/notice/my/unread-count],耗时:[9]毫秒
+2026-06-29 08:49:40 [http-nio-8081-exec-10] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /product-capability/material-types/options],耗时:[7]毫秒
+2026-06-29 08:49:40 [http-nio-8081-exec-4] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /ai/bootstrap],耗时:[12]毫秒
+2026-06-29 08:49:40 [http-nio-8081-exec-1] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /product-capability/units/options],参数类型[param],参数:[{"status":["ENABLED"],"pageNum":["1"],"pageSize":["500"]}]
+2026-06-29 08:49:40 [http-nio-8081-exec-1] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /product-capability/units/options],耗时:[3]毫秒
+2026-06-29 08:49:40 [http-nio-8081-exec-2] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /product-capability/materials/options],耗时:[20]毫秒
+2026-06-29 08:49:40 [http-nio-8081-exec-9] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /product-formula/formulas/2070153961905676289/materials],耗时:[28]毫秒
+2026-06-29 08:49:41 [http-nio-8081-exec-8] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /getInfo],无参数
+2026-06-29 08:49:41 [http-nio-8081-exec-3] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /getInfo],无参数
+2026-06-29 08:49:41 [http-nio-8081-exec-8] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /getInfo],耗时:[8]毫秒
+2026-06-29 08:49:41 [http-nio-8081-exec-3] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /getInfo],耗时:[8]毫秒
+2026-06-29 08:49:41 [http-nio-8081-exec-5] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /getRouters],无参数
+2026-06-29 08:49:41 [http-nio-8081-exec-5] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /getRouters],耗时:[5]毫秒
+2026-06-29 08:49:41 [http-nio-8081-exec-7] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /getRouters],无参数
+2026-06-29 08:49:41 [http-nio-8081-exec-7] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /getRouters],耗时:[8]毫秒
+2026-06-29 08:49:41 [http-nio-8081-exec-10] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /system/notice/my/unread-count],无参数
+2026-06-29 08:49:41 [http-nio-8081-exec-6] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /ai/bootstrap],无参数
+2026-06-29 08:49:41 [http-nio-8081-exec-2] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /ai/admin/usage-ledgers/list],参数类型[param],参数:[{"pageNum":["1"],"pageSize":["10"]}]
+2026-06-29 08:49:41 [http-nio-8081-exec-4] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /system/notice/my/unread-count],无参数
+2026-06-29 08:49:41 [http-nio-8081-exec-1] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /ai/bootstrap],无参数
+2026-06-29 08:49:41 [http-nio-8081-exec-6] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /ai/bootstrap],耗时:[7]毫秒
+2026-06-29 08:49:41 [http-nio-8081-exec-2] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /ai/admin/usage-ledgers/list],耗时:[2]毫秒
+2026-06-29 08:49:41 [http-nio-8081-exec-10] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /system/notice/my/unread-count],耗时:[9]毫秒
+2026-06-29 08:49:41 [http-nio-8081-exec-1] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /ai/bootstrap],耗时:[6]毫秒
+2026-06-29 08:49:41 [http-nio-8081-exec-4] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /system/notice/my/unread-count],耗时:[7]毫秒
+2026-06-29 08:54:34 [background-preinit] INFO  o.h.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2026-06-29 08:54:34 [main] INFO  com.bocoo.BocooApplication - Starting BocooApplication using Java 17.0.19 with PID 14387 (/Users/chengmuxuan/Desktop/cmx/base-boot/bocoo-admin/target/classes started by chengmuxuan in /Users/chengmuxuan/Desktop/cmx/base-boot/bocoo-admin)
+2026-06-29 08:54:34 [main] INFO  com.bocoo.BocooApplication - The following 1 profile is active: "dev"
+2026-06-29 08:54:35 [main] INFO  c.b.c.web.i18n.JsonMessageSource - Loaded JSON i18n locales: [en_US, zh_CN]
+2026-06-29 08:54:35 [main] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8081"]
+2026-06-29 08:54:35 [main] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+2026-06-29 08:54:35 [main] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.33]
+2026-06-29 08:54:35 [main] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-06-29 08:54:35 [main] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource detect P6SPY plugin and enabled it
+2026-06-29 08:54:35 [main] INFO  com.zaxxer.hikari.HikariDataSource - master - Starting...
+2026-06-29 08:54:35 [main] INFO  com.zaxxer.hikari.pool.HikariPool - master - Added connection org.postgresql.jdbc.PgConnection@253379ec
+2026-06-29 08:54:35 [main] INFO  com.zaxxer.hikari.HikariDataSource - master - Start completed.
+2026-06-29 08:54:35 [main] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource - add a datasource named [master] success
+2026-06-29 08:54:35 [main] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource initial loaded [1] datasource,primary datasource named [master]
+2026-06-29 08:54:36 [main] INFO  c.b.common.redis.config.RedisConfig - 初始化 redis 配置
+2026-06-29 08:54:36 [main] INFO  org.redisson.Version - Redisson 3.52.0
+2026-06-29 08:54:36 [redisson-netty-1-4] INFO  o.r.connection.ConnectionsHolder - 1 connections initialized for 127.0.0.1/127.0.0.1:6379
+2026-06-29 08:54:36 [redisson-netty-1-3] INFO  o.r.connection.ConnectionsHolder - 8 connections initialized for 127.0.0.1/127.0.0.1:6379
+2026-06-29 08:54:36 [main] INFO  c.b.common.json.config.JacksonConfig - 初始化 jackson 配置
+2026-06-29 08:54:38 [main] INFO  c.b.c.w.s.ServerEndpointExporter - [34mNetty WebSocket started on port: 2831 with context path(s): '/ws' .[0m
+2026-06-29 08:54:38 [main] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8081"]
+2026-06-29 08:54:38 [main] INFO  c.b.c.core.config.ThreadPoolConfig - ====关闭后台任务任务线程池====
+2026-06-29 08:54:38 [main] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource start closing ....
+2026-06-29 08:54:38 [main] INFO  com.zaxxer.hikari.HikariDataSource - master - Shutdown initiated...
+2026-06-29 08:54:38 [main] INFO  com.zaxxer.hikari.HikariDataSource - master - Shutdown completed.
+2026-06-29 08:54:38 [main] INFO  c.b.d.d.d.DefaultDataSourceDestroyer - dynamic-datasource close the datasource named [master] success,
+2026-06-29 08:54:38 [main] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource all closed success,bye
+2026-06-29 08:55:48 [SpringApplicationShutdownHook] INFO  c.b.c.core.config.ThreadPoolConfig - ====关闭后台任务任务线程池====
+2026-06-29 08:55:48 [SpringApplicationShutdownHook] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource start closing ....
+2026-06-29 08:55:48 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - master - Shutdown initiated...
+2026-06-29 08:55:48 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - master - Shutdown completed.
+2026-06-29 08:55:48 [SpringApplicationShutdownHook] INFO  c.b.d.d.d.DefaultDataSourceDestroyer - dynamic-datasource close the datasource named [master] success,
+2026-06-29 08:55:48 [SpringApplicationShutdownHook] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource all closed success,bye
+2026-06-29 08:56:02 [background-preinit] INFO  o.h.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2026-06-29 08:56:02 [main] INFO  com.bocoo.BocooApplication - Starting BocooApplication using Java 17.0.19 with PID 15795 (/Users/chengmuxuan/Desktop/cmx/base-boot/bocoo-admin/target/classes started by chengmuxuan in /Users/chengmuxuan/Desktop/cmx/base-boot/bocoo-admin)
+2026-06-29 08:56:02 [main] INFO  com.bocoo.BocooApplication - The following 1 profile is active: "dev"
+2026-06-29 08:56:03 [main] INFO  c.b.c.web.i18n.JsonMessageSource - Loaded JSON i18n locales: [en_US, zh_CN]
+2026-06-29 08:56:04 [main] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8081"]
+2026-06-29 08:56:04 [main] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+2026-06-29 08:56:04 [main] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.33]
+2026-06-29 08:56:04 [main] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-06-29 08:56:04 [main] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource detect P6SPY plugin and enabled it
+2026-06-29 08:56:04 [main] INFO  com.zaxxer.hikari.HikariDataSource - master - Starting...
+2026-06-29 08:56:04 [main] INFO  com.zaxxer.hikari.pool.HikariPool - master - Added connection org.postgresql.jdbc.PgConnection@2a9fd482
+2026-06-29 08:56:04 [main] INFO  com.zaxxer.hikari.HikariDataSource - master - Start completed.
+2026-06-29 08:56:04 [main] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource - add a datasource named [master] success
+2026-06-29 08:56:04 [main] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource initial loaded [1] datasource,primary datasource named [master]
+2026-06-29 08:56:04 [main] INFO  c.b.common.redis.config.RedisConfig - 初始化 redis 配置
+2026-06-29 08:56:04 [main] INFO  org.redisson.Version - Redisson 3.52.0
+2026-06-29 08:56:04 [redisson-netty-1-4] INFO  o.r.connection.ConnectionsHolder - 1 connections initialized for 127.0.0.1/127.0.0.1:6379
+2026-06-29 08:56:04 [redisson-netty-1-3] INFO  o.r.connection.ConnectionsHolder - 8 connections initialized for 127.0.0.1/127.0.0.1:6379
+2026-06-29 08:56:05 [main] INFO  c.b.common.json.config.JacksonConfig - 初始化 jackson 配置
+2026-06-29 08:56:06 [main] INFO  c.b.c.w.s.ServerEndpointExporter - [34mNetty WebSocket started on port: 2831 with context path(s): '/ws' .[0m
+2026-06-29 08:56:06 [main] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8081"]
+2026-06-29 08:56:06 [main] INFO  com.bocoo.BocooApplication - Started BocooApplication in 4.269 seconds (process running for 4.407)
+2026-06-29 08:56:06 [main] INFO  c.b.s.runner.SystemApplicationRunner - 初始化OSS配置成功
+2026-06-29 08:56:07 [main] INFO  c.b.s.runner.SystemApplicationRunner - 加载参数缓存数据成功
+2026-06-29 08:56:07 [main] INFO  c.b.s.runner.SystemApplicationRunner - 加载字典缓存数据成功
+2026-06-29 08:59:23 [http-nio-8081-exec-1] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-06-29 08:59:23 [http-nio-8081-exec-1] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /ai/admin/providers/list],参数类型[param],参数:[{"pageNum":["1"],"pageSize":["10"]}]
+2026-06-29 08:59:23 [http-nio-8081-exec-1] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /ai/admin/providers/list],耗时:[60]毫秒
+2026-06-29 08:59:24 [http-nio-8081-exec-2] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /ai/admin/service-credentials/list],参数类型[param],参数:[{"pageNum":["1"],"pageSize":["10"]}]
+2026-06-29 08:59:24 [http-nio-8081-exec-2] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /ai/admin/service-credentials/list],耗时:[1]毫秒
+2026-06-29 09:01:20 [SpringApplicationShutdownHook] INFO  c.b.c.core.config.ThreadPoolConfig - ====关闭后台任务任务线程池====
+2026-06-29 09:01:21 [SpringApplicationShutdownHook] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource start closing ....
+2026-06-29 09:01:21 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - master - Shutdown initiated...
+2026-06-29 09:01:21 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - master - Shutdown completed.
+2026-06-29 09:01:21 [SpringApplicationShutdownHook] INFO  c.b.d.d.d.DefaultDataSourceDestroyer - dynamic-datasource close the datasource named [master] success,
+2026-06-29 09:01:21 [SpringApplicationShutdownHook] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource all closed success,bye
+2026-06-29 09:03:17 [background-preinit] INFO  o.h.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2026-06-29 09:03:17 [main] INFO  com.bocoo.BocooApplication - Starting BocooApplication using Java 17.0.19 with PID 20535 (/Users/chengmuxuan/Desktop/cmx/base-boot/bocoo-admin/target/classes started by chengmuxuan in /Users/chengmuxuan/Desktop/cmx/base-boot/bocoo-admin)
+2026-06-29 09:03:17 [main] INFO  com.bocoo.BocooApplication - The following 1 profile is active: "dev"
+2026-06-29 09:03:18 [main] INFO  c.b.c.web.i18n.JsonMessageSource - Loaded JSON i18n locales: [en_US, zh_CN]
+2026-06-29 09:03:18 [main] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8081"]
+2026-06-29 09:03:18 [main] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+2026-06-29 09:03:18 [main] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.33]
+2026-06-29 09:03:18 [main] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-06-29 09:03:18 [main] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource detect P6SPY plugin and enabled it
+2026-06-29 09:03:18 [main] INFO  com.zaxxer.hikari.HikariDataSource - master - Starting...
+2026-06-29 09:03:18 [main] INFO  com.zaxxer.hikari.pool.HikariPool - master - Added connection org.postgresql.jdbc.PgConnection@37806ccb
+2026-06-29 09:03:18 [main] INFO  com.zaxxer.hikari.HikariDataSource - master - Start completed.
+2026-06-29 09:03:18 [main] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource - add a datasource named [master] success
+2026-06-29 09:03:18 [main] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource initial loaded [1] datasource,primary datasource named [master]
+2026-06-29 09:03:19 [main] INFO  c.b.common.redis.config.RedisConfig - 初始化 redis 配置
+2026-06-29 09:03:19 [main] INFO  org.redisson.Version - Redisson 3.52.0
+2026-06-29 09:03:19 [redisson-netty-1-4] INFO  o.r.connection.ConnectionsHolder - 1 connections initialized for 127.0.0.1/127.0.0.1:6379
+2026-06-29 09:03:19 [redisson-netty-1-3] INFO  o.r.connection.ConnectionsHolder - 8 connections initialized for 127.0.0.1/127.0.0.1:6379
+2026-06-29 09:03:20 [main] INFO  c.b.common.json.config.JacksonConfig - 初始化 jackson 配置
+2026-06-29 09:03:21 [main] INFO  c.b.c.w.s.ServerEndpointExporter - [34mNetty WebSocket started on port: 2831 with context path(s): '/ws' .[0m
+2026-06-29 09:03:21 [main] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8081"]
+2026-06-29 09:03:21 [main] INFO  com.bocoo.BocooApplication - Started BocooApplication in 4.155 seconds (process running for 4.291)
+2026-06-29 09:03:21 [main] INFO  c.b.s.runner.SystemApplicationRunner - 初始化OSS配置成功
+2026-06-29 09:03:21 [main] INFO  c.b.s.runner.SystemApplicationRunner - 加载参数缓存数据成功
+2026-06-29 09:03:21 [main] INFO  c.b.s.runner.SystemApplicationRunner - 加载字典缓存数据成功
+2026-06-29 09:04:08 [http-nio-8081-exec-1] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-06-29 09:04:39 [SpringApplicationShutdownHook] INFO  c.b.c.core.config.ThreadPoolConfig - ====关闭后台任务任务线程池====
+2026-06-29 09:04:39 [SpringApplicationShutdownHook] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource start closing ....
+2026-06-29 09:04:39 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - master - Shutdown initiated...
+2026-06-29 09:04:39 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - master - Shutdown completed.
+2026-06-29 09:04:39 [SpringApplicationShutdownHook] INFO  c.b.d.d.d.DefaultDataSourceDestroyer - dynamic-datasource close the datasource named [master] success,
+2026-06-29 09:04:39 [SpringApplicationShutdownHook] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource all closed success,bye
+2026-06-29 09:13:34 [background-preinit] INFO  o.h.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2026-06-29 09:13:34 [main] INFO  com.bocoo.BocooApplication - Starting BocooApplication using Java 17.0.19 with PID 23170 (/Users/chengmuxuan/Desktop/cmx/base-boot/bocoo-admin/target/classes started by chengmuxuan in /Users/chengmuxuan/Desktop/cmx/base-boot/bocoo-admin)
+2026-06-29 09:13:34 [main] INFO  com.bocoo.BocooApplication - The following 1 profile is active: "dev"
+2026-06-29 09:13:35 [main] INFO  c.b.c.web.i18n.JsonMessageSource - Loaded JSON i18n locales: [en_US, zh_CN]
+2026-06-29 09:13:35 [main] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8081"]
+2026-06-29 09:13:35 [main] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+2026-06-29 09:13:35 [main] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.33]
+2026-06-29 09:13:35 [main] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-06-29 09:13:35 [main] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource detect P6SPY plugin and enabled it
+2026-06-29 09:13:35 [main] INFO  com.zaxxer.hikari.HikariDataSource - master - Starting...
+2026-06-29 09:13:35 [main] INFO  com.zaxxer.hikari.pool.HikariPool - master - Added connection org.postgresql.jdbc.PgConnection@289b7efe
+2026-06-29 09:13:35 [main] INFO  com.zaxxer.hikari.HikariDataSource - master - Start completed.
+2026-06-29 09:13:35 [main] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource - add a datasource named [master] success
+2026-06-29 09:13:35 [main] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource initial loaded [1] datasource,primary datasource named [master]
+2026-06-29 09:13:36 [main] INFO  c.b.common.redis.config.RedisConfig - 初始化 redis 配置
+2026-06-29 09:13:36 [main] INFO  org.redisson.Version - Redisson 3.52.0
+2026-06-29 09:13:36 [redisson-netty-1-5] INFO  o.r.connection.ConnectionsHolder - 1 connections initialized for 127.0.0.1/127.0.0.1:6379
+2026-06-29 09:13:36 [redisson-netty-1-3] INFO  o.r.connection.ConnectionsHolder - 8 connections initialized for 127.0.0.1/127.0.0.1:6379
+2026-06-29 09:13:36 [main] INFO  c.b.common.json.config.JacksonConfig - 初始化 jackson 配置
+2026-06-29 09:13:38 [main] INFO  c.b.c.w.s.ServerEndpointExporter - [34mNetty WebSocket started on port: 2831 with context path(s): '/ws' .[0m
+2026-06-29 09:13:38 [main] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8081"]
+2026-06-29 09:13:38 [main] INFO  c.b.c.core.config.ThreadPoolConfig - ====关闭后台任务任务线程池====
+2026-06-29 09:13:38 [main] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource start closing ....
+2026-06-29 09:13:38 [main] INFO  com.zaxxer.hikari.HikariDataSource - master - Shutdown initiated...
+2026-06-29 09:13:38 [main] INFO  com.zaxxer.hikari.HikariDataSource - master - Shutdown completed.
+2026-06-29 09:13:38 [main] INFO  c.b.d.d.d.DefaultDataSourceDestroyer - dynamic-datasource close the datasource named [master] success,
+2026-06-29 09:13:38 [main] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource all closed success,bye
+2026-06-29 09:15:12 [background-preinit] INFO  o.h.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2026-06-29 09:15:12 [main] INFO  com.bocoo.BocooApplication - Starting BocooApplication using Java 17.0.19 with PID 23837 (/Users/chengmuxuan/Desktop/cmx/base-boot/bocoo-admin/target/classes started by chengmuxuan in /Users/chengmuxuan/Desktop/cmx/base-boot/bocoo-admin)
+2026-06-29 09:15:12 [main] INFO  com.bocoo.BocooApplication - The following 1 profile is active: "dev"
+2026-06-29 09:15:13 [main] INFO  c.b.c.web.i18n.JsonMessageSource - Loaded JSON i18n locales: [en_US, zh_CN]
+2026-06-29 09:15:13 [main] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8081"]
+2026-06-29 09:15:13 [main] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+2026-06-29 09:15:13 [main] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.33]
+2026-06-29 09:15:13 [main] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-06-29 09:15:13 [main] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource detect P6SPY plugin and enabled it
+2026-06-29 09:15:13 [main] INFO  com.zaxxer.hikari.HikariDataSource - master - Starting...
+2026-06-29 09:15:13 [main] INFO  com.zaxxer.hikari.pool.HikariPool - master - Added connection org.postgresql.jdbc.PgConnection@702e21c
+2026-06-29 09:15:13 [main] INFO  com.zaxxer.hikari.HikariDataSource - master - Start completed.
+2026-06-29 09:15:13 [main] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource - add a datasource named [master] success
+2026-06-29 09:15:13 [main] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource initial loaded [1] datasource,primary datasource named [master]
+2026-06-29 09:15:14 [main] INFO  c.b.common.redis.config.RedisConfig - 初始化 redis 配置
+2026-06-29 09:15:14 [main] INFO  org.redisson.Version - Redisson 3.52.0
+2026-06-29 09:15:14 [redisson-netty-1-5] INFO  o.r.connection.ConnectionsHolder - 1 connections initialized for 127.0.0.1/127.0.0.1:6379
+2026-06-29 09:15:14 [redisson-netty-1-3] INFO  o.r.connection.ConnectionsHolder - 8 connections initialized for 127.0.0.1/127.0.0.1:6379
+2026-06-29 09:15:14 [main] INFO  c.b.common.json.config.JacksonConfig - 初始化 jackson 配置
+2026-06-29 09:15:16 [main] INFO  c.b.c.w.s.ServerEndpointExporter - [34mNetty WebSocket started on port: 2831 with context path(s): '/ws' .[0m
+2026-06-29 09:15:16 [main] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8081"]
+2026-06-29 09:15:16 [main] INFO  com.bocoo.BocooApplication - Started BocooApplication in 4.29 seconds (process running for 4.43)
+2026-06-29 09:15:16 [main] INFO  c.b.s.runner.SystemApplicationRunner - 初始化OSS配置成功
+2026-06-29 09:15:16 [main] INFO  c.b.s.runner.SystemApplicationRunner - 加载参数缓存数据成功
+2026-06-29 09:15:16 [main] INFO  c.b.s.runner.SystemApplicationRunner - 加载字典缓存数据成功
+2026-06-29 09:16:50 [http-nio-8081-exec-1] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-06-29 09:16:50 [http-nio-8081-exec-1] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /ai/admin/service-credentials/list],参数类型[param],参数:[{"pageNum":["1"],"pageSize":["10"]}]
+2026-06-29 09:16:50 [http-nio-8081-exec-1] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /ai/admin/service-credentials/list],耗时:[102]毫秒
+2026-06-29 09:16:50 [http-nio-8081-exec-2] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /ai/admin/providers/list],参数类型[param],参数:[{"pageNum":["1"],"pageSize":["10"]}]
+2026-06-29 09:16:50 [http-nio-8081-exec-2] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /ai/admin/providers/list],耗时:[17]毫秒
+2026-06-29 09:16:50 [http-nio-8081-exec-4] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /ai/admin/provider-models/list],参数类型[param],参数:[{"pageNum":["1"],"pageSize":["10"]}]
+2026-06-29 09:16:50 [http-nio-8081-exec-4] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /ai/admin/provider-models/list],耗时:[8]毫秒
+2026-06-29 09:16:50 [http-nio-8081-exec-6] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /ai/admin/user-quotas/list],参数类型[param],参数:[{"pageNum":["1"],"pageSize":["10"]}]
+2026-06-29 09:16:50 [http-nio-8081-exec-6] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /ai/admin/user-quotas/list],耗时:[6]毫秒
+2026-06-29 09:16:50 [http-nio-8081-exec-8] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /ai/admin/usage-ledgers/list],参数类型[param],参数:[{"pageNum":["1"],"pageSize":["10"]}]
+2026-06-29 09:16:50 [http-nio-8081-exec-8] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /ai/admin/usage-ledgers/list],耗时:[4]毫秒
+2026-06-29 09:16:50 [http-nio-8081-exec-10] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /ai/admin/audit-summaries/list],参数类型[param],参数:[{"pageNum":["1"],"pageSize":["10"]}]
+2026-06-29 09:16:50 [http-nio-8081-exec-10] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /ai/admin/audit-summaries/list],耗时:[5]毫秒
+2026-06-29 09:17:44 [http-nio-8081-exec-2] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /ai/admin/providers/options],无参数
+2026-06-29 09:17:44 [http-nio-8081-exec-2] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /ai/admin/providers/options],耗时:[16]毫秒
+2026-06-29 09:17:44 [http-nio-8081-exec-4] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]开始请求 => URL[GET /ai/bootstrap],无参数
+2026-06-29 09:17:44 [http-nio-8081-exec-4] INFO  c.b.c.w.i.PlusWebInvokeTimeInterceptor - [PLUS]结束请求 => URL[GET /ai/bootstrap],耗时:[164]毫秒
+2026-06-29 09:18:12 [SpringApplicationShutdownHook] INFO  c.b.c.core.config.ThreadPoolConfig - ====关闭后台任务任务线程池====
+2026-06-29 09:18:12 [SpringApplicationShutdownHook] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource start closing ....
+2026-06-29 09:18:12 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - master - Shutdown initiated...
+2026-06-29 09:18:12 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - master - Shutdown completed.
+2026-06-29 09:18:12 [SpringApplicationShutdownHook] INFO  c.b.d.d.d.DefaultDataSourceDestroyer - dynamic-datasource close the datasource named [master] success,
+2026-06-29 09:18:12 [SpringApplicationShutdownHook] INFO  c.b.d.d.DynamicRoutingDataSource - dynamic-datasource all closed success,bye

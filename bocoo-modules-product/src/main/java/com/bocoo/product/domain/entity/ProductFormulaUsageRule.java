@@ -38,6 +38,14 @@ public class ProductFormulaUsageRule extends BaseEntity {
     private String conditionKey;
     private String usageMode;
     private BigDecimal fixedUsageQty;
+    private String lengthFormula;
+    private String lengthFormulaText;
+    private String widthFormula;
+    private String widthFormulaText;
+    private String heightFormula;
+    private String heightFormulaText;
+    private String weightFormula;
+    private String weightFormulaText;
     private String usageFormula;
     private String usageFormulaText;
     private String calculationUnitCode;

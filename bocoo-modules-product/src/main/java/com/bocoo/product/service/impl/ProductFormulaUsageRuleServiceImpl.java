@@ -168,6 +168,14 @@ public class ProductFormulaUsageRuleServiceImpl extends ProductServiceSupport im
         normalizeConditionSnapshot(entity, optionMap, valueMap);
         entity.setRuleName(defaultString(trim(entity.getRuleName()), defaultRuleName(entity)));
         entity.setUsageMode(defaultString(trimUpper(entity.getUsageMode()), USAGE_FIXED));
+        entity.setLengthFormula(trim(entity.getLengthFormula()));
+        entity.setLengthFormulaText(defaultString(trim(entity.getLengthFormulaText()), entity.getLengthFormula()));
+        entity.setWidthFormula(trim(entity.getWidthFormula()));
+        entity.setWidthFormulaText(defaultString(trim(entity.getWidthFormulaText()), entity.getWidthFormula()));
+        entity.setHeightFormula(trim(entity.getHeightFormula()));
+        entity.setHeightFormulaText(defaultString(trim(entity.getHeightFormulaText()), entity.getHeightFormula()));
+        entity.setWeightFormula(trim(entity.getWeightFormula()));
+        entity.setWeightFormulaText(defaultString(trim(entity.getWeightFormulaText()), entity.getWeightFormula()));
         entity.setUsageFormula(trim(entity.getUsageFormula()));
         entity.setUsageFormulaText(defaultString(trim(entity.getUsageFormulaText()), entity.getUsageFormula()));
         entity.setCalculationUnitCode(defaultString(trim(entity.getCalculationUnitCode()), material.getCalculationUnitCode()));
@@ -259,14 +267,30 @@ public class ProductFormulaUsageRuleServiceImpl extends ProductServiceSupport im
             return "product.formula.materialUsageRuleRequired";
         }
         if (USAGE_FORMULA.equals(rule.getUsageMode())) {
-            if (StringUtils.isBlank(rule.getUsageFormula())) {
+            if (!hasAnyFormula(rule)) {
                 return "product.formula.materialUsageRuleRequired";
             }
-            if (!ProductFormulaExpressionValidator.isFormulaValid(rule.getUsageFormula())) {
+            if (!isFormulaValidIfPresent(rule.getLengthFormula())
+                || !isFormulaValidIfPresent(rule.getWidthFormula())
+                || !isFormulaValidIfPresent(rule.getHeightFormula())
+                || !isFormulaValidIfPresent(rule.getWeightFormula())
+                || !isFormulaValidIfPresent(rule.getUsageFormula())) {
                 return "product.formula.usageFormulaInvalid";
             }
         }
         return null;
+    }
+
+    private boolean hasAnyFormula(ProductFormulaUsageRule rule) {
+        return StringUtils.isNotBlank(rule.getLengthFormula())
+            || StringUtils.isNotBlank(rule.getWidthFormula())
+            || StringUtils.isNotBlank(rule.getHeightFormula())
+            || StringUtils.isNotBlank(rule.getWeightFormula())
+            || StringUtils.isNotBlank(rule.getUsageFormula());
+    }
+
+    private boolean isFormulaValidIfPresent(String formula) {
+        return StringUtils.isBlank(formula) || ProductFormulaExpressionValidator.isFormulaValid(formula);
     }
 
     private String defaultRuleName(ProductFormulaUsageRule entity) {

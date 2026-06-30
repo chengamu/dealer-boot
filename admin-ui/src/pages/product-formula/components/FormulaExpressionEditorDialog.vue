@@ -19,7 +19,7 @@
             resize="none"
             :placeholder="editorPlaceholder"
           />
-          <div v-if="target === 'usage'" class="expression-editor__templates">
+          <div v-if="isFormulaTarget" class="expression-editor__templates">
             <el-button v-for="template in formulaTemplates" :key="template.value" plain @click="useExpressionTemplate(template.value)">
               {{ template.label }}
             </el-button>
@@ -91,7 +91,7 @@ import {
   validateFormulaExpression
 } from '../utils/formulaExpression'
 
-type ExpressionTarget = 'usage' | 'condition'
+type ExpressionTarget = 'length' | 'width' | 'height' | 'weight' | 'usage' | 'condition'
 
 const props = defineProps<{
   modelValue: boolean
@@ -117,45 +117,49 @@ const editorText = computed({
   get: () => props.text,
   set: (value: string) => emit('update:text', value)
 })
-const editorTitle = computed(() => props.target === 'usage'
-  ? t('productCenter.formulaSetup.usageFormulaEditor')
+const isFormulaTarget = computed(() => props.target !== 'condition')
+const editorTitle = computed(() => isFormulaTarget.value
+  ? t('productCenter.formulaSetup.formulaSelector')
   : t('productCenter.formulaSetup.conditionExpressionEditor'))
-const editorPlaceholder = computed(() => props.target === 'usage'
+const editorPlaceholder = computed(() => isFormulaTarget.value
   ? t('productCenter.formulaSetup.usageFormulaPlaceholder')
   : t('productCenter.formulaSetup.conditionExpressionPlaceholder'))
-const editorVariables = computed(() => props.target === 'usage'
-  ? formulaVariables.filter((variable) => ['orderWidth', 'orderHeight', 'orderArea'].includes(variable.name))
+const editorVariables = computed(() => isFormulaTarget.value
+  ? formulaVariables.filter((variable) => ['orderLength', 'orderWidth', 'orderHeight', 'orderWeight', 'orderArea'].includes(variable.name))
   : formulaVariables)
-const conditionBuilderVariables = computed(() => formulaVariables.filter((variable) => ['orderWidth', 'orderHeight', 'orderArea', 'fabric', 'productType', 'optionValue'].includes(variable.name)))
-const editorOperators = computed(() => props.target === 'usage'
+const conditionBuilderVariables = computed(() => formulaVariables.filter((variable) => ['orderLength', 'orderWidth', 'orderHeight', 'orderWeight', 'orderArea', 'fabric', 'productType', 'optionValue'].includes(variable.name)))
+const editorOperators = computed(() => isFormulaTarget.value
   ? ['+', '-', '*', '/', '(', ')']
   : ['=', '!=', '>', '>=', '<', '<=', '并且', '或者', '(', ')'])
 const conditionBuilderOperators = ['=', '!=', '>', '>=', '<', '<=']
 const formulaTemplates = computed(() => [
   { label: t('productCenter.formulaSetup.templateOrderWidth'), value: '订单宽' },
+  { label: t('productCenter.formulaSetup.templateOrderHeight'), value: '订单高' },
+  { label: t('productCenter.formulaSetup.templateOrderWeight'), value: '订单重量' },
   { label: t('productCenter.formulaSetup.templateOrderArea'), value: '订单面积' },
   { label: t('productCenter.formulaSetup.templateWidthDeduct'), value: '订单宽 * 12 - 2.0' }
 ])
 const editorVariableGroups = computed(() => {
-  const orderVariables = editorVariables.value.filter((variable) => ['orderWidth', 'orderHeight', 'orderArea'].includes(variable.name))
-  const businessVariables = editorVariables.value.filter((variable) => !['orderWidth', 'orderHeight', 'orderArea'].includes(variable.name))
+  const orderVariableNames = ['orderLength', 'orderWidth', 'orderHeight', 'orderWeight', 'orderArea']
+  const orderVariables = editorVariables.value.filter((variable) => orderVariableNames.includes(variable.name))
+  const businessVariables = editorVariables.value.filter((variable) => !orderVariableNames.includes(variable.name))
   return [
     { title: t('productCenter.formulaSetup.orderVariables'), variables: orderVariables },
     ...(businessVariables.length ? [{ title: t('productCenter.formulaSetup.businessVariables'), variables: businessVariables }] : [])
   ]
 })
-const editorResult = computed(() => props.target === 'usage'
+const editorResult = computed(() => isFormulaTarget.value
   ? validateFormulaExpression(props.text)
   : validateConditionExpression(props.text))
 const editorResultText = computed(() => {
   const result = editorResult.value
   if (!result.valid) return expressionValidationMessage(result.message)
-  if (props.target === 'usage') {
+  if (isFormulaTarget.value) {
     return `${t('productCenter.formulaSetup.sampleResult')}：${typeof result.sampleValue === 'number' ? formatUsageNumber(result.sampleValue) : result.sampleValue}`
   }
   return `${t('productCenter.formulaSetup.sampleResult')}：${result.sampleValue ? t('common.yes') : t('common.no')}`
 })
-const sampleText = computed(() => props.target === 'usage'
+const sampleText = computed(() => isFormulaTarget.value
   ? t('productCenter.formulaSetup.formulaSampleContext')
   : t('productCenter.formulaSetup.conditionSampleContext'))
 

@@ -11,11 +11,13 @@ import java.util.Set;
  */
 final class ProductFormulaExpressionValidator {
 
-    private static final Set<String> FORMULA_VARIABLES = Set.of("orderWidth", "orderHeight", "orderArea");
-    private static final Set<String> CONDITION_VARIABLES = Set.of("orderWidth", "orderHeight", "orderArea", "fabric", "productType", "optionValue");
+    private static final Set<String> FORMULA_VARIABLES = Set.of("orderLength", "orderWidth", "orderHeight", "orderWeight", "orderArea");
+    private static final Set<String> CONDITION_VARIABLES = Set.of("orderLength", "orderWidth", "orderHeight", "orderWeight", "orderArea", "fabric", "productType", "optionValue");
     private static final Map<String, Object> SAMPLE = Map.of(
+        "orderLength", 18D,
         "orderWidth", 12D,
         "orderHeight", 20D,
+        "orderWeight", 3D,
         "orderArea", 240D,
         "fabric", "XLF241801",
         "productType", "CUSTOM_CURTAIN",

@@ -11,15 +11,24 @@
       :validation-text="validationText"
       :status-tag-type="statusTagType"
       :validation-tag-type="validationTagType"
-      :active-tab="activeTab"
-      @back="goBack"
+      :formula-options="editableFormulaOptions"
+      :selected-formula-id="selectedFormulaId"
+      :formula-selecting="formulaSelecting"
+      :active-section="activeTab"
+      :can-operate="Boolean(currentFormulaId)"
+      @formula-change="handleFormulaChange"
       @validate="validateSetup"
       @save="saveSetup"
-      @submit-review="submitReview"
-      @tab-change="switchSection"
     />
 
-    <template v-if="activeTab === 'content'">
+    <el-empty
+      v-if="!currentFormulaId"
+      class="formula-setup-page__empty"
+      :description="t('productCenter.formulaSetup.selectEditableFormulaHint')"
+      :image-size="120"
+    />
+
+    <template v-else-if="activeTab === 'content'">
       <FormulaSetupSummary
         :material-group-cards="materialGroupCards"
         :material-count="setup.materials.length"
@@ -91,8 +100,8 @@
 
 <script setup lang="ts" name="ProductFormulaSetupPage">
 import { computed, onMounted, reactive, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { useRoute } from 'vue-router'
+import { ElMessage } from 'element-plus'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 import { productMaterialApi } from '@/api/product-capability/material'
@@ -106,6 +115,7 @@ import FormulaSetupSummary from './components/FormulaSetupSummary.vue'
 import FormulaUsageDrawer from './components/FormulaUsageDrawer.vue'
 import { formatUsageNumber } from './utils/formulaExpression'
 import {
+  FORMULA_STATUS,
   PRODUCT_STATUS_DISABLED,
   PRODUCT_STATUS_ENABLED,
   formulaStatusTagType,
@@ -141,14 +151,18 @@ interface SetupState {
 }
 
 const route = useRoute()
-const router = useRouter()
 const localeStore = useLocaleStore()
 const t = (key: string) => getMessage(key, localeStore.language)
 const props = defineProps<{
   setupSection?: 'content' | 'options'
 }>()
 
-const formulaId = computed(() => String(route.params.id || ''))
+const routeFormulaId = computed(() => {
+  const rawId = String(route.params.id || '')
+  return /^\d+$/.test(rawId) ? rawId : ''
+})
+const selectedFormulaId = ref('')
+const currentFormulaId = computed(() => selectedFormulaId.value)
 function routeSetupSection() {
   if (props.setupSection) return props.setupSection
   return route.meta.setupSection === 'options' ? 'options' : 'content'
@@ -158,6 +172,7 @@ const activeTab = ref<'content' | 'options'>(routeSetupSection())
 const loading = ref(false)
 const saving = ref(false)
 const validating = ref(false)
+const formulaSelecting = ref(false)
 const materialPickerOpen = ref(false)
 const usageDrawerOpen = ref(false)
 const usageRow = ref<ProductFormulaMaterialVO | null>(null)
@@ -166,6 +181,7 @@ const materialRows = ref<ProductMaterialVO[]>([])
 const groupRows = ref<ProductMaterialTypeGroupVO[]>([])
 const materialTypeRows = ref<ProductMaterialTypeVO[]>([])
 const unitRows = ref<ProductUnitVO[]>([])
+const editableFormulas = ref<ProductFormulaVO[]>([])
 
 const setup = reactive<SetupState>({
   materials: [],
@@ -178,6 +194,10 @@ const setup = reactive<SetupState>({
 const formula = ref<ProductFormulaVO>({})
 
 const draftVersionLabel = computed(() => `V${formula.value.draftVersionNo || 1} ${t('productCenter.formula.status.draft')}`)
+const editableFormulaOptions = computed(() => editableFormulas.value.map((row) => ({
+  value: String(row.formulaId || ''),
+  label: compactFormulaLabel(row)
+})).filter((item) => item.value))
 const groupOptions = computed<ProductOption[]>(() => groupRows.value.map((row) => ({ value: row.groupCode || '', label: labelOf(row, 'groupCode', 'groupNameCn', 'groupNameEn') })).filter((item) => item.value))
 const unitOptions = computed<ProductOption[]>(() => unitRows.value.map((row) => ({ value: row.unitCode || '', label: labelOf(row, 'unitCode', 'unitNameCn', 'unitNameEn') })).filter((item) => item.value))
 const materialGroupCards = computed(() => groupRows.value
@@ -194,11 +214,16 @@ const selectedValues = computed(() => setup.optionValues.filter((row) => row.opt
 const selectedOptionMaterials = computed(() => setup.optionMaterials.filter((row) => row.optionCode === selectedOptionCode.value))
 
 onMounted(async () => {
-  await Promise.all([loadBaseOptions(), loadSetup()])
+  await Promise.all([loadBaseOptions(), loadEditableFormulas()])
+  await loadSetup()
 })
 
-watch([() => route.meta.setupSection, () => props.setupSection, formulaId], async () => {
+watch([() => route.meta.setupSection, () => props.setupSection], async () => {
   activeTab.value = routeSetupSection()
+  await loadSetup()
+})
+
+watch(currentFormulaId, async () => {
   await loadSetup()
 })
 
@@ -215,13 +240,41 @@ async function loadBaseOptions() {
   unitRows.value = responseRows(unitResponse)
 }
 
+async function loadEditableFormulas() {
+  formulaSelecting.value = true
+  try {
+    const [draftResponse, rejectedResponse] = await Promise.all([
+      productFormulaApi.list({ status: FORMULA_STATUS.DRAFT, pageNum: 1, pageSize: 500 }),
+      productFormulaApi.list({ status: FORMULA_STATUS.REJECTED, pageNum: 1, pageSize: 500 })
+    ])
+    const formulaMap = new Map<string, ProductFormulaVO>()
+    ;[...(draftResponse.rows || []), ...(rejectedResponse.rows || [])].forEach((row) => {
+      if (row.formulaId) formulaMap.set(String(row.formulaId), row)
+    })
+    editableFormulas.value = [...formulaMap.values()]
+    const routeId = routeFormulaId.value
+    if (routeId && formulaMap.has(routeId)) {
+      selectedFormulaId.value = routeId
+      return
+    }
+    if (!selectedFormulaId.value || !formulaMap.has(selectedFormulaId.value)) {
+      selectedFormulaId.value = editableFormulaOptions.value[0]?.value || ''
+    }
+  } finally {
+    formulaSelecting.value = false
+  }
+}
+
 async function loadSetup() {
-  if (!formulaId.value) return
+  if (!currentFormulaId.value) {
+    resetSetup()
+    return
+  }
   loading.value = true
   try {
     const response = activeTab.value === 'options'
-      ? await productFormulaApi.getFormulaOptions(formulaId.value)
-      : await productFormulaApi.materials(formulaId.value)
+      ? await productFormulaApi.getFormulaOptions(currentFormulaId.value)
+      : await productFormulaApi.materials(currentFormulaId.value)
     formula.value = response.data?.formula || {}
     setup.materials = response.data?.materials || []
     setup.options = (response.data?.options || []).map((row) => ({
@@ -239,12 +292,16 @@ async function loadSetup() {
 }
 
 async function saveSetup() {
+  if (!currentFormulaId.value) {
+    ElMessage.warning(t('productCenter.formulaSetup.selectEditableFormulaHint'))
+    return
+  }
   saving.value = true
   try {
     if (activeTab.value === 'options') {
-      await productFormulaApi.saveOptions(formulaId.value, buildPayload())
+      await productFormulaApi.saveOptions(currentFormulaId.value, buildPayload())
     } else {
-      await productFormulaApi.saveMaterials(formulaId.value, buildPayload())
+      await productFormulaApi.saveMaterials(currentFormulaId.value, buildPayload())
     }
     ElMessage.success(t('common.success'))
     await loadSetup()
@@ -254,30 +311,22 @@ async function saveSetup() {
 }
 
 async function validateSetup() {
+  if (!currentFormulaId.value) {
+    ElMessage.warning(t('productCenter.formulaSetup.selectEditableFormulaHint'))
+    return
+  }
   validating.value = true
   try {
     if (activeTab.value === 'options') {
-      await productFormulaApi.validateOptions(formulaId.value)
+      await productFormulaApi.validateOptions(currentFormulaId.value)
     } else {
-      await productFormulaApi.validateMaterials(formulaId.value)
+      await productFormulaApi.validateMaterials(currentFormulaId.value)
     }
     ElMessage.success(t('productCenter.formula.validation.pass'))
     await loadSetup()
   } finally {
     validating.value = false
   }
-}
-
-async function submitReview() {
-  await ElMessageBox.confirm(t('productCenter.formula.confirm.submitReview'), t('common.prompt'), { type: 'warning' })
-  await productFormulaApi.submitReview(formulaId.value)
-  ElMessage.success(t('common.success'))
-  await loadSetup()
-}
-
-async function switchSection(tab: 'content' | 'options') {
-  const target = tab === 'options' ? 'options' : 'materials'
-  await router.push(`/product-formula/formulas/${formulaId.value}/${target}`)
 }
 
 function buildPayload(): ProductFormulaSetupVO {
@@ -289,6 +338,21 @@ function buildPayload(): ProductFormulaSetupVO {
     restrictions: setup.restrictions,
     usageRules: setup.usageRules
   }
+}
+
+function handleFormulaChange(value: string) {
+  selectedFormulaId.value = value
+}
+
+function resetSetup() {
+  formula.value = {}
+  setup.materials = []
+  setup.options = []
+  setup.optionValues = []
+  setup.optionMaterials = []
+  setup.restrictions = []
+  setup.usageRules = []
+  selectedOptionCode.value = ''
 }
 
 function appendSelectedMaterials(selectedMaterials: ProductMaterialVO[]) {
@@ -502,7 +566,7 @@ function usageSummary(row: ProductFormulaMaterialVO) {
   if (row.usageMode === 'FIXED' && row.fixedUsageQty !== undefined && row.fixedUsageQty !== null) {
     return `${t('productCenter.formulaSetup.usageFixedShort')} ${formatUsageNumber(row.fixedUsageQty)}`
   }
-  if (row.usageMode === 'FORMULA' && row.usageFormula) {
+  if (row.usageMode === 'FORMULA' && hasAnyUsageFormula(row)) {
     return t('productCenter.formulaSetup.formulaUsageRuleCount').replace('{count}', '1')
   }
   return t('productCenter.formulaSetup.usageNotSet')
@@ -516,12 +580,22 @@ function isUsageUnset(row: ProductFormulaMaterialVO) {
     return activeRules.some((rule) => rule.usageMode === 'FIXED' && (rule.fixedUsageQty === undefined || rule.fixedUsageQty === null))
   }
   if (row.usageMode === 'FIXED') return row.fixedUsageQty === undefined || row.fixedUsageQty === null
-  if (row.usageMode === 'FORMULA') return !row.usageFormula
+  if (row.usageMode === 'FORMULA') return !hasAnyUsageFormula(row)
   return true
 }
 
 function usageRulesFor(row: ProductFormulaMaterialVO) {
   return setup.usageRules.filter((rule) => rule.materialCode === row.materialCode)
+}
+
+function hasAnyUsageFormula(row: ProductFormulaUsageRuleVO | ProductFormulaMaterialVO) {
+  return Boolean(
+    row.lengthFormula ||
+    row.widthFormula ||
+    row.heightFormula ||
+    row.weightFormula ||
+    row.usageFormula
+  )
 }
 
 function statusText(status?: string) {
@@ -540,6 +614,13 @@ function validationTagType(status?: string) {
   return formulaValidationTagType(status)
 }
 
+function compactFormulaLabel(row: ProductFormulaVO) {
+  const code = row.formulaCode || '-'
+  const name = row.formulaName || '-'
+  const status = statusText(row.status)
+  return `${code} ${name}（${status}）`
+}
+
 function materialLabel(row: ProductMaterialVO | ProductFormulaMaterialVO) {
   return `${row.materialCode || ''} ${row.materialNameCn || ''}`.trim()
 }
@@ -547,7 +628,9 @@ function materialLabel(row: ProductMaterialVO | ProductFormulaMaterialVO) {
 function unitLabel(unitCode?: string) {
   if (!unitCode) return '-'
   const unit = unitRows.value.find((row) => row.unitCode === unitCode)
-  return unit ? labelOf(unit, 'unitCode', 'unitNameCn', 'unitNameEn') : unitCode
+  if (!unit) return unitCode
+  if (localeStore.language === 'zh_CN') return unit.unitNameCn || unit.unitCode || unitCode
+  return unit.unitNameEn || unit.unitNameCn || unit.unitCode || unitCode
 }
 
 function labelOf(row: ProductRecord, codeKey: string, cnKey: string, enKey?: string) {
@@ -566,14 +649,18 @@ function formatNumber(value?: number | string) {
 function formatMinute(value?: string) {
   return value ? value.replace('T', ' ').slice(0, 16) : '-'
 }
-
-function goBack() {
-  router.push('/product-formula/formulas')
-}
 </script>
 
 <style scoped>
 .formula-setup-page {
   background: #f5f7fb;
+}
+
+.formula-setup-page__empty {
+  min-height: 360px;
+  margin-top: 16px;
+  background: #fff;
+  border: 1px solid #e6ebf2;
+  border-radius: 8px;
 }
 </style>

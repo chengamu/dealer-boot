@@ -1,7 +1,7 @@
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 
-export function useAiSettingsI18n() {
+export function useAiI18n() {
   const localeStore = useLocaleStore()
   return (key: string, params?: Record<string, string | number>) => {
     const message = getMessage(key, localeStore.language)

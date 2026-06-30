@@ -288,6 +288,14 @@ export interface ProductFormulaMaterialVO extends ProductRecord {
   defaultFlag?: boolean
   requiredFlag?: boolean
   usageMode?: string
+  lengthFormula?: string
+  lengthFormulaText?: string
+  widthFormula?: string
+  widthFormulaText?: string
+  heightFormula?: string
+  heightFormulaText?: string
+  weightFormula?: string
+  weightFormulaText?: string
   usageFormula?: string
   fixedUsageQty?: number
   calculationUnitCode?: string
@@ -390,6 +398,14 @@ export interface ProductFormulaUsageRuleVO extends ProductRecord {
   conditionKey?: string
   usageMode?: string
   fixedUsageQty?: number
+  lengthFormula?: string
+  lengthFormulaText?: string
+  widthFormula?: string
+  widthFormulaText?: string
+  heightFormula?: string
+  heightFormulaText?: string
+  weightFormula?: string
+  weightFormulaText?: string
   usageFormula?: string
   usageFormulaText?: string
   calculationUnitCode?: string

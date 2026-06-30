@@ -30,19 +30,29 @@ export interface FormulaVariable {
 }
 
 const VARIABLE_ALIASES: Record<string, string> = {
+  订单长: 'orderLength',
+  长: 'orderLength',
   订单宽: 'orderWidth',
+  宽: 'orderWidth',
   订单高: 'orderHeight',
+  高: 'orderHeight',
+  厚度: 'orderHeight',
+  订单重量: 'orderWeight',
+  重量: 'orderWeight',
   订单面积: 'orderArea',
+  面积: 'orderArea',
   面料: 'fabric',
   产品类型: 'productType',
   配置项值: 'optionValue'
 }
 
-const FORMULA_VARIABLES = new Set(['orderWidth', 'orderHeight', 'orderArea'])
-const CONDITION_VARIABLES = new Set(['orderWidth', 'orderHeight', 'orderArea', 'fabric', 'productType', 'optionValue'])
+const FORMULA_VARIABLES = new Set(['orderLength', 'orderWidth', 'orderHeight', 'orderWeight', 'orderArea'])
+const CONDITION_VARIABLES = new Set(['orderLength', 'orderWidth', 'orderHeight', 'orderWeight', 'orderArea', 'fabric', 'productType', 'optionValue'])
 const SAMPLE_CONTEXT: Record<string, number | string> = {
+  orderLength: 18,
   orderWidth: 12,
   orderHeight: 20,
+  orderWeight: 3,
   orderArea: 240,
   fabric: 'XLF241801',
   productType: 'CUSTOM_CURTAIN',
@@ -50,8 +60,10 @@ const SAMPLE_CONTEXT: Record<string, number | string> = {
 }
 
 export const formulaVariables: FormulaVariable[] = [
+  { label: '订单长', name: 'orderLength', sample: 18 },
   { label: '订单宽', name: 'orderWidth', sample: 12 },
   { label: '订单高', name: 'orderHeight', sample: 20 },
+  { label: '订单重量', name: 'orderWeight', sample: 3 },
   { label: '订单面积', name: 'orderArea', sample: 240 },
   { label: '面料', name: 'fabric', sample: 'XLF241801' },
   { label: '产品类型', name: 'productType', sample: 'CUSTOM_CURTAIN' },

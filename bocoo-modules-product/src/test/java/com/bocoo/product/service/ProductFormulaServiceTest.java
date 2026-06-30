@@ -6,6 +6,7 @@ import com.bocoo.product.domain.entity.ProductCategory;
 import com.bocoo.product.domain.entity.ProductDictItem;
 import com.bocoo.product.domain.entity.ProductFormula;
 import com.bocoo.product.domain.entity.ProductFormulaVersion;
+import com.bocoo.product.domain.vo.ReferenceCheckResultVo;
 import com.bocoo.product.mapper.ProductCategoryMapper;
 import com.bocoo.product.mapper.ProductDictItemMapper;
 import com.bocoo.product.mapper.ProductFormulaMapper;
@@ -143,6 +144,29 @@ class ProductFormulaServiceTest {
             .isInstanceOf(ServiceException.class);
         verify(formulaMapper, never()).updateById(any());
         verify(formulaMapper, never()).deleteBatchIds(any());
+    }
+
+    @Test
+    void referenceCheckFollowsFormulaLifecycleState() {
+        when(formulaMapper.selectById(3001L)).thenReturn(formula(3001L, "DRAFT"));
+        ReferenceCheckResultVo draft = formulaService.checkReferences(3001L);
+        assertThat(draft.getAllowed()).isTrue();
+        assertThat(draft.getCanRemove()).isTrue();
+        assertThat(draft.getCanDisable()).isFalse();
+
+        when(formulaMapper.selectById(3002L)).thenReturn(formula(3002L, "EFFECTIVE"));
+        ReferenceCheckResultVo effective = formulaService.checkReferences(3002L);
+        assertThat(effective.getAllowed()).isFalse();
+        assertThat(effective.getCanRemove()).isFalse();
+        assertThat(effective.getCanDisable()).isTrue();
+        assertThat(effective.getBlockerReasonKey()).isEqualTo("product.formula.deleteOnlyDraft");
+
+        when(formulaMapper.selectById(3003L)).thenReturn(formula(3003L, "PENDING_REVIEW"));
+        ReferenceCheckResultVo pendingReview = formulaService.checkReferences(3003L);
+        assertThat(pendingReview.getAllowed()).isFalse();
+        assertThat(pendingReview.getCanRemove()).isFalse();
+        assertThat(pendingReview.getCanDisable()).isFalse();
+        assertThat(pendingReview.getBlockerReasonKey()).isEqualTo("product.formula.deleteOnlyDraft");
     }
 
     @Test

@@ -1,4 +1,5 @@
-import { request, requestData } from '@/utils/request'
+import { request, requestData, requestPage } from '@/utils/request'
+import type { PageQuery } from '@/types/api'
 
 export interface AiServiceCredential {
   credentialId?: number
@@ -28,6 +29,9 @@ export interface AiProviderConfig {
   status?: string
   remark?: string
   keyFingerprint?: string
+  apiKey?: string
+  createTime?: string
+  updateTime?: string
 }
 
 export interface AiProviderModel {
@@ -43,12 +47,16 @@ export interface AiProviderModel {
   defaultModel?: boolean
   status?: string
   remark?: string
+  createTime?: string
+  updateTime?: string
 }
 
 export interface AiUserQuota {
   quotaId?: number
   tenantId?: number
   userId?: number
+  userName?: string
+  nickName?: string
   dailyRequestLimit?: number
   dailyTokenLimit?: number
   dailyCostLimit?: number
@@ -61,6 +69,8 @@ export interface AiUsageLedger {
   usageId?: number
   tenantId?: number
   userId?: number
+  userName?: string
+  nickName?: string
   sessionId?: string
   requestId?: string
   providerCallId?: string
@@ -78,6 +88,8 @@ export interface AiAuditSummary {
   auditId?: number
   tenantId?: number
   userId?: number
+  userName?: string
+  nickName?: string
   sessionId?: string
   requestId?: string
   actionType?: string
@@ -89,16 +101,52 @@ export interface AiAuditSummary {
   createdTime?: string
 }
 
-export type AiListQuery = {
-  tenantId?: number
-  userId?: number
-  limit?: number
+export interface AiCredentialQuery extends PageQuery {
+  serviceName?: string
+  status?: string
 }
 
-export function listAiServiceCredentials() {
-  return requestData<AiServiceCredential[]>({
-    url: '/ai/admin/service-credentials',
-    method: 'get'
+export interface AiProviderQuery extends PageQuery {
+  providerCode?: string
+  providerName?: string
+  enabled?: boolean
+  status?: string
+}
+
+export interface AiProviderModelQuery extends PageQuery {
+  providerCode?: string
+  modelCode?: string
+  modelName?: string
+  modelType?: string
+  status?: string
+}
+
+export interface AiTenantUserQuery extends PageQuery {
+  tenantId?: number
+  userId?: number
+  status?: string
+}
+
+export interface AiUsageQuery extends AiTenantUserQuery {
+  provider?: string
+  model?: string
+  requestId?: string
+  status?: string
+}
+
+export interface AiAuditQuery extends AiTenantUserQuery {
+  actionType?: string
+  toolCode?: string
+  riskLevel?: string
+  approvalStatus?: string
+  requestId?: string
+}
+
+export function listAiServiceCredentials(query: AiCredentialQuery) {
+  return requestPage<AiServiceCredential>({
+    url: '/ai/admin/service-credentials/list',
+    method: 'get',
+    params: query
   })
 }
 
@@ -110,6 +158,13 @@ export function generateAiServiceCredential(data: { serviceName?: string; remark
   })
 }
 
+export function enableAiServiceCredential(credentialId: number) {
+  return request({
+    url: `/ai/admin/service-credentials/${credentialId}/enable`,
+    method: 'put'
+  })
+}
+
 export function disableAiServiceCredential(credentialId: number) {
   return request({
     url: `/ai/admin/service-credentials/${credentialId}/disable`,
@@ -117,60 +172,100 @@ export function disableAiServiceCredential(credentialId: number) {
   })
 }
 
-export function listAiProviders() {
+export function deleteAiServiceCredential(credentialId: number) {
+  return request({
+    url: `/ai/admin/service-credentials/${credentialId}`,
+    method: 'delete'
+  })
+}
+
+export function listAiProviders(query: AiProviderQuery) {
+  return requestPage<AiProviderConfig>({
+    url: '/ai/admin/providers/list',
+    method: 'get',
+    params: query
+  })
+}
+
+export function listAiProviderOptions() {
   return requestData<AiProviderConfig[]>({
-    url: '/ai/admin/providers',
+    url: '/ai/admin/providers/options',
     method: 'get'
   })
 }
 
-export function saveAiProvider(data: AiProviderConfig) {
+export function addAiProvider(data: AiProviderConfig) {
   return request({
     url: '/ai/admin/providers',
-    method: 'put',
-    data
-  })
-}
-
-export function saveAiProviderApiKey(data: { providerCode?: string; apiKey?: string; remark?: string }) {
-  return request({
-    url: '/ai/admin/providers/api-key',
     method: 'post',
     data
   })
 }
 
-export function listAiProviderModels(providerCode: string) {
-  return requestData<AiProviderModel[]>({
-    url: `/ai/admin/providers/${providerCode}/models`,
-    method: 'get'
-  })
-}
-
-export function saveAiProviderModel(data: AiProviderModel) {
+export function updateAiProvider(data: AiProviderConfig) {
   return request({
-    url: '/ai/admin/providers/models',
+    url: '/ai/admin/providers',
     method: 'put',
     data
   })
 }
 
-export function setDefaultAiProviderModel(providerCode: string, modelId: number) {
+export function saveAiProviderApiKey(providerId: number, data: { providerCode?: string; apiKey?: string; remark?: string }) {
   return request({
-    url: `/ai/admin/providers/${providerCode}/models/${modelId}/default`,
+    url: `/ai/admin/providers/${providerId}/api-key`,
+    method: 'put',
+    data
+  })
+}
+
+export function listAiProviderModels(query: AiProviderModelQuery) {
+  return requestPage<AiProviderModel>({
+    url: '/ai/admin/provider-models/list',
+    method: 'get',
+    params: query
+  })
+}
+
+export function addAiProviderModel(data: AiProviderModel) {
+  return request({
+    url: '/ai/admin/provider-models',
+    method: 'post',
+    data
+  })
+}
+
+export function updateAiProviderModel(data: AiProviderModel) {
+  return request({
+    url: '/ai/admin/provider-models',
+    method: 'put',
+    data
+  })
+}
+
+export function setDefaultAiProviderModel(modelId: number) {
+  return request({
+    url: `/ai/admin/provider-models/${modelId}/default`,
     method: 'put'
   })
 }
 
-export function listAiUserQuotas(params: AiListQuery) {
-  return requestData<AiUserQuota[]>({
-    url: '/ai/admin/user-quotas',
+export function listAiUserQuotas(query: AiTenantUserQuery) {
+  return requestPage<AiUserQuota>({
+    url: '/ai/admin/user-quotas/list',
     method: 'get',
-    params
+    params: query
   })
 }
 
-export function saveAiUserQuota(data: AiUserQuota) {
+export function addAiUserQuota(data: AiUserQuota) {
+  return request({
+    url: '/ai/admin/user-quotas',
+    method: 'post',
+    data
+  })
+}
+
+export function updateAiUserQuota(data: AiUserQuota) {
   return request({
     url: '/ai/admin/user-quotas',
     method: 'put',
@@ -178,18 +273,18 @@ export function saveAiUserQuota(data: AiUserQuota) {
   })
 }
 
-export function listAiUsageLedgers(params: AiListQuery) {
-  return requestData<AiUsageLedger[]>({
-    url: '/ai/admin/usage-ledgers',
+export function listAiUsageLedgers(query: AiUsageQuery) {
+  return requestPage<AiUsageLedger>({
+    url: '/ai/admin/usage-ledgers/list',
     method: 'get',
-    params
+    params: query
   })
 }
 
-export function listAiAuditSummaries(params: AiListQuery) {
-  return requestData<AiAuditSummary[]>({
-    url: '/ai/admin/audit-summaries',
+export function listAiAuditSummaries(query: AiAuditQuery) {
+  return requestPage<AiAuditSummary>({
+    url: '/ai/admin/audit-summaries/list',
     method: 'get',
-    params
+    params: query
   })
 }

@@ -1,84 +1,128 @@
 <template>
   <div class="app-container">
-    <el-card shadow="never">
-      <template #header>
-        <div class="panel-header">
-          <span>{{ t('ai.settings.usage') }}</span>
-        </div>
-      </template>
+    <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true">
+      <el-form-item :label="t('ai.settings.user')" prop="userId">
+        <el-input v-model="queryUserLabel" readonly clearable style="width: 220px" @clear="clearQueryUser">
+          <template #append>
+            <el-button icon="Search" @click="queryUserSelectorRef?.show()" />
+          </template>
+        </el-input>
+      </el-form-item>
+      <el-form-item :label="t('ai.settings.channel')" prop="provider">
+        <el-select v-model="queryParams.provider" clearable filterable style="width: 200px">
+          <el-option v-for="item in providers" :key="item.providerCode" :label="providerLabel(item)" :value="item.providerCode || ''" />
+        </el-select>
+      </el-form-item>
+      <el-form-item :label="t('ai.settings.modelName')" prop="model">
+        <el-input v-model="queryParams.model" clearable style="width: 200px" @keyup.enter="handleQuery" />
+      </el-form-item>
+      <el-form-item :label="t('common.status')" prop="status">
+        <el-input v-model="queryParams.status" clearable style="width: 140px" @keyup.enter="handleQuery" />
+      </el-form-item>
+      <el-form-item>
+        <el-button type="primary" icon="Search" @click="handleQuery">{{ t('common.search') }}</el-button>
+        <el-button icon="Refresh" @click="resetQuery">{{ t('common.reset') }}</el-button>
+      </el-form-item>
+    </el-form>
 
-      <el-form :model="query" inline>
-        <el-form-item :label="t('ai.settings.tenantId')">
-          <el-input-number v-model="query.tenantId" :min="1" controls-position="right" clearable />
-        </el-form-item>
-        <el-form-item :label="t('ai.settings.userId')">
-          <el-input-number v-model="query.userId" :min="1" controls-position="right" clearable />
-        </el-form-item>
-        <el-form-item :label="t('ai.settings.limit')">
-          <el-input-number v-model="query.limit" :min="1" :max="500" controls-position="right" />
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" icon="Search" @click="loadUsage">{{ t('common.search') }}</el-button>
-          <el-button icon="Refresh" @click="resetQuery">{{ t('common.reset') }}</el-button>
-        </el-form-item>
-      </el-form>
+    <el-row :gutter="10" class="mb8">
+      <right-toolbar v-model:showSearch="showSearch" @queryTable="getList" />
+    </el-row>
 
-      <el-table v-loading="loading" :data="rows" height="560">
-        <el-table-column prop="createdTime" :label="t('ai.settings.createdTime')" min-width="170">
-          <template #default="{ row }">{{ formatUtc(row.createdTime) || '-' }}</template>
-        </el-table-column>
-        <el-table-column prop="tenantId" :label="t('ai.settings.tenantId')" width="110" />
-        <el-table-column prop="userId" :label="t('ai.settings.userId')" width="110" />
-        <el-table-column prop="provider" :label="t('ai.settings.providerCode')" min-width="120" />
-        <el-table-column prop="model" :label="t('ai.settings.modelCode')" min-width="160" show-overflow-tooltip />
-        <el-table-column prop="inputTokens" :label="t('ai.settings.inputTokens')" width="120" />
-        <el-table-column prop="outputTokens" :label="t('ai.settings.outputTokens')" width="120" />
-        <el-table-column prop="costAmount" :label="t('ai.settings.costAmount')" width="120" />
-        <el-table-column prop="latencyMs" :label="t('ai.settings.latencyMs')" width="120" />
-        <el-table-column prop="status" :label="t('common.status')" width="110" />
-        <el-table-column prop="requestId" :label="t('ai.settings.requestId')" min-width="180" show-overflow-tooltip />
-      </el-table>
-    </el-card>
+    <el-table v-loading="loading" :data="dataList" border>
+      <el-table-column :label="t('ai.settings.createdTime')" prop="createdTime" width="180">
+        <template #default="{ row }">{{ formatUtc(row.createdTime) || '-' }}</template>
+      </el-table-column>
+      <el-table-column :label="t('ai.settings.user')" min-width="160" show-overflow-tooltip>
+        <template #default="{ row }">{{ userLabel(row) }}</template>
+      </el-table-column>
+      <el-table-column :label="t('ai.settings.channel')" prop="provider" min-width="130" show-overflow-tooltip />
+      <el-table-column :label="t('ai.settings.modelName')" prop="model" min-width="180" show-overflow-tooltip />
+      <el-table-column :label="t('ai.settings.inputTokens')" prop="inputTokens" width="120" />
+      <el-table-column :label="t('ai.settings.outputTokens')" prop="outputTokens" width="120" />
+      <el-table-column :label="t('ai.settings.costAmount')" prop="costAmount" width="120" />
+      <el-table-column :label="t('ai.settings.latencyMs')" prop="latencyMs" width="120" />
+      <el-table-column :label="t('common.status')" prop="status" width="110" />
+    </el-table>
+
+    <pagination v-show="total > 0" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" :total="total" @pagination="getList" />
+    <AiUserSelectorDialog ref="queryUserSelectorRef" :multiple="false" :title="t('ai.settings.selectUser')" @confirm="selectQueryUser" />
   </div>
 </template>
 
 <script setup lang="ts" name="AiUsagePage">
 import { onMounted, reactive, ref } from 'vue'
-import { listAiUsageLedgers, type AiUsageLedger } from '@/api/ai-admin'
+import { listAiProviderOptions, listAiUsageLedgers, type AiProviderConfig, type AiUsageLedger, type AiUsageQuery } from '@/api/ai-admin'
+import type { SysUser } from '@/api/system/user'
 import { formatUtc } from '@/utils/datetime'
-import { useAiSettingsI18n } from './ai-settings/useAiSettingsI18n'
+import { useAiI18n } from './useAiI18n'
+import AiUserSelectorDialog from './components/AiUserSelectorDialog.vue'
 
-const t = useAiSettingsI18n()
+const t = useAiI18n()
 const loading = ref(false)
-const rows = ref<AiUsageLedger[]>([])
-const query = reactive({ tenantId: undefined as number | undefined, userId: undefined as number | undefined, limit: 200 })
+const showSearch = ref(true)
+const total = ref(0)
+const dataList = ref<AiUsageLedger[]>([])
+const providers = ref<AiProviderConfig[]>([])
+const queryUserLabel = ref('')
+const queryRef = ref()
+const queryUserSelectorRef = ref<InstanceType<typeof AiUserSelectorDialog>>()
+const queryParams = reactive<AiUsageQuery>({
+  pageNum: 1,
+  pageSize: 10
+})
 
-async function loadUsage() {
+function providerLabel(provider: AiProviderConfig) {
+  return `${provider.providerName || provider.providerCode} / ${provider.providerCode}`
+}
+
+function userLabel(row: AiUsageLedger) {
+  const name = row.nickName || row.userName
+  return name ? `${name}${row.userName && row.userName !== name ? ` / ${row.userName}` : ''}` : '-'
+}
+
+async function getProviderOptions() {
+  providers.value = await listAiProviderOptions()
+}
+
+async function getList() {
   loading.value = true
   try {
-    rows.value = await listAiUsageLedgers(query)
+    const res = await listAiUsageLedgers(queryParams)
+    dataList.value = res.rows
+    total.value = res.total
   } finally {
     loading.value = false
   }
 }
 
-function resetQuery() {
-  query.tenantId = undefined
-  query.userId = undefined
-  query.limit = 200
-  void loadUsage()
+function handleQuery() {
+  queryParams.pageNum = 1
+  void getList()
 }
 
-onMounted(() => {
-  void loadUsage()
+function resetQuery() {
+  queryRef.value?.resetFields()
+  clearQueryUser()
+  handleQuery()
+}
+
+function clearQueryUser() {
+  queryUserLabel.value = ''
+  queryParams.userId = undefined
+  queryParams.tenantId = undefined
+}
+
+function selectQueryUser(users: SysUser[]) {
+  const user = users[0]
+  if (!user) return
+  queryParams.userId = Number(user.userId)
+  queryParams.tenantId = user.tenantId ? Number(user.tenantId) : undefined
+  queryUserLabel.value = user.nickName || user.userName || ''
+}
+
+onMounted(async () => {
+  await getProviderOptions()
+  await getList()
 })
 </script>
-
-<style scoped>
-.panel-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-</style>

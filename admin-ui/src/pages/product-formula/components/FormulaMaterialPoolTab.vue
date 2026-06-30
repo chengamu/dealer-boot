@@ -37,34 +37,46 @@
     <el-table v-loading="loading" :data="visibleMaterials" border class="setup-table" row-key="materialCode" @selection-change="selectedRows = $event">
       <el-table-column type="selection" width="48" align="center" />
       <el-table-column type="index" :label="t('common.index')" width="56" align="center" />
-      <el-table-column :label="t('productCenter.formulaSetup.attributeGroup')" width="68">
+      <el-table-column :label="t('productCenter.formulaSetup.attributeGroup')" width="92">
         <template #default="{ row }">
           <el-tag size="small" :class="`group-tag group-tag--${String(row.attributeGroupCode || '').toLowerCase()}`">{{ row.attributeGroupNameCn || row.attributeGroupCode || '-' }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column :label="t('productCenter.formulaSetup.materialType')" width="88" show-overflow-tooltip>
-        <template #default="{ row }">{{ row.materialTypeNameCn || row.materialTypeCode || '-' }}</template>
-      </el-table-column>
-      <el-table-column :label="t('productCenter.formulaSetup.materialCode')" prop="materialCode" width="96" show-overflow-tooltip />
-      <el-table-column :label="t('productCenter.formulaSetup.materialName')" prop="materialNameCn" min-width="180" show-overflow-tooltip />
-      <el-table-column :label="t('productCenter.formulaSetup.specModel')" min-width="160">
+      <el-table-column :label="t('productCenter.formulaSetup.materialType')" width="112">
         <template #default="{ row }">
-          <span class="spec-model-text">{{ row.specModelText || '-' }}</span>
+          <span class="material-cell-text material-cell-text--compact">{{ row.materialTypeNameCn || row.materialTypeCode || '-' }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column :label="t('productCenter.formulaSetup.materialCode')" prop="materialCode" width="132">
+        <template #default="{ row }">
+          <span class="material-cell-text material-code-text">{{ row.materialCode || '-' }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column :label="t('productCenter.formulaSetup.materialName')" prop="materialNameCn" min-width="260">
+        <template #default="{ row }">
+          <span class="material-cell-text material-name-text">{{ row.materialNameCn || '-' }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column :label="t('productCenter.formulaSetup.specModel')" min-width="220">
+        <template #default="{ row }">
+          <span class="material-cell-text spec-model-text">{{ row.specModelText || '-' }}</span>
         </template>
       </el-table-column>
       <el-table-column :label="t('productCenter.formulaSetup.unit')" prop="unitCode" width="66">
         <template #default="{ row }">{{ unitLabel(row.unitCode) }}</template>
       </el-table-column>
-      <el-table-column :label="t('productCenter.formulaSetup.defaultFlag')" width="76" align="center">
-        <template #default="{ row }"><el-switch v-model="row.defaultFlag" /></template>
-      </el-table-column>
-      <el-table-column :label="t('productCenter.formulaSetup.requiredFlag')" width="76" align="center">
+      <el-table-column width="88" align="center">
+        <template #header>
+          <el-tooltip :content="t('productCenter.formulaSetup.requiredFlagHint')" placement="top">
+            <span class="header-help">{{ t('productCenter.formulaSetup.requiredFlag') }}</span>
+          </el-tooltip>
+        </template>
         <template #default="{ row }"><el-switch v-model="row.requiredFlag" /></template>
       </el-table-column>
       <el-table-column :label="t('productCenter.formulaSetup.usageSummary')" min-width="122">
         <template #default="{ row }">{{ usageSummary(row) }}</template>
       </el-table-column>
-      <el-table-column :label="t('productCenter.formulaSetup.productionRemark')" min-width="128">
+      <el-table-column :label="t('productCenter.formulaSetup.productionRemark')" min-width="112">
         <template #default="{ row }">
           <el-input v-model="row.productionRemark" clearable />
         </template>
@@ -146,16 +158,14 @@ function openBatchUsage() {
 
 .setup-section__toolbar {
   display: flex;
+  flex-direction: column;
   align-items: flex-start;
-  justify-content: space-between;
   gap: 12px;
   margin-bottom: 8px;
 }
 
 .setup-section__title {
-  flex: 0 0 auto;
-  min-width: 112px;
-  max-width: 180px;
+  width: 100%;
 }
 
 .setup-section__toolbar h3 {
@@ -165,12 +175,9 @@ function openBatchUsage() {
 }
 
 .setup-section__toolbar p {
-  overflow: hidden;
   margin: 0;
   color: #6b7280;
   font-size: 13px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .setup-section__actions {
@@ -184,7 +191,7 @@ function openBatchUsage() {
   justify-content: space-between;
   gap: 12px;
   align-items: center;
-  flex: 1;
+  width: 100%;
   min-width: 0;
 }
 
@@ -206,11 +213,11 @@ function openBatchUsage() {
 }
 
 .material-pool-toolbar__search {
-  width: min(320px, 100%);
+  width: min(360px, 100%);
 }
 
 .material-type-filter {
-  width: 160px;
+  width: 168px;
 }
 
 .material-pool-toolbar :deep(.el-button) {
@@ -236,7 +243,7 @@ function openBatchUsage() {
 }
 
 .setup-table :deep(.el-table__row td) {
-  height: 56px;
+  height: 64px;
 }
 
 .setup-table :deep(.el-input-number) {
@@ -250,9 +257,12 @@ function openBatchUsage() {
   border-radius: 6px;
 }
 
-.spec-model-text {
+.header-help {
+  cursor: help;
+}
+
+.material-cell-text {
   display: -webkit-box;
-  max-height: 48px;
   overflow: hidden;
   color: #4b5563;
   font-size: 13px;
@@ -260,6 +270,25 @@ function openBatchUsage() {
   white-space: normal;
   word-break: break-all;
   -webkit-box-orient: vertical;
+}
+
+.material-cell-text--compact {
+  -webkit-line-clamp: 2;
+}
+
+.material-code-text {
+  color: #374151;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  -webkit-line-clamp: 2;
+}
+
+.material-name-text {
+  color: #1f2937;
+  -webkit-line-clamp: 2;
+}
+
+.spec-model-text {
+  max-height: 54px;
   -webkit-line-clamp: 3;
 }
 

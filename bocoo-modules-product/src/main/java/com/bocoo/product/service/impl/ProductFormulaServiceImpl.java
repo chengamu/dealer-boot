@@ -312,8 +312,19 @@ public class ProductFormulaServiceImpl extends ProductServiceSupport implements 
 
     @Override
     public ReferenceCheckResultVo checkReferences(Long formulaId) {
+        ProductFormula formula = formulaMapper.selectById(formulaId);
         ReferenceCheckResultVo result = referenceResult(0, null, null);
-        result.setCanDisable(Boolean.TRUE);
+        if (formula == null) {
+            result.setCanDisable(Boolean.FALSE);
+            return result;
+        }
+        boolean canRemove = STATUS_DRAFT.equals(formula.getStatus());
+        result.setAllowed(canRemove);
+        result.setCanRemove(canRemove);
+        result.setCanDisable(STATUS_EFFECTIVE.equals(formula.getStatus()));
+        if (!canRemove) {
+            result.setBlockerReasonKey("product.formula.deleteOnlyDraft");
+        }
         return result;
     }
 

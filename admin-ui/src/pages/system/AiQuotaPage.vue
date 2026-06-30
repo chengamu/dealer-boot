@@ -1,158 +1,246 @@
 <template>
   <div class="app-container">
-    <el-card shadow="never">
-      <template #header>
-        <div class="panel-header">
-          <span>{{ t('ai.settings.quota') }}</span>
-          <el-button type="primary" icon="Plus" @click="openQuotaDialog()" v-hasPermi="['ai:quota:manage']">
-            {{ t('ai.settings.addQuota') }}
-          </el-button>
-        </div>
-      </template>
-
-      <el-form :model="query" inline>
-        <el-form-item :label="t('ai.settings.tenantId')">
-          <el-input-number v-model="query.tenantId" :min="1" controls-position="right" clearable />
-        </el-form-item>
-        <el-form-item :label="t('ai.settings.userId')">
-          <el-input-number v-model="query.userId" :min="1" controls-position="right" clearable />
-        </el-form-item>
-        <el-form-item :label="t('ai.settings.limit')">
-          <el-input-number v-model="query.limit" :min="1" :max="500" controls-position="right" />
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" icon="Search" @click="loadQuotas">{{ t('common.search') }}</el-button>
-          <el-button icon="Refresh" @click="resetQuery">{{ t('common.reset') }}</el-button>
-        </el-form-item>
-      </el-form>
-
-      <el-table v-loading="loading" :data="quotas" height="520">
-        <el-table-column prop="tenantId" :label="t('ai.settings.tenantId')" width="120" />
-        <el-table-column prop="userId" :label="t('ai.settings.userId')" width="120" />
-        <el-table-column prop="dailyRequestLimit" :label="t('ai.settings.dailyRequestLimit')" min-width="150" />
-        <el-table-column prop="dailyTokenLimit" :label="t('ai.settings.dailyTokenLimit')" min-width="150" />
-        <el-table-column prop="dailyCostLimit" :label="t('ai.settings.dailyCostLimit')" min-width="150" />
-        <el-table-column prop="status" :label="t('common.status')" width="100">
-          <template #default="{ row }">
-            <el-tag :type="row.status === '1' ? 'success' : 'info'">{{ row.status === '1' ? t('ai.settings.enabled') : t('common.disabled') }}</el-tag>
+    <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true">
+      <el-form-item :label="t('ai.settings.user')" prop="userId">
+        <el-input v-model="queryUserLabel" readonly clearable style="width: 220px" @clear="clearQueryUser">
+          <template #append>
+            <el-button icon="Search" @click="queryUserSelectorRef?.show()" />
           </template>
-        </el-table-column>
-        <el-table-column prop="updateTime" :label="t('common.updateTime')" min-width="170">
-          <template #default="{ row }">{{ formatUtc(row.updateTime || row.createTime) || '-' }}</template>
-        </el-table-column>
-        <el-table-column :label="t('common.operate')" width="120" fixed="right">
-          <template #default="{ row }">
-            <el-button link type="primary" icon="Edit" @click="openQuotaDialog(row)" v-hasPermi="['ai:quota:manage']">
-              {{ t('common.edit') }}
-            </el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-    </el-card>
+        </el-input>
+      </el-form-item>
+      <el-form-item :label="t('common.status')" prop="status">
+        <el-select v-model="queryParams.status" clearable style="width: 140px">
+          <el-option :label="t('common.normal')" value="1" />
+          <el-option :label="t('common.disabled')" value="0" />
+        </el-select>
+      </el-form-item>
+      <el-form-item>
+        <el-button type="primary" icon="Search" @click="handleQuery">{{ t('common.search') }}</el-button>
+        <el-button icon="Refresh" @click="resetQuery">{{ t('common.reset') }}</el-button>
+      </el-form-item>
+    </el-form>
 
-    <AdminDialog v-model="dialogOpen" :title="t('ai.settings.quota')" width="640px">
-      <el-form ref="quotaRef" :model="quotaForm" :rules="rules" label-width="150px">
-        <el-form-item :label="t('ai.settings.tenantId')" prop="tenantId">
-          <el-input-number v-model="quotaForm.tenantId" :min="1" controls-position="right" />
+    <el-row :gutter="10" class="mb8">
+      <el-col :span="1.5">
+        <el-button type="primary" plain icon="Plus" @click="addUserSelectorRef?.show()" v-hasPermi="['ai:quota:add']">
+          {{ t('ai.settings.addUserQuota') }}
+        </el-button>
+      </el-col>
+      <right-toolbar v-model:showSearch="showSearch" @queryTable="getList" />
+    </el-row>
+
+    <el-table v-loading="loading" :data="dataList" border>
+      <el-table-column type="index" :label="t('common.index')" width="70" align="center" />
+      <el-table-column :label="t('ai.settings.user')" min-width="180" show-overflow-tooltip>
+        <template #default="{ row }">{{ userLabel(row) }}</template>
+      </el-table-column>
+      <el-table-column :label="t('ai.settings.dailyRequestLimit')" prop="dailyRequestLimit" min-width="150" />
+      <el-table-column :label="t('ai.settings.dailyTokenLimit')" prop="dailyTokenLimit" min-width="150" />
+      <el-table-column :label="t('ai.settings.dailyCostLimit')" prop="dailyCostLimit" min-width="150" />
+      <el-table-column :label="t('common.status')" prop="status" width="100" align="center">
+        <template #default="{ row }">
+          <el-tag :type="row.status === '1' ? 'success' : 'info'">{{ row.status === '1' ? t('common.normal') : t('common.disabled') }}</el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column :label="t('common.updateTime')" prop="updateTime" width="180">
+        <template #default="{ row }">{{ formatUtc(row.updateTime || row.createTime) || '-' }}</template>
+      </el-table-column>
+      <el-table-column :label="t('common.operate')" width="120" align="center" fixed="right">
+        <template #default="{ row }">
+          <AdminTableActions :actions="quotaActions(row)" />
+        </template>
+      </el-table-column>
+    </el-table>
+
+    <pagination v-show="total > 0" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" :total="total" @pagination="getList" />
+
+    <AdminDrawer v-model="drawerOpen" :title="quotaForm.quotaId ? t('ai.settings.editQuota') : t('ai.settings.addUserQuota')" size="620px" append-to-body destroy-on-close>
+      <el-form ref="quotaRef" :model="quotaForm" :rules="rules" label-width="148px">
+        <el-form-item :label="t('ai.settings.user')">
+          <div class="ai-selected-users">
+            <el-tag v-for="user in selectedUsers" :key="user.userId" class="ai-selected-users__tag">
+              {{ displayUser(user) }}
+            </el-tag>
+          </div>
         </el-form-item>
-        <el-form-item :label="t('ai.settings.userId')" prop="userId">
-          <el-input-number v-model="quotaForm.userId" :min="1" controls-position="right" />
-        </el-form-item>
-        <el-form-item :label="t('ai.settings.dailyRequestLimit')">
+        <el-form-item :label="t('ai.settings.dailyRequestLimit')" prop="dailyRequestLimit">
           <el-input-number v-model="quotaForm.dailyRequestLimit" :min="0" controls-position="right" />
         </el-form-item>
-        <el-form-item :label="t('ai.settings.dailyTokenLimit')">
+        <el-form-item :label="t('ai.settings.dailyTokenLimit')" prop="dailyTokenLimit">
           <el-input-number v-model="quotaForm.dailyTokenLimit" :min="0" controls-position="right" />
         </el-form-item>
-        <el-form-item :label="t('ai.settings.dailyCostLimit')">
+        <el-form-item :label="t('ai.settings.dailyCostLimit')" prop="dailyCostLimit">
           <el-input-number v-model="quotaForm.dailyCostLimit" :min="0" :precision="6" controls-position="right" />
         </el-form-item>
-        <el-form-item :label="t('ai.settings.enabled')">
-          <el-switch v-model="enabled" />
+        <el-form-item :label="t('common.status')" prop="status">
+          <el-radio-group v-model="quotaForm.status">
+            <el-radio value="1">{{ t('common.normal') }}</el-radio>
+            <el-radio value="0">{{ t('common.disabled') }}</el-radio>
+          </el-radio-group>
         </el-form-item>
       </el-form>
       <template #footer>
-        <AdminDialogFooter>
-          <el-button @click="dialogOpen = false">{{ t('common.cancel') }}</el-button>
+        <div class="admin-drawer__footer-actions">
+          <el-button @click="drawerOpen = false">{{ t('common.cancel') }}</el-button>
           <el-button type="primary" @click="handleSaveQuota">{{ t('common.save') }}</el-button>
-        </AdminDialogFooter>
+        </div>
       </template>
-    </AdminDialog>
+    </AdminDrawer>
+
+    <AiUserSelectorDialog ref="addUserSelectorRef" :title="t('ai.settings.selectQuotaUsers')" @confirm="openAddQuotaDrawer" />
+    <AiUserSelectorDialog ref="queryUserSelectorRef" :multiple="false" :title="t('ai.settings.selectUser')" @confirm="selectQueryUser" />
   </div>
 </template>
 
 <script setup lang="ts" name="AiQuotaPage">
 import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
-import AdminDialog from '@/components/AdminDialog/index.vue'
-import AdminDialogFooter from '@/components/AdminDialogFooter/index.vue'
-import { listAiUserQuotas, saveAiUserQuota, type AiUserQuota } from '@/api/ai-admin'
+import AdminDrawer from '@/components/AdminDrawer/index.vue'
+import AdminTableActions, { type AdminTableAction } from '@/components/AdminTableActions/index.vue'
+import { addAiUserQuota, listAiUserQuotas, updateAiUserQuota, type AiTenantUserQuery, type AiUserQuota } from '@/api/ai-admin'
+import type { SysUser } from '@/api/system/user'
 import { formatUtc } from '@/utils/datetime'
-import { useAiSettingsI18n } from './ai-settings/useAiSettingsI18n'
+import { useAiI18n } from './useAiI18n'
+import AiUserSelectorDialog from './components/AiUserSelectorDialog.vue'
 
-const t = useAiSettingsI18n()
+const t = useAiI18n()
 const loading = ref(false)
-const quotas = ref<AiUserQuota[]>([])
-const dialogOpen = ref(false)
+const showSearch = ref(true)
+const total = ref(0)
+const dataList = ref<AiUserQuota[]>([])
+const selectedUsers = ref<SysUser[]>([])
+const queryUserLabel = ref('')
+const queryRef = ref<FormInstance>()
 const quotaRef = ref<FormInstance>()
-const query = reactive({ tenantId: undefined as number | undefined, userId: undefined as number | undefined, limit: 200 })
-const quotaForm = reactive<AiUserQuota>(emptyQuota())
-const enabled = computed({
-  get: () => quotaForm.status !== '0',
-  set: (value: boolean) => {
-    quotaForm.status = value ? '1' : '0'
-  }
-})
+const drawerOpen = ref(false)
+const addUserSelectorRef = ref<InstanceType<typeof AiUserSelectorDialog>>()
+const queryUserSelectorRef = ref<InstanceType<typeof AiUserSelectorDialog>>()
 
-const rules = computed<FormRules<AiUserQuota>>(() => ({
-  tenantId: [{ required: true, message: t('ai.settings.tenantIdRequired'), trigger: 'blur' }],
-  userId: [{ required: true, message: t('ai.settings.userIdRequired'), trigger: 'blur' }]
-}))
+const queryParams = reactive<AiTenantUserQuery>({
+  pageNum: 1,
+  pageSize: 10
+})
+const quotaForm = reactive<AiUserQuota>(emptyQuota())
+
+const rules = computed<FormRules>(() => ({}))
 
 function emptyQuota(): AiUserQuota {
   return { status: '1' }
 }
 
-async function loadQuotas() {
+function userLabel(row: AiUserQuota) {
+  const name = row.nickName || row.userName
+  return name ? `${name}${row.userName && row.userName !== name ? ` / ${row.userName}` : ''}` : '-'
+}
+
+function displayUser(user: SysUser | AiUserQuota) {
+  const name = user.nickName || user.userName
+  return name ? `${name}${user.userName && user.userName !== name ? ` / ${user.userName}` : ''}` : '-'
+}
+
+async function getList() {
   loading.value = true
   try {
-    quotas.value = await listAiUserQuotas(query)
+    const res = await listAiUserQuotas(queryParams)
+    dataList.value = res.rows
+    total.value = res.total
   } finally {
     loading.value = false
   }
 }
 
-function resetQuery() {
-  query.tenantId = undefined
-  query.userId = undefined
-  query.limit = 200
-  void loadQuotas()
+function handleQuery() {
+  queryParams.pageNum = 1
+  void getList()
 }
 
-function openQuotaDialog(row?: AiUserQuota) {
-  Object.assign(quotaForm, emptyQuota(), row || {})
-  dialogOpen.value = true
+function resetQuery() {
+  queryRef.value?.resetFields()
+  clearQueryUser()
+  handleQuery()
+}
+
+function clearQueryUser() {
+  queryUserLabel.value = ''
+  queryParams.userId = undefined
+  queryParams.tenantId = undefined
+}
+
+function selectQueryUser(users: SysUser[]) {
+  const user = users[0]
+  if (!user) return
+  queryParams.userId = Number(user.userId)
+  queryParams.tenantId = user.tenantId ? Number(user.tenantId) : undefined
+  queryUserLabel.value = displayUser(user)
+}
+
+function openAddQuotaDrawer(users: SysUser[]) {
+  selectedUsers.value = users
+  Object.assign(quotaForm, emptyQuota(), {
+    quotaId: undefined,
+    tenantId: users[0]?.tenantId,
+    userId: users[0]?.userId
+  })
+  drawerOpen.value = true
+}
+
+function openEditQuotaDrawer(row: AiUserQuota) {
+  selectedUsers.value = [{
+    tenantId: row.tenantId,
+    userId: row.userId,
+    userName: row.userName,
+    nickName: row.nickName
+  }]
+  Object.assign(quotaForm, emptyQuota(), row)
+  drawerOpen.value = true
+}
+
+function quotaActions(row: AiUserQuota): AdminTableAction[] {
+  return [
+    {
+      label: t('common.edit'),
+      icon: 'Edit',
+      primary: true,
+      permission: 'ai:quota:edit',
+      onClick: () => openEditQuotaDrawer(row)
+    }
+  ]
 }
 
 async function handleSaveQuota() {
   const valid = await quotaRef.value?.validate().catch(() => false)
   if (!valid) return
-  await saveAiUserQuota(quotaForm)
+  if (quotaForm.quotaId) {
+    await updateAiUserQuota(quotaForm)
+  } else {
+    for (const user of selectedUsers.value) {
+      await addAiUserQuota({
+        ...quotaForm,
+        tenantId: user.tenantId ? Number(user.tenantId) : quotaForm.tenantId,
+        userId: user.userId ? Number(user.userId) : quotaForm.userId
+      })
+    }
+  }
   ElMessage.success(t('common.success'))
-  dialogOpen.value = false
-  await loadQuotas()
+  drawerOpen.value = false
+  await getList()
 }
 
 onMounted(() => {
-  void loadQuotas()
+  void getList()
 })
 </script>
 
 <style scoped>
-.panel-header {
+.ai-selected-users {
   display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 32px;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+}
+
+.ai-selected-users__tag {
+  max-width: 220px;
 }
 </style>

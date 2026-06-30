@@ -2,7 +2,7 @@
   <AdminDrawer
     :model-value="modelValue"
     :title="t('productCenter.formulaSetup.usageSetting')"
-    size="1640px"
+    size="96vw"
     append-to-body
     variant="wide"
     class="formula-usage-drawer"
@@ -41,10 +41,14 @@
           <span class="usage-mode-card__label">{{ t('productCenter.formulaSetup.usageMode') }}</span>
           <p>{{ t('productCenter.formulaSetup.usageModeHint') }}</p>
         </div>
-        <el-radio-group class="usage-mode-card__switch" :model-value="usageRow.usageMode || 'FIXED'" @change="handleUsageModeChange">
-          <el-radio label="FIXED" border>{{ t('productCenter.formulaSetup.usageFixedValue') }}</el-radio>
-          <el-radio label="FORMULA" border>{{ t('productCenter.formulaSetup.usageFormulaRules') }}</el-radio>
-        </el-radio-group>
+        <el-select
+          class="usage-mode-card__select"
+          :model-value="usageRow.usageMode || 'FIXED'"
+          @change="handleUsageModeChange"
+        >
+          <el-option value="FIXED" :label="t('productCenter.formulaSetup.usageFixedValue')" />
+          <el-option value="FORMULA" :label="t('productCenter.formulaSetup.usageFormulaRules')" />
+        </el-select>
       </div>
 
       <FormulaUsageFixedPanel v-if="usageRow.usageMode !== 'FORMULA'" :usage-row="usageRow" @change="syncFixedRuleFromRow" />
@@ -96,22 +100,27 @@
                   :placeholder="t('productCenter.formulaSetup.conditionExpressionPlaceholder')"
                   @blur="syncExpressionCondition(row)"
                 />
-                <el-button plain @click="openExpressionEditor(row, 'condition')">{{ t('productCenter.formulaSetup.expressionEditor') }}</el-button>
+                <el-button plain @click="openExpressionEditor(row, 'condition')">{{ t('productCenter.formulaSetup.conditionExpressionEditor') }}</el-button>
               </div>
               <el-tag v-else effect="plain" type="info">{{ t('productCenter.formulaSetup.defaultUsageRule') }}</el-tag>
             </div>
           </template>
         </el-table-column>
-        <el-table-column :label="t('productCenter.formulaSetup.usageFormula')" min-width="320">
+        <el-table-column
+          v-for="field in formulaFields"
+          :key="field.valueKey"
+          :label="t(field.labelKey)"
+          min-width="180"
+        >
           <template #default="{ row }">
-            <div class="formula-cell">
+            <div class="formula-cell formula-cell--compact">
               <el-input
-                v-model="row.usageFormulaText"
+                v-model="row[field.textKey]"
                 clearable
-                :placeholder="t('productCenter.formulaSetup.usageFormulaPlaceholder')"
-                @blur="syncFormula(row)"
+                :placeholder="t('productCenter.formulaSetup.formulaOptionalPlaceholder')"
+                @blur="syncFormula(row, field)"
               />
-              <el-button plain @click="openExpressionEditor(row, 'usage')">{{ t('productCenter.formulaSetup.expressionEditor') }}</el-button>
+              <el-button plain @click="openExpressionEditor(row, field.target)">{{ t('productCenter.formulaSetup.formulaSelectorShort') }}</el-button>
             </div>
           </template>
         </el-table-column>
@@ -205,24 +214,33 @@ const emit = defineEmits<{
 }>()
 
 const localeStore = useLocaleStore()
-const localMessages: Record<string, string> = {
-  'productCenter.formulaSetup.usageFixedValue': '固定值',
-  'productCenter.formulaSetup.usageFormulaRules': '公式规则',
-  'productCenter.formulaSetup.conditionType': '使用条件',
-  'productCenter.formulaSetup.conditionExpression': '表达式条件',
-  'productCenter.formulaSetup.usageFixedShort': '固定',
-  'productCenter.formulaSetup.formulaUsageRuleCount': '公式 {count} 条'
-}
 const t = (key: string) => {
   const message = getMessage(key, localeStore.language)
-  return message === key ? (localMessages[key] || key) : message
+  return message
 }
 const selectedRule = ref<ProductFormulaUsageRuleVO | null>(null)
 const variableChips = formulaVariables
 const expressionEditorOpen = ref(false)
 const expressionEditorText = ref('')
 const expressionEditorRow = ref<ProductFormulaUsageRuleVO | null>(null)
-const expressionEditorTarget = ref<'usage' | 'condition'>('usage')
+type FormulaTarget = 'length' | 'width' | 'height' | 'weight' | 'usage'
+type ExpressionTarget = FormulaTarget | 'condition'
+type FormulaField = {
+  target: FormulaTarget
+  labelKey: string
+  valueKey: keyof ProductFormulaUsageRuleVO
+  textKey: keyof ProductFormulaUsageRuleVO
+}
+
+const formulaFields: FormulaField[] = [
+  { target: 'length', labelKey: 'productCenter.formulaSetup.lengthFormula', valueKey: 'lengthFormula', textKey: 'lengthFormulaText' },
+  { target: 'width', labelKey: 'productCenter.formulaSetup.widthFormula', valueKey: 'widthFormula', textKey: 'widthFormulaText' },
+  { target: 'height', labelKey: 'productCenter.formulaSetup.heightFormula', valueKey: 'heightFormula', textKey: 'heightFormulaText' },
+  { target: 'weight', labelKey: 'productCenter.formulaSetup.weightFormula', valueKey: 'weightFormula', textKey: 'weightFormulaText' },
+  { target: 'usage', labelKey: 'productCenter.formulaSetup.quantityFormula', valueKey: 'usageFormula', textKey: 'usageFormulaText' }
+]
+
+const expressionEditorTarget = ref<ExpressionTarget>('usage')
 const usageSnapshot = ref<{
   materialCode?: string
   usageRow: ProductFormulaMaterialVO | null
@@ -433,8 +451,8 @@ function addFormulaRule(defaultRule: boolean, value?: ProductFormulaOptionValueV
     conditionKey: defaultRule ? defaultConditionKey() : conditionKeyForOption(value?.optionCode || 'FABRIC', value?.valueCode),
     usageMode: 'FORMULA',
     fixedUsageQty: undefined,
-    usageFormula: defaultRule ? '1' : 'orderWidth',
-    usageFormulaText: defaultRule ? '1' : '订单宽',
+    usageFormula: defaultRule ? '1' : undefined,
+    usageFormulaText: defaultRule ? '1' : undefined,
     calculationUnitCode: props.usageRow.calculationUnitCode || props.usageRow.unitCode,
     lossRate: props.usageRow.lossRate ?? 0,
     defaultRuleFlag: defaultRule,
@@ -544,21 +562,28 @@ function syncExpressionCondition(row: ProductFormulaUsageRuleVO) {
   row.conditionKey = result.valid ? `EXPR:${result.expression}` : undefined
 }
 
-function syncFormula(row: ProductFormulaUsageRuleVO) {
-  const result = validateFormulaExpression(ruleFormulaText(row))
-  row.usageFormula = result.expression
+function syncFormula(row: ProductFormulaUsageRuleVO, field: FormulaField = formulaFields[4]) {
+  const result = validateFormulaExpression(ruleFormulaText(row, field))
+  row[field.valueKey] = result.expression as never
   if (row.usageMode === 'FIXED' && result.valid && typeof result.sampleValue === 'number') {
     row.fixedUsageQty = result.sampleValue
   }
 }
 
 function formulaResult(row: ProductFormulaUsageRuleVO) {
-  return validateFormulaExpression(ruleFormulaText(row))
+  const candidates = formulaFields
+    .map((field) => ruleFormulaText(row, field))
+    .filter(Boolean)
+  return candidates.length
+    ? validateFormulaExpression(candidates[0])
+    : { valid: false, expression: '', message: 'empty' }
 }
 
-function ruleFormulaText(row: ProductFormulaUsageRuleVO) {
-  if (row.usageFormulaText || row.usageFormula) return row.usageFormulaText || row.usageFormula
-  if (row.fixedUsageQty !== undefined && row.fixedUsageQty !== null) return String(row.fixedUsageQty)
+function ruleFormulaText(row: ProductFormulaUsageRuleVO, field: FormulaField = formulaFields[4]) {
+  const textValue = row[field.textKey]
+  const formulaValue = row[field.valueKey]
+  if (typeof textValue === 'string' || typeof formulaValue === 'string') return (textValue || formulaValue) as string
+  if (field.target === 'usage' && row.fixedUsageQty !== undefined && row.fixedUsageQty !== null) return String(row.fixedUsageQty)
   return undefined
 }
 
@@ -570,14 +595,17 @@ function formulaResultText(row: ProductFormulaUsageRuleVO) {
 
 function insertVariable(label: string) {
   if (!selectedRule.value) return
-  selectedRule.value.usageFormulaText = `${selectedRule.value.usageFormulaText || ''}${label}`
+  const field = formulaFieldByTarget(expressionEditorTarget.value)
+  if (!field) return
+  selectedRule.value[field.textKey] = `${String(selectedRule.value[field.textKey] || '')}${label}` as never
 }
 
-function openExpressionEditor(row: ProductFormulaUsageRuleVO, target: 'usage' | 'condition') {
+function openExpressionEditor(row: ProductFormulaUsageRuleVO, target: ExpressionTarget) {
   expressionEditorRow.value = row
   expressionEditorTarget.value = target
-  expressionEditorText.value = target === 'usage'
-    ? ruleFormulaText(row) || ''
+  const field = formulaFieldByTarget(target)
+  expressionEditorText.value = field
+    ? ruleFormulaText(row, field) || ''
     : row.conditionText || row.conditionExpression || ''
   expressionEditorOpen.value = true
 }
@@ -585,14 +613,19 @@ function openExpressionEditor(row: ProductFormulaUsageRuleVO, target: 'usage' | 
 function confirmExpressionEditor() {
   const row = expressionEditorRow.value
   if (!row) return
-  if (expressionEditorTarget.value === 'usage') {
-    row.usageFormulaText = expressionEditorText.value
-    syncFormula(row)
+  const field = formulaFieldByTarget(expressionEditorTarget.value)
+  if (field) {
+    row[field.textKey] = expressionEditorText.value as never
+    syncFormula(row, field)
   } else {
     row.conditionText = expressionEditorText.value
     syncExpressionCondition(row)
   }
   expressionEditorOpen.value = false
+}
+
+function formulaFieldByTarget(target: ExpressionTarget) {
+  return formulaFields.find((field) => field.target === target)
 }
 
 function optionValuesOf(optionCode?: string) {
@@ -693,22 +726,14 @@ function removeRulesForCurrent() {
   font-size: 12px;
 }
 
-.usage-mode-card__switch {
-  display: flex;
-  gap: 8px;
+.usage-mode-card__select {
+  width: 180px;
+  flex: 0 0 auto;
 }
 
-.usage-mode-card__switch :deep(.el-radio) {
-  height: 34px;
-  margin-right: 0;
-  padding: 0 14px;
+.usage-mode-card__select :deep(.el-select__wrapper) {
+  min-height: 34px;
   border-radius: 6px;
-  font-weight: 600;
-}
-
-.usage-mode-card__switch :deep(.el-radio.is-checked) {
-  border-color: #409eff;
-  background: #eff6ff;
 }
 
 .usage-editor__toolbar {

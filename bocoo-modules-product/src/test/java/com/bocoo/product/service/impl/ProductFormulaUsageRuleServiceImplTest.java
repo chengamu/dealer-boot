@@ -62,6 +62,29 @@ class ProductFormulaUsageRuleServiceImplTest {
     }
 
     @Test
+    void formulaRuleCanUseDimensionFormulasWithoutQuantityFormula() {
+        ProductFormulaUsageRule rule = formulaRule(true);
+        rule.setUsageFormula(null);
+        rule.setWidthFormula("orderWidth + 3");
+        rule.setHeightFormula("orderHeight + 3");
+
+        assertThat(service.validationMessageKey(materials(), options(), values(), List.of(rule))).isNull();
+    }
+
+    @Test
+    void formulaRuleRequiresAtLeastOneFormulaField() {
+        ProductFormulaUsageRule rule = formulaRule(true);
+        rule.setUsageFormula(null);
+        rule.setLengthFormula(null);
+        rule.setWidthFormula(null);
+        rule.setHeightFormula(null);
+        rule.setWeightFormula(null);
+
+        assertThat(service.validationMessageKey(materials(), options(), values(), List.of(rule)))
+            .isEqualTo("product.formula.materialUsageRuleRequired");
+    }
+
+    @Test
     void optionValueConditionMustReferenceExistingOptionValue() {
         ProductFormulaUsageRule rule = formulaRule(false);
         rule.setConditionValueCode("UNKNOWN");

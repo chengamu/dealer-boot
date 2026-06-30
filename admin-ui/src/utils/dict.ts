@@ -55,6 +55,10 @@ const frontendDictLabelKeys: Record<string, Record<string, string>> = {
     '9': 'common.clear',
     '10': 'dataLabels.crossTenantQuery',
     '11': 'dataLabels.sensitiveOperation'
+  },
+  ai_model_type: {
+    CHAT: 'dict.ai_model_type.CHAT',
+    EMBEDDING: 'dict.ai_model_type.EMBEDDING'
   }
 }
 
@@ -66,7 +70,8 @@ const fallbackDictValues: Record<string, string[]> = {
   sys_common_status: ['0', '1'],
   sys_notice_type: ['1', '2'],
   sys_notice_status: ['0', '1'],
-  sys_oper_type: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11']
+  sys_oper_type: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11'],
+  ai_model_type: ['CHAT', 'EMBEDDING']
 }
 
 function resolveDictLabel(dictType: string, item: DictOption, locale: string) {

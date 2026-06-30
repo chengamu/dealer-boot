@@ -2,15 +2,25 @@
   <div class="setup-header">
     <div>
       <div class="setup-header__topline">
-        <div class="setup-header__breadcrumb">{{ t('productCenter.formula.title') }} / {{ t('productCenter.formula.actions.setup') }}</div>
-        <div class="setup-header__modes">
-          <button type="button" class="setup-header__mode" :class="{ 'setup-header__mode--active': activeTab === 'content' }" @click="$emit('tab-change', 'content')">
-            {{ t('productCenter.formulaSetup.contentTab') }}
-          </button>
-          <button type="button" class="setup-header__mode" :class="{ 'setup-header__mode--active': activeTab === 'options' }" @click="$emit('tab-change', 'options')">
-            {{ t('productCenter.formulaSetup.optionTab') }}
-          </button>
+        <div class="setup-header__breadcrumb">
+          {{ t('productCenter.formula.title') }} /
+          {{ activeSection === 'options' ? t('productCenter.formula.actions.options') : t('productCenter.formula.actions.materials') }}
         </div>
+        <el-select
+          class="setup-header__formula-select"
+          filterable
+          :model-value="selectedFormulaId"
+          :loading="formulaSelecting"
+          :placeholder="t('productCenter.formulaSetup.selectEditableFormulaPlaceholder')"
+          @change="$emit('formula-change', String($event || ''))"
+        >
+          <el-option
+            v-for="item in formulaOptions"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          />
+        </el-select>
       </div>
       <div class="setup-header__title">
         <span>{{ formula.formulaName || '-' }}</span>
@@ -28,12 +38,8 @@
       </div>
     </div>
     <div class="setup-header__actions">
-      <el-button icon="Back" @click="$emit('back')">{{ t('common.back') }}</el-button>
-      <el-button icon="CircleCheck" :loading="validating" @click="$emit('validate')">{{ t('productCenter.formula.actions.validate') }}</el-button>
-      <el-button type="primary" icon="DocumentChecked" :loading="saving" @click="$emit('save')">{{ t('productCenter.formulaSetup.saveDraft') }}</el-button>
-      <el-button type="primary" icon="Promotion" :disabled="formula.latestValidationStatus !== 'PASS'" @click="$emit('submit-review')">
-        {{ t('productCenter.formula.actions.submitReview') }}
-      </el-button>
+      <el-button icon="CircleCheck" :disabled="!canOperate" :loading="validating" @click="$emit('validate')">{{ t('productCenter.formula.actions.validate') }}</el-button>
+      <el-button type="primary" icon="DocumentChecked" :disabled="!canOperate" :loading="saving" @click="$emit('save')">{{ t('productCenter.formulaSetup.saveDraft') }}</el-button>
     </div>
   </div>
 </template>
@@ -48,21 +54,23 @@ defineProps<{
   draftVersionLabel: string
   saving: boolean
   validating: boolean
-  formatNumber: (value?: number) => string
+  formatNumber: (value?: number | string) => string
   formatMinute: (value?: string) => string
   statusText: (status?: string) => string
   validationText: (status?: string) => string
   statusTagType: (status?: string) => string
   validationTagType: (status?: string) => string
-  activeTab: 'content' | 'options'
+  formulaOptions: Array<{ value: string; label: string }>
+  selectedFormulaId: string
+  formulaSelecting: boolean
+  activeSection: 'content' | 'options'
+  canOperate: boolean
 }>()
 
 defineEmits<{
-  back: []
   validate: []
   save: []
-  'submit-review': []
-  'tab-change': [value: 'content' | 'options']
+  'formula-change': [value: string]
 }>()
 
 const localeStore = useLocaleStore()
@@ -93,32 +101,8 @@ const t = (key: string) => getMessage(key, localeStore.language)
   font-size: 13px;
 }
 
-.setup-header__modes {
-  display: inline-flex;
-  gap: 3px;
-  padding: 3px;
-  background: #f7faff;
-  border: 1px solid #e1eaf7;
-  border-radius: 7px;
-}
-
-.setup-header__mode {
-  min-width: 86px;
-  height: 28px;
-  padding: 0 12px;
-  color: #4b5563;
-  font-size: 13px;
-  font-weight: 700;
-  background: transparent;
-  border: 0;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.setup-header__mode--active {
-  color: #1677ff;
-  background: #fff;
-  box-shadow: 0 1px 4px rgb(15 23 42 / 8%), inset 0 0 0 1px #cfe3ff;
+.setup-header__formula-select {
+  width: min(420px, 46vw);
 }
 
 .setup-header__title {

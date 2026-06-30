@@ -168,20 +168,58 @@ CREATE TABLE IF NOT EXISTS ai_audit_summary (
 );
 CREATE INDEX IF NOT EXISTS idx_ai_audit_tenant_user_time ON ai_audit_summary (tenant_id, user_id, created_time DESC);
 
+DELETE FROM sys_role_menu
+WHERE tenant_id = 1 AND menu_id = 25006;
+
+DELETE FROM sys_menu
+WHERE tenant_id = 1 AND menu_id = 25006 AND perms = 'ai:tool:manage';
+
+INSERT INTO sys_dict_type (dict_id, dict_name, dict_type, status, create_by, create_time, remark)
+VALUES
+    (25030, 'AI model type', 'ai_model_type', '1', 'system', now(), '智能中枢模型类型')
+ON CONFLICT (dict_type) DO UPDATE
+SET dict_name = EXCLUDED.dict_name,
+    status = EXCLUDED.status,
+    remark = EXCLUDED.remark,
+    update_time = now();
+
+INSERT INTO sys_dict_data (dict_code, dict_sort, dict_label, dict_value, dict_type, list_class, is_default, status, create_by, create_time)
+VALUES
+    (25031, 1, 'Chat model', 'CHAT', 'ai_model_type', 'primary', 'Y', '1', 'system', now()),
+    (25032, 2, 'Embedding model', 'EMBEDDING', 'ai_model_type', 'success', 'N', '1', 'system', now())
+ON CONFLICT (dict_code) DO UPDATE
+SET dict_sort = EXCLUDED.dict_sort,
+    dict_label = EXCLUDED.dict_label,
+    dict_value = EXCLUDED.dict_value,
+    dict_type = EXCLUDED.dict_type,
+    list_class = EXCLUDED.list_class,
+    is_default = EXCLUDED.is_default,
+    status = EXCLUDED.status,
+    update_time = now();
+
 INSERT INTO sys_menu (menu_id, tenant_id, parent_id, menu_name, i18n_key, order_num, path, component, query_param, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, remark)
 VALUES
     (25000, 1, 0, 'Smart Hub', 'ai.menu.root', 90, 'ai', 'Layout', NULL, '1', '0', 'M', '1', '1', NULL, 'ai', 'system', now(), '智能中枢'),
-    (25001, 1, 25000, 'Service Keys', 'ai.menu.credentials', 1, 'credentials', 'ai/credentials/index', NULL, '1', '0', 'C', '1', '1', 'ai:credential:manage', 'lock', 'system', now(), '服务密钥'),
-    (25010, 1, 25000, 'Channel Config', 'ai.menu.providers', 2, 'providers', 'ai/providers/index', NULL, '1', '0', 'C', '1', '1', 'ai:provider:manage', 'server', 'system', now(), '渠道配置'),
-    (25011, 1, 25000, 'Model Config', 'ai.menu.models', 3, 'models', 'ai/models/index', NULL, '1', '0', 'C', '1', '1', 'ai:provider:manage', 'component', 'system', now(), '模型配置'),
-    (25007, 1, 25000, 'Quota Manage', 'ai.menu.quotas', 4, 'quotas', 'ai/quotas/index', NULL, '1', '0', 'C', '1', '1', 'ai:quota:manage', 'money', 'system', now(), '额度管理'),
-    (25008, 1, 25000, 'Usage View', 'ai.menu.usage', 5, 'usage', 'ai/usage/index', NULL, '1', '0', 'C', '1', '1', 'ai:usage:view', 'report', 'system', now(), '用量查看'),
-    (25009, 1, 25000, 'Audit View', 'ai.menu.audit', 6, 'audit', 'ai/audit/index', NULL, '1', '0', 'C', '1', '1', 'ai:audit:view', 'log', 'system', now(), '审计查看'),
+    (25001, 1, 25000, 'Service Keys', 'ai.menu.credentials', 1, 'credentials', 'ai/credentials/index', NULL, '1', '0', 'C', '1', '1', 'ai:credential:list', 'lock', 'system', now(), '服务密钥'),
+    (25010, 1, 25000, 'Channel Config', 'ai.menu.providers', 2, 'providers', 'ai/providers/index', NULL, '1', '0', 'C', '1', '1', 'ai:provider:list', 'server', 'system', now(), '渠道配置'),
+    (25011, 1, 25000, 'Model Config', 'ai.menu.models', 3, 'models', 'ai/models/index', NULL, '1', '0', 'C', '1', '1', 'ai:model:list', 'component', 'system', now(), '模型配置'),
+    (25007, 1, 25000, 'Quota Manage', 'ai.menu.quotas', 4, 'quotas', 'ai/quotas/index', NULL, '1', '0', 'C', '1', '1', 'ai:quota:list', 'money', 'system', now(), '额度管理'),
+    (25008, 1, 25000, 'Usage View', 'ai.menu.usage', 5, 'usage', 'ai/usage/index', NULL, '1', '0', 'C', '1', '1', 'ai:usage:list', 'report', 'system', now(), '用量查看'),
+    (25009, 1, 25000, 'Audit View', 'ai.menu.audit', 6, 'audit', 'ai/audit/index', NULL, '1', '0', 'C', '1', '1', 'ai:audit:list', 'log', 'system', now(), '审计查看'),
     (25002, 1, 25000, 'Smart Assistant Use', 'ai.menu.assistantUse', 1, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'ai:assistant:use', '#', 'system', now(), '使用智能助手'),
     (25003, 1, 25000, 'Smart Assistant Admin', 'ai.menu.assistantAdmin', 2, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'ai:assistant:admin', '#', 'system', now(), '智能助手管理'),
-    (25004, 1, 25001, 'Smart Credential Manage', 'ai.menu.credentialManage', 1, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'ai:credential:manage', '#', 'system', now(), '智能密钥管理'),
-    (25005, 1, 25010, 'Smart Provider Manage', 'ai.menu.providerManage', 1, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'ai:provider:manage', '#', 'system', now(), '智能 Provider 管理'),
-    (25006, 1, 25000, 'Smart Tool Manage', 'ai.menu.toolManage', 7, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'ai:tool:manage', '#', 'system', now(), '智能工具权限管理')
+    (25004, 1, 25001, 'Generate Service Key', 'ai.menu.credentialGenerate', 1, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'ai:credential:generate', '#', 'system', now(), '生成服务密钥'),
+    (25012, 1, 25001, 'Enable Service Key', 'ai.menu.credentialEnable', 2, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'ai:credential:enable', '#', 'system', now(), '启用服务密钥'),
+    (25020, 1, 25001, 'Disable Service Key', 'ai.menu.credentialDisable', 3, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'ai:credential:disable', '#', 'system', now(), '禁用服务密钥'),
+    (25021, 1, 25001, 'Delete Service Key', 'ai.menu.credentialRemove', 4, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'ai:credential:remove', '#', 'system', now(), '删除服务密钥'),
+    (25005, 1, 25010, 'Add Provider', 'ai.menu.providerAdd', 1, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'ai:provider:add', '#', 'system', now(), '新增 Provider'),
+    (25013, 1, 25010, 'Edit Provider', 'ai.menu.providerEdit', 2, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'ai:provider:edit', '#', 'system', now(), '编辑 Provider'),
+    (25014, 1, 25010, 'Update Provider Key', 'ai.menu.providerKey', 3, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'ai:provider:key', '#', 'system', now(), '更新 Provider Key'),
+    (25015, 1, 25011, 'Add Model', 'ai.menu.modelAdd', 1, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'ai:model:add', '#', 'system', now(), '新增模型'),
+    (25016, 1, 25011, 'Edit Model', 'ai.menu.modelEdit', 2, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'ai:model:edit', '#', 'system', now(), '编辑模型'),
+    (25017, 1, 25011, 'Set Default Model', 'ai.menu.modelDefault', 3, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'ai:model:default', '#', 'system', now(), '设为默认模型'),
+    (25018, 1, 25007, 'Add Quota', 'ai.menu.quotaAdd', 1, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'ai:quota:add', '#', 'system', now(), '新增额度'),
+    (25019, 1, 25007, 'Edit Quota', 'ai.menu.quotaEdit', 2, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'ai:quota:edit', '#', 'system', now(), '编辑额度')
 ON CONFLICT (menu_id) DO UPDATE
 SET tenant_id = EXCLUDED.tenant_id,
     parent_id = EXCLUDED.parent_id,
@@ -214,5 +252,5 @@ SET model_name = EXCLUDED.model_name,
 
 INSERT INTO sys_role_menu (role_id, menu_id, tenant_id)
 SELECT 1, menu_id, 1 FROM sys_menu
-WHERE tenant_id = 1 AND menu_id BETWEEN 25000 AND 25011
+WHERE tenant_id = 1 AND menu_id BETWEEN 25000 AND 25021
 ON CONFLICT DO NOTHING;

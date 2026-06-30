@@ -135,42 +135,6 @@ const legacyFallbackRoutes: RouteRecordRaw[] = [
     meta: { title: 'legacy.ossTitle' }
   },
   {
-    path: '/ai/credentials',
-    name: 'AiCredentials',
-    component: () => import('@/pages/system/AiCredentialPage.vue'),
-    meta: { title: 'ai.menu.credentials' }
-  },
-  {
-    path: '/ai/providers',
-    name: 'AiProviders',
-    component: () => import('@/pages/system/AiProviderPage.vue'),
-    meta: { title: 'ai.menu.providers' }
-  },
-  {
-    path: '/ai/models',
-    name: 'AiModels',
-    component: () => import('@/pages/system/AiModelPage.vue'),
-    meta: { title: 'ai.menu.models' }
-  },
-  {
-    path: '/ai/quotas',
-    name: 'AiQuotas',
-    component: () => import('@/pages/system/AiQuotaPage.vue'),
-    meta: { title: 'ai.menu.quotas' }
-  },
-  {
-    path: '/ai/usage',
-    name: 'AiUsage',
-    component: () => import('@/pages/system/AiUsagePage.vue'),
-    meta: { title: 'ai.menu.usage' }
-  },
-  {
-    path: '/ai/audit',
-    name: 'AiAudit',
-    component: () => import('@/pages/system/AiAuditPage.vue'),
-    meta: { title: 'ai.menu.audit' }
-  },
-  {
     path: '/system/tenant/applications',
     name: 'LegacyTenantApplications',
     alias: ['/system/tenantApplication', '/merchantManagement/tenantApplication'],

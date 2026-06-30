@@ -19,6 +19,14 @@ crypto:
 captcha:
   enable: true
 
+bocoo:
+  ai:
+    security:
+      # 本地开发也走环境变量；Docker/IDE 启动时注入 BOCOO_AI_SECRET_ENCRYPTION_KEY。
+      # 这里的默认值只用于本机 dev profile 测试，生产环境必须通过 Docker/环境变量覆盖。
+      secret-encryption-key: ${BOCOO_AI_SECRET_ENCRYPTION_KEY:local-dev-only-ai-secret-20260629-N8qP4vM2xR7cT9zK5wY3sH6dF1jL0bAa}
+      channel-token-secret: ${BOCOO_AI_CHANNEL_TOKEN_SECRET:local-dev-only-ai-channel-20260629-Q6mZ2rX8vC4nB7pL1tS9yD5hK0eUaWc}
+
 web:
   cors:
     allow-credentials: true

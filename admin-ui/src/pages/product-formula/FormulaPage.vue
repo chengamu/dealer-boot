@@ -7,7 +7,6 @@
 <script setup lang="ts" name="ProductFormulaPage">
 import { computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { useRouter } from 'vue-router'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 import { productCategoryApi } from '@/api/product-capability/base'
@@ -26,7 +25,6 @@ import {
 import { compactParts, localizedRecordLabel } from '@/utils/productLabels'
 
 const localeStore = useLocaleStore()
-const router = useRouter()
 const t = (key: string) => getMessage(key, localeStore.language)
 
 const formulaStatusOptionList = computed(() => formulaStatusOptions(t))
@@ -61,12 +59,6 @@ async function runWithConfirm(messageKey: string, action: () => Promise<unknown>
   ElMessage.success(t('common.success'))
 }
 
-async function openFormulaModule(row: ProductRecord, module: 'materials' | 'options' | 'simulation') {
-  const id = row.formulaId as string | number | undefined
-  if (!id) return
-  await router.push(`/product-formula/formulas/${id}/${module}`)
-}
-
 const formulaConfig = computed<ProductGridConfig>(() => ({
   key: 'formula',
   titleKey: 'productCenter.formula.title',
@@ -74,6 +66,7 @@ const formulaConfig = computed<ProductGridConfig>(() => ({
   idKey: 'formulaId',
   singleRowActions: true,
   showDetail: true,
+  hideReference: true,
   permissions: {
     add: 'product:formula:add',
     edit: 'product:formula:edit',
@@ -126,31 +119,6 @@ const formulaConfig = computed<ProductGridConfig>(() => ({
     { prop: 'remark', labelKey: 'productCenter.common.remark', type: 'textarea', table: false, formSpan: 2 }
   ],
   rowActions: [
-    {
-      labelKey: 'productCenter.formula.actions.materials',
-      icon: 'Setting',
-      type: 'primary',
-      permission: 'product:formula:setup',
-      primary: true,
-      visible: (row) => row.status === FORMULA_STATUS.DRAFT || row.status === FORMULA_STATUS.REJECTED,
-      handler: (row) => openFormulaModule(row, 'materials')
-    },
-    {
-      labelKey: 'productCenter.formula.actions.options',
-      icon: 'Operation',
-      type: 'primary',
-      permission: 'product:formula:setup',
-      visible: (row) => row.status === FORMULA_STATUS.DRAFT || row.status === FORMULA_STATUS.REJECTED,
-      handler: (row) => openFormulaModule(row, 'options')
-    },
-    {
-      labelKey: 'productCenter.formula.actions.simulation',
-      icon: 'DataAnalysis',
-      type: 'primary',
-      permission: 'product:formula:setup',
-      visible: (row) => row.status === FORMULA_STATUS.DRAFT || row.status === FORMULA_STATUS.REJECTED,
-      handler: (row) => openFormulaModule(row, 'simulation')
-    },
     {
       labelKey: 'productCenter.formula.actions.submitReview',
       icon: 'Promotion',
