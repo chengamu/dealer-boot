@@ -40,7 +40,7 @@ public class ProductFormulaOptionController extends BaseController {
     @PutMapping
     @Operation(summary = "保存配方选项")
     public R<Void> save(@PathVariable Long id, @Validated @RequestBody ProductFormulaSetupBo bo) {
-        return toAjax(setupService.saveSetup(id, bo));
+        return toAjax(setupService.saveOptions(id, bo));
     }
 
     @SaCheckPermission("product:formula:setup")

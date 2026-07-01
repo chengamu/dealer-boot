@@ -254,13 +254,6 @@ export function useFormulaUsageRules(
     return undefined
   }
 
-  function insertVariable(label: string) {
-    if (!selectedRule.value) return
-    const field = formulaFieldByTarget(expressionEditorTarget.value)
-    if (!field) return
-    selectedRule.value[field.textKey] = `${String(selectedRule.value[field.textKey] || '')}${label}` as never
-  }
-
   function openExpressionEditor(row: ProductFormulaUsageRuleVO, target: ExpressionTarget) {
     expressionEditorRow.value = row
     expressionEditorTarget.value = target
@@ -362,7 +355,6 @@ export function useFormulaUsageRules(
     removeSelectedRule,
     handleDefaultRuleChange,
     syncFormula,
-    insertVariable,
     openExpressionEditor,
     confirmExpressionEditor,
     applyCurrentUsageToBatchRows

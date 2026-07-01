@@ -171,7 +171,6 @@ export function useFormulaUsageEditor(props: FormulaUsageEditorProps, close: () 
     removeSelectedRule: usageRules.removeSelectedRule,
     handleDefaultRuleChange: usageRules.handleDefaultRuleChange,
     syncFormula: usageRules.syncFormula,
-    insertVariable: usageRules.insertVariable,
     openExpressionEditor: usageRules.openExpressionEditor,
     confirmExpressionEditor: usageRules.confirmExpressionEditor
   }

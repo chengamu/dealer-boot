@@ -16,7 +16,7 @@ import static org.mockito.Mockito.mock;
 class ProductFormulaUsageRuleServiceImplTest {
 
     private final ProductFormulaUsageRuleServiceImpl service =
-        new ProductFormulaUsageRuleServiceImpl(mock(ProductFormulaUsageRuleMapper.class));
+        new ProductFormulaUsageRuleServiceImpl(mock(ProductFormulaUsageRuleMapper.class), new ProductFormulaUsageRuleValidator());
 
     @Test
     void fixedUsageModeAllowsOnlyOneEnabledRulePerMaterial() {

@@ -1,46 +1,28 @@
 package com.bocoo.product.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.bocoo.common.core.exception.ServiceException;
 import com.bocoo.common.core.utils.MapstructUtils;
 import com.bocoo.common.core.utils.StringUtils;
-import com.bocoo.common.core.utils.TimeUtils;
 import com.bocoo.common.mybatis.core.page.PageQuery;
 import com.bocoo.common.mybatis.core.page.TableDataInfo;
-import com.bocoo.common.satoken.utils.LoginHelper;
 import com.bocoo.product.domain.bo.ProductFormulaBo;
-import com.bocoo.product.domain.entity.ProductCategory;
-import com.bocoo.product.domain.entity.ProductDictItem;
 import com.bocoo.product.domain.entity.ProductFormula;
-import com.bocoo.product.domain.entity.ProductFormulaVersion;
 import com.bocoo.product.domain.vo.BaseEditCheckResultVo;
 import com.bocoo.product.domain.vo.ProductFormulaVersionVo;
 import com.bocoo.product.domain.vo.ProductFormulaVo;
 import com.bocoo.product.domain.vo.ReferenceCheckResultVo;
-import com.bocoo.product.mapper.ProductCategoryMapper;
-import com.bocoo.product.mapper.ProductDictItemMapper;
 import com.bocoo.product.mapper.ProductFormulaMapper;
-import com.bocoo.product.mapper.ProductFormulaVersionMapper;
 import com.bocoo.product.service.ProductChangeLogService;
 import com.bocoo.product.service.ProductEntityDefaults;
 import com.bocoo.product.service.ProductFormulaService;
 import com.bocoo.product.service.ProductFormulaSetupService;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.json.JsonMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
-import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -51,21 +33,14 @@ public class ProductFormulaServiceImpl extends ProductServiceSupport implements 
     public static final String STATUS_REJECTED = "REJECTED";
     public static final String STATUS_EFFECTIVE = "EFFECTIVE";
     public static final String STATUS_STOPPED = "STOPPED";
-    private static final String VALIDATION_NOT_VALIDATED = "NOT_VALIDATED";
-    private static final String VALIDATION_PASS = "PASS";
-    private static final String VALIDATION_FAIL = "FAIL";
-    private static final String PRODUCT_TYPE_DICT = "product_type";
-    private static final JsonMapper OBJECT_MAPPER = JsonMapper.builder()
-        .addModule(new JavaTimeModule())
-        .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-        .build();
+    public static final String VALIDATION_NOT_VALIDATED = "NOT_VALIDATED";
+    public static final String VALIDATION_PASS = "PASS";
 
     private final ProductFormulaMapper formulaMapper;
-    private final ProductFormulaVersionMapper versionMapper;
-    private final ProductCategoryMapper categoryMapper;
-    private final ProductDictItemMapper dictItemMapper;
     private final ProductFormulaSetupService setupService;
     private final ProductChangeLogService changeLogService;
+    private final ProductFormulaDraftNormalizer draftNormalizer;
+    private final ProductFormulaReviewLifecycle reviewLifecycle;
 
     @Override
     public TableDataInfo<ProductFormulaVo> queryPageList(ProductFormulaBo bo, PageQuery pageQuery) {
@@ -85,8 +60,8 @@ public class ProductFormulaServiceImpl extends ProductServiceSupport implements 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Boolean insertByBo(ProductFormulaBo bo) {
-        normalizeFormula(bo, true);
-        validateFormulaUnique(bo);
+        draftNormalizer.normalize(bo, true);
+        draftNormalizer.validateUnique(bo);
         ProductFormula entity = MapstructUtils.convert(bo, ProductFormula.class);
         if (entity == null) {
             return Boolean.FALSE;
@@ -102,8 +77,8 @@ public class ProductFormulaServiceImpl extends ProductServiceSupport implements 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Boolean updateByBo(ProductFormulaBo bo) {
-        normalizeFormula(bo, false);
-        validateFormulaUnique(bo);
+        draftNormalizer.normalize(bo, false);
+        draftNormalizer.validateUnique(bo);
         ProductFormula current = formulaMapper.selectById(bo.getFormulaId());
         assertFormulaEditable(current);
         ProductFormula entity = MapstructUtils.convert(bo, ProductFormula.class);
@@ -152,129 +127,47 @@ public class ProductFormulaServiceImpl extends ProductServiceSupport implements 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Boolean submitReview(Long id) {
-        ProductFormula current = requireFormula(id);
-        if (!STATUS_DRAFT.equals(current.getStatus()) && !STATUS_REJECTED.equals(current.getStatus())) {
-            throw ServiceException.ofMessageKey("product.formula.submitReviewDenied");
-        }
-        if (!Boolean.TRUE.equals(current.getConfiguredFlag()) || current.getMaterialLineCount() == null || current.getMaterialLineCount() <= 0) {
-            throw ServiceException.ofMessageKey("product.formula.notConfigured");
-        }
-        if (!VALIDATION_PASS.equals(current.getLatestValidationStatus())) {
-            throw ServiceException.ofMessageKey("product.formula.validationRequired");
-        }
-        assertStagePassed(current.getMaterialValidationStatus(), "product.formula.materialValidationRequired");
-        assertStagePassed(current.getOptionValidationStatus(), "product.formula.optionValidationRequired");
-        assertStagePassed(current.getSimulationValidationStatus(), "product.formula.simulationValidationRequired");
-        ProductFormulaVersion review = buildReviewSnapshot(current, setupService.snapshot(id));
-        ProductEntityDefaults.prepareInsert(review);
-        boolean inserted = versionMapper.insert(review) > 0;
-        if (!inserted) {
-            return Boolean.FALSE;
-        }
-        return updateFormulaStatus(current, STATUS_PENDING_REVIEW, "SUBMIT_REVIEW", null);
+        return reviewLifecycle.submitReview(id);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Boolean approve(Long id) {
-        ProductFormula current = requireFormula(id);
-        if (!STATUS_PENDING_REVIEW.equals(current.getStatus())) {
-            throw ServiceException.ofMessageKey("product.formula.approveDenied");
-        }
-        ProductFormulaVersion version = requirePendingReviewVersion(id);
-        String auditBy = currentUsername();
-        LocalDateTime auditTime = TimeUtils.utcNow();
-        versionMapper.update(null, new LambdaUpdateWrapper<ProductFormulaVersion>()
-            .eq(ProductFormulaVersion::getVersionId, version.getVersionId())
-            .set(ProductFormulaVersion::getVersionStatus, STATUS_EFFECTIVE)
-            .set(ProductFormulaVersion::getAuditBy, auditBy)
-            .set(ProductFormulaVersion::getAuditTime, auditTime)
-            .set(ProductFormulaVersion::getRejectReason, null));
-        ProductFormula after = copyStatusSnapshot(current);
-        after.setStatus(STATUS_EFFECTIVE);
-        after.setAuditBy(auditBy);
-        after.setAuditTime(auditTime);
-        after.setRejectReason(null);
-        after.setCurrentVersionId(version.getVersionId());
-        after.setCurrentVersionNo(version.getVersionNo());
-        after.setCurrentVersionLabel(version.getVersionLabel());
-        boolean updated = formulaMapper.update(null, new LambdaUpdateWrapper<ProductFormula>()
-            .eq(ProductFormula::getFormulaId, id)
-            .set(ProductFormula::getStatus, STATUS_EFFECTIVE)
-            .set(ProductFormula::getAuditBy, auditBy)
-            .set(ProductFormula::getAuditTime, auditTime)
-            .set(ProductFormula::getRejectReason, null)
-            .set(ProductFormula::getCurrentVersionId, version.getVersionId())
-            .set(ProductFormula::getCurrentVersionNo, version.getVersionNo())
-            .set(ProductFormula::getCurrentVersionLabel, version.getVersionLabel())) > 0;
-        if (updated) {
-            recordFormulaChange(id, current.getFormulaCode(), "APPROVE_VERSION", current, after);
-        }
-        return updated;
+        return reviewLifecycle.approve(id);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Boolean reject(Long id, String rejectReason) {
-        ProductFormula current = requireFormula(id);
-        if (!STATUS_PENDING_REVIEW.equals(current.getStatus())) {
-            throw ServiceException.ofMessageKey("product.formula.rejectDenied");
-        }
-        if (StringUtils.isBlank(rejectReason)) {
-            throw ServiceException.ofMessageKey("product.formula.rejectReasonRequired");
-        }
-        ProductFormulaVersion review = requirePendingReviewVersion(id);
-        versionMapper.update(null, new LambdaUpdateWrapper<ProductFormulaVersion>()
-            .eq(ProductFormulaVersion::getVersionId, review.getVersionId())
-            .set(ProductFormulaVersion::getVersionStatus, STATUS_REJECTED)
-            .set(ProductFormulaVersion::getAuditBy, currentUsername())
-            .set(ProductFormulaVersion::getAuditTime, TimeUtils.utcNow())
-            .set(ProductFormulaVersion::getRejectReason, rejectReason.trim()));
-        return updateFormulaStatus(current, STATUS_REJECTED, "REJECT", rejectReason.trim());
+        return reviewLifecycle.reject(id, rejectReason);
     }
 
     @Override
     public TableDataInfo<ProductFormulaVersionVo> queryReviewPage(PageQuery pageQuery) {
-        return page(versionMapper, pageQuery, activeQuery(ProductFormulaVersion.class)
-            .eq("version_status", STATUS_PENDING_REVIEW), q -> q.orderByDesc("submit_time", "version_id"));
+        return reviewLifecycle.queryReviewPage(pageQuery);
     }
 
     @Override
     public ProductFormulaVersionVo queryReviewById(Long reviewId) {
-        return versionMapper.selectVoById(reviewId);
+        return reviewLifecycle.queryReviewById(reviewId);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Boolean approveReview(Long reviewId) {
-        ProductFormulaVersion review = requireReview(reviewId);
-        return approve(review.getFormulaId());
+        return reviewLifecycle.approveReview(reviewId);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Boolean rejectReview(Long reviewId, String rejectReason) {
-        ProductFormulaVersion review = requireReview(reviewId);
-        return reject(review.getFormulaId(), rejectReason);
+        return reviewLifecycle.rejectReview(reviewId, rejectReason);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Boolean stop(Long id) {
-        ProductFormula current = requireFormula(id);
-        if (!STATUS_EFFECTIVE.equals(current.getStatus())) {
-            throw ServiceException.ofMessageKey("product.formula.stopDenied");
-        }
-        ProductFormula after = copyStatusSnapshot(current);
-        after.setStatus(STATUS_STOPPED);
-        boolean updated = formulaMapper.update(null, new LambdaUpdateWrapper<ProductFormula>()
-            .eq(ProductFormula::getFormulaId, id)
-            .set(ProductFormula::getStatus, STATUS_STOPPED)) > 0;
-        if (updated) {
-            markCurrentVersionStopped(current);
-            recordFormulaChange(id, current.getFormulaCode(), "STOP", current, after);
-        }
-        return updated;
+        return reviewLifecycle.stop(id);
     }
 
     @Override
@@ -285,17 +178,12 @@ public class ProductFormulaServiceImpl extends ProductServiceSupport implements 
 
     @Override
     public List<ProductFormulaVersionVo> queryVersions(Long formulaId) {
-        return versionMapper.selectVoList(activeQuery(ProductFormulaVersion.class)
-            .eq("formula_id", formulaId)
-            .in("version_status", List.of(STATUS_EFFECTIVE, STATUS_STOPPED))
-            .orderByDesc("version_no", "version_id"));
+        return reviewLifecycle.queryVersions(formulaId);
     }
 
     @Override
     public ProductFormulaVersionVo queryVersionById(Long formulaId, Long versionId) {
-        return versionMapper.selectVoOne(activeQuery(ProductFormulaVersion.class)
-            .eq("formula_id", formulaId)
-            .eq("version_id", versionId));
+        return reviewLifecycle.queryVersionById(formulaId, versionId);
     }
 
     @Override
@@ -341,189 +229,6 @@ public class ProductFormulaServiceImpl extends ProductServiceSupport implements 
         return q;
     }
 
-    private void normalizeFormula(ProductFormulaBo bo, boolean insert) {
-        if (bo == null) {
-            throw ServiceException.ofMessageKey("product.formula.required");
-        }
-        bo.setFormulaCode(trimToNull(bo.getFormulaCode()));
-        bo.setFormulaName(trimToNull(bo.getFormulaName()));
-        bo.setCategoryCode(trimToNull(bo.getCategoryCode()));
-        bo.setCategoryNameCn(trimToNull(bo.getCategoryNameCn()));
-        bo.setProductTypeCode(trimToNull(bo.getProductTypeCode()));
-        bo.setProductTypeNameCn(trimToNull(bo.getProductTypeNameCn()));
-        bo.setSizeSummary(trimToNull(bo.getSizeSummary()));
-        bo.setStatus(trimToNull(bo.getStatus()));
-        bo.setRejectReason(trimToNull(bo.getRejectReason()));
-        bo.setRemark(trimToNull(bo.getRemark()));
-        normalizeSizeRange(bo);
-        validateRequiredFields(bo);
-        validateSizeRange(bo);
-        normalizeCategory(bo);
-        normalizeProductType(bo);
-        if (bo.getConfiguredFlag() == null) {
-            bo.setConfiguredFlag(Boolean.FALSE);
-        }
-        if (bo.getMaterialLineCount() == null) {
-            bo.setMaterialLineCount(0);
-        }
-        if (bo.getDraftVersionNo() == null) {
-            bo.setDraftVersionNo(1);
-        }
-        if (StringUtils.isBlank(bo.getLatestValidationStatus())) {
-            bo.setLatestValidationStatus(VALIDATION_NOT_VALIDATED);
-        }
-        defaultValidationStatus(bo);
-        bo.setSizeSummary(buildSizeSummary(bo.getMinWidthInch(), bo.getMaxWidthInch(), bo.getMinHeightInch(), bo.getMaxHeightInch()));
-        if (insert || StringUtils.isBlank(bo.getStatus())) {
-            bo.setStatus(STATUS_DRAFT);
-        } else {
-            bo.setStatus(normalizeStatus(bo.getStatus()));
-        }
-    }
-
-    private void validateRequiredFields(ProductFormulaBo bo) {
-        if (StringUtils.isBlank(bo.getFormulaCode())) {
-            throw ServiceException.ofMessageKey("product.formula.codeRequired");
-        }
-        if (StringUtils.isBlank(bo.getFormulaName())) {
-            throw ServiceException.ofMessageKey("product.formula.nameRequired");
-        }
-        if (bo.getCategoryId() == null && StringUtils.isBlank(bo.getCategoryCode())) {
-            throw ServiceException.ofMessageKey("product.formula.categoryRequired");
-        }
-        if (StringUtils.isBlank(bo.getProductTypeCode())) {
-            throw ServiceException.ofMessageKey("product.formula.productTypeRequired");
-        }
-        if (bo.getMaxWidthInch() == null || bo.getMaxHeightInch() == null) {
-            throw ServiceException.ofMessageKey("product.formula.sizeRequired");
-        }
-    }
-
-    private void normalizeSizeRange(ProductFormulaBo bo) {
-        if (bo.getMinWidthInch() == null) {
-            bo.setMinWidthInch(BigDecimal.ZERO);
-        }
-        if (bo.getMinHeightInch() == null) {
-            bo.setMinHeightInch(BigDecimal.ZERO);
-        }
-    }
-
-    private void validateSizeRange(ProductFormulaBo bo) {
-        if (bo.getMinWidthInch().compareTo(bo.getMaxWidthInch()) > 0) {
-            throw ServiceException.ofMessageKey("product.formula.minWidthGreaterThanMax");
-        }
-        if (bo.getMinHeightInch().compareTo(bo.getMaxHeightInch()) > 0) {
-            throw ServiceException.ofMessageKey("product.formula.minHeightGreaterThanMax");
-        }
-    }
-
-    private void normalizeCategory(ProductFormulaBo bo) {
-        ProductCategory category = null;
-        if (bo.getCategoryId() != null) {
-            category = categoryMapper.selectById(bo.getCategoryId());
-            if (category != null && !"0".equals(category.getDelFlag())) {
-                category = null;
-            }
-        }
-        if (category == null && StringUtils.isNotBlank(bo.getCategoryCode())) {
-            category = categoryMapper.selectOne(activeQuery(ProductCategory.class).eq("category_code", bo.getCategoryCode()));
-        }
-        if (category == null || !STATUS_ENABLED.equals(category.getStatus())) {
-            throw ServiceException.ofMessageKey("product.formula.categoryNotFound");
-        }
-        bo.setCategoryId(category.getCategoryId());
-        bo.setCategoryCode(category.getCategoryCode());
-        bo.setCategoryNameCn(category.getCategoryNameCn());
-    }
-
-    private void normalizeProductType(ProductFormulaBo bo) {
-        ProductDictItem item = dictItemMapper.selectOne(activeQuery(ProductDictItem.class)
-            .eq("dict_type_code", PRODUCT_TYPE_DICT)
-            .eq("dict_item_value", bo.getProductTypeCode())
-            .eq("status", STATUS_ENABLED));
-        if (item == null) {
-            throw ServiceException.ofMessageKey("product.formula.productTypeNotFound");
-        }
-        bo.setProductTypeCode(item.getDictItemValue());
-        bo.setProductTypeNameCn(item.getDictItemLabelCn());
-    }
-
-    private void validateFormulaUnique(ProductFormulaBo bo) {
-        QueryWrapper<ProductFormula> codeQuery = activeQuery(ProductFormula.class)
-            .eq("formula_code", bo.getFormulaCode())
-            .ne(bo.getFormulaId() != null, "formula_id", bo.getFormulaId());
-        if (formulaMapper.selectCount(codeQuery) > 0) {
-            throw ServiceException.ofMessageKey("product.formula.codeExists");
-        }
-        QueryWrapper<ProductFormula> naturalKeyQuery = activeQuery(ProductFormula.class)
-            .eq("formula_name", bo.getFormulaName())
-            .eq("category_id", bo.getCategoryId())
-            .eq("product_type_code", bo.getProductTypeCode())
-            .eq("min_width_inch", bo.getMinWidthInch())
-            .eq("min_height_inch", bo.getMinHeightInch())
-            .eq("max_width_inch", bo.getMaxWidthInch())
-            .eq("max_height_inch", bo.getMaxHeightInch())
-            .ne(bo.getFormulaId() != null, "formula_id", bo.getFormulaId());
-        if (formulaMapper.selectCount(naturalKeyQuery) > 0) {
-            throw ServiceException.ofMessageKey("product.formula.naturalKeyExists");
-        }
-    }
-
-    private Boolean updateFormulaStatus(ProductFormula current, String status, String actionType, String rejectReason) {
-        ProductFormula after = copyStatusSnapshot(current);
-        after.setStatus(status);
-        after.setRejectReason(rejectReason);
-        boolean updated = formulaMapper.update(null, new LambdaUpdateWrapper<ProductFormula>()
-            .eq(ProductFormula::getFormulaId, current.getFormulaId())
-            .set(ProductFormula::getStatus, status)
-            .set(ProductFormula::getRejectReason, rejectReason)) > 0;
-        if (updated) {
-            recordFormulaChange(current.getFormulaId(), current.getFormulaCode(), actionType, current, after);
-        }
-        return updated;
-    }
-
-    private ProductFormulaVersion buildReviewSnapshot(ProductFormula current, Map<String, Object> setupSnapshot) {
-        int versionNo = nextVersionNo(current.getFormulaId());
-        ProductFormulaVersion version = new ProductFormulaVersion();
-        version.setTenantId(current.getTenantId());
-        version.setFormulaId(current.getFormulaId());
-        version.setVersionNo(versionNo);
-        version.setVersionLabel(versionLabel(versionNo));
-        version.setVersionStatus(STATUS_PENDING_REVIEW);
-        version.setFormulaSnapshotJson(toJson(current));
-        version.setSetupSnapshotJson(toJson(setupSnapshot));
-        version.setValidationStatus(VALIDATION_PASS);
-        Map<String, Object> validationReport = new LinkedHashMap<>();
-        validationReport.put("status", VALIDATION_PASS);
-        validationReport.put("materialStatus", current.getMaterialValidationStatus());
-        validationReport.put("optionStatus", current.getOptionValidationStatus());
-        validationReport.put("simulationStatus", current.getSimulationValidationStatus());
-        validationReport.put("message", "product.formula.validationPassed");
-        version.setValidationReportJson(toJson(validationReport));
-        version.setSubmitBy(currentUsername());
-        version.setSubmitTime(TimeUtils.utcNow());
-        return version;
-    }
-
-    private int nextVersionNo(Long formulaId) {
-        ProductFormulaVersion latest = versionMapper.selectOne(activeQuery(ProductFormulaVersion.class)
-            .eq("formula_id", formulaId)
-            .in("version_status", List.of(STATUS_EFFECTIVE, STATUS_STOPPED))
-            .orderByDesc("version_no")
-            .last("limit 1"));
-        return latest == null || latest.getVersionNo() == null ? 1 : latest.getVersionNo() + 1;
-    }
-
-    private void markCurrentVersionStopped(ProductFormula current) {
-        if (current.getCurrentVersionId() == null) {
-            return;
-        }
-        versionMapper.update(null, new LambdaUpdateWrapper<ProductFormulaVersion>()
-            .eq(ProductFormulaVersion::getVersionId, current.getCurrentVersionId())
-            .set(ProductFormulaVersion::getVersionStatus, STATUS_STOPPED));
-    }
-
     private void assertFormulaEditable(ProductFormula current) {
         if (current == null) {
             throw ServiceException.ofMessageKey("product.base.edit.notFound");
@@ -537,148 +242,10 @@ public class ProductFormulaServiceImpl extends ProductServiceSupport implements 
         return STATUS_DRAFT.equals(status) || STATUS_REJECTED.equals(status);
     }
 
-    private ProductFormula requireFormula(Long id) {
-        ProductFormula current = id == null ? null : formulaMapper.selectById(id);
-        if (current == null) {
-            throw ServiceException.ofMessageKey("product.base.edit.notFound");
-        }
-        return current;
-    }
-
-    private ProductFormulaVersion requirePendingReviewVersion(Long formulaId) {
-        ProductFormulaVersion review = versionMapper.selectOne(activeQuery(ProductFormulaVersion.class)
-            .eq("formula_id", formulaId)
-            .eq("version_status", STATUS_PENDING_REVIEW)
-            .orderByDesc("version_id")
-            .last("limit 1"));
-        if (review == null) {
-            throw ServiceException.ofMessageKey("product.formula.reviewSnapshotRequired");
-        }
-        return review;
-    }
-
-    private ProductFormulaVersion requireReview(Long reviewId) {
-        ProductFormulaVersion review = reviewId == null ? null : versionMapper.selectById(reviewId);
-        if (review == null || !"0".equals(review.getDelFlag())) {
-            throw ServiceException.ofMessageKey("product.formula.reviewSnapshotRequired");
-        }
-        if (!STATUS_PENDING_REVIEW.equals(review.getVersionStatus())) {
-            throw ServiceException.ofMessageKey("product.formula.reviewSnapshotInvalid");
-        }
-        return review;
-    }
-
-    private void assertStagePassed(String status, String messageKey) {
-        if (!VALIDATION_PASS.equals(status)) {
-            throw ServiceException.ofMessageKey(messageKey);
-        }
-    }
-
-    private void defaultValidationStatus(ProductFormulaBo bo) {
-        if (StringUtils.isBlank(bo.getMaterialValidationStatus())) {
-            bo.setMaterialValidationStatus(VALIDATION_NOT_VALIDATED);
-        }
-        if (StringUtils.isBlank(bo.getOptionValidationStatus())) {
-            bo.setOptionValidationStatus(VALIDATION_NOT_VALIDATED);
-        }
-        if (StringUtils.isBlank(bo.getSimulationValidationStatus())) {
-            bo.setSimulationValidationStatus(VALIDATION_NOT_VALIDATED);
-        }
-    }
-
-    private String normalizeStatus(String status) {
-        String next = StringUtils.blankToDefault(status, STATUS_DRAFT).trim().toUpperCase(Locale.ROOT);
-        if (STATUS_DRAFT.equals(next) || STATUS_PENDING_REVIEW.equals(next) || STATUS_REJECTED.equals(next)
-            || STATUS_EFFECTIVE.equals(next) || STATUS_STOPPED.equals(next)) {
-            return next;
-        }
-        throw ServiceException.ofMessageKey("product.formula.statusInvalid");
-    }
-
-    private String trimToNull(String value) {
-        return StringUtils.isBlank(value) ? null : value.trim();
-    }
-
-    private String buildSizeSummary(BigDecimal minWidth, BigDecimal maxWidth, BigDecimal minHeight, BigDecimal maxHeight) {
-        return strip(minWidth) + "≤W≤" + strip(maxWidth) + "in, " + strip(minHeight) + "≤H≤" + strip(maxHeight) + "in";
-    }
-
-    private String strip(BigDecimal value) {
-        return value == null ? "-" : value.stripTrailingZeros().toPlainString();
-    }
-
-    private String versionLabel(Integer versionNo) {
-        return "V" + versionNo;
-    }
-
-    private String currentUsername() {
-        try {
-            return LoginHelper.getUsername();
-        } catch (Exception ignored) {
-            return "system";
-        }
-    }
-
     private void recordFormulaChange(Long formulaId, String formulaCode, String actionType,
                                      Object before, Object after) {
         changeLogService.record("FORMULA", "FORMULA", formulaId, formulaCode, actionType, before, after, null);
     }
 
-    private ProductFormula copyStatusSnapshot(ProductFormula source) {
-        ProductFormula target = new ProductFormula();
-        target.setFormulaId(source.getFormulaId());
-        target.setFormulaCode(source.getFormulaCode());
-        target.setFormulaName(source.getFormulaName());
-        target.setStatus(source.getStatus());
-        target.setMaterialLineCount(source.getMaterialLineCount());
-        target.setConfiguredFlag(source.getConfiguredFlag());
-        target.setCurrentVersionId(source.getCurrentVersionId());
-        target.setCurrentVersionNo(source.getCurrentVersionNo());
-        target.setCurrentVersionLabel(source.getCurrentVersionLabel());
-        target.setDraftVersionNo(source.getDraftVersionNo());
-        target.setLatestValidationStatus(source.getLatestValidationStatus());
-        target.setLatestValidationMessage(source.getLatestValidationMessage());
-        target.setLatestValidationTime(source.getLatestValidationTime());
-        target.setMaterialValidationStatus(source.getMaterialValidationStatus());
-        target.setMaterialValidationMessage(source.getMaterialValidationMessage());
-        target.setMaterialValidationTime(source.getMaterialValidationTime());
-        target.setOptionValidationStatus(source.getOptionValidationStatus());
-        target.setOptionValidationMessage(source.getOptionValidationMessage());
-        target.setOptionValidationTime(source.getOptionValidationTime());
-        target.setSimulationValidationStatus(source.getSimulationValidationStatus());
-        target.setSimulationValidationMessage(source.getSimulationValidationMessage());
-        target.setSimulationValidationTime(source.getSimulationValidationTime());
-        target.setAuditBy(source.getAuditBy());
-        target.setAuditTime(source.getAuditTime());
-        target.setRejectReason(source.getRejectReason());
-        return target;
-    }
 
-    private String toJson(Object value) {
-        if (value == null) {
-            return null;
-        }
-        try {
-            if (value instanceof ProductFormula formula) {
-                Map<String, Object> snapshot = new LinkedHashMap<>();
-                snapshot.put("formulaId", formula.getFormulaId());
-                snapshot.put("formulaCode", formula.getFormulaCode());
-                snapshot.put("formulaName", formula.getFormulaName());
-                snapshot.put("categoryId", formula.getCategoryId());
-                snapshot.put("categoryCode", formula.getCategoryCode());
-                snapshot.put("categoryNameCn", formula.getCategoryNameCn());
-                snapshot.put("productTypeCode", formula.getProductTypeCode());
-                snapshot.put("productTypeNameCn", formula.getProductTypeNameCn());
-                snapshot.put("minWidthInch", formula.getMinWidthInch());
-                snapshot.put("minHeightInch", formula.getMinHeightInch());
-                snapshot.put("maxWidthInch", formula.getMaxWidthInch());
-                snapshot.put("maxHeightInch", formula.getMaxHeightInch());
-                snapshot.put("sizeSummary", formula.getSizeSummary());
-                return OBJECT_MAPPER.writeValueAsString(snapshot);
-            }
-            return OBJECT_MAPPER.writeValueAsString(value);
-        } catch (JsonProcessingException e) {
-            throw new IllegalStateException("Failed to serialize formula snapshot", e);
-        }
-    }
 }

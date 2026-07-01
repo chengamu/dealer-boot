@@ -11,6 +11,10 @@ public interface ProductFormulaSetupService {
 
     Boolean saveSetup(Long formulaId, ProductFormulaSetupBo bo);
 
+    Boolean saveMaterials(Long formulaId, ProductFormulaSetupBo bo);
+
+    Boolean saveOptions(Long formulaId, ProductFormulaSetupBo bo);
+
     Boolean validateSetup(Long formulaId);
 
     Boolean validateMaterials(Long formulaId);

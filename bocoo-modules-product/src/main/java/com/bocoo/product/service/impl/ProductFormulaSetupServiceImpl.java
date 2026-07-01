@@ -49,6 +49,28 @@ public class ProductFormulaSetupServiceImpl extends ProductServiceSupport implem
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Boolean saveMaterials(Long formulaId, ProductFormulaSetupBo bo) {
+        ProductFormula current = requireEditableFormula(formulaId);
+        ProductFormulaSetupBo safeBo = bo == null ? new ProductFormulaSetupBo() : bo;
+        ProductFormulaSetupRows rows = setupNormalizer.normalizeMaterials(formulaId, safeBo, setupReader.context(formulaId));
+        setupWriter.replaceMaterials(formulaId, rows);
+        refreshFormulaSetup(current, rows.materials().size(), "SAVE_MATERIALS", safeBo);
+        return Boolean.TRUE;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Boolean saveOptions(Long formulaId, ProductFormulaSetupBo bo) {
+        ProductFormula current = requireEditableFormula(formulaId);
+        ProductFormulaSetupBo safeBo = bo == null ? new ProductFormulaSetupBo() : bo;
+        ProductFormulaSetupRows rows = setupNormalizer.normalizeOptions(formulaId, safeBo, setupReader.context(formulaId));
+        setupWriter.replaceOptions(formulaId, rows);
+        refreshFormulaSetup(current, rows.materials().size(), "SAVE_OPTIONS", safeBo);
+        return Boolean.TRUE;
+    }
+
+    @Override
     @Transactional(rollbackFor = Exception.class, noRollbackFor = ServiceException.class)
     public Boolean validateSetup(Long formulaId) {
         ProductFormula current = requireEditableFormula(formulaId);

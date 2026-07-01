@@ -34,6 +34,7 @@ import com.bocoo.product.service.impl.ProductFormulaSetupServiceImpl;
 import com.bocoo.product.service.impl.ProductFormulaSetupValidator;
 import com.bocoo.product.service.impl.ProductFormulaSetupWriter;
 import com.bocoo.product.service.impl.ProductFormulaUsageRuleServiceImpl;
+import com.bocoo.product.service.impl.ProductFormulaUsageRuleValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -85,7 +86,7 @@ class ProductFormulaSetupServiceTest {
     @BeforeEach
     void setUp() {
         ProductServiceTestSupport.prepareMapperAndConverter();
-        usageRuleService = new ProductFormulaUsageRuleServiceImpl(usageRuleMapper);
+        usageRuleService = new ProductFormulaUsageRuleServiceImpl(usageRuleMapper, new ProductFormulaUsageRuleValidator());
         ProductFormulaMaterialSnapshotResolver materialSnapshotResolver =
             new ProductFormulaMaterialSnapshotResolver(productMaterialMapper, unitMapper);
         ProductFormulaSetupReader setupReader = new ProductFormulaSetupReader(
@@ -189,6 +190,75 @@ class ProductFormulaSetupServiceTest {
                 && Boolean.TRUE.equals(row.getDefaultRuleFlag())
         ));
         verify(changeLogService).record(eq("FORMULA"), eq("FORMULA"), eq(3001L), eq("FORMULA_25_ZEBRA"), eq("SAVE_SETUP"), any(), any(), eq(null));
+    }
+
+    @Test
+    void saveMaterialsPreservesExistingOptionsAndRefreshesOptionMaterialLinks() {
+        ProductFormulaSetupBo bo = validSetup();
+        bo.setOptions(List.of());
+        bo.setOptionValues(List.of());
+        bo.setOptionMaterials(List.of());
+        bo.setRestrictions(List.of());
+        when(formulaMapper.selectById(3001L)).thenReturn(formula("DRAFT"));
+        when(materialMapper.selectList(any())).thenReturn(List.of(formulaMaterial()));
+        when(optionMapper.selectList(any())).thenReturn(List.of(option("FABRIC", "面料")));
+        when(optionValueMapper.selectList(any())).thenReturn(List.of(optionValue("FABRIC", "MAT001", "米色斑马帘面料")));
+        when(optionMaterialMapper.selectList(any())).thenReturn(List.of(optionMaterial()));
+        when(restrictionMapper.selectList(any())).thenReturn(List.of(restriction()));
+        when(usageRuleMapper.selectList(any())).thenReturn(List.of(usageRule()));
+        stubMaterialSnapshot();
+        doAnswer(invocation -> {
+            ProductFormulaMaterial row = invocation.getArgument(0);
+            row.setFormulaMaterialId(7002L);
+            return 1;
+        }).when(materialMapper).insert(any(ProductFormulaMaterial.class));
+        when(optionMaterialMapper.insert(any(ProductFormulaOptionMaterial.class))).thenReturn(1);
+        when(usageRuleMapper.insert(any(ProductFormulaUsageRule.class))).thenReturn(1);
+
+        assertThat(setupService.saveMaterials(3001L, bo)).isTrue();
+
+        verify(optionMapper, never()).insert(any());
+        verify(optionValueMapper, never()).insert(any());
+        verify(restrictionMapper, never()).insert(any());
+        verify(optionMaterialMapper).insert(argThat(row -> Long.valueOf(7002L).equals(row.getFormulaMaterialId())));
+        verify(changeLogService).record(eq("FORMULA"), eq("FORMULA"), eq(3001L), eq("FORMULA_25_ZEBRA"), eq("SAVE_MATERIALS"), any(), any(), eq(null));
+    }
+
+    @Test
+    void saveOptionsPreservesExistingMaterialsAndUsageRules() {
+        ProductFormulaSetupBo bo = validSetup();
+        bo.setMaterials(List.of());
+        bo.setUsageRules(List.of());
+        when(formulaMapper.selectById(3001L)).thenReturn(formula("DRAFT"));
+        when(materialMapper.selectList(any())).thenReturn(List.of(formulaMaterial()));
+        when(optionMapper.selectList(any())).thenReturn(List.of(option("FABRIC", "面料")));
+        when(optionValueMapper.selectList(any())).thenReturn(List.of(optionValue("FABRIC", "MAT001", "米色斑马帘面料")));
+        when(optionMaterialMapper.selectList(any())).thenReturn(List.of(optionMaterial()));
+        when(restrictionMapper.selectList(any())).thenReturn(List.of(restriction()));
+        when(usageRuleMapper.selectList(any())).thenReturn(List.of(usageRule()));
+        doAnswer(invocation -> {
+            ProductFormulaOption row = invocation.getArgument(0);
+            row.setOptionId(7102L);
+            return 1;
+        }).when(optionMapper).insert(any(ProductFormulaOption.class));
+        doAnswer(invocation -> {
+            ProductFormulaOptionValue row = invocation.getArgument(0);
+            row.setOptionValueId(7202L);
+            return 1;
+        }).when(optionValueMapper).insert(any(ProductFormulaOptionValue.class));
+        when(optionMaterialMapper.insert(any(ProductFormulaOptionMaterial.class))).thenReturn(1);
+        when(restrictionMapper.insert(any(ProductFormulaRestriction.class))).thenReturn(1);
+
+        assertThat(setupService.saveOptions(3001L, bo)).isTrue();
+
+        verify(materialMapper, never()).insert(any());
+        verify(usageRuleMapper, never()).insert(any());
+        verify(optionMaterialMapper).insert(argThat(row ->
+            Long.valueOf(7001L).equals(row.getFormulaMaterialId())
+                && Long.valueOf(7102L).equals(row.getOptionId())
+                && Long.valueOf(7202L).equals(row.getOptionValueId())
+        ));
+        verify(changeLogService).record(eq("FORMULA"), eq("FORMULA"), eq(3001L), eq("FORMULA_25_ZEBRA"), eq("SAVE_OPTIONS"), any(), any(), eq(null));
     }
 
     @Test
@@ -458,6 +528,22 @@ class ProductFormulaSetupServiceTest {
         bo.setDefaultFlag(Boolean.TRUE);
         bo.setStatus("ENABLED");
         return bo;
+    }
+
+    private ProductFormulaOptionMaterial optionMaterial() {
+        ProductFormulaOptionMaterial optionMaterial = new ProductFormulaOptionMaterial();
+        optionMaterial.setFormulaId(3001L);
+        optionMaterial.setOptionId(7101L);
+        optionMaterial.setOptionValueId(7201L);
+        optionMaterial.setOptionCode("FABRIC");
+        optionMaterial.setValueCode("MAT001");
+        optionMaterial.setFormulaMaterialId(7001L);
+        optionMaterial.setMaterialId(4001L);
+        optionMaterial.setMaterialCode("MAT001");
+        optionMaterial.setMaterialNameCn("米色斑马帘面料");
+        optionMaterial.setStatus("ENABLED");
+        optionMaterial.setDelFlag("0");
+        return optionMaterial;
     }
 
     private ProductFormulaRestrictionBo restrictionBo() {

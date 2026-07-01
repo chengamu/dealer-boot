@@ -1,16 +1,12 @@
 package com.bocoo.product.service.impl;
-
 import com.bocoo.common.core.utils.StringUtils;
-
 import java.util.Map;
 import java.util.Set;
-
 /**
  * Small expression validator for formula setup.
  * It intentionally supports only arithmetic formulas and simple boolean conditions.
  */
 final class ProductFormulaExpressionValidator {
-
     private static final Set<String> FORMULA_VARIABLES = Set.of("orderLength", "orderWidth", "orderHeight", "orderWeight", "orderArea");
     private static final Set<String> CONDITION_VARIABLES = Set.of("orderLength", "orderWidth", "orderHeight", "orderWeight", "orderArea", "store", "fabric", "productType", "optionValue");
     private static final Map<String, Object> SAMPLE = Map.of(
@@ -24,16 +20,14 @@ final class ProductFormulaExpressionValidator {
         "productType", "CUSTOM_CURTAIN",
         "optionValue", "MOTOR"
     );
-
     private ProductFormulaExpressionValidator() {
     }
-
     static boolean isFormulaValid(String expression) {
         if (StringUtils.isBlank(expression)) {
             return false;
         }
         try {
-            Parser parser = new Parser(expression, FORMULA_VARIABLES, false);
+            Parser parser = new Parser(expression, FORMULA_VARIABLES, false, SAMPLE);
             Object result = parser.parseExpression();
             parser.expectEnd();
             return result instanceof Number number && Double.isFinite(number.doubleValue()) && number.doubleValue() >= 0D;
@@ -41,7 +35,6 @@ final class ProductFormulaExpressionValidator {
             return false;
         }
     }
-
     static boolean isConditionValid(String expression) {
         if ("DEFAULT".equals(expression)) {
             return true;
@@ -50,7 +43,7 @@ final class ProductFormulaExpressionValidator {
             return false;
         }
         try {
-            Parser parser = new Parser(expression, CONDITION_VARIABLES, true);
+            Parser parser = new Parser(expression, CONDITION_VARIABLES, true, SAMPLE);
             Object result = parser.parseOr();
             parser.expectEnd();
             return result instanceof Boolean;
@@ -58,19 +51,45 @@ final class ProductFormulaExpressionValidator {
             return false;
         }
     }
-
+    static Double evaluateFormula(String expression, Map<String, Object> context) {
+        if (StringUtils.isBlank(expression)) {
+            return null;
+        }
+        Parser parser = new Parser(expression, FORMULA_VARIABLES, false, context);
+        Object result = parser.parseExpression();
+        parser.expectEnd();
+        if (!(result instanceof Number number) || !Double.isFinite(number.doubleValue()) || number.doubleValue() < 0D) {
+            throw new IllegalArgumentException("invalid formula result");
+        }
+        return number.doubleValue();
+    }
+    static boolean evaluateCondition(String expression, Map<String, Object> context) {
+        if ("DEFAULT".equals(expression)) {
+            return true;
+        }
+        if (StringUtils.isBlank(expression)) {
+            return false;
+        }
+        Parser parser = new Parser(expression, CONDITION_VARIABLES, true, context);
+        Object result = parser.parseOr();
+        parser.expectEnd();
+        if (!(result instanceof Boolean bool)) {
+            throw new IllegalArgumentException("condition must be boolean");
+        }
+        return bool;
+    }
     private static final class Parser {
         private final String expression;
         private final Set<String> variables;
         private final boolean conditionMode;
+        private final Map<String, Object> context;
         private int index;
-
-        private Parser(String expression, Set<String> variables, boolean conditionMode) {
+        private Parser(String expression, Set<String> variables, boolean conditionMode, Map<String, Object> context) {
             this.expression = expression;
             this.variables = variables;
             this.conditionMode = conditionMode;
+            this.context = context == null ? Map.of() : context;
         }
-
         private Object parseOr() {
             Object value = parseAnd();
             while (match("||")) {
@@ -78,7 +97,6 @@ final class ProductFormulaExpressionValidator {
             }
             return value;
         }
-
         private Object parseAnd() {
             Object value = parseComparison();
             while (match("&&")) {
@@ -86,7 +104,6 @@ final class ProductFormulaExpressionValidator {
             }
             return value;
         }
-
         private Object parseComparison() {
             Object left = parseExpression();
             skipSpaces();
@@ -104,7 +121,6 @@ final class ProductFormulaExpressionValidator {
             Object right = parseExpression();
             return compare(left, right, operator);
         }
-
         private Object parseExpression() {
             Object value = parseTerm();
             while (true) {
@@ -117,7 +133,6 @@ final class ProductFormulaExpressionValidator {
                 }
             }
         }
-
         private Object parseTerm() {
             Object value = parseFactor();
             while (true) {
@@ -134,7 +149,6 @@ final class ProductFormulaExpressionValidator {
                 }
             }
         }
-
         private Object parseFactor() {
             skipSpaces();
             if (match("+")) {
@@ -162,7 +176,6 @@ final class ProductFormulaExpressionValidator {
             }
             throw new IllegalArgumentException("invalid token");
         }
-
         private Object parseIdentifierValue() {
             int start = index;
             while (index < expression.length()) {
@@ -180,13 +193,12 @@ final class ProductFormulaExpressionValidator {
             if (!variables.contains(identifier) && !(conditionMode && identifier.startsWith("option_"))) {
                 throw new IllegalArgumentException("unknown variable");
             }
-            Object value = SAMPLE.get(identifier);
+            Object value = context.get(identifier);
             if (value == null && identifier.startsWith("option_")) {
                 return "OPTION_VALUE";
             }
             return value;
         }
-
         private String parseString(char quote) {
             index++;
             StringBuilder builder = new StringBuilder();
@@ -199,7 +211,6 @@ final class ProductFormulaExpressionValidator {
             index++;
             return builder.toString();
         }
-
         private Double parseNumber() {
             int start = index;
             while (index < expression.length()) {
@@ -211,7 +222,6 @@ final class ProductFormulaExpressionValidator {
             }
             return Double.parseDouble(expression.substring(start, index));
         }
-
         private boolean compare(Object left, Object right, String operator) {
             if ("==".equals(operator)) {
                 return String.valueOf(left).equals(String.valueOf(right));
@@ -229,7 +239,6 @@ final class ProductFormulaExpressionValidator {
                 default -> throw new IllegalArgumentException("invalid comparison");
             };
         }
-
         private boolean match(String token) {
             skipSpaces();
             if (!peek(token)) {
@@ -238,36 +247,30 @@ final class ProductFormulaExpressionValidator {
             index += token.length();
             return true;
         }
-
         private boolean peek(String token) {
             return expression.startsWith(token, index);
         }
-
         private char current() {
             skipSpaces();
             return index >= expression.length() ? '\0' : expression.charAt(index);
         }
-
         private void skipSpaces() {
             while (index < expression.length() && Character.isWhitespace(expression.charAt(index))) {
                 index++;
             }
         }
-
         private void expectEnd() {
             skipSpaces();
             if (index != expression.length()) {
                 throw new IllegalArgumentException("unexpected tail");
             }
         }
-
         private double toNumber(Object value) {
             if (value instanceof Number number) {
                 return number.doubleValue();
             }
             throw new IllegalArgumentException("number expected");
         }
-
         private boolean toBoolean(Object value) {
             if (value instanceof Boolean bool) {
                 return bool;

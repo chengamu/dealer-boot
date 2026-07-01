@@ -1,5 +1,4 @@
 package com.bocoo.product.service.impl;
-
 import com.bocoo.common.core.exception.ServiceException;
 import com.bocoo.common.core.utils.MapstructUtils;
 import com.bocoo.common.core.utils.StringUtils;
@@ -16,7 +15,6 @@ import com.bocoo.product.domain.entity.ProductFormulaRestriction;
 import com.bocoo.product.service.ProductFormulaUsageRuleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -24,7 +22,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
 @Component
 @RequiredArgsConstructor
 public class ProductFormulaSetupNormalizer extends ProductServiceSupport {
@@ -33,7 +30,6 @@ public class ProductFormulaSetupNormalizer extends ProductServiceSupport {
     private final ProductFormulaMaterialSnapshotResolver materialSnapshotResolver;
     private final ProductFormulaRestrictionNormalizer restrictionNormalizer;
     private final ProductFormulaUsageRuleService usageRuleService;
-
     ProductFormulaSetupRows normalize(Long formulaId, ProductFormulaSetupBo bo) {
         ProductFormulaSetupBo safeBo = bo == null ? new ProductFormulaSetupBo() : bo;
         List<ProductFormulaMaterial> materials = normalizeMaterials(formulaId, safeBo.getMaterials());
@@ -46,7 +42,27 @@ public class ProductFormulaSetupNormalizer extends ProductServiceSupport {
         var usageRules = usageRuleService.normalize(formulaId, materials, options, values, safeBo.getUsageRules());
         return new ProductFormulaSetupRows(materials, options, values, optionMaterials, restrictions, usageRules);
     }
-
+    ProductFormulaSetupRows normalizeMaterials(Long formulaId, ProductFormulaSetupBo bo, ProductFormulaSetupContext current) {
+        ProductFormulaSetupBo safeBo = bo == null ? new ProductFormulaSetupBo() : bo;
+        List<ProductFormulaMaterial> materials = normalizeMaterials(formulaId, safeBo.getMaterials());
+        Set<String> materialCodes = materials.stream().map(ProductFormulaMaterial::getMaterialCode).collect(Collectors.toSet());
+        for (ProductFormulaOptionMaterial optionMaterial : current.optionMaterials()) {
+            if (!materialCodes.contains(optionMaterial.getMaterialCode())) {
+                throw ServiceException.ofMessageKey("product.formula.optionMaterialNotInPool");
+            }
+        }
+        var usageRules = usageRuleService.normalize(formulaId, materials, current.options(), current.values(), safeBo.getUsageRules());
+        return new ProductFormulaSetupRows(materials, current.options(), current.values(), current.optionMaterials(), current.restrictions(), usageRules);
+    }
+    ProductFormulaSetupRows normalizeOptions(Long formulaId, ProductFormulaSetupBo bo, ProductFormulaSetupContext current) {
+        ProductFormulaSetupBo safeBo = bo == null ? new ProductFormulaSetupBo() : bo;
+        List<ProductFormulaOption> options = normalizeOptions(formulaId, safeBo.getOptions());
+        List<ProductFormulaOptionValue> values = normalizeOptionValues(formulaId, options, safeBo.getOptionValues());
+        normalizeOptionVisibility(options, values);
+        List<ProductFormulaOptionMaterial> optionMaterials = normalizeOptionMaterials(formulaId, current.materials(), options, values, safeBo.getOptionMaterials());
+        List<ProductFormulaRestriction> restrictions = restrictionNormalizer.normalize(formulaId, options, values, safeBo.getRestrictions());
+        return new ProductFormulaSetupRows(current.materials(), options, values, optionMaterials, restrictions, current.usageRules());
+    }
     private List<ProductFormulaMaterial> normalizeMaterials(Long formulaId, List<ProductFormulaMaterialBo> rows) {
         List<ProductFormulaMaterial> result = new ArrayList<>();
         int index = 0;
@@ -73,7 +89,6 @@ public class ProductFormulaSetupNormalizer extends ProductServiceSupport {
         validateMaterialSnapshots(result);
         return result;
     }
-
     private void validateMaterialSnapshots(List<ProductFormulaMaterial> materials) {
         Set<Long> materialIds = new HashSet<>();
         materialSnapshotResolver.resolve(materials);
@@ -86,7 +101,6 @@ public class ProductFormulaSetupNormalizer extends ProductServiceSupport {
             }
         }
     }
-
     private List<ProductFormulaOption> normalizeOptions(Long formulaId, List<ProductFormulaOptionBo> rows) {
         List<ProductFormulaOption> result = new ArrayList<>();
         Set<String> codes = new HashSet<>();
@@ -122,7 +136,6 @@ public class ProductFormulaSetupNormalizer extends ProductServiceSupport {
         }
         return result;
     }
-
     private void normalizeOptionVisibility(List<ProductFormulaOption> options, List<ProductFormulaOptionValue> values) {
         Map<String, ProductFormulaOption> optionMap = options.stream()
             .collect(Collectors.toMap(ProductFormulaOption::getOptionCode, Function.identity(), (left, right) -> left));
@@ -137,7 +150,6 @@ public class ProductFormulaSetupNormalizer extends ProductServiceSupport {
             applyVisibilityCondition(option, optionMap, valueMap);
         }
     }
-
     private void applyVisibilityCondition(ProductFormulaOption option, Map<String, ProductFormulaOption> optionMap,
                                           Map<String, ProductFormulaOptionValue> valueMap) {
         String conditionOptionCode = option.getVisibleConditionOptionCode();
@@ -162,14 +174,12 @@ public class ProductFormulaSetupNormalizer extends ProductServiceSupport {
         option.setVisibleConditionOptionNameCn(conditionOption.getOptionNameCn());
         option.setVisibleConditionValueNameCn(conditionValue.getValueNameCn());
     }
-
     private void clearOptionVisibilityCondition(ProductFormulaOption option) {
         option.setVisibleConditionOptionCode(null);
         option.setVisibleConditionOptionNameCn(null);
         option.setVisibleConditionValueCode(null);
         option.setVisibleConditionValueNameCn(null);
     }
-
     private List<ProductFormulaOptionValue> normalizeOptionValues(Long formulaId, List<ProductFormulaOption> options,
                                                                   List<ProductFormulaOptionValueBo> rows) {
         Map<String, ProductFormulaOption> optionMap =
@@ -203,7 +213,6 @@ public class ProductFormulaSetupNormalizer extends ProductServiceSupport {
         }
         return result;
     }
-
     private List<ProductFormulaOptionMaterial> normalizeOptionMaterials(Long formulaId, List<ProductFormulaMaterial> materials,
                                                                         List<ProductFormulaOption> options, List<ProductFormulaOptionValue> values,
                                                                         List<ProductFormulaOptionMaterialBo> rows) {
@@ -244,13 +253,11 @@ public class ProductFormulaSetupNormalizer extends ProductServiceSupport {
         }
         return result;
     }
-
     private void validateOptionMaterialValue(ProductFormulaOptionMaterial entity, Set<String> optionCodes, Set<String> valueKeys) {
         if (!optionCodes.contains(entity.getOptionCode()) || !valueKeys.contains(key(entity.getOptionCode(), entity.getValueCode()))) {
             throw ServiceException.ofMessageKey("product.formula.optionMaterialValueInvalid");
         }
     }
-
     private ProductFormulaMaterial resolveOptionMaterial(ProductFormulaOptionMaterial entity,
                                                          Map<Long, ProductFormulaMaterial> materialById,
                                                          Map<String, ProductFormulaMaterial> materialByCode) {
@@ -263,7 +270,6 @@ public class ProductFormulaSetupNormalizer extends ProductServiceSupport {
         }
         return material;
     }
-
     private String requiredTrim(String value, String messageKey) {
         String trimmed = trim(value);
         if (StringUtils.isBlank(trimmed)) {
@@ -271,7 +277,6 @@ public class ProductFormulaSetupNormalizer extends ProductServiceSupport {
         }
         return trimmed;
     }
-
     private String requiredUpper(String value, String messageKey) {
         String trimmed = trimUpper(value);
         if (StringUtils.isBlank(trimmed)) {
@@ -279,20 +284,16 @@ public class ProductFormulaSetupNormalizer extends ProductServiceSupport {
         }
         return trimmed;
     }
-
     private String trimUpper(String value) {
         String trimmed = trim(value);
         return trimmed == null ? null : trimmed.toUpperCase(java.util.Locale.ROOT);
     }
-
     private String trim(String value) {
         return StringUtils.isBlank(value) ? null : value.trim();
     }
-
     private String defaultString(String value, String defaultValue) {
         return StringUtils.isBlank(value) ? defaultValue : value;
     }
-
     private String key(String... parts) {
         return String.join("|", parts);
     }

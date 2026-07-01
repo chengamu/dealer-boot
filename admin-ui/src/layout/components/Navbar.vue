@@ -41,7 +41,9 @@
         </template>
       </el-dropdown>
 
-      <message-bell class="right-menu-item message-wrapper" />
+      <div class="right-menu-item message-wrapper">
+        <message-bell />
+      </div>
 
       <div class="avatar-container">
         <el-dropdown @command="handleCommand" class="right-menu-item user-menu" trigger="click" popper-class="shell-user-dropdown">

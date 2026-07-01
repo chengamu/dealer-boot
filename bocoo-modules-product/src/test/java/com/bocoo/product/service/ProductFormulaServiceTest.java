@@ -11,7 +11,10 @@ import com.bocoo.product.mapper.ProductCategoryMapper;
 import com.bocoo.product.mapper.ProductDictItemMapper;
 import com.bocoo.product.mapper.ProductFormulaMapper;
 import com.bocoo.product.mapper.ProductFormulaVersionMapper;
+import com.bocoo.product.service.impl.ProductFormulaDraftNormalizer;
+import com.bocoo.product.service.impl.ProductFormulaReviewLifecycle;
 import com.bocoo.product.service.impl.ProductFormulaServiceImpl;
+import com.bocoo.product.service.impl.ProductFormulaSnapshotJson;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -54,13 +57,24 @@ class ProductFormulaServiceTest {
     @BeforeEach
     void setUp() {
         ProductServiceTestSupport.prepareMapperAndConverter();
-        formulaService = new ProductFormulaServiceImpl(
+        ProductFormulaDraftNormalizer draftNormalizer = new ProductFormulaDraftNormalizer(
+            formulaMapper,
+            categoryMapper,
+            dictItemMapper
+        );
+        ProductFormulaReviewLifecycle reviewLifecycle = new ProductFormulaReviewLifecycle(
             formulaMapper,
             versionMapper,
-            categoryMapper,
-            dictItemMapper,
             setupService,
-            changeLogService
+            changeLogService,
+            new ProductFormulaSnapshotJson()
+        );
+        formulaService = new ProductFormulaServiceImpl(
+            formulaMapper,
+            setupService,
+            changeLogService,
+            draftNormalizer,
+            reviewLifecycle
         );
     }
 
@@ -208,6 +222,8 @@ class ProductFormulaServiceTest {
         ProductFormula notValidated = configuredFormula("DRAFT", "NOT_VALIDATED");
         ProductFormula valid = configuredFormula("DRAFT", "PASS");
         when(formulaMapper.selectById(3001L)).thenReturn(notConfigured, notValidated, valid);
+        when(versionMapper.selectCount(any())).thenReturn(0L);
+        when(versionMapper.insert(any())).thenReturn(1);
         when(formulaMapper.update(any(), any())).thenReturn(1);
 
         assertThatThrownBy(() -> formulaService.submitReview(3001L))
@@ -219,6 +235,19 @@ class ProductFormulaServiceTest {
         verify(changeLogService).record(eq("FORMULA"), eq("FORMULA"), eq(3001L), eq("FORMULA_25_ZEBRA"), eq("SUBMIT_REVIEW"), eq(valid),
             argThat(after -> after instanceof ProductFormula formula && "PENDING_REVIEW".equals(formula.getStatus())),
             isNull());
+    }
+
+    @Test
+    void submitReviewRejectsExistingPendingReviewSnapshot() {
+        ProductFormula valid = configuredFormula("DRAFT", "PASS");
+        when(formulaMapper.selectById(3001L)).thenReturn(valid);
+        when(versionMapper.selectCount(any())).thenReturn(1L);
+
+        assertThatThrownBy(() -> formulaService.submitReview(3001L))
+            .isInstanceOf(ServiceException.class);
+
+        verify(versionMapper, never()).insert(any());
+        verify(formulaMapper, never()).update(any(), any());
     }
 
     @Test
@@ -337,6 +366,9 @@ class ProductFormulaServiceTest {
         formula.setConfiguredFlag(Boolean.TRUE);
         formula.setMaterialLineCount(1);
         formula.setLatestValidationStatus(validationStatus);
+        formula.setMaterialValidationStatus(validationStatus);
+        formula.setOptionValidationStatus(validationStatus);
+        formula.setSimulationValidationStatus(validationStatus);
         return formula;
     }
 

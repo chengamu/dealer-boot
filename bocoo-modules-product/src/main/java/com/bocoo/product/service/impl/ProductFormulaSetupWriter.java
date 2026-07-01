@@ -45,6 +45,28 @@ public class ProductFormulaSetupWriter extends ProductServiceSupport {
         usageRuleService.insertAll(rows.usageRules(), rows.materials());
     }
 
+    void replaceMaterials(Long formulaId, ProductFormulaSetupRows rows) {
+        materialMapper.delete(activeQuery(ProductFormulaMaterial.class).eq("formula_id", formulaId));
+        optionMaterialMapper.delete(activeQuery(ProductFormulaOptionMaterial.class).eq("formula_id", formulaId));
+        usageRuleService.deleteByFormula(formulaId);
+        insertAll(rows.materials(), materialMapper);
+        refreshFormulaMaterialIds(rows.optionMaterials(), rows.materials());
+        insertAll(rows.optionMaterials(), optionMaterialMapper);
+        usageRuleService.insertAll(rows.usageRules(), rows.materials());
+    }
+
+    void replaceOptions(Long formulaId, ProductFormulaSetupRows rows) {
+        optionMapper.delete(activeQuery(ProductFormulaOption.class).eq("formula_id", formulaId));
+        optionValueMapper.delete(activeQuery(ProductFormulaOptionValue.class).eq("formula_id", formulaId));
+        optionMaterialMapper.delete(activeQuery(ProductFormulaOptionMaterial.class).eq("formula_id", formulaId));
+        restrictionMapper.delete(activeQuery(ProductFormulaRestriction.class).eq("formula_id", formulaId));
+        Map<String, Long> optionIds = insertOptions(rows.options());
+        Map<String, Long> valueIds = insertValues(rows.values(), optionIds);
+        assignGeneratedIds(rows.optionMaterials(), rows.materials(), optionIds, valueIds);
+        insertAll(rows.optionMaterials(), optionMaterialMapper);
+        insertAll(rows.restrictions(), restrictionMapper);
+    }
+
     private void deleteByFormula(Long formulaId) {
         materialMapper.delete(activeQuery(ProductFormulaMaterial.class).eq("formula_id", formulaId));
         optionMapper.delete(activeQuery(ProductFormulaOption.class).eq("formula_id", formulaId));
@@ -92,6 +114,20 @@ public class ProductFormulaSetupWriter extends ProductServiceSupport {
             optionMaterial.setOptionId(optionIds.get(optionMaterial.getOptionCode()));
             optionMaterial.setOptionValueId(valueIds.get(key(optionMaterial.getOptionCode(), optionMaterial.getValueCode())));
             optionMaterial.setFormulaMaterialId(materialIds.get(optionMaterial.getMaterialCode()));
+        }
+    }
+
+    private void refreshFormulaMaterialIds(List<ProductFormulaOptionMaterial> optionMaterials, List<ProductFormulaMaterial> materials) {
+        Map<String, ProductFormulaMaterial> materialMap = materials.stream()
+            .collect(Collectors.toMap(ProductFormulaMaterial::getMaterialCode, material -> material, (left, right) -> left));
+        for (ProductFormulaOptionMaterial optionMaterial : optionMaterials) {
+            ProductFormulaMaterial material = materialMap.get(optionMaterial.getMaterialCode());
+            if (material == null) {
+                continue;
+            }
+            optionMaterial.setFormulaMaterialId(material.getFormulaMaterialId());
+            optionMaterial.setMaterialId(material.getMaterialId());
+            optionMaterial.setMaterialNameCn(material.getMaterialNameCn());
         }
     }
 

@@ -70,20 +70,6 @@
     </el-table-column>
   </el-table>
 
-  <div class="usage-editor__helper">
-    <div>
-      <h4>{{ t('productCenter.formulaSetup.formulaVariables') }}</h4>
-      <div class="usage-editor__chips">
-        <el-tag v-for="variable in variableChips" :key="variable.name" effect="plain" @click="$emit('insert-variable', variable.label)">
-          {{ variable.label }}
-        </el-tag>
-      </div>
-    </div>
-    <div class="usage-editor__example">
-      <span>{{ t('productCenter.formulaSetup.formulaExample') }}</span>
-      <code>订单宽 * 12 - 2.0</code>
-    </div>
-  </div>
 </template>
 
 <script setup lang="ts">
@@ -91,7 +77,7 @@ import { CopyDocument, Delete, MagicStick, Plus } from '@element-plus/icons-vue'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 import FormulaUsageConditionEditor from './FormulaUsageConditionEditor.vue'
-import { formulaVariables, formatUsageNumber, validateFormulaExpression } from '../utils/formulaExpression'
+import { formatUsageNumber, validateFormulaExpression } from '../utils/formulaExpression'
 import type { FormulaField, ExpressionTarget } from './formulaUsageTypes'
 import type {
   ProductFormulaOptionVO,
@@ -116,12 +102,10 @@ defineEmits<{
   'default-rule-change': [row: ProductFormulaUsageRuleVO]
   'formula-blur': [row: ProductFormulaUsageRuleVO, field: FormulaField]
   'open-expression': [row: ProductFormulaUsageRuleVO, target: ExpressionTarget]
-  'insert-variable': [label: string]
 }>()
 
 const localeStore = useLocaleStore()
 const t = (key: string) => getMessage(key, localeStore.language)
-const variableChips = formulaVariables
 
 function formulaResult(row: ProductFormulaUsageRuleVO) {
   const candidates = props.formulaFields
@@ -155,8 +139,7 @@ function ruleFormulaText(row: ProductFormulaUsageRuleVO, field: FormulaField) {
   gap: 16px;
 }
 
-.usage-editor__toolbar h3,
-.usage-editor__helper h4 {
+.usage-editor__toolbar h3 {
   margin: 0 0 4px;
   color: #111827;
   font-size: 15px;
@@ -210,38 +193,4 @@ function ruleFormulaText(row: ProductFormulaUsageRuleVO, field: FormulaField) {
   flex: 0 0 auto;
 }
 
-.usage-editor__helper {
-  display: flex;
-  justify-content: space-between;
-  gap: 18px;
-  padding: 12px;
-  background: #fbfdff;
-  border: 1px solid #e5ecf6;
-  border-radius: 8px;
-}
-
-.usage-editor__chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.usage-editor__chips :deep(.el-tag) {
-  cursor: pointer;
-}
-
-.usage-editor__example {
-  min-width: 260px;
-  color: #6b7280;
-  font-size: 12px;
-}
-
-.usage-editor__example code {
-  display: block;
-  margin-top: 6px;
-  padding: 7px 9px;
-  color: #1d4ed8;
-  background: #eef5ff;
-  border-radius: 6px;
-}
 </style>

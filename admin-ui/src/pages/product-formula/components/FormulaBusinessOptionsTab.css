@@ -1,0 +1,29 @@
+.option-workbench {
+  display: grid;
+  grid-template-columns: minmax(320px, 380px) minmax(0, 1fr);
+  align-items: start;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.option-node-panel {
+  min-width: 0;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid #e6ebf2;
+  border-radius: 8px;
+}
+
+.option-edit-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  padding: 12px;
+}
+
+@media (max-width: 1440px) {
+  .option-workbench,
+  .option-edit-grid {
+    grid-template-columns: 1fr;
+  }
+}

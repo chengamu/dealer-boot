@@ -38,6 +38,7 @@
         <span>{{ t('productCenter.formula.maxHeightInch') }}：{{ formatNumber(formula.maxHeightInch) }}</span>
         <span>{{ t('productCenter.formula.updateTime') }}：{{ formatMinute(formula.updateTime) }}</span>
       </div>
+      <div v-if="draftCacheStatus" class="setup-header__draft-status">{{ draftCacheStatus }}</div>
     </div>
     <div class="setup-header__actions">
       <el-button icon="CircleCheck" :disabled="!canOperate" :loading="validating" @click="$emit('validate')">{{ t('productCenter.formula.actions.validate') }}</el-button>
@@ -67,6 +68,7 @@ defineProps<{
   formulaSelecting: boolean
   activeSection: 'content' | 'options'
   canOperate: boolean
+  draftCacheStatus?: string
 }>()
 
 defineEmits<{
@@ -123,6 +125,12 @@ const t = (key: string) => getMessage(key, localeStore.language)
   margin-top: 10px;
   color: #4b5563;
   font-size: 13px;
+}
+
+.setup-header__draft-status {
+  margin-top: 8px;
+  color: #64748b;
+  font-size: 12px;
 }
 
 .setup-header__actions {

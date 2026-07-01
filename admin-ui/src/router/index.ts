@@ -327,7 +327,7 @@ export function resetDynamicRoutes() {
 export function registerDynamicRoutes(routesToRegister: RouteRecordRaw[]) {
   removeNotFoundRoute()
   routesToRegister.forEach((route) => {
-    const alreadyRegistered = router.resolve(route.path).matched.some((matched) => matched.path === route.path)
+    const alreadyRegistered = router.getRoutes().some((registered) => registered.path === route.path)
     if (!alreadyRegistered) {
       router.addRoute('Root', route)
       if (route.name && typeof route.name === 'string') dynamicRouteNames.add(route.name)

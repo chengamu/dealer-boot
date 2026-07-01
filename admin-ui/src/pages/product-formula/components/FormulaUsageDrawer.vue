@@ -52,7 +52,6 @@
         @default-rule-change="handleDefaultRuleChange"
         @formula-blur="syncFormula"
         @open-expression="openExpressionEditor"
-        @insert-variable="insertVariable"
       />
     </div>
 
@@ -127,7 +126,6 @@ const {
   removeSelectedRule,
   handleDefaultRuleChange,
   syncFormula,
-  insertVariable,
   openExpressionEditor,
   confirmExpressionEditor
 } = useFormulaUsageEditor(props, () => {

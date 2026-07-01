@@ -8,7 +8,7 @@
           <span>{{ t('productCenter.formula.code') }}：{{ formula.formulaCode || '-' }}</span>
           <span>{{ t('productCenter.formula.category') }}：{{ formula.categoryNameCn || '-' }}</span>
           <span>{{ t('productCenter.formula.productType') }}：{{ formula.productTypeNameCn || '-' }}</span>
-          <span>{{ t('productCenter.formulaSimulation.status') }}：{{ validationText(formula.simulationValidationStatus) }}</span>
+          <span>{{ t('productCenter.formulaSimulation.status') }}：{{ validationText(simulationStatus) }}</span>
         </div>
       </div>
       <div class="simulation-header__actions">
@@ -26,6 +26,25 @@
           </el-form-item>
           <el-form-item :label="t('productCenter.formulaSimulation.orderHeight')">
             <el-input-number v-model="form.orderHeight" :precision="2" :step="1" />
+          </el-form-item>
+          <el-form-item
+            v-for="option in visibleOptions"
+            :key="option.optionCode"
+            :label="option.optionNameCn || option.optionCode"
+          >
+            <el-select
+              v-model="selectedOptionValues[option.optionCode!]"
+              filterable
+              clearable
+              :placeholder="t('productCenter.formulaSetup.optionValueNamePlaceholder')"
+            >
+              <el-option
+                v-for="value in optionValuesOf(option.optionCode)"
+                :key="value.valueCode"
+                :label="value.valueNameCn || value.valueCode"
+                :value="value.valueCode"
+              />
+            </el-select>
           </el-form-item>
         </el-form>
       </div>
@@ -45,7 +64,9 @@
         <el-table-column prop="materialCode" :label="t('productCenter.formulaSetup.materialCode')" width="130" show-overflow-tooltip />
         <el-table-column prop="materialNameCn" :label="t('productCenter.formulaSetup.materialName')" min-width="220" show-overflow-tooltip />
         <el-table-column prop="specModelText" :label="t('productCenter.formulaSetup.specModel')" min-width="180" show-overflow-tooltip />
-        <el-table-column prop="unitCode" :label="t('productCenter.formulaSetup.unit')" width="90" />
+        <el-table-column :label="t('productCenter.formulaSetup.unit')" width="90">
+          <template #default="{ row }">{{ unitLabel(row.unitCode) }}</template>
+        </el-table-column>
         <el-table-column :label="t('productCenter.formulaSimulation.usageQty')" width="110" align="right">
           <template #default="{ row }">{{ quantity(row.usageQty) }}</template>
         </el-table-column>
@@ -65,14 +86,23 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useRoute, useRouter } from 'vue-router'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 import { productFormulaApi } from '@/api/product-formula/formula'
-import type { ProductFormulaSimulationBO, ProductFormulaSimulationVO, ProductFormulaVO } from '@/api/product-capability/types'
-import { formulaValidationStatusText, formulaValidationTagType } from '@/constants/productStatus'
+import { productUnitApi } from '@/api/product-capability/base'
+import type {
+  ProductFormulaOptionVO,
+  ProductFormulaOptionValueVO,
+  ProductFormulaSetupVO,
+  ProductFormulaSimulationBO,
+  ProductFormulaSimulationVO,
+  ProductFormulaVO,
+  ProductUnitVO
+} from '@/api/product-capability/types'
+import { FORMULA_VALIDATION_STATUS, PRODUCT_STATUS_ENABLED, formulaValidationStatusText, formulaValidationTagType } from '@/constants/productStatus'
 
 const route = useRoute()
 const router = useRouter()
@@ -84,10 +114,16 @@ const running = ref(false)
 const validating = ref(false)
 const formula = ref<ProductFormulaVO>({})
 const result = ref<ProductFormulaSimulationVO>({})
+const setup = ref<ProductFormulaSetupVO>({})
+const unitRows = ref<ProductUnitVO[]>([])
+const selectedOptionValues = reactive<Record<string, string>>({})
 const form = reactive<ProductFormulaSimulationBO>({
   orderWidth: undefined,
-  orderHeight: undefined
+  orderHeight: undefined,
+  selectedOptionValues
 })
+const visibleOptions = computed(() => (setup.value.options || []).filter((option) => isOptionVisible(option)))
+const simulationStatus = computed(() => result.value.status || formula.value.simulationValidationStatus || FORMULA_VALIDATION_STATUS.NOT_VALIDATED)
 
 function validationText(status?: string) {
   return formulaValidationStatusText(status, t)
@@ -105,19 +141,44 @@ function money(value?: number) {
   return value == null ? '-' : Number(value).toFixed(2)
 }
 
+function unitLabel(unitCode?: string) {
+  const row = unitRows.value.find((unit) => unit.unitCode === unitCode)
+  if (!row) return unitCode || '-'
+  return String(localeStore.language === 'zh_CN' ? row.unitNameCn : row.unitNameEn || row.unitNameCn || unitCode || '-')
+}
+
 async function load() {
   if (!formulaId) return
   loading.value = true
   try {
-    const [formulaResponse, simulationResponse] = await Promise.all([
+    const [formulaResponse, simulationResponse, setupResponse, unitResponse] = await Promise.all([
       productFormulaApi.get(formulaId),
-      productFormulaApi.simulation(formulaId)
+      productFormulaApi.simulation(formulaId),
+      productFormulaApi.getFormulaOptions(formulaId),
+      productUnitApi.options?.({ status: PRODUCT_STATUS_ENABLED, pageNum: 1, pageSize: 500 })
     ])
     formula.value = formulaResponse.data || {}
     result.value = simulationResponse.data || {}
+    setup.value = setupResponse.data || {}
+    unitRows.value = responseRows(unitResponse)
   } finally {
     loading.value = false
   }
+}
+
+function optionValuesOf(optionCode?: string) {
+  return (setup.value.optionValues || []).filter((value: ProductFormulaOptionValueVO) => value.optionCode === optionCode)
+}
+
+function responseRows<T>(response: { data?: T[] } | T[] | undefined): T[] {
+  return Array.isArray(response) ? response : response?.data || []
+}
+
+function isOptionVisible(option: ProductFormulaOptionVO) {
+  if (option.visibilityMode !== 'CONDITIONAL') return true
+  const conditionOptionCode = option.visibleConditionOptionCode
+  return Boolean(conditionOptionCode)
+    && selectedOptionValues[conditionOptionCode as string] === option.visibleConditionValueCode
 }
 
 async function run() {
@@ -125,6 +186,7 @@ async function run() {
   try {
     const response = await productFormulaApi.runSimulation(formulaId, form)
     result.value = response.data || {}
+    formula.value.simulationValidationStatus = result.value.status
   } finally {
     running.value = false
   }
@@ -148,10 +210,12 @@ onMounted(load)
 .formula-simulation-page {
   display: grid;
   gap: 12px;
+  min-width: 0;
 }
 
 .simulation-header,
 .simulation-panel {
+  min-width: 0;
   padding: 16px;
   background: #fff;
   border: 1px solid #e6ebf2;
@@ -162,6 +226,22 @@ onMounted(load)
   display: flex;
   justify-content: space-between;
   gap: 16px;
+}
+
+.simulation-panel {
+  overflow-x: auto;
+}
+
+.simulation-panel :deep(.el-table) {
+  min-width: 1280px;
+}
+
+.simulation-panel:first-of-type {
+  overflow-x: visible;
+}
+
+.simulation-panel:first-of-type :deep(.el-table) {
+  min-width: 0;
 }
 
 .simulation-header h2 {
