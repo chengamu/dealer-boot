@@ -108,8 +108,13 @@ async function loadBaseAttributeOptions(form?: ProductRecord) {
   }))
 }
 
-async function loadMaterialTypeOptions() {
-  const response = await productMaterialTypeApi.options?.({ status: PRODUCT_STATUS_ENABLED, pageNum: 1, pageSize: 500 })
+async function loadMaterialTypeOptions(context?: ProductRecord) {
+  const response = await productMaterialTypeApi.options?.({
+    status: PRODUCT_STATUS_ENABLED,
+    attributeGroupCode: context?.attributeGroupCode as string | undefined,
+    pageNum: 1,
+    pageSize: 500
+  })
   const rows = Array.isArray(response) ? response : response?.data || []
   return rows.map((row) => ({
     value: row.materialTypeCode,
@@ -206,9 +211,10 @@ const configs = computed<ProductGridConfig[]>(() => [
       { prop: 'materialCode', labelKey: 'productCenter.material.code', search: true, required: true, sortable: true, sectionKey: 'basic', sectionLabelKey: 'productCenter.formSection.basic' },
       { prop: 'materialNameCn', labelKey: 'productCenter.material.name', search: true, required: true, sortable: true, sectionKey: 'basic' },
       { prop: 'materialNameEn', labelKey: 'productCenter.material.nameEn', table: false, sectionKey: 'basic' },
+      { prop: 'attributeGroupCode', labelKey: 'productCenter.material.attributeGroup', type: 'remote-select', optionLoader: loadMaterialTypeGroupOptions, search: true, form: false, table: false, onChange: (_value, target) => { target.materialTypeCode = undefined } },
       { prop: 'materialTypeCode', labelKey: 'productCenter.material.type', type: 'remote-select', optionLoader: loadMaterialTypeOptions, fillFields: { materialTypeId: 'materialTypeId', materialTypeNameCn: 'materialTypeNameCn', attributeGroupId: 'attributeGroupId', attributeGroupCode: 'attributeGroupCode', attributeGroupNameCn: 'attributeGroupNameCn', materialType: 'materialTypeCode' }, search: true, required: true, clearFields: ['attributeList'], table: false, sectionKey: 'basic' },
       { prop: 'materialTypeNameCn', labelKey: 'productCenter.material.type', form: false, minWidth: 150 },
-      { prop: 'attributeGroupNameCn', labelKey: 'productCenter.material.attributeGroup', form: false, table: false },
+      { prop: 'attributeGroupNameCn', labelKey: 'productCenter.material.attributeGroup', form: false, minWidth: 130 },
       { prop: 'model', labelKey: 'productCenter.material.model', sortable: true, minWidth: 140, sectionKey: 'spec', sectionLabelKey: 'productCenter.formSection.spec' },
       { prop: 'spec', labelKey: 'productCenter.material.spec', search: true, required: true, sortable: true, minWidth: 180, sectionKey: 'spec' },
       { prop: 'specModelText', labelKey: 'productCenter.material.specModelText', form: false, table: false },

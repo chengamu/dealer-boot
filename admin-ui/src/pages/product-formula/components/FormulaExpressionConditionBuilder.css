@@ -1,0 +1,118 @@
+.condition-builder__section {
+  border: 1px solid #e5ecf6;
+  border-radius: 8px;
+  background: #f8fbff;
+  padding: 12px;
+}
+
+.condition-builder__section h4 {
+  margin: 0 0 14px;
+  font-size: 13px;
+  line-height: 1.35;
+  color: #1f2d3d;
+}
+
+.condition-builder__row {
+  display: flex !important;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 12px;
+}
+
+.condition-builder__row--with-joiner {
+  gap: 10px 12px;
+}
+
+.condition-builder__row > * {
+  min-width: 0;
+}
+
+.condition-builder__field {
+  flex: 0 0 124px;
+}
+
+.condition-builder__operator {
+  flex: 0 0 72px;
+}
+
+.condition-builder__value {
+  flex: 1 1 136px;
+}
+
+.condition-builder__break {
+  flex: 0 0 100%;
+  height: 0;
+}
+
+.condition-builder__joiner {
+  flex: 0 0 94px;
+}
+
+.condition-builder__action {
+  flex: 0 0 86px;
+}
+
+.condition-builder__row--material {
+  gap: 10px;
+}
+
+.condition-builder__role {
+  flex: 0 0 112px;
+}
+
+.condition-builder__fixed-field {
+  display: inline-flex;
+  flex: 0 0 92px;
+  align-items: center;
+  justify-content: center;
+  min-height: 30px;
+  padding: 0 10px;
+  color: #334155;
+  font-size: 13px;
+  background: #fff;
+  border: 1px solid #dbe5f2;
+  border-radius: 6px;
+}
+
+.condition-builder__row--material .condition-builder__field {
+  flex: 0 0 116px;
+}
+
+.condition-builder__row--material .condition-builder__operator {
+  flex: 0 0 72px;
+}
+
+.condition-builder__row--material .condition-builder__value {
+  flex: 1 1 120px;
+}
+
+.condition-builder__row--material .condition-builder__joiner {
+  flex: 0 0 94px;
+}
+
+.condition-builder__row--material .condition-builder__action {
+  flex: 0 0 86px;
+  align-self: center;
+}
+
+.condition-builder :deep(.el-button) {
+  justify-self: end;
+  margin-left: 0;
+}
+
+.condition-builder__row :deep(.el-button) {
+  min-width: 86px;
+  height: 30px;
+  padding: 4px 10px;
+}
+
+.condition-builder__operator,
+.condition-builder__joiner {
+  width: auto;
+}
+
+.condition-builder__operator,
+.condition-builder__joiner,
+.condition-builder__action {
+  max-width: none;
+}

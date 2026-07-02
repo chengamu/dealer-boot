@@ -19,6 +19,7 @@
           :aria-label="`${t(field.labelKey)}${t('common.search')}`"
           :data-agent-label="`${t(field.labelKey)}${t('common.search')}`"
           style="width: 180px"
+          @change="handleQuerySelectChange(field, $event)"
         >
           <template v-if="field.type === 'status'">
             <el-option :label="t('productCenter.status.enabled')" :value="PRODUCT_STATUS_ENABLED" />
@@ -29,7 +30,7 @@
             <el-option :label="t('common.no')" :value="false" />
           </template>
           <template v-else>
-            <el-option v-for="option in fieldOptions(field)" :key="String(option.value)" :label="option.label" :value="option.value" />
+            <el-option v-for="option in fieldOptions(field, 'search')" :key="String(option.value)" :label="option.label" :value="option.value" />
           </template>
         </el-select>
         <el-input
@@ -496,6 +497,7 @@ const queryParams = reactive<ProductPageQuery>({
   pageSize: 10
 })
 const remoteOptions = ref<Record<string, Array<{ label?: string; value?: string | number; record?: ProductRecord }>>>({})
+const searchRemoteOptions = ref<Record<string, Array<{ label?: string; value?: string | number; record?: ProductRecord }>>>({})
 const materialAttributeDrafts = ref<Record<string, ProductRecord[]>>({})
 const materialAttributeDraftKeys = ref<Record<string, string>>({})
 const unsavedChangesGuard = useUnsavedChangesGuard({
@@ -613,8 +615,9 @@ function optionDisplayValue(field: ProductFieldConfig, value: unknown) {
   return optionLabel(field, value)
 }
 
-function fieldOptions(field: ProductFieldConfig) {
-  return remoteOptions.value[field.prop] || field.options || []
+function fieldOptions(field: ProductFieldConfig, scope: 'form' | 'search' = 'form') {
+  const optionsMap = scope === 'search' ? searchRemoteOptions.value : remoteOptions.value
+  return optionsMap[field.prop] || field.options || []
 }
 
 function fieldTreeOptions(field: ProductFieldConfig) {
@@ -978,8 +981,18 @@ function reset() {
 }
 
 async function loadRemoteOptions() {
-  const fieldEntries = await Promise.all(allFormFields.value.filter((field) => field.optionLoader).map(async (field) => {
+  const formOptionFields = allFormFields.value.filter((field, index, fields) =>
+    field.optionLoader && fields.findIndex((item) => item.prop === field.prop) === index
+  )
+  const searchOptionFields = searchFields.value.filter((field, index, fields) =>
+    field.optionLoader && fields.findIndex((item) => item.prop === field.prop) === index
+  )
+  const fieldEntries = await Promise.all(formOptionFields.map(async (field) => {
     const options = await field.optionLoader?.(form.value)
+    return [field.prop, options || []] as const
+  }))
+  const searchEntries = await Promise.all(searchOptionFields.map(async (field) => {
+    const options = await field.optionLoader?.(queryParams)
     return [field.prop, options || []] as const
   }))
   const sharedEntries = await Promise.all(Object.entries(props.config.optionLoaders || {}).map(async ([key, loader]) => {
@@ -987,6 +1000,12 @@ async function loadRemoteOptions() {
     return [key, options || []] as const
   }))
   remoteOptions.value = Object.fromEntries([...fieldEntries, ...sharedEntries])
+  searchRemoteOptions.value = Object.fromEntries(searchEntries)
+}
+
+async function handleQuerySelectChange(field: ProductFieldConfig, value: unknown) {
+  field.onChange?.(value, queryParams)
+  await loadRemoteOptions()
 }
 
 async function loadAttachments(record?: ProductRecord) {

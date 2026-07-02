@@ -68,6 +68,7 @@
         <okhttp.version>4.12.0</okhttp.version>
         <ip2region.version>2.7.0</ip2region.version>
         <annotation.version>1.3.2</annotation.version>
+        <jsr305.version>3.0.2</jsr305.version>
         <commons.io.version>2.22.0</commons.io.version>
         <!-- 中间件与服务配置 -->
         <satoken.version>1.37.0</satoken.version>
@@ -182,6 +183,11 @@
                 <groupId>javax.annotation</groupId>
                 <artifactId>javax.annotation-api</artifactId>
                 <version>${annotation.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.code.findbugs</groupId>
+                <artifactId>jsr305</artifactId>
+                <version>${jsr305.version}</version>
             </dependency>
 
             <!-- 寮曞叆 Lombok 渚濊禆锛岀敤浜庣畝鍖?Java 浠ｇ爜锛屽噺灏?boilerplate 浠ｇ爜鐨勭紪鍐?-->
@@ -496,6 +502,7 @@
                     </annotationProcessorPaths>
                     <compilerArgs>
                         <arg>-parameters</arg>
+                        <arg>-implicit:class</arg>
                     </compilerArgs>
                 </configuration>
             </plugin>

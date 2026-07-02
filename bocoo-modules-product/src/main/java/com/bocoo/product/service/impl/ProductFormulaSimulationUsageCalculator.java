@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -27,8 +28,9 @@ class ProductFormulaSimulationUsageCalculator {
         item.setUnitCode(material.getUnitCode());
         item.setLossRate(material.getLossRate());
         item.setProductionRemark(material.getProductionRemark());
-        ProductFormulaUsageRuleVo matchedRule = matchUsageRule(usageRules, context);
-        item.setUsageQty(resolveUsageQty(material, matchedRule, context));
+        Map<String, Object> materialContext = materialContext(context, material);
+        ProductFormulaUsageRuleVo matchedRule = matchUsageRule(usageRules, materialContext);
+        item.setUsageQty(resolveUsageQty(material, matchedRule, materialContext));
         item.setUsageSummary(resolveUsageSummary(item.getUsageQty(), matchedRule));
         if (source != null) {
             item.setUnitPrice(source.getUnitPrice());
@@ -59,6 +61,20 @@ class ProductFormulaSimulationUsageCalculator {
         return sortedRules.stream().filter(rule -> Boolean.TRUE.equals(rule.getDefaultRuleFlag())
             || "DEFAULT".equals(rule.getConditionType())).findFirst().orElse(null);
     }
+
+    private Map<String, Object> materialContext(Map<String, Object> context, ProductFormulaMaterialVo material) {
+        Map<String, Object> result = new HashMap<>(context == null ? Map.of() : context);
+        String groupCode = material.getAttributeGroupCode();
+        if (StringUtils.isBlank(groupCode)) {
+            return result;
+        }
+        result.put("material_" + groupCode + "_attributeGroup", groupCode);
+        result.put("material_" + groupCode + "_materialType", material.getMaterialTypeCode());
+        result.put("material_" + groupCode + "_materialCode", material.getMaterialCode());
+        result.put("material_" + groupCode + "_materialName", material.getMaterialNameCn());
+        return result;
+    }
+
     private BigDecimal resolveUsageQty(ProductFormulaMaterialVo material, ProductFormulaUsageRuleVo rule, Map<String, Object> context) {
         if (rule == null) {
             return applyLimitsAndLoss(material.getFixedUsageQty() == null ? BigDecimal.ONE : material.getFixedUsageQty(),

@@ -15,6 +15,7 @@ type FormulaUsageEditorProps = {
   modelValue: boolean
   usageRow: ProductFormulaMaterialVO | null
   usageRows?: ProductFormulaMaterialVO[]
+  materials?: ProductFormulaMaterialVO[]
   usageRules: ProductFormulaUsageRuleVO[]
   options: ProductFormulaOptionVO[]
   optionValues: ProductFormulaOptionValueVO[]

@@ -42,8 +42,6 @@
         v-else
         v-model:selected-rule="selectedRule"
         :rules="currentRules"
-        :options="options"
-        :option-values="optionValues"
         :formula-fields="formulaFields"
         @generate-fabric-rules="generateFabricRules"
         @add-rule="addConditionalUsageRule"
@@ -59,6 +57,9 @@
       v-model="expressionEditorOpen"
       v-model:text="expressionEditorText"
       :target="expressionEditorTarget"
+      :materials="materials || []"
+      :options="options"
+      :option-values="optionValues"
       @confirm="confirmExpressionEditor"
     />
     <template #footer>
@@ -88,6 +89,7 @@ const props = defineProps<{
   modelValue: boolean
   usageRow: ProductFormulaMaterialVO | null
   usageRows?: ProductFormulaMaterialVO[]
+  materials?: ProductFormulaMaterialVO[]
   usageRules: ProductFormulaUsageRuleVO[]
   options: ProductFormulaOptionVO[]
   optionValues: ProductFormulaOptionValueVO[]

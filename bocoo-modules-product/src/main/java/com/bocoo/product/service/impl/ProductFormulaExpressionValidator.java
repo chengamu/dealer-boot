@@ -190,12 +190,15 @@ final class ProductFormulaExpressionValidator {
             if (peek("(") || peek(".") || peek("[") || peek("?") || peek(":")) {
                 throw new IllegalArgumentException("unsupported expression");
             }
-            if (!variables.contains(identifier) && !(conditionMode && identifier.startsWith("option_"))) {
+            if (!variables.contains(identifier) && !(conditionMode && (identifier.startsWith("option_") || identifier.startsWith("material_")))) {
                 throw new IllegalArgumentException("unknown variable");
             }
             Object value = context.get(identifier);
             if (value == null && identifier.startsWith("option_")) {
                 return "OPTION_VALUE";
+            }
+            if (value == null && identifier.startsWith("material_")) {
+                return sampleMaterialValue(identifier);
             }
             return value;
         }
@@ -276,6 +279,22 @@ final class ProductFormulaExpressionValidator {
                 return bool;
             }
             throw new IllegalArgumentException("boolean expected");
+        }
+
+        private String sampleMaterialValue(String identifier) {
+            if (identifier.endsWith("_materialType")) {
+                return "MOTOR";
+            }
+            if (identifier.endsWith("_materialCode")) {
+                return "XLF241801";
+            }
+            if (identifier.endsWith("_materialName")) {
+                return "XLF241801 Cream";
+            }
+            if (identifier.endsWith("_attributeGroup")) {
+                return "FABRIC";
+            }
+            return "MATERIAL_VALUE";
         }
     }
 }

@@ -9,6 +9,7 @@ import {
   validateConditionExpression,
   validateFormulaExpression
 } from '../utils/formulaExpression'
+import { normalizeDisplayExpression } from './formulaExpressionDisplay'
 import type { ExpressionTarget, FormulaField } from './formulaUsageTypes'
 import type {
   ProductFormulaMaterialVO,
@@ -21,6 +22,7 @@ type TFunction = (key: string) => string
 
 type FormulaUsageRulesProps = {
   usageRow: ProductFormulaMaterialVO | null
+  materials?: ProductFormulaMaterialVO[]
   usageRules: ProductFormulaUsageRuleVO[]
   options: ProductFormulaOptionVO[]
   optionValues: ProductFormulaOptionValueVO[]
@@ -143,7 +145,7 @@ export function useFormulaUsageRules(
       materialId: props.usageRow.materialId,
       formulaMaterialId: props.usageRow.formulaMaterialId,
       ruleName: defaultRule ? t('productCenter.formulaSetup.defaultUsageRule') : (value?.valueNameCn || t('productCenter.formulaSetup.conditionalUsageRule')),
-      conditionType: defaultRule ? 'DEFAULT' : 'OPTION_VALUE',
+      conditionType: defaultRule ? 'DEFAULT' : 'EXPRESSION',
       conditionOptionCode: defaultRule ? undefined : value?.optionCode || 'FABRIC',
       conditionOptionNameCn: defaultRule ? undefined : optionName(value?.optionCode || 'FABRIC'),
       conditionValueCode: defaultRule ? undefined : value?.valueCode,
@@ -226,14 +228,18 @@ export function useFormulaUsageRules(
       row.conditionText = t('productCenter.formulaSetup.defaultUsageRule')
       row.conditionKey = defaultConditionKey()
     } else if (row.conditionType === 'DEFAULT') {
-      row.conditionType = 'OPTION_VALUE'
+      row.conditionType = 'EXPRESSION'
+      row.conditionExpression = undefined
+      row.conditionText = undefined
+      row.conditionKey = undefined
     }
   }
 
   function syncExpressionCondition(row: ProductFormulaUsageRuleVO) {
     if (row.conditionType !== 'EXPRESSION') return
     ;(row as Record<string, unknown>)._conditionMode = 'EXPRESSION'
-    const result = validateConditionExpression(row.conditionText || row.conditionExpression)
+    const expressionText = normalizeDisplayExpression(row.conditionText || row.conditionExpression, props.options, props.optionValues, props.materials || [])
+    const result = validateConditionExpression(expressionText)
     row.conditionExpression = result.expression
     row.conditionKey = result.valid ? `EXPR:${result.expression}` : undefined
   }

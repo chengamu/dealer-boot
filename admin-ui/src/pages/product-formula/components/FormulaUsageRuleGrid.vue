@@ -26,8 +26,6 @@
       <template #default="{ row }">
         <FormulaUsageConditionEditor
           :row="row"
-          :options="options"
-          :option-values="optionValues"
           @default-change="$emit('default-rule-change', $event)"
           @open-expression="$emit('open-expression', $event, 'condition')"
         />
@@ -51,9 +49,9 @@
         </div>
       </template>
     </el-table-column>
-    <el-table-column :label="t('productCenter.formulaSetup.sampleResult')" width="98" align="center">
+    <el-table-column :label="t('productCenter.formulaSetup.usageResult')" width="98" align="center">
       <template #default="{ row }">
-        <el-tag :type="formulaResult(row).valid ? 'success' : 'warning'" effect="plain">
+        <el-tag :type="formulaResultTagType(row)" effect="plain">
           {{ formulaResultText(row) }}
         </el-tag>
       </template>
@@ -79,17 +77,11 @@ import { useLocaleStore } from '@/stores/locale'
 import FormulaUsageConditionEditor from './FormulaUsageConditionEditor.vue'
 import { formatUsageNumber, validateFormulaExpression } from '../utils/formulaExpression'
 import type { FormulaField, ExpressionTarget } from './formulaUsageTypes'
-import type {
-  ProductFormulaOptionVO,
-  ProductFormulaOptionValueVO,
-  ProductFormulaUsageRuleVO
-} from '@/api/product-capability/types'
+import type { ProductFormulaUsageRuleVO } from '@/api/product-capability/types'
 
 const props = defineProps<{
   rules: ProductFormulaUsageRuleVO[]
   selectedRule: ProductFormulaUsageRuleVO | null
-  options: ProductFormulaOptionVO[]
-  optionValues: ProductFormulaOptionValueVO[]
   formulaFields: FormulaField[]
 }>()
 
@@ -118,8 +110,15 @@ function formulaResult(row: ProductFormulaUsageRuleVO) {
 
 function formulaResultText(row: ProductFormulaUsageRuleVO) {
   const result = formulaResult(row)
-  if (!result.valid) return t('productCenter.formulaSetup.formulaInvalid')
+  if (result.message === 'empty') return t('productCenter.formulaSetup.usageNotSet')
+  if (!result.valid) return t('productCenter.formulaSetup.usageInvalid')
   return typeof result.sampleValue === 'number' ? formatUsageNumber(result.sampleValue) : String(result.sampleValue)
+}
+
+function formulaResultTagType(row: ProductFormulaUsageRuleVO) {
+  const result = formulaResult(row)
+  if (result.valid) return 'success'
+  return result.message === 'empty' ? 'info' : 'warning'
 }
 
 function ruleFormulaText(row: ProductFormulaUsageRuleVO, field: FormulaField) {

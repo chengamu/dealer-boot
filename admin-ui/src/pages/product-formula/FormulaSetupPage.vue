@@ -95,6 +95,7 @@
       v-model="usageDrawerOpen"
       :usage-row="usageRow"
       :usage-rows="usageRows"
+      :materials="setup.materials"
       :usage-rules="setup.usageRules"
       :options="setup.options"
       :option-values="setup.optionValues"

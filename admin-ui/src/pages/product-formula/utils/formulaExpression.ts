@@ -35,6 +35,7 @@ const VARIABLE_ALIASES: Record<string, string> = {
   订单宽: 'orderWidth',
   宽: 'orderWidth',
   订单高: 'orderHeight',
+  订单厚: 'orderHeight',
   高: 'orderHeight',
   厚度: 'orderHeight',
   订单重量: 'orderWeight',
@@ -64,7 +65,7 @@ const SAMPLE_CONTEXT: Record<string, number | string> = {
 export const formulaVariables: FormulaVariable[] = [
   { label: '订单长', name: 'orderLength', sample: 18 },
   { label: '订单宽', name: 'orderWidth', sample: 12 },
-  { label: '订单高', name: 'orderHeight', sample: 20 },
+  { label: '订单厚', name: 'orderHeight', sample: 20 },
   { label: '订单重量', name: 'orderWeight', sample: 3 },
   { label: '订单面积', name: 'orderArea', sample: 240 },
   { label: '面料', name: 'fabric', sample: 'XLF241801' },
@@ -177,7 +178,7 @@ function validateFormulaNode(node: ExpressionNode) {
 function validateConditionNode(node: ExpressionNode) {
   if (node.type === 'Literal') return
   if (node.type === 'Identifier') {
-    if (!node.name || (!CONDITION_VARIABLES.has(node.name) && !node.name.startsWith('option_'))) {
+    if (!node.name || (!CONDITION_VARIABLES.has(node.name) && !node.name.startsWith('option_') && !node.name.startsWith('material_'))) {
       throw new Error(`unknown variable: ${node.name || ''}`)
     }
     return
@@ -188,6 +189,11 @@ function validateConditionNode(node: ExpressionNode) {
     return
   }
   if (node.type === 'BinaryExpression') {
+    if (['&&', '||'].includes(node.operator || '')) {
+      validateConditionNode(requiredNode(node.left))
+      validateConditionNode(requiredNode(node.right))
+      return
+    }
     if (!['+', '-', '*', '/', '==', '!=', '>', '>=', '<', '<='].includes(node.operator || '')) {
       throw new Error('invalid condition operator')
     }
@@ -206,7 +212,7 @@ function validateConditionNode(node: ExpressionNode) {
 
 function evaluate(node: ExpressionNode): number | boolean | string {
   if (node.type === 'Literal') return node.value as number | string
-  if (node.type === 'Identifier') return SAMPLE_CONTEXT[node.name || ''] ?? 0
+  if (node.type === 'Identifier') return SAMPLE_CONTEXT[node.name || ''] ?? sampleDynamicVariable(node.name)
   if (node.type === 'UnaryExpression') {
     const value = Number(evaluate(requiredNode(node.argument)))
     return node.operator === '-' ? -value : value
@@ -215,6 +221,8 @@ function evaluate(node: ExpressionNode): number | boolean | string {
     const left = evaluate(requiredNode(node.left))
     const right = evaluate(requiredNode(node.right))
     switch (node.operator) {
+      case '&&': return Boolean(left) && Boolean(right)
+      case '||': return Boolean(left) || Boolean(right)
       case '+': return Number(left) + Number(right)
       case '-': return Number(left) - Number(right)
       case '*': return Number(left) * Number(right)
@@ -235,6 +243,16 @@ function evaluate(node: ExpressionNode): number | boolean | string {
       : left || Boolean(evaluate(requiredNode(node.right)))
   }
   throw new Error('unsupported expression')
+}
+
+function sampleDynamicVariable(name?: string) {
+  if (!name) return 0
+  if (name.startsWith('option_')) return 'MOTOR'
+  if (name.startsWith('material_') && name.endsWith('_materialType')) return 'MOTOR'
+  if (name.startsWith('material_') && name.endsWith('_materialCode')) return 'XLF241801'
+  if (name.startsWith('material_') && name.endsWith('_materialName')) return 'XLF241801 Cream'
+  if (name.startsWith('material_') && name.endsWith('_attributeGroup')) return 'FABRIC'
+  return 0
 }
 
 function requiredNode(node?: ExpressionNode) {

@@ -1,0 +1,197 @@
+.formula-expression-dialog.admin-dialog.el-dialog {
+  width: min(1040px, calc(100vw - 96px)) !important;
+}
+
+.formula-expression-dialog .expression-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: none;
+  overflow-y: visible;
+  overflow-x: hidden;
+  padding: 0;
+}
+
+.formula-expression-dialog .expression-editor__composer,
+.formula-expression-dialog .expression-editor__operators,
+.formula-expression-dialog .expression-editor__tool-card,
+.formula-expression-dialog .expression-editor__result {
+  min-width: 0;
+  border: 1px solid #e5ecf6;
+  border-radius: 8px;
+  background: #fff;
+  padding: 8px 12px;
+}
+
+.formula-expression-dialog .expression-editor__head {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.formula-expression-dialog .expression-editor h4 {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  margin: 0;
+  font-size: 14px;
+  color: #1f2d3d;
+  white-space: nowrap;
+}
+
+.formula-expression-dialog .expression-editor h4 span,
+.formula-expression-dialog .expression-editor p,
+.formula-expression-dialog .expression-editor dt {
+  color: #8a95a6;
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.formula-expression-dialog .expression-editor p,
+.formula-expression-dialog .expression-editor dt {
+  margin: 3px 0 0;
+}
+
+.formula-expression-dialog .expression-editor__composer .el-textarea__inner {
+  min-height: 119px !important;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.formula-expression-dialog .expression-editor__operators {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(34px, max-content));
+  gap: 10px 8px;
+  align-content: flex-start;
+  min-height: 0;
+  background: #f8fbff;
+  padding: 10px 12px;
+}
+
+.formula-expression-dialog .expression-editor__operators h4 {
+  grid-column: 1 / -1;
+}
+
+.formula-expression-dialog .expression-editor__operators .el-button {
+  min-width: 34px;
+  height: 30px;
+  padding: 4px 10px;
+  border-color: #d9e2ef;
+  background: #fff;
+  margin-left: 0;
+}
+
+.formula-expression-dialog .expression-editor__condition-area {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 12px;
+}
+
+.formula-expression-dialog .expression-editor__condition-area > .expression-editor__operators {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.formula-expression-dialog .expression-editor__builder.condition-builder {
+  display: contents !important;
+}
+
+.formula-expression-dialog .expression-editor__builder.condition-builder > .condition-builder__section--business {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.formula-expression-dialog .expression-editor__builder.condition-builder > .condition-builder__section--material {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.formula-expression-dialog .expression-editor__builder.condition-builder > .condition-builder__section--order {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+.formula-expression-dialog .expression-editor__builder.condition-builder > .condition-builder__section h4 {
+  margin: 0 0 14px;
+  line-height: 1.35;
+}
+
+.formula-expression-dialog .expression-editor__tools {
+  display: grid;
+  gap: 6px;
+}
+
+.formula-expression-dialog .expression-editor__tool-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.formula-expression-dialog .expression-editor__tool-card .el-button {
+  margin-left: 0;
+}
+
+.formula-expression-dialog .expression-editor__result {
+  display: grid;
+  gap: 8px;
+  align-items: stretch;
+  background: #f8fbff;
+}
+
+.formula-expression-dialog .expression-editor__result-head {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.formula-expression-dialog .expression-editor__result dl {
+  margin: 0;
+  border: 1px solid #e5ecf6;
+  border-radius: 8px;
+  background: #fff;
+  padding: 9px 12px;
+}
+
+.formula-expression-dialog .expression-editor__result dd {
+  margin: 0;
+  word-break: break-all;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.formula-expression-dialog .expression-editor__result dt {
+  display: none;
+}
+
+.formula-expression-dialog .expression-editor .el-input__wrapper,
+.formula-expression-dialog .expression-editor .el-select__wrapper {
+  min-height: 30px;
+}
+
+@media (max-width: 1020px) {
+  .formula-expression-dialog .expression-editor__condition-area {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .formula-expression-dialog .expression-editor__builder.condition-builder {
+    display: grid !important;
+    gap: 8px;
+  }
+
+  .formula-expression-dialog .expression-editor__operators,
+  .formula-expression-dialog .expression-editor__builder.condition-builder > .condition-builder__section--business,
+  .formula-expression-dialog .expression-editor__builder.condition-builder > .condition-builder__section--material,
+  .formula-expression-dialog .expression-editor__builder.condition-builder > .condition-builder__section--order {
+    grid-column: auto;
+    grid-row: auto;
+  }
+
+  .formula-expression-dialog .expression-editor__result {
+    display: block;
+  }
+}

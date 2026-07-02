@@ -1,75 +1,60 @@
 <template>
-  <AdminDialog :model-value="modelValue" :title="editorTitle" width="1040px" class="formula-expression-dialog" append-to-body @update:model-value="$emit('update:modelValue', $event)">
+  <AdminDialog
+    :model-value="modelValue"
+    :title="editorTitle"
+    width="1080px"
+    class="formula-expression-dialog"
+    append-to-body
+    @update:model-value="$emit('update:modelValue', $event)"
+  >
     <div class="expression-editor">
-      <div class="expression-editor__main">
-        <section class="expression-editor__composer">
-          <div class="expression-editor__section-head">
-            <div>
-              <h4>{{ t('productCenter.formulaSetup.expressionContent') }}</h4>
-              <p>{{ editorPlaceholder }}</p>
-            </div>
-            <el-tag effect="plain" :type="editorResult.valid ? 'success' : 'warning'">
-              {{ editorResult.valid ? t('productCenter.formulaSetup.expressionValid') : t('productCenter.formulaSetup.expressionInvalid') }}
-            </el-tag>
-          </div>
-          <el-input
-            v-model="editorText"
-            type="textarea"
-            :rows="7"
-            resize="none"
-            :placeholder="editorPlaceholder"
-          />
-          <div v-if="isFormulaTarget" class="expression-editor__templates">
-            <el-button v-for="template in formulaTemplates" :key="template.value" plain @click="useExpressionTemplate(template.value)">
-              {{ template.label }}
-            </el-button>
-          </div>
-          <div v-else class="expression-editor__builder">
-            <el-select v-model="conditionBuilder.variable" filterable>
-              <el-option v-for="variable in conditionBuilderVariables" :key="variable.name" :label="variable.label" :value="variable.name" />
-            </el-select>
-            <el-select v-model="conditionBuilder.operator">
-              <el-option v-for="operator in conditionBuilderOperators" :key="operator" :label="operator" :value="operator" />
-            </el-select>
-            <el-input v-model="conditionBuilder.value" :placeholder="t('productCenter.formulaSetup.conditionValue')" />
-            <el-button type="primary" plain @click="useConditionBuilder">{{ t('productCenter.formulaSetup.useCondition') }}</el-button>
-          </div>
-        </section>
+      <FormulaExpressionComposer
+        v-model="editorText"
+        :title="t('productCenter.formulaSetup.expressionContent')"
+        :placeholder="editorPlaceholder"
+        :clear-text="t('common.clear')"
+      />
 
-        <aside class="expression-editor__result" :class="{ 'is-error': !editorResult.valid }">
-          <h4>{{ t('productCenter.formulaSetup.validationResult') }}</h4>
-          <strong>{{ editorResultText }}</strong>
-          <dl>
-            <div>
-              <dt>{{ t('productCenter.formulaSetup.normalizedExpression') }}</dt>
-              <dd>{{ editorResult.expression || '-' }}</dd>
-            </div>
-            <div>
-              <dt>{{ t('productCenter.formulaSetup.sampleContext') }}</dt>
-              <dd>{{ sampleText }}</dd>
-            </div>
-          </dl>
-        </aside>
+      <FormulaExpressionOperatorPanel
+        v-if="isFormulaTarget"
+        :title="t('productCenter.formulaSetup.operator')"
+        :operators="editorOperators"
+        @append="appendExpressionText"
+      />
+
+      <div v-else class="expression-editor__condition-area">
+        <FormulaExpressionOperatorPanel
+          :title="t('productCenter.formulaSetup.operator')"
+          :operators="editorOperators"
+          @append="appendExpressionText"
+        />
+
+        <FormulaExpressionConditionBuilder
+          class="expression-editor__builder"
+          :has-text="Boolean(editorText)"
+          :materials="materials"
+          :options="options"
+          :option-values="optionValues"
+          @insert="appendConditionClause"
+        />
       </div>
 
-      <div class="expression-editor__tools">
-        <section v-for="group in editorVariableGroups" :key="group.title" class="expression-editor__tool-card">
+      <section v-if="isFormulaTarget" class="expression-editor__tools">
+        <div v-for="group in variableGroups" :key="group.title" class="expression-editor__tool-card">
           <h4>{{ group.title }}</h4>
-          <div class="expression-editor__chips">
-            <el-button v-for="variable in group.variables" :key="variable.name" plain @click="appendExpressionText(variable.label)">
-              {{ variable.label }}
-            </el-button>
-          </div>
-        </section>
-        <section class="expression-editor__tool-card">
-          <h4>{{ t('productCenter.formulaSetup.operator') }}</h4>
-          <div class="expression-editor__ops">
-            <el-button v-for="operator in editorOperators" :key="operator" plain @click="appendExpressionText(operator)">
-              {{ operator }}
-            </el-button>
-          </div>
-        </section>
-      </div>
+          <el-button v-for="variable in group.variables" :key="variable.name" plain @click="appendExpressionText(variable.insert)">
+            {{ variable.label }}
+          </el-button>
+        </div>
+      </section>
+
+      <FormulaExpressionValidationPanel
+        :title="t('productCenter.formulaSetup.validationResult')"
+        :status-text="editorResultText"
+        :normalized-title="t('productCenter.formulaSetup.normalizedExpression')"
+        :expression="editorResult.expression || ''"
+        :valid="editorResult.valid"
+      />
     </div>
     <template #footer>
       <AdminDialogFooter>
@@ -81,22 +66,32 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed } from 'vue'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
+import FormulaExpressionComposer from './FormulaExpressionComposer.vue'
+import FormulaExpressionConditionBuilder from './FormulaExpressionConditionBuilder.vue'
+import FormulaExpressionOperatorPanel from './FormulaExpressionOperatorPanel.vue'
+import FormulaExpressionValidationPanel from './FormulaExpressionValidationPanel.vue'
 import {
   formulaVariables,
   formatUsageNumber,
   validateConditionExpression,
   validateFormulaExpression
 } from '../utils/formulaExpression'
+import { normalizeDisplayExpression } from './formulaExpressionDisplay'
+import type { ProductFormulaMaterialVO, ProductFormulaOptionVO, ProductFormulaOptionValueVO } from '@/api/product-capability/types'
 
 type ExpressionTarget = 'length' | 'width' | 'height' | 'weight' | 'usage' | 'condition'
+type InsertVariable = { label: string; name: string; insert: string }
 
 const props = defineProps<{
   modelValue: boolean
   target: ExpressionTarget
   text: string
+  materials?: ProductFormulaMaterialVO[]
+  options?: ProductFormulaOptionVO[]
+  optionValues?: ProductFormulaOptionValueVO[]
 }>()
 
 const emit = defineEmits<{
@@ -107,214 +102,49 @@ const emit = defineEmits<{
 
 const localeStore = useLocaleStore()
 const t = (key: string) => getMessage(key, localeStore.language)
-const conditionBuilder = ref({
-  variable: 'orderWidth',
-  operator: '>',
-  value: '12'
-})
 
-const editorText = computed({
-  get: () => props.text,
-  set: (value: string) => emit('update:text', value)
-})
+const editorText = computed({ get: () => props.text, set: (value: string) => emit('update:text', value) })
 const isFormulaTarget = computed(() => props.target !== 'condition')
-const editorTitle = computed(() => isFormulaTarget.value
-  ? t('productCenter.formulaSetup.formulaSelector')
-  : t('productCenter.formulaSetup.conditionExpressionEditor'))
-const editorPlaceholder = computed(() => isFormulaTarget.value
-  ? t('productCenter.formulaSetup.usageFormulaPlaceholder')
-  : t('productCenter.formulaSetup.conditionExpressionPlaceholder'))
-const editorVariables = computed(() => isFormulaTarget.value
-  ? formulaVariables.filter((variable) => ['orderLength', 'orderWidth', 'orderHeight', 'orderWeight', 'orderArea'].includes(variable.name))
-  : formulaVariables)
-const conditionBuilderVariables = computed(() => formulaVariables.filter((variable) => ['orderLength', 'orderWidth', 'orderHeight', 'orderWeight', 'orderArea', 'fabric', 'productType', 'optionValue'].includes(variable.name)))
-const editorOperators = computed(() => isFormulaTarget.value
-  ? ['+', '-', '*', '/', '(', ')']
-  : ['=', '!=', '>', '>=', '<', '<=', '并且', '或者', '(', ')'])
-const conditionBuilderOperators = ['=', '!=', '>', '>=', '<', '<=']
-const formulaTemplates = computed(() => [
-  { label: t('productCenter.formulaSetup.templateOrderWidth'), value: '订单宽' },
-  { label: t('productCenter.formulaSetup.templateOrderHeight'), value: '订单高' },
-  { label: t('productCenter.formulaSetup.templateOrderWeight'), value: '订单重量' },
-  { label: t('productCenter.formulaSetup.templateOrderArea'), value: '订单面积' },
-  { label: t('productCenter.formulaSetup.templateWidthDeduct'), value: '订单宽 * 12 - 2.0' }
-])
-const editorVariableGroups = computed(() => {
-  const orderVariableNames = ['orderLength', 'orderWidth', 'orderHeight', 'orderWeight', 'orderArea']
-  const orderVariables = editorVariables.value.filter((variable) => orderVariableNames.includes(variable.name))
-  const businessVariables = editorVariables.value.filter((variable) => !orderVariableNames.includes(variable.name))
-  return [
-    { title: t('productCenter.formulaSetup.orderVariables'), variables: orderVariables },
-    ...(businessVariables.length ? [{ title: t('productCenter.formulaSetup.businessVariables'), variables: businessVariables }] : [])
-  ]
-})
-const editorResult = computed(() => isFormulaTarget.value
-  ? validateFormulaExpression(props.text)
-  : validateConditionExpression(props.text))
+const editorTitle = computed(() => isFormulaTarget.value ? t('productCenter.formulaSetup.formulaSelector') : t('productCenter.formulaSetup.conditionExpressionEditor'))
+const editorPlaceholder = computed(() => isFormulaTarget.value ? t('productCenter.formulaSetup.usageFormulaPlaceholder') : t('productCenter.formulaSetup.conditionExpressionPlaceholder'))
+const editorOperators = computed(() => isFormulaTarget.value ? ['+', '-', '*', '/', '(', ')'] : ['=', '!=', '>', '>=', '<', '<=', '并且', '或者', '(', ')'])
+const normalizedEditorText = computed(() => normalizeDisplayExpression(props.text, props.options, props.optionValues, props.materials))
+const editorResult = computed(() => isFormulaTarget.value ? validateFormulaExpression(props.text) : validateConditionExpression(normalizedEditorText.value))
 const editorResultText = computed(() => {
   const result = editorResult.value
   if (!result.valid) return expressionValidationMessage(result.message)
-  if (isFormulaTarget.value) {
-    return `${t('productCenter.formulaSetup.sampleResult')}：${typeof result.sampleValue === 'number' ? formatUsageNumber(result.sampleValue) : result.sampleValue}`
-  }
-  return `${t('productCenter.formulaSetup.sampleResult')}：${result.sampleValue ? t('common.yes') : t('common.no')}`
+  if (isFormulaTarget.value) return `${t('productCenter.formulaSetup.sampleResult')}：${typeof result.sampleValue === 'number' ? formatUsageNumber(result.sampleValue) : result.sampleValue}`
+  return t('productCenter.formulaSetup.expressionValid')
 })
-const sampleText = computed(() => isFormulaTarget.value
-  ? t('productCenter.formulaSetup.formulaSampleContext')
-  : t('productCenter.formulaSetup.conditionSampleContext'))
-
-watch(() => props.modelValue, (open) => {
-  if (open) resetConditionBuilder()
-})
+const variableGroups = computed(() => isFormulaTarget.value ? formulaVariableGroups() : [])
 
 function appendExpressionText(value: string) {
   editorText.value = `${editorText.value || ''}${editorText.value ? ' ' : ''}${value}`
 }
 
-function useExpressionTemplate(value: string) {
-  editorText.value = value
+function appendConditionClause(clause: string, joiner: string) {
+  editorText.value = `${editorText.value.trim()}${editorText.value.trim() ? ` ${joiner} ` : ''}${clause}`.trim()
 }
 
-function resetConditionBuilder() {
-  conditionBuilder.value = {
-    variable: 'orderWidth',
-    operator: '>',
-    value: '12'
-  }
+function formulaVariableGroups() {
+  const names = new Set(['orderLength', 'orderWidth', 'orderHeight', 'orderWeight', 'orderArea'])
+  return [{ title: t('productCenter.formulaSetup.orderVariables'), variables: formulaVariables.filter((item) => names.has(item.name)).map(toInsertVariable) }]
 }
 
-function useConditionBuilder() {
-  const variable = conditionBuilderVariables.value.find((item) => item.name === conditionBuilder.value.variable)
-  const label = variable?.label || conditionBuilder.value.variable
-  const rawValue = String(conditionBuilder.value.value || '').trim()
-  const value = needsQuotedConditionValue(conditionBuilder.value.variable, rawValue)
-    ? `"${rawValue.replace(/"/g, '\\"')}"`
-    : rawValue
-  editorText.value = `${label} ${conditionBuilder.value.operator} ${value}`
-}
-
-function needsQuotedConditionValue(variable: string, value: string) {
-  if (!value) return false
-  if (value.startsWith('"') || value.startsWith("'")) return false
-  if (['fabric', 'productType', 'optionValue'].includes(variable)) return true
-  return Number.isNaN(Number(value))
+function toInsertVariable(variable: { label: string; name: string }): InsertVariable {
+  return { label: variable.label, name: variable.name, insert: variable.label }
 }
 
 function expressionValidationMessage(message?: string) {
-  if (!message) return t('productCenter.formulaSetup.formulaInvalid')
-  const messageKeyMap: Record<string, string> = {
+  const map: Record<string, string> = {
     empty: 'productCenter.formulaSetup.expressionEmpty',
     invalidResult: 'productCenter.formulaSetup.expressionInvalidResult',
     conditionMustBeBoolean: 'productCenter.formulaSetup.conditionMustBeBoolean'
   }
-  const key = messageKeyMap[message]
-  return key ? t(key) : t('productCenter.formulaSetup.formulaInvalid')
+  return t(map[message || ''] || 'productCenter.formulaSetup.formulaInvalid')
 }
 </script>
 
-<style scoped>
-.expression-editor {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.expression-editor__main {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 300px;
-  gap: 12px;
-}
-
-.expression-editor__composer,
-.expression-editor__result,
-.expression-editor__tool-card {
-  border: 1px solid #e5ecf6;
-  border-radius: 8px;
-  background: #fff;
-  padding: 12px;
-}
-
-.expression-editor__section-head {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 10px;
-}
-
-.expression-editor__section-head h4,
-.expression-editor__tool-card h4,
-.expression-editor__result h4 {
-  margin: 0;
-  font-size: 15px;
-}
-
-.expression-editor__section-head p {
-  margin: 4px 0 0;
-  color: #8a95a6;
-  font-size: 12px;
-}
-
-.expression-editor__templates,
-.expression-editor__builder {
-  display: flex;
-  gap: 8px;
-  margin-top: 10px;
-  flex-wrap: wrap;
-}
-
-.expression-editor__builder {
-  align-items: center;
-}
-
-.expression-editor__tools {
-  display: grid;
-  grid-template-columns: 1fr 260px;
-  gap: 12px;
-}
-
-.expression-editor__chips,
-.expression-editor__ops {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.expression-editor__chips :deep(.el-button),
-.expression-editor__ops :deep(.el-button) {
-  margin-left: 0;
-}
-
-.expression-editor__result {
-  background: #f8fbff;
-}
-
-.expression-editor__result strong {
-  display: block;
-  color: #0f766e;
-  font-size: 16px;
-  margin-bottom: 12px;
-}
-
-.expression-editor__result dl {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin: 0;
-}
-
-.expression-editor__result dt {
-  color: #8a95a6;
-  font-size: 12px;
-  margin-bottom: 4px;
-}
-
-.expression-editor__result dd {
-  margin: 0;
-  color: #1f2937;
-  word-break: break-all;
-}
-
-.expression-editor__result.is-error strong {
-  color: #dc2626;
-}
+<style>
+@import './FormulaExpressionEditorDialog.css';
 </style>
