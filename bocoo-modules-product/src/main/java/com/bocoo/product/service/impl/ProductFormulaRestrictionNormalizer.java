@@ -47,11 +47,13 @@ public class ProductFormulaRestrictionNormalizer extends ProductServiceSupport {
     private void prepareRestriction(Long formulaId, ProductFormulaRestriction entity, int index) {
         entity.setFormulaId(formulaId);
         entity.setRestrictionName(defaultString(trim(entity.getRestrictionName()), "限制条件" + (index + 1)));
-        entity.setTargetOptionCode(requiredUpper(entity.getTargetOptionCode(), "product.formula.restrictionTargetRequired"));
+        entity.setTargetOptionCode(defaultString(trimUpper(entity.getTargetOptionCode()), ""));
         entity.setConditionType(requiredUpper(entity.getConditionType(), "product.formula.restrictionConditionRequired"));
         entity.setConditionOptionCode(trimUpper(entity.getConditionOptionCode()));
-        entity.setConditionOperator(requiredUpper(entity.getConditionOperator(), "product.formula.restrictionConditionRequired"));
+        entity.setConditionOperator(defaultString(trimUpper(entity.getConditionOperator()), "EXPRESSION"));
         entity.setConditionValueCode(trimUpper(entity.getConditionValueCode()));
+        entity.setConditionExpression(trim(entity.getConditionExpression()));
+        entity.setConditionText(defaultString(trim(entity.getConditionText()), entity.getConditionExpression()));
         entity.setActionType(requiredUpper(entity.getActionType(), "product.formula.restrictionActionRequired"));
         entity.setTargetValueCode(trimUpper(entity.getTargetValueCode()));
         entity.setMessageText(trim(entity.getMessageText()));

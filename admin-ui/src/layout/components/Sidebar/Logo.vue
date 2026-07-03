@@ -16,7 +16,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import variables from '@/assets/styles/variables.module.scss'
-import logo from '@/assets/logo/logo.png'
+import logo from '@/assets/logo/skyspf-mark-d1.svg'
 import useSettingsStore from '@/stores/settings'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'

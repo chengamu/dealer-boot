@@ -24,12 +24,17 @@
       :row-class-name="optionValueRowClass"
       @row-click="$emit('selectValue', $event)"
     >
-      <el-table-column :label="t('productCenter.formulaSetup.valueName')" min-width="220">
+      <el-table-column :label="t('productCenter.formulaSetup.valueNameCn')" width="220">
         <template #default="{ row }">
           <el-input v-model="row.valueNameCn" :disabled="selectedOption?.sourceType === 'MATERIAL_POOL'" />
         </template>
       </el-table-column>
-      <el-table-column :label="t('productCenter.formulaSetup.linkedMaterial')" min-width="220">
+      <el-table-column :label="t('productCenter.formulaSetup.valueNameEn')" width="220">
+        <template #default="{ row }">
+          <el-input v-model="row.valueNameEn" />
+        </template>
+      </el-table-column>
+      <el-table-column :label="t('productCenter.formulaSetup.linkedMaterial')" min-width="320">
         <template #default="{ row }">
           <div class="linked-materials">
             <el-tag v-for="material in materialsForValue(row)" :key="String(material.materialCode)" size="small">
@@ -44,7 +49,7 @@
           <el-switch :model-value="row.defaultFlag" @change="$emit('setDefault', row)" />
         </template>
       </el-table-column>
-      <el-table-column :label="t('common.operate')" width="170" align="center" fixed="right">
+      <el-table-column :label="t('common.operate')" width="150" align="center" fixed="right">
         <template #default="{ row }">
           <AdminTableActions :actions="[
             { label: t('productCenter.formulaSetup.manageLinkedMaterial'), icon: 'Setting', stopPropagation: true, onClick: () => $emit('manageMaterial', row) },

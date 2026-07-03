@@ -329,7 +329,7 @@ final class ProductFormulaExpressionValidator {
             throw new IllegalArgumentException("boolean expected");
         }
 
-        private String sampleMaterialValue(String identifier) {
+        private Object sampleMaterialValue(String identifier) {
             if (identifier.endsWith("_materialType")) {
                 return "MOTOR";
             }
@@ -342,7 +342,7 @@ final class ProductFormulaExpressionValidator {
             if (identifier.endsWith("_attributeGroup")) {
                 return "FABRIC";
             }
-            return "MATERIAL_VALUE";
+            return 1D;
         }
     }
 }

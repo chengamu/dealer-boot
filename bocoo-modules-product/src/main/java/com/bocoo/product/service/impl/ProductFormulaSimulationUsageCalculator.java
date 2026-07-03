@@ -72,7 +72,28 @@ class ProductFormulaSimulationUsageCalculator {
         result.put("material_" + groupCode + "_materialType", material.getMaterialTypeCode());
         result.put("material_" + groupCode + "_materialCode", material.getMaterialCode());
         result.put("material_" + groupCode + "_materialName", material.getMaterialNameCn());
+        if (material.getAttributeList() != null) {
+            material.getAttributeList().forEach(attribute -> {
+                if (StringUtils.isNotBlank(attribute.getAttributeCode())) {
+                    result.put("material_" + identifierPart(groupCode) + "_" + identifierPart(attribute.getAttributeCode()), attributeValue(attribute));
+                }
+            });
+        }
         return result;
+    }
+
+    private Object attributeValue(com.bocoo.product.domain.vo.ProductMaterialAttributeVo attribute) {
+        if (attribute.getValueNumber() != null) {
+            return attribute.getValueNumber().doubleValue();
+        }
+        if (attribute.getValueBool() != null) {
+            return attribute.getValueBool();
+        }
+        return attribute.getValueText();
+    }
+
+    private String identifierPart(String value) {
+        return value == null ? "" : value.replaceAll("[^A-Za-z0-9_]", "_");
     }
 
     private BigDecimal resolveUsageQty(ProductFormulaMaterialVo material, ProductFormulaUsageRuleVo rule, Map<String, Object> context) {

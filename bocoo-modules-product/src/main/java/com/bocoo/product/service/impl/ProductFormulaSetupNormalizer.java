@@ -121,6 +121,7 @@ public class ProductFormulaSetupNormalizer extends ProductServiceSupport {
             entity.setFormulaId(formulaId);
             entity.setOptionCode(requiredUpper(entity.getOptionCode(), "product.formula.optionCodeRequired"));
             entity.setOptionNameCn(requiredTrim(entity.getOptionNameCn(), "product.formula.optionNameRequired"));
+            entity.setOptionNameEn(trim(entity.getOptionNameEn()));
             if (!codes.add(entity.getOptionCode())) {
                 throw ServiceException.ofMessageKey("product.formula.optionCodeDuplicate");
             }
@@ -209,6 +210,7 @@ public class ProductFormulaSetupNormalizer extends ProductServiceSupport {
             entity.setOptionId(option.getOptionId());
             entity.setValueCode(requiredUpper(entity.getValueCode(), "product.formula.optionValueCodeRequired"));
             entity.setValueNameCn(requiredTrim(entity.getValueNameCn(), "product.formula.optionValueNameRequired"));
+            entity.setValueNameEn(trim(entity.getValueNameEn()));
             if (!keys.add(key(entity.getOptionCode(), entity.getValueCode()))) {
                 throw ServiceException.ofMessageKey("product.formula.optionValueDuplicate");
             }

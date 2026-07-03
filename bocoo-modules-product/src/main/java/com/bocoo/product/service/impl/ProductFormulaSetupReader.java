@@ -6,14 +6,18 @@ import com.bocoo.product.domain.entity.ProductFormulaOption;
 import com.bocoo.product.domain.entity.ProductFormulaOptionMaterial;
 import com.bocoo.product.domain.entity.ProductFormulaOptionValue;
 import com.bocoo.product.domain.entity.ProductFormulaRestriction;
+import com.bocoo.product.domain.entity.ProductMaterialAttribute;
 import com.bocoo.product.domain.entity.ProductMaterial;
+import com.bocoo.product.domain.vo.ProductFormulaMaterialVo;
 import com.bocoo.product.domain.vo.ProductFormulaSetupVo;
+import com.bocoo.product.domain.vo.ProductMaterialAttributeVo;
 import com.bocoo.product.mapper.ProductFormulaMapper;
 import com.bocoo.product.mapper.ProductFormulaMaterialMapper;
 import com.bocoo.product.mapper.ProductFormulaOptionMapper;
 import com.bocoo.product.mapper.ProductFormulaOptionMaterialMapper;
 import com.bocoo.product.mapper.ProductFormulaOptionValueMapper;
 import com.bocoo.product.mapper.ProductFormulaRestrictionMapper;
+import com.bocoo.product.mapper.ProductMaterialAttributeMapper;
 import com.bocoo.product.mapper.ProductMaterialMapper;
 import com.bocoo.product.service.ProductFormulaUsageRuleService;
 import com.bocoo.product.service.ProductFormulaVariableService;
@@ -38,15 +42,18 @@ public class ProductFormulaSetupReader extends ProductServiceSupport {
     private final ProductFormulaOptionMaterialMapper optionMaterialMapper;
     private final ProductFormulaRestrictionMapper restrictionMapper;
     private final ProductMaterialMapper productMaterialMapper;
+    private final ProductMaterialAttributeMapper materialAttributeMapper;
     private final ProductFormulaUsageRuleService usageRuleService;
     private final ProductFormulaVariableService variableService;
 
     ProductFormulaSetupVo querySetup(Long formulaId) {
         ProductFormulaSetupVo vo = new ProductFormulaSetupVo();
         vo.setFormula(formulaMapper.selectVoById(formulaId));
-        vo.setMaterials(materialMapper.selectVoList(activeQuery(ProductFormulaMaterial.class)
+        List<ProductFormulaMaterialVo> materials = materialMapper.selectVoList(activeQuery(ProductFormulaMaterial.class)
             .eq("formula_id", formulaId)
-            .orderByAsc("sort_order", "line_no", "formula_material_id")));
+            .orderByAsc("sort_order", "line_no", "formula_material_id"));
+        enrichMaterialDetails(materials);
+        vo.setMaterials(materials);
         vo.setOptions(optionMapper.selectVoList(activeQuery(ProductFormulaOption.class)
             .eq("formula_id", formulaId)
             .orderByAsc("sort_order", "option_id")));
@@ -63,6 +70,31 @@ public class ProductFormulaSetupReader extends ProductServiceSupport {
         vo.setVariables(variableService.queryVariableVos(formulaId));
         vo.setVariableRules(variableService.queryRuleVos(formulaId));
         return vo;
+    }
+
+    private void enrichMaterialDetails(List<ProductFormulaMaterialVo> materials) {
+        Set<Long> materialIds = materials.stream()
+            .map(ProductFormulaMaterialVo::getMaterialId)
+            .filter(id -> id != null)
+            .collect(Collectors.toSet());
+        if (materialIds.isEmpty()) {
+            return;
+        }
+        Map<Long, ProductMaterial> masterById = productMaterialMapper.selectList(activeQuery(ProductMaterial.class).in("material_id", materialIds))
+            .stream()
+            .collect(Collectors.toMap(ProductMaterial::getMaterialId, Function.identity(), (left, right) -> left));
+        Map<Long, List<ProductMaterialAttributeVo>> attributesByMaterial = materialAttributeMapper.selectVoList(activeQuery(ProductMaterialAttribute.class)
+                .in("material_id", materialIds)
+                .orderByAsc("sort_order", "material_attribute_id"))
+            .stream()
+            .collect(Collectors.groupingBy(ProductMaterialAttributeVo::getMaterialId));
+        materials.forEach(material -> {
+            ProductMaterial master = masterById.get(material.getMaterialId());
+            if (master != null) {
+                material.setMaterialNameEn(master.getMaterialNameEn());
+            }
+            material.setAttributeList(attributesByMaterial.getOrDefault(material.getMaterialId(), List.of()));
+        });
     }
 
     int materialCount(Long formulaId) {

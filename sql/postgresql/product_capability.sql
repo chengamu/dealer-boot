@@ -470,6 +470,7 @@ CREATE TABLE IF NOT EXISTS pc_formula_option (
     formula_id bigint NOT NULL,
     option_code varchar(80) NOT NULL,
     option_name_cn varchar(200) NOT NULL,
+    option_name_en varchar(200),
     source_type varchar(40) NOT NULL DEFAULT 'MANUAL',
     source_scope varchar(300),
     selection_mode varchar(40) NOT NULL DEFAULT 'SINGLE',
@@ -494,6 +495,7 @@ CREATE TABLE IF NOT EXISTS pc_formula_option (
 );
 
 COMMENT ON TABLE pc_formula_option IS '产品配方业务配置项草稿表';
+ALTER TABLE IF EXISTS pc_formula_option ADD COLUMN IF NOT EXISTS option_name_en varchar(200);
 ALTER TABLE IF EXISTS pc_formula_option ADD COLUMN IF NOT EXISTS visibility_mode varchar(40) NOT NULL DEFAULT 'ALWAYS';
 ALTER TABLE IF EXISTS pc_formula_option ADD COLUMN IF NOT EXISTS visible_condition_option_code varchar(80);
 ALTER TABLE IF EXISTS pc_formula_option ADD COLUMN IF NOT EXISTS visible_condition_option_name_cn varchar(200);
@@ -515,6 +517,7 @@ CREATE TABLE IF NOT EXISTS pc_formula_option_value (
     option_code varchar(80) NOT NULL,
     value_code varchar(80) NOT NULL,
     value_name_cn varchar(200) NOT NULL,
+    value_name_en varchar(200),
     default_flag boolean NOT NULL DEFAULT false,
     status varchar(20) NOT NULL DEFAULT 'ENABLED',
     del_flag varchar(1) NOT NULL DEFAULT '0',
@@ -528,6 +531,7 @@ CREATE TABLE IF NOT EXISTS pc_formula_option_value (
 );
 
 COMMENT ON TABLE pc_formula_option_value IS '产品配方业务配置项可选值草稿表';
+ALTER TABLE IF EXISTS pc_formula_option_value ADD COLUMN IF NOT EXISTS value_name_en varchar(200);
 CREATE INDEX IF NOT EXISTS idx_pc_formula_option_value_formula_sort ON pc_formula_option_value (tenant_id, formula_id, option_code, sort_order, option_value_id) WHERE del_flag = '0';
 
 CREATE TABLE IF NOT EXISTS pc_formula_option_material (
@@ -569,6 +573,8 @@ CREATE TABLE IF NOT EXISTS pc_formula_restriction (
     condition_operator varchar(40) NOT NULL,
     condition_value_code varchar(80),
     condition_value_number numeric(18,6),
+    condition_expression text,
+    condition_text varchar(500),
     action_type varchar(40) NOT NULL,
     target_value_code varchar(80),
     message_text varchar(500),
@@ -584,6 +590,10 @@ CREATE TABLE IF NOT EXISTS pc_formula_restriction (
 );
 
 COMMENT ON TABLE pc_formula_restriction IS '产品配方限制条件草稿表';
+ALTER TABLE IF EXISTS pc_formula_restriction ADD COLUMN IF NOT EXISTS condition_expression text;
+ALTER TABLE IF EXISTS pc_formula_restriction ADD COLUMN IF NOT EXISTS condition_text varchar(500);
+COMMENT ON COLUMN pc_formula_restriction.condition_expression IS '限制条件表达式，返回 true 时触发限制';
+COMMENT ON COLUMN pc_formula_restriction.condition_text IS '限制条件展示文本';
 CREATE INDEX IF NOT EXISTS idx_pc_formula_restriction_formula_sort ON pc_formula_restriction (tenant_id, formula_id, sort_order, restriction_id) WHERE del_flag = '0';
 
 CREATE TABLE IF NOT EXISTS pc_formula_version (

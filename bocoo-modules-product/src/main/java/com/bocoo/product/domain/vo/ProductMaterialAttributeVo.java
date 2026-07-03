@@ -39,6 +39,9 @@ public class ProductMaterialAttributeVo implements Serializable {
     @Schema(description = "属性中文名称快照")
     private String attributeNameCn;
 
+    @Schema(description = "属性英文名称快照")
+    private String attributeNameEn;
+
     @Schema(description = "文本值")
     private String valueText;
 

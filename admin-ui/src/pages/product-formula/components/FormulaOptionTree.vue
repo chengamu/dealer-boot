@@ -1,13 +1,16 @@
 <template>
   <aside class="option-tree-panel">
     <div class="option-tree-panel__header">
-      <div>
-        <h3>{{ t('productCenter.formulaSetup.optionTree') }}</h3>
-        <p>{{ t('productCenter.formulaSetup.optionTreeHint') }}</p>
-      </div>
+      <h3>{{ t('productCenter.formulaSetup.optionTree') }}</h3>
       <div class="option-tree-panel__actions">
         <el-button type="primary" plain :icon="Plus" @click="$emit('addRootOption')">
           {{ t('productCenter.formulaSetup.addRootOption') }}
+        </el-button>
+        <el-button plain :icon="Plus" :disabled="!canAddChildOption" @click="$emit('addChildOption')">
+          {{ t('productCenter.formulaSetup.addChildOption') }}
+        </el-button>
+        <el-button plain type="danger" :icon="Delete" :disabled="!canRemoveOption" @click="$emit('removeSelection')">
+          {{ t('common.delete') }}
         </el-button>
       </div>
     </div>
@@ -41,6 +44,14 @@
           <span class="option-tree__title">{{ node.title }}</span>
           <span class="option-tree__meta">{{ node.meta }}</span>
         </span>
+        <span v-if="node.id === selectedNodeId && node.type !== 'group'" class="option-tree__actions" @click.stop>
+          <el-tooltip :content="t('productCenter.formulaSetup.moveUp')" placement="top">
+            <el-button :icon="ArrowUp" :disabled="!canMoveUp" @click="$emit('moveSelection', 'UP')" />
+          </el-tooltip>
+          <el-tooltip :content="t('productCenter.formulaSetup.moveDown')" placement="top">
+            <el-button :icon="ArrowDown" :disabled="!canMoveDown" @click="$emit('moveSelection', 'DOWN')" />
+          </el-tooltip>
+        </span>
       </button>
       <el-empty v-if="!totalCount" :description="t('productCenter.formulaSetup.selectOptionHint')" :image-size="80" />
     </div>
@@ -48,7 +59,7 @@
 </template>
 
 <script setup lang="ts">
-import { CaretBottom, CaretRight, Plus } from '@element-plus/icons-vue'
+import { ArrowDown, ArrowUp, CaretBottom, CaretRight, Delete, Plus } from '@element-plus/icons-vue'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 
@@ -64,14 +75,21 @@ export type FormulaOptionTreeViewNode = {
   expanded: boolean
 }
 
-defineProps<{
+const props = defineProps<{
   nodes: FormulaOptionTreeViewNode[]
   totalCount: number
   selectedNodeId: string
+  canAddChildOption: boolean
+  canRemoveOption: boolean
+  canMoveUp: boolean
+  canMoveDown: boolean
 }>()
 
-defineEmits<{
+const emit = defineEmits<{
   addRootOption: []
+  addChildOption: []
+  removeSelection: []
+  moveSelection: [direction: 'UP' | 'DOWN']
   selectNode: [nodeId: string]
   toggleNode: [nodeId: string]
 }>()
@@ -89,7 +107,7 @@ const t = (key: string) => getMessage(key, localeStore.language)
 
 .option-tree-panel__header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 14px;
   padding: 16px;
@@ -97,15 +115,10 @@ const t = (key: string) => getMessage(key, localeStore.language)
 }
 
 .option-tree-panel__header h3 {
-  margin: 0 0 4px;
+  flex: 0 0 auto;
+  margin: 0;
   color: #111827;
   font-size: 16px;
-}
-
-.option-tree-panel__header p {
-  margin: 0;
-  color: #6b7280;
-  font-size: 13px;
 }
 
 .option-tree-panel__actions {
@@ -220,6 +233,7 @@ const t = (key: string) => getMessage(key, localeStore.language)
 
 .option-tree__body {
   display: grid;
+  flex: 1 1 auto;
   min-width: 0;
   gap: 2px;
 }
@@ -239,5 +253,18 @@ const t = (key: string) => getMessage(key, localeStore.language)
   font-size: 12px;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.option-tree__actions {
+  display: inline-flex;
+  flex: 0 0 auto;
+  gap: 4px;
+}
+
+.option-tree__actions :deep(.el-button) {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 6px;
 }
 </style>

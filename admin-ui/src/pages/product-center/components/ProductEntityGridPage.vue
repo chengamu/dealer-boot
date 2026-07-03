@@ -1594,13 +1594,10 @@ defineExpose({
 }
 
 .product-grid-page__multiline-cell {
-  display: -webkit-box;
   overflow: hidden;
   white-space: normal;
   word-break: break-word;
   line-height: 1.45;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
 }
 
 .product-grid-page__drawer-actions {

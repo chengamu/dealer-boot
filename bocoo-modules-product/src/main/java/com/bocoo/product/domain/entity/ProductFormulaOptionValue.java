@@ -25,6 +25,7 @@ public class ProductFormulaOptionValue extends BaseEntity {
     private String optionCode;
     private String valueCode;
     private String valueNameCn;
+    private String valueNameEn;
     private Boolean defaultFlag;
     private String status;
     private String delFlag;

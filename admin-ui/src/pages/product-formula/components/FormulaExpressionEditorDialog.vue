@@ -72,7 +72,10 @@
             :materials="materials"
             :options="options"
             :option-values="optionValues"
+            :option-materials="optionMaterials"
+            :enable-option-material-attributes="enableOptionMaterialAttributes"
             @insert="appendConditionClause"
+            @insert-raw="appendExpressionText"
           />
         </div>
 
@@ -122,6 +125,7 @@ import {
 import { normalizeDisplayExpression } from './formulaExpressionDisplay'
 import type {
   ProductFormulaMaterialVO,
+  ProductFormulaOptionMaterialVO,
   ProductFormulaOptionVO,
   ProductFormulaOptionValueVO,
   ProductFormulaSetupVO,
@@ -140,8 +144,10 @@ const props = defineProps<{
   materials?: ProductFormulaMaterialVO[]
   options?: ProductFormulaOptionVO[]
   optionValues?: ProductFormulaOptionValueVO[]
+  optionMaterials?: ProductFormulaOptionMaterialVO[]
   variables?: ProductFormulaVariableVO[]
   variableRules?: ProductFormulaVariableRuleVO[]
+  enableOptionMaterialAttributes?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -160,7 +166,7 @@ const editorTitle = computed(() => isFormulaTarget.value ? t('productCenter.form
 const editorPlaceholder = computed(() => isFormulaTarget.value ? t('productCenter.formulaSetup.usageFormulaPlaceholder') : t('productCenter.formulaSetup.conditionExpressionPlaceholder'))
 const editorOperators = computed(() => isFormulaTarget.value
   ? ['+', '-', '*', '/', '(', ')', { label: '四舍五入(x, 2)', insert: '四舍五入()' }, { label: '向上取整(x, 2)', insert: '向上取整()' }, { label: '向下取整(x, 2)', insert: '向下取整()' }]
-  : ['=', '!=', '>', '>=', '<', '<=', '并且', '或者', '(', ')'])
+  : conditionOperators())
 const normalizedEditorText = computed(() => normalizeDisplayExpression(props.text, props.options, props.optionValues, props.materials, props.variables))
 const editorResult = computed(() => isFormulaTarget.value ? validateFormulaExpression(normalizedEditorText.value) : validateConditionExpression(normalizedEditorText.value))
 const editorResultText = computed(() => {
@@ -180,6 +186,11 @@ function appendExpressionText(value: string) {
 
 function appendConditionClause(clause: string, joiner: string) {
   editorText.value = `${editorText.value.trim()}${editorText.value.trim() ? ` ${joiner} ` : ''}${clause}`.trim()
+}
+
+function conditionOperators() {
+  const operators: Array<string | { label: string; insert: string }> = ['=', '!=', '>', '>=', '<', '<=', '并且', '或者', '(', ')']
+  return props.enableOptionMaterialAttributes ? ['+', '-', '*', '/', ...operators] : operators
 }
 
 function insertVariable(row: ProductFormulaVariableVO) {

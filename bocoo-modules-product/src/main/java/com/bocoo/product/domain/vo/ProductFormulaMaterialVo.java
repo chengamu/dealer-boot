@@ -8,6 +8,7 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @AutoMapper(target = ProductFormulaMaterial.class)
@@ -22,6 +23,7 @@ public class ProductFormulaMaterialVo implements Serializable {
     private Long materialId;
     private String materialCode;
     private String materialNameCn;
+    private String materialNameEn;
     private String specModelText;
     private Long attributeGroupId;
     private String attributeGroupCode;
@@ -49,4 +51,5 @@ public class ProductFormulaMaterialVo implements Serializable {
     private LocalDateTime createTime;
     private String updateBy;
     private LocalDateTime updateTime;
+    private List<ProductMaterialAttributeVo> attributeList;
 }

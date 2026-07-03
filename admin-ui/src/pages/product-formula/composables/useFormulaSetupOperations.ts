@@ -6,6 +6,7 @@ import type {
   ProductFormulaMaterialVO,
   ProductFormulaOptionMaterialVO,
   ProductFormulaOptionVO,
+  ProductFormulaOptionValueVO,
   ProductFormulaUsageRuleVO,
   ProductFormulaVO,
   ProductMaterialVO,
@@ -82,7 +83,8 @@ export function useFormulaSetupOperations(ctx: SetupOperationContext) {
     const code = `OPTION_${next}`
     ctx.setup.options.push({
       optionCode: code,
-      optionNameCn: parent ? `${parent.valueNameCn || parent.valueCode || ''}${ctx.t('productCenter.formulaSetup.childOption')}` : `${ctx.t('productCenter.formulaSetup.optionName')} ${next}`,
+      optionNameCn: `${ctx.t('productCenter.formulaSetup.optionName')} ${next}`,
+      optionNameEn: '',
       sourceType: 'MANUAL',
       selectionMode: 'SINGLE',
       requiredFlag: true,
@@ -104,6 +106,7 @@ export function useFormulaSetupOperations(ctx: SetupOperationContext) {
       optionCode: ctx.selectedOptionCode.value,
       valueCode: `VALUE_${next}`,
       valueNameCn: '',
+      valueNameEn: '',
       defaultFlag: false,
       status: PRODUCT_STATUS_ENABLED,
       sortOrder: ctx.setup.optionValues.length * 10 + 10
@@ -123,16 +126,23 @@ export function useFormulaSetupOperations(ctx: SetupOperationContext) {
   function addRestrictionRow() {
     ctx.setup.restrictions.push({
       restrictionName: '',
-      targetOptionCode: ctx.selectedOptionCode.value || ctx.setup.options[0]?.optionCode,
-      conditionType: 'WIDTH',
-      conditionOperator: 'GT',
+      targetOptionCode: '',
+      conditionType: 'EXPRESSION',
+      conditionOperator: 'EXPRESSION',
+      conditionExpression: '',
+      conditionText: '',
       actionType: 'DISABLE',
       status: PRODUCT_STATUS_ENABLED,
       sortOrder: ctx.setup.restrictions.length * 10 + 10
     })
   }
   function removeOption(index: number) {
-    const optionCode = ctx.setup.options[index]?.optionCode
+    const option = ctx.setup.options[index]
+    const optionCode = option?.optionCode
+    if (isOptionReferenced(option)) {
+      ElMessage.warning(ctx.t('productCenter.formulaSetup.optionReferencedRemoveDenied'))
+      return
+    }
     removeRow(ctx.setup.options, index)
     ctx.setup.optionValues = ctx.setup.optionValues.filter((row) => row.optionCode !== optionCode)
     ctx.setup.optionMaterials = ctx.setup.optionMaterials.filter((row) => row.optionCode !== optionCode)
@@ -144,6 +154,10 @@ export function useFormulaSetupOperations(ctx: SetupOperationContext) {
   function removeSelectedValue(index: number) {
     const row = selectedValues.value[index]
     if (!row) return
+    if (isOptionValueReferenced(row)) {
+      ElMessage.warning(ctx.t('productCenter.formulaSetup.optionReferencedRemoveDenied'))
+      return
+    }
     removeRow(ctx.setup.optionValues, ctx.setup.optionValues.indexOf(row))
     ctx.setup.optionMaterials = ctx.setup.optionMaterials.filter((item) => !(item.optionCode === row.optionCode && item.valueCode === row.valueCode))
     ctx.setup.options.forEach((option) => {
@@ -175,6 +189,29 @@ export function useFormulaSetupOperations(ctx: SetupOperationContext) {
     if (!materialCode) return false
     return ctx.setup.usageRules.some((row) => row.materialCode === materialCode)
       || ctx.setup.optionMaterials.some((row) => row.materialCode === materialCode)
+  }
+  function isOptionReferenced(option?: ProductFormulaOptionVO) {
+    if (!option?.optionCode) return false
+    return ctx.setup.options.some((row) => row.visibleConditionOptionCode === option.optionCode)
+      || ctx.setup.restrictions.some((row) => row.targetOptionCode === option.optionCode || expressionReferencesOption(row.conditionExpression || row.conditionText, option))
+      || ctx.setup.usageRules.some((row) => row.conditionOptionCode === option.optionCode || expressionReferencesOption(row.conditionExpression || row.conditionText, option))
+      || ctx.setup.variableRules.some((row) => expressionReferencesOption(row.conditionExpression || row.conditionText, option))
+  }
+  function isOptionValueReferenced(row?: ProductFormulaOptionValueVO) {
+    if (!row?.optionCode || !row.valueCode) return false
+    return ctx.setup.options.some((option) => (
+      (option.visibleConditionOptionCode === row.optionCode && option.visibleConditionValueCode === row.valueCode)
+      || (option.optionCode === row.optionCode && option.defaultValueCode === row.valueCode)
+    ))
+      || ctx.setup.restrictions.some((restriction) => (
+        (restriction.targetOptionCode === row.optionCode && restriction.targetValueCode === row.valueCode)
+        || expressionReferencesOptionValue(restriction.conditionExpression || restriction.conditionText, row)
+      ))
+      || ctx.setup.usageRules.some((rule) => (
+        (rule.conditionOptionCode === row.optionCode && rule.conditionValueCode === row.valueCode)
+        || expressionReferencesOptionValue(rule.conditionExpression || rule.conditionText, row)
+      ))
+      || ctx.setup.variableRules.some((rule) => expressionReferencesOptionValue(rule.conditionExpression || rule.conditionText, row))
   }
   function handleOptionChange(row?: ProductFormulaOptionVO) {
     if (row?.optionCode) ctx.selectedOptionCode.value = row.optionCode
@@ -275,6 +312,18 @@ export function useFormulaSetupOperations(ctx: SetupOperationContext) {
   function summaryFormulaValue(value: unknown): string { const text = textOf(value).trim(); const numeric = Number(text); return text && Number.isFinite(numeric) && /^-?\d+(\.\d+)?$/.test(text) ? numeric.toFixed(2) : text }
   function isDefaultQuantityFormula(value: string) { return Number(value) === 1 && /^1(\.0+)?$/.test(value) }
   function textOf(value: unknown): string { return value === undefined || value === null ? '' : String(value) }
+  function expressionReferencesOption(expression: unknown, option: ProductFormulaOptionVO) {
+    const text = textOf(expression)
+    if (!text) return false
+    return [optionVariableName(option.optionCode), option.optionCode, option.optionNameCn, option.optionNameEn].some((value) => value && text.includes(value))
+  }
+  function expressionReferencesOptionValue(expression: unknown, row: ProductFormulaOptionValueVO) {
+    const option = ctx.setup.options.find((item) => item.optionCode === row.optionCode)
+    if (!option || !expressionReferencesOption(expression, option)) return false
+    const text = textOf(expression)
+    return [row.valueCode, row.valueNameCn, row.valueNameEn].some((value) => value && text.includes(value))
+  }
+  function optionVariableName(optionCode?: string) { return optionCode === 'FABRIC' ? 'fabric' : `option_${optionCode || ''}` }
   return {
     selectedValues, selectedOptionMaterials, unsetUsageCount, appendSelectedMaterials, addOptionRow, addOptionValueRow,
     addOptionMaterialRow, addRestrictionRow, removeOption, removeSelectedValue, removeSelectedOptionMaterial, removeMaterial,

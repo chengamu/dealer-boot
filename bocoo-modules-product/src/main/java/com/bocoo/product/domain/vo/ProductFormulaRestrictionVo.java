@@ -25,6 +25,8 @@ public class ProductFormulaRestrictionVo implements Serializable {
     private String conditionOperator;
     private String conditionValueCode;
     private BigDecimal conditionValueNumber;
+    private String conditionExpression;
+    private String conditionText;
     private String actionType;
     private String targetValueCode;
     private String messageText;

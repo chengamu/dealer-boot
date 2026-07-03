@@ -7,12 +7,29 @@
     :exception-count="businessExceptionCount"
   />
 
+  <FormulaRestrictionBand
+    :restrictions="restrictions"
+    :options="options"
+    :all-option-values="allOptionValues"
+    :all-option-materials="allOptionMaterials"
+    :materials="materials"
+    @add-restriction="$emit('add-restriction')"
+    @remove-restriction="$emit('remove-restriction', $event)"
+  />
+
   <section class="option-workbench">
     <FormulaOptionTree
       :nodes="visibleOptionTreeViewNodes"
       :total-count="optionTreeNodes.length"
       :selected-node-id="selectedNodeId"
+      :can-add-child-option="canAddChildOption"
+      :can-remove-option="canRemoveSelectedOption"
+      :can-move-up="canMoveSelectedOptionUp"
+      :can-move-down="canMoveSelectedOptionDown"
       @add-root-option="$emit('add-option')"
+      @add-child-option="addChildOptionFromValue"
+      @remove-selection="removeSelectedTreeNode"
+      @move-selection="moveSelectedTreeNode"
       @select-node="selectTreeNodeById"
       @toggle-node="toggleTreeNodeById"
     />
@@ -20,18 +37,10 @@
     <main class="option-node-panel">
       <template v-if="selectedOption">
         <FormulaOptionNodeEditor
-          :selected-node="selectedNode"
           :selected-option="selectedOption"
-          :selected-value="selectedValue"
-          :current-option-index="currentOptionIndex"
-          :sibling-options="siblingOptions"
           :material-group-options="materialGroupOptions"
           :t="t"
-          :visibility-text="visibilityText"
           :source-group-code="sourceGroupCode"
-          @move-option="moveSelectedOption"
-          @add-child-option="addChildOptionFromValue"
-          @remove-option="removeSelectedOption"
           @source-type-change="handleSourceTypeChange"
           @source-group-change="changeSourceGroup"
         />
@@ -56,14 +65,6 @@
       <el-empty v-else :description="t('productCenter.formulaSetup.selectOptionHint')" :image-size="96" />
     </main>
   </section>
-
-  <FormulaRestrictionBand
-    :restrictions="restrictions"
-    :options="options"
-    :all-option-values="allOptionValues"
-    @add-restriction="$emit('add-restriction')"
-    @remove-restriction="$emit('remove-restriction', $event)"
-  />
 
   <FormulaOptionValueDialogs
     :value-import-open="valueImportOpen"
@@ -92,6 +93,7 @@
 <script setup lang="ts">
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
+import { ElMessage } from 'element-plus'
 import { computed, ref } from 'vue'
 import FormulaOptionNodeEditor from './FormulaOptionNodeEditor.vue'
 import FormulaOptionOverview from './FormulaOptionOverview.vue'
@@ -132,7 +134,6 @@ const props = defineProps<{
 const emit = defineEmits<{
   'add-option': [parent?: ChildOptionPayload]
   'option-change': [row?: ProductFormulaOptionVO]
-  'move-option': [optionCode: string, direction: 'UP' | 'DOWN']
   'remove-option': [index: number]
   'add-option-value': []
   'remove-option-value': [index: number]
@@ -162,7 +163,6 @@ const {
   valuesForOption,
   materialsForValue,
   siblingOptionsFor,
-  valueNodeId,
   selectOptionValue,
   selectTreeNodeById,
   toggleTreeNodeById
@@ -205,11 +205,33 @@ const {
 const businessExceptionCount = computed(() => {
   const optionIssues = props.options.filter((row) => !row.optionCode || !row.optionNameCn || valuesForOption(row.optionCode).length === 0).length
   const valueIssues = props.allOptionValues.filter((row) => !row.valueCode || !row.valueNameCn).length
-  const materialIssues = props.allOptionMaterials.filter((row) => !row.valueCode || !row.materialCode).length
-  const restrictionIssues = props.restrictions.filter((row) => !row.targetOptionCode || !row.conditionType || !row.conditionOperator || !row.actionType).length
+  const materialIssues = props.allOptionValues.filter((row) => !row.valueCode || (!valueHasChildOption(row) && materialsForValue(row).length === 0)).length
+    + props.allOptionMaterials.filter((row) => !row.valueCode || !row.materialCode).length
+  const restrictionIssues = props.restrictions.filter((row) => !row.conditionExpression || !row.actionType).length
   const visibilityIssues = props.options.filter((row) => row.visibilityMode === 'CONDITIONAL' && (!row.visibleConditionOptionCode || !row.visibleConditionValueCode)).length
   return optionIssues + valueIssues + materialIssues + restrictionIssues + visibilityIssues
 })
+
+function valueHasChildOption(row: ProductFormulaOptionValueVO) {
+  return props.options.some((option) => (
+    option.visibilityMode === 'CONDITIONAL'
+    && option.visibleConditionOptionCode === row.optionCode
+    && option.visibleConditionValueCode === row.valueCode
+  ))
+}
+
+const canAddChildOption = computed(() => selectedNode.value?.type === 'value' && Boolean(selectedValue.value))
+const canRemoveSelectedOption = computed(() => selectedNode.value?.type === 'option' || selectedNode.value?.type === 'value')
+const canMoveSelectedOptionUp = computed(() => {
+  if (selectedNode.value?.type === 'option') return currentOptionIndex.value > 0
+  if (selectedNode.value?.type === 'value') return currentValueIndex.value > 0
+  return false
+})
+const canMoveSelectedOptionDown = computed(() => (
+  selectedNode.value?.type === 'option'
+    ? currentOptionIndex.value >= 0 && currentOptionIndex.value < siblingOptions.value.length - 1
+    : currentValueIndex.value >= 0 && currentValueIndex.value < siblingValues.value.length - 1
+))
 function setDefaultValue(row: ProductFormulaOptionValueVO) {
   props.allOptionValues
     .filter((item) => item.optionCode === row.optionCode)
@@ -221,6 +243,10 @@ function setDefaultValue(row: ProductFormulaOptionValueVO) {
 }
 
 function removeOptionValue(row: ProductFormulaOptionValueVO) {
+  if (optionValueReferenced(row)) {
+    ElMessage.warning(t('productCenter.formulaSetup.optionReferencedRemoveDenied'))
+    return
+  }
   const index = props.optionValues.indexOf(row)
   if (index >= 0) emit('remove-option-value', index)
 }
@@ -235,9 +261,60 @@ function addChildOptionFromValue() {
   })
 }
 
+function optionHasChildOption(row?: ProductFormulaOptionVO) {
+  if (!row?.optionCode) return false
+  return props.options.some((option) => option.visibleConditionOptionCode === row.optionCode)
+}
+
+function optionReferenced(row?: ProductFormulaOptionVO) {
+  if (!row?.optionCode) return false
+  const optionCode = row.optionCode
+  return optionHasChildOption(row)
+    || props.restrictions.some((restriction) => restriction.targetOptionCode === optionCode || expressionReferencesOption(restriction.conditionExpression || restriction.conditionText, row))
+}
+
+function optionValueReferenced(row?: ProductFormulaOptionValueVO) {
+  if (!row?.optionCode || !row.valueCode) return false
+  return valueHasChildOption(row)
+    || props.options.some((option) => option.optionCode === row.optionCode && option.defaultValueCode === row.valueCode)
+    || props.restrictions.some((restriction) => {
+      const targetMatched = restriction.targetOptionCode === row.optionCode && restriction.targetValueCode === row.valueCode
+      const expressionMatched = expressionReferencesOptionValue(restriction.conditionExpression || restriction.conditionText, row)
+      return targetMatched || expressionMatched
+    })
+}
+
+function expressionReferencesOption(expression: unknown, option: ProductFormulaOptionVO) {
+  const text = String(expression || '')
+  if (!text) return false
+  return [optionVariableName(option.optionCode), option.optionCode, option.optionNameCn, option.optionNameEn].some((value) => value && text.includes(value))
+}
+
+function expressionReferencesOptionValue(expression: unknown, row: ProductFormulaOptionValueVO) {
+  const option = props.options.find((item) => item.optionCode === row.optionCode)
+  if (!option || !expressionReferencesOption(expression, option)) return false
+  const text = String(expression || '')
+  return [row.valueCode, row.valueNameCn, row.valueNameEn].some((value) => value && text.includes(value))
+}
+
+function optionVariableName(optionCode?: string) {
+  return optionCode === 'FABRIC' ? 'fabric' : `option_${optionCode || ''}`
+}
+
+const siblingValues = computed(() => selectedOption.value?.optionCode ? valuesForOption(selectedOption.value.optionCode) : [])
+const currentValueIndex = computed(() => siblingValues.value.findIndex((row) => row.valueCode === selectedValue.value?.valueCode))
+
+function moveSelectedTreeNode(direction: 'UP' | 'DOWN') {
+  if (selectedNode.value?.type === 'value') {
+    moveSelectedValue(direction)
+    return
+  }
+  moveSelectedOption(direction)
+}
+
 function moveSelectedOption(direction: 'UP' | 'DOWN') {
   const option = selectedOption.value
-  if (!option?.optionCode) return
+  if (selectedNode.value?.type !== 'option' || !option?.optionCode) return
   const siblings = siblingOptionsFor(option)
   const currentIndex = siblings.findIndex((row) => row.optionCode === option.optionCode)
   const targetIndex = direction === 'UP' ? currentIndex - 1 : currentIndex + 1
@@ -247,9 +324,31 @@ function moveSelectedOption(direction: 'UP' | 'DOWN') {
   siblings.forEach((item, index) => { item.sortOrder = (index + 1) * 10 })
 }
 
-function removeSelectedOption() {
-  const index = props.options.findIndex((row) => row.optionCode === props.selectedOptionCode)
-  if (index >= 0) emit('remove-option', index)
+function moveSelectedValue(direction: 'UP' | 'DOWN') {
+  const value = selectedValue.value
+  if (!value?.optionCode || !value.valueCode) return
+  const siblings = valuesForOption(value.optionCode)
+  const currentIndex = siblings.findIndex((row) => row.valueCode === value.valueCode)
+  const targetIndex = direction === 'UP' ? currentIndex - 1 : currentIndex + 1
+  if (currentIndex < 0 || targetIndex < 0 || targetIndex >= siblings.length) return
+  const [row] = siblings.splice(currentIndex, 1)
+  siblings.splice(targetIndex, 0, row)
+  siblings.forEach((item, index) => { item.sortOrder = (index + 1) * 10 })
+}
+
+function removeSelectedTreeNode() {
+  if (selectedNode.value?.type === 'value' && selectedValue.value) {
+    removeOptionValue(selectedValue.value)
+    return
+  }
+  if (selectedNode.value?.type === 'option') {
+    if (optionReferenced(selectedOption.value)) {
+      ElMessage.warning(t('productCenter.formulaSetup.optionReferencedRemoveDenied'))
+      return
+    }
+    const index = props.options.findIndex((row) => row.optionCode === props.selectedOptionCode)
+    if (index >= 0) emit('remove-option', index)
+  }
 }
 
 </script>

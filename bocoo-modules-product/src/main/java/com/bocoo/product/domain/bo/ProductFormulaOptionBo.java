@@ -15,6 +15,7 @@ public class ProductFormulaOptionBo extends BaseBo {
     private Long formulaId;
     private String optionCode;
     private String optionNameCn;
+    private String optionNameEn;
     private String sourceType;
     private String sourceScope;
     private String selectionMode;

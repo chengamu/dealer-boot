@@ -9,53 +9,38 @@
     </div>
 
     <el-table :data="restrictions" border class="setup-table">
-      <el-table-column :label="t('productCenter.formulaSetup.restrictionSentence')" min-width="920">
+      <el-table-column :label="t('productCenter.formulaSetup.restrictionSentence')" min-width="220">
         <template #default="{ row }">
-          <div class="restriction-sentence">
-            <span>{{ t('productCenter.formulaSetup.when') }}</span>
-            <el-select v-model="row.conditionType" class="restriction-sentence__condition" @change="handleRestrictionTypeChange(row)">
-              <el-option value="WIDTH" :label="t('productCenter.formulaSetup.conditionWidth')" />
-              <el-option value="HEIGHT" :label="t('productCenter.formulaSetup.conditionHeight')" />
-              <el-option value="WEIGHT" :label="t('productCenter.formulaSetup.conditionWeight')" />
-              <el-option value="OPTION_VALUE" :label="t('productCenter.formulaSetup.conditionOptionValue')" />
-            </el-select>
-            <template v-if="row.conditionType === 'OPTION_VALUE'">
-              <el-select v-model="row.conditionOptionCode" class="restriction-sentence__target" filterable clearable @change="handleRestrictionConditionOptionChange(row)">
-                <el-option v-for="option in options" :key="String(option.optionCode)" :label="option.optionNameCn || option.optionCode" :value="option.optionCode" />
-              </el-select>
-              <el-select v-model="row.conditionOperator" class="restriction-sentence__operator">
-                <el-option value="EQ" label="=" />
-                <el-option value="NE" label="!=" />
-              </el-select>
-              <el-select v-model="row.conditionValueCode" class="restriction-sentence__target" filterable clearable>
-                <el-option
-                  v-for="value in valuesForOption(row.conditionOptionCode)"
-                  :key="String(value.valueCode)"
-                  :label="value.valueNameCn || value.valueCode"
-                  :value="value.valueCode"
-                />
-              </el-select>
-            </template>
-            <template v-else>
-              <el-select v-model="row.conditionOperator" class="restriction-sentence__operator">
-                <el-option value="GT" label=">" />
-                <el-option value="GTE" label=">=" />
-                <el-option value="EQ" label="=" />
-                <el-option value="NE" label="!=" />
-                <el-option value="LTE" label="<=" />
-                <el-option value="LT" label="<" />
-              </el-select>
-              <el-input v-model="row.conditionValueCode" class="restriction-sentence__value" :placeholder="t('productCenter.formulaSetup.conditionValue')" />
-            </template>
-            <span>{{ t('productCenter.formulaSetup.then') }}</span>
-            <el-select v-model="row.actionType" class="restriction-sentence__action">
+          <el-input v-model="row.restrictionName" clearable />
+        </template>
+      </el-table-column>
+      <el-table-column :label="t('productCenter.formulaSetup.conditionExpression')" min-width="360">
+        <template #default="{ row }">
+          <div class="restriction-expression">
+            <span :class="{ 'restriction-expression__text--invalid': restrictionExpressionInvalid(row) }" :title="restrictionExpressionText(row)">
+              {{ restrictionExpressionText(row) }}
+            </span>
+            <el-button plain @click="openExpressionEditor(row)">{{ t('productCenter.formulaSetup.conditionExpressionEditor') }}</el-button>
+          </div>
+        </template>
+      </el-table-column>
+      <el-table-column :label="t('productCenter.formulaSetup.restrictionTarget')" min-width="430">
+        <template #default="{ row }">
+          <div class="restriction-target">
+            <el-select v-model="row.actionType" class="restriction-target__action">
               <el-option value="DISABLE" :label="t('productCenter.formulaSetup.disable')" />
               <el-option value="WARN" :label="t('productCenter.formulaSetup.warn')" />
             </el-select>
-            <el-select v-model="row.targetOptionCode" class="restriction-sentence__target" filterable clearable @change="row.targetValueCode = ''">
+            <el-select
+              :model-value="targetOptionValue(row)"
+              class="restriction-target__option"
+              filterable
+              @update:model-value="handleTargetOptionChange(row, $event)"
+            >
+              <el-option :label="t('productCenter.formulaSetup.wholeOrder')" :value="WHOLE_ORDER_TARGET" />
               <el-option v-for="option in options" :key="String(option.optionCode)" :label="option.optionNameCn || option.optionCode" :value="option.optionCode" />
             </el-select>
-            <el-select v-model="row.targetValueCode" class="restriction-sentence__target" filterable clearable>
+            <el-select v-if="row.targetOptionCode" v-model="row.targetValueCode" class="restriction-target__value" filterable clearable>
               <el-option :label="t('productCenter.formulaSetup.allOptionValues')" value="" />
               <el-option v-for="value in valuesForOption(row.targetOptionCode)" :key="String(value.valueCode)" :label="value.valueNameCn || value.valueCode" :value="value.valueCode" />
             </el-select>
@@ -73,6 +58,17 @@
         </template>
       </el-table-column>
     </el-table>
+    <FormulaExpressionEditorDialog
+      v-model="expressionEditorOpen"
+      v-model:text="expressionEditorText"
+      target="condition"
+      :materials="materials"
+      :options="options"
+      :option-values="allOptionValues"
+      :option-materials="allOptionMaterials"
+      enable-option-material-attributes
+      @confirm="confirmExpressionEditor"
+    />
   </section>
 </template>
 
@@ -80,7 +76,13 @@
 import { Plus } from '@element-plus/icons-vue'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
+import { ref } from 'vue'
+import FormulaExpressionEditorDialog from './FormulaExpressionEditorDialog.vue'
+import { normalizeDisplayExpression } from './formulaExpressionDisplay'
+import { validateConditionExpression } from '../utils/formulaExpression'
 import type {
+  ProductFormulaMaterialVO,
+  ProductFormulaOptionMaterialVO,
   ProductFormulaOptionVO,
   ProductFormulaOptionValueVO,
   ProductFormulaRestrictionVO
@@ -90,6 +92,8 @@ const props = defineProps<{
   restrictions: ProductFormulaRestrictionVO[]
   options: ProductFormulaOptionVO[]
   allOptionValues: ProductFormulaOptionValueVO[]
+  allOptionMaterials: ProductFormulaOptionMaterialVO[]
+  materials: ProductFormulaMaterialVO[]
 }>()
 
 defineEmits<{
@@ -99,6 +103,10 @@ defineEmits<{
 
 const localeStore = useLocaleStore()
 const t = (key: string) => getMessage(key, localeStore.language)
+const expressionEditorOpen = ref(false)
+const expressionEditorText = ref('')
+const editingRestriction = ref<ProductFormulaRestrictionVO | null>(null)
+const WHOLE_ORDER_TARGET = '__WHOLE_ORDER__'
 
 function valuesForOption(optionCode?: string) {
   return props.allOptionValues
@@ -106,22 +114,52 @@ function valuesForOption(optionCode?: string) {
     .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
 }
 
-function handleRestrictionTypeChange(row: ProductFormulaRestrictionVO) {
-  row.conditionOptionCode = ''
-  row.conditionValueCode = ''
-  if (row.conditionType === 'OPTION_VALUE') {
-    row.conditionOperator = 'EQ'
-  }
+function targetOptionValue(row: ProductFormulaRestrictionVO) {
+  return row.targetOptionCode || WHOLE_ORDER_TARGET
 }
 
-function handleRestrictionConditionOptionChange(row: ProductFormulaRestrictionVO) {
+function handleTargetOptionChange(row: ProductFormulaRestrictionVO, value: string | number | boolean) {
+  row.targetOptionCode = value === WHOLE_ORDER_TARGET ? '' : String(value || '')
+  row.targetValueCode = ''
+}
+
+function openExpressionEditor(row: ProductFormulaRestrictionVO) {
+  editingRestriction.value = row
+  expressionEditorText.value = row.conditionText || row.conditionExpression || ''
+  expressionEditorOpen.value = true
+}
+
+function confirmExpressionEditor() {
+  const row = editingRestriction.value
+  if (!row) return
+  const text = expressionEditorText.value.trim()
+  const normalized = normalizeDisplayExpression(text, props.options, props.allOptionValues, props.materials)
+  const result = validateConditionExpression(normalized)
+  if (!result.valid) return
+  row.conditionType = 'EXPRESSION'
+  row.conditionOperator = 'EXPRESSION'
+  row.conditionExpression = result.expression
+  row.conditionText = text
+  row.conditionOptionCode = ''
   row.conditionValueCode = ''
+  row.conditionValueNumber = undefined
+  expressionEditorOpen.value = false
+}
+
+function restrictionExpressionText(row: ProductFormulaRestrictionVO) {
+  return row.conditionText || row.conditionExpression || t('productCenter.formulaSetup.conditionExpressionPlaceholder')
+}
+
+function restrictionExpressionInvalid(row: ProductFormulaRestrictionVO) {
+  const text = row.conditionExpression || normalizeDisplayExpression(row.conditionText, props.options, props.allOptionValues, props.materials)
+  return !validateConditionExpression(text).valid
 }
 </script>
 
 <style scoped>
 .setup-section {
   padding: 16px;
+  margin-bottom: 12px;
   background: #fff;
   border: 1px solid #e6ebf2;
   border-radius: 8px;
@@ -146,25 +184,37 @@ function handleRestrictionConditionOptionChange(row: ProductFormulaRestrictionVO
   font-size: 13px;
 }
 
-.restriction-sentence {
+.restriction-expression,
+.restriction-target {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
 }
 
-.restriction-sentence__condition,
-.restriction-sentence__action {
-  width: 140px;
+.restriction-expression span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: #334155;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.restriction-sentence__operator {
-  width: 96px;
+.restriction-expression__text--invalid {
+  color: #dc2626;
 }
 
-.restriction-sentence__value,
-.restriction-sentence__target {
-  width: 180px;
+.restriction-expression :deep(.el-button) {
+  flex: 0 0 auto;
+}
+
+.restriction-target__action {
+  width: 112px;
+}
+
+.restriction-target__option,
+.restriction-target__value {
+  width: 150px;
 }
 
 .setup-table {

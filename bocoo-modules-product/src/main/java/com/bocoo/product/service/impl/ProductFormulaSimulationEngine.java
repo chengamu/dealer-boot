@@ -44,6 +44,7 @@ class ProductFormulaSimulationEngine extends ProductServiceSupport {
         }
         List<ProductFormulaMaterialVo> bomMaterials = resolveBomMaterials(setup, vo.getSelectedOptionValues());
         Map<String, Object> context = expressionContext(formula, vo);
+        context.putAll(selectedOptionMaterialContext(setup, vo.getSelectedOptionValues()));
         messageKey = validateRestrictions(setup.getRestrictions(), vo.getSelectedOptionValues(), context);
         if (messageKey != null) {
             return fail(vo, messageKey);
@@ -168,6 +169,52 @@ class ProductFormulaSimulationEngine extends ProductServiceSupport {
         vo.getSelectedOptionValues().forEach((optionCode, valueCode) -> context.put("option_" + optionCode, valueCode));
         return context;
     }
+
+    private Map<String, Object> selectedOptionMaterialContext(ProductFormulaSetupVo setup, Map<String, String> selectedValues) {
+        Map<String, ProductFormulaMaterialVo> materialsByCode = setup.getMaterials().stream()
+            .filter(material -> StringUtils.isNotBlank(material.getMaterialCode()))
+            .collect(Collectors.toMap(ProductFormulaMaterialVo::getMaterialCode, material -> material, (left, right) -> left));
+        Map<String, Object> context = new HashMap<>();
+        setup.getOptionMaterials().stream()
+            .filter(optionMaterial -> Objects.equals(selectedValues.get(optionMaterial.getOptionCode()), optionMaterial.getValueCode()))
+            .sorted(Comparator.comparing(ProductFormulaOptionMaterialVo::getDefaultFlag, Comparator.nullsLast(Comparator.reverseOrder()))
+                .thenComparing(ProductFormulaOptionMaterialVo::getSortOrder, Comparator.nullsLast(Integer::compareTo)))
+            .forEach(optionMaterial -> applyOptionMaterialContext(context, optionMaterial.getOptionCode(), materialsByCode.get(optionMaterial.getMaterialCode())));
+        return context;
+    }
+
+    private void applyOptionMaterialContext(Map<String, Object> context, String optionCode, ProductFormulaMaterialVo material) {
+        if (StringUtils.isBlank(optionCode) || material == null) {
+            return;
+        }
+        String prefix = "material_" + identifierPart(optionCode) + "_";
+        context.putIfAbsent(prefix + "materialType", material.getMaterialTypeCode());
+        context.putIfAbsent(prefix + "materialCode", material.getMaterialCode());
+        context.putIfAbsent(prefix + "materialName", material.getMaterialNameCn());
+        if (material.getAttributeList() == null) {
+            return;
+        }
+        material.getAttributeList().forEach(attribute -> {
+            if (StringUtils.isNotBlank(attribute.getAttributeCode())) {
+                context.putIfAbsent(prefix + identifierPart(attribute.getAttributeCode()), attributeValue(attribute));
+            }
+        });
+    }
+
+    private Object attributeValue(com.bocoo.product.domain.vo.ProductMaterialAttributeVo attribute) {
+        if (attribute.getValueNumber() != null) {
+            return attribute.getValueNumber().doubleValue();
+        }
+        if (attribute.getValueBool() != null) {
+            return attribute.getValueBool();
+        }
+        return attribute.getValueText();
+    }
+
+    private String identifierPart(String value) {
+        return value == null ? "" : value.replaceAll("[^A-Za-z0-9_]", "_");
+    }
+
     private String validateRestrictions(List<ProductFormulaRestrictionVo> restrictions, Map<String, String> selectedValues,
                                         Map<String, Object> context) {
         for (ProductFormulaRestrictionVo restriction : restrictions) {
@@ -188,6 +235,7 @@ class ProductFormulaSimulationEngine extends ProductServiceSupport {
     private boolean restrictionConditionMatched(ProductFormulaRestrictionVo restriction, Map<String, String> selectedValues,
                                                 Map<String, Object> context) {
         return switch (StringUtils.blankToDefault(restriction.getConditionType(), "")) {
+            case "EXPRESSION" -> ProductFormulaExpressionValidator.evaluateCondition(restriction.getConditionExpression(), context);
             case "OPTION_VALUE" -> compareString(selectedValues.get(restriction.getConditionOptionCode()),
                 restriction.getConditionValueCode(), restriction.getConditionOperator());
             case "WIDTH" -> compareNumber(numberValue(context.get("orderWidthIn")), restriction.getConditionValueNumber(), restriction.getConditionOperator());

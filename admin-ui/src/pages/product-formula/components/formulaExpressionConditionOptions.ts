@@ -12,6 +12,7 @@ export type MaterialBuilderState = BuilderState & {
 export type ConditionValue = {
   valueCode?: string
   valueNameCn?: string
+  valueNameEn?: string
 }
 
 export type ConditionField = {
@@ -19,6 +20,7 @@ export type ConditionField = {
   name: string
   insert: string
   optionCode?: string
+  attributeCode?: string
   stringValue?: boolean
 }
 

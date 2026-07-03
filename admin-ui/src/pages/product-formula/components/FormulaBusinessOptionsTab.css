@@ -1,6 +1,6 @@
 .option-workbench {
   display: grid;
-  grid-template-columns: minmax(320px, 380px) minmax(0, 1fr);
+  grid-template-columns: minmax(440px, 520px) minmax(0, 1fr);
   align-items: start;
   gap: 12px;
   margin-bottom: 12px;
@@ -21,7 +21,7 @@
   padding: 12px;
 }
 
-@media (max-width: 1440px) {
+@media (max-width: 1180px) {
   .option-workbench,
   .option-edit-grid {
     grid-template-columns: 1fr;

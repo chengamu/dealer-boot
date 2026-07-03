@@ -27,6 +27,7 @@ import com.bocoo.product.mapper.ProductFormulaUsageRuleMapper;
 import com.bocoo.product.mapper.ProductFormulaVariableMapper;
 import com.bocoo.product.mapper.ProductFormulaVariableRuleMapper;
 import com.bocoo.product.mapper.ProductMaterialMapper;
+import com.bocoo.product.mapper.ProductMaterialAttributeMapper;
 import com.bocoo.product.mapper.ProductUnitMapper;
 import com.bocoo.product.service.impl.ProductFormulaMaterialSnapshotResolver;
 import com.bocoo.product.service.impl.ProductFormulaRestrictionNormalizer;
@@ -83,6 +84,8 @@ class ProductFormulaSetupServiceTest {
     @Mock
     private ProductMaterialMapper productMaterialMapper;
     @Mock
+    private ProductMaterialAttributeMapper materialAttributeMapper;
+    @Mock
     private ProductUnitMapper unitMapper;
     @Mock
     private ProductChangeLogService changeLogService;
@@ -106,6 +109,7 @@ class ProductFormulaSetupServiceTest {
             optionMaterialMapper,
             restrictionMapper,
             productMaterialMapper,
+            materialAttributeMapper,
             usageRuleService,
             variableService
         );
@@ -320,6 +324,7 @@ class ProductFormulaSetupServiceTest {
         motorModel.setVisibleConditionValueCode("MAT001");
         bo.setOptions(List.of(optionBo(), motorModel));
         bo.setOptionValues(List.of(optionValueBo(), optionValueBo("MOTOR_MODEL", "MOTOR_A", "A款电机")));
+        bo.setOptionMaterials(List.of(optionMaterialBo(), optionMaterialBo("MOTOR_MODEL", "MOTOR_A", "MAT001")));
         when(formulaMapper.selectById(3001L)).thenReturn(formula("DRAFT"));
         stubMaterialSnapshot();
         when(formulaMapper.update(any(), any())).thenReturn(1);
@@ -406,6 +411,7 @@ class ProductFormulaSetupServiceTest {
         ProductFormulaSetupBo bo = validSetup();
         bo.setOptions(List.of(optionBo(), optionBo("SYSTEM", "系统")));
         bo.setOptionValues(List.of(optionValueBo(), optionValueBo("SYSTEM", "ELECTRIC", "电机")));
+        bo.setOptionMaterials(List.of(optionMaterialBo(), optionMaterialBo("SYSTEM", "ELECTRIC", "MAT001")));
         ProductFormulaRestrictionBo restriction = restrictionBo();
         restriction.setConditionType("OPTION_VALUE");
         restriction.setConditionOptionCode("SYSTEM");
@@ -433,11 +439,27 @@ class ProductFormulaSetupServiceTest {
             optionValue("FABRIC", "MAT001", "米色斑马帘面料"),
             optionValue("SYSTEM", "ELECTRIC", "电机")
         ));
-        when(optionMaterialMapper.selectList(any())).thenReturn(List.of());
+        when(optionMaterialMapper.selectList(any())).thenReturn(List.of(
+            optionMaterial(),
+            optionMaterial("SYSTEM", "ELECTRIC", "MAT001")
+        ));
         when(restrictionMapper.selectList(any())).thenReturn(List.of(restriction));
 
         assertThat(setupService.validationMessageKey(3001L))
             .isEqualTo("product.formula.restrictionConditionInvalid");
+    }
+
+    @Test
+    void validationRequiresLeafOptionValueLinkedMaterial() {
+        when(materialMapper.selectList(any())).thenReturn(List.of(formulaMaterial()));
+        when(usageRuleMapper.selectList(any())).thenReturn(List.of(usageRule()));
+        when(optionMapper.selectList(any())).thenReturn(List.of(option("FABRIC", "面料")));
+        when(optionValueMapper.selectList(any())).thenReturn(List.of(optionValue("FABRIC", "MAT001", "米色斑马帘面料")));
+        when(optionMaterialMapper.selectList(any())).thenReturn(List.of());
+        when(restrictionMapper.selectList(any())).thenReturn(List.of());
+
+        assertThat(setupService.validationMessageKey(3001L))
+            .isEqualTo("product.formula.optionValueMaterialRequired");
     }
 
     @Test
@@ -531,10 +553,14 @@ class ProductFormulaSetupServiceTest {
     }
 
     private ProductFormulaOptionMaterialBo optionMaterialBo() {
+        return optionMaterialBo("FABRIC", "MAT001", "MAT001");
+    }
+
+    private ProductFormulaOptionMaterialBo optionMaterialBo(String optionCode, String valueCode, String materialCode) {
         ProductFormulaOptionMaterialBo bo = new ProductFormulaOptionMaterialBo();
-        bo.setOptionCode("FABRIC");
-        bo.setValueCode("MAT001");
-        bo.setMaterialCode("MAT001");
+        bo.setOptionCode(optionCode);
+        bo.setValueCode(valueCode);
+        bo.setMaterialCode(materialCode);
         bo.setRequiredFlag(Boolean.TRUE);
         bo.setDefaultFlag(Boolean.TRUE);
         bo.setStatus("ENABLED");
@@ -542,15 +568,19 @@ class ProductFormulaSetupServiceTest {
     }
 
     private ProductFormulaOptionMaterial optionMaterial() {
+        return optionMaterial("FABRIC", "MAT001", "MAT001");
+    }
+
+    private ProductFormulaOptionMaterial optionMaterial(String optionCode, String valueCode, String materialCode) {
         ProductFormulaOptionMaterial optionMaterial = new ProductFormulaOptionMaterial();
         optionMaterial.setFormulaId(3001L);
         optionMaterial.setOptionId(7101L);
         optionMaterial.setOptionValueId(7201L);
-        optionMaterial.setOptionCode("FABRIC");
-        optionMaterial.setValueCode("MAT001");
+        optionMaterial.setOptionCode(optionCode);
+        optionMaterial.setValueCode(valueCode);
         optionMaterial.setFormulaMaterialId(7001L);
         optionMaterial.setMaterialId(4001L);
-        optionMaterial.setMaterialCode("MAT001");
+        optionMaterial.setMaterialCode(materialCode);
         optionMaterial.setMaterialNameCn("米色斑马帘面料");
         optionMaterial.setStatus("ENABLED");
         optionMaterial.setDelFlag("0");

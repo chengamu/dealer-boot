@@ -100,6 +100,7 @@ public class ProductFormulaSetupValidator extends ProductServiceSupport {
             .map(ProductFormulaMaterial::getMaterialCode)
             .collect(Collectors.toSet());
         Set<String> optionMaterialKeys = new HashSet<>();
+        Set<String> valuesWithMaterials = new HashSet<>();
         for (ProductFormulaOptionMaterial optionMaterial : context.optionMaterials()) {
             if (!optionCodes.contains(optionMaterial.getOptionCode())
                 || !valueKeys.contains(key(optionMaterial.getOptionCode(), optionMaterial.getValueCode()))) {
@@ -110,6 +111,19 @@ public class ProductFormulaSetupValidator extends ProductServiceSupport {
             }
             if (!optionMaterialKeys.add(key(optionMaterial.getOptionCode(), optionMaterial.getValueCode(), optionMaterial.getMaterialCode()))) {
                 return "product.formula.optionMaterialDuplicate";
+            }
+            valuesWithMaterials.add(key(optionMaterial.getOptionCode(), optionMaterial.getValueCode()));
+        }
+        Set<String> parentValueKeys = context.options().stream()
+            .filter(option -> VISIBILITY_CONDITIONAL.equals(option.getVisibilityMode()))
+            .filter(option -> StringUtils.isNotBlank(option.getVisibleConditionOptionCode())
+                && StringUtils.isNotBlank(option.getVisibleConditionValueCode()))
+            .map(option -> key(option.getVisibleConditionOptionCode(), option.getVisibleConditionValueCode()))
+            .collect(Collectors.toSet());
+        for (ProductFormulaOptionValue value : context.values()) {
+            String valueKey = key(value.getOptionCode(), value.getValueCode());
+            if (!parentValueKeys.contains(valueKey) && !valuesWithMaterials.contains(valueKey)) {
+                return "product.formula.optionValueMaterialRequired";
             }
         }
         for (ProductFormulaRestriction restriction : context.restrictions()) {
@@ -125,16 +139,19 @@ public class ProductFormulaSetupValidator extends ProductServiceSupport {
     }
 
     String validateRestriction(ProductFormulaRestriction restriction, Set<String> optionCodes, Set<String> valueKeys) {
-        if (StringUtils.isBlank(restriction.getTargetOptionCode()) || !optionCodes.contains(restriction.getTargetOptionCode())) {
+        if (StringUtils.isNotBlank(restriction.getTargetOptionCode()) && !optionCodes.contains(restriction.getTargetOptionCode())) {
             return "product.formula.restrictionTargetInvalid";
         }
-        if (StringUtils.isNotBlank(restriction.getTargetValueCode())
-            && !valueKeys.contains(key(restriction.getTargetOptionCode(), restriction.getTargetValueCode()))) {
+        if (StringUtils.isNotBlank(restriction.getTargetValueCode()) && (StringUtils.isBlank(restriction.getTargetOptionCode())
+            || !valueKeys.contains(key(restriction.getTargetOptionCode(), restriction.getTargetValueCode())))) {
             return "product.formula.restrictionTargetInvalid";
         }
-        if (StringUtils.isBlank(restriction.getConditionType()) || StringUtils.isBlank(restriction.getConditionOperator())
-            || StringUtils.isBlank(restriction.getActionType())) {
+        if (StringUtils.isBlank(restriction.getConditionType()) || StringUtils.isBlank(restriction.getActionType())) {
             return "product.formula.restrictionConditionInvalid";
+        }
+        if ("EXPRESSION".equals(restriction.getConditionType())) {
+            return ProductFormulaExpressionValidator.isConditionValid(restriction.getConditionExpression())
+                ? null : "product.formula.restrictionConditionInvalid";
         }
         if ("OPTION_VALUE".equals(restriction.getConditionType())) {
             if (StringUtils.isBlank(restriction.getConditionOptionCode()) || !optionCodes.contains(restriction.getConditionOptionCode())) {

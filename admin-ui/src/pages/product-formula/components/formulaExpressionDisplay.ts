@@ -7,7 +7,7 @@ export function optionVariableName(optionCode?: string) {
 }
 
 export function materialAttributeVariableName(roleCode?: string, fieldName?: string) {
-  return `material_${roleCode || 'MATERIAL'}_${fieldName || 'value'}`
+  return `material_${identifierPart(roleCode || 'MATERIAL')}_${identifierPart(fieldName || 'value')}`
 }
 
 export function normalizeDisplayExpression(
@@ -31,10 +31,13 @@ function buildAliasPairs(options: ProductFormulaOptionVO[], optionValues: Produc
   options.forEach((option) => {
     const variableName = optionVariableName(option.optionCode)
     pushAlias(aliases, option.optionNameCn, variableName)
+    pushAlias(aliases, option.optionNameEn, variableName)
     pushAlias(aliases, option.optionCode, variableName)
   })
+  buildOptionMaterialAttributeAliasPairs(aliases, options, materials)
   optionValues.forEach((value) => {
     pushAlias(aliases, value.valueNameCn, value.valueCode)
+    pushAlias(aliases, value.valueNameEn, value.valueCode)
   })
   buildMaterialAliasPairs(aliases, materials)
   variables.forEach((variable) => {
@@ -45,6 +48,29 @@ function buildAliasPairs(options: ProductFormulaOptionVO[], optionValues: Produc
   pushAlias(aliases, '向上取整', 'ceil')
   pushAlias(aliases, '向下取整', 'floor')
   return aliases
+}
+
+function buildOptionMaterialAttributeAliasPairs(aliases: AliasPair[], options: ProductFormulaOptionVO[], materials: ProductFormulaMaterialVO[]) {
+  const attributes = new Map<string, { code: string; nameCn?: string; nameEn?: string }>()
+  materials.flatMap((material) => material.attributeList || []).forEach((attribute) => {
+    if (!attribute.attributeCode || attributes.has(attribute.attributeCode)) return
+    attributes.set(attribute.attributeCode, {
+      code: attribute.attributeCode,
+      nameCn: attribute.attributeNameCn,
+      nameEn: attribute.attributeNameEn
+    })
+  })
+  options.forEach((option) => {
+    const optionNames = [option.optionNameCn, option.optionNameEn, option.optionCode].filter(Boolean) as string[]
+    attributes.forEach((attribute) => {
+      const variableName = materialAttributeVariableName(option.optionCode, attribute.code)
+      optionNames.forEach((optionName) => {
+        pushAlias(aliases, `${optionName}.${attribute.nameCn || attribute.code}`, variableName)
+        pushAlias(aliases, `${optionName}.${attribute.nameEn || attribute.code}`, variableName)
+        pushAlias(aliases, `${optionName}.${attribute.code}`, variableName)
+      })
+    })
+  })
 }
 
 function buildMaterialAliasPairs(aliases: AliasPair[], materials: ProductFormulaMaterialVO[]) {
@@ -67,6 +93,10 @@ function buildMaterialAliasPairs(aliases: AliasPair[], materials: ProductFormula
     pushAlias(aliases, material.materialNameCn, material.materialCode)
     pushAlias(aliases, material.attributeGroupNameCn, material.attributeGroupCode)
   })
+}
+
+function identifierPart(value: string) {
+  return value.replace(/[^A-Za-z0-9_]/g, '_')
 }
 
 function pushAlias(aliases: AliasPair[], from?: string, to?: string) {

@@ -71,7 +71,6 @@
       :material-label="materialLabel"
       @add-option="addOptionRow"
       @option-change="handleOptionChange"
-      @move-option="moveOption"
       @remove-option="removeOption"
       @add-option-value="addOptionValueRow"
       @remove-option-value="removeSelectedValue"
@@ -175,7 +174,6 @@ const {
   removeMaterials,
   removeRow,
   handleOptionChange,
-  moveOption,
   openUsage,
   openBatchUsage,
   selectUsageRow,

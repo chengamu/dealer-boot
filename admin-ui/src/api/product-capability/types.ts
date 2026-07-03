@@ -279,6 +279,7 @@ export interface ProductFormulaMaterialVO extends ProductRecord {
   materialId?: number
   materialCode?: string
   materialNameCn?: string
+  materialNameEn?: string
   specModelText?: string
   attributeGroupId?: number
   attributeGroupCode?: string
@@ -309,6 +310,7 @@ export interface ProductFormulaMaterialVO extends ProductRecord {
   status?: string
   sortOrder?: number
   remark?: string
+  attributeList?: ProductMaterialAttributeVO[]
 }
 
 export interface ProductFormulaOptionVO extends ProductRecord {
@@ -316,6 +318,7 @@ export interface ProductFormulaOptionVO extends ProductRecord {
   formulaId?: number
   optionCode?: string
   optionNameCn?: string
+  optionNameEn?: string
   sourceType?: string
   sourceScope?: string
   selectionMode?: string
@@ -340,6 +343,7 @@ export interface ProductFormulaOptionValueVO extends ProductRecord {
   optionCode?: string
   valueCode?: string
   valueNameCn?: string
+  valueNameEn?: string
   defaultFlag?: boolean
   status?: string
   sortOrder?: number
@@ -374,6 +378,8 @@ export interface ProductFormulaRestrictionVO extends ProductRecord {
   conditionOperator?: string
   conditionValueCode?: string
   conditionValueNumber?: number
+  conditionExpression?: string
+  conditionText?: string
   actionType?: string
   targetValueCode?: string
   messageText?: string
@@ -521,6 +527,7 @@ export interface ProductMaterialAttributeVO extends ProductRecord {
   attributeId?: number
   attributeCode?: string
   attributeNameCn?: string
+  attributeNameEn?: string
   valueText?: string
   valueNumber?: number
   valueBool?: string | boolean

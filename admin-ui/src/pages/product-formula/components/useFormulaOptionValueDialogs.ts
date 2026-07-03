@@ -48,6 +48,7 @@ export function useFormulaOptionValueDialogs(props: ValueDialogProps, options: U
     if (!keyword) return true
     return containsText(row.materialCode, keyword)
       || containsText(row.materialNameCn, keyword)
+      || containsText(row.materialNameEn, keyword)
       || containsText(row.specModelText, keyword)
       || containsText(row.materialTypeNameCn, keyword)
   }))
@@ -71,6 +72,7 @@ export function useFormulaOptionValueDialogs(props: ValueDialogProps, options: U
         optionCode: option.optionCode,
         valueCode: material.materialCode,
         valueNameCn: material.materialNameCn,
+        valueNameEn: material.materialNameEn || '',
         defaultFlag: false,
         status: PRODUCT_STATUS_ENABLED,
         sortOrder: props.allOptionValues.length * 10 + 10
