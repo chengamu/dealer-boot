@@ -12,7 +12,10 @@ import com.bocoo.product.domain.entity.ProductFormulaOption;
 import com.bocoo.product.domain.entity.ProductFormulaOptionMaterial;
 import com.bocoo.product.domain.entity.ProductFormulaOptionValue;
 import com.bocoo.product.domain.entity.ProductFormulaRestriction;
+import com.bocoo.product.domain.entity.ProductFormulaVariable;
+import com.bocoo.product.domain.entity.ProductFormulaVariableRule;
 import com.bocoo.product.service.ProductFormulaUsageRuleService;
+import com.bocoo.product.service.ProductFormulaVariableService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import java.util.ArrayList;
@@ -30,6 +33,7 @@ public class ProductFormulaSetupNormalizer extends ProductServiceSupport {
     private final ProductFormulaMaterialSnapshotResolver materialSnapshotResolver;
     private final ProductFormulaRestrictionNormalizer restrictionNormalizer;
     private final ProductFormulaUsageRuleService usageRuleService;
+    private final ProductFormulaVariableService variableService;
     ProductFormulaSetupRows normalize(Long formulaId, ProductFormulaSetupBo bo) {
         ProductFormulaSetupBo safeBo = bo == null ? new ProductFormulaSetupBo() : bo;
         List<ProductFormulaMaterial> materials = normalizeMaterials(formulaId, safeBo.getMaterials());
@@ -40,7 +44,9 @@ public class ProductFormulaSetupNormalizer extends ProductServiceSupport {
             normalizeOptionMaterials(formulaId, materials, options, values, safeBo.getOptionMaterials());
         List<ProductFormulaRestriction> restrictions = restrictionNormalizer.normalize(formulaId, options, values, safeBo.getRestrictions());
         var usageRules = usageRuleService.normalize(formulaId, materials, options, values, safeBo.getUsageRules());
-        return new ProductFormulaSetupRows(materials, options, values, optionMaterials, restrictions, usageRules);
+        List<ProductFormulaVariable> variables = variableService.normalizeVariables(formulaId, safeBo.getVariables());
+        List<ProductFormulaVariableRule> variableRules = variableService.normalizeRules(formulaId, variables, safeBo.getVariableRules());
+        return new ProductFormulaSetupRows(materials, options, values, optionMaterials, restrictions, usageRules, variables, variableRules);
     }
     ProductFormulaSetupRows normalizeMaterials(Long formulaId, ProductFormulaSetupBo bo, ProductFormulaSetupContext current) {
         ProductFormulaSetupBo safeBo = bo == null ? new ProductFormulaSetupBo() : bo;
@@ -52,7 +58,8 @@ public class ProductFormulaSetupNormalizer extends ProductServiceSupport {
             }
         }
         var usageRules = usageRuleService.normalize(formulaId, materials, current.options(), current.values(), safeBo.getUsageRules());
-        return new ProductFormulaSetupRows(materials, current.options(), current.values(), current.optionMaterials(), current.restrictions(), usageRules);
+        return new ProductFormulaSetupRows(materials, current.options(), current.values(), current.optionMaterials(), current.restrictions(),
+            usageRules, current.variables(), current.variableRules());
     }
     ProductFormulaSetupRows normalizeOptions(Long formulaId, ProductFormulaSetupBo bo, ProductFormulaSetupContext current) {
         ProductFormulaSetupBo safeBo = bo == null ? new ProductFormulaSetupBo() : bo;
@@ -61,7 +68,8 @@ public class ProductFormulaSetupNormalizer extends ProductServiceSupport {
         normalizeOptionVisibility(options, values);
         List<ProductFormulaOptionMaterial> optionMaterials = normalizeOptionMaterials(formulaId, current.materials(), options, values, safeBo.getOptionMaterials());
         List<ProductFormulaRestriction> restrictions = restrictionNormalizer.normalize(formulaId, options, values, safeBo.getRestrictions());
-        return new ProductFormulaSetupRows(current.materials(), options, values, optionMaterials, restrictions, current.usageRules());
+        return new ProductFormulaSetupRows(current.materials(), options, values, optionMaterials, restrictions, current.usageRules(),
+            current.variables(), current.variableRules());
     }
     private List<ProductFormulaMaterial> normalizeMaterials(Long formulaId, List<ProductFormulaMaterialBo> rows) {
         List<ProductFormulaMaterial> result = new ArrayList<>();

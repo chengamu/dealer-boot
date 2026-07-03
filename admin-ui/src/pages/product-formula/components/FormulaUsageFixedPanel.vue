@@ -4,10 +4,6 @@
       <span>{{ t('productCenter.formulaSetup.fixedUsageQty') }}</span>
       <el-input-number v-model="usageRow.fixedUsageQty" :min="0" :precision="2" controls-position="right" @change="$emit('change')" />
     </label>
-    <label>
-      <span>{{ t('productCenter.formulaSetup.lossRate') }}</span>
-      <el-input-number v-model="usageRow.lossRate" :min="0" :precision="2" controls-position="right" @change="$emit('change')" />
-    </label>
   </div>
 </template>
 
@@ -31,7 +27,7 @@ const t = (key: string) => getMessage(key, localeStore.language)
 <style scoped>
 .fixed-usage-card {
   display: grid;
-  grid-template-columns: repeat(2, minmax(220px, 360px));
+  grid-template-columns: minmax(220px, 360px);
   gap: 12px;
   padding: 12px;
   background: #fff;

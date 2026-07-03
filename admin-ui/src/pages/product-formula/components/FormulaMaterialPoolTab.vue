@@ -65,6 +65,11 @@
       <el-table-column :label="t('productCenter.formulaSetup.unit')" prop="unitCode" width="66">
         <template #default="{ row }">{{ unitLabel(row.unitCode) }}</template>
       </el-table-column>
+      <el-table-column :label="t('productCenter.formulaSetup.lossRate')" width="112" align="center">
+        <template #default="{ row }">
+          <el-input-number v-model="row.lossRate" :min="0" :precision="2" controls-position="right" />
+        </template>
+      </el-table-column>
       <el-table-column :label="t('productCenter.formulaSetup.usageSummary')" min-width="280">
         <template #default="{ row }">
           <div class="usage-summary-lines">
@@ -220,4 +225,3 @@ function openBatchUsage() {
 </script>
 
 <style scoped src="./FormulaMaterialPoolTab.css"></style>
-

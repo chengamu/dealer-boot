@@ -8,6 +8,7 @@ import com.bocoo.product.domain.entity.ProductFormulaOptionValue;
 import com.bocoo.product.domain.entity.ProductFormulaRestriction;
 import com.bocoo.product.domain.entity.ProductFormulaUsageRule;
 import com.bocoo.product.service.ProductFormulaUsageRuleService;
+import com.bocoo.product.service.ProductFormulaVariableService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -25,6 +26,7 @@ public class ProductFormulaSetupValidator extends ProductServiceSupport {
     private static final String VISIBILITY_CONDITIONAL = "CONDITIONAL";
 
     private final ProductFormulaUsageRuleService usageRuleService;
+    private final ProductFormulaVariableService variableService;
 
     String validationMessageKey(ProductFormulaSetupContext context) {
         String materialMessageKey = materialValidationMessageKey(context);
@@ -58,7 +60,11 @@ public class ProductFormulaSetupValidator extends ProductServiceSupport {
                 return "product.formula.materialUsageRuleRequired";
             }
         }
-        return usageRuleService.validationMessageKey(context.materials(), context.options(), context.values(), context.usageRules());
+        String usageMessageKey = usageRuleService.validationMessageKey(context.materials(), context.options(), context.values(), context.usageRules());
+        if (usageMessageKey != null) {
+            return usageMessageKey;
+        }
+        return variableService.validationMessageKey(context.variables(), context.variableRules(), context.usageRules());
     }
 
     String optionValidationMessageKey(ProductFormulaSetupContext context) {

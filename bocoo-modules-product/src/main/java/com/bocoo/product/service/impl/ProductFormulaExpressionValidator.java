@@ -7,14 +7,14 @@ import java.util.Set;
  * It intentionally supports only arithmetic formulas and simple boolean conditions.
  */
 final class ProductFormulaExpressionValidator {
-    private static final Set<String> FORMULA_VARIABLES = Set.of("orderLength", "orderWidth", "orderHeight", "orderWeight", "orderArea");
-    private static final Set<String> CONDITION_VARIABLES = Set.of("orderLength", "orderWidth", "orderHeight", "orderWeight", "orderArea", "store", "fabric", "productType", "optionValue");
+    private static final Set<String> FORMULA_VARIABLES = Set.of("orderWidthIn", "orderLengthIn", "orderWidthCm", "orderLengthCm", "orderAreaM2");
+    private static final Set<String> CONDITION_VARIABLES = Set.of("orderWidthIn", "orderLengthIn", "orderWidthCm", "orderLengthCm", "orderAreaM2", "store", "fabric", "productType", "optionValue");
     private static final Map<String, Object> SAMPLE = Map.of(
-        "orderLength", 18D,
-        "orderWidth", 12D,
-        "orderHeight", 20D,
-        "orderWeight", 3D,
-        "orderArea", 240D,
+        "orderWidthIn", 12D,
+        "orderLengthIn", 20D,
+        "orderWidthCm", 30.48D,
+        "orderLengthCm", 50.8D,
+        "orderAreaM2", 0.1548D,
         "store", "SHOP_A",
         "fabric", "XLF241801",
         "productType", "CUSTOM_CURTAIN",
@@ -63,6 +63,14 @@ final class ProductFormulaExpressionValidator {
         }
         return number.doubleValue();
     }
+
+    static boolean isFormulaVariable(String identifier) {
+        return identifier != null && identifier.startsWith("var_");
+    }
+
+    static String variableName(String variableCode) {
+        return "var_" + variableCode;
+    }
     static boolean evaluateCondition(String expression, Map<String, Object> context) {
         if ("DEFAULT".equals(expression)) {
             return true;
@@ -83,12 +91,14 @@ final class ProductFormulaExpressionValidator {
         private final Set<String> variables;
         private final boolean conditionMode;
         private final Map<String, Object> context;
+        private final boolean sampleContext;
         private int index;
         private Parser(String expression, Set<String> variables, boolean conditionMode, Map<String, Object> context) {
             this.expression = expression;
             this.variables = variables;
             this.conditionMode = conditionMode;
             this.context = context == null ? Map.of() : context;
+            this.sampleContext = context == SAMPLE;
         }
         private Object parseOr() {
             Object value = parseAnd();
@@ -187,13 +197,20 @@ final class ProductFormulaExpressionValidator {
             }
             String identifier = expression.substring(start, index);
             skipSpaces();
-            if (peek("(") || peek(".") || peek("[") || peek("?") || peek(":")) {
+            if (peek("(")) {
+                return parseFunction(identifier);
+            }
+            if (peek(".") || peek("[") || peek("?") || peek(":")) {
                 throw new IllegalArgumentException("unsupported expression");
             }
-            if (!variables.contains(identifier) && !(conditionMode && (identifier.startsWith("option_") || identifier.startsWith("material_")))) {
+            if (!variables.contains(identifier) && !isFormulaVariable(identifier)
+                && !(conditionMode && (identifier.startsWith("option_") || identifier.startsWith("material_")))) {
                 throw new IllegalArgumentException("unknown variable");
             }
             Object value = context.get(identifier);
+            if (value == null && isFormulaVariable(identifier) && sampleContext) {
+                return 1D;
+            }
             if (value == null && identifier.startsWith("option_")) {
                 return "OPTION_VALUE";
             }
@@ -201,6 +218,37 @@ final class ProductFormulaExpressionValidator {
                 return sampleMaterialValue(identifier);
             }
             return value;
+        }
+        private Object parseFunction(String identifier) {
+            if (!match("(")) {
+                throw new IllegalArgumentException("missing (");
+            }
+            double value = toNumber(parseExpression());
+            double scale = 0D;
+            if (match(",")) {
+                scale = toNumber(parseExpression());
+            }
+            if (!match(")")) {
+                throw new IllegalArgumentException("missing )");
+            }
+            return switch (identifier) {
+                case "round" -> round(value, scale);
+                case "ceil" -> ceil(value, scale);
+                case "floor" -> floor(value, scale);
+                default -> throw new IllegalArgumentException("unsupported function");
+            };
+        }
+        private double round(double value, double scale) {
+            double factor = Math.pow(10D, Math.max(0D, scale));
+            return Math.round(value * factor) / factor;
+        }
+        private double ceil(double value, double scale) {
+            double factor = Math.pow(10D, Math.max(0D, scale));
+            return Math.ceil(value * factor) / factor;
+        }
+        private double floor(double value, double scale) {
+            double factor = Math.pow(10D, Math.max(0D, scale));
+            return Math.floor(value * factor) / factor;
         }
         private String parseString(char quote) {
             index++;

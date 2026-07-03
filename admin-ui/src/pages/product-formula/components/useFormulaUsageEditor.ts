@@ -8,6 +8,8 @@ import type {
   ProductFormulaMaterialVO,
   ProductFormulaOptionVO,
   ProductFormulaOptionValueVO,
+  ProductFormulaVariableRuleVO,
+  ProductFormulaVariableVO,
   ProductFormulaUsageRuleVO
 } from '@/api/product-capability/types'
 
@@ -16,6 +18,8 @@ type FormulaUsageEditorProps = {
   usageRow: ProductFormulaMaterialVO | null
   usageRows?: ProductFormulaMaterialVO[]
   materials?: ProductFormulaMaterialVO[]
+  variables?: ProductFormulaVariableVO[]
+  variableRules?: ProductFormulaVariableRuleVO[]
   usageRules: ProductFormulaUsageRuleVO[]
   options: ProductFormulaOptionVO[]
   optionValues: ProductFormulaOptionValueVO[]

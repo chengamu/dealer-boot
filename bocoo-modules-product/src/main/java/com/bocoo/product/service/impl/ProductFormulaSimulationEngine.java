@@ -14,6 +14,7 @@ import com.bocoo.product.domain.vo.ProductFormulaSimulationItemVo;
 import com.bocoo.product.domain.vo.ProductFormulaSimulationVo;
 import com.bocoo.product.domain.vo.ProductFormulaUsageRuleVo;
 import com.bocoo.product.mapper.ProductMaterialMapper;
+import com.bocoo.product.service.ProductFormulaVariableService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
@@ -33,6 +34,7 @@ class ProductFormulaSimulationEngine extends ProductServiceSupport {
     private static final String VALIDATION_PASS = "PASS";
     private final ProductMaterialMapper productMaterialMapper;
     private final ProductFormulaSimulationUsageCalculator usageCalculator;
+    private final ProductFormulaVariableService variableService;
     ProductFormulaSimulationVo run(Long formulaId, ProductFormula formula, ProductFormulaSetupVo setup,
                                    ProductFormulaSimulationBo bo, String setupMessageKey) {
         ProductFormulaSimulationVo vo = baseVo(formulaId, bo);
@@ -47,6 +49,7 @@ class ProductFormulaSimulationEngine extends ProductServiceSupport {
             return fail(vo, messageKey);
         }
         try {
+            context = variableService.evaluateVariables(setup.getVariables(), setup.getVariableRules(), context);
             List<ProductFormulaSimulationItemVo> items = buildItems(setup, bomMaterials, context);
             if (items.isEmpty()) {
                 return fail(vo, "product.formula.notConfigured");
@@ -149,14 +152,16 @@ class ProductFormulaSimulationEngine extends ProductServiceSupport {
             .collect(Collectors.toMap(ProductMaterial::getMaterialId, material -> material, (left, right) -> left));
     }
     private Map<String, Object> expressionContext(ProductFormula formula, ProductFormulaSimulationVo vo) {
-        double width = vo.getOrderWidth().doubleValue();
-        double height = vo.getOrderHeight().doubleValue();
+        double widthIn = vo.getOrderWidth().doubleValue();
+        double lengthIn = vo.getOrderHeight().doubleValue();
+        double widthCm = widthIn * 2.54D;
+        double lengthCm = lengthIn * 2.54D;
         Map<String, Object> context = new HashMap<>();
-        context.put("orderLength", width);
-        context.put("orderWidth", width);
-        context.put("orderHeight", height);
-        context.put("orderWeight", 0D);
-        context.put("orderArea", width * height);
+        context.put("orderWidthIn", widthIn);
+        context.put("orderLengthIn", lengthIn);
+        context.put("orderWidthCm", widthCm);
+        context.put("orderLengthCm", lengthCm);
+        context.put("orderAreaM2", widthCm * lengthCm / 10000D);
         context.put("productType", formula.getProductTypeCode());
         context.put("fabric", vo.getSelectedOptionValues().getOrDefault("FABRIC", ""));
         context.put("optionValue", "");
@@ -185,9 +190,8 @@ class ProductFormulaSimulationEngine extends ProductServiceSupport {
         return switch (StringUtils.blankToDefault(restriction.getConditionType(), "")) {
             case "OPTION_VALUE" -> compareString(selectedValues.get(restriction.getConditionOptionCode()),
                 restriction.getConditionValueCode(), restriction.getConditionOperator());
-            case "WIDTH" -> compareNumber(numberValue(context.get("orderWidth")), restriction.getConditionValueNumber(), restriction.getConditionOperator());
-            case "HEIGHT" -> compareNumber(numberValue(context.get("orderHeight")), restriction.getConditionValueNumber(), restriction.getConditionOperator());
-            case "WEIGHT" -> compareNumber(numberValue(context.get("orderWeight")), restriction.getConditionValueNumber(), restriction.getConditionOperator());
+            case "WIDTH" -> compareNumber(numberValue(context.get("orderWidthIn")), restriction.getConditionValueNumber(), restriction.getConditionOperator());
+            case "HEIGHT" -> compareNumber(numberValue(context.get("orderLengthIn")), restriction.getConditionValueNumber(), restriction.getConditionOperator());
             default -> false;
         };
     }

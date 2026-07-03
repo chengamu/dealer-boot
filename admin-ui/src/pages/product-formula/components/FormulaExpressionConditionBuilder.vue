@@ -92,7 +92,7 @@ const t = (key: string) => getMessage(key, localeStore.language)
 const conditionOperators = ['=', '!=', '>', '>=', '<', '<=']
 const businessBuilder = reactive<BuilderState>({ field: 'productType', operator: '=', value: '', joiner: '并且' })
 const materialBuilder = reactive<MaterialBuilderState>({ role: '', field: 'materialType', operator: '=', value: '', joiner: '并且' })
-const orderBuilder = reactive<BuilderState>({ field: 'orderWidth', operator: '=', value: '', joiner: '并且' })
+const orderBuilder = reactive<BuilderState>({ field: 'orderWidthIn', operator: '=', value: '', joiner: '并且' })
 
 const businessFields = computed<ConditionField[]>(() => {
   const optionFields = (props.options || []).map((option) => ({
@@ -110,7 +110,7 @@ const businessValueOptions = computed<ConditionValue[]>(() => selectedBusinessFi
   : [])
 
 const orderFields = computed(() => formulaVariables
-  .filter((item) => ['orderLength', 'orderWidth', 'orderHeight', 'orderWeight', 'orderArea'].includes(item.name))
+  .filter((item) => ['orderWidthIn', 'orderLengthIn', 'orderWidthCm', 'orderLengthCm', 'orderAreaM2'].includes(item.name))
   .map((variable) => ({ label: variable.label, name: variable.name, insert: variable.label }))
 )
 

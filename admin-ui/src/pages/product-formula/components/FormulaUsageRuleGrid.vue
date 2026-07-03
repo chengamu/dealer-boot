@@ -56,11 +56,6 @@
         </el-tag>
       </template>
     </el-table-column>
-    <el-table-column :label="t('productCenter.formulaSetup.lossRate')" width="96">
-      <template #default="{ row }">
-        <el-input-number v-model="row.lossRate" :min="0" :precision="2" controls-position="right" />
-      </template>
-    </el-table-column>
     <el-table-column :label="t('productCenter.formulaSetup.defaultUsageRule')" width="86" align="center">
       <template #default="{ row }">
         <el-switch v-model="row.defaultRuleFlag" @change="$emit('default-rule-change', row)" />
@@ -75,7 +70,7 @@ import { CopyDocument, Delete, MagicStick, Plus } from '@element-plus/icons-vue'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 import FormulaUsageConditionEditor from './FormulaUsageConditionEditor.vue'
-import { formatUsageNumber, validateFormulaExpression } from '../utils/formulaExpression'
+import { validateFormulaExpression } from '../utils/formulaExpression'
 import type { FormulaField, ExpressionTarget } from './formulaUsageTypes'
 import type { ProductFormulaUsageRuleVO } from '@/api/product-capability/types'
 
@@ -111,8 +106,7 @@ function formulaResult(row: ProductFormulaUsageRuleVO) {
 function formulaResultText(row: ProductFormulaUsageRuleVO) {
   const result = formulaResult(row)
   if (result.message === 'empty') return t('productCenter.formulaSetup.usageNotSet')
-  if (!result.valid) return t('productCenter.formulaSetup.usageInvalid')
-  return typeof result.sampleValue === 'number' ? formatUsageNumber(result.sampleValue) : String(result.sampleValue)
+  return result.valid ? t('productCenter.formulaSetup.usagePass') : t('productCenter.formulaSetup.usageFail')
 }
 
 function formulaResultTagType(row: ProductFormulaUsageRuleVO) {

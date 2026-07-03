@@ -16,6 +16,8 @@ import type {
   ProductFormulaRestrictionVO,
   ProductFormulaSetupVO,
   ProductFormulaUsageRuleVO,
+  ProductFormulaVariableRuleVO,
+  ProductFormulaVariableVO,
   ProductFormulaVO,
   ProductMaterialTypeGroupVO,
   ProductMaterialTypeVO,
@@ -32,6 +34,8 @@ export interface SetupState {
   optionMaterials: ProductFormulaOptionMaterialVO[]
   restrictions: ProductFormulaRestrictionVO[]
   usageRules: ProductFormulaUsageRuleVO[]
+  variables: ProductFormulaVariableVO[]
+  variableRules: ProductFormulaVariableRuleVO[]
 }
 
 const LAST_FORMULA_STORAGE_KEY = 'productFormula.setup.lastFormulaId'
@@ -56,7 +60,7 @@ export function useFormulaSetupCore(props: { setupSection?: 'content' | 'options
   const materialTypeRows = ref<ProductMaterialTypeVO[]>([])
   const unitRows = ref<ProductUnitVO[]>([])
   const editableFormulas = ref<ProductFormulaVO[]>([])
-  const setup = reactive<SetupState>({ materials: [], options: [], optionValues: [], optionMaterials: [], restrictions: [], usageRules: [] })
+  const setup = reactive<SetupState>({ materials: [], options: [], optionValues: [], optionMaterials: [], restrictions: [], usageRules: [], variables: [], variableRules: [] })
   const formula = ref<ProductFormulaVO>({})
   let setupLoadSeq = 0
   const draftCache = useFormulaSetupDraftCache({
@@ -169,6 +173,8 @@ export function useFormulaSetupCore(props: { setupSection?: 'content' | 'options
       setup.optionMaterials = response.data?.optionMaterials || []
       setup.restrictions = response.data?.restrictions || []
       setup.usageRules = response.data?.usageRules || []
+      setup.variables = response.data?.variables || []
+      setup.variableRules = response.data?.variableRules || []
       selectedOptionCode.value = setup.options[0]?.optionCode || ''
       await draftCache.afterSetupLoaded()
     } finally {
@@ -215,12 +221,23 @@ export function useFormulaSetupCore(props: { setupSection?: 'content' | 'options
   }
 
   function buildPayload(): ProductFormulaSetupVO {
-    return { materials: setup.materials, options: setup.options, optionValues: setup.optionValues, optionMaterials: setup.optionMaterials, restrictions: setup.restrictions, usageRules: setup.usageRules }
+    return { materials: setup.materials, options: setup.options, optionValues: setup.optionValues, optionMaterials: setup.optionMaterials, restrictions: setup.restrictions, usageRules: setup.usageRules.map(withoutUsageRuleLossRate), variables: setup.variables, variableRules: setup.variableRules }
+  }
+
+  function withoutUsageRuleLossRate(row: ProductFormulaUsageRuleVO): ProductFormulaUsageRuleVO {
+    const next = { ...row }
+    delete next.lossRate
+    return next
   }
 
   function handleFormulaChange(value: string) {
     selectedFormulaId.value = value
     rememberFormulaId(value)
+  }
+
+  function handleVariablesSaved(value: ProductFormulaSetupVO) {
+    setup.variables = value.variables || []
+    setup.variableRules = value.variableRules || []
   }
 
   function resetSetup() {
@@ -231,6 +248,8 @@ export function useFormulaSetupCore(props: { setupSection?: 'content' | 'options
     setup.optionMaterials = []
     setup.restrictions = []
     setup.usageRules = []
+    setup.variables = []
+    setup.variableRules = []
     selectedOptionCode.value = ''
   }
 
@@ -268,6 +287,6 @@ export function useFormulaSetupCore(props: { setupSection?: 'content' | 'options
     activeTab, loading, saving, validating, formulaSelecting, materialPickerOpen, usageDrawerOpen, usageRow, usageRows,
     selectedFormulaId, currentFormulaId, selectedOptionCode, materialRows, groupRows, materialTypeRows, unitRows, setup, formula,
     draftVersionLabel, editableFormulaOptions, groupOptions, groupSortMap, unitOptions, materialGroupCards, draftCacheStatus: draftCache.cacheStatus,
-    saveSetup, validateSetup, handleFormulaChange
+    saveSetup, validateSetup, handleFormulaChange, handleVariablesSaved
   }
 }

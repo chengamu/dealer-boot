@@ -14,6 +14,7 @@ type ExpressionNode = {
   test?: ExpressionNode
   consequent?: ExpressionNode
   alternate?: ExpressionNode
+  callee?: ExpressionNode
 }
 
 export interface ExpressionValidationResult {
@@ -30,32 +31,47 @@ export interface FormulaVariable {
 }
 
 const VARIABLE_ALIASES: Record<string, string> = {
-  订单长: 'orderLength',
-  长: 'orderLength',
-  订单宽: 'orderWidth',
-  宽: 'orderWidth',
-  订单高: 'orderHeight',
-  订单厚: 'orderHeight',
-  高: 'orderHeight',
-  厚度: 'orderHeight',
-  订单重量: 'orderWeight',
-  重量: 'orderWeight',
-  订单面积: 'orderArea',
-  面积: 'orderArea',
+  '订单宽(in)': 'orderWidthIn',
+  '订单宽in': 'orderWidthIn',
+  订单宽: 'orderWidthIn',
+  宽: 'orderWidthIn',
+  '订单长(in)': 'orderLengthIn',
+  '订单长in': 'orderLengthIn',
+  订单长: 'orderLengthIn',
+  长: 'orderLengthIn',
+  '订单宽(cm)': 'orderWidthCm',
+  '订单宽cm': 'orderWidthCm',
+  宽cm: 'orderWidthCm',
+  '订单长(cm)': 'orderLengthCm',
+  '订单长cm': 'orderLengthCm',
+  长cm: 'orderLengthCm',
+  '订单面积(m²)': 'orderAreaM2',
+  '订单面积m²': 'orderAreaM2',
+  '订单面积m2': 'orderAreaM2',
+  '面积m²': 'orderAreaM2',
+  '面积m2': 'orderAreaM2',
+  订单面积: 'orderAreaM2',
+  面积: 'orderAreaM2',
   店铺: 'store',
   面料: 'fabric',
   产品类型: 'productType',
   配置项值: 'optionValue'
 }
 
-const FORMULA_VARIABLES = new Set(['orderLength', 'orderWidth', 'orderHeight', 'orderWeight', 'orderArea'])
-const CONDITION_VARIABLES = new Set(['orderLength', 'orderWidth', 'orderHeight', 'orderWeight', 'orderArea', 'store', 'fabric', 'productType', 'optionValue'])
+const FUNCTION_ALIASES: Record<string, string> = {
+  四舍五入: 'round',
+  向上取整: 'ceil',
+  向下取整: 'floor'
+}
+
+const FORMULA_VARIABLES = new Set(['orderWidthIn', 'orderLengthIn', 'orderWidthCm', 'orderLengthCm', 'orderAreaM2'])
+const CONDITION_VARIABLES = new Set(['orderWidthIn', 'orderLengthIn', 'orderWidthCm', 'orderLengthCm', 'orderAreaM2', 'store', 'fabric', 'productType', 'optionValue'])
 const SAMPLE_CONTEXT: Record<string, number | string> = {
-  orderLength: 18,
-  orderWidth: 12,
-  orderHeight: 20,
-  orderWeight: 3,
-  orderArea: 240,
+  orderWidthIn: 12,
+  orderLengthIn: 20,
+  orderWidthCm: 30.48,
+  orderLengthCm: 50.8,
+  orderAreaM2: 0.1548,
   store: 'SHOP_A',
   fabric: 'XLF241801',
   productType: 'CUSTOM_CURTAIN',
@@ -63,11 +79,11 @@ const SAMPLE_CONTEXT: Record<string, number | string> = {
 }
 
 export const formulaVariables: FormulaVariable[] = [
-  { label: '订单长', name: 'orderLength', sample: 18 },
-  { label: '订单宽', name: 'orderWidth', sample: 12 },
-  { label: '订单厚', name: 'orderHeight', sample: 20 },
-  { label: '订单重量', name: 'orderWeight', sample: 3 },
-  { label: '订单面积', name: 'orderArea', sample: 240 },
+  { label: '订单宽(in)', name: 'orderWidthIn', sample: 12 },
+  { label: '订单长(in)', name: 'orderLengthIn', sample: 20 },
+  { label: '订单宽(cm)', name: 'orderWidthCm', sample: 30.48 },
+  { label: '订单长(cm)', name: 'orderLengthCm', sample: 50.8 },
+  { label: '订单面积(m²)', name: 'orderAreaM2', sample: 0.1548 },
   { label: '面料', name: 'fabric', sample: 'XLF241801' },
   { label: '产品类型', name: 'productType', sample: 'CUSTOM_CURTAIN' },
   { label: '配置项值', name: 'optionValue', sample: 'MOTOR' }
@@ -149,6 +165,11 @@ function normalizeBase(input?: string) {
     .forEach(([label, name]) => {
       expression = expression.replace(new RegExp(escapeRegExp(label), 'g'), name)
     })
+  Object.entries(FUNCTION_ALIASES)
+    .sort((left, right) => right[0].length - left[0].length)
+    .forEach(([label, name]) => {
+      expression = expression.replace(new RegExp(escapeRegExp(label), 'g'), name)
+    })
   return expression
 }
 
@@ -158,7 +179,7 @@ function validateFormulaNode(node: ExpressionNode) {
     return
   }
   if (node.type === 'Identifier') {
-    if (!node.name || !FORMULA_VARIABLES.has(node.name)) throw new Error(`unknown variable: ${node.name || ''}`)
+    if (!node.name || (!FORMULA_VARIABLES.has(node.name) && !node.name.startsWith('var_'))) throw new Error(`unknown variable: ${node.name || ''}`)
     return
   }
   if (node.type === 'UnaryExpression') {
@@ -172,7 +193,18 @@ function validateFormulaNode(node: ExpressionNode) {
     validateFormulaNode(requiredNode(node.right))
     return
   }
+  if (node.type === 'CallExpression') {
+    validateFormulaFunction(node)
+    return
+  }
   throw new Error(`unsupported formula node: ${node.type}`)
+}
+
+function validateFormulaFunction(node: ExpressionNode) {
+  const name = node.callee?.name
+  if (!name || !['round', 'ceil', 'floor'].includes(name)) throw new Error('unsupported function')
+  if (!node.arguments?.length || node.arguments.length > 2) throw new Error('invalid function arguments')
+  node.arguments.forEach((argument) => validateFormulaNode(argument))
 }
 
 function validateConditionNode(node: ExpressionNode) {
@@ -242,7 +274,21 @@ function evaluate(node: ExpressionNode): number | boolean | string {
       ? left && Boolean(evaluate(requiredNode(node.right)))
       : left || Boolean(evaluate(requiredNode(node.right)))
   }
+  if (node.type === 'CallExpression') return evaluateFunction(node)
   throw new Error('unsupported expression')
+}
+
+function evaluateFunction(node: ExpressionNode) {
+  const args = (node.arguments || []).map((argument) => Number(evaluate(argument)))
+  const value = args[0] || 0
+  const scale = Math.max(0, args[1] || 0)
+  const factor = 10 ** scale
+  switch (node.callee?.name) {
+    case 'round': return Math.round(value * factor) / factor
+    case 'ceil': return Math.ceil(value * factor) / factor
+    case 'floor': return Math.floor(value * factor) / factor
+    default: throw new Error('unsupported function')
+  }
 }
 
 function sampleDynamicVariable(name?: string) {
@@ -252,6 +298,7 @@ function sampleDynamicVariable(name?: string) {
   if (name.startsWith('material_') && name.endsWith('_materialCode')) return 'XLF241801'
   if (name.startsWith('material_') && name.endsWith('_materialName')) return 'XLF241801 Cream'
   if (name.startsWith('material_') && name.endsWith('_attributeGroup')) return 'FABRIC'
+  if (name.startsWith('var_')) return 1
   return 0
 }
 

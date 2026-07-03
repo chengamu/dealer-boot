@@ -28,6 +28,10 @@ export const productFormulaApi: ProductCrudApi<ProductFormulaVO, ProductFormulaQ
   getFormulaOptions: (id: string | number) => Promise<{ data?: ProductFormulaSetupVO }>
   saveOptions: (id: string | number, data: ProductFormulaSetupVO) => Promise<unknown>
   validateOptions: (id: string | number) => Promise<unknown>
+  variables: (id: string | number) => Promise<{ data?: ProductFormulaSetupVO }>
+  saveVariables: (id: string | number, data: ProductFormulaSetupVO) => Promise<unknown>
+  copyVariables: (id: string | number, sourceFormulaCode: string) => Promise<unknown>
+  validateVariables: (id: string | number) => Promise<unknown>
   simulation: (id: string | number) => Promise<{ data?: ProductFormulaSimulationVO }>
   runSimulation: (id: string | number, data?: ProductFormulaSimulationBO) => Promise<{ data?: ProductFormulaSimulationVO }>
   validateSimulation: (id: string | number, data?: ProductFormulaSimulationBO) => Promise<unknown>
@@ -54,6 +58,10 @@ export const productFormulaApi: ProductCrudApi<ProductFormulaVO, ProductFormulaQ
   getFormulaOptions: (id: string | number) => request<ProductFormulaSetupVO>({ url: '/product-formula/formulas/' + id + '/options', method: 'get' }),
   saveOptions: (id: string | number, data: ProductFormulaSetupVO) => request({ url: '/product-formula/formulas/' + id + '/options', method: 'put', data }),
   validateOptions: (id: string | number) => request({ url: '/product-formula/formulas/' + id + '/options/validate', method: 'put' }),
+  variables: (id: string | number) => request<ProductFormulaSetupVO>({ url: '/product-formula/formulas/' + id + '/variables', method: 'get' }),
+  saveVariables: (id: string | number, data: ProductFormulaSetupVO) => request({ url: '/product-formula/formulas/' + id + '/variables', method: 'put', data }),
+  copyVariables: (id: string | number, sourceFormulaCode: string) => request({ url: '/product-formula/formulas/' + id + '/variables/copy-from-code/' + encodeURIComponent(sourceFormulaCode), method: 'post' }),
+  validateVariables: (id: string | number) => request({ url: '/product-formula/formulas/' + id + '/variables/validate', method: 'put' }),
   simulation: (id: string | number) => request<ProductFormulaSimulationVO>({ url: '/product-formula/formulas/' + id + '/simulation', method: 'get' }),
   runSimulation: (id: string | number, data?: ProductFormulaSimulationBO) => request<ProductFormulaSimulationVO>({ url: '/product-formula/formulas/' + id + '/simulation/run', method: 'post', data }),
   validateSimulation: (id: string | number, data?: ProductFormulaSimulationBO) => request({ url: '/product-formula/formulas/' + id + '/simulation/validate', method: 'put', data }),
@@ -91,6 +99,13 @@ export const productFormulaOptionsApi = {
   get: productFormulaApi.getFormulaOptions,
   save: productFormulaApi.saveOptions,
   validate: productFormulaApi.validateOptions
+}
+
+export const productFormulaVariablesApi = {
+  get: productFormulaApi.variables,
+  save: productFormulaApi.saveVariables,
+  copy: productFormulaApi.copyVariables,
+  validate: productFormulaApi.validateVariables
 }
 
 export const productFormulaSimulationApi = {

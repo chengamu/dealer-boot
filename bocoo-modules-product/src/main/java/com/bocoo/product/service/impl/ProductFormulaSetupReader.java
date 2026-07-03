@@ -16,6 +16,7 @@ import com.bocoo.product.mapper.ProductFormulaOptionValueMapper;
 import com.bocoo.product.mapper.ProductFormulaRestrictionMapper;
 import com.bocoo.product.mapper.ProductMaterialMapper;
 import com.bocoo.product.service.ProductFormulaUsageRuleService;
+import com.bocoo.product.service.ProductFormulaVariableService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -38,6 +39,7 @@ public class ProductFormulaSetupReader extends ProductServiceSupport {
     private final ProductFormulaRestrictionMapper restrictionMapper;
     private final ProductMaterialMapper productMaterialMapper;
     private final ProductFormulaUsageRuleService usageRuleService;
+    private final ProductFormulaVariableService variableService;
 
     ProductFormulaSetupVo querySetup(Long formulaId) {
         ProductFormulaSetupVo vo = new ProductFormulaSetupVo();
@@ -58,6 +60,8 @@ public class ProductFormulaSetupReader extends ProductServiceSupport {
             .eq("formula_id", formulaId)
             .orderByAsc("sort_order", "restriction_id")));
         vo.setUsageRules(usageRuleService.queryByFormula(formulaId));
+        vo.setVariables(variableService.queryVariableVos(formulaId));
+        vo.setVariableRules(variableService.queryRuleVos(formulaId));
         return vo;
     }
 
@@ -72,7 +76,9 @@ public class ProductFormulaSetupReader extends ProductServiceSupport {
             activeValues(formulaId),
             activeOptionMaterials(formulaId),
             activeRestrictions(formulaId),
-            usageRuleService.activeRules(formulaId)
+            usageRuleService.activeRules(formulaId),
+            variableService.activeVariables(formulaId),
+            variableService.activeRules(formulaId)
         );
     }
 
@@ -85,6 +91,8 @@ public class ProductFormulaSetupReader extends ProductServiceSupport {
         snapshot.put("optionMaterials", context.optionMaterials());
         snapshot.put("restrictions", context.restrictions());
         snapshot.put("usageRules", context.usageRules());
+        snapshot.put("variables", context.variables());
+        snapshot.put("variableRules", context.variableRules());
         snapshot.put("priceSnapshot", priceSnapshot(context.materials()));
         return snapshot;
     }

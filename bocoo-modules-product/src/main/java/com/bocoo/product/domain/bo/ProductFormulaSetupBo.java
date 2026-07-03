@@ -20,4 +20,8 @@ public class ProductFormulaSetupBo {
     private List<ProductFormulaRestrictionBo> restrictions = new ArrayList<>();
     @Valid
     private List<ProductFormulaUsageRuleBo> usageRules = new ArrayList<>();
+    @Valid
+    private List<ProductFormulaVariableBo> variables = new ArrayList<>();
+    @Valid
+    private List<ProductFormulaVariableRuleBo> variableRules = new ArrayList<>();
 }

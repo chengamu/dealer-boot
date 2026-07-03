@@ -57,9 +57,13 @@
       v-model="expressionEditorOpen"
       v-model:text="expressionEditorText"
       :target="expressionEditorTarget"
+      :formula-id="formulaId"
       :materials="materials || []"
       :options="options"
       :option-values="optionValues"
+      :variables="variables || []"
+      :variable-rules="variableRules || []"
+      @variables-saved="$emit('variables-saved', $event)"
       @confirm="confirmExpressionEditor"
     />
     <template #footer>
@@ -81,15 +85,20 @@ import type {
   ProductFormulaMaterialVO,
   ProductFormulaOptionVO,
   ProductFormulaOptionValueVO,
+  ProductFormulaVariableRuleVO,
+  ProductFormulaVariableVO,
   ProductFormulaUsageRuleVO,
   ProductOption
 } from '@/api/product-capability/types'
 
 const props = defineProps<{
   modelValue: boolean
+  formulaId?: string | number
   usageRow: ProductFormulaMaterialVO | null
   usageRows?: ProductFormulaMaterialVO[]
   materials?: ProductFormulaMaterialVO[]
+  variables?: ProductFormulaVariableVO[]
+  variableRules?: ProductFormulaVariableRuleVO[]
   usageRules: ProductFormulaUsageRuleVO[]
   options: ProductFormulaOptionVO[]
   optionValues: ProductFormulaOptionValueVO[]
@@ -99,6 +108,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
   'select-usage-row': [row: ProductFormulaMaterialVO]
+  'variables-saved': [setup: { variables?: ProductFormulaVariableVO[]; variableRules?: ProductFormulaVariableRuleVO[] }]
 }>()
 
 const localeStore = useLocaleStore()

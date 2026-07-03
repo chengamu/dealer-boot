@@ -24,6 +24,8 @@ import com.bocoo.product.mapper.ProductFormulaOptionMaterialMapper;
 import com.bocoo.product.mapper.ProductFormulaOptionValueMapper;
 import com.bocoo.product.mapper.ProductFormulaRestrictionMapper;
 import com.bocoo.product.mapper.ProductFormulaUsageRuleMapper;
+import com.bocoo.product.mapper.ProductFormulaVariableMapper;
+import com.bocoo.product.mapper.ProductFormulaVariableRuleMapper;
 import com.bocoo.product.mapper.ProductMaterialMapper;
 import com.bocoo.product.mapper.ProductUnitMapper;
 import com.bocoo.product.service.impl.ProductFormulaMaterialSnapshotResolver;
@@ -35,6 +37,7 @@ import com.bocoo.product.service.impl.ProductFormulaSetupValidator;
 import com.bocoo.product.service.impl.ProductFormulaSetupWriter;
 import com.bocoo.product.service.impl.ProductFormulaUsageRuleServiceImpl;
 import com.bocoo.product.service.impl.ProductFormulaUsageRuleValidator;
+import com.bocoo.product.service.impl.ProductFormulaVariableServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -74,6 +77,10 @@ class ProductFormulaSetupServiceTest {
     @Mock
     private ProductFormulaUsageRuleMapper usageRuleMapper;
     @Mock
+    private ProductFormulaVariableMapper variableMapper;
+    @Mock
+    private ProductFormulaVariableRuleMapper variableRuleMapper;
+    @Mock
     private ProductMaterialMapper productMaterialMapper;
     @Mock
     private ProductUnitMapper unitMapper;
@@ -82,6 +89,7 @@ class ProductFormulaSetupServiceTest {
 
     private ProductFormulaSetupServiceImpl setupService;
     private ProductFormulaUsageRuleServiceImpl usageRuleService;
+    private ProductFormulaVariableServiceImpl variableService;
 
     @BeforeEach
     void setUp() {
@@ -89,6 +97,7 @@ class ProductFormulaSetupServiceTest {
         usageRuleService = new ProductFormulaUsageRuleServiceImpl(usageRuleMapper, new ProductFormulaUsageRuleValidator());
         ProductFormulaMaterialSnapshotResolver materialSnapshotResolver =
             new ProductFormulaMaterialSnapshotResolver(productMaterialMapper, unitMapper);
+        variableService = new ProductFormulaVariableServiceImpl(formulaMapper, variableMapper, variableRuleMapper, usageRuleMapper);
         ProductFormulaSetupReader setupReader = new ProductFormulaSetupReader(
             formulaMapper,
             materialMapper,
@@ -97,19 +106,21 @@ class ProductFormulaSetupServiceTest {
             optionMaterialMapper,
             restrictionMapper,
             productMaterialMapper,
-            usageRuleService
+            usageRuleService,
+            variableService
         );
-        ProductFormulaSetupValidator setupValidator = new ProductFormulaSetupValidator(usageRuleService);
+        ProductFormulaSetupValidator setupValidator = new ProductFormulaSetupValidator(usageRuleService, variableService);
         ProductFormulaRestrictionNormalizer restrictionNormalizer = new ProductFormulaRestrictionNormalizer(setupValidator);
         ProductFormulaSetupNormalizer setupNormalizer =
-            new ProductFormulaSetupNormalizer(materialSnapshotResolver, restrictionNormalizer, usageRuleService);
+            new ProductFormulaSetupNormalizer(materialSnapshotResolver, restrictionNormalizer, usageRuleService, variableService);
         ProductFormulaSetupWriter setupWriter = new ProductFormulaSetupWriter(
             materialMapper,
             optionMapper,
             optionValueMapper,
             optionMaterialMapper,
             restrictionMapper,
-            usageRuleService
+            usageRuleService,
+            variableService
         );
         setupService = new ProductFormulaSetupServiceImpl(
             formulaMapper,
@@ -450,9 +461,9 @@ class ProductFormulaSetupServiceTest {
     void validationRejectsNonBooleanExpressionCondition() {
         ProductFormulaUsageRule usageRule = usageRule();
         usageRule.setConditionType("EXPRESSION");
-        usageRule.setConditionExpression("orderWidth");
+        usageRule.setConditionExpression("orderWidthIn");
         usageRule.setConditionText("非布尔表达式");
-        usageRule.setConditionKey("EXPR:orderWidth");
+        usageRule.setConditionKey("EXPR:orderWidthIn");
         usageRule.setDefaultRuleFlag(Boolean.FALSE);
 
         when(materialMapper.selectList(any())).thenReturn(List.of(formulaMaterial()));
@@ -568,7 +579,7 @@ class ProductFormulaSetupServiceTest {
         material.setMaterialNameCn("米色斑马帘面料");
         material.setUnitCode("米");
         material.setUsageMode("FORMULA");
-        material.setUsageFormula("orderWidth * 12 - 2.0");
+        material.setUsageFormula("orderWidthCm * 12 - 2.0");
         material.setStatus("ENABLED");
         material.setDelFlag("0");
         return material;
@@ -618,8 +629,8 @@ class ProductFormulaSetupServiceTest {
         bo.setConditionOptionCode(defaultRule ? null : "FABRIC");
         bo.setConditionValueCode(defaultRule ? null : "MAT001");
         bo.setUsageMode("FORMULA");
-        bo.setUsageFormula(defaultRule ? "1" : "orderWidth * 12 - 2.0");
-        bo.setUsageFormulaText(defaultRule ? "1" : "订单宽 * 12 - 2.0");
+        bo.setUsageFormula(defaultRule ? "1" : "orderWidthCm * 12 - 2.0");
+        bo.setUsageFormulaText(defaultRule ? "1" : "订单宽(cm) * 12 - 2.0");
         bo.setCalculationUnitCode("米");
         bo.setLossRate(new BigDecimal("5"));
         bo.setDefaultRuleFlag(defaultRule);

@@ -19,4 +19,6 @@ public class ProductFormulaSetupVo implements Serializable {
     private List<ProductFormulaOptionMaterialVo> optionMaterials = new ArrayList<>();
     private List<ProductFormulaRestrictionVo> restrictions = new ArrayList<>();
     private List<ProductFormulaUsageRuleVo> usageRules = new ArrayList<>();
+    private List<ProductFormulaVariableVo> variables = new ArrayList<>();
+    private List<ProductFormulaVariableRuleVo> variableRules = new ArrayList<>();
 }

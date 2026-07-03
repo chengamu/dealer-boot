@@ -96,11 +96,15 @@
       :usage-row="usageRow"
       :usage-rows="usageRows"
       :materials="setup.materials"
+      :formula-id="currentFormulaId"
+      :variables="setup.variables"
+      :variable-rules="setup.variableRules"
       :usage-rules="setup.usageRules"
       :options="setup.options"
       :option-values="setup.optionValues"
       :unit-options="unitOptions"
       @select-usage-row="selectUsageRow"
+      @variables-saved="handleVariablesSaved"
     />
   </div>
 </template>
@@ -151,7 +155,8 @@ const {
   draftCacheStatus,
   saveSetup,
   validateSetup,
-  handleFormulaChange
+  handleFormulaChange,
+  handleVariablesSaved
 } = useFormulaSetupCore(props, t, () => localeStore.language)
 
 const {

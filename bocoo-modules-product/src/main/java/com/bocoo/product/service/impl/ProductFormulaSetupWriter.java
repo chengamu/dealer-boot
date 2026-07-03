@@ -15,6 +15,7 @@ import com.bocoo.product.mapper.ProductFormulaOptionValueMapper;
 import com.bocoo.product.mapper.ProductFormulaRestrictionMapper;
 import com.bocoo.product.service.ProductEntityDefaults;
 import com.bocoo.product.service.ProductFormulaUsageRuleService;
+import com.bocoo.product.service.ProductFormulaVariableService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -33,6 +34,7 @@ public class ProductFormulaSetupWriter extends ProductServiceSupport {
     private final ProductFormulaOptionMaterialMapper optionMaterialMapper;
     private final ProductFormulaRestrictionMapper restrictionMapper;
     private final ProductFormulaUsageRuleService usageRuleService;
+    private final ProductFormulaVariableService variableService;
 
     void replace(Long formulaId, ProductFormulaSetupRows rows) {
         deleteByFormula(formulaId);
@@ -43,6 +45,7 @@ public class ProductFormulaSetupWriter extends ProductServiceSupport {
         insertAll(rows.optionMaterials(), optionMaterialMapper);
         insertAll(rows.restrictions(), restrictionMapper);
         usageRuleService.insertAll(rows.usageRules(), rows.materials());
+        variableService.insertAll(rows.variables(), rows.variableRules());
     }
 
     void replaceMaterials(Long formulaId, ProductFormulaSetupRows rows) {
@@ -74,6 +77,7 @@ public class ProductFormulaSetupWriter extends ProductServiceSupport {
         optionMaterialMapper.delete(activeQuery(ProductFormulaOptionMaterial.class).eq("formula_id", formulaId));
         restrictionMapper.delete(activeQuery(ProductFormulaRestriction.class).eq("formula_id", formulaId));
         usageRuleService.deleteByFormula(formulaId);
+        variableService.replace(formulaId, List.of(), List.of());
     }
 
     private <T> void insertAll(List<T> rows, BaseMapper<T> mapper) {

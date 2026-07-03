@@ -15,6 +15,7 @@ import type {
   ProductFormulaMaterialVO,
   ProductFormulaOptionVO,
   ProductFormulaOptionValueVO,
+  ProductFormulaVariableVO,
   ProductFormulaUsageRuleVO
 } from '@/api/product-capability/types'
 
@@ -23,6 +24,7 @@ type TFunction = (key: string) => string
 type FormulaUsageRulesProps = {
   usageRow: ProductFormulaMaterialVO | null
   materials?: ProductFormulaMaterialVO[]
+  variables?: ProductFormulaVariableVO[]
   usageRules: ProductFormulaUsageRuleVO[]
   options: ProductFormulaOptionVO[]
   optionValues: ProductFormulaOptionValueVO[]
@@ -94,7 +96,6 @@ export function useFormulaUsageRules(
       usageFormula: String(fixedUsageQty),
       usageFormulaText: formatUsageNumber(fixedUsageQty),
       calculationUnitCode: props.usageRow.calculationUnitCode || props.usageRow.unitCode,
-      lossRate: props.usageRow.lossRate ?? 0,
       defaultRuleFlag: true,
       productionRemark: props.usageRow.productionRemark,
       status: PRODUCT_STATUS_ENABLED,
@@ -115,7 +116,6 @@ export function useFormulaUsageRules(
     rule.fixedUsageQty = fixedUsageQty
     rule.usageFormula = String(fixedUsageQty)
     rule.usageFormulaText = formatUsageNumber(fixedUsageQty)
-    rule.lossRate = props.usageRow.lossRate ?? 0
     rule.defaultRuleFlag = true
     handleDefaultRuleChange(rule)
   }
@@ -158,7 +158,6 @@ export function useFormulaUsageRules(
       usageFormula: defaultRule ? '1' : undefined,
       usageFormulaText: defaultRule ? '1' : undefined,
       calculationUnitCode: props.usageRow.calculationUnitCode || props.usageRow.unitCode,
-      lossRate: props.usageRow.lossRate ?? 0,
       defaultRuleFlag: defaultRule,
       productionRemark: props.usageRow.productionRemark,
       status: PRODUCT_STATUS_ENABLED,
@@ -245,7 +244,8 @@ export function useFormulaUsageRules(
   }
 
   function syncFormula(row: ProductFormulaUsageRuleVO, field: FormulaField = formulaFields[4]) {
-    const result = validateFormulaExpression(ruleFormulaText(row, field))
+    const expressionText = normalizeDisplayExpression(ruleFormulaText(row, field), props.options, props.optionValues, props.materials || [], props.variables || [])
+    const result = validateFormulaExpression(expressionText)
     row[field.valueKey] = result.expression as never
     if (row.usageMode === 'FIXED' && result.valid && typeof result.sampleValue === 'number') {
       row.fixedUsageQty = result.sampleValue
@@ -322,6 +322,7 @@ export function useFormulaUsageRules(
   function copyUsageRuleForMaterial(rule: ProductFormulaUsageRuleVO, row: ProductFormulaMaterialVO, index: number) {
     const copy = cloneValue(rule)
     delete (copy as Record<string, unknown>).usageRuleId
+    delete (copy as Record<string, unknown>).lossRate
     copy.materialCode = row.materialCode
     copy.materialNameCn = row.materialNameCn
     copy.materialId = row.materialId

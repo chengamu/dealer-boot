@@ -1,4 +1,4 @@
-import type { ProductFormulaMaterialVO, ProductFormulaOptionVO, ProductFormulaOptionValueVO } from '@/api/product-capability/types'
+import type { ProductFormulaMaterialVO, ProductFormulaOptionVO, ProductFormulaOptionValueVO, ProductFormulaVariableVO } from '@/api/product-capability/types'
 
 type AliasPair = { from: string; to: string }
 
@@ -14,10 +14,11 @@ export function normalizeDisplayExpression(
   input?: string,
   options: ProductFormulaOptionVO[] = [],
   optionValues: ProductFormulaOptionValueVO[] = [],
-  materials: ProductFormulaMaterialVO[] = []
+  materials: ProductFormulaMaterialVO[] = [],
+  variables: ProductFormulaVariableVO[] = []
 ) {
   let expression = String(input || '')
-  buildAliasPairs(options, optionValues, materials)
+  buildAliasPairs(options, optionValues, materials, variables)
     .sort((left, right) => right.from.length - left.from.length)
     .forEach(({ from, to }) => {
       expression = expression.replace(new RegExp(escapeRegExp(from), 'g'), to)
@@ -25,7 +26,7 @@ export function normalizeDisplayExpression(
   return expression
 }
 
-function buildAliasPairs(options: ProductFormulaOptionVO[], optionValues: ProductFormulaOptionValueVO[], materials: ProductFormulaMaterialVO[]) {
+function buildAliasPairs(options: ProductFormulaOptionVO[], optionValues: ProductFormulaOptionValueVO[], materials: ProductFormulaMaterialVO[], variables: ProductFormulaVariableVO[]) {
   const aliases: AliasPair[] = []
   options.forEach((option) => {
     const variableName = optionVariableName(option.optionCode)
@@ -36,6 +37,13 @@ function buildAliasPairs(options: ProductFormulaOptionVO[], optionValues: Produc
     pushAlias(aliases, value.valueNameCn, value.valueCode)
   })
   buildMaterialAliasPairs(aliases, materials)
+  variables.forEach((variable) => {
+    pushAlias(aliases, variable.variableName, `var_${variable.variableCode}`)
+    pushAlias(aliases, variable.variableCode, `var_${variable.variableCode}`)
+  })
+  pushAlias(aliases, '四舍五入', 'round')
+  pushAlias(aliases, '向上取整', 'ceil')
+  pushAlias(aliases, '向下取整', 'floor')
   return aliases
 }
 

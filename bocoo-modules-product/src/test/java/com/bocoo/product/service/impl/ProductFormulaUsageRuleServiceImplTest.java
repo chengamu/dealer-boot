@@ -49,14 +49,14 @@ class ProductFormulaUsageRuleServiceImplTest {
     @Test
     void formulaRuleRejectsInvalidFormulaAndNonBooleanExpressionCondition() {
         ProductFormulaUsageRule invalidFormula = formulaRule(true);
-        invalidFormula.setUsageFormula("if(orderWidth > 12, 2, 1)");
+        invalidFormula.setUsageFormula("if(orderWidthIn > 12, 2, 1)");
         assertThat(service.validationMessageKey(materials(), options(), values(), List.of(invalidFormula)))
             .isEqualTo("product.formula.usageFormulaInvalid");
 
         ProductFormulaUsageRule invalidCondition = formulaRule(false);
         invalidCondition.setConditionType("EXPRESSION");
-        invalidCondition.setConditionExpression("orderWidth");
-        invalidCondition.setConditionKey("EXPR:orderWidth");
+        invalidCondition.setConditionExpression("orderWidthIn");
+        invalidCondition.setConditionKey("EXPR:orderWidthIn");
         assertThat(service.validationMessageKey(materials(), options(), values(), List.of(invalidCondition)))
             .isEqualTo("product.formula.usageConditionInvalid");
     }
@@ -65,8 +65,8 @@ class ProductFormulaUsageRuleServiceImplTest {
     void formulaRuleCanUseDimensionFormulasWithoutQuantityFormula() {
         ProductFormulaUsageRule rule = formulaRule(true);
         rule.setUsageFormula(null);
-        rule.setWidthFormula("orderWidth + 3");
-        rule.setHeightFormula("orderHeight + 3");
+        rule.setWidthFormula("orderWidthCm + 3");
+        rule.setHeightFormula("orderLengthCm + 3");
 
         assertThat(service.validationMessageKey(materials(), options(), values(), List.of(rule))).isNull();
     }
@@ -142,7 +142,7 @@ class ProductFormulaUsageRuleServiceImplTest {
         rule.setConditionExpression(defaultRule ? "DEFAULT" : "fabric == \"MAT001\"");
         rule.setConditionKey(defaultRule ? "DEFAULT" : "OPTION:FABRIC:MAT001");
         rule.setUsageMode("FORMULA");
-        rule.setUsageFormula("orderWidth * 12 - 2.0");
+        rule.setUsageFormula("orderWidthCm * 12 - 2.0");
         rule.setDefaultRuleFlag(defaultRule);
         return rule;
     }

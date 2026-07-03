@@ -14,6 +14,7 @@ import com.bocoo.product.domain.vo.ProductFormulaUsageRuleVo;
 import com.bocoo.product.mapper.ProductFormulaMapper;
 import com.bocoo.product.mapper.ProductMaterialMapper;
 import com.bocoo.product.service.ProductFormulaSetupService;
+import com.bocoo.product.service.ProductFormulaVariableService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -32,6 +33,7 @@ class ProductFormulaSimulationServiceImplTest {
     private ProductFormulaMapper formulaMapper;
     private ProductMaterialMapper productMaterialMapper;
     private ProductFormulaSetupService setupService;
+    private ProductFormulaVariableService variableService;
     private ProductFormulaSimulationServiceImpl service;
 
     @BeforeEach
@@ -39,11 +41,13 @@ class ProductFormulaSimulationServiceImplTest {
         formulaMapper = mock(ProductFormulaMapper.class);
         productMaterialMapper = mock(ProductMaterialMapper.class);
         setupService = mock(ProductFormulaSetupService.class);
+        variableService = mock(ProductFormulaVariableService.class);
         service = new ProductFormulaSimulationServiceImpl(
             formulaMapper,
             setupService,
-            new ProductFormulaSimulationEngine(productMaterialMapper, new ProductFormulaSimulationUsageCalculator())
+            new ProductFormulaSimulationEngine(productMaterialMapper, new ProductFormulaSimulationUsageCalculator(), variableService)
         );
+        when(variableService.evaluateVariables(any(), any(), any())).thenAnswer(invocation -> invocation.getArgument(2));
         when(formulaMapper.selectById(3001L)).thenReturn(formula());
         when(setupService.validationMessageKey(3001L)).thenReturn(null);
         when(setupService.querySetup(3001L)).thenReturn(setup());
@@ -69,8 +73,8 @@ class ProductFormulaSimulationServiceImplTest {
         assertThat(result.getStatus()).isEqualTo("PASS");
         assertThat(result.getItems()).hasSize(1);
         assertThat(result.getItems().get(0).getMaterialCode()).isEqualTo("MAT001");
-        assertThat(result.getItems().get(0).getUsageQty()).isEqualByComparingTo("20.00");
-        assertThat(result.getTotalAmount()).isEqualByComparingTo("60.00");
+        assertThat(result.getItems().get(0).getUsageQty()).isEqualByComparingTo("50.80");
+        assertThat(result.getTotalAmount()).isEqualByComparingTo("152.40");
     }
 
     @Test
@@ -180,7 +184,7 @@ class ProductFormulaSimulationServiceImplTest {
         rule.setConditionOptionCode(defaultRule ? null : "FABRIC");
         rule.setConditionValueCode(defaultRule ? null : "MAT001");
         rule.setUsageMode("FORMULA");
-        rule.setUsageFormula(defaultRule ? "1" : "orderWidth * 2");
+        rule.setUsageFormula(defaultRule ? "1" : "orderWidthCm * 2");
         rule.setDefaultRuleFlag(defaultRule);
         rule.setStatus("ENABLED");
         rule.setSortOrder(defaultRule ? 20 : 10);

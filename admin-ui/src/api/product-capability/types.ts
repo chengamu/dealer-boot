@@ -422,6 +422,31 @@ export interface ProductFormulaUsageRuleVO extends ProductRecord {
   remark?: string
 }
 
+export interface ProductFormulaVariableVO extends ProductRecord {
+  variableId?: number
+  formulaId?: number
+  variableCode?: string
+  variableName?: string
+  sortOrder?: number
+  remark?: string
+}
+
+export interface ProductFormulaVariableRuleVO extends ProductRecord {
+  ruleId?: number
+  formulaId?: number
+  variableId?: number
+  variableCode?: string
+  conditionExpression?: string
+  conditionText?: string
+  valueType?: string
+  fixedValue?: number
+  formulaExpression?: string
+  formulaText?: string
+  defaultRuleFlag?: boolean
+  sortOrder?: number
+  remark?: string
+}
+
 export interface ProductFormulaSetupVO extends ProductRecord {
   formula?: ProductFormulaVO
   materials?: ProductFormulaMaterialVO[]
@@ -430,6 +455,8 @@ export interface ProductFormulaSetupVO extends ProductRecord {
   optionMaterials?: ProductFormulaOptionMaterialVO[]
   restrictions?: ProductFormulaRestrictionVO[]
   usageRules?: ProductFormulaUsageRuleVO[]
+  variables?: ProductFormulaVariableVO[]
+  variableRules?: ProductFormulaVariableRuleVO[]
 }
 
 export interface ProductFormulaVersionVO extends ProductRecord {
