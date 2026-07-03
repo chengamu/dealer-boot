@@ -1,0 +1,233 @@
+.login-card {
+  width: min(100%, 552px);
+  padding: 48px 45px 34px;
+  border: 1px solid rgba(218, 228, 242, 0.92);
+  border-radius: 8px;
+  box-shadow: 0 28px 72px rgba(18, 45, 90, 0.11);
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.login-card h2 {
+  margin: 0 0 12px;
+  color: #06184a;
+  font-size: 36px;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.login-card > p {
+  margin: 0 0 32px;
+  color: #556894;
+}
+
+.login-card :deep(.el-form-item) {
+  margin-bottom: 19px;
+}
+
+.login-card :deep(.el-form-item__label) {
+  margin-bottom: 10px;
+  color: #06184a;
+  font-weight: 700;
+}
+
+.login-card :deep(.el-input__wrapper) {
+  height: 52px;
+  padding: 0 16px;
+  border-radius: 8px;
+  box-shadow: 0 0 0 1px #d5e0ef inset;
+}
+
+.captcha-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 122px;
+  gap: 12px;
+  width: 100%;
+}
+
+.inline-captcha-row {
+  grid-template-columns: minmax(0, 1fr) 116px 28px;
+  align-items: center;
+  gap: 8px;
+}
+
+.captcha-image {
+  display: grid;
+  height: 52px;
+  place-items: center;
+  overflow: hidden;
+  cursor: pointer;
+  border: 1px solid #d7e2f0;
+  border-radius: 7px;
+  background: #f8fbff;
+}
+
+.captcha-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.captcha-refresh {
+  display: grid;
+  width: 28px;
+  height: 52px;
+  place-items: center;
+  color: #496392;
+  font-size: 22px;
+  cursor: pointer;
+  border: 0;
+  background: transparent;
+}
+
+.login-options {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
+  margin: -1px 0 22px;
+}
+
+.login-options a {
+  max-width: 180px;
+  color: #075cff;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.submit {
+  width: 100%;
+  height: 56px;
+  font-weight: 700;
+  font-size: 16px;
+  border-radius: 8px;
+  background: #075cff;
+}
+
+@media (max-width: 1280px) {
+  .login-card {
+    padding: 44px 40px 32px;
+  }
+
+  .login-card :deep(.el-input__wrapper),
+  .captcha-image,
+  .captcha-refresh {
+    height: 48px;
+  }
+
+  .submit {
+    height: 50px;
+  }
+}
+
+@media (max-width: 560px) {
+  .login-card {
+    padding: 34px 34px 30px;
+  }
+
+  .login-card h2 {
+    font-size: 34px;
+  }
+
+  .login-card > p {
+    margin-bottom: 24px;
+    line-height: 1.45;
+  }
+
+  .login-card :deep(.el-form-item) {
+    margin-bottom: 18px;
+  }
+
+  .login-card :deep(.el-input__wrapper) {
+    height: 48px;
+  }
+
+  .inline-captcha-row {
+    grid-template-columns: minmax(0, 1fr) 112px 24px;
+    gap: 6px;
+  }
+
+  .captcha-image {
+    min-width: 112px;
+  }
+
+  .captcha-refresh {
+    width: 24px;
+    height: 48px;
+    font-size: 19px;
+  }
+
+  .login-options {
+    gap: 8px;
+  }
+
+  .login-options a {
+    max-width: none;
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 460px) {
+  .login-card {
+    padding: 30px 24px 26px;
+  }
+
+  .login-card h2 {
+    font-size: 30px;
+  }
+
+  .inline-captcha-row {
+    grid-template-columns: minmax(0, 1fr) 96px 22px;
+  }
+
+  .captcha-image {
+    min-width: 96px;
+  }
+
+  .login-options a {
+    font-size: 14px;
+  }
+}
+
+@media (max-height: 960px) and (min-width: 1101px) {
+  .login-card {
+    padding: 32px 40px 24px;
+  }
+
+  .login-card h2 {
+    margin-bottom: 8px;
+    font-size: 32px;
+  }
+
+  .login-card > p {
+    margin-bottom: 22px;
+  }
+
+  .login-card :deep(.el-form-item) {
+    margin-bottom: 14px;
+  }
+
+  .login-card :deep(.el-form-item__label) {
+    margin-bottom: 7px;
+  }
+
+  .login-card :deep(.el-input__wrapper) {
+    height: 46px;
+  }
+
+  .login-options {
+    margin: 0 0 16px;
+  }
+
+  .submit {
+    height: 46px;
+  }
+}
+
+@media (max-height: 820px) and (min-width: 1101px) {
+  .login-card {
+    padding-top: 28px;
+    padding-bottom: 20px;
+  }
+}

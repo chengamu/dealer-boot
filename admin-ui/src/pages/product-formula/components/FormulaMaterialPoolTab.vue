@@ -110,10 +110,10 @@
         <template #default="{ row }"><el-switch v-model="row.requiredFlag" /></template>
       </el-table-column>
       <el-table-column :label="t('common.operate')" width="176" fixed="right" align="center" class-name="material-actions-column">
-        <template #default="{ row, $index }">
+        <template #default="{ row }">
           <AdminTableActions :actions="[
             { label: t('productCenter.formulaSetup.usage'), icon: Setting, onClick: () => $emit('open-usage', row) },
-            { label: t('common.delete'), icon: Delete, type: 'danger', onClick: () => $emit('remove-material', $index) }
+            { label: t('common.delete'), icon: Delete, type: 'danger', onClick: () => $emit('remove-material', row) }
           ]" />
         </template>
       </el-table-column>
@@ -151,7 +151,7 @@ const emit = defineEmits<{
   'open-picker': []
   'open-usage': [row: ProductFormulaMaterialVO]
   'open-batch-usage': [rows: ProductFormulaMaterialVO[]]
-  'remove-material': [index: number]
+  'remove-material': [row: ProductFormulaMaterialVO]
   'remove-materials': [rows: ProductFormulaMaterialVO[]]
 }>()
 

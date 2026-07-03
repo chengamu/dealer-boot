@@ -1,0 +1,103 @@
+@media (max-width: 1280px) {
+  .hero-panel {
+    padding-right: 36px;
+  }
+
+  .hero-copy {
+    width: min(570px, 92%);
+  }
+
+  .hero-copy h1 {
+    font-size: 39px;
+    line-height: 1.24;
+  }
+
+  .hero-copy p {
+    max-width: 500px;
+  }
+
+  .order-card {
+    top: 360px;
+    right: 24px;
+  }
+
+  .chart-card {
+    right: 28px;
+    bottom: 286px;
+  }
+
+  .material-card {
+    right: 40px;
+    bottom: 154px;
+  }
+
+  .trust-card {
+    width: 378px;
+  }
+}
+
+@media (max-width: 1100px) {
+  .hero-panel {
+    display: none;
+  }
+}
+
+@media (max-height: 960px) and (min-width: 1101px) {
+  .hero-panel {
+    min-height: calc(100vh - 48px);
+    padding-top: 34px;
+    padding-bottom: 76px;
+  }
+
+  .sky-logo {
+    font-size: 52px;
+  }
+
+  .portal-pill {
+    margin-top: 24px;
+    padding: 8px 16px;
+  }
+
+  .hero-copy {
+    margin-top: 28px;
+  }
+
+  .hero-copy h1 {
+    margin-bottom: 14px;
+    font-size: 38px;
+    line-height: 1.2;
+  }
+
+  .hero-copy p {
+    font-size: 16px;
+    line-height: 1.55;
+  }
+
+  .order-card {
+    top: 266px;
+  }
+
+  .chart-card {
+    bottom: 206px;
+    transform: scale(0.9);
+    transform-origin: right bottom;
+  }
+
+  .material-card {
+    bottom: 98px;
+    transform: scale(0.9);
+    transform-origin: right bottom;
+  }
+
+  .trust-card {
+    bottom: 34px;
+    transform: scale(0.88);
+    transform-origin: left bottom;
+  }
+}
+
+@media (max-height: 820px) and (min-width: 1101px) {
+  .hero-panel {
+    min-height: calc(100vh - 32px);
+  }
+}

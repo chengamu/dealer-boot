@@ -52,9 +52,9 @@ export function useFormulaUsageEditor(props: FormulaUsageEditorProps, close: () 
   watch(() => props.modelValue, (open) => {
     if (open && props.usageRow) {
       summaryCollapsed.value = false
+      captureUsageSnapshot()
       usageRules.ensureInitialRule()
       usageRules.selectedRule.value = null
-      captureUsageSnapshot()
       window.addEventListener('keydown', handleDrawerShortcut)
     } else {
       window.removeEventListener('keydown', handleDrawerShortcut)

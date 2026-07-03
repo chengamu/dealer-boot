@@ -154,12 +154,13 @@ export function useFormulaSetupOperations(ctx: SetupOperationContext) {
     const row = selectedOptionMaterials.value[index]
     if (row) removeRow(ctx.setup.optionMaterials, ctx.setup.optionMaterials.indexOf(row))
   }
-  function removeMaterial(index: number) {
-    const material = ctx.setup.materials[index]
+  function removeMaterial(material: ProductFormulaMaterialVO) {
     if (isMaterialReferenced(material?.materialCode)) {
       ElMessage.warning(ctx.t('productCenter.formulaSetup.materialReferencedRemoveDenied'))
       return
     }
+    const index = ctx.setup.materials.indexOf(material)
+    if (index < 0) return
     removeRow(ctx.setup.materials, index)
   }
   function removeMaterials(rows: ProductFormulaMaterialVO[]) {
