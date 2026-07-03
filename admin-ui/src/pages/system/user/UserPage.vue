@@ -42,11 +42,8 @@
           <el-form-item :label="t('user.userName')" prop="userName">
             <el-input v-model="queryParams.userName" :placeholder="t('user.userNamePlaceholder')" clearable style="width: 240px" @keyup.enter="handleQuery" />
           </el-form-item>
-          <el-form-item :label="t('user.phonenumber')" prop="phonenumber">
-            <el-input v-model="queryParams.phonenumber" :placeholder="t('user.phonenumberPlaceholder')" clearable style="width: 240px" @keyup.enter="handleQuery" />
-          </el-form-item>
-          <el-form-item :label="t('user.status')" prop="status">
-            <el-select v-model="queryParams.status" :placeholder="t('user.statusPlaceholder')" clearable style="width: 240px">
+          <el-form-item :label="t('user.status')" prop="status" data-agent-field="status">
+            <el-select v-model="queryParams.status" class="user-page__status-select" :placeholder="t('user.statusPlaceholder')" clearable>
               <el-option v-for="dict in sys_normal_disable" :key="dict.value" :label="dict.label" :value="dict.value" />
             </el-select>
           </el-form-item>
@@ -829,25 +826,25 @@ getList()
 
 .user-page__dept-card {
   display: grid;
-  grid-template-columns: 44px minmax(0, 1fr);
+  grid-template-columns: 28px minmax(0, 1fr);
   align-items: center;
   width: 100%;
-  gap: 12px;
+  gap: 8px;
 }
 
 .user-page__dept-card-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
-  border-radius: 12px;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
   background: #eaf2ff;
   color: #1677ff;
 }
 
 .user-page__dept-card-icon .el-icon {
-  font-size: 18px;
+  font-size: 14px;
 }
 
 .user-page__dept-card-main {
@@ -860,7 +857,7 @@ getList()
   overflow: hidden;
   color: #07143d;
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1.35;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -868,10 +865,10 @@ getList()
 
 .user-page__dept-card-main small {
   overflow: hidden;
-  margin-top: 3px;
+  margin-top: 1px;
   color: #6b7895;
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 10px;
+  font-weight: 500;
   line-height: 1.35;
   text-overflow: ellipsis;
   white-space: nowrap;

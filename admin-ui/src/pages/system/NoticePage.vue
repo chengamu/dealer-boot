@@ -1,5 +1,5 @@
 <template>
-  <div class="app-container">
+  <div class="app-container notice-page">
     <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true">
       <el-form-item :label="t('legacy.noticeTitle')" prop="noticeTitle">
         <el-input

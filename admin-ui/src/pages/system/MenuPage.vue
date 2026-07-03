@@ -1,5 +1,5 @@
 <template>
-  <div class="app-container">
+  <div class="app-container menu-page">
     <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true">
       <el-form-item :label="t('menu.menuName')" prop="menuName">
         <el-input v-model="queryParams.menuName" :placeholder="t('menu.menuNamePlaceholder')" clearable style="width: 200px" @keyup.enter="handleQuery" />

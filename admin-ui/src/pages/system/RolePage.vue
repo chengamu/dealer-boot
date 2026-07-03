@@ -1,5 +1,5 @@
 ﻿<template>
-  <div class="app-container">
+  <div class="app-container role-page">
     <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true" label-width="80px">
       <el-form-item :label="t('role.roleName')" prop="roleName">
         <el-input v-model="queryParams.roleName" :placeholder="t('role.roleNamePlaceholder')" clearable style="width: 240px" @keyup.enter="handleQuery" />

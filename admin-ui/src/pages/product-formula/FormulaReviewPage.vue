@@ -22,11 +22,9 @@
           <template #default="{ row }">{{ formatMinute(row.submitTime) }}</template>
         </el-table-column>
         <el-table-column prop="validationStatus" :label="t('productCenter.formula.validationStatus')" width="120" />
-        <el-table-column :label="t('common.operate')" width="240" fixed="right" align="center">
+        <el-table-column :label="t('common.operate')" width="180" fixed="right" align="center" class-name="small-padding fixed-width">
           <template #default="{ row }">
-            <el-button link type="primary" @click="openDetail(row)">{{ t('common.detail') }}</el-button>
-            <el-button link type="success" @click="approve(row)">{{ t('productCenter.formula.actions.approve') }}</el-button>
-            <el-button link type="warning" @click="reject(row)">{{ t('productCenter.formula.actions.reject') }}</el-button>
+            <AdminTableActions :actions="reviewActions(row)" />
           </template>
         </el-table-column>
       </el-table>
@@ -53,6 +51,7 @@ import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 import { productFormulaApi } from '@/api/product-formula/formula'
 import { formatUtc } from '@/utils/datetime'
+import AdminTableActions, { type AdminTableAction } from '@/components/AdminTableActions/index.vue'
 import type { ProductFormulaVersionVO, ProductRecord } from '@/api/product-capability/types'
 
 const router = useRouter()
@@ -116,6 +115,14 @@ async function reject(row: ProductFormulaVersionVO) {
   await productFormulaApi.rejectReview(row.versionId, result.value.trim())
   ElMessage.success(t('common.success'))
   await load()
+}
+
+function reviewActions(row: ProductFormulaVersionVO): AdminTableAction[] {
+  return [
+    { label: t('common.detail'), icon: 'View', primary: true, onClick: () => openDetail(row) },
+    { label: t('productCenter.formula.actions.approve'), icon: 'CircleCheck', type: 'success', onClick: () => approve(row) },
+    { label: t('productCenter.formula.actions.reject'), icon: 'Close', type: 'warning', onClick: () => reject(row) }
+  ]
 }
 
 onMounted(load)

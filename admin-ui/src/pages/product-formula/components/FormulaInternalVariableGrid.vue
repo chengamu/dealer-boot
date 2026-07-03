@@ -23,8 +23,7 @@
         <div class="internal-variable-row__top">
           <strong>{{ row.variableName || '-' }}</strong>
           <span class="internal-variable-row__actions">
-          <el-button link type="primary" @click.stop="$emit('edit', row)">{{ t('common.edit') }}</el-button>
-          <el-button link type="danger" @click.stop="$emit('remove', row)">{{ t('common.delete') }}</el-button>
+            <AdminTableActions :actions="variableActions(row)" />
           </span>
         </div>
         <div class="internal-variable-row__summary">{{ variableSummary(row) }}</div>
@@ -37,6 +36,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { formatUsageNumber } from '../utils/formulaExpression'
+import AdminTableActions, { type AdminTableAction } from '@/components/AdminTableActions/index.vue'
 import type { ProductFormulaVariableRuleVO, ProductFormulaVariableVO } from '@/api/product-capability/types'
 
 const props = defineProps<{
@@ -45,7 +45,7 @@ const props = defineProps<{
   t: (key: string) => string
 }>()
 
-defineEmits<{
+const emit = defineEmits<{
   add: []
   edit: [row: ProductFormulaVariableVO]
   remove: [row: ProductFormulaVariableVO]
@@ -71,6 +71,13 @@ function variableSummary(row: ProductFormulaVariableVO) {
     : `${props.t('productCenter.formulaSetup.defaultUsageRule')} ${formatUsageNumber(defaultRule.fixedValue)}`
   const extraCount = Math.max(0, rules.length - 1)
   return extraCount ? `${base}，${props.t('productCenter.formulaSetup.moreVariableRules').replace('{count}', String(extraCount))}` : base
+}
+
+function variableActions(row: ProductFormulaVariableVO): AdminTableAction[] {
+  return [
+    { label: props.t('common.edit'), icon: 'Edit', primary: true, stopPropagation: true, onClick: () => emit('edit', row) },
+    { label: props.t('common.delete'), icon: 'Delete', type: 'danger', danger: true, stopPropagation: true, onClick: () => emit('remove', row) }
+  ]
 }
 </script>
 

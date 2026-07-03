@@ -12,7 +12,7 @@ import { useLocaleStore } from '@/stores/locale'
 import { productCategoryApi } from '@/api/product-capability/base'
 import { getProductDictItems } from '@/api/product-capability/product-dict'
 import { productFormulaApi } from '@/api/product-formula/formula'
-import type { ProductDictOption, ProductRecord } from '@/api/product-capability/types'
+import type { ProductDictOption } from '@/api/product-capability/types'
 import ProductEntityGridPage from '@/pages/product-center/components/ProductEntityGridPage.vue'
 import type { ProductGridConfig } from '@/pages/product-center/components/productGridTypes'
 import {
@@ -22,7 +22,6 @@ import {
   formulaStatusOptions,
   formulaValidationStatusOptions
 } from '@/constants/productStatus'
-import { compactParts, localizedRecordLabel } from '@/utils/productLabels'
 
 const localeStore = useLocaleStore()
 const t = (key: string) => getMessage(key, localeStore.language)
@@ -30,14 +29,10 @@ const t = (key: string) => getMessage(key, localeStore.language)
 const formulaStatusOptionList = computed(() => formulaStatusOptions(t))
 const validationStatusOptionList = computed(() => formulaValidationStatusOptions(t))
 
-function labelOf(row: ProductRecord, codeKey: string, cnKey: string, enKey?: string) {
-  return localizedRecordLabel(row, localeStore.language, codeKey, cnKey, enKey)
-}
-
 async function loadCategoryOptions() {
   const response = await productCategoryApi.options?.({ status: PRODUCT_STATUS_ENABLED, pageNum: 1, pageSize: 500 })
   const rows = Array.isArray(response) ? response : response?.data || []
-  return rows.map((row) => ({ value: row.categoryId, label: labelOf(row, 'categoryCode', 'categoryNameCn', 'categoryNameEn'), record: row }))
+  return rows.map((row) => ({ value: row.categoryId, label: String(row.categoryNameCn || row.categoryCode || ''), record: row }))
 }
 
 async function loadProductTypeOptions() {
@@ -45,7 +40,7 @@ async function loadProductTypeOptions() {
   const rows = response.data || []
   return rows.map((row: ProductDictOption) => ({
     value: row.value,
-    label: compactParts(row.value, localeStore.language === 'zh_CN' ? row.labelCn || row.label : row.labelEn || row.labelCn || row.label),
+    label: String(row.labelCn || row.label || row.value || ''),
     record: {
       ...row,
       productTypeNameCn: row.labelCn || row.label

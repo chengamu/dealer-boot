@@ -1,5 +1,5 @@
 <template>
-  <div class="app-container">
+  <div class="app-container ai-audit-page">
     <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true">
       <el-form-item :label="t('ai.settings.user')" prop="userId">
         <el-input v-model="queryUserLabel" readonly clearable style="width: 220px" @clear="clearQueryUser">

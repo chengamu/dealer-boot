@@ -1,9 +1,6 @@
 <template>
-  <div class="app-container">
+  <div class="app-container operation-log-page">
     <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true" label-width="90px">
-      <el-form-item :label="t('operlog.operIp')" prop="operIp">
-        <el-input v-model="queryParams.operIp" :placeholder="t('operlog.operIpPlaceholder')" clearable style="width: 240px" @keyup.enter="handleQuery" />
-      </el-form-item>
       <el-form-item :label="t('operlog.title')" prop="title">
         <el-input v-model="queryParams.title" :placeholder="t('operlog.titlePlaceholder')" clearable style="width: 240px" @keyup.enter="handleQuery" />
       </el-form-item>
@@ -13,11 +10,6 @@
       <el-form-item :label="t('operlog.businessType')" prop="businessType">
         <el-select v-model="queryParams.businessType" :placeholder="t('operlog.businessTypePlaceholder')" clearable style="width: 240px">
           <el-option v-for="dict in sys_oper_type" :key="dict.value" :label="dict.label" :value="dict.value" />
-        </el-select>
-      </el-form-item>
-      <el-form-item :label="t('operlog.status')" prop="status">
-        <el-select v-model="queryParams.status" :placeholder="t('operlog.statusPlaceholder')" clearable style="width: 240px">
-          <el-option v-for="dict in sys_common_status" :key="dict.value" :label="dict.label" :value="dict.value" />
         </el-select>
       </el-form-item>
       <el-form-item :label="t('operlog.operTime')" style="width: 330px">

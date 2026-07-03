@@ -1,5 +1,5 @@
 <template>
-  <div class="app-container">
+  <div class="app-container gen-page">
     <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true">
       <el-form-item :label="t('gen.dataName')" prop="dataName">
         <el-input v-model="queryParams.dataName" :placeholder="t('gen.dataNamePlaceholder')" clearable style="width: 200px" @keyup.enter="handleQuery" />

@@ -88,7 +88,7 @@ async function loadMaterialOptions(form?: ProductRecord) {
 async function loadCategoryOptions() {
   const response = await productCategoryApi.options?.({ status: PRODUCT_STATUS_ENABLED, pageNum: 1, pageSize: 500 })
   const rows = Array.isArray(response) ? response : response?.data || []
-  return rows.map((row) => ({ value: row.categoryId, label: labelOf(row, 'categoryCode', 'categoryNameCn', 'categoryNameEn'), record: row }))
+  return rows.map((row) => ({ value: row.categoryId, label: String(row.categoryNameCn || row.categoryCode || ''), record: row }))
 }
 
 async function loadBaseAttributeOptions(form?: ProductRecord) {
@@ -118,7 +118,7 @@ async function loadMaterialTypeOptions(context?: ProductRecord) {
   const rows = Array.isArray(response) ? response : response?.data || []
   return rows.map((row) => ({
     value: row.materialTypeCode,
-    label: String((localeStore.language === 'zh_CN' ? row.materialTypeNameCn : row.materialTypeNameEn || row.materialTypeNameCn) || row.materialTypeCode || ''),
+    label: String(row.materialTypeNameCn || row.materialTypeCode || ''),
     record: row
   }))
 }
@@ -126,7 +126,7 @@ async function loadMaterialTypeOptions(context?: ProductRecord) {
 async function loadMaterialTypeGroupOptions() {
   const response = await productMaterialTypeGroupApi.options?.({ status: PRODUCT_STATUS_ENABLED, pageNum: 1, pageSize: 500 })
   const rows = Array.isArray(response) ? response : response?.data || []
-  return rows.map((row) => ({ value: row.groupCode, label: labelOf(row, 'groupCode', 'groupNameCn', 'groupNameEn'), record: row }))
+  return rows.map((row) => ({ value: row.groupCode, label: String(row.groupNameCn || row.groupCode || ''), record: row }))
 }
 
 async function loadManufacturerOptions() {
@@ -216,7 +216,7 @@ const configs = computed<ProductGridConfig[]>(() => [
       { prop: 'materialTypeNameCn', labelKey: 'productCenter.material.type', form: false, minWidth: 150 },
       { prop: 'attributeGroupNameCn', labelKey: 'productCenter.material.attributeGroup', form: false, minWidth: 130 },
       { prop: 'model', labelKey: 'productCenter.material.model', sortable: true, minWidth: 140, sectionKey: 'spec', sectionLabelKey: 'productCenter.formSection.spec' },
-      { prop: 'spec', labelKey: 'productCenter.material.spec', search: true, required: true, sortable: true, minWidth: 260, multiline: true, sectionKey: 'spec' },
+      { prop: 'spec', labelKey: 'productCenter.material.spec', required: true, sortable: true, minWidth: 260, multiline: true, sectionKey: 'spec' },
       { prop: 'specModelText', labelKey: 'productCenter.material.specModelText', form: false, table: false },
       { prop: 'colorName', labelKey: 'productCenter.material.colorName', table: false, sectionKey: 'spec' },
       { prop: 'weightValue', labelKey: 'productCenter.material.weightValue', type: 'number', table: false, sectionKey: 'spec' },

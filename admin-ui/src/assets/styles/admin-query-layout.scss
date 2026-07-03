@@ -1,0 +1,185 @@
+@mixin query-row {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  gap: 6px 6px;
+  overflow-x: visible;
+
+  > .el-form-item {
+    flex: 0 0 auto;
+    width: auto !important;
+    margin-right: 0 !important;
+    margin-bottom: 0 !important;
+  }
+
+  .el-form-item__label {
+    width: auto !important;
+    min-width: max-content;
+    padding-right: 3px;
+  }
+
+  .el-form-item__content {
+    flex: 0 0 auto;
+  }
+
+  .el-input {
+    width: var(--query-input-width, 180px) !important;
+  }
+
+  .el-select {
+    width: var(--query-select-width, 132px) !important;
+  }
+
+  .el-select .el-input {
+    width: 100% !important;
+  }
+
+  .el-date-editor.el-input,
+  .el-date-editor.el-input__wrapper,
+  .el-date-editor--daterange.el-input__wrapper {
+    width: var(--query-date-width, 250px) !important;
+  }
+}
+
+#app {
+  .merchant-user-page > .el-form.el-form--inline,
+  .user-page__content > .el-form.el-form--inline,
+  .role-page > .el-form.el-form--inline,
+  .dict-type-page > .el-form.el-form--inline,
+  .config-page > .el-form.el-form--inline,
+  .gen-page > .el-form.el-form--inline,
+  .login-info-page > .el-form.el-form--inline,
+  .post-page > .el-form.el-form--inline,
+  .menu-page > .el-form.el-form--inline,
+  .notice-page > .el-form.el-form--inline,
+  .dept-page > .el-form.el-form--inline,
+  .ai-audit-page > .el-form.el-form--inline,
+  .product-grid-page__search {
+    @include query-row;
+  }
+
+  .merchant-user-page > .el-form.el-form--inline,
+  .user-page__content > .el-form.el-form--inline {
+    --query-input-width: 150px;
+    --query-select-width: 112px;
+    --query-date-width: 230px;
+  }
+
+  .user-page__content > .el-form.el-form--inline {
+    flex-wrap: nowrap !important;
+    gap: 8px 10px;
+    margin-bottom: 8px;
+    padding: 8px 10px;
+    --query-input-width: 176px;
+    --query-select-width: 124px;
+    --query-date-width: 300px;
+
+    > .el-form-item {
+      display: flex !important;
+      grid-template-columns: none !important;
+      align-items: center;
+    }
+
+    > .el-form-item:last-child {
+      display: flex !important;
+      grid-column: auto !important;
+      justify-self: auto !important;
+
+      .el-form-item__content {
+        display: flex;
+        gap: 8px;
+        justify-content: flex-start;
+      }
+    }
+  }
+
+  .merchant-user-page > .el-form.el-form--inline > .el-form-item:first-child .el-select {
+    width: 136px !important;
+  }
+
+  .role-page > .el-form.el-form--inline,
+  .dict-type-page > .el-form.el-form--inline,
+  .config-page > .el-form.el-form--inline {
+    --query-input-width: 168px;
+    --query-select-width: 112px;
+    --query-date-width: 236px;
+  }
+
+  .post-page > .el-form.el-form--inline,
+  .menu-page > .el-form.el-form--inline,
+  .notice-page > .el-form.el-form--inline,
+  .dept-page > .el-form.el-form--inline {
+    --query-input-width: 168px;
+    --query-select-width: 112px;
+  }
+
+  .operation-log-page > .el-form.el-form--inline {
+    @include query-row;
+    --query-input-width: 128px;
+    --query-select-width: 112px;
+    --query-date-width: 230px;
+  }
+
+  .login-info-page > .el-form.el-form--inline {
+    --query-input-width: 156px;
+    --query-select-width: 112px;
+    --query-date-width: 230px;
+  }
+
+  .oss-page > .el-form.el-form--inline {
+    @include query-row;
+    --query-input-width: 120px;
+    --query-date-width: 230px;
+  }
+
+  .gen-page > .el-form.el-form--inline {
+    --query-input-width: 156px;
+    --query-date-width: 230px;
+  }
+
+  .ai-audit-page > .el-form.el-form--inline {
+    --query-input-width: 136px;
+  }
+
+  .ai-audit-page > .el-form.el-form--inline > .el-form-item:first-child .el-input {
+    width: 170px !important;
+  }
+
+  .product-grid-page__search {
+    --query-input-width: 126px;
+    --query-select-width: 116px;
+  }
+
+  .product-grid-page__search[data-agent-entity="material"] {
+    --query-input-width: 124px;
+    --query-select-width: 126px;
+  }
+
+  .product-grid-page__search[data-agent-entity="formula"] {
+    --query-input-width: 144px;
+    --query-select-width: 130px;
+  }
+
+  .product-grid-page__search [data-agent-field="attributeGroupCode"] .el-select,
+  .product-grid-page__search [data-agent-field="materialTypeCode"] .el-select,
+  .product-grid-page__search [data-agent-field="categoryId"] .el-select,
+  .product-grid-page__search [data-agent-field="productTypeCode"] .el-select {
+    width: 146px !important;
+  }
+
+  .product-grid-page__search [data-agent-field="status"] .el-select,
+  .product-grid-page__search [data-agent-field="manufacturerFlag"] .el-select,
+  .product-grid-page__search [data-agent-field="supplierFlag"] .el-select {
+    width: 118px !important;
+  }
+
+  .user-page__content > .el-form.el-form--inline [data-agent-field="status"] .el-select,
+  .merchant-user-page > .el-form.el-form--inline [data-agent-field="status"] .el-select {
+    width: 128px !important;
+  }
+
+  .user-page__content > .el-form.el-form--inline [data-agent-field="status"] .user-page__status-select {
+    min-width: 128px !important;
+    width: 128px !important;
+  }
+}

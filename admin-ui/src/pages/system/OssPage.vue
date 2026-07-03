@@ -1,5 +1,5 @@
 <template>
-  <div class="app-container">
+  <div class="app-container oss-page">
     <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true">
       <el-form-item :label="t('legacy.fileName')" prop="fileName">
         <el-input v-model="queryParams.fileName" :placeholder="t('legacy.fileNamePlaceholder')" clearable style="width: 200px" @keyup.enter="handleQuery" />
@@ -23,9 +23,6 @@
       </el-form-item>
       <el-form-item :label="t('legacy.createBy')" prop="createBy">
         <el-input v-model="queryParams.createBy" :placeholder="t('legacy.createByPlaceholder')" clearable style="width: 200px" @keyup.enter="handleQuery" />
-      </el-form-item>
-      <el-form-item :label="t('legacy.provider')" prop="service">
-        <el-input v-model="queryParams.service" :placeholder="t('legacy.providerPlaceholder')" clearable style="width: 200px" @keyup.enter="handleQuery" />
       </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="Search" @click="handleQuery">{{ t('common.search') }}</el-button>

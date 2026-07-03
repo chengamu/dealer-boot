@@ -1,5 +1,5 @@
 ﻿<template>
-  <div class="app-container">
+  <div class="app-container config-page">
     <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true" label-width="80px">
       <el-form-item :label="t('legacy.configName')" prop="configName">
         <el-input

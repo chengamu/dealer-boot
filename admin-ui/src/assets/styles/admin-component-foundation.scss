@@ -180,35 +180,50 @@
 }
 
 .admin-table-actions {
-  gap: 6px;
+  gap: 10px;
 }
 
 .admin-table-actions__button.el-button {
+  --el-button-bg-color: transparent;
+  --el-button-border-color: transparent;
+  --el-button-hover-bg-color: transparent;
+  --el-button-hover-border-color: transparent;
+  --el-button-active-bg-color: transparent;
+  --el-button-active-border-color: transparent;
+  height: 24px;
+  min-height: 24px;
   min-width: 0;
-  border-radius: 7px;
-  transition: background-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
+  padding: 0 2px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  transition: color 0.16s ease;
 }
 
 .admin-table-actions__button.el-button:hover,
-.admin-table-actions__button.el-button:focus {
-  background: var(--admin-primary-soft, #eaf2ff);
-  box-shadow: 0 2px 8px rgba(22, 119, 255, 0.08);
+.admin-table-actions__button.el-button:focus,
+.admin-table-actions__button.el-button.is-disabled,
+.admin-table-actions__button.el-button.is-disabled:hover,
+.admin-table-actions__button.el-button.is-disabled:focus {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
 }
 
 .admin-table-actions__button.is-primary-action.el-button {
-  padding-inline: 8px;
-  background: var(--admin-primary-soft, #eaf2ff);
-  font-weight: 700;
+  background: transparent;
+  font-weight: 500;
 }
 
 .admin-table-actions__button.is-danger-action.el-button:hover,
 .admin-table-actions__button.is-danger-action.el-button:focus {
-  background: #fff1f1;
+  background: transparent;
   box-shadow: none;
 }
 
 .admin-table-actions__more.el-button {
-  border-radius: 8px;
+  border-radius: 6px;
 }
 
 .admin-pagination.pagination-container {

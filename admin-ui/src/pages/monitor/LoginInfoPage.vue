@@ -1,5 +1,5 @@
 ﻿<template>
-  <div class="app-container">
+  <div class="app-container login-info-page">
     <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true" label-width="90px">
       <el-form-item :label="t('legacy.loginIp')" prop="ipaddr">
         <el-input

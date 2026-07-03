@@ -61,9 +61,9 @@
             <el-switch v-model="row.defaultRuleFlag" @change="handleDefaultChange(row)" />
           </template>
         </el-table-column>
-        <el-table-column :label="t('common.operate')" width="68" align="center">
+        <el-table-column :label="t('common.operate')" width="96" align="center" class-name="small-padding fixed-width">
           <template #default="{ $index }">
-            <el-button link type="danger" :disabled="draftRules.length <= 1" @click="draftRules.splice($index, 1)">{{ t('common.delete') }}</el-button>
+            <AdminTableActions :actions="ruleActions($index)" />
           </template>
         </el-table-column>
       </el-table>
@@ -79,6 +79,7 @@
 
 <script setup lang="ts">
 import { watch, reactive, ref } from 'vue'
+import AdminTableActions, { type AdminTableAction } from '@/components/AdminTableActions/index.vue'
 import type { ProductFormulaVariableRuleVO, ProductFormulaVariableVO } from '@/api/product-capability/types'
 
 type DraftRule = ProductFormulaVariableRuleVO & { __key: string }
@@ -108,6 +109,23 @@ watch(() => props.modelValue, (open) => {
 
 function addRule() {
   draftRules.value.push(emptyRule(false))
+}
+
+function removeRule(index: number) {
+  draftRules.value.splice(index, 1)
+}
+
+function ruleActions(index: number): AdminTableAction[] {
+  return [
+    {
+      label: props.t('common.delete'),
+      icon: 'Delete',
+      type: 'danger',
+      danger: true,
+      disabled: draftRules.value.length <= 1,
+      onClick: () => removeRule(index)
+    }
+  ]
 }
 
 function emptyRule(defaultRuleFlag: boolean): DraftRule {
