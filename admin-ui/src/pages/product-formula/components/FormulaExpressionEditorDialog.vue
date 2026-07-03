@@ -72,10 +72,7 @@
             :materials="materials"
             :options="options"
             :option-values="optionValues"
-            :option-materials="optionMaterials"
-            :enable-option-material-attributes="enableOptionMaterialAttributes"
             @insert="appendConditionClause"
-            @insert-raw="appendExpressionText"
           />
         </div>
 
@@ -125,7 +122,6 @@ import {
 import { normalizeDisplayExpression } from './formulaExpressionDisplay'
 import type {
   ProductFormulaMaterialVO,
-  ProductFormulaOptionMaterialVO,
   ProductFormulaOptionVO,
   ProductFormulaOptionValueVO,
   ProductFormulaSetupVO,
@@ -144,10 +140,9 @@ const props = defineProps<{
   materials?: ProductFormulaMaterialVO[]
   options?: ProductFormulaOptionVO[]
   optionValues?: ProductFormulaOptionValueVO[]
-  optionMaterials?: ProductFormulaOptionMaterialVO[]
   variables?: ProductFormulaVariableVO[]
   variableRules?: ProductFormulaVariableRuleVO[]
-  enableOptionMaterialAttributes?: boolean
+  enableConditionArithmeticOperators?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -190,7 +185,7 @@ function appendConditionClause(clause: string, joiner: string) {
 
 function conditionOperators() {
   const operators: Array<string | { label: string; insert: string }> = ['=', '!=', '>', '>=', '<', '<=', '并且', '或者', '(', ')']
-  return props.enableOptionMaterialAttributes ? ['+', '-', '*', '/', ...operators] : operators
+  return props.enableConditionArithmeticOperators ? ['+', '-', '*', '/', ...operators] : operators
 }
 
 function insertVariable(row: ProductFormulaVariableVO) {

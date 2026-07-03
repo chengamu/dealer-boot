@@ -1,14 +1,22 @@
 <template>
-  <div class="top-right-btn" :style="style">
-    <el-row>
+  <div class="top-right-btn admin-toolbar-tools" :style="style">
+    <el-row class="admin-toolbar-tools__group">
       <el-tooltip v-if="search" class="item" effect="dark" :content="showSearch ? t('common.hideSearch') : t('common.showSearch')" placement="top">
-        <el-button circle icon="Search" :aria-label="showSearch ? t('common.hideSearch') : t('common.showSearch')" :title="showSearch ? t('common.hideSearch') : t('common.showSearch')" @click="toggleSearch()" />
+        <el-button
+          circle
+          icon="Search"
+          class="admin-toolbar-tools__button"
+          :class="{ 'is-active': showSearch }"
+          :aria-label="showSearch ? t('common.hideSearch') : t('common.showSearch')"
+          :title="showSearch ? t('common.hideSearch') : t('common.showSearch')"
+          @click="toggleSearch()"
+        />
       </el-tooltip>
       <el-tooltip class="item" effect="dark" :content="t('common.refresh')" placement="top">
-        <el-button circle icon="Refresh" :aria-label="t('common.refresh')" :title="t('common.refresh')" @click="refresh()" />
+        <el-button circle icon="Refresh" class="admin-toolbar-tools__button" :aria-label="t('common.refresh')" :title="t('common.refresh')" @click="refresh()" />
       </el-tooltip>
       <el-tooltip v-if="columns" class="item" effect="dark" :content="t('common.columnVisibility')" placement="top">
-        <el-button circle icon="Menu" :aria-label="t('common.columnVisibility')" :title="t('common.columnVisibility')" @click="showColumn()" />
+        <el-button circle icon="Menu" class="admin-toolbar-tools__button" :aria-label="t('common.columnVisibility')" :title="t('common.columnVisibility')" @click="showColumn()" />
       </el-tooltip>
     </el-row>
     <AdminDialog v-model="open" :title="title" width="560px" class="column-visibility-dialog" append-to-body>

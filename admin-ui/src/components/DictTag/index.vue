@@ -1,16 +1,16 @@
 <template>
-  <div>
+  <div class="dict-tag-list">
     <template v-for="(item, index) in options" :key="`${item.value}-${index}`">
       <template v-if="values.includes(String(item.value))">
         <span
           v-if="(item.elTagType === 'default' || item.elTagType === '') && (item.elTagClass === '' || item.elTagClass == null)"
-          :class="item.elTagClass"
+          class="dict-tag dict-tag--plain"
         >{{ item.label + ' ' }}</span>
         <el-tag
           v-else
           :disable-transitions="true"
           :type="tagType(item.elTagType)"
-          :class="item.elTagClass"
+          :class="['dict-tag', item.elTagClass]"
         >{{ item.label + ' ' }}</el-tag>
       </template>
     </template>
@@ -70,7 +70,27 @@ function tagType(type?: string) {
 </script>
 
 <style scoped>
-.el-tag + .el-tag {
-  margin-left: 10px;
+.dict-tag-list {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.dict-tag {
+  margin: 0;
+}
+
+.dict-tag--plain {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 0 8px;
+  border: 1px solid var(--admin-border-soft, #eef2f7);
+  border-radius: 999px;
+  background: #f8fbff;
+  color: var(--admin-muted, #8c96a5);
+  font-size: 12px;
+  line-height: 20px;
 }
 </style>

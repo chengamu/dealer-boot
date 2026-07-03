@@ -1,5 +1,5 @@
 <template>
-  <div :class="{ 'hidden': hidden }" class="pagination-container">
+  <div :class="{ 'hidden': hidden }" class="pagination-container admin-pagination">
     <el-pagination
       :background="background"
       v-model:current-page="currentPage"

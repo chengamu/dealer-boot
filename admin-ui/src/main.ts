@@ -22,6 +22,9 @@ import elementIcons from '@/components/SvgIcon/svgicon'
 import AdminDialog from '@/components/AdminDialog/index.vue'
 import AdminDialogFooter from '@/components/AdminDialogFooter/index.vue'
 import AdminDrawer from '@/components/AdminDrawer/index.vue'
+import AdminEmptyState from '@/components/AdminEmptyState/index.vue'
+import AdminSection from '@/components/AdminSection/index.vue'
+import AdminSkeletonTable from '@/components/AdminSkeletonTable/index.vue'
 import AdminTableActions from '@/components/AdminTableActions/index.vue'
 import DictTag from '@/components/DictTag/index.vue'
 import Editor from '@/components/Editor/index.vue'
@@ -51,6 +54,9 @@ async function bootstrap() {
   app.component('AdminDialog', AdminDialog)
   app.component('AdminDialogFooter', AdminDialogFooter)
   app.component('AdminDrawer', AdminDrawer)
+  app.component('AdminEmptyState', AdminEmptyState)
+  app.component('AdminSection', AdminSection)
+  app.component('AdminSkeletonTable', AdminSkeletonTable)
   app.component('AdminTableActions', AdminTableActions)
   app.component('DictTag', DictTag)
   app.component('Editor', Editor)

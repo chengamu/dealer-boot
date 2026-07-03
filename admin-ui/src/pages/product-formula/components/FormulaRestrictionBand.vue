@@ -65,8 +65,7 @@
       :materials="materials"
       :options="options"
       :option-values="allOptionValues"
-      :option-materials="allOptionMaterials"
-      enable-option-material-attributes
+      enable-condition-arithmetic-operators
       @confirm="confirmExpressionEditor"
     />
   </section>
@@ -82,7 +81,6 @@ import { normalizeDisplayExpression } from './formulaExpressionDisplay'
 import { validateConditionExpression } from '../utils/formulaExpression'
 import type {
   ProductFormulaMaterialVO,
-  ProductFormulaOptionMaterialVO,
   ProductFormulaOptionVO,
   ProductFormulaOptionValueVO,
   ProductFormulaRestrictionVO
@@ -92,7 +90,6 @@ const props = defineProps<{
   restrictions: ProductFormulaRestrictionVO[]
   options: ProductFormulaOptionVO[]
   allOptionValues: ProductFormulaOptionValueVO[]
-  allOptionMaterials: ProductFormulaOptionMaterialVO[]
   materials: ProductFormulaMaterialVO[]
 }>()
 

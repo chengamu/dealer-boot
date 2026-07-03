@@ -11,7 +11,6 @@
     :restrictions="restrictions"
     :options="options"
     :all-option-values="allOptionValues"
-    :all-option-materials="allOptionMaterials"
     :materials="materials"
     @add-restriction="$emit('add-restriction')"
     @remove-restriction="$emit('remove-restriction', $event)"

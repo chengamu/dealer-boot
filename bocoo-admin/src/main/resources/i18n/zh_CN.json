@@ -1668,7 +1668,7 @@
   "productCenter.formulaSetup.conditionalUsageRulesHint": "按面料、宽高或配置条件维护用量公式。",
   "productCenter.formulaSetup.conditionExpression": "条件表达式",
   "productCenter.formulaSetup.conditionExpressionEditor": "条件编辑器",
-  "productCenter.formulaSetup.conditionExpressionPlaceholder": "例如：订单宽(in) > 12",
+  "productCenter.formulaSetup.conditionExpressionPlaceholder": "可手工输入，例如：订单宽(in) > 12，或 面料.厚度 + 副面料.厚度 > 12",
   "productCenter.formulaSetup.conditionHeight": "条件高度",
   "productCenter.formulaSetup.conditionOption": "条件选项",
   "productCenter.formulaSetup.conditionOptionValue": "条件选项值",

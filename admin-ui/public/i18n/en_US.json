@@ -1698,7 +1698,7 @@
   "productCenter.formulaSetup.conditionalUsageRulesHint": "Maintain formulas by fabric, order size, or option value. Keep one default rule.",
   "productCenter.formulaSetup.conditionExpression": "Expression",
   "productCenter.formulaSetup.conditionExpressionEditor": "Condition Editor",
-  "productCenter.formulaSetup.conditionExpressionPlaceholder": "Example: orderWidthIn > 12",
+  "productCenter.formulaSetup.conditionExpressionPlaceholder": "Enter manually, e.g. orderWidthIn > 12 or Fabric.Thickness + Secondary Fabric.Thickness > 12",
   "productCenter.formulaSetup.conditionOr": "Or",
   "productCenter.formulaSetup.conditionAdvancedExpression": "Manual Expression",
   "productCenter.formulaSetup.conditionBusinessOption": "Business Option",

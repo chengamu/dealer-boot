@@ -1,14 +1,24 @@
 <template>
   <el-dialog
     :model-value="modelValue"
-    :title="title"
     :width="width"
     :class="dialogClass"
     v-bind="$attrs"
     @update:model-value="emit('update:modelValue', $event)"
   >
-    <template v-if="$slots.header" #header>
-      <slot name="header" />
+    <template #header>
+      <slot name="header">
+        <div class="admin-dialog__header">
+          <div>
+            <p v-if="eyebrow" class="admin-dialog__eyebrow">{{ eyebrow }}</p>
+            <h2 class="admin-dialog__title">{{ title }}</h2>
+            <p v-if="subtitle" class="admin-dialog__subtitle">{{ subtitle }}</p>
+          </div>
+          <div v-if="$slots.actions" class="admin-dialog__actions">
+            <slot name="actions" />
+          </div>
+        </div>
+      </slot>
     </template>
     <slot />
     <template v-if="$slots.footer" #footer>
@@ -25,10 +35,14 @@ defineOptions({
 const props = withDefaults(defineProps<{
   modelValue: boolean
   title?: string
+  subtitle?: string
+  eyebrow?: string
   width?: string
   variant?: 'form' | 'detail' | 'picker'
 }>(), {
   title: '',
+  subtitle: '',
+  eyebrow: '',
   width: undefined,
   variant: 'form'
 })

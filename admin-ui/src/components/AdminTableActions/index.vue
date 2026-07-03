@@ -6,6 +6,7 @@
       :key="action.key || action.label"
       v-bind="action.attrs || {}"
       class="admin-table-actions__button"
+      :class="buttonClass(action)"
       link
       :type="actionType(action)"
       :icon="action.icon"
@@ -103,6 +104,13 @@ function isDanger(action: AdminTableAction) {
 function actionType(action: AdminTableAction) {
   if (isDanger(action)) return 'danger'
   return action.type || 'primary'
+}
+
+function buttonClass(action: AdminTableAction) {
+  return {
+    'is-primary-action': action.primary && !isDanger(action),
+    'is-danger-action': isDanger(action)
+  }
 }
 
 function handleAction(action: AdminTableAction, event?: MouseEvent) {
