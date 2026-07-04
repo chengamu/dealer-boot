@@ -700,28 +700,28 @@ getList()
 }
 
 .user-rich-table :deep(td.el-table__cell) {
-  height: 64px;
+  height: 42px;
 }
 
 .user-rich-cell {
   display: inline-flex;
   align-items: center;
   min-width: 0;
-  gap: 12px;
+  gap: 8px;
 }
 
 .user-rich-avatar {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
-  flex: 0 0 38px;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
   border-radius: 50%;
   color: #ffffff;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
-  box-shadow: 0 6px 14px rgba(15, 35, 80, 0.14);
+  box-shadow: none;
 }
 
 .user-rich-avatar.is-blue {
@@ -753,7 +753,7 @@ getList()
 .user-rich-main strong {
   overflow: hidden;
   color: #07143d;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   line-height: 1.35;
   text-overflow: ellipsis;
@@ -790,14 +790,14 @@ getList()
   justify-content: center;
   gap: 6px;
   min-width: 76px;
-  height: 28px;
-  padding: 0 10px;
+  height: 24px;
+  padding: 0 8px;
   border: 0;
-  border-radius: 7px;
+  border-radius: 6px;
   cursor: pointer;
   font: inherit;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .user-status-pill i {
