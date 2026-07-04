@@ -70,6 +70,11 @@ function buildOptionMaterialAttributeAliasPairs(aliases: AliasPair[], options: P
         pushAlias(aliases, `${optionName}.${attribute.code}`, variableName)
       })
     })
+    optionNames.forEach((optionName) => {
+      pushAlias(aliases, `${optionName}.厚度`, materialAttributeVariableName(option.optionCode, 'THICKNESS'))
+      pushAlias(aliases, `${optionName}.Thickness`, materialAttributeVariableName(option.optionCode, 'THICKNESS'))
+      pushAlias(aliases, `${optionName}.thickness`, materialAttributeVariableName(option.optionCode, 'THICKNESS'))
+    })
   })
 }
 

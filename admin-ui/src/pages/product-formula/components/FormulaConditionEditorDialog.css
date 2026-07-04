@@ -1,0 +1,183 @@
+.formula-condition-dialog .admin-dialog__body {
+  padding: 16px 18px;
+  overflow-x: hidden;
+}
+
+.formula-condition-editor {
+  display: grid;
+  gap: 14px;
+}
+
+.formula-condition-editor__panel {
+  padding: 14px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+.formula-condition-dialog .expression-editor__composer,
+.formula-condition-dialog .expression-editor__result {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.formula-condition-dialog .expression-editor__composer {
+  padding: 12px;
+}
+
+.formula-condition-dialog .expression-editor__head,
+.formula-condition-dialog .expression-editor__result-head {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.formula-condition-dialog .expression-editor__head {
+  margin-bottom: 10px;
+}
+
+.formula-condition-dialog .expression-editor__composer h4,
+.formula-condition-dialog .expression-editor__result h4 {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: baseline;
+  min-width: 0;
+  margin: 0;
+  color: #1f2937;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.formula-condition-dialog .expression-editor__composer h4 span {
+  color: #94a3b8;
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.formula-condition-dialog .expression-editor__head .el-button {
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
+.formula-condition-dialog .expression-editor__composer .el-textarea__inner {
+  min-height: 72px !important;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.formula-condition-dialog .expression-editor__result {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  background: #f8fafc;
+}
+
+.formula-condition-dialog .expression-editor__result-head {
+  justify-content: flex-start;
+}
+
+.formula-condition-dialog .expression-editor__result dl {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+}
+
+.formula-condition-dialog .expression-editor__result dt {
+  color: #475569;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.formula-condition-dialog .expression-editor__result dd {
+  min-height: 32px;
+  margin: 0;
+  padding: 8px 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: #fff;
+  color: #334155;
+  font-size: 13px;
+  line-height: 1.5;
+  word-break: break-all;
+}
+
+.condition-panel,
+.condition-grid__row {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) 96px minmax(220px, 1.4fr) auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.condition-panel__operator,
+.condition-grid__operator {
+  width: 96px;
+}
+
+.condition-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.condition-grid__row {
+  grid-template-columns: 72px minmax(180px, 1fr) 90px minmax(220px, 1.2fr) auto;
+}
+
+.condition-grid--material-attribute .condition-grid__row {
+  grid-template-columns: 48px minmax(220px, 1fr) minmax(220px, 1fr) auto;
+}
+
+.condition-grid--material-attribute .condition-grid__row--compare {
+  grid-template-columns: auto auto 96px minmax(180px, 1fr);
+  justify-content: start;
+}
+
+.condition-grid__joiner {
+  width: 72px;
+}
+
+.condition-grid__joiner-text {
+  color: #64748b;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.condition-grid__hint {
+  grid-column: 2 / -1;
+  margin: -2px 0 0;
+  color: #d97706;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.formula-condition-editor .el-segmented {
+  max-width: 100%;
+  width: fit-content;
+}
+
+@media (max-width: 760px) {
+  .formula-condition-dialog .admin-dialog__body {
+    padding: 12px;
+  }
+
+  .condition-panel,
+  .condition-grid__row,
+  .condition-grid--material-attribute .condition-grid__row,
+  .condition-grid--material-attribute .condition-grid__row--compare {
+    grid-template-columns: 1fr;
+  }
+
+  .condition-panel__operator,
+  .condition-grid__operator,
+  .condition-grid__joiner {
+    width: 100%;
+  }
+
+  .condition-grid__hint {
+    grid-column: 1;
+  }
+}

@@ -214,7 +214,7 @@ final class ProductFormulaExpressionValidator {
             if (value == null && identifier.startsWith("option_")) {
                 return "OPTION_VALUE";
             }
-            if (value == null && identifier.startsWith("material_")) {
+            if (value == null && identifier.startsWith("material_") && sampleContext) {
                 return sampleMaterialValue(identifier);
             }
             return value;

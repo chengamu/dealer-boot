@@ -1360,6 +1360,42 @@ SET material_type_code = EXCLUDED.material_type_code,
     update_by = 'system',
     update_time = now();
 
+INSERT INTO pc_base_attribute (
+    attribute_id, tenant_id, attribute_group_code, attribute_group_name_cn,
+    attribute_code, attribute_name_cn, attribute_name_en, value_type, unit_code, extra_json,
+    sort_order, status, del_flag, remark, create_by, create_time, update_by, update_time
+) VALUES
+    (123001, 1, 'FABRIC', '面料', 'THICKNESS', '厚度', 'Thickness', 'NUMBER', 'MM', '{"formulaUsable": true}'::jsonb, 10, 'ENABLED', '0', '配方限制和规则计算常用属性', 'system', '2026-07-03 00:00:00+00', 'system', '2026-07-03 00:00:00+00'),
+    (123002, 1, 'FABRIC', '面料', 'FABRIC_WIDTH', '幅宽', 'Fabric Width', 'NUMBER', 'MM', '{"formulaUsable": true}'::jsonb, 20, 'ENABLED', '0', '面料门幅/幅宽，用于用量和限制规则', 'system', '2026-07-03 00:00:00+00', 'system', '2026-07-03 00:00:00+00'),
+    (123003, 1, 'FABRIC', '面料', 'GSM', '克重', 'GSM', 'NUMBER', 'GSM', '{"formulaUsable": true}'::jsonb, 30, 'ENABLED', '0', '面料克重，用于重量估算和限制规则', 'system', '2026-07-03 00:00:00+00', 'system', '2026-07-03 00:00:00+00'),
+    (123101, 1, 'ALUMINUM', '铝材', 'LENGTH', '长度', 'Length', 'NUMBER', 'MM', '{"formulaUsable": true}'::jsonb, 10, 'ENABLED', '0', '下杆、上杆、罩壳等铝材长度属性', 'system', '2026-07-03 00:00:00+00', 'system', '2026-07-03 00:00:00+00'),
+    (123102, 1, 'ALUMINUM', '铝材', 'WEIGHT', '重量', 'Weight', 'NUMBER', 'KG', '{"formulaUsable": true}'::jsonb, 20, 'ENABLED', '0', '罩壳、下杆、边盖等铝材重量属性', 'system', '2026-07-03 00:00:00+00', 'system', '2026-07-03 00:00:00+00'),
+    (123201, 1, 'SYSTEM', '系统', 'LOAD_CAPACITY', '承重', 'Load Capacity', 'NUMBER', 'KG', '{"formulaUsable": true}'::jsonb, 10, 'ENABLED', '0', '电机、拉珠系统等承重限制属性', 'system', '2026-07-03 00:00:00+00', 'system', '2026-07-03 00:00:00+00'),
+    (123202, 1, 'SYSTEM', '系统', 'CHANNEL_COUNT', '通道数', 'Channel Count', 'NUMBER', NULL, '{"formulaUsable": true}'::jsonb, 20, 'ENABLED', '0', '遥控器、控制器通道数量属性', 'system', '2026-07-03 00:00:00+00', 'system', '2026-07-03 00:00:00+00'),
+    (123203, 1, 'SYSTEM', '系统', 'RATED_POWER', '额定功率', 'Rated Power', 'NUMBER', NULL, '{"formulaUsable": true}'::jsonb, 30, 'ENABLED', '0', '电机功率属性，单位由业务备注或后续单位扩展明确', 'system', '2026-07-03 00:00:00+00', 'system', '2026-07-03 00:00:00+00'),
+    (123301, 1, 'ACCESSORY', '配件', 'LENGTH', '长度', 'Length', 'NUMBER', 'MM', '{"formulaUsable": true}'::jsonb, 10, 'ENABLED', '0', '胶条、安装码、手柄等配件长度属性', 'system', '2026-07-03 00:00:00+00', 'system', '2026-07-03 00:00:00+00'),
+    (123302, 1, 'ACCESSORY', '配件', 'WEIGHT', '重量', 'Weight', 'NUMBER', 'KG', '{"formulaUsable": true}'::jsonb, 20, 'ENABLED', '0', '支架、安装码、手柄等配件重量属性', 'system', '2026-07-03 00:00:00+00', 'system', '2026-07-03 00:00:00+00'),
+    (123401, 1, 'PART_PACK', '零件包', 'WEIGHT', '重量', 'Weight', 'NUMBER', 'KG', '{"formulaUsable": true}'::jsonb, 10, 'ENABLED', '0', '安装包、备件包重量属性', 'system', '2026-07-03 00:00:00+00', 'system', '2026-07-03 00:00:00+00'),
+    (123501, 1, 'PACKAGING', '包装', 'LENGTH', '长度', 'Length', 'NUMBER', 'MM', '{"formulaUsable": true}'::jsonb, 10, 'ENABLED', '0', '纸箱、PET盒等包装长度属性', 'system', '2026-07-03 00:00:00+00', 'system', '2026-07-03 00:00:00+00'),
+    (123502, 1, 'PACKAGING', '包装', 'WIDTH', '宽度', 'Width', 'NUMBER', 'MM', '{"formulaUsable": true}'::jsonb, 20, 'ENABLED', '0', '纸箱、PET盒等包装宽度属性', 'system', '2026-07-03 00:00:00+00', 'system', '2026-07-03 00:00:00+00'),
+    (123503, 1, 'PACKAGING', '包装', 'HEIGHT', '高度', 'Height', 'NUMBER', 'MM', '{"formulaUsable": true}'::jsonb, 30, 'ENABLED', '0', '纸箱、PET盒等包装高度属性', 'system', '2026-07-03 00:00:00+00', 'system', '2026-07-03 00:00:00+00'),
+    (123504, 1, 'PACKAGING', '包装', 'WEIGHT', '重量', 'Weight', 'NUMBER', 'KG', '{"formulaUsable": true}'::jsonb, 40, 'ENABLED', '0', '包装物料重量属性', 'system', '2026-07-03 00:00:00+00', 'system', '2026-07-03 00:00:00+00')
+ON CONFLICT (attribute_id) DO UPDATE
+SET attribute_group_code = EXCLUDED.attribute_group_code,
+    attribute_group_name_cn = EXCLUDED.attribute_group_name_cn,
+    attribute_code = EXCLUDED.attribute_code,
+    attribute_name_cn = EXCLUDED.attribute_name_cn,
+    attribute_name_en = EXCLUDED.attribute_name_en,
+    value_type = EXCLUDED.value_type,
+    unit_code = EXCLUDED.unit_code,
+    extra_json = EXCLUDED.extra_json,
+    sort_order = EXCLUDED.sort_order,
+    status = EXCLUDED.status,
+    del_flag = EXCLUDED.del_flag,
+    remark = EXCLUDED.remark,
+    update_by = 'system',
+    update_time = now();
+
 DELETE FROM pc_product_dict_item
 WHERE dict_type_code LIKE 'engineering\_%' ESCAPE '\'
    OR dict_type_code LIKE 'config\_%' ESCAPE '\';

@@ -9,8 +9,9 @@
 
   <FormulaRestrictionBand
     :restrictions="restrictions"
-    :options="options"
+    :options="conditionOptions"
     :all-option-values="allOptionValues"
+    :option-materials="allOptionMaterials"
     :materials="materials"
     @add-restriction="$emit('add-restriction')"
     @remove-restriction="$emit('remove-restriction', $event)"
@@ -209,6 +210,12 @@ const businessExceptionCount = computed(() => {
   const restrictionIssues = props.restrictions.filter((row) => !row.conditionExpression || !row.actionType).length
   const visibilityIssues = props.options.filter((row) => row.visibilityMode === 'CONDITIONAL' && (!row.visibleConditionOptionCode || !row.visibleConditionValueCode)).length
   return optionIssues + valueIssues + materialIssues + restrictionIssues + visibilityIssues
+})
+const conditionOptions = computed(() => {
+  const visibleOptionIds = new Set(visibleOptionTreeViewNodes.value.filter((node) => node.type === 'option').map((node) => node.id))
+  return optionTreeNodes.value
+    .filter((node) => node.type === 'option' && node.option && visibleOptionIds.has(node.id))
+    .map((node) => node.option!)
 })
 
 function valueHasChildOption(row: ProductFormulaOptionValueVO) {

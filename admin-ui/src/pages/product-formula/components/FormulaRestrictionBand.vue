@@ -58,14 +58,13 @@
         </template>
       </el-table-column>
     </el-table>
-    <FormulaExpressionEditorDialog
+    <FormulaConditionEditorDialog
       v-model="expressionEditorOpen"
       v-model:text="expressionEditorText"
-      target="condition"
       :materials="materials"
       :options="options"
       :option-values="allOptionValues"
-      enable-condition-arithmetic-operators
+      :option-materials="optionMaterials"
       @confirm="confirmExpressionEditor"
     />
   </section>
@@ -76,11 +75,12 @@ import { Plus } from '@element-plus/icons-vue'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 import { ref } from 'vue'
-import FormulaExpressionEditorDialog from './FormulaExpressionEditorDialog.vue'
+import FormulaConditionEditorDialog from './FormulaConditionEditorDialog.vue'
 import { normalizeDisplayExpression } from './formulaExpressionDisplay'
 import { validateConditionExpression } from '../utils/formulaExpression'
 import type {
   ProductFormulaMaterialVO,
+  ProductFormulaOptionMaterialVO,
   ProductFormulaOptionVO,
   ProductFormulaOptionValueVO,
   ProductFormulaRestrictionVO
@@ -90,6 +90,7 @@ const props = defineProps<{
   restrictions: ProductFormulaRestrictionVO[]
   options: ProductFormulaOptionVO[]
   allOptionValues: ProductFormulaOptionValueVO[]
+  optionMaterials: ProductFormulaOptionMaterialVO[]
   materials: ProductFormulaMaterialVO[]
 }>()
 
@@ -126,11 +127,11 @@ function openExpressionEditor(row: ProductFormulaRestrictionVO) {
   expressionEditorOpen.value = true
 }
 
-function confirmExpressionEditor() {
+function confirmExpressionEditor(value?: { text: string; expression: string; valid: boolean }) {
   const row = editingRestriction.value
   if (!row) return
-  const text = expressionEditorText.value.trim()
-  const normalized = normalizeDisplayExpression(text, props.options, props.allOptionValues, props.materials)
+  const text = (value?.text || expressionEditorText.value).trim()
+  const normalized = value?.expression || normalizeDisplayExpression(text, props.options, props.allOptionValues, props.materials)
   const result = validateConditionExpression(normalized)
   if (!result.valid) return
   row.conditionType = 'EXPRESSION'
