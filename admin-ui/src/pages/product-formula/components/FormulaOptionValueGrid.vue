@@ -65,6 +65,7 @@
 import { Plus } from '@element-plus/icons-vue'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
+import { materialValueClientKey, valueClientKey } from '../utils/formulaOptionDraftIdentity'
 import type {
   ProductFormulaOptionMaterialVO,
   ProductFormulaOptionVO,
@@ -92,11 +93,15 @@ const localeStore = useLocaleStore()
 const t = (key: string) => getMessage(key, localeStore.language)
 
 function materialsForValue(row?: ProductFormulaOptionValueVO) {
-  return props.optionMaterials.filter((item) => item.optionCode === row?.optionCode && item.valueCode === row?.valueCode)
+  return props.optionMaterials.filter((item) => (
+    materialValueClientKey(item)
+      ? materialValueClientKey(item) === valueClientKey(row)
+      : item.optionCode === row?.optionCode && item.valueCode === row?.valueCode
+  ))
 }
 
 function optionValueRowClass({ row }: { row: ProductFormulaOptionValueVO }) {
-  return row.valueCode && row.valueCode === props.selectedValueCode ? 'option-value-row--active' : ''
+  return (valueClientKey(row) || row.valueCode) === props.selectedValueCode ? 'option-value-row--active' : ''
 }
 </script>
 

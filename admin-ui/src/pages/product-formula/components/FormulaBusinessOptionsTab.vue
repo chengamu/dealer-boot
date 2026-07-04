@@ -104,6 +104,12 @@ import FormulaRestrictionBand from './FormulaRestrictionBand.vue'
 import { useFormulaOptionSource } from './useFormulaOptionSource'
 import { useFormulaOptionTree } from './useFormulaOptionTree'
 import { useFormulaOptionValueDialogs } from './useFormulaOptionValueDialogs'
+import {
+  optionClientKey,
+  valueClientKey,
+  valueOwnerClientKey,
+  type DraftOption
+} from '../utils/formulaOptionDraftIdentity'
 import type {
   ProductFormulaMaterialVO,
   ProductFormulaOptionMaterialVO,
@@ -113,8 +119,10 @@ import type {
 } from '@/api/product-capability/types'
 
 type ChildOptionPayload = {
+  optionClientKey?: string
   optionCode?: string
   optionNameCn?: string
+  valueClientKey?: string
   valueCode?: string
   valueNameCn?: string
 }
@@ -203,7 +211,7 @@ const {
   materialsForValue
 })
 const businessExceptionCount = computed(() => {
-  const optionIssues = props.options.filter((row) => !row.optionCode || !row.optionNameCn || valuesForOption(row.optionCode).length === 0).length
+  const optionIssues = props.options.filter((row) => !row.optionCode || !row.optionNameCn || valuesForOption(row).length === 0).length
   const valueIssues = props.allOptionValues.filter((row) => !row.valueCode || !row.valueNameCn).length
   const materialIssues = props.allOptionValues.filter((row) => !row.valueCode || (!valueHasChildOption(row) && materialsForValue(row).length === 0)).length
     + props.allOptionMaterials.filter((row) => !row.valueCode || !row.materialCode).length
@@ -221,8 +229,12 @@ const conditionOptions = computed(() => {
 function valueHasChildOption(row: ProductFormulaOptionValueVO) {
   return props.options.some((option) => (
     option.visibilityMode === 'CONDITIONAL'
-    && option.visibleConditionOptionCode === row.optionCode
-    && option.visibleConditionValueCode === row.valueCode
+    && ((option as DraftOption).visibleConditionOptionClientKey
+      ? (option as DraftOption).visibleConditionOptionClientKey === valueOwnerClientKey(row)
+      : option.visibleConditionOptionCode === row.optionCode)
+    && ((option as DraftOption).visibleConditionValueClientKey
+      ? (option as DraftOption).visibleConditionValueClientKey === valueClientKey(row)
+      : option.visibleConditionValueCode === row.valueCode)
   ))
 }
 
@@ -240,7 +252,7 @@ const canMoveSelectedOptionDown = computed(() => (
 ))
 function setDefaultValue(row: ProductFormulaOptionValueVO) {
   props.allOptionValues
-    .filter((item) => item.optionCode === row.optionCode)
+    .filter((item) => (valueOwnerClientKey(item) ? valueOwnerClientKey(item) === valueOwnerClientKey(row) : item.optionCode === row.optionCode))
     .forEach((item) => { item.defaultFlag = item === row })
   if (selectedOption.value) {
     selectedOption.value.defaultValueCode = row.valueCode
@@ -260,16 +272,24 @@ function removeOptionValue(row: ProductFormulaOptionValueVO) {
 function addChildOptionFromValue() {
   if (!selectedOption.value || !selectedValue.value) return
   emit('add-option', {
+    optionClientKey: optionClientKey(selectedOption.value),
     optionCode: selectedOption.value.optionCode,
     optionNameCn: selectedOption.value.optionNameCn,
+    valueClientKey: valueClientKey(selectedValue.value),
     valueCode: selectedValue.value.valueCode,
     valueNameCn: selectedValue.value.valueNameCn
   })
 }
 
 function optionHasChildOption(row?: ProductFormulaOptionVO) {
-  if (!row?.optionCode) return false
-  return props.options.some((option) => option.visibleConditionOptionCode === row.optionCode)
+  if (!row?.optionCode && !optionClientKey(row)) return false
+  const optionKey = optionClientKey(row)
+  const optionCode = row?.optionCode
+  return props.options.some((option) => (
+    (option as DraftOption).visibleConditionOptionClientKey
+      ? (option as DraftOption).visibleConditionOptionClientKey === optionKey
+      : option.visibleConditionOptionCode === optionCode
+  ))
 }
 
 function optionReferenced(row?: ProductFormulaOptionVO) {
@@ -297,7 +317,7 @@ function expressionReferencesOption(expression: unknown, option: ProductFormulaO
 }
 
 function expressionReferencesOptionValue(expression: unknown, row: ProductFormulaOptionValueVO) {
-  const option = props.options.find((item) => item.optionCode === row.optionCode)
+  const option = props.options.find((item) => optionClientKey(item) === valueOwnerClientKey(row) || item.optionCode === row.optionCode)
   if (!option || !expressionReferencesOption(expression, option)) return false
   const text = String(expression || '')
   return [row.valueCode, row.valueNameCn, row.valueNameEn].some((value) => value && text.includes(value))
@@ -307,8 +327,8 @@ function optionVariableName(optionCode?: string) {
   return optionCode === 'FABRIC' ? 'fabric' : `option_${optionCode || ''}`
 }
 
-const siblingValues = computed(() => selectedOption.value?.optionCode ? valuesForOption(selectedOption.value.optionCode) : [])
-const currentValueIndex = computed(() => siblingValues.value.findIndex((row) => row.valueCode === selectedValue.value?.valueCode))
+const siblingValues = computed(() => selectedOption.value ? valuesForOption(selectedOption.value) : [])
+const currentValueIndex = computed(() => siblingValues.value.findIndex((row) => valueClientKey(row) === valueClientKey(selectedValue.value)))
 
 function moveSelectedTreeNode(direction: 'UP' | 'DOWN') {
   if (selectedNode.value?.type === 'value') {
@@ -322,7 +342,7 @@ function moveSelectedOption(direction: 'UP' | 'DOWN') {
   const option = selectedOption.value
   if (selectedNode.value?.type !== 'option' || !option?.optionCode) return
   const siblings = siblingOptionsFor(option)
-  const currentIndex = siblings.findIndex((row) => row.optionCode === option.optionCode)
+  const currentIndex = siblings.findIndex((row) => optionClientKey(row) === optionClientKey(option))
   const targetIndex = direction === 'UP' ? currentIndex - 1 : currentIndex + 1
   if (currentIndex < 0 || targetIndex < 0 || targetIndex >= siblings.length) return
   const [row] = siblings.splice(currentIndex, 1)
@@ -333,8 +353,8 @@ function moveSelectedOption(direction: 'UP' | 'DOWN') {
 function moveSelectedValue(direction: 'UP' | 'DOWN') {
   const value = selectedValue.value
   if (!value?.optionCode || !value.valueCode) return
-  const siblings = valuesForOption(value.optionCode)
-  const currentIndex = siblings.findIndex((row) => row.valueCode === value.valueCode)
+  const siblings = valuesForOption(valueOwnerClientKey(value) || value.optionCode)
+  const currentIndex = siblings.findIndex((row) => valueClientKey(row) === valueClientKey(value))
   const targetIndex = direction === 'UP' ? currentIndex - 1 : currentIndex + 1
   if (currentIndex < 0 || targetIndex < 0 || targetIndex >= siblings.length) return
   const [row] = siblings.splice(currentIndex, 1)
@@ -352,7 +372,7 @@ function removeSelectedTreeNode() {
       ElMessage.warning(t('productCenter.formulaSetup.optionReferencedRemoveDenied'))
       return
     }
-    const index = props.options.findIndex((row) => row.optionCode === props.selectedOptionCode)
+    const index = props.options.findIndex((row) => optionClientKey(row) === props.selectedOptionCode || row.optionCode === props.selectedOptionCode)
     if (index >= 0) emit('remove-option', index)
   }
 }

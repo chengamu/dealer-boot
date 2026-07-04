@@ -1569,8 +1569,11 @@ defineExpose({
   }
 }
 
+.product-grid-page__search[data-agent-entity='category'],
 .product-grid-page__search[data-agent-entity='unit'],
-.product-grid-page__search[data-agent-entity='material'] {
+.product-grid-page__search[data-agent-entity='material'],
+.product-grid-page__search[data-agent-entity='manufacturer'],
+.product-grid-page__search[data-agent-entity='baseAttribute'] {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
@@ -1627,8 +1630,11 @@ defineExpose({
   }
 }
 
+.product-grid-page__toolbar[data-agent-entity='category'],
 .product-grid-page__toolbar[data-agent-entity='unit'],
-.product-grid-page__toolbar[data-agent-entity='material'] {
+.product-grid-page__toolbar[data-agent-entity='material'],
+.product-grid-page__toolbar[data-agent-entity='manufacturer'],
+.product-grid-page__toolbar[data-agent-entity='baseAttribute'] {
   align-items: center;
   min-height: 36px;
   margin-bottom: 8px;
@@ -1736,8 +1742,11 @@ defineExpose({
   }
 }
 
+.product-grid-page__table[data-agent-entity='category'],
 .product-grid-page__table[data-agent-entity='unit'],
-.product-grid-page__table[data-agent-entity='material'] {
+.product-grid-page__table[data-agent-entity='material'],
+.product-grid-page__table[data-agent-entity='manufacturer'],
+.product-grid-page__table[data-agent-entity='baseAttribute'] {
   :deep(.el-table__inner-wrapper::before),
   :deep(.el-table__border-left-patch),
   :deep(.el-table__border-bottom-patch) {
@@ -1785,7 +1794,9 @@ defineExpose({
 }
 
 .product-grid-page__pagination--unit,
-.product-grid-page__pagination--material {
+.product-grid-page__pagination--material,
+.product-grid-page__pagination--manufacturer,
+.product-grid-page__pagination--baseAttribute {
   border-color: #eef0f5 !important;
   box-shadow: none !important;
 }

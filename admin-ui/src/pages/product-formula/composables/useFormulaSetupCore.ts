@@ -8,6 +8,7 @@ import useUserStore from '@/stores/user'
 import { FORMULA_STATUS, PRODUCT_STATUS_ENABLED, formulaStatusText } from '@/constants/productStatus'
 import { localizedRecordLabel } from '@/utils/productLabels'
 import { useFormulaSetupDraftCache } from './useFormulaSetupDraftCache'
+import { buildFormulaOptionPayload, normalizeFormulaOptionDraftState, optionClientKey } from '../utils/formulaOptionDraftIdentity'
 import type {
   ProductFormulaMaterialVO,
   ProductFormulaOptionMaterialVO,
@@ -70,7 +71,8 @@ export function useFormulaSetupCore(props: { setupSection?: 'content' | 'options
     setup,
     tenantId: () => String(userStore.user?.tenantId || 'default'),
     userId: () => String(userStore.id || userStore.user?.userId || 'anonymous'),
-    t
+    t,
+    normalize: () => normalizeFormulaOptionDraftState(setup)
   })
 
   const draftVersionLabel = computed(() => `V${formula.value.draftVersionNo || 1} ${t('productCenter.formula.status.draft')}`)
@@ -175,8 +177,10 @@ export function useFormulaSetupCore(props: { setupSection?: 'content' | 'options
       setup.usageRules = response.data?.usageRules || []
       setup.variables = response.data?.variables || []
       setup.variableRules = response.data?.variableRules || []
-      selectedOptionCode.value = setup.options[0]?.optionCode || ''
+      normalizeFormulaOptionDraftState(setup)
+      selectedOptionCode.value = optionClientKey(setup.options[0]) || setup.options[0]?.optionCode || ''
       await draftCache.afterSetupLoaded()
+      selectedOptionCode.value = optionClientKey(setup.options.find((row) => optionClientKey(row) === selectedOptionCode.value) || setup.options[0]) || setup.options[0]?.optionCode || ''
     } finally {
       if (loadSeq === setupLoadSeq) loading.value = false
     }
@@ -221,7 +225,8 @@ export function useFormulaSetupCore(props: { setupSection?: 'content' | 'options
   }
 
   function buildPayload(): ProductFormulaSetupVO {
-    return { materials: setup.materials, options: setup.options, optionValues: setup.optionValues, optionMaterials: setup.optionMaterials, restrictions: setup.restrictions, usageRules: setup.usageRules.map(withoutUsageRuleLossRate), variables: setup.variables, variableRules: setup.variableRules }
+    const payload = { materials: setup.materials, options: setup.options, optionValues: setup.optionValues, optionMaterials: setup.optionMaterials, restrictions: setup.restrictions, usageRules: setup.usageRules.map(withoutUsageRuleLossRate), variables: setup.variables, variableRules: setup.variableRules }
+    return activeTab.value === 'options' ? buildFormulaOptionPayload(payload) : payload
   }
 
   function withoutUsageRuleLossRate(row: ProductFormulaUsageRuleVO): ProductFormulaUsageRuleVO {

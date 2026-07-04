@@ -2,6 +2,19 @@ import { computed, type Ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { PRODUCT_STATUS_DISABLED, PRODUCT_STATUS_ENABLED, formulaStatusTagType, formulaStatusText, formulaValidationStatusText, formulaValidationTagType } from '@/constants/productStatus'
 import { formatUsageNumber } from '../utils/formulaExpression'
+import {
+  createDraftClientKey,
+  materialOwnerClientKey,
+  materialValueClientKey,
+  nextOptionCode,
+  nextValueCode,
+  optionClientKey,
+  valueClientKey,
+  valueOwnerClientKey,
+  type DraftOption,
+  type DraftOptionMaterial,
+  type DraftOptionValue
+} from '../utils/formulaOptionDraftIdentity'
 import type {
   ProductFormulaMaterialVO,
   ProductFormulaOptionMaterialVO,
@@ -31,8 +44,8 @@ type SetupOperationContext = {
 }
 
 export function useFormulaSetupOperations(ctx: SetupOperationContext) {
-  const selectedValues = computed(() => ctx.setup.optionValues.filter((row) => row.optionCode === ctx.selectedOptionCode.value))
-  const selectedOptionMaterials = computed(() => ctx.setup.optionMaterials.filter((row) => row.optionCode === ctx.selectedOptionCode.value))
+  const selectedValues = computed(() => ctx.setup.optionValues.filter((row) => valueBelongsToSelectedOption(row)))
+  const selectedOptionMaterials = computed(() => ctx.setup.optionMaterials.filter((row) => materialBelongsToSelectedOption(row)))
   const unsetUsageCount = computed(() => ctx.setup.materials.filter((row) => isUsageUnset(row)).length)
   function appendSelectedMaterials(selectedMaterials: ProductMaterialVO[]) {
     const existing = new Set(ctx.setup.materials.map((row) => row.materialCode))
@@ -78,10 +91,12 @@ export function useFormulaSetupOperations(ctx: SetupOperationContext) {
     while (used.has(next)) next += 1
     return next
   }
-  function addOptionRow(parent?: { optionCode?: string; optionNameCn?: string; valueCode?: string; valueNameCn?: string }) {
+  function addOptionRow(parent?: { optionClientKey?: string; optionCode?: string; optionNameCn?: string; valueClientKey?: string; valueCode?: string; valueNameCn?: string }) {
+    const code = nextOptionCode(ctx.setup.options)
     const next = ctx.setup.options.length + 1
-    const code = `OPTION_${next}`
+    const clientKey = createDraftClientKey('option')
     ctx.setup.options.push({
+      clientKey,
       optionCode: code,
       optionNameCn: `${ctx.t('productCenter.formulaSetup.optionName')} ${next}`,
       optionNameEn: '',
@@ -90,38 +105,49 @@ export function useFormulaSetupOperations(ctx: SetupOperationContext) {
       requiredFlag: true,
       businessVisibleFlag: true,
       visibilityMode: parent ? 'CONDITIONAL' : 'ALWAYS',
+      visibleConditionOptionClientKey: parent?.optionClientKey || '',
       visibleConditionOptionCode: parent?.optionCode || '',
       visibleConditionOptionNameCn: parent?.optionNameCn || '',
+      visibleConditionValueClientKey: parent?.valueClientKey || '',
       visibleConditionValueCode: parent?.valueCode || '',
       visibleConditionValueNameCn: parent?.valueNameCn || '',
       status: PRODUCT_STATUS_ENABLED,
       sortOrder: next * 10
-    })
-    ctx.selectedOptionCode.value = code
+    } as DraftOption)
+    ctx.selectedOptionCode.value = clientKey
   }
   function addOptionValueRow() {
-    if (!ctx.selectedOptionCode.value) return
+    const option = selectedOption()
+    if (!option) return
     const next = selectedValues.value.length + 1
+    const optionKey = optionClientKey(option)
+    const clientKey = createDraftClientKey('value')
     ctx.setup.optionValues.push({
-      optionCode: ctx.selectedOptionCode.value,
-      valueCode: `VALUE_${next}`,
+      clientKey,
+      optionClientKey: optionKey,
+      optionCode: option.optionCode,
+      valueCode: nextValueCode(ctx.setup.optionValues, optionKey),
       valueNameCn: '',
       valueNameEn: '',
       defaultFlag: false,
       status: PRODUCT_STATUS_ENABLED,
       sortOrder: ctx.setup.optionValues.length * 10 + 10
-    })
+    } as DraftOptionValue)
   }
   function addOptionMaterialRow(valueCode?: string) {
-    if (!ctx.selectedOptionCode.value) return
+    const option = selectedOption()
+    if (!option) return
+    const value = valueCode ? selectedValues.value.find((row) => row.valueCode === valueCode) : selectedValues.value[0]
     ctx.setup.optionMaterials.push({
-      optionCode: ctx.selectedOptionCode.value,
-      valueCode: valueCode || selectedValues.value[0]?.valueCode,
+      optionClientKey: optionClientKey(option),
+      valueClientKey: valueClientKey(value),
+      optionCode: option.optionCode,
+      valueCode: valueCode || value?.valueCode,
       requiredFlag: true,
       defaultFlag: true,
       status: PRODUCT_STATUS_ENABLED,
       sortOrder: ctx.setup.optionMaterials.length * 10 + 10
-    })
+    } as DraftOptionMaterial)
   }
   function addRestrictionRow() {
     ctx.setup.restrictions.push({
@@ -139,17 +165,18 @@ export function useFormulaSetupOperations(ctx: SetupOperationContext) {
   function removeOption(index: number) {
     const option = ctx.setup.options[index]
     const optionCode = option?.optionCode
+    const optionKey = optionClientKey(option)
     if (isOptionReferenced(option)) {
       ElMessage.warning(ctx.t('productCenter.formulaSetup.optionReferencedRemoveDenied'))
       return
     }
     removeRow(ctx.setup.options, index)
-    ctx.setup.optionValues = ctx.setup.optionValues.filter((row) => row.optionCode !== optionCode)
-    ctx.setup.optionMaterials = ctx.setup.optionMaterials.filter((row) => row.optionCode !== optionCode)
+    ctx.setup.optionValues = ctx.setup.optionValues.filter((row) => !sameOptionRef(row, optionKey, optionCode))
+    ctx.setup.optionMaterials = ctx.setup.optionMaterials.filter((row) => !sameOptionRef(row, optionKey, optionCode))
     ctx.setup.options.forEach((row) => {
-      if (row.visibleConditionOptionCode === optionCode) clearVisibilityCondition(row)
+      if (sameOptionVisibilityRef(row, optionKey, optionCode)) clearVisibilityCondition(row)
     })
-    if (ctx.selectedOptionCode.value === optionCode) ctx.selectedOptionCode.value = ctx.setup.options[0]?.optionCode || ''
+    if (ctx.selectedOptionCode.value === optionKey || ctx.selectedOptionCode.value === optionCode) ctx.selectedOptionCode.value = optionClientKey(ctx.setup.options[0]) || ctx.setup.options[0]?.optionCode || ''
   }
   function removeSelectedValue(index: number) {
     const row = selectedValues.value[index]
@@ -159,9 +186,9 @@ export function useFormulaSetupOperations(ctx: SetupOperationContext) {
       return
     }
     removeRow(ctx.setup.optionValues, ctx.setup.optionValues.indexOf(row))
-    ctx.setup.optionMaterials = ctx.setup.optionMaterials.filter((item) => !(item.optionCode === row.optionCode && item.valueCode === row.valueCode))
+    ctx.setup.optionMaterials = ctx.setup.optionMaterials.filter((item) => !sameValueRef(item, row))
     ctx.setup.options.forEach((option) => {
-      if (option.visibleConditionOptionCode === row.optionCode && option.visibleConditionValueCode === row.valueCode) clearVisibilityCondition(option)
+      if (sameOptionValueVisibilityRef(option, row)) clearVisibilityCondition(option)
     })
   }
   function removeSelectedOptionMaterial(index: number) {
@@ -192,16 +219,20 @@ export function useFormulaSetupOperations(ctx: SetupOperationContext) {
   }
   function isOptionReferenced(option?: ProductFormulaOptionVO) {
     if (!option?.optionCode) return false
+    const optionKey = optionClientKey(option)
     return ctx.setup.options.some((row) => row.visibleConditionOptionCode === option.optionCode)
+      || ctx.setup.options.some((row) => (row as DraftOption).visibleConditionOptionClientKey === optionKey)
       || ctx.setup.restrictions.some((row) => row.targetOptionCode === option.optionCode || expressionReferencesOption(row.conditionExpression || row.conditionText, option))
       || ctx.setup.usageRules.some((row) => row.conditionOptionCode === option.optionCode || expressionReferencesOption(row.conditionExpression || row.conditionText, option))
       || ctx.setup.variableRules.some((row) => expressionReferencesOption(row.conditionExpression || row.conditionText, option))
   }
   function isOptionValueReferenced(row?: ProductFormulaOptionValueVO) {
     if (!row?.optionCode || !row.valueCode) return false
+    const rowKey = valueClientKey(row)
     return ctx.setup.options.some((option) => (
-      (option.visibleConditionOptionCode === row.optionCode && option.visibleConditionValueCode === row.valueCode)
+      sameOptionValueVisibilityRef(option, row)
       || (option.optionCode === row.optionCode && option.defaultValueCode === row.valueCode)
+      || ((option as DraftOption).visibleConditionValueClientKey && (option as DraftOption).visibleConditionValueClientKey === rowKey)
     ))
       || ctx.setup.restrictions.some((restriction) => (
         (restriction.targetOptionCode === row.optionCode && restriction.targetValueCode === row.valueCode)
@@ -214,10 +245,10 @@ export function useFormulaSetupOperations(ctx: SetupOperationContext) {
       || ctx.setup.variableRules.some((rule) => expressionReferencesOptionValue(rule.conditionExpression || rule.conditionText, row))
   }
   function handleOptionChange(row?: ProductFormulaOptionVO) {
-    if (row?.optionCode) ctx.selectedOptionCode.value = row.optionCode
+    if (row) ctx.selectedOptionCode.value = optionClientKey(row) || row.optionCode || ''
   }
   function moveOption(optionCode: string, direction: 'UP' | 'DOWN') {
-    const currentIndex = ctx.setup.options.findIndex((row) => row.optionCode === optionCode)
+    const currentIndex = ctx.setup.options.findIndex((row) => optionClientKey(row) === optionCode || row.optionCode === optionCode)
     const targetIndex = direction === 'UP' ? currentIndex - 1 : currentIndex + 1
     if (currentIndex < 0 || targetIndex < 0 || targetIndex >= ctx.setup.options.length) return
     const [row] = ctx.setup.options.splice(currentIndex, 1)
@@ -305,7 +336,7 @@ export function useFormulaSetupOperations(ctx: SetupOperationContext) {
   function formatNumber(value?: number | string) { const numericValue = Number(value); return Number.isFinite(numericValue) ? numericValue.toFixed(2) : '-' }
   function formatMinute(value?: string) { return value ? value.replace('T', ' ').slice(0, 16) : '-' }
   function removeRow<T>(rows: T[], index: number) { if (index >= 0) rows.splice(index, 1) }
-  function clearVisibilityCondition(row: ProductFormulaOptionVO) { row.visibilityMode = 'ALWAYS'; row.visibleConditionOptionCode = ''; row.visibleConditionOptionNameCn = ''; row.visibleConditionValueCode = ''; row.visibleConditionValueNameCn = '' }
+  function clearVisibilityCondition(row: ProductFormulaOptionVO) { row.visibilityMode = 'ALWAYS'; (row as DraftOption).visibleConditionOptionClientKey = ''; row.visibleConditionOptionCode = ''; row.visibleConditionOptionNameCn = ''; (row as DraftOption).visibleConditionValueClientKey = ''; row.visibleConditionValueCode = ''; row.visibleConditionValueNameCn = '' }
   function usageRulesFor(row: ProductFormulaMaterialVO) { return ctx.setup.usageRules.filter((rule) => rule.materialCode === row.materialCode) }
   function hasAnyUsageFormula(row: ProductFormulaUsageRuleVO | ProductFormulaMaterialVO) { return Boolean(row.lengthFormula || row.widthFormula || row.heightFormula || row.weightFormula || row.usageFormula) }
   function appendUsageFormulaPart(parts: string[], label: string, value?: string) { if (value) parts.push(`${label} ${value}`) }
@@ -324,6 +355,38 @@ export function useFormulaSetupOperations(ctx: SetupOperationContext) {
     return [row.valueCode, row.valueNameCn, row.valueNameEn].some((value) => value && text.includes(value))
   }
   function optionVariableName(optionCode?: string) { return optionCode === 'FABRIC' ? 'fabric' : `option_${optionCode || ''}` }
+  function selectedOption() {
+    return ctx.setup.options.find((row) => optionClientKey(row) === ctx.selectedOptionCode.value || row.optionCode === ctx.selectedOptionCode.value)
+  }
+  function valueBelongsToSelectedOption(row: ProductFormulaOptionValueVO) {
+    const option = selectedOption()
+    if (!option) return false
+    return sameOptionRef(row, optionClientKey(option), option.optionCode)
+  }
+  function materialBelongsToSelectedOption(row: ProductFormulaOptionMaterialVO) {
+    const option = selectedOption()
+    if (!option) return false
+    return sameOptionRef(row, optionClientKey(option), option.optionCode)
+  }
+  function sameOptionRef(row: ProductFormulaOptionValueVO | ProductFormulaOptionMaterialVO, optionKey?: string, optionCode?: string) {
+    const rowKey = valueOwnerClientKey(row as ProductFormulaOptionValueVO) || materialOwnerClientKey(row as ProductFormulaOptionMaterialVO)
+    return rowKey ? rowKey === optionKey : row.optionCode === optionCode
+  }
+  function sameValueRef(row: ProductFormulaOptionMaterialVO, value: ProductFormulaOptionValueVO) {
+    return materialValueClientKey(row)
+      ? materialValueClientKey(row) === valueClientKey(value)
+      : row.optionCode === value.optionCode && row.valueCode === value.valueCode
+  }
+  function sameOptionVisibilityRef(row: ProductFormulaOptionVO, optionKey?: string, optionCode?: string) {
+    const draft = row as DraftOption
+    return draft.visibleConditionOptionClientKey ? draft.visibleConditionOptionClientKey === optionKey : row.visibleConditionOptionCode === optionCode
+  }
+  function sameOptionValueVisibilityRef(option: ProductFormulaOptionVO, value: ProductFormulaOptionValueVO) {
+    const draft = option as DraftOption
+    return draft.visibleConditionValueClientKey
+      ? draft.visibleConditionValueClientKey === valueClientKey(value)
+      : option.visibleConditionOptionCode === value.optionCode && option.visibleConditionValueCode === value.valueCode
+  }
   return {
     selectedValues, selectedOptionMaterials, unsetUsageCount, appendSelectedMaterials, addOptionRow, addOptionValueRow,
     addOptionMaterialRow, addRestrictionRow, removeOption, removeSelectedValue, removeSelectedOptionMaterial, removeMaterial,

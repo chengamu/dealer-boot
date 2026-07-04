@@ -1,6 +1,15 @@
 import { computed, ref, type Ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { PRODUCT_STATUS_ENABLED } from '@/constants/productStatus'
+import {
+  materialOwnerClientKey,
+  materialValueClientKey,
+  optionClientKey,
+  valueClientKey,
+  valueOwnerClientKey,
+  type DraftOptionMaterial,
+  type DraftOptionValue
+} from '../utils/formulaOptionDraftIdentity'
 import type { ProductFormulaMaterialVO, ProductFormulaOptionMaterialVO, ProductFormulaOptionVO, ProductFormulaOptionValueVO } from '@/api/product-capability/types'
 
 type ValueDialogProps = {
@@ -33,7 +42,7 @@ export function useFormulaOptionValueDialogs(props: ValueDialogProps, options: U
   const valueMaterialOpen = ref(false)
   const valueMaterialCodes = ref<string[]>([])
   const selectedValueCodes = computed(() => new Set(props.optionValues
-    .filter((row) => row.optionCode === options.selectedOption.value?.optionCode)
+    .filter((row) => valueOwnerClientKey(row) === optionClientKey(options.selectedOption.value) || (!valueOwnerClientKey(row) && row.optionCode === options.selectedOption.value?.optionCode))
     .map((row) => row.valueCode || '')
     .filter(Boolean)))
   const sourceMaterials = computed(() => {
@@ -65,10 +74,16 @@ export function useFormulaOptionValueDialogs(props: ValueDialogProps, options: U
   function appendImportedMaterialValues() {
     const option = options.selectedOption.value
     if (!option) return
-    const existingValues = new Set(props.allOptionValues.filter((row) => row.optionCode === option.optionCode).map((row) => row.valueCode))
+    const optionKey = optionClientKey(option)
+    const existingValues = new Set(props.allOptionValues
+      .filter((row) => valueOwnerClientKey(row) === optionKey || (!valueOwnerClientKey(row) && row.optionCode === option.optionCode))
+      .map((row) => row.valueCode))
     importMaterialRows.value.forEach((material) => {
       if (!material?.materialCode || existingValues.has(material.materialCode)) return
+      const valueKey = `material-value-${optionKey}-${material.materialCode}`
       props.allOptionValues.push({
+        clientKey: valueKey,
+        optionClientKey: optionKey,
         optionCode: option.optionCode,
         valueCode: material.materialCode,
         valueNameCn: material.materialNameCn,
@@ -76,8 +91,10 @@ export function useFormulaOptionValueDialogs(props: ValueDialogProps, options: U
         defaultFlag: false,
         status: PRODUCT_STATUS_ENABLED,
         sortOrder: props.allOptionValues.length * 10 + 10
-      })
+      } as DraftOptionValue)
       props.allOptionMaterials.push({
+        optionClientKey: optionKey,
+        valueClientKey: valueKey,
         optionCode: option.optionCode,
         valueCode: material.materialCode,
         formulaMaterialId: material.formulaMaterialId,
@@ -88,8 +105,8 @@ export function useFormulaOptionValueDialogs(props: ValueDialogProps, options: U
         defaultFlag: true,
         status: PRODUCT_STATUS_ENABLED,
         sortOrder: props.allOptionMaterials.length * 10 + 10
-      })
-      options.selectedValueCode.value = material.materialCode
+      } as DraftOptionMaterial)
+      options.selectedValueCode.value = valueKey
     })
     importMaterialRows.value = []
     valueImportOpen.value = false
@@ -111,9 +128,14 @@ export function useFormulaOptionValueDialogs(props: ValueDialogProps, options: U
     const option = options.selectedOption.value
     const value = options.selectedValue.value
     if (!option?.optionCode || !value?.valueCode) return
+    const optionKey = optionClientKey(option)
+    const valueKey = valueClientKey(value)
     for (let index = props.allOptionMaterials.length - 1; index >= 0; index -= 1) {
       const row = props.allOptionMaterials[index]
-      if (row.optionCode === option.optionCode && row.valueCode === value.valueCode) {
+      const matched = materialValueClientKey(row)
+        ? materialValueClientKey(row) === valueKey
+        : row.optionCode === option.optionCode && row.valueCode === value.valueCode
+      if (matched) {
         props.allOptionMaterials.splice(index, 1)
       }
     }
@@ -121,6 +143,8 @@ export function useFormulaOptionValueDialogs(props: ValueDialogProps, options: U
       const material = props.materials.find((row) => row.materialCode === code)
       if (!material?.materialCode) return
       props.allOptionMaterials.push({
+        optionClientKey: optionKey,
+        valueClientKey: valueKey,
         optionCode: option.optionCode,
         valueCode: value.valueCode,
         formulaMaterialId: material.formulaMaterialId,
@@ -128,10 +152,14 @@ export function useFormulaOptionValueDialogs(props: ValueDialogProps, options: U
         materialCode: material.materialCode,
         materialNameCn: material.materialNameCn,
         requiredFlag: true,
-        defaultFlag: props.allOptionMaterials.filter((row) => row.optionCode === option.optionCode && row.valueCode === value.valueCode).length === 0,
+        defaultFlag: props.allOptionMaterials.filter((row) => {
+          if (materialValueClientKey(row)) return materialValueClientKey(row) === valueKey
+          if (materialOwnerClientKey(row)) return materialOwnerClientKey(row) === optionKey && row.valueCode === value.valueCode
+          return row.optionCode === option.optionCode && row.valueCode === value.valueCode
+        }).length === 0,
         status: PRODUCT_STATUS_ENABLED,
         sortOrder: props.allOptionMaterials.length * 10 + 10
-      })
+      } as DraftOptionMaterial)
     })
     valueMaterialOpen.value = false
   }

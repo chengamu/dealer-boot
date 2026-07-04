@@ -599,51 +599,86 @@ onBeforeUnmount(() => {
 .material-type-page {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
 .material-type-page__search-bar {
   display: grid;
-  grid-template-columns: minmax(480px, 560px) minmax(0, 1fr);
-  gap: 12px;
-  padding: 12px 12px 4px;
-  border: 1px solid var(--el-border-color-lighter);
+  grid-template-columns: minmax(360px, 1fr) minmax(360px, 1fr);
+  gap: 10px;
+  padding: 10px 12px 2px;
+  border: 1px solid #eef0f5;
   border-radius: 8px;
-  background: var(--el-bg-color);
+  background: #ffffff;
   align-items: start;
 }
 
 .material-type-page__grids {
   display: grid;
   grid-template-columns: minmax(480px, 560px) minmax(0, 1fr);
-  gap: 12px;
+  gap: 10px;
+  align-items: stretch;
 }
 
 .material-type-page__pane {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  background: var(--el-bg-color);
-  border: 1px solid var(--el-border-color-lighter);
+  min-height: 420px;
+  background: #ffffff;
+  border: 1px solid #e9edf5;
   border-radius: 8px;
-  padding: 12px;
+  padding: 10px 12px;
 }
 
 .material-type-page__search {
   display: flex;
   flex-wrap: nowrap;
-  align-items: flex-start;
+  align-items: center;
   margin-bottom: 0;
   min-width: 0;
 
   :deep(.el-form-item) {
-    margin-right: 8px;
+    margin-right: 12px;
     margin-bottom: 8px;
+  }
+
+  :deep(.el-form-item:last-child) {
+    margin-right: 0;
+    margin-left: auto;
+  }
+
+  :deep(.el-form-item__label) {
+    padding-right: 6px;
   }
 
   :deep(.el-input),
   :deep(.el-select) {
     width: 168px;
+  }
+
+  :deep(.el-input__wrapper),
+  :deep(.el-select__wrapper) {
+    min-height: 32px;
+  }
+
+  :deep(.el-button) {
+    height: 32px;
+    padding: 0 12px;
+    border-radius: 6px;
+  }
+
+  :deep(.el-button:not(.el-button--primary)) {
+    border-color: #d9e0ea;
+    color: #475467;
+    background: #ffffff;
+
+    &:hover,
+    &:focus {
+      border-color: #c7d0dd;
+      color: #344054;
+      background: #f8fafc;
+    }
   }
 }
 
@@ -652,7 +687,8 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 10px;
+  min-height: 36px;
+  margin-bottom: 8px;
 }
 
 .material-type-page__title {
@@ -662,12 +698,13 @@ onBeforeUnmount(() => {
   min-width: 120px;
 
   strong {
-    color: var(--el-text-color-primary);
-    font-size: 16px;
+    color: #1d2129;
+    font-size: 15px;
+    font-weight: 600;
   }
 
   span {
-    color: var(--el-text-color-secondary);
+    color: #98a2b3;
     font-size: 13px;
     line-height: 1.4;
   }
@@ -678,17 +715,109 @@ onBeforeUnmount(() => {
   flex-wrap: nowrap;
   justify-content: flex-end;
   gap: 8px;
+
+  :deep(.el-button) {
+    height: 32px;
+    padding: 0 12px;
+    border-radius: 6px;
+  }
+
+  :deep(.el-button--primary.is-plain) {
+    border-color: #1677ff;
+    background: #1677ff;
+    color: #ffffff;
+
+    &:hover,
+    &:focus {
+      border-color: #0958d9;
+      background: #0958d9;
+      color: #ffffff;
+    }
+  }
+
+  :deep(.el-button--success.is-plain) {
+    border-color: #b8d2ff;
+    color: #1677ff;
+    background: #f8fbff;
+
+    &:hover,
+    &:focus {
+      border-color: #8bb8ff;
+      color: #0958d9;
+      background: #eef5ff;
+    }
+  }
+
+  :deep(.el-button--danger.is-plain) {
+    border-color: #ffd6d9;
+    color: #dc3545;
+    background: #fffafa;
+
+    &:hover,
+    &:focus {
+      border-color: #ffb8bf;
+      color: #c92a3a;
+      background: #fff1f2;
+    }
+  }
+
+  :deep(.el-button--info.is-plain) {
+    border-color: #d9e0ea;
+    color: #475467;
+    background: #ffffff;
+
+    &:hover,
+    &:focus {
+      border-color: #c7d0dd;
+      color: #344054;
+      background: #f8fafc;
+    }
+  }
+
+  :deep(.el-button.is-disabled),
+  :deep(.el-button.is-disabled:hover),
+  :deep(.el-button.is-disabled:focus) {
+    border-color: #eef0f5;
+    color: #b8c2d3;
+    background: #f8fafc;
+  }
 }
 
 .material-type-page__table {
+  flex: 1;
   width: 100%;
+
+  :deep(.el-table__inner-wrapper::before),
+  :deep(.el-table__border-left-patch),
+  :deep(.el-table__border-bottom-patch) {
+    background-color: #eef0f5;
+  }
+
+  :deep(.el-table__header th) {
+    background: #f7f9fc;
+    color: #344054;
+    font-weight: 600;
+  }
+
+  :deep(th.el-table__cell),
+  :deep(td.el-table__cell) {
+    border-color: #eef0f5;
+  }
 
   :deep(.el-table__body tr) {
     cursor: pointer;
   }
 
+  :deep(.el-table__body tr:hover > td.el-table__cell) {
+    background: #f8fbff;
+  }
+
   :deep(.el-table__cell) {
-    padding: 10px 0;
+    padding: 8px 0;
+  }
+
+  :deep(.el-switch) {
+    vertical-align: middle;
   }
 }
 

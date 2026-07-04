@@ -19,6 +19,7 @@ interface FormulaSetupDraftCacheOptions {
   tenantId: () => string
   userId: () => string
   t: (key: string) => string
+  normalize?: () => void
 }
 
 interface DraftContext {
@@ -152,6 +153,7 @@ export function useFormulaSetupDraftCache(options: FormulaSetupDraftCacheOptions
     const stale = isServerNewer(draft, activeContext.serverUpdateTime)
     if (!stale && isRestoredDraft(draft)) {
       applyDraft(draft)
+      options.normalize?.()
       hasPendingDraft.value = true
       cacheStatus.value = `${options.t('productCenter.formulaSetupDraft.restored')} ${formatTime(draft.savedAt)}`
       return
@@ -169,6 +171,7 @@ export function useFormulaSetupDraftCache(options: FormulaSetupDraftCacheOptions
         type: stale ? 'warning' : 'info'
       })
       applyDraft(draft)
+      options.normalize?.()
       markRestoredDraft(draft.draftKey, draft.savedAt)
       hasPendingDraft.value = true
       cacheStatus.value = `${options.t('productCenter.formulaSetupDraft.restored')} ${formatTime(draft.savedAt)}`
