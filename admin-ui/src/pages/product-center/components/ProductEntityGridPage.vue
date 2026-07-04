@@ -52,37 +52,37 @@
 
     <el-row :gutter="10" class="mb8 product-grid-page__toolbar" data-agent-scope="product-base-toolbar" :data-agent-entity="config.key">
       <el-col :span="1.5">
-        <el-button v-if="!config.readonly" type="primary" plain icon="Plus" :aria-label="t('common.add')" :data-agent-label="t('common.add')" @click="handleAdd()" v-hasPermi="[config.permissions.add]">
+        <el-button v-if="!config.readonly" type="primary" plain icon="Plus" class="product-grid-page__toolbar-button product-grid-page__toolbar-button--add" :aria-label="t('common.add')" :data-agent-label="t('common.add')" @click="handleAdd()" v-hasPermi="[config.permissions.add]">
           {{ t('common.add') }}
         </el-button>
       </el-col>
       <el-col v-if="isTreeGrid" :span="1.5">
-        <el-button type="info" plain icon="Sort" :aria-label="t('common.expandCollapse')" :data-agent-label="t('common.expandCollapse')" @click="toggleExpandAll">
+        <el-button type="info" plain icon="Sort" class="product-grid-page__toolbar-button" :aria-label="t('common.expandCollapse')" :data-agent-label="t('common.expandCollapse')" @click="toggleExpandAll">
           {{ t('common.expandCollapse') }}
         </el-button>
       </el-col>
       <el-col v-if="!isTreeGrid" :span="1.5">
-        <el-button v-if="!config.readonly" type="success" plain icon="Edit" :disabled="single" :aria-label="agentSelectedActionLabel(t('common.edit'))" :data-agent-label="agentSelectedActionLabel(t('common.edit'))" data-agent-action="edit-selected" @click="handleUpdate()" v-hasPermi="[config.permissions.edit]">
+        <el-button v-if="!config.readonly" type="success" plain icon="Edit" class="product-grid-page__toolbar-button product-grid-page__toolbar-button--edit" :disabled="single" :aria-label="agentSelectedActionLabel(t('common.edit'))" :data-agent-label="agentSelectedActionLabel(t('common.edit'))" data-agent-action="edit-selected" @click="handleUpdate()" v-hasPermi="[config.permissions.edit]">
           {{ t('common.edit') }}
         </el-button>
       </el-col>
       <el-col v-if="config.superEditPermission && config.api.superUpdate" :span="1.5">
-        <el-button type="warning" plain icon="EditPen" :disabled="single" :aria-label="agentSelectedActionLabel(t('productCenter.common.superEdit'))" :data-agent-label="agentSelectedActionLabel(t('productCenter.common.superEdit'))" data-agent-action="super-edit-selected" data-agent-danger="super-edit" data-agent-risk="confirm-required" data-agent-confirm-required="true" data-agent-confirm-message="超级修改需要用户人工确认" @click="handleSuperUpdate()" v-hasPermi="[config.superEditPermission]">
+        <el-button type="warning" plain icon="EditPen" class="product-grid-page__toolbar-button product-grid-page__toolbar-button--warning" :disabled="single" :aria-label="agentSelectedActionLabel(t('productCenter.common.superEdit'))" :data-agent-label="agentSelectedActionLabel(t('productCenter.common.superEdit'))" data-agent-action="super-edit-selected" data-agent-danger="super-edit" data-agent-risk="confirm-required" data-agent-confirm-required="true" data-agent-confirm-message="超级修改需要用户人工确认" @click="handleSuperUpdate()" v-hasPermi="[config.superEditPermission]">
           {{ t('productCenter.common.superEdit') }}
         </el-button>
       </el-col>
       <el-col v-if="!isTreeGrid" :span="1.5">
-        <el-button v-if="!config.readonly" type="danger" plain icon="Delete" :disabled="multiple" :aria-label="agentSelectedActionLabel(t('common.delete'))" :data-agent-label="agentSelectedActionLabel(t('common.delete'))" data-agent-action="delete-selected" data-agent-danger="delete" data-agent-risk="confirm-required" data-agent-confirm-required="true" data-agent-confirm-message="需要用户人工确认后才能删除" @click="handleDelete()" v-hasPermi="[config.permissions.remove]">
+        <el-button v-if="!config.readonly" type="danger" plain icon="Delete" class="product-grid-page__toolbar-button product-grid-page__toolbar-button--delete" :disabled="multiple" :aria-label="agentSelectedActionLabel(t('common.delete'))" :data-agent-label="agentSelectedActionLabel(t('common.delete'))" data-agent-action="delete-selected" data-agent-danger="delete" data-agent-risk="confirm-required" data-agent-confirm-required="true" data-agent-confirm-message="需要用户人工确认后才能删除" @click="handleDelete()" v-hasPermi="[config.permissions.remove]">
           {{ t('common.delete') }}
         </el-button>
       </el-col>
       <el-col v-if="isSingleRowActions && !isTreeGrid && !config.hideReference" :span="1.5">
-        <el-button type="success" plain icon="View" :disabled="single" :aria-label="agentSelectedActionLabel(t('productCenter.common.references'))" :data-agent-label="agentSelectedActionLabel(t('productCenter.common.references'))" data-agent-action="reference-selected" @click="handleSelectedReference" v-hasPermi="[config.permissions.reference]">
+        <el-button type="success" plain icon="View" class="product-grid-page__toolbar-button product-grid-page__toolbar-button--reference" :disabled="single" :aria-label="agentSelectedActionLabel(t('productCenter.common.references'))" :data-agent-label="agentSelectedActionLabel(t('productCenter.common.references'))" data-agent-action="reference-selected" @click="handleSelectedReference" v-hasPermi="[config.permissions.reference]">
           {{ t('productCenter.common.references') }}
         </el-button>
       </el-col>
       <el-col v-if="isSingleRowActions && !isTreeGrid && config.changeLog" :span="1.5">
-        <el-button type="primary" plain icon="Clock" :disabled="single" :aria-label="agentSelectedActionLabel(t(config.changeLog.titleKey || 'productCenter.changeLog.title'))" :data-agent-label="agentSelectedActionLabel(t(config.changeLog.titleKey || 'productCenter.changeLog.title'))" data-agent-action="change-log-selected" @click="handleSelectedChangeLog" v-hasPermi="[config.changeLog.permission]">
+        <el-button type="primary" plain icon="Clock" class="product-grid-page__toolbar-button product-grid-page__toolbar-button--change-log" :disabled="single" :aria-label="agentSelectedActionLabel(t(config.changeLog.titleKey || 'productCenter.changeLog.title'))" :data-agent-label="agentSelectedActionLabel(t(config.changeLog.titleKey || 'productCenter.changeLog.title'))" data-agent-action="change-log-selected" @click="handleSelectedChangeLog" v-hasPermi="[config.changeLog.permission]">
           {{ t(config.changeLog.titleKey || 'productCenter.changeLog.title') }}
         </el-button>
       </el-col>
@@ -91,6 +91,7 @@
           :type="action.type || 'primary'"
           plain
           :icon="action.icon"
+          class="product-grid-page__toolbar-button product-grid-page__toolbar-button--row-action"
           :disabled="single || Boolean(rowActionLoading)"
           :loading="selectedRow ? rowActionLoading === rowActionKey(action, selectedRow) : false"
           :aria-label="agentSelectedActionLabel(t(action.labelKey))"
@@ -106,12 +107,12 @@
         </el-button>
       </el-col>
       <el-col v-for="action in config.toolbarActions || []" :key="action.labelKey" :span="1.5">
-        <el-button :type="action.type || 'primary'" plain :icon="action.icon" :aria-label="t(action.labelKey)" :data-agent-label="t(action.labelKey)" @click="action.handler" v-hasPermi="[action.permission]">
+        <el-button :type="action.type || 'primary'" plain :icon="action.icon" class="product-grid-page__toolbar-button" :aria-label="t(action.labelKey)" :data-agent-label="t(action.labelKey)" @click="action.handler" v-hasPermi="[action.permission]">
           {{ t(action.labelKey) }}
         </el-button>
       </el-col>
       <el-col v-if="config.closePath" :span="1.5">
-        <el-button type="warning" plain icon="Close" :aria-label="t('common.close')" :data-agent-label="t('common.close')" @click="handleClosePage">
+        <el-button type="warning" plain icon="Close" class="product-grid-page__toolbar-button product-grid-page__toolbar-button--warning" :aria-label="t('common.close')" :data-agent-label="t('common.close')" @click="handleClosePage">
           {{ t('common.close') }}
         </el-button>
       </el-col>
@@ -195,6 +196,8 @@
       v-model:page="queryParams.pageNum"
       v-model:limit="queryParams.pageSize"
       :total="total"
+      class="product-grid-page__pagination"
+      :class="`product-grid-page__pagination--${config.key}`"
       @pagination="getList"
     />
 
@@ -1566,6 +1569,54 @@ defineExpose({
   }
 }
 
+.product-grid-page__search[data-agent-entity='unit'],
+.product-grid-page__search[data-agent-entity='material'] {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  margin-bottom: 8px;
+  padding: 10px 12px 2px;
+  border-color: #eef0f5;
+  border-radius: 8px;
+
+  :deep(.el-form-item) {
+    margin-right: 12px;
+    margin-bottom: 8px;
+  }
+
+  :deep(.el-form-item:last-child) {
+    margin-right: 0;
+    margin-left: auto;
+  }
+
+  :deep(.el-form-item__label) {
+    padding-right: 6px;
+  }
+
+  :deep(.el-input),
+  :deep(.el-select) {
+    width: 168px !important;
+  }
+
+  :deep(.el-input__wrapper),
+  :deep(.el-select__wrapper) {
+    min-height: 32px;
+  }
+
+  :deep(.el-button:not(.el-button--primary)) {
+    border-color: #d9e0ea;
+    color: #475467;
+    background: #ffffff;
+
+    &:hover,
+    &:focus {
+      border-color: #c7d0dd;
+      color: #344054;
+      background: #f8fafc;
+    }
+  }
+}
+
 .product-grid-page__toolbar {
   align-items: center;
   min-height: 36px;
@@ -1573,6 +1624,98 @@ defineExpose({
 
   :deep(.el-col) {
     flex: 0 0 auto;
+  }
+}
+
+.product-grid-page__toolbar[data-agent-entity='unit'],
+.product-grid-page__toolbar[data-agent-entity='material'] {
+  align-items: center;
+  min-height: 36px;
+  margin-bottom: 8px;
+
+  :deep(.el-col) {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  :deep(.product-grid-page__toolbar-button) {
+    height: 32px;
+    padding: 0 12px;
+    border-radius: 6px;
+  }
+
+  :deep(.product-grid-page__toolbar-button--add.el-button--primary) {
+    border-color: #1677ff;
+    background: #1677ff;
+    color: #ffffff;
+
+    &:hover,
+    &:focus {
+      border-color: #0958d9;
+      background: #0958d9;
+      color: #ffffff;
+    }
+  }
+
+  :deep(.product-grid-page__toolbar-button--edit.el-button--success.is-plain),
+  :deep(.product-grid-page__toolbar-button--change-log.el-button--primary.is-plain) {
+    border-color: #b8d2ff;
+    color: #1677ff;
+    background: #f8fbff;
+
+    &:hover,
+    &:focus {
+      border-color: #8bb8ff;
+      color: #0958d9;
+      background: #eef5ff;
+    }
+  }
+
+  :deep(.product-grid-page__toolbar-button--delete.el-button--danger.is-plain) {
+    border-color: #ffd6d9;
+    color: #dc3545;
+    background: #fffafa;
+
+    &:hover,
+    &:focus {
+      border-color: #ffb8bf;
+      color: #c92a3a;
+      background: #fff1f2;
+    }
+  }
+
+  :deep(.product-grid-page__toolbar-button--warning.el-button--warning.is-plain) {
+    border-color: #ffdca8;
+    color: #d97706;
+    background: #fffaf2;
+
+    &:hover,
+    &:focus {
+      border-color: #ffc978;
+      color: #b45309;
+      background: #fff7e8;
+    }
+  }
+
+  :deep(.product-grid-page__toolbar-button--reference.el-button--success.is-plain) {
+    border-color: #bfe8d4;
+    color: #0f9f6e;
+    background: #f6fffb;
+
+    &:hover,
+    &:focus {
+      border-color: #95d9b9;
+      color: #067647;
+      background: #edfbf5;
+    }
+  }
+
+  :deep(.el-button.is-disabled),
+  :deep(.el-button.is-disabled:hover),
+  :deep(.el-button.is-disabled:focus) {
+    border-color: #eef0f5;
+    color: #b8c2d3;
+    background: #f8fafc;
   }
 }
 
@@ -1591,6 +1734,60 @@ defineExpose({
   :deep(.el-table__body tr) {
     cursor: pointer;
   }
+}
+
+.product-grid-page__table[data-agent-entity='unit'],
+.product-grid-page__table[data-agent-entity='material'] {
+  :deep(.el-table__inner-wrapper::before),
+  :deep(.el-table__border-left-patch),
+  :deep(.el-table__border-bottom-patch) {
+    background-color: #eef0f5;
+  }
+
+  :deep(.el-table__header th) {
+    background: #f7f9fc;
+    color: #344054;
+    font-weight: 600;
+  }
+
+  :deep(th.el-table__cell),
+  :deep(td.el-table__cell) {
+    border-color: #eef0f5;
+  }
+
+  :deep(.el-table__cell) {
+    padding: 8px 0;
+  }
+
+  :deep(.el-table__body tr:hover > td.el-table__cell) {
+    background: #f8fbff;
+  }
+
+  :deep(.sort-caret.ascending) {
+    border-bottom-color: #c5ccd8;
+  }
+
+  :deep(.sort-caret.descending) {
+    border-top-color: #c5ccd8;
+  }
+
+  :deep(.ascending .sort-caret.ascending) {
+    border-bottom-color: #8ea6c8;
+  }
+
+  :deep(.descending .sort-caret.descending) {
+    border-top-color: #8ea6c8;
+  }
+
+  :deep(.el-switch) {
+    vertical-align: middle;
+  }
+}
+
+.product-grid-page__pagination--unit,
+.product-grid-page__pagination--material {
+  border-color: #eef0f5 !important;
+  box-shadow: none !important;
 }
 
 .product-grid-page__multiline-cell {

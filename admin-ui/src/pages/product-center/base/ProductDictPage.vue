@@ -29,8 +29,8 @@
             <strong>{{ t('productCenter.productDict.typeTitle') }}</strong>
           </div>
           <div class="product-dict-page__actions">
-            <el-button type="primary" plain icon="Plus" :aria-label="t('common.add')" :data-agent-label="t('common.add')" @click="addType" v-hasPermi="['product:dict:add']">{{ t('common.add') }}</el-button>
-            <el-button type="success" plain icon="Edit" :disabled="selectedTypeIds.length !== 1" :aria-label="t('common.edit')" :data-agent-label="t('common.edit')" @click="editSelectedType" v-hasPermi="['product:dict:edit']">{{ t('common.edit') }}</el-button>
+            <el-button type="primary" icon="Plus" :aria-label="t('common.add')" :data-agent-label="t('common.add')" @click="addType" v-hasPermi="['product:dict:add']">{{ t('common.add') }}</el-button>
+            <el-button type="primary" plain icon="Edit" :disabled="selectedTypeIds.length !== 1" :aria-label="t('common.edit')" :data-agent-label="t('common.edit')" @click="editSelectedType" v-hasPermi="['product:dict:edit']">{{ t('common.edit') }}</el-button>
             <el-button type="danger" plain icon="Delete" :disabled="!selectedTypeIds.length" :aria-label="t('common.delete')" :data-agent-label="t('common.delete')" data-agent-danger="delete" data-agent-risk="confirm-required" data-agent-confirm-required="true" data-agent-confirm-message="需要用户人工确认后才能删除" @click="deleteSelectedTypes" v-hasPermi="['product:dict:remove']">{{ t('common.delete') }}</el-button>
           </div>
         </div>
@@ -80,8 +80,8 @@
             <span v-if="activeType">{{ activeType.dictTypeNameCn }} / {{ activeType.dictTypeCode }}</span>
           </div>
           <div class="product-dict-page__actions">
-            <el-button type="primary" plain icon="Plus" :disabled="!activeType" :aria-label="t('common.add')" :data-agent-label="t('common.add')" @click="addItem" v-hasPermi="['product:dict:add']">{{ t('common.add') }}</el-button>
-            <el-button type="success" plain icon="Edit" :disabled="selectedItemIds.length !== 1" :aria-label="t('common.edit')" :data-agent-label="t('common.edit')" @click="editSelectedItem" v-hasPermi="['product:dict:edit']">{{ t('common.edit') }}</el-button>
+            <el-button type="primary" icon="Plus" :disabled="!activeType" :aria-label="t('common.add')" :data-agent-label="t('common.add')" @click="addItem" v-hasPermi="['product:dict:add']">{{ t('common.add') }}</el-button>
+            <el-button type="primary" plain icon="Edit" :disabled="selectedItemIds.length !== 1" :aria-label="t('common.edit')" :data-agent-label="t('common.edit')" @click="editSelectedItem" v-hasPermi="['product:dict:edit']">{{ t('common.edit') }}</el-button>
             <el-button type="danger" plain icon="Delete" :disabled="!selectedItemIds.length" :aria-label="t('common.delete')" :data-agent-label="t('common.delete')" data-agent-danger="delete" data-agent-risk="confirm-required" data-agent-confirm-required="true" data-agent-confirm-message="需要用户人工确认后才能删除" @click="deleteSelectedItems" v-hasPermi="['product:dict:remove']">{{ t('common.delete') }}</el-button>
           </div>
         </div>
@@ -803,15 +803,15 @@ loadTypes()
 .product-dict-page {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
 .product-dict-page__search-bar {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 12px;
-  padding: 12px 12px 4px;
-  border: 1px solid var(--el-border-color-lighter);
+  padding: 10px 12px 2px;
+  border: 1px solid #eef0f5;
   border-radius: 8px;
   background: var(--el-bg-color);
   align-items: start;
@@ -832,7 +832,7 @@ loadTypes()
     left: 1px;
     width: 1px;
     border-radius: 1px;
-    background: var(--el-border-color-lighter);
+    background: #eef0f5;
     content: '';
   }
 
@@ -845,8 +845,9 @@ loadTypes()
   display: flex;
   flex-direction: column;
   min-width: 0;
-  padding: 12px;
-  border: 1px solid var(--el-border-color-lighter);
+  min-height: 560px;
+  padding: 10px;
+  border: 1px solid #eef0f5;
   border-radius: 8px;
   background: var(--el-bg-color);
 }
@@ -863,6 +864,19 @@ loadTypes()
   :deep(.el-select) {
     width: 168px;
   }
+
+  :deep(.el-button:not(.el-button--primary)) {
+    border-color: #d9e0ea;
+    color: #475467;
+    background: #ffffff;
+
+    &:hover,
+    &:focus {
+      border-color: #c7d0dd;
+      color: #344054;
+      background: #f8fafc;
+    }
+  }
 }
 
 .product-dict-page__toolbar {
@@ -870,7 +884,8 @@ loadTypes()
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 10px;
+  min-height: 32px;
+  margin-bottom: 8px;
 }
 
 .product-dict-page__title {
@@ -880,13 +895,18 @@ loadTypes()
 
   strong {
     color: var(--el-text-color-primary);
-    font-size: 16px;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.25;
   }
 
   span {
-    color: var(--el-text-color-secondary);
+    overflow: hidden;
+    color: #98a2b3;
     font-size: 13px;
     line-height: 1.4;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }
 
@@ -895,16 +915,90 @@ loadTypes()
   flex-wrap: nowrap;
   justify-content: flex-end;
   gap: 8px;
+
+  :deep(.el-button--danger.is-plain) {
+    border-color: #ffd6d9;
+    color: #dc3545;
+    background: #fffafa;
+
+    &:hover,
+    &:focus {
+      border-color: #ffb8bf;
+      color: #c92a3a;
+      background: #fff1f2;
+    }
+
+    &.is-disabled,
+    &.is-disabled:hover,
+    &.is-disabled:focus {
+      border-color: #eef0f5;
+      color: #b8c2d3;
+      background: #f8fafc;
+    }
+  }
 }
 
 .product-dict-page__table {
+  flex: 1 1 auto;
+  min-height: 0;
+
+  :deep(.el-table__inner-wrapper::before),
+  :deep(.el-table__border-left-patch),
+  :deep(.el-table__border-bottom-patch) {
+    background-color: #eef0f5;
+  }
+
   :deep(.el-table__body tr) {
     cursor: pointer;
   }
 
-  :deep(.el-table__cell) {
-    padding: 10px 0;
+  :deep(.el-table__body tr:hover > td.el-table__cell) {
+    background: #f8fbff;
   }
+
+  :deep(th.el-table__cell),
+  :deep(td.el-table__cell) {
+    border-color: #eef0f5;
+  }
+
+  :deep(.el-table__cell) {
+    padding: 8px 0;
+  }
+
+  :deep(.sort-caret.ascending) {
+    border-bottom-color: #c5ccd8;
+  }
+
+  :deep(.sort-caret.descending) {
+    border-top-color: #c5ccd8;
+  }
+
+  :deep(.ascending .sort-caret.ascending) {
+    border-bottom-color: #8ea6c8;
+  }
+
+  :deep(.descending .sort-caret.descending) {
+    border-top-color: #8ea6c8;
+  }
+
+  :deep(.cell) {
+    text-align: left;
+  }
+
+  :deep(.el-table-column--selection .cell),
+  :deep(.el-table__cell.is-center .cell) {
+    text-align: center;
+  }
+
+  :deep(.el-switch) {
+    vertical-align: middle;
+  }
+}
+
+.product-dict-page__panel :deep(.pagination-container) {
+  margin-top: auto !important;
+  border-color: #eef0f5;
+  box-shadow: none;
 }
 
 .product-dict-page__form {

@@ -8,6 +8,7 @@
 | --- | --- |
 | 后端模块、Controller、Service、Mapper | [backend-code-standards.md](./backend-code-standards.md) |
 | 前端页面、组件、API 封装 | [frontend-code-standards.md](./frontend-code-standards.md) |
+| 后台布局、导航、Tab、表格和按钮视觉标准 | [admin-ui-visual-standards.md](./admin-ui-visual-standards.md) |
 | 代码生成器 | [code-generator-standards.md](./code-generator-standards.md) |
 | 菜单、按钮、权限、动态路由 | [permission-menu-standards.md](./permission-menu-standards.md) |
 | 文案、错误消息、时间字段 | [i18n-utc-standards.md](./i18n-utc-standards.md) |
