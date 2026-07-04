@@ -1,6 +1,6 @@
 ﻿<template>
-  <div class="app-container login-info-page">
-    <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true" label-width="90px">
+  <div class="app-container login-info-page monitor-table-page">
+    <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true" label-width="90px" class="monitor-table-page__search">
       <el-form-item :label="t('legacy.loginIp')" prop="ipaddr">
         <el-input
           v-model="queryParams.ipaddr"
@@ -41,7 +41,7 @@
       </el-form-item>
     </el-form>
 
-    <el-row :gutter="10" class="mb8">
+    <el-row :gutter="10" class="mb8 monitor-table-page__toolbar">
       <el-col :span="1.5">
         <el-button v-hasPermi="['monitor:logininfor:remove']" type="danger" plain icon="Delete" :disabled="multiple" @click="handleDelete()">
           {{ t('common.delete') }}
@@ -70,21 +70,23 @@
       v-loading="loading"
       :data="logininforList"
       :default-sort="defaultSort"
+      border
+      class="monitor-table-page__table"
       @selection-change="handleSelectionChange"
       @sort-change="handleSortChange"
     >
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column :label="t('user.userName')" align="center" prop="userName" :show-overflow-tooltip="true" sortable="custom" :sort-orders="['descending', 'ascending']" />
-      <el-table-column :label="t('legacy.loginIp')" align="center" prop="ipaddr" :show-overflow-tooltip="true" />
-      <el-table-column :label="t('legacy.loginLocation')" align="center" prop="loginLocation" :show-overflow-tooltip="true" />
-      <el-table-column :label="t('legacy.os')" align="center" prop="os" :show-overflow-tooltip="true" />
-      <el-table-column :label="t('legacy.browser')" align="center" prop="browser" :show-overflow-tooltip="true" />
+      <el-table-column :label="t('user.userName')" align="left" prop="userName" :show-overflow-tooltip="true" sortable="custom" :sort-orders="['descending', 'ascending']" />
+      <el-table-column :label="t('legacy.loginIp')" align="left" prop="ipaddr" :show-overflow-tooltip="true" />
+      <el-table-column :label="t('legacy.loginLocation')" align="left" prop="loginLocation" :show-overflow-tooltip="true" />
+      <el-table-column :label="t('legacy.os')" align="left" prop="os" :show-overflow-tooltip="true" />
+      <el-table-column :label="t('legacy.browser')" align="left" prop="browser" :show-overflow-tooltip="true" />
       <el-table-column :label="t('legacy.loginStatus')" align="center" prop="status">
         <template #default="scope">
           <dict-tag :options="sys_common_status" :value="scope.row.status" />
         </template>
       </el-table-column>
-      <el-table-column :label="t('legacy.description')" align="center" prop="msg" :show-overflow-tooltip="true" />
+      <el-table-column :label="t('legacy.description')" align="left" prop="msg" :show-overflow-tooltip="true" />
       <el-table-column :label="t('legacy.accessTime')" align="center" prop="loginTime" sortable="custom" :sort-orders="['descending', 'ascending']" width="180">
         <template #default="scope">
           <span>{{ formatUtc(scope.row.loginTime) }}</span>
@@ -92,7 +94,7 @@
       </el-table-column>
     </el-table>
 
-    <pagination v-show="total > 0" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" :total="total" @pagination="getList" />
+    <pagination v-show="total > 0" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" :total="total" class="monitor-table-page__pagination" @pagination="getList" />
   </div>
 </template>
 

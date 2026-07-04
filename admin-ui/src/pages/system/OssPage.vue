@@ -1,6 +1,6 @@
 <template>
-  <div class="app-container oss-page">
-    <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true">
+  <div class="app-container oss-page system-table-page">
+    <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true" class="system-table-page__search">
       <el-form-item :label="t('legacy.fileName')" prop="fileName">
         <el-input v-model="queryParams.fileName" :placeholder="t('legacy.fileNamePlaceholder')" clearable style="width: 200px" @keyup.enter="handleQuery" />
       </el-form-item>
@@ -30,7 +30,7 @@
       </el-form-item>
     </el-form>
 
-    <el-row :gutter="10" class="mb8">
+    <el-row :gutter="10" class="mb8 system-table-page__toolbar">
       <el-col :span="1.5">
         <el-button type="primary" plain icon="Plus" @click="handleFile" v-hasPermi="['system:oss:upload']">
           {{ t('legacy.uploadFile') }}
@@ -64,17 +64,19 @@
       v-loading="loading"
       :data="ossList"
       :header-cell-class-name="handleHeaderClass"
+      border
+      class="system-table-page__table"
       @header-click="handleHeaderClick"
       @selection-change="handleSelectionChange"
     >
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column :label="t('legacy.ossId')" align="center" prop="ossId" v-if="false" />
-      <el-table-column :label="t('legacy.fileName')" align="center" prop="fileName" />
-      <el-table-column :label="t('legacy.originalName')" align="center" prop="originalName" />
-      <el-table-column :label="t('legacy.fileSuffix')" align="center" prop="fileSuffix" />
-      <el-table-column :label="t('legacy.fileDisplay')" align="center" prop="url">
+      <el-table-column :label="t('legacy.fileName')" align="left" prop="fileName" :show-overflow-tooltip="true" />
+      <el-table-column :label="t('legacy.originalName')" align="left" prop="originalName" :show-overflow-tooltip="true" />
+      <el-table-column :label="t('legacy.fileSuffix')" align="left" prop="fileSuffix" width="110" :show-overflow-tooltip="true" />
+      <el-table-column :label="t('legacy.fileDisplay')" align="left" prop="url" min-width="180" :show-overflow-tooltip="true">
         <template #default="{ row }">
-          <ImagePreview v-if="previewListResource && checkFileSuffix(row.fileSuffix)" :width="100" :height="100" :src="row.url" />
+          <ImagePreview v-if="previewListResource && checkFileSuffix(row.fileSuffix)" :width="40" :height="40" :src="row.url" />
           <span v-else>{{ row.url }}</span>
         </template>
       </el-table-column>
@@ -83,8 +85,8 @@
           <span>{{ formatUtc(row.createTime, 'YYYY-MM-DD') }}</span>
         </template>
       </el-table-column>
-      <el-table-column :label="t('legacy.createBy')" align="center" prop="createBy" />
-      <el-table-column :label="t('legacy.provider')" align="center" prop="service" sortable="custom" />
+      <el-table-column :label="t('legacy.createBy')" align="left" prop="createBy" width="120" :show-overflow-tooltip="true" />
+      <el-table-column :label="t('legacy.provider')" align="left" prop="service" width="120" sortable="custom" :show-overflow-tooltip="true" />
       <el-table-column :label="t('common.operate')" align="center" width="160" class-name="small-padding fixed-width">
         <template #default="{ row }">
           <AdminTableActions :actions="[
@@ -100,6 +102,7 @@
       v-model:page="queryParams.pageNum"
       v-model:limit="queryParams.pageSize"
       :total="total"
+      class="system-table-page__pagination"
       @pagination="getList"
     />
 

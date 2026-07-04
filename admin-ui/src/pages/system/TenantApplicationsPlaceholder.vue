@@ -1,6 +1,6 @@
 <template>
-  <div class="app-container">
-    <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true" label-width="90px">
+  <div class="app-container tenant-application-page merchant-table-page">
+    <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true" label-width="90px" class="merchant-table-page__search">
       <el-form-item :label="t('tenant.merchantName')" prop="merchantName">
         <el-input
           v-model="queryParams.merchantName"
@@ -26,7 +26,7 @@
       </el-form-item>
     </el-form>
 
-    <el-row :gutter="10" class="mb8">
+    <el-row :gutter="10" class="mb8 merchant-table-page__toolbar">
       <el-col :span="1.5">
         <el-button
           type="success"
@@ -54,11 +54,11 @@
       <right-toolbar v-model:showSearch="showSearch" @queryTable="getList" />
     </el-row>
 
-    <el-table v-loading="loading" :data="rows" @selection-change="handleSelectionChange">
+    <el-table v-loading="loading" :data="rows" border class="merchant-table-page__table" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column :label="t('tenant.merchantName')" align="center" prop="merchantName" min-width="180" :show-overflow-tooltip="true" />
-      <el-table-column :label="t('tenant.email')" align="center" prop="email" min-width="220" :show-overflow-tooltip="true" />
-      <el-table-column :label="t('tenant.country')" align="center" prop="country" min-width="120" :show-overflow-tooltip="true" />
+      <el-table-column :label="t('tenant.merchantName')" prop="merchantName" min-width="180" :show-overflow-tooltip="true" />
+      <el-table-column :label="t('tenant.email')" prop="email" min-width="220" :show-overflow-tooltip="true" />
+      <el-table-column :label="t('tenant.country')" prop="country" min-width="120" :show-overflow-tooltip="true" />
       <el-table-column :label="t('tenant.status')" align="center" prop="status" width="130">
         <template #default="{ row }">
           <el-tag :type="statusType(row.status)">{{ statusText(row.status) }}</el-tag>
@@ -78,7 +78,7 @@
       </el-table-column>
     </el-table>
 
-    <pagination v-show="total > 0" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" :total="total" @pagination="getList" />
+    <pagination v-show="total > 0" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" :total="total" class="merchant-table-page__pagination" @pagination="getList" />
 
     <AdminDrawer v-model="detailOpen" :title="t('tenant.applicationDetail')" size="520px" variant="detail" append-to-body>
       <div v-if="detail" class="admin-detail">

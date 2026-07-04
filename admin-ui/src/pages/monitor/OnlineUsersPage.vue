@@ -1,6 +1,6 @@
 <template>
-  <div class="app-container">
-    <el-form ref="queryRef" :model="queryParams" :inline="true">
+  <div class="app-container monitor-table-page">
+    <el-form ref="queryRef" :model="queryParams" :inline="true" class="monitor-table-page__search">
       <el-form-item :label="t('legacy.loginIp')" prop="ipaddr">
         <el-input
           v-model="queryParams.ipaddr"
@@ -25,18 +25,18 @@
       </el-form-item>
     </el-form>
 
-    <el-table v-loading="loading" :data="pagedOnlineList" style="width: 100%">
+    <el-table v-loading="loading" :data="pagedOnlineList" border class="monitor-table-page__table" style="width: 100%">
       <el-table-column :label="t('common.index')" width="70" type="index" align="center">
         <template #default="scope">
           <span>{{ (pageNum - 1) * pageSize + scope.$index + 1 }}</span>
         </template>
       </el-table-column>
-      <el-table-column :label="t('legacy.loginName')" align="center" prop="userName" :show-overflow-tooltip="true" />
-      <el-table-column :label="t('legacy.dept')" align="center" prop="deptName" :show-overflow-tooltip="true" />
-      <el-table-column :label="t('legacy.host')" align="center" prop="ipaddr" :show-overflow-tooltip="true" />
-      <el-table-column :label="t('legacy.loginLocation')" align="center" prop="loginLocation" :show-overflow-tooltip="true" />
-      <el-table-column :label="t('legacy.os')" align="center" prop="os" :show-overflow-tooltip="true" />
-      <el-table-column :label="t('legacy.browser')" align="center" prop="browser" :show-overflow-tooltip="true" />
+      <el-table-column :label="t('legacy.loginName')" align="left" prop="userName" :show-overflow-tooltip="true" />
+      <el-table-column :label="t('legacy.dept')" align="left" prop="deptName" :show-overflow-tooltip="true" />
+      <el-table-column :label="t('legacy.host')" align="left" prop="ipaddr" :show-overflow-tooltip="true" />
+      <el-table-column :label="t('legacy.loginLocation')" align="left" prop="loginLocation" :show-overflow-tooltip="true" />
+      <el-table-column :label="t('legacy.os')" align="left" prop="os" :show-overflow-tooltip="true" />
+      <el-table-column :label="t('legacy.browser')" align="left" prop="browser" :show-overflow-tooltip="true" />
       <el-table-column :label="t('legacy.loginTime')" align="center" prop="loginTime" width="180">
         <template #default="scope">
           <span>{{ formatUtc(scope.row.loginTime) }}</span>
@@ -51,7 +51,7 @@
       </el-table-column>
     </el-table>
 
-    <pagination v-show="total > 0" v-model:page="pageNum" v-model:limit="pageSize" :total="total" />
+    <pagination v-show="total > 0" v-model:page="pageNum" v-model:limit="pageSize" :total="total" class="monitor-table-page__pagination" />
   </div>
 </template>
 

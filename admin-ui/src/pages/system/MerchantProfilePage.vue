@@ -1,6 +1,6 @@
 <template>
-  <div class="app-container merchant-profile-page">
-    <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true" class="toolbar-form">
+  <div class="app-container merchant-profile-page merchant-table-page">
+    <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true" class="merchant-table-page__search">
       <el-form-item :label="t('merchantProfile.merchantName')" prop="merchantName">
         <el-input v-model="queryParams.merchantName" :placeholder="t('merchantProfile.merchantNamePlaceholder')" clearable @keyup.enter="handleQuery" />
       </el-form-item>
@@ -13,24 +13,24 @@
       </el-form-item>
     </el-form>
 
-    <el-row :gutter="10" class="mb8">
+    <el-row :gutter="10" class="mb8 merchant-table-page__toolbar">
       <right-toolbar v-model:showSearch="showSearch" @queryTable="getList" />
     </el-row>
 
-    <el-table v-loading="loading" :data="rows">
-      <el-table-column :label="t('merchantProfile.merchantName')" prop="merchantName" min-width="180" />
-      <el-table-column :label="t('merchantProfile.companyName')" prop="companyName" min-width="180" />
-      <el-table-column :label="t('merchantProfile.primaryEmail')" prop="primaryEmail" min-width="220" />
-      <el-table-column :label="t('merchantProfile.country')" prop="country" width="120" />
-      <el-table-column :label="t('merchantProfile.status')" prop="status" width="110">
+    <el-table v-loading="loading" :data="rows" border class="merchant-table-page__table">
+      <el-table-column :label="t('merchantProfile.merchantName')" prop="merchantName" min-width="180" :show-overflow-tooltip="true" />
+      <el-table-column :label="t('merchantProfile.companyName')" prop="companyName" min-width="180" :show-overflow-tooltip="true" />
+      <el-table-column :label="t('merchantProfile.primaryEmail')" prop="primaryEmail" min-width="220" :show-overflow-tooltip="true" />
+      <el-table-column :label="t('merchantProfile.country')" prop="country" width="120" :show-overflow-tooltip="true" />
+      <el-table-column :label="t('merchantProfile.status')" prop="status" width="110" align="center">
         <template #default="{ row }">
           <dict-tag :options="sys_normal_disable" :value="row.status" />
         </template>
       </el-table-column>
-      <el-table-column :label="t('common.createTime')" width="180">
+      <el-table-column :label="t('common.createTime')" width="180" align="center">
         <template #default="{ row }">{{ formatUtc(row.createTime) }}</template>
       </el-table-column>
-      <el-table-column :label="t('common.operate')" width="150" fixed="right">
+      <el-table-column :label="t('common.operate')" width="150" fixed="right" align="center">
         <template #default="{ row }">
           <AdminTableActions :actions="[
             { label: t('common.detail'), icon: 'View', permission: 'system:merchant:profile:query', onClick: () => openDetail(row.merchantId) },
@@ -40,7 +40,7 @@
       </el-table-column>
     </el-table>
 
-    <pagination v-show="total > 0" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" :total="total" @pagination="getList" />
+    <pagination v-show="total > 0" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" :total="total" class="merchant-table-page__pagination" @pagination="getList" />
 
     <AdminDrawer v-model="detailOpen" :title="t('merchantProfile.detailTitle')" size="520px" variant="detail">
       <MerchantProfileDescriptions v-if="detail" :profile="detail" />
@@ -178,10 +178,6 @@ getList()
 </script>
 
 <style scoped>
-.toolbar-form {
-  padding: 4px 0 12px;
-}
-
 .merchant-profile-page__drawer-footer {
   display: flex;
   justify-content: flex-end;

@@ -7,6 +7,9 @@
 @use './admin-component-foundation.scss';
 @use './admin-state-components.scss';
 @use './admin-query-layout.scss';
+@use '../../pages/monitor/styles/monitor-table-page.scss';
+@use '../../pages/merchant/styles/merchant-table-page.scss';
+@use '../../pages/system/styles/system-table-page.scss';
 
 body {
   height: 100%;

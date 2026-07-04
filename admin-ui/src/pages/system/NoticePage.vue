@@ -1,6 +1,6 @@
 <template>
-  <div class="app-container notice-page">
-    <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true">
+  <div class="app-container notice-page system-table-page">
+    <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true" class="system-table-page__search">
       <el-form-item :label="t('legacy.noticeTitle')" prop="noticeTitle">
         <el-input
           v-model="queryParams.noticeTitle"
@@ -30,7 +30,7 @@
       </el-form-item>
     </el-form>
 
-    <el-row :gutter="10" class="mb8">
+    <el-row :gutter="10" class="mb8 system-table-page__toolbar">
       <el-col :span="1.5">
         <el-button type="primary" plain icon="Plus" @click="handleAdd" v-hasPermi="['system:notice:add']">
           {{ t('common.add') }}
@@ -49,10 +49,10 @@
       <right-toolbar v-model:showSearch="showSearch" @queryTable="getList" />
     </el-row>
 
-    <el-table v-loading="loading" :data="noticeList" @selection-change="handleSelectionChange">
+    <el-table v-loading="loading" :data="noticeList" border class="system-table-page__table" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column :label="t('common.index')" align="center" type="index" width="80" />
-      <el-table-column :label="t('legacy.noticeTitle')" align="center" prop="noticeTitle" :show-overflow-tooltip="true" />
+      <el-table-column :label="t('legacy.noticeTitle')" align="left" prop="noticeTitle" :show-overflow-tooltip="true" />
       <el-table-column :label="t('legacy.noticeType')" align="center" prop="noticeType" width="120">
         <template #default="{ row }">
           <dict-tag :options="sys_notice_type" :value="row.noticeType" />
@@ -63,7 +63,7 @@
           <dict-tag :options="sys_notice_status" :value="row.status" />
         </template>
       </el-table-column>
-      <el-table-column :label="t('legacy.createdBy')" align="center" prop="createBy" width="120" />
+      <el-table-column :label="t('legacy.createdBy')" align="left" prop="createBy" width="120" :show-overflow-tooltip="true" />
       <el-table-column :label="t('common.createTime')" align="center" prop="createTime" width="140">
         <template #default="{ row }">
           <span>{{ formatUtc(row.createTime, 'YYYY-MM-DD') }}</span>
@@ -84,6 +84,7 @@
       v-model:page="queryParams.pageNum"
       v-model:limit="queryParams.pageSize"
       :total="total"
+      class="system-table-page__pagination"
       @pagination="getList"
     />
 

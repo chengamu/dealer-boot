@@ -1,6 +1,6 @@
 ﻿<template>
-  <div class="app-container">
-    <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true">
+  <div class="app-container dict-data-page system-table-page">
+    <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true" class="system-table-page__search">
       <el-form-item :label="t('legacy.dictType')" prop="dictType">
         <el-select v-model="queryParams.dictType" style="width: 200px">
           <el-option v-for="item in typeOptions" :key="item.dictId" :label="item.dictName" :value="item.dictType" />
@@ -26,7 +26,7 @@
       </el-form-item>
     </el-form>
 
-    <el-row :gutter="10" class="mb8">
+    <el-row :gutter="10" class="mb8 system-table-page__toolbar">
       <el-col :span="1.5">
         <el-button type="primary" plain icon="Plus" @click="handleAdd" v-hasPermi="['system:dict:add']">
           {{ t('common.add') }}
@@ -55,22 +55,22 @@
       <right-toolbar v-model:showSearch="showSearch" @queryTable="getList" />
     </el-row>
 
-    <el-table v-loading="loading" :data="dataList" @selection-change="handleSelectionChange">
+    <el-table v-loading="loading" :data="dataList" border class="system-table-page__table" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column :label="t('legacy.dictLabel')" align="center" prop="dictLabel">
+      <el-table-column :label="t('legacy.dictLabel')" align="left" prop="dictLabel" :show-overflow-tooltip="true">
         <template #default="{ row }">
           <span v-if="isPlainLabel(row)">{{ row.dictLabel }}</span>
           <el-tag v-else :type="row.listClass === 'primary' ? '' : row.listClass" :class="row.cssClass">{{ row.dictLabel }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column :label="t('legacy.dictValue')" align="center" prop="dictValue" />
+      <el-table-column :label="t('legacy.dictValue')" align="left" prop="dictValue" :show-overflow-tooltip="true" />
       <el-table-column :label="t('legacy.dictSort')" align="center" prop="dictSort" />
       <el-table-column :label="t('user.status')" align="center" prop="status">
         <template #default="{ row }">
           <dict-tag :options="sys_normal_disable" :value="row.status" />
         </template>
       </el-table-column>
-      <el-table-column :label="t('user.remark')" align="center" prop="remark" :show-overflow-tooltip="true" />
+      <el-table-column :label="t('user.remark')" align="left" prop="remark" :show-overflow-tooltip="true" />
       <el-table-column :label="t('common.createTime')" align="center" prop="createTime" width="180">
         <template #default="{ row }">
           <span>{{ formatUtc(row.createTime) }}</span>
@@ -91,6 +91,7 @@
       v-model:page="queryParams.pageNum"
       v-model:limit="queryParams.pageSize"
       :total="total"
+      class="system-table-page__pagination"
       @pagination="getList"
     />
 

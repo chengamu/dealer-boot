@@ -1,6 +1,6 @@
 <template>
-  <div class="app-container operation-log-page">
-    <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true" label-width="90px">
+  <div class="app-container operation-log-page monitor-table-page">
+    <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true" label-width="90px" class="monitor-table-page__search">
       <el-form-item :label="t('operlog.title')" prop="title">
         <el-input v-model="queryParams.title" :placeholder="t('operlog.titlePlaceholder')" clearable style="width: 240px" @keyup.enter="handleQuery" />
       </el-form-item>
@@ -29,7 +29,7 @@
       </el-form-item>
     </el-form>
 
-    <el-row :gutter="10" class="mb8">
+    <el-row :gutter="10" class="mb8 monitor-table-page__toolbar">
       <el-col :span="1.5">
         <el-button v-hasPermi="['monitor:operlog:remove']" type="danger" plain icon="Delete" :disabled="multiple" @click="handleDelete()">
           {{ t('common.delete') }}
@@ -54,19 +54,21 @@
       v-loading="loading"
       :data="operlogList"
       :default-sort="defaultSort"
+      border
+      class="monitor-table-page__table"
       @selection-change="handleSelectionChange"
       @sort-change="handleSortChange"
     >
       <el-table-column type="selection" width="50" align="center" />
-      <el-table-column :label="t('operlog.title')" align="center" prop="title" min-width="132" :show-overflow-tooltip="true" />
+      <el-table-column :label="t('operlog.title')" align="left" prop="title" min-width="132" :show-overflow-tooltip="true" />
       <el-table-column :label="t('operlog.businessType')" align="center" prop="businessType" width="116">
         <template #default="scope">
           <dict-tag :options="sys_oper_type" :value="scope.row.businessType" />
         </template>
       </el-table-column>
-      <el-table-column :label="t('operlog.operName')" align="center" width="110" prop="operName" :show-overflow-tooltip="true" sortable="custom" :sort-orders="['descending', 'ascending']" />
-      <el-table-column :label="t('operlog.operIp')" align="center" prop="operIp" width="130" :show-overflow-tooltip="true" />
-      <el-table-column :label="t('operlog.operLocation')" align="center" prop="operLocation" min-width="116" :show-overflow-tooltip="true" />
+      <el-table-column :label="t('operlog.operName')" align="left" width="110" prop="operName" :show-overflow-tooltip="true" sortable="custom" :sort-orders="['descending', 'ascending']" />
+      <el-table-column :label="t('operlog.operIp')" align="left" prop="operIp" width="130" :show-overflow-tooltip="true" />
+      <el-table-column :label="t('operlog.operLocation')" align="left" prop="operLocation" min-width="116" :show-overflow-tooltip="true" />
       <el-table-column :label="t('operlog.operStatus')" align="center" prop="status" width="126">
         <template #default="scope">
           <dict-tag :options="sys_common_status" :value="scope.row.status" />
@@ -91,7 +93,7 @@
       </el-table-column>
     </el-table>
 
-    <pagination v-show="total > 0" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" :total="total" @pagination="getList" />
+    <pagination v-show="total > 0" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" :total="total" class="monitor-table-page__pagination" @pagination="getList" />
 
     <AdminDrawer v-model="open" :title="t('operlog.detailTitle')" size="700px" variant="detail" append-to-body destroy-on-close @closed="resetDetail">
       <div class="admin-detail operation-log-detail">
@@ -199,18 +201,14 @@ const queryParams = reactive<OperLogQuery>({
   businessType: undefined,
   status: undefined
 })
-
 const requestInfoText = computed(() => `${codeText(form.value.requestMethod)} ${codeText(form.value.operUrl)}`.trim())
-
 function codeText(value: unknown) {
   if (value === undefined || value === null || value === '') return '-'
   return String(value)
 }
-
 function withDateRange(params: OperLogQuery) {
   return withUtcDateRangeParams(params, dateRange.value)
 }
-
 async function getList() {
   loading.value = true
   try {
@@ -221,22 +219,18 @@ async function getList() {
     loading.value = false
   }
 }
-
 function typeFormat(row: Partial<OperLog>) {
   return sys_oper_type.value.find((item) => String(item.value) === String(row.businessType))?.label || row.businessType || ''
 }
-
 function statusText(value: unknown) {
   if (String(value) === '0') return t('dataLabels.normal')
   if (String(value) === '1') return t('common.failed')
   return codeText(value)
 }
-
 function handleQuery() {
   queryParams.pageNum = 1
   getList()
 }
-
 function resetQuery() {
   dateRange.value = []
   queryRef.value?.resetFields()
@@ -245,12 +239,10 @@ function resetQuery() {
   queryParams.isAsc = defaultSort.value.order
   getList()
 }
-
 function handleSelectionChange(selection: OperLog[]) {
   ids.value = selection.map((item) => String(item.operId)).filter(Boolean)
   multiple.value = selection.length === 0
 }
-
 function handleSortChange(column: { prop?: string; order?: string }) {
   queryParams.orderByColumn = column.prop
   queryParams.isAsc = column.order

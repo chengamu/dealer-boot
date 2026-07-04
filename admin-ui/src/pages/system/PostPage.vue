@@ -1,6 +1,6 @@
 ﻿<template>
-  <div class="app-container post-page">
-    <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true">
+  <div class="app-container post-page system-table-page">
+    <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true" class="system-table-page__search">
       <el-form-item :label="t('legacy.postCode')" prop="postCode">
         <el-input
           v-model="queryParams.postCode"
@@ -30,7 +30,7 @@
       </el-form-item>
     </el-form>
 
-    <el-row :gutter="10" class="mb8">
+    <el-row :gutter="10" class="mb8 system-table-page__toolbar">
       <el-col :span="1.5">
         <el-button type="primary" plain icon="Plus" @click="handleAdd" v-hasPermi="['system:post:add']">
           {{ t('common.add') }}
@@ -54,10 +54,10 @@
       <right-toolbar v-model:showSearch="showSearch" @queryTable="getList" />
     </el-row>
 
-    <el-table v-loading="loading" :data="postList" @selection-change="handleSelectionChange">
+    <el-table v-loading="loading" :data="postList" border class="system-table-page__table" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column :label="t('legacy.postCode')" align="center" prop="postCode" />
-      <el-table-column :label="t('legacy.postName')" align="center" prop="postName" />
+      <el-table-column :label="t('legacy.postCode')" align="left" prop="postCode" :show-overflow-tooltip="true" />
+      <el-table-column :label="t('legacy.postName')" align="left" prop="postName" :show-overflow-tooltip="true" />
       <el-table-column :label="t('legacy.postSort')" align="center" prop="postSort" />
       <el-table-column :label="t('user.status')" align="center" prop="status">
         <template #default="{ row }">
@@ -84,6 +84,7 @@
       v-model:page="queryParams.pageNum"
       v-model:limit="queryParams.pageSize"
       :total="total"
+      class="system-table-page__pagination"
       @pagination="getList"
     />
 

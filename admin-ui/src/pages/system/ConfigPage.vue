@@ -1,6 +1,6 @@
 ﻿<template>
-  <div class="app-container config-page">
-    <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true" label-width="80px">
+  <div class="app-container config-page system-table-page">
+    <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true" label-width="80px" class="system-table-page__search">
       <el-form-item :label="t('legacy.configName')" prop="configName">
         <el-input
           v-model="queryParams.configName"
@@ -41,7 +41,7 @@
       </el-form-item>
     </el-form>
 
-    <el-row :gutter="10" class="mb8">
+    <el-row :gutter="10" class="mb8 system-table-page__toolbar">
       <el-col :span="1.5">
         <el-button type="primary" plain icon="Plus" @click="handleAdd" v-hasPermi="['system:config:add']">
           {{ t('common.add') }}
@@ -63,24 +63,24 @@
         </el-button>
       </el-col>
       <el-col :span="1.5">
-        <el-button type="danger" plain icon="Refresh" @click="handleRefreshCache" v-hasPermi="['system:config:remove']">
+        <el-button type="warning" plain icon="Refresh" @click="handleRefreshCache" v-hasPermi="['system:config:remove']">
           {{ t('legacy.refreshConfigCache') }}
         </el-button>
       </el-col>
       <right-toolbar v-model:showSearch="showSearch" @queryTable="getList" />
     </el-row>
 
-    <el-table v-loading="loading" :data="configList" @selection-change="handleSelectionChange">
+    <el-table v-loading="loading" :data="configList" border class="system-table-page__table" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column :label="t('legacy.configName')" align="center" prop="configName" :show-overflow-tooltip="true" />
-      <el-table-column :label="t('legacy.configKey')" align="center" prop="configKey" :show-overflow-tooltip="true" />
-      <el-table-column :label="t('legacy.configValue')" align="center" prop="configValue" :show-overflow-tooltip="true" />
+      <el-table-column :label="t('legacy.configName')" align="left" prop="configName" :show-overflow-tooltip="true" />
+      <el-table-column :label="t('legacy.configKey')" align="left" prop="configKey" :show-overflow-tooltip="true" />
+      <el-table-column :label="t('legacy.configValue')" align="left" prop="configValue" :show-overflow-tooltip="true" />
       <el-table-column :label="t('legacy.configType')" align="center" prop="configType">
         <template #default="{ row }">
           <dict-tag :options="sys_yes_no" :value="row.configType" />
         </template>
       </el-table-column>
-      <el-table-column :label="t('user.remark')" align="center" prop="remark" :show-overflow-tooltip="true" />
+      <el-table-column :label="t('user.remark')" align="left" prop="remark" :show-overflow-tooltip="true" />
       <el-table-column :label="t('common.createTime')" align="center" prop="createTime" width="180">
         <template #default="{ row }">
           <span>{{ formatUtc(row.createTime) }}</span>
@@ -101,6 +101,7 @@
       v-model:page="queryParams.pageNum"
       v-model:limit="queryParams.pageSize"
       :total="total"
+      class="system-table-page__pagination"
       @pagination="getList"
     />
 

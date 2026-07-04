@@ -1,6 +1,6 @@
 <template>
-  <div class="app-container merchant-user-page">
-    <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true" label-width="96px">
+  <div class="app-container merchant-user-page merchant-table-page">
+    <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true" label-width="96px" class="merchant-table-page__search">
       <el-form-item v-if="isPlatformMode" :label="t('merchantProfile.merchantName')" prop="tenantId">
         <el-select v-model="selectedTenantId" clearable filterable :placeholder="t('merchantUser.allMerchants')" style="width: 240px" @change="handleMerchantChange">
           <el-option v-for="item in merchantOptions" :key="item.tenantId" :label="item.merchantName || item.companyName || String(item.tenantId)" :value="item.tenantId" />
@@ -34,7 +34,7 @@
       </el-form-item>
     </el-form>
 
-    <el-row :gutter="10" class="mb8">
+    <el-row :gutter="10" class="mb8 merchant-table-page__toolbar">
       <el-col :span="1.5">
         <el-button type="primary" plain icon="Plus" :disabled="requiresMerchantSelection" @click="handleAdd" v-hasPermi="['merchant:user:add']">{{ t('common.add') }}</el-button>
       </el-col>
@@ -47,7 +47,7 @@
       <right-toolbar v-model:showSearch="showSearch" :columns="columns" @queryTable="getList" />
     </el-row>
 
-    <el-table v-loading="loading" :data="userList" @selection-change="handleSelectionChange">
+    <el-table v-loading="loading" :data="userList" border class="merchant-table-page__table" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="50" align="center" />
       <el-table-column v-if="columns[0].visible" :label="t('user.userName')" min-width="220">
         <template #default="{ row }">
@@ -60,7 +60,7 @@
           </div>
         </template>
       </el-table-column>
-      <el-table-column v-if="columns[1].visible" :label="t('user.phonenumber')" align="center" prop="phonenumber" width="142" />
+      <el-table-column v-if="columns[1].visible" :label="t('user.phonenumber')" prop="phonenumber" width="142" :show-overflow-tooltip="true" />
       <el-table-column v-if="columns[2].visible" :label="t('user.status')" align="center" width="126">
         <template #default="{ row }">
           <el-switch
@@ -88,7 +88,7 @@
       </el-table-column>
     </el-table>
 
-    <pagination v-show="total > 0" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" :total="total" @pagination="getList" />
+    <pagination v-show="total > 0" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" :total="total" class="merchant-table-page__pagination" @pagination="getList" />
 
     <AdminDrawer
       v-model="open"
@@ -448,7 +448,7 @@ initPage()
   display: inline-flex;
   align-items: center;
   min-width: 0;
-  gap: 12px;
+  gap: 8px;
 }
 
 .merchant-user-cell small {
@@ -461,13 +461,13 @@ initPage()
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
-  flex: 0 0 38px;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
   border-radius: 50%;
   background: #1677ff;
   color: #fff;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
 }
 
