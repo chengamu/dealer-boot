@@ -9,6 +9,7 @@ import { FORMULA_STATUS, PRODUCT_STATUS_ENABLED, formulaStatusText } from '@/con
 import { localizedRecordLabel } from '@/utils/productLabels'
 import { useFormulaSetupDraftCache } from './useFormulaSetupDraftCache'
 import { buildFormulaOptionPayload, normalizeFormulaOptionDraftState, optionClientKey } from '../utils/formulaOptionDraftIdentity'
+import { normalizeFormulaMaterials, normalizeFormulaUsageRules, normalizeFormulaVariableRules } from '../utils/formulaSetupNumbers'
 import type {
   ProductFormulaMaterialVO,
   ProductFormulaOptionMaterialVO,
@@ -169,14 +170,14 @@ export function useFormulaSetupCore(props: { setupSection?: 'content' | 'options
         : await productFormulaApi.materials(formulaId)
       if (loadSeq !== setupLoadSeq || currentFormulaId.value !== formulaId || activeTab.value !== setupSection) return
       formula.value = response.data?.formula || {}
-      setup.materials = response.data?.materials || []
+      setup.materials = normalizeFormulaMaterials(response.data?.materials || [])
       setup.options = (response.data?.options || []).map((row) => ({ ...row, visibilityMode: row.visibilityMode || 'ALWAYS' }))
       setup.optionValues = response.data?.optionValues || []
       setup.optionMaterials = response.data?.optionMaterials || []
       setup.restrictions = response.data?.restrictions || []
-      setup.usageRules = response.data?.usageRules || []
+      setup.usageRules = normalizeFormulaUsageRules(response.data?.usageRules || [])
       setup.variables = response.data?.variables || []
-      setup.variableRules = response.data?.variableRules || []
+      setup.variableRules = normalizeFormulaVariableRules(response.data?.variableRules || [])
       normalizeFormulaOptionDraftState(setup)
       selectedOptionCode.value = optionClientKey(setup.options[0]) || setup.options[0]?.optionCode || ''
       await draftCache.afterSetupLoaded()
@@ -225,7 +226,7 @@ export function useFormulaSetupCore(props: { setupSection?: 'content' | 'options
   }
 
   function buildPayload(): ProductFormulaSetupVO {
-    const payload = { materials: setup.materials, options: setup.options, optionValues: setup.optionValues, optionMaterials: setup.optionMaterials, restrictions: setup.restrictions, usageRules: setup.usageRules.map(withoutUsageRuleLossRate), variables: setup.variables, variableRules: setup.variableRules }
+    const payload = { materials: normalizeFormulaMaterials(setup.materials), options: setup.options, optionValues: setup.optionValues, optionMaterials: setup.optionMaterials, restrictions: setup.restrictions, usageRules: normalizeFormulaUsageRules(setup.usageRules).map(withoutUsageRuleLossRate), variables: setup.variables, variableRules: normalizeFormulaVariableRules(setup.variableRules) }
     return activeTab.value === 'options' ? buildFormulaOptionPayload(payload) : payload
   }
 
@@ -242,7 +243,7 @@ export function useFormulaSetupCore(props: { setupSection?: 'content' | 'options
 
   function handleVariablesSaved(value: ProductFormulaSetupVO) {
     setup.variables = value.variables || []
-    setup.variableRules = value.variableRules || []
+    setup.variableRules = normalizeFormulaVariableRules(value.variableRules || [])
   }
 
   function resetSetup() {

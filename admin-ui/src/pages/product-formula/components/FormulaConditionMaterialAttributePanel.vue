@@ -9,14 +9,14 @@
   <div v-else class="condition-grid condition-grid--material-attribute">
     <div v-for="(row, index) in sources" :key="index" class="condition-grid__row">
       <span class="condition-grid__joiner-text">{{ index === 0 ? '取' : '+' }}</span>
-      <el-select v-model="row.optionCode" filterable :placeholder="t('productCenter.formulaSetup.attributeSourceOption')" @change="row.attributeCode = ''">
+      <el-select v-model="row.optionRef" filterable :placeholder="t('productCenter.formulaSetup.attributeSourceOption')" @change="row.attributeCode = ''">
         <el-option v-for="option in optionChoices" :key="option.value" :label="option.label" :value="option.value" />
       </el-select>
       <el-select v-model="row.attributeCode" filterable :placeholder="t('productCenter.formulaSetup.materialAttribute')">
-        <el-option v-for="attribute in attributesForOption(row.optionCode)" :key="attribute.value" :label="attribute.label" :value="attribute.value" />
+        <el-option v-for="attribute in attributesForOption(row.optionRef)" :key="attribute.value" :label="attribute.label" :value="attribute.value" />
       </el-select>
       <el-button v-if="sources.length > 1" text type="danger" @click="removeSource(index)">{{ t('common.delete') }}</el-button>
-      <p v-if="row.optionCode && attributesForOption(row.optionCode).length === 0" class="condition-grid__hint">
+      <p v-if="row.optionRef && attributesForOption(row.optionRef).length === 0" class="condition-grid__hint">
         {{ t('productCenter.formulaSetup.conditionNoAttributesForOption') }}
       </p>
     </div>
@@ -75,8 +75,8 @@ watch([sources, operator, value, allAttributes], () => {
   emit('change', buildMaterialAttributeCondition(sources, operator.value, value.value, props.options, allAttributes.value.map(toAttribute)))
 }, { deep: true, immediate: true })
 
-function attributesForOption(optionCode: string) {
-  return materialAttributeOptions(optionCode, props.optionMaterials, props.materials)
+function attributesForOption(optionRef: string) {
+  return materialAttributeOptions(optionRef, props.options, props.optionMaterials, props.materials)
 }
 
 function addSource() {
@@ -88,7 +88,7 @@ function removeSource(index: number) {
 }
 
 function emptySource(): MaterialAttributeSourceRow {
-  return { optionCode: '', attributeCode: '' }
+  return { optionRef: '', attributeCode: '' }
 }
 
 function toAttribute(option: { value: string; label: string }) {

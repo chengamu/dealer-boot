@@ -38,11 +38,18 @@
               @update:model-value="handleTargetOptionChange(row, $event)"
             >
               <el-option :label="t('productCenter.formulaSetup.wholeOrder')" :value="WHOLE_ORDER_TARGET" />
-              <el-option v-for="option in options" :key="String(option.optionCode)" :label="option.optionNameCn || option.optionCode" :value="option.optionCode" />
+              <el-option v-for="option in options" :key="targetOptionRef(option)" :label="option.optionNameCn || option.optionCode" :value="targetOptionRef(option)" />
             </el-select>
-            <el-select v-if="row.targetOptionCode" v-model="row.targetValueCode" class="restriction-target__value" filterable clearable>
+            <el-select
+              v-if="targetOptionValue(row) !== WHOLE_ORDER_TARGET"
+              :model-value="targetValueValue(row)"
+              class="restriction-target__value"
+              filterable
+              clearable
+              @update:model-value="handleTargetValueChange(row, $event)"
+            >
               <el-option :label="t('productCenter.formulaSetup.allOptionValues')" value="" />
-              <el-option v-for="value in valuesForOption(row.targetOptionCode)" :key="String(value.valueCode)" :label="value.valueNameCn || value.valueCode" :value="value.valueCode" />
+              <el-option v-for="value in valuesForOption(row)" :key="targetValueRef(value)" :label="value.valueNameCn || value.valueCode" :value="targetValueRef(value)" />
             </el-select>
           </div>
         </template>
@@ -78,6 +85,11 @@ import { ref } from 'vue'
 import FormulaConditionEditorDialog from './FormulaConditionEditorDialog.vue'
 import { normalizeDisplayExpression } from './formulaExpressionDisplay'
 import { validateConditionExpression } from '../utils/formulaExpression'
+import {
+  optionClientKey,
+  valueClientKey,
+  valueOwnerClientKey
+} from '../utils/formulaOptionDraftIdentity'
 import type {
   ProductFormulaMaterialVO,
   ProductFormulaOptionMaterialVO,
@@ -85,6 +97,11 @@ import type {
   ProductFormulaOptionValueVO,
   ProductFormulaRestrictionVO
 } from '@/api/product-capability/types'
+
+type DraftRestriction = ProductFormulaRestrictionVO & {
+  targetOptionClientKey?: string
+  targetValueClientKey?: string
+}
 
 const props = defineProps<{
   restrictions: ProductFormulaRestrictionVO[]
@@ -106,19 +123,50 @@ const expressionEditorText = ref('')
 const editingRestriction = ref<ProductFormulaRestrictionVO | null>(null)
 const WHOLE_ORDER_TARGET = '__WHOLE_ORDER__'
 
-function valuesForOption(optionCode?: string) {
+function valuesForOption(row: ProductFormulaRestrictionVO) {
+  const optionRef = targetOptionValue(row)
+  const option = optionByRef(optionRef)
+  const ownerKey = optionClientKey(option)
+  const optionCode = option?.optionCode || row.targetOptionCode
   return props.allOptionValues
-    .filter((row) => row.optionCode === optionCode)
+    .filter((value) => {
+      const valueOwnerKey = valueOwnerClientKey(value)
+      return valueOwnerKey ? valueOwnerKey === ownerKey : value.optionCode === optionCode
+    })
     .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
 }
 
 function targetOptionValue(row: ProductFormulaRestrictionVO) {
-  return row.targetOptionCode || WHOLE_ORDER_TARGET
+  return (row as DraftRestriction).targetOptionClientKey || row.targetOptionCode || WHOLE_ORDER_TARGET
+}
+
+function targetValueValue(row: ProductFormulaRestrictionVO) {
+  return (row as DraftRestriction).targetValueClientKey || row.targetValueCode || ''
 }
 
 function handleTargetOptionChange(row: ProductFormulaRestrictionVO, value: string | number | boolean) {
-  row.targetOptionCode = value === WHOLE_ORDER_TARGET ? '' : String(value || '')
+  const draft = row as DraftRestriction
+  const optionRef = value === WHOLE_ORDER_TARGET ? '' : String(value || '')
+  const option = optionByRef(optionRef)
+  draft.targetOptionClientKey = optionClientKey(option)
+  row.targetOptionCode = option?.optionCode || ''
+  draft.targetValueClientKey = ''
   row.targetValueCode = ''
+}
+
+function handleTargetValueChange(row: ProductFormulaRestrictionVO, value: string | number | boolean) {
+  const draft = row as DraftRestriction
+  const valueRef = String(value || '')
+  const optionRef = targetOptionValue(row)
+  const option = optionByRef(optionRef)
+  const optionKey = optionClientKey(option)
+  const selected = props.allOptionValues.find((item) => {
+    const itemRef = targetValueRef(item)
+    const ownerMatched = valueOwnerClientKey(item) ? valueOwnerClientKey(item) === optionKey : item.optionCode === option?.optionCode
+    return itemRef === valueRef && ownerMatched
+  })
+  draft.targetValueClientKey = valueClientKey(selected)
+  row.targetValueCode = selected?.valueCode || ''
 }
 
 function openExpressionEditor(row: ProductFormulaRestrictionVO) {
@@ -151,6 +199,18 @@ function restrictionExpressionText(row: ProductFormulaRestrictionVO) {
 function restrictionExpressionInvalid(row: ProductFormulaRestrictionVO) {
   const text = row.conditionExpression || normalizeDisplayExpression(row.conditionText, props.options, props.allOptionValues, props.materials)
   return !validateConditionExpression(text).valid
+}
+
+function targetOptionRef(option?: ProductFormulaOptionVO) {
+  return optionClientKey(option) || String(option?.optionCode || '')
+}
+
+function targetValueRef(value?: ProductFormulaOptionValueVO) {
+  return valueClientKey(value) || String(value?.valueCode || '')
+}
+
+function optionByRef(ref?: string) {
+  return props.options.find((option) => targetOptionRef(option) === ref || option.optionCode === ref)
 }
 </script>
 

@@ -387,6 +387,7 @@ CREATE TABLE IF NOT EXISTS pc_formula_variable (
     variable_id bigint PRIMARY KEY,
     tenant_id bigint NOT NULL DEFAULT 1 CHECK (tenant_id <> 0),
     formula_id bigint NOT NULL,
+    variable_key varchar(80) NOT NULL,
     variable_code varchar(80) NOT NULL,
     variable_name varchar(200) NOT NULL,
     del_flag varchar(1) NOT NULL DEFAULT '0',
@@ -402,6 +403,7 @@ CREATE TABLE IF NOT EXISTS pc_formula_variable (
 ALTER TABLE IF EXISTS pc_formula_variable
     ADD COLUMN IF NOT EXISTS tenant_id bigint NOT NULL DEFAULT 1 CHECK (tenant_id <> 0),
     ADD COLUMN IF NOT EXISTS formula_id bigint,
+    ADD COLUMN IF NOT EXISTS variable_key varchar(80),
     ADD COLUMN IF NOT EXISTS variable_code varchar(80),
     ADD COLUMN IF NOT EXISTS variable_name varchar(200),
     ADD COLUMN IF NOT EXISTS del_flag varchar(1) NOT NULL DEFAULT '0',
@@ -411,16 +413,19 @@ ALTER TABLE IF EXISTS pc_formula_variable
 COMMENT ON TABLE pc_formula_variable IS '产品配方内部变量草稿表';
 COMMENT ON COLUMN pc_formula_variable.variable_id IS '内部变量ID';
 COMMENT ON COLUMN pc_formula_variable.formula_id IS '配方ID';
-COMMENT ON COLUMN pc_formula_variable.variable_code IS '变量编码，公式内部使用 var_变量编码';
+COMMENT ON COLUMN pc_formula_variable.variable_key IS '变量隐藏引用键，公式内部使用 var_变量键';
+COMMENT ON COLUMN pc_formula_variable.variable_code IS '变量编码，人工识别使用，不作为公式唯一引用';
 COMMENT ON COLUMN pc_formula_variable.variable_name IS '变量名称，技术科公式展示使用';
 CREATE INDEX IF NOT EXISTS idx_pc_formula_variable_formula_sort ON pc_formula_variable (tenant_id, formula_id, sort_order, variable_id) WHERE del_flag = '0';
 CREATE INDEX IF NOT EXISTS idx_pc_formula_variable_code ON pc_formula_variable (tenant_id, formula_id, variable_code) WHERE del_flag = '0';
+CREATE INDEX IF NOT EXISTS idx_pc_formula_variable_key ON pc_formula_variable (tenant_id, formula_id, variable_key) WHERE del_flag = '0';
 
 CREATE TABLE IF NOT EXISTS pc_formula_variable_rule (
     rule_id bigint PRIMARY KEY,
     tenant_id bigint NOT NULL DEFAULT 1 CHECK (tenant_id <> 0),
     formula_id bigint NOT NULL,
     variable_id bigint,
+    variable_key varchar(80) NOT NULL,
     variable_code varchar(80) NOT NULL,
     condition_expression text,
     condition_text varchar(500),
@@ -443,6 +448,7 @@ ALTER TABLE IF EXISTS pc_formula_variable_rule
     ADD COLUMN IF NOT EXISTS tenant_id bigint NOT NULL DEFAULT 1 CHECK (tenant_id <> 0),
     ADD COLUMN IF NOT EXISTS formula_id bigint,
     ADD COLUMN IF NOT EXISTS variable_id bigint,
+    ADD COLUMN IF NOT EXISTS variable_key varchar(80),
     ADD COLUMN IF NOT EXISTS variable_code varchar(80),
     ADD COLUMN IF NOT EXISTS condition_expression text,
     ADD COLUMN IF NOT EXISTS condition_text varchar(500),
@@ -457,11 +463,12 @@ ALTER TABLE IF EXISTS pc_formula_variable_rule
 
 COMMENT ON TABLE pc_formula_variable_rule IS '产品配方内部变量取值规则草稿表';
 COMMENT ON COLUMN pc_formula_variable_rule.rule_id IS '内部变量规则ID';
+COMMENT ON COLUMN pc_formula_variable_rule.variable_key IS '变量隐藏引用键快照';
 COMMENT ON COLUMN pc_formula_variable_rule.variable_code IS '变量编码快照';
 COMMENT ON COLUMN pc_formula_variable_rule.condition_expression IS '规则内部条件表达式';
 COMMENT ON COLUMN pc_formula_variable_rule.value_type IS '取值方式：FIXED、FORMULA';
 COMMENT ON COLUMN pc_formula_variable_rule.default_rule_flag IS '默认规则标记';
-CREATE INDEX IF NOT EXISTS idx_pc_formula_variable_rule_formula_sort ON pc_formula_variable_rule (tenant_id, formula_id, variable_code, sort_order, rule_id) WHERE del_flag = '0';
+CREATE INDEX IF NOT EXISTS idx_pc_formula_variable_rule_formula_sort ON pc_formula_variable_rule (tenant_id, formula_id, variable_key, sort_order, rule_id) WHERE del_flag = '0';
 CREATE INDEX IF NOT EXISTS idx_pc_formula_variable_rule_variable ON pc_formula_variable_rule (tenant_id, formula_id, variable_id) WHERE del_flag = '0';
 
 CREATE TABLE IF NOT EXISTS pc_formula_option (

@@ -16,7 +16,7 @@
     <div class="internal-variable-list">
       <div
         v-for="row in visibleVariables"
-        :key="row.variableCode"
+        :key="row.variableKey || row.variableCode"
         class="internal-variable-row"
         @dblclick="$emit('insert', row)"
       >
@@ -63,7 +63,7 @@ const visibleVariables = computed(() => {
 })
 
 function variableSummary(row: ProductFormulaVariableVO) {
-  const rules = props.variableRules.filter((rule) => rule.variableCode === row.variableCode)
+  const rules = props.variableRules.filter((rule) => sameVariableRef(rule, row))
   const defaultRule = rules.find((rule) => rule.defaultRuleFlag) || rules[0]
   if (!defaultRule) return '-'
   const base = defaultRule.valueType === 'FORMULA'
@@ -71,6 +71,11 @@ function variableSummary(row: ProductFormulaVariableVO) {
     : `${props.t('productCenter.formulaSetup.defaultUsageRule')} ${formatUsageNumber(defaultRule.fixedValue)}`
   const extraCount = Math.max(0, rules.length - 1)
   return extraCount ? `${base}，${props.t('productCenter.formulaSetup.moreVariableRules').replace('{count}', String(extraCount))}` : base
+}
+
+function sameVariableRef(left: ProductFormulaVariableRuleVO, right: ProductFormulaVariableVO) {
+  if (left.variableKey && right.variableKey) return left.variableKey === right.variableKey
+  return left.variableCode === right.variableCode
 }
 
 function variableActions(row: ProductFormulaVariableVO): AdminTableAction[] {

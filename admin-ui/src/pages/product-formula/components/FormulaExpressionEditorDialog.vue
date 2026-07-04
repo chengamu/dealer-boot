@@ -173,7 +173,7 @@ const editorResultText = computed(() => {
 const variableGroups = computed(() => isFormulaTarget.value ? formulaVariableGroups() : [])
 const variableEditorOpen = ref(false)
 const editingVariable = ref<ProductFormulaVariableVO | null>(null)
-const editingVariableRules = computed(() => props.variableRules?.filter((rule) => rule.variableCode === editingVariable.value?.variableCode) || [])
+const editingVariableRules = computed(() => props.variableRules?.filter((rule) => sameVariableRef(rule, editingVariable.value)) || [])
 
 function appendExpressionText(value: string) {
   editorText.value = `${editorText.value || ''}${editorText.value ? ' ' : ''}${value}`
@@ -200,11 +200,13 @@ function openVariableEditor(row?: ProductFormulaVariableVO) {
 async function saveVariable(variable: ProductFormulaVariableVO, rules: ProductFormulaVariableRuleVO[]) {
   if (!props.formulaId) return
   const variables = [...(props.variables || [])]
+  variable.variableKey = variable.variableKey || editingVariable.value?.variableKey || newVariableKey()
   const oldCode = editingVariable.value?.variableCode
-  const index = variables.findIndex((row) => row.variableCode === variable.variableCode || row.variableId === variable.variableId)
+  const oldKey = editingVariable.value?.variableKey
+  const index = variables.findIndex((row) => row.variableKey === variable.variableKey || row.variableId === variable.variableId)
   if (index >= 0) variables.splice(index, 1, variable)
   else variables.push(variable)
-  const variableRules = (props.variableRules || []).filter((rule) => rule.variableCode !== variable.variableCode && rule.variableCode !== oldCode)
+  const variableRules = (props.variableRules || []).filter((rule) => rule.variableKey !== variable.variableKey && rule.variableKey !== oldKey && rule.variableCode !== oldCode)
     .concat(rules.map((rule) => normalizeVariableRule(rule, variables)))
   await productFormulaApi.saveVariables(props.formulaId, { variables, variableRules })
   const response = await productFormulaApi.variables(props.formulaId)
@@ -220,8 +222,8 @@ async function removeVariable(row: ProductFormulaVariableVO) {
     cancelButtonText: t('common.cancel'),
     type: 'warning'
   })
-  const variables = (props.variables || []).filter((item) => item.variableCode !== row.variableCode)
-  const variableRules = (props.variableRules || []).filter((rule) => rule.variableCode !== row.variableCode)
+  const variables = (props.variables || []).filter((item) => !sameVariableRef(item, row))
+  const variableRules = (props.variableRules || []).filter((rule) => !sameVariableRef(rule, row))
   await productFormulaApi.saveVariables(props.formulaId, { variables, variableRules })
   const response = await productFormulaApi.variables(props.formulaId)
   emit('variables-saved', response.data || { variables, variableRules })
@@ -241,15 +243,29 @@ async function copyVariables() {
 }
 
 function normalizeVariableRule(rule: ProductFormulaVariableRuleVO, variables: ProductFormulaVariableVO[]) {
+  const variable = variables.find((item) => item.variableKey === rule.variableKey || item.variableCode === rule.variableCode) || editingVariable.value
   const formulaText = rule.formulaText || rule.formulaExpression
   const conditionText = rule.defaultRuleFlag ? undefined : (rule.conditionText || rule.conditionExpression)
   return {
     ...rule,
+    variableKey: variable?.variableKey,
+    variableCode: variable?.variableCode,
     formulaExpression: formulaText ? normalizeDisplayExpression(formulaText, props.options, props.optionValues, props.materials, variables) : undefined,
     conditionExpression: conditionText ? normalizeDisplayExpression(conditionText, props.options, props.optionValues, props.materials, variables) : undefined,
     conditionText,
     formulaText
   }
+}
+
+function sameVariableRef(left?: { variableKey?: string; variableCode?: string; variableId?: number }, right?: { variableKey?: string; variableCode?: string; variableId?: number } | null) {
+  if (!left || !right) return false
+  if (left.variableKey && right.variableKey) return left.variableKey === right.variableKey
+  if (left.variableId && right.variableId) return left.variableId === right.variableId
+  return Boolean(left.variableCode && right.variableCode && left.variableCode === right.variableCode)
+}
+
+function newVariableKey() {
+  return `V_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`.toUpperCase()
 }
 
 function formulaVariableGroups() {

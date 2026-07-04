@@ -13,17 +13,17 @@
         <el-option label="或者" value="OR" />
       </el-select>
       <span v-else class="condition-grid__joiner condition-grid__joiner-text">当</span>
-      <el-select v-model="row.optionCode" filterable @change="row.valueCode = ''">
+      <el-select v-model="row.optionRef" filterable @change="row.valueRef = ''">
         <el-option v-for="option in optionChoices" :key="option.value" :label="option.label" :value="option.value" />
       </el-select>
       <el-select v-model="row.operator" class="condition-grid__operator">
         <el-option v-for="item in optionOperators" :key="item" :label="item" :value="item" />
       </el-select>
-      <el-select v-model="row.valueCode" filterable>
-        <el-option v-for="option in valueChoices(row.optionCode)" :key="option.value" :label="option.label" :value="option.value" />
+      <el-select v-model="row.valueRef" filterable>
+        <el-option v-for="option in valueChoices(row.optionRef)" :key="option.value" :label="option.label" :value="option.value" />
       </el-select>
       <el-button v-if="rows.length > 1" text type="danger" @click="removeRow(index)">{{ t('common.delete') }}</el-button>
-      <p v-if="row.optionCode && valueChoices(row.optionCode).length === 0" class="condition-grid__hint">
+      <p v-if="row.optionRef && valueChoices(row.optionRef).length === 0" class="condition-grid__hint">
         {{ t('productCenter.formulaSetup.conditionNoOptionValues') }}
       </p>
     </div>
@@ -60,8 +60,8 @@ watch(rows, () => {
   emit('change', buildOptionCondition(rows, props.options, props.optionValues))
 }, { deep: true, immediate: true })
 
-function valueChoices(optionCode: string) {
-  return valueSelectOptions(optionCode, props.optionValues)
+function valueChoices(optionRef: string) {
+  return valueSelectOptions(optionRef, props.options, props.optionValues)
 }
 
 function addRow() {
@@ -73,6 +73,6 @@ function removeRow(index: number) {
 }
 
 function emptyRow(): OptionConditionRow {
-  return { joiner: 'AND', optionCode: '', operator: '=', valueCode: '' }
+  return { joiner: 'AND', optionRef: '', operator: '=', valueRef: '' }
 }
 </script>

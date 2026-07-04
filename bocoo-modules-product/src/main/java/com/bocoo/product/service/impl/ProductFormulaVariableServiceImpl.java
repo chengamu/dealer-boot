@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -79,8 +80,9 @@ public class ProductFormulaVariableServiceImpl extends ProductServiceSupport imp
             throw ServiceException.ofMessageKey("product.formula.copySourceNotFound");
         }
         Long sourceFormulaId = sourceFormula.getFormulaId();
-        List<ProductFormulaVariable> variables = activeVariables(sourceFormulaId).stream().map(this::copyVariable).toList();
-        List<ProductFormulaVariableRule> rules = activeRules(sourceFormulaId).stream().map(this::copyRule).toList();
+        Map<String, String> copiedKeys = new LinkedHashMap<>();
+        List<ProductFormulaVariable> variables = activeVariables(sourceFormulaId).stream().map(source -> copyVariable(source, copiedKeys)).toList();
+        List<ProductFormulaVariableRule> rules = activeRules(sourceFormulaId).stream().map(rule -> copyRule(rule, copiedKeys)).toList();
         replace(formulaId, variables.stream().peek(row -> row.setFormulaId(formulaId)).toList(),
             rules.stream().peek(row -> row.setFormulaId(formulaId)).toList());
         return Boolean.TRUE;
@@ -123,14 +125,17 @@ public class ProductFormulaVariableServiceImpl extends ProductServiceSupport imp
     public List<ProductFormulaVariable> normalizeVariables(Long formulaId, List<ProductFormulaVariableBo> rows) {
         List<ProductFormulaVariable> result = new ArrayList<>();
         Set<String> codes = new HashSet<>();
+        Set<String> names = new HashSet<>();
         int index = 0;
         for (ProductFormulaVariableBo row : rows == null ? List.<ProductFormulaVariableBo>of() : rows) {
             if (row == null) continue;
             ProductFormulaVariable entity = ProductFormulaVariableRowConverter.variable(row);
             entity.setFormulaId(formulaId);
+            entity.setVariableKey(defaultString(trimUpper(entity.getVariableKey()), newVariableKey()));
             entity.setVariableCode(requiredUpper(entity.getVariableCode(), "product.formula.variableCodeRequired"));
             entity.setVariableName(requiredTrim(entity.getVariableName(), "product.formula.variableNameRequired"));
             if (!codes.add(entity.getVariableCode())) throw ServiceException.ofMessageKey("product.formula.variableCodeDuplicate");
+            if (!names.add(entity.getVariableName())) throw ServiceException.ofMessageKey("product.formula.variableNameDuplicate");
             entity.setDelFlag("0");
             entity.setSortOrder(entity.getSortOrder() == null ? index * 10 + 10 : entity.getSortOrder());
             result.add(entity);
@@ -142,15 +147,17 @@ public class ProductFormulaVariableServiceImpl extends ProductServiceSupport imp
     @Override
     public List<ProductFormulaVariableRule> normalizeRules(Long formulaId, List<ProductFormulaVariable> variables,
                                                            List<ProductFormulaVariableRuleBo> rows) {
-        Set<String> codes = variables.stream().map(ProductFormulaVariable::getVariableCode).collect(Collectors.toSet());
+        Map<String, ProductFormulaVariable> variablesByKey = variables.stream().collect(Collectors.toMap(ProductFormulaVariable::getVariableKey, variable -> variable));
+        Map<String, ProductFormulaVariable> variablesByCode = variables.stream().collect(Collectors.toMap(ProductFormulaVariable::getVariableCode, variable -> variable));
         List<ProductFormulaVariableRule> result = new ArrayList<>();
         int index = 0;
         for (ProductFormulaVariableRuleBo row : rows == null ? List.<ProductFormulaVariableRuleBo>of() : rows) {
             if (row == null) continue;
             ProductFormulaVariableRule entity = ProductFormulaVariableRowConverter.rule(row);
             entity.setFormulaId(formulaId);
-            entity.setVariableCode(requiredUpper(entity.getVariableCode(), "product.formula.variableCodeRequired"));
-            if (!codes.contains(entity.getVariableCode())) throw ServiceException.ofMessageKey("product.formula.variableRuleInvalid");
+            ProductFormulaVariable variable = resolveVariable(entity, variablesByKey, variablesByCode);
+            entity.setVariableKey(variable.getVariableKey());
+            entity.setVariableCode(variable.getVariableCode());
             normalizeRuleContent(entity);
             entity.setDelFlag("0");
             entity.setSortOrder(entity.getSortOrder() == null ? index * 10 + 10 : entity.getSortOrder());
@@ -175,10 +182,10 @@ public class ProductFormulaVariableServiceImpl extends ProductServiceSupport imp
         for (ProductFormulaVariable variable : variables) {
             ProductEntityDefaults.prepareInsert(variable);
             variableMapper.insert(variable);
-            ids.put(variable.getVariableCode(), variable.getVariableId());
+            ids.put(variable.getVariableKey(), variable.getVariableId());
         }
         for (ProductFormulaVariableRule rule : rules) {
-            rule.setVariableId(ids.get(rule.getVariableCode()));
+            rule.setVariableId(ids.get(rule.getVariableKey()));
             ProductEntityDefaults.prepareInsert(rule);
             ruleMapper.insert(rule);
         }
@@ -194,11 +201,17 @@ public class ProductFormulaVariableServiceImpl extends ProductServiceSupport imp
     public Map<String, Object> evaluateVariables(List<ProductFormulaVariableVo> variables, List<ProductFormulaVariableRuleVo> rules,
                                                  Map<String, Object> context) {
         Map<String, Object> result = new LinkedHashMap<>(context == null ? Map.of() : context);
-        Map<String, List<ProductFormulaVariableRuleVo>> rulesByCode = rules.stream()
-            .collect(Collectors.groupingBy(ProductFormulaVariableRuleVo::getVariableCode));
+        Map<String, List<ProductFormulaVariableRuleVo>> rulesByKey = rules.stream()
+            .collect(Collectors.groupingBy(rule -> variableKey(rule.getVariableKey(), rule.getVariableCode())));
         variables.stream().sorted(Comparator.comparing(ProductFormulaVariableVo::getSortOrder, Comparator.nullsLast(Integer::compareTo)))
-            .forEach(variable -> result.put(ProductFormulaExpressionValidator.variableName(variable.getVariableCode()),
-                evaluateVariableRule(rulesByCode.getOrDefault(variable.getVariableCode(), List.of()), result)));
+            .forEach(variable -> {
+                String key = variableKey(variable.getVariableKey(), variable.getVariableCode());
+                Object value = evaluateVariableRule(rulesByKey.getOrDefault(key, List.of()), result);
+                result.put(ProductFormulaExpressionValidator.variableName(key), value);
+                if (!key.equals(variable.getVariableCode())) {
+                    result.put(ProductFormulaExpressionValidator.variableName(variable.getVariableCode()), value);
+                }
+            });
         return result;
     }
 
@@ -237,10 +250,11 @@ public class ProductFormulaVariableServiceImpl extends ProductServiceSupport imp
     }
 
     private void assertRemovedVariablesNotReferenced(Long formulaId, List<ProductFormulaVariable> variables) {
-        Set<String> newCodes = variables.stream().map(ProductFormulaVariable::getVariableCode).collect(Collectors.toSet());
-        Set<String> removed = activeVariables(formulaId).stream().map(ProductFormulaVariable::getVariableCode)
-            .filter(code -> !newCodes.contains(code)).collect(Collectors.toSet());
-        if (!removed.isEmpty() && !referenceValidator.referencedUsageVariableCodes(activeUsageRules(formulaId)).stream().filter(removed::contains).toList().isEmpty()) {
+        Set<String> newKeys = variables.stream().map(ProductFormulaVariable::getVariableKey).collect(Collectors.toSet());
+        List<ProductFormulaVariable> active = activeVariables(formulaId);
+        Set<String> removed = active.stream().map(variable -> variableKey(variable.getVariableKey(), variable.getVariableCode()))
+            .filter(key -> !newKeys.contains(key)).collect(Collectors.toSet());
+        if (!removed.isEmpty() && !referenceValidator.referencedUsageVariableKeys(activeUsageRules(formulaId), active).stream().filter(removed::contains).toList().isEmpty()) {
             throw ServiceException.ofMessageKey("product.formula.variableReferencedRemoveDenied");
         }
     }
@@ -258,17 +272,52 @@ public class ProductFormulaVariableServiceImpl extends ProductServiceSupport imp
         return formula;
     }
 
-    private ProductFormulaVariable copyVariable(ProductFormulaVariable source) {
+    private ProductFormulaVariable copyVariable(ProductFormulaVariable source, Map<String, String> copiedKeys) {
         ProductFormulaVariable target = MapstructUtils.convert(source, ProductFormulaVariable.class);
         target.setVariableId(null);
+        String newKey = newVariableKey();
+        copiedKeys.put(variableKey(source.getVariableKey(), source.getVariableCode()), newKey);
+        copiedKeys.put(source.getVariableCode(), newKey);
+        target.setVariableKey(newKey);
         return target;
     }
 
-    private ProductFormulaVariableRule copyRule(ProductFormulaVariableRule source) {
+    private ProductFormulaVariableRule copyRule(ProductFormulaVariableRule source, Map<String, String> copiedKeys) {
         ProductFormulaVariableRule target = MapstructUtils.convert(source, ProductFormulaVariableRule.class);
         target.setRuleId(null);
         target.setVariableId(null);
+        target.setVariableKey(copiedKeys.get(variableKey(source.getVariableKey(), source.getVariableCode())));
+        target.setFormulaExpression(replaceVariableRefs(target.getFormulaExpression(), copiedKeys));
+        target.setFormulaText(replaceVariableRefs(target.getFormulaText(), copiedKeys));
+        target.setConditionExpression(replaceVariableRefs(target.getConditionExpression(), copiedKeys));
+        target.setConditionText(replaceVariableRefs(target.getConditionText(), copiedKeys));
         return target;
+    }
+
+    private ProductFormulaVariable resolveVariable(ProductFormulaVariableRule entity, Map<String, ProductFormulaVariable> variablesByKey,
+                                                   Map<String, ProductFormulaVariable> variablesByCode) {
+        ProductFormulaVariable variable = variablesByKey.get(trimUpper(entity.getVariableKey()));
+        if (variable == null) variable = variablesByCode.get(trimUpper(entity.getVariableCode()));
+        if (variable == null) throw ServiceException.ofMessageKey("product.formula.variableRuleInvalid");
+        return variable;
+    }
+
+    private String replaceVariableRefs(String expression, Map<String, String> copiedKeys) {
+        String result = expression;
+        if (StringUtils.isBlank(result)) return result;
+        for (Map.Entry<String, String> entry : copiedKeys.entrySet()) {
+            result = result.replace(ProductFormulaExpressionValidator.variableName(entry.getKey()),
+                ProductFormulaExpressionValidator.variableName(entry.getValue()));
+        }
+        return result;
+    }
+
+    private String variableKey(String variableKey, String variableCode) {
+        return StringUtils.isBlank(variableKey) ? variableCode : variableKey;
+    }
+
+    private String newVariableKey() {
+        return "V_" + UUID.randomUUID().toString().replace("-", "").substring(0, 12).toUpperCase(Locale.ROOT);
     }
 
     private String requiredTrim(String value, String messageKey) {

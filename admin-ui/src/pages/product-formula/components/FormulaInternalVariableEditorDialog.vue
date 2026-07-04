@@ -158,9 +158,10 @@ function fillCode() {
 
 function confirm() {
   fillCode()
+  draft.variableKey = draft.variableKey || `V_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`.toUpperCase()
   if (!draftRules.value.some((rule) => rule.defaultRuleFlag) && draftRules.value[0]) draftRules.value[0].defaultRuleFlag = true
   const variable = { ...draft }
-  const rules = draftRules.value.map(({ __key, ...rule }) => ({ ...rule, variableCode: variable.variableCode }))
+  const rules = draftRules.value.map(({ __key, ...rule }) => ({ ...rule, variableKey: variable.variableKey, variableCode: variable.variableCode }))
   emit('save', variable, rules)
 }
 </script>

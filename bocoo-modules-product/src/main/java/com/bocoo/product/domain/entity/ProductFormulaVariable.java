@@ -18,6 +18,7 @@ public class ProductFormulaVariable extends BaseEntity {
 
     private Long tenantId;
     private Long formulaId;
+    private String variableKey;
     private String variableCode;
     private String variableName;
     private String delFlag;

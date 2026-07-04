@@ -252,6 +252,23 @@ export function useFormulaUsageRules(
     }
   }
 
+  function syncCurrentRules() {
+    let valid = true
+    currentRules.value.forEach((row) => {
+      if (row.conditionType === 'EXPRESSION') {
+        syncExpressionCondition(row)
+        if (!validateConditionExpression(row.conditionExpression).valid) valid = false
+      }
+      formulaFields.forEach((field) => {
+        if (!ruleFormulaText(row, field)) return
+        syncFormula(row, field)
+        if (!validateFormulaExpression(String(row[field.valueKey] || '')).valid) valid = false
+      })
+    })
+    if (!valid) ElMessage.warning(t('product.formula.usageConditionInvalid'))
+    return valid
+  }
+
   function ruleFormulaText(row: ProductFormulaUsageRuleVO, field: FormulaField = formulaFields[4]) {
     const textValue = row[field.textKey]
     const formulaValue = row[field.valueKey]
@@ -362,6 +379,7 @@ export function useFormulaUsageRules(
     removeSelectedRule,
     handleDefaultRuleChange,
     syncFormula,
+    syncCurrentRules,
     openExpressionEditor,
     confirmExpressionEditor,
     applyCurrentUsageToBatchRows

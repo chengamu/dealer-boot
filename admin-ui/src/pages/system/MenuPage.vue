@@ -1,6 +1,6 @@
 <template>
-  <div class="app-container menu-page">
-    <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true">
+  <div class="app-container menu-page system-table-page">
+    <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true" class="system-table-page__search">
       <el-form-item :label="t('menu.menuName')" prop="menuName">
         <el-input v-model="queryParams.menuName" :placeholder="t('menu.menuNamePlaceholder')" clearable style="width: 200px" @keyup.enter="handleQuery" />
       </el-form-item>
@@ -15,7 +15,7 @@
       </el-form-item>
     </el-form>
 
-    <el-row :gutter="10" class="mb8">
+    <el-row :gutter="10" class="mb8 system-table-page__toolbar">
       <el-col :span="1.5">
         <el-button type="primary" plain icon="Plus" @click="handleAdd()" v-hasPermi="['system:menu:add']">{{ t('common.add') }}</el-button>
       </el-col>
@@ -29,6 +29,8 @@
       v-if="refreshTable"
       v-loading="loading"
       :data="menuList"
+      border
+      class="system-table-page__table"
       row-key="menuId"
       :default-expand-all="isExpandAll"
       :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"

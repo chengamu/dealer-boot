@@ -13,6 +13,7 @@ public class ProductFormulaVariableBo extends BaseBo {
     private Long variableId;
     private Long tenantId;
     private Long formulaId;
+    private String variableKey;
     private String variableCode;
     private String variableName;
     private String delFlag;

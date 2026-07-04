@@ -1,6 +1,6 @@
 <template>
-  <div class="app-container legal-document-page">
-    <el-form ref="queryRef" :model="queryParams" :inline="true">
+  <div class="app-container legal-document-page system-table-page">
+    <el-form ref="queryRef" :model="queryParams" :inline="true" class="system-table-page__search">
       <el-form-item :label="t('legal.documentType')" prop="documentType">
         <el-select v-model="queryParams.documentType" :placeholder="t('common.selectPlaceholder')" clearable class="legal-document-page__select">
           <el-option v-for="item in documentTypeOptions" :key="item.value" :label="item.label" :value="item.value" />
@@ -17,11 +17,11 @@
       </el-form-item>
     </el-form>
 
-    <el-row class="mb8">
+    <el-row class="mb8 system-table-page__toolbar">
       <el-button type="primary" icon="Plus" @click="openForm()" v-hasPermi="['system:legal:document:add']">{{ t('common.add') }}</el-button>
     </el-row>
 
-    <el-table v-loading="loading" :data="rows">
+    <el-table v-loading="loading" :data="rows" border class="system-table-page__table">
       <el-table-column :label="t('legal.title')" prop="title" min-width="220" />
       <el-table-column :label="t('legal.documentType')" width="170">
         <template #default="{ row }">{{ formatDocumentType(row.documentType) }}</template>
@@ -33,7 +33,7 @@
       <el-table-column :label="t('legal.publishedTime')" width="180">
         <template #default="{ row }">{{ formatUtc(row.publishedTime) }}</template>
       </el-table-column>
-      <el-table-column :label="t('common.operate')" width="150" fixed="right">
+      <el-table-column :label="t('common.operate')" align="center" width="150" fixed="right" class-name="small-padding fixed-width">
         <template #default="{ row }">
           <AdminTableActions :actions="[
             { label: t('common.edit'), icon: 'Edit', permission: 'system:legal:document:edit', onClick: () => openForm(row) },
@@ -43,7 +43,7 @@
       </el-table-column>
     </el-table>
 
-    <pagination v-show="total > 0" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" :total="total" @pagination="getList" />
+    <pagination v-show="total > 0" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" :total="total" class="system-table-page__pagination" @pagination="getList" />
 
     <AdminDrawer
       v-model="open"

@@ -37,8 +37,8 @@
         </div>
       </el-col>
 
-      <el-col :span="21" :xs="24" class="user-page__content">
-        <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true" label-width="96px">
+      <el-col :span="21" :xs="24" class="user-page__content system-table-page">
+        <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true" label-width="96px" class="system-table-page__search">
           <el-form-item :label="t('user.userName')" prop="userName">
             <el-input v-model="queryParams.userName" :placeholder="t('user.userNamePlaceholder')" clearable style="width: 240px" @keyup.enter="handleQuery" />
           </el-form-item>
@@ -64,7 +64,7 @@
           </el-form-item>
         </el-form>
 
-        <el-row :gutter="10" class="mb8">
+        <el-row :gutter="10" class="mb8 system-table-page__toolbar">
           <el-col :span="1.5">
             <el-button type="primary" plain icon="Plus" @click="handleAdd" v-hasPermi="['system:user:add']">{{ t('common.add') }}</el-button>
           </el-col>
@@ -84,7 +84,7 @@
           <right-toolbar v-model:showSearch="showSearch" :columns="columns" @queryTable="getList" />
         </el-row>
 
-        <el-table v-loading="loading" :data="userList" class="user-rich-table" @selection-change="handleSelectionChange">
+        <el-table v-loading="loading" :data="userList" border class="user-rich-table system-table-page__table" @selection-change="handleSelectionChange">
           <el-table-column type="selection" width="50" align="center" />
           <el-table-column v-if="columns[0].visible" :label="t('user.userName')" min-width="240">
             <template #default="{ row }">
@@ -123,7 +123,7 @@
           </el-table-column>
         </el-table>
 
-        <pagination v-show="total > 0" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" :total="total" @pagination="getList" />
+        <pagination v-show="total > 0" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" :total="total" class="system-table-page__pagination" @pagination="getList" />
       </el-col>
     </el-row>
 

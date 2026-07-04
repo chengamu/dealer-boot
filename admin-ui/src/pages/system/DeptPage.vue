@@ -1,6 +1,6 @@
 ﻿<template>
-  <div class="app-container dept-page">
-    <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true">
+  <div class="app-container dept-page system-table-page">
+    <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true" class="system-table-page__search">
       <el-form-item :label="t('legacy.deptName')" prop="deptName">
         <el-input
           v-model="queryParams.deptName"
@@ -21,7 +21,7 @@
       </el-form-item>
     </el-form>
 
-    <el-row :gutter="10" class="mb8">
+    <el-row :gutter="10" class="mb8 system-table-page__toolbar">
       <el-col :span="1.5">
         <el-button type="primary" plain icon="Plus" @click="handleAdd()" v-hasPermi="['system:dept:add']">
           {{ t('common.add') }}
@@ -39,6 +39,8 @@
       v-if="refreshTable"
       v-loading="loading"
       :data="deptList"
+      border
+      class="system-table-page__table"
       row-key="deptId"
       :default-expand-all="isExpandAll"
       :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"

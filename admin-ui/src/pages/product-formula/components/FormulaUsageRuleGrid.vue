@@ -71,13 +71,18 @@ import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 import FormulaUsageConditionEditor from './FormulaUsageConditionEditor.vue'
 import { validateFormulaExpression } from '../utils/formulaExpression'
+import { normalizeDisplayExpression } from './formulaExpressionDisplay'
 import type { FormulaField, ExpressionTarget } from './formulaUsageTypes'
-import type { ProductFormulaUsageRuleVO } from '@/api/product-capability/types'
+import type { ProductFormulaMaterialVO, ProductFormulaOptionVO, ProductFormulaOptionValueVO, ProductFormulaUsageRuleVO, ProductFormulaVariableVO } from '@/api/product-capability/types'
 
 const props = defineProps<{
   rules: ProductFormulaUsageRuleVO[]
   selectedRule: ProductFormulaUsageRuleVO | null
   formulaFields: FormulaField[]
+  materials?: ProductFormulaMaterialVO[]
+  options: ProductFormulaOptionVO[]
+  optionValues: ProductFormulaOptionValueVO[]
+  variables?: ProductFormulaVariableVO[]
 }>()
 
 defineEmits<{
@@ -96,11 +101,11 @@ const t = (key: string) => getMessage(key, localeStore.language)
 
 function formulaResult(row: ProductFormulaUsageRuleVO) {
   const candidates = props.formulaFields
-    .map((field) => ruleFormulaText(row, field))
+    .map((field) => normalizeFormulaText(ruleFormulaText(row, field)))
     .filter(Boolean)
-  return candidates.length
-    ? validateFormulaExpression(candidates[0])
-    : { valid: false, expression: '', message: 'empty' }
+  if (!candidates.length) return { valid: false, expression: '', message: 'empty' }
+  const results = candidates.map((formula) => validateFormulaExpression(formula))
+  return results.find((result) => !result.valid) || results[0]
 }
 
 function formulaResultText(row: ProductFormulaUsageRuleVO) {
@@ -121,6 +126,10 @@ function ruleFormulaText(row: ProductFormulaUsageRuleVO, field: FormulaField) {
   if (typeof textValue === 'string' || typeof formulaValue === 'string') return (textValue || formulaValue) as string
   if (field.target === 'usage' && row.fixedUsageQty !== undefined && row.fixedUsageQty !== null) return String(row.fixedUsageQty)
   return undefined
+}
+
+function normalizeFormulaText(value?: string) {
+  return value ? normalizeDisplayExpression(value, props.options, props.optionValues, props.materials || [], props.variables || []) : ''
 }
 </script>
 

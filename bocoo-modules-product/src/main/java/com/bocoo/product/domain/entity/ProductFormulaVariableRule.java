@@ -21,6 +21,7 @@ public class ProductFormulaVariableRule extends BaseEntity {
     private Long tenantId;
     private Long formulaId;
     private Long variableId;
+    private String variableKey;
     private String variableCode;
     private String conditionExpression;
     private String conditionText;

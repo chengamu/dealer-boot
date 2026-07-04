@@ -132,6 +132,7 @@ export function useFormulaUsageEditor(props: FormulaUsageEditorProps, close: () 
   }
 
   function confirmAndClose() {
+    if (!usageRules.syncCurrentRules()) return
     usageRules.applyCurrentUsageToBatchRows()
     unsavedChangesGuard.markPristine()
     close()

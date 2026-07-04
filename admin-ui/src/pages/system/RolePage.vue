@@ -1,6 +1,6 @@
 ﻿<template>
-  <div class="app-container role-page">
-    <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true" label-width="80px">
+  <div class="app-container role-page system-table-page">
+    <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true" label-width="80px" class="system-table-page__search">
       <el-form-item :label="t('role.roleName')" prop="roleName">
         <el-input v-model="queryParams.roleName" :placeholder="t('role.roleNamePlaceholder')" clearable style="width: 240px" @keyup.enter="handleQuery" />
       </el-form-item>
@@ -29,7 +29,7 @@
       </el-form-item>
     </el-form>
 
-    <el-row :gutter="10" class="mb8">
+    <el-row :gutter="10" class="mb8 system-table-page__toolbar">
       <el-col :span="1.5">
         <el-button type="primary" plain icon="Plus" @click="handleAdd" v-hasPermi="['system:role:add']">{{ t('common.add') }}</el-button>
       </el-col>
@@ -46,7 +46,7 @@
       <right-toolbar v-model:showSearch="showSearch" @queryTable="getList" />
     </el-row>
 
-    <el-table v-loading="loading" :data="roleList" @selection-change="handleSelectionChange">
+    <el-table v-loading="loading" :data="roleList" border class="system-table-page__table" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column :label="t('role.roleName')" prop="roleName" :show-overflow-tooltip="true" width="150" />
       <el-table-column :label="t('role.roleKey')" prop="roleKey" :show-overflow-tooltip="true" width="150" />
@@ -73,6 +73,7 @@
       v-model:page="queryParams.pageNum"
       v-model:limit="queryParams.pageSize"
       :total="total"
+      class="system-table-page__pagination"
       @pagination="getList"
     />
 

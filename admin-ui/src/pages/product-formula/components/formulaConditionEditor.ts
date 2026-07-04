@@ -1,5 +1,11 @@
 import { materialAttributeVariableName, normalizeDisplayExpression, optionVariableName } from './formulaExpressionDisplay'
 import { validateConditionExpression } from '../utils/formulaExpression'
+import {
+  materialOwnerClientKey,
+  optionClientKey,
+  valueClientKey,
+  valueOwnerClientKey
+} from '../utils/formulaOptionDraftIdentity'
 import type {
   ProductFormulaMaterialVO,
   ProductFormulaOptionMaterialVO,
@@ -17,13 +23,13 @@ export type ConditionBuildResult = {
 
 export type OptionConditionRow = {
   joiner: 'AND' | 'OR'
-  optionCode: string
+  optionRef: string
   operator: '=' | '!='
-  valueCode: string
+  valueRef: string
 }
 
 export type MaterialAttributeSourceRow = {
-  optionCode: string
+  optionRef: string
   attributeCode: string
 }
 
@@ -42,14 +48,16 @@ export function buildOrderCondition(field: SelectOption | undefined, operator: s
 }
 
 export function buildOptionCondition(rows: OptionConditionRow[], options: ProductFormulaOptionVO[], values: ProductFormulaOptionValueVO[]): ConditionBuildResult {
-  const validRows = rows.filter((row) => row.optionCode && row.operator && row.valueCode)
+  const validRows = rows
+    .map((row) => ({ row, option: optionByRef(row.optionRef, options), value: valueByRef(row.valueRef, values) }))
+    .filter((item) => item.option?.optionCode && item.value?.valueCode && item.row.operator)
   const text = validRows.map((row, index) => {
-    const prefix = index === 0 ? '' : ` ${joinerText(row.joiner)} `
-    return `${prefix}${optionLabel(row.optionCode, options)} ${row.operator} ${valueLabel(row.valueCode, values)}`
+    const prefix = index === 0 ? '' : ` ${joinerText(row.row.joiner)} `
+    return `${prefix}${optionLabel(row.option?.optionCode, options)} ${row.row.operator} ${valueLabel(row.value?.valueCode, values)}`
   }).join('')
   const expression = validRows.map((row, index) => {
-    const prefix = index === 0 ? '' : ` ${row.joiner === 'AND' ? '&&' : '||'} `
-    return `${prefix}${optionVariableName(row.optionCode)} ${toExpressionOperator(row.operator)} ${quoted(row.valueCode)}`
+    const prefix = index === 0 ? '' : ` ${row.row.joiner === 'AND' ? '&&' : '||'} `
+    return `${prefix}${optionVariableName(row.option?.optionCode)} ${toExpressionOperator(row.row.operator)} ${quoted(row.value?.valueCode || '')}`
   }).join('')
   return validateBuildResult(text, expression)
 }
@@ -61,10 +69,12 @@ export function buildMaterialAttributeCondition(
   options: ProductFormulaOptionVO[],
   attributes: ProductMaterialAttributeVO[]
 ): ConditionBuildResult {
-  const validSources = sources.filter((row) => row.optionCode && row.attributeCode)
+  const validSources = sources
+    .map((row) => ({ row, option: optionByRef(row.optionRef, options) }))
+    .filter((item) => item.option?.optionCode && item.row.attributeCode)
   const numericValue = String(value || '').trim()
-  const textLeft = validSources.map((row) => `${optionLabel(row.optionCode, options)}.${attributeLabel(row.attributeCode, attributes)}`).join(' + ')
-  const expressionLeft = validSources.map((row) => materialAttributeVariableName(row.optionCode, row.attributeCode)).join(' + ')
+  const textLeft = validSources.map(({ row, option }) => `${optionLabel(option?.optionCode, options)}.${attributeLabel(row.attributeCode, attributes)}`).join(' + ')
+  const expressionLeft = validSources.map(({ row, option }) => materialAttributeVariableName(option?.optionCode, row.attributeCode)).join(' + ')
   const text = textLeft && numericValue ? `${textLeft} ${operator} ${numericValue}` : ''
   const expression = expressionLeft && numericValue ? `${expressionLeft} ${toExpressionOperator(operator)} ${numericValue}` : ''
   return validateBuildResult(text, expression)
@@ -77,21 +87,37 @@ export function buildAdvancedCondition(text: string, options: ProductFormulaOpti
 
 export function optionSelectOptions(options: ProductFormulaOptionVO[]): SelectOption[] {
   return options.map((option) => ({
-    value: String(option.optionCode || ''),
+    value: optionRef(option),
     label: option.optionNameCn || option.optionNameEn || option.optionCode || '-'
   })).filter((option) => option.value)
 }
 
-export function valueSelectOptions(optionCode: string, values: ProductFormulaOptionValueVO[]): SelectOption[] {
+export function valueSelectOptions(optionRefValue: string, options: ProductFormulaOptionVO[], values: ProductFormulaOptionValueVO[]): SelectOption[] {
+  const option = optionByRef(optionRefValue, options)
+  const ownerKey = optionClientKey(option)
+  const optionCode = option?.optionCode
   return values
-    .filter((value) => value.optionCode === optionCode)
+    .filter((value) => {
+      const valueOwnerKey = valueOwnerClientKey(value)
+      return valueOwnerKey ? valueOwnerKey === ownerKey : value.optionCode === optionCode
+    })
     .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
-    .map((value) => ({ value: String(value.valueCode || ''), label: value.valueNameCn || value.valueNameEn || value.valueCode || '-' }))
+    .map((value) => ({ value: valueRef(value), label: value.valueNameCn || value.valueNameEn || value.valueCode || '-' }))
     .filter((option) => option.value)
 }
 
-export function materialAttributeOptions(optionCode: string, optionMaterials: ProductFormulaOptionMaterialVO[], materials: ProductFormulaMaterialVO[]): SelectOption[] {
-  const materialCodes = new Set(optionMaterials.filter((row) => row.optionCode === optionCode).map((row) => row.materialCode).filter(Boolean))
+export function materialAttributeOptions(optionRefValue: string, options: ProductFormulaOptionVO[], optionMaterials: ProductFormulaOptionMaterialVO[], materials: ProductFormulaMaterialVO[]): SelectOption[] {
+  const option = optionByRef(optionRefValue, options)
+  const ownerKey = optionClientKey(option)
+  const optionCode = option?.optionCode || optionRefValue
+  const materialCodes = new Set(optionMaterials
+    .filter((row) => {
+      if (!optionRefValue) return true
+      const rowOwnerKey = materialOwnerClientKey(row)
+      return rowOwnerKey ? rowOwnerKey === ownerKey : row.optionCode === optionCode
+    })
+    .map((row) => row.materialCode)
+    .filter(Boolean))
   const attributes = materials
     .filter((material) => material.materialCode && materialCodes.has(material.materialCode))
     .flatMap((material) => material.attributeList || [])
@@ -107,7 +133,7 @@ export function materialAttributeOptions(optionCode: string, optionMaterials: Pr
 }
 
 export function allMaterialAttributes(optionMaterials: ProductFormulaOptionMaterialVO[], materials: ProductFormulaMaterialVO[]) {
-  return materialAttributeOptions('', optionMaterials.map((row) => ({ ...row, optionCode: '' })), materials)
+  return materialAttributeOptions('', [], optionMaterials.map((row) => ({ ...row, optionCode: '' })), materials)
 }
 
 function validateBuildResult(text: string, expression: string): ConditionBuildResult {
@@ -115,14 +141,30 @@ function validateBuildResult(text: string, expression: string): ConditionBuildRe
   return { text, expression: result.expression || expression, valid: result.valid, message: result.message }
 }
 
-function optionLabel(optionCode: string, options: ProductFormulaOptionVO[]) {
+function optionLabel(optionCode: string | undefined, options: ProductFormulaOptionVO[]) {
   const option = options.find((row) => row.optionCode === optionCode)
   return option?.optionNameCn || option?.optionNameEn || optionCode
 }
 
-function valueLabel(valueCode: string, values: ProductFormulaOptionValueVO[]) {
+function valueLabel(valueCode: string | undefined, values: ProductFormulaOptionValueVO[]) {
   const value = values.find((row) => row.valueCode === valueCode)
   return value?.valueNameCn || value?.valueNameEn || valueCode
+}
+
+function optionByRef(ref: string | undefined, options: ProductFormulaOptionVO[]) {
+  return options.find((option) => optionRef(option) === ref || option.optionCode === ref)
+}
+
+function valueByRef(ref: string | undefined, values: ProductFormulaOptionValueVO[]) {
+  return values.find((value) => valueRef(value) === ref || value.valueCode === ref)
+}
+
+function optionRef(option?: ProductFormulaOptionVO) {
+  return optionClientKey(option) || String(option?.optionCode || '')
+}
+
+function valueRef(value?: ProductFormulaOptionValueVO) {
+  return valueClientKey(value) || String(value?.valueCode || '')
 }
 
 function attributeLabel(attributeCode: string, attributes: ProductMaterialAttributeVO[]) {

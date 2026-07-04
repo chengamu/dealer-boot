@@ -17,46 +17,70 @@ class ProductFormulaVariableReferenceValidator {
 
     String validationMessageKey(List<ProductFormulaVariable> variables, List<ProductFormulaVariableRule> rules,
                                 List<ProductFormulaUsageRule> usageRules) {
-        Set<String> variableCodes = variables.stream().map(ProductFormulaVariable::getVariableCode).collect(Collectors.toSet());
-        Map<String, List<ProductFormulaVariableRule>> rulesByCode = rules.stream()
-            .collect(Collectors.groupingBy(ProductFormulaVariableRule::getVariableCode));
-        for (String code : variableCodes) {
-            if (rulesByCode.getOrDefault(code, List.of()).stream().noneMatch(rule -> Boolean.TRUE.equals(rule.getDefaultRuleFlag()))) {
+        Map<String, String> keysByRef = variableRefMap(variables);
+        Set<String> variableKeys = variables.stream().map(this::variableKey).collect(Collectors.toSet());
+        Map<String, List<ProductFormulaVariableRule>> rulesByKey = rules.stream()
+            .collect(Collectors.groupingBy(rule -> variableKey(rule.getVariableKey(), rule.getVariableCode())));
+        for (String key : variableKeys) {
+            if (rulesByKey.getOrDefault(key, List.of()).stream().noneMatch(rule -> Boolean.TRUE.equals(rule.getDefaultRuleFlag()))) {
                 return "product.formula.variableDefaultRuleRequired";
             }
         }
-        if (!variableCodes.containsAll(referencedVariableCodes(rules))) return "product.formula.variableReferenceInvalid";
-        if (!variableCodes.containsAll(referencedUsageVariableCodes(usageRules))) return "product.formula.variableReferenceInvalid";
-        return hasCycle(variableCodes, rules) ? "product.formula.variableCycleInvalid" : null;
+        if (!variableKeys.containsAll(referencedVariableKeys(rules, keysByRef))) return "product.formula.variableReferenceInvalid";
+        if (!variableKeys.containsAll(referencedUsageVariableKeys(usageRules, keysByRef))) return "product.formula.variableReferenceInvalid";
+        return hasCycle(variableKeys, rules, keysByRef) ? "product.formula.variableCycleInvalid" : null;
     }
 
-    Set<String> referencedUsageVariableCodes(List<ProductFormulaUsageRule> rules) {
+    Set<String> referencedUsageVariableKeys(List<ProductFormulaUsageRule> rules, List<ProductFormulaVariable> variables) {
+        return referencedUsageVariableKeys(rules, variableRefMap(variables));
+    }
+
+    private Set<String> referencedUsageVariableKeys(List<ProductFormulaUsageRule> rules, Map<String, String> keysByRef) {
         return rules.stream().flatMap(rule -> variableRefs(String.join(" ",
             blank(rule.getLengthFormula()), blank(rule.getWidthFormula()), blank(rule.getHeightFormula()),
-            blank(rule.getWeightFormula()), blank(rule.getUsageFormula()))).stream()).collect(Collectors.toSet());
+            blank(rule.getWeightFormula()), blank(rule.getUsageFormula())), keysByRef).stream()).collect(Collectors.toSet());
     }
 
-    private Set<String> referencedVariableCodes(List<ProductFormulaVariableRule> rules) {
-        return rules.stream().flatMap(rule -> variableRefs(rule.getFormulaExpression()).stream()).collect(Collectors.toSet());
+    private Set<String> referencedVariableKeys(List<ProductFormulaVariableRule> rules, Map<String, String> keysByRef) {
+        return rules.stream().flatMap(rule -> variableRefs(rule.getFormulaExpression(), keysByRef).stream()).collect(Collectors.toSet());
     }
 
-    private Set<String> variableRefs(String expression) {
+    private Set<String> variableRefs(String expression, Map<String, String> keysByRef) {
         Set<String> refs = new HashSet<>();
         var matcher = VAR_PATTERN.matcher(blank(expression));
-        while (matcher.find()) refs.add(matcher.group(1));
+        while (matcher.find()) refs.add(keysByRef.getOrDefault(matcher.group(1), matcher.group(1)));
         return refs;
     }
 
-    private boolean hasCycle(Set<String> variableCodes, List<ProductFormulaVariableRule> rules) {
+    private boolean hasCycle(Set<String> variableKeys, List<ProductFormulaVariableRule> rules, Map<String, String> keysByRef) {
         Map<String, Set<String>> graph = new LinkedHashMap<>();
-        variableCodes.forEach(code -> graph.put(code, new HashSet<>()));
-        rules.forEach(rule -> graph.getOrDefault(rule.getVariableCode(), new HashSet<>()).addAll(variableRefs(rule.getFormulaExpression())));
+        variableKeys.forEach(key -> graph.put(key, new HashSet<>()));
+        rules.forEach(rule -> graph.getOrDefault(variableKey(rule.getVariableKey(), rule.getVariableCode()), new HashSet<>())
+            .addAll(variableRefs(rule.getFormulaExpression(), keysByRef)));
         Set<String> visiting = new HashSet<>();
         Set<String> visited = new HashSet<>();
-        for (String code : variableCodes) {
-            if (dfsCycle(code, graph, visiting, visited)) return true;
+        for (String key : variableKeys) {
+            if (dfsCycle(key, graph, visiting, visited)) return true;
         }
         return false;
+    }
+
+    private Map<String, String> variableRefMap(List<ProductFormulaVariable> variables) {
+        Map<String, String> refs = new LinkedHashMap<>();
+        variables.forEach(variable -> {
+            String key = variableKey(variable);
+            refs.put(key, key);
+            refs.put(variable.getVariableCode(), key);
+        });
+        return refs;
+    }
+
+    private String variableKey(ProductFormulaVariable variable) {
+        return variableKey(variable.getVariableKey(), variable.getVariableCode());
+    }
+
+    private String variableKey(String variableKey, String variableCode) {
+        return blank(variableKey).isBlank() ? variableCode : variableKey;
     }
 
     private boolean dfsCycle(String code, Map<String, Set<String>> graph, Set<String> visiting, Set<String> visited) {

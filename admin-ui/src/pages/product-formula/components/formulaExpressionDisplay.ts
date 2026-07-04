@@ -41,8 +41,12 @@ function buildAliasPairs(options: ProductFormulaOptionVO[], optionValues: Produc
   })
   buildMaterialAliasPairs(aliases, materials)
   variables.forEach((variable) => {
-    pushAlias(aliases, variable.variableName, `var_${variable.variableCode}`)
-    pushAlias(aliases, variable.variableCode, `var_${variable.variableCode}`)
+    const internalName = internalVariableName(variable)
+    if (!internalName) return
+    pushAlias(aliases, variable.variableName, internalName)
+    pushAlias(aliases, variable.variableCode, internalName)
+    if (variable.variableCode) pushAlias(aliases, `var_${variable.variableCode}`, internalName)
+    if (variable.variableKey) pushAlias(aliases, `var_${variable.variableKey}`, internalName)
   })
   pushAlias(aliases, '四舍五入', 'round')
   pushAlias(aliases, '向上取整', 'ceil')
@@ -108,6 +112,11 @@ function pushAlias(aliases: AliasPair[], from?: string, to?: string) {
   if (!from || !to || from === to) return
   if (aliases.some((item) => item.from === from)) return
   aliases.push({ from, to })
+}
+
+function internalVariableName(variable: ProductFormulaVariableVO) {
+  const key = variable.variableKey || variable.variableCode
+  return key ? `var_${key}` : ''
 }
 
 function escapeRegExp(value: string) {

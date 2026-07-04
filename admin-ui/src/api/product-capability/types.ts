@@ -431,6 +431,7 @@ export interface ProductFormulaUsageRuleVO extends ProductRecord {
 export interface ProductFormulaVariableVO extends ProductRecord {
   variableId?: number
   formulaId?: number
+  variableKey?: string
   variableCode?: string
   variableName?: string
   sortOrder?: number
@@ -441,6 +442,7 @@ export interface ProductFormulaVariableRuleVO extends ProductRecord {
   ruleId?: number
   formulaId?: number
   variableId?: number
+  variableKey?: string
   variableCode?: string
   conditionExpression?: string
   conditionText?: string

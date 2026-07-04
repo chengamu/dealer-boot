@@ -17,6 +17,7 @@ final class ProductFormulaVariableRowConverter {
         target.setVariableId(source.getVariableId());
         target.setTenantId(source.getTenantId());
         target.setFormulaId(source.getFormulaId());
+        target.setVariableKey(source.getVariableKey());
         target.setVariableCode(source.getVariableCode());
         target.setVariableName(source.getVariableName());
         target.setDelFlag(source.getDelFlag());
@@ -33,6 +34,7 @@ final class ProductFormulaVariableRowConverter {
         target.setTenantId(source.getTenantId());
         target.setFormulaId(source.getFormulaId());
         target.setVariableId(source.getVariableId());
+        target.setVariableKey(source.getVariableKey());
         target.setVariableCode(source.getVariableCode());
         target.setConditionExpression(source.getConditionExpression());
         target.setConditionText(source.getConditionText());
