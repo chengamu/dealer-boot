@@ -12,9 +12,9 @@
         @click.middle="!isAffix(tag) ? closeSelectedTag(tag) : ''"
         @contextmenu.prevent="openMenu(tag, $event)"
       >
-        {{ routeTitle(tag.title) }}
-        <span v-if="!isAffix(tag)" @click.prevent.stop="closeSelectedTag(tag)">
-          <close class="el-icon-close" style="width: 1em; height: 1em;vertical-align: middle;" />
+        <span class="tags-view-title">{{ routeTitle(tag.title) }}</span>
+        <span v-if="!isAffix(tag)" class="tags-view-close" @click.prevent.stop="closeSelectedTag(tag)">
+          <close class="el-icon-close" />
         </span>
       </router-link>
     </scroll-pane>
@@ -278,44 +278,70 @@ function handleScroll() {
 
 <style lang='scss' scoped>
 .tags-view-container {
-  height: 30px;
+  height: 38px;
   width: 100%;
-  background: #F8F9FD;
-  border-bottom: 1px solid #d8dce5;
+  padding: 0 16px;
+  background: #fff;
+  border-bottom: 1px solid #eef0f5;
   .tags-view-wrapper {
     .tags-view-item {
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
       position: relative;
       cursor: pointer;
-      height: 26px;
-      line-height: 24px;
-      border: 1px solid #d8dce5;
-      color: #495060;
-      background: #fff;
-      padding: 0 8px;
-      font-size: 12px;
-      margin-left: 5px;
-      margin-top: 3px;
+      max-width: 156px;
+      height: 32px;
+      line-height: 32px;
+      border: 0;
+      border-radius: 6px;
+      color: #667085;
+      background: transparent;
+      padding: 0 12px;
+      font-size: 13px;
+      gap: 6px;
+      margin: 3px 2px;
+      white-space: nowrap;
+      transition: color 0.18s ease, background-color 0.18s ease;
       &:first-of-type {
-        margin-left: 15px;
+        margin-left: 0;
       }
       &:last-of-type {
-        margin-right: 15px;
+        margin-right: 0;
+      }
+      &:hover {
+        color: #1677ff;
+        background: #f3f6fb;
       }
       &.active {
-        background-color: #42b983;
-        color: #fff;
-        border-color: #42b983;
-        &::before {
+        color: #1677ff;
+        font-weight: 600;
+        background: transparent;
+        &::after {
           content: "";
-          background: #fff;
-          display: inline-block;
-          width: 8px;
-          height: 8px;
-          border-radius: 50%;
-          position: relative;
-          margin-right: 5px;
+          position: absolute;
+          right: 12px;
+          bottom: 0;
+          left: 12px;
+          height: 2px;
+          border-radius: 2px;
+          background: #1677ff;
         }
+      }
+      .tags-view-title {
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .tags-view-close {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+        opacity: 0;
+        transition: opacity 0.18s ease, color 0.18s ease;
+      }
+      &:hover .tags-view-close,
+      &.active .tags-view-close {
+        opacity: 1;
       }
     }
   }
@@ -348,23 +374,16 @@ function handleScroll() {
 .tags-view-wrapper {
   .tags-view-item {
     .el-icon-close {
-      width: 16px;
-      height: 16px;
-      vertical-align: 2px;
+      width: 14px;
+      height: 14px;
+      color: #98a2b3;
+      vertical-align: middle;
       border-radius: 50%;
       text-align: center;
-      transition: all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
-      transform-origin: 100% 50%;
-      &:before {
-        transform: scale(0.6);
-        display: inline-block;
-        vertical-align: -3px;
-      }
+      transition: color 0.18s ease;
       &:hover {
-        background-color: #b4bccc;
-        color: #fff;
-        width: 12px !important;
-        height: 12px !important;
+        color: #f56c6c;
+        background: transparent;
       }
     }
   }

@@ -102,13 +102,26 @@ defineExpose({
 .scroll-container {
   white-space: nowrap;
   position: relative;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
   width: 100%;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
   :deep(.el-scrollbar__bar) {
-    bottom: 0px;
+    display: none;
   }
   :deep(.el-scrollbar__wrap) {
-    height: 35px;
+    height: 38px;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+  :deep(.el-scrollbar__view) {
+    height: 38px;
   }
 }
 </style>

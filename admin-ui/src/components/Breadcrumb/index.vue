@@ -62,12 +62,12 @@ getBreadcrumb()
 <style lang="scss" scoped>
 .app-breadcrumb.el-breadcrumb {
   display: inline-block;
-  font-size: 14px;
-  line-height: 50px;
+  font-size: 13px;
+  line-height: 46px;
   margin-left: 8px;
 
   .no-redirect {
-    color: #97a8be;
+    color: #667085;
     cursor: text;
   }
 }
