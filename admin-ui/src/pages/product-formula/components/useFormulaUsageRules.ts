@@ -176,15 +176,16 @@ export function useFormulaUsageRules(
   function generateFabricRules() {
     ensureFormulaMode()
     ensureDefaultRule()
-    const fabricValues = optionValuesOf('FABRIC')
+    const optionCode = fabricOptionCode()
+    const fabricValues = optionValuesOf(optionCode)
     if (!fabricValues.length) {
       ElMessage.warning(t('productCenter.formulaSetup.fabricOptionMissing'))
       return
     }
     fabricValues.forEach((value) => {
-      const key = conditionKeyForOption('FABRIC', value.valueCode)
+      const key = conditionKeyForOption(optionCode, value.valueCode)
       const exists = currentRules.value.some((rule) => rule.conditionKey === key)
-      if (!exists) addFormulaRule(false, value)
+      if (!exists) addFormulaRule(false, { ...value, optionCode })
     })
   }
 
@@ -307,6 +308,14 @@ export function useFormulaUsageRules(
 
   function optionValuesOf(optionCode?: string) {
     return props.optionValues.filter((value) => value.optionCode === optionCode)
+  }
+
+  function fabricOptionCode() {
+    const materialPoolOptions = props.options.filter((option) => option.sourceType === 'MATERIAL_POOL')
+    return props.options.find((option) => option.optionCode === 'FABRIC')?.optionCode
+      || materialPoolOptions.find((option) => option.optionNameCn?.includes('面料'))?.optionCode
+      || materialPoolOptions[0]?.optionCode
+      || 'FABRIC'
   }
 
   function optionName(optionCode?: string) {

@@ -7,6 +7,7 @@ import com.bocoo.product.domain.entity.ProductFormulaOptionMaterial;
 import com.bocoo.product.domain.entity.ProductFormulaOptionValue;
 import com.bocoo.product.domain.entity.ProductFormulaRestriction;
 import com.bocoo.product.domain.entity.ProductFormulaUsageRule;
+import com.bocoo.product.domain.entity.ProductFormulaVariableRule;
 import com.bocoo.product.service.ProductFormulaUsageRuleService;
 import com.bocoo.product.service.ProductFormulaVariableService;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,7 @@ public class ProductFormulaSetupValidator extends ProductServiceSupport {
 
     private final ProductFormulaUsageRuleService usageRuleService;
     private final ProductFormulaVariableService variableService;
+    private final ProductFormulaExpressionReferenceValidator referenceValidator;
 
     String validationMessageKey(ProductFormulaSetupContext context) {
         String materialMessageKey = materialValidationMessageKey(context);
@@ -60,9 +62,14 @@ public class ProductFormulaSetupValidator extends ProductServiceSupport {
                 return "product.formula.materialUsageRuleRequired";
             }
         }
-        String usageMessageKey = usageRuleService.validationMessageKey(context.materials(), context.options(), context.values(), context.usageRules());
+        String usageMessageKey = usageRuleService.validationMessageKey(context.materials(), context.options(), context.values(),
+            context.optionMaterials(), context.usageRules());
         if (usageMessageKey != null) {
             return usageMessageKey;
+        }
+        String variableConditionMessageKey = validateVariableRuleReferences(context);
+        if (variableConditionMessageKey != null) {
+            return variableConditionMessageKey;
         }
         return variableService.validationMessageKey(context.variables(), context.variableRules(), context.usageRules());
     }
@@ -127,7 +134,7 @@ public class ProductFormulaSetupValidator extends ProductServiceSupport {
             }
         }
         for (ProductFormulaRestriction restriction : context.restrictions()) {
-            String restrictionMessageKey = validateRestriction(restriction, optionCodes, valueKeys);
+            String restrictionMessageKey = validateRestriction(restriction, optionCodes, valueKeys, context);
             if (restrictionMessageKey != null) {
                 return restrictionMessageKey;
             }
@@ -138,7 +145,30 @@ public class ProductFormulaSetupValidator extends ProductServiceSupport {
         return null;
     }
 
+    String optionReferenceValidationMessageKey(ProductFormulaSetupContext context) {
+        Map<String, ProductFormulaOption> optionMap = context.options().stream()
+            .filter(option -> StringUtils.isNotBlank(option.getOptionCode()))
+            .collect(Collectors.toMap(ProductFormulaOption::getOptionCode, Function.identity(), (left, right) -> left));
+        Set<String> optionCodes = optionMap.keySet();
+        Set<String> valueKeys = context.values().stream()
+            .map(value -> key(value.getOptionCode(), value.getValueCode()))
+            .collect(Collectors.toSet());
+        for (ProductFormulaRestriction restriction : context.restrictions()) {
+            String restrictionMessageKey = validateRestriction(restriction, optionCodes, valueKeys, context);
+            if (restrictionMessageKey != null) {
+                return restrictionMessageKey;
+            }
+        }
+        String usageMessageKey = validateUsageRuleOptionReferences(context, optionCodes, valueKeys);
+        return usageMessageKey == null ? validateVariableRuleReferences(context) : usageMessageKey;
+    }
+
     String validateRestriction(ProductFormulaRestriction restriction, Set<String> optionCodes, Set<String> valueKeys) {
+        return validateRestriction(restriction, optionCodes, valueKeys, null);
+    }
+
+    String validateRestriction(ProductFormulaRestriction restriction, Set<String> optionCodes, Set<String> valueKeys,
+                               ProductFormulaSetupContext context) {
         if (StringUtils.isNotBlank(restriction.getTargetOptionCode()) && !optionCodes.contains(restriction.getTargetOptionCode())) {
             return "product.formula.restrictionTargetInvalid";
         }
@@ -150,8 +180,12 @@ public class ProductFormulaSetupValidator extends ProductServiceSupport {
             return "product.formula.restrictionConditionInvalid";
         }
         if ("EXPRESSION".equals(restriction.getConditionType())) {
-            return ProductFormulaExpressionValidator.isConditionValid(restriction.getConditionExpression())
-                ? null : "product.formula.restrictionConditionInvalid";
+            if (!ProductFormulaExpressionValidator.isConditionValid(restriction.getConditionExpression())) {
+                return "product.formula.restrictionConditionInvalid";
+            }
+            String messageKey = context == null ? null : referenceValidator.validationMessageKey(restriction.getConditionExpression(),
+                context.options(), context.values(), context.optionMaterials(), context.materials());
+            return messageKey == null ? null : "product.formula.restrictionConditionInvalid";
         }
         if ("OPTION_VALUE".equals(restriction.getConditionType())) {
             if (StringUtils.isBlank(restriction.getConditionOptionCode()) || !optionCodes.contains(restriction.getConditionOptionCode())) {
@@ -174,6 +208,43 @@ public class ProductFormulaSetupValidator extends ProductServiceSupport {
             && (StringUtils.isBlank(restriction.getConditionOptionCode())
             || !valueKeys.contains(key(restriction.getConditionOptionCode(), restriction.getConditionValueCode())))) {
             return "product.formula.restrictionConditionInvalid";
+        }
+        return null;
+    }
+
+    private String validateVariableRuleReferences(ProductFormulaSetupContext context) {
+        for (ProductFormulaVariableRule rule : context.variableRules()) {
+            if (Boolean.TRUE.equals(rule.getDefaultRuleFlag()) || StringUtils.isBlank(rule.getConditionExpression())) {
+                continue;
+            }
+            String messageKey = referenceValidator.validationMessageKey(rule.getConditionExpression(), context.options(),
+                context.values(), context.optionMaterials(), context.materials());
+            if (messageKey != null) {
+                return "product.formula.variableRuleInvalid";
+            }
+        }
+        return null;
+    }
+
+    private String validateUsageRuleOptionReferences(ProductFormulaSetupContext context, Set<String> optionCodes, Set<String> valueKeys) {
+        for (ProductFormulaUsageRule rule : context.usageRules()) {
+            if (Boolean.TRUE.equals(rule.getDefaultRuleFlag()) || "DEFAULT".equals(rule.getConditionType())) {
+                continue;
+            }
+            if ("OPTION_VALUE".equals(rule.getConditionType())) {
+                if (!optionCodes.contains(rule.getConditionOptionCode())
+                    || !valueKeys.contains(key(rule.getConditionOptionCode(), rule.getConditionValueCode()))) {
+                    return "product.formula.usageConditionInvalid";
+                }
+                continue;
+            }
+            if ("EXPRESSION".equals(rule.getConditionType())) {
+                String messageKey = referenceValidator.validationMessageKey(rule.getConditionExpression(), context.options(),
+                    context.values(), context.optionMaterials(), context.materials());
+                if (messageKey != null) {
+                    return "product.formula.usageConditionInvalid";
+                }
+            }
         }
         return null;
     }

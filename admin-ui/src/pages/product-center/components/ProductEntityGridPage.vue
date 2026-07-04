@@ -1572,6 +1572,7 @@ defineExpose({
 .product-grid-page__search[data-agent-entity='category'],
 .product-grid-page__search[data-agent-entity='unit'],
 .product-grid-page__search[data-agent-entity='material'],
+.product-grid-page__search[data-agent-entity='formula'],
 .product-grid-page__search[data-agent-entity='manufacturer'],
 .product-grid-page__search[data-agent-entity='baseAttribute'] {
   display: flex;
@@ -1633,6 +1634,7 @@ defineExpose({
 .product-grid-page__toolbar[data-agent-entity='category'],
 .product-grid-page__toolbar[data-agent-entity='unit'],
 .product-grid-page__toolbar[data-agent-entity='material'],
+.product-grid-page__toolbar[data-agent-entity='formula'],
 .product-grid-page__toolbar[data-agent-entity='manufacturer'],
 .product-grid-page__toolbar[data-agent-entity='baseAttribute'] {
   align-items: center;
@@ -1745,6 +1747,7 @@ defineExpose({
 .product-grid-page__table[data-agent-entity='category'],
 .product-grid-page__table[data-agent-entity='unit'],
 .product-grid-page__table[data-agent-entity='material'],
+.product-grid-page__table[data-agent-entity='formula'],
 .product-grid-page__table[data-agent-entity='manufacturer'],
 .product-grid-page__table[data-agent-entity='baseAttribute'] {
   :deep(.el-table__inner-wrapper::before),
@@ -1795,6 +1798,7 @@ defineExpose({
 
 .product-grid-page__pagination--unit,
 .product-grid-page__pagination--material,
+.product-grid-page__pagination--formula,
 .product-grid-page__pagination--manufacturer,
 .product-grid-page__pagination--baseAttribute {
   border-color: #eef0f5 !important;

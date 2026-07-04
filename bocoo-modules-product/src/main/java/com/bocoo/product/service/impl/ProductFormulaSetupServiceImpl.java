@@ -65,6 +65,10 @@ public class ProductFormulaSetupServiceImpl extends ProductServiceSupport implem
         ProductFormula current = requireEditableFormula(formulaId);
         ProductFormulaSetupBo safeBo = bo == null ? new ProductFormulaSetupBo() : bo;
         ProductFormulaSetupRows rows = setupNormalizer.normalizeOptions(formulaId, safeBo, setupReader.context(formulaId));
+        String messageKey = setupValidator.optionReferenceValidationMessageKey(toContext(rows));
+        if (messageKey != null) {
+            throw ServiceException.ofMessageKey(messageKey);
+        }
         setupWriter.replaceOptions(formulaId, rows);
         refreshFormulaSetup(current, rows.materials().size(), "SAVE_OPTIONS", safeBo);
         return Boolean.TRUE;
@@ -168,6 +172,11 @@ public class ProductFormulaSetupServiceImpl extends ProductServiceSupport implem
             throw ServiceException.ofMessageKey("product.formula.editDenied");
         }
         return formula;
+    }
+
+    private ProductFormulaSetupContext toContext(ProductFormulaSetupRows rows) {
+        return new ProductFormulaSetupContext(rows.materials(), rows.options(), rows.values(), rows.optionMaterials(),
+            rows.restrictions(), rows.usageRules(), rows.variables(), rows.variableRules());
     }
 
     private void refreshFormulaSetup(ProductFormula current, int materialCount, String actionType, Object afterPayload) {

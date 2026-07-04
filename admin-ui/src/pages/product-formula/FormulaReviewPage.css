@@ -1,0 +1,144 @@
+.formula-review-page__search {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  margin-bottom: 8px;
+  padding: 10px 12px 2px;
+  border: 1px solid #eef0f5;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.formula-review-page__search .el-form-item {
+  margin-right: 12px;
+  margin-bottom: 8px;
+}
+
+.formula-review-page__search .el-form-item:last-child {
+  margin-right: 0;
+  margin-left: auto;
+}
+
+.formula-review-page__search .el-form-item__label {
+  padding-right: 6px;
+}
+
+.formula-review-page__search .el-input__wrapper,
+.formula-review-page__search .el-select__wrapper,
+.formula-review-page__search .el-button {
+  min-height: 32px;
+}
+
+.formula-review-page__search .el-button:not(.el-button--primary) {
+  border-color: #d9e0ea;
+  color: #475467;
+  background: #fff;
+}
+
+.formula-review-page__search .el-button:not(.el-button--primary):hover,
+.formula-review-page__search .el-button:not(.el-button--primary):focus {
+  border-color: #c7d0dd;
+  color: #344054;
+  background: #f8fafc;
+}
+
+.formula-review-page__toolbar {
+  align-items: center;
+  min-height: 36px;
+  margin-bottom: 8px;
+}
+
+.formula-review-page__toolbar .el-col {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+}
+
+.formula-review-page__toolbar .el-button {
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 6px;
+}
+
+.formula-review-page__toolbar .el-button--primary.is-plain {
+  border-color: #b8d2ff;
+  color: #1677ff;
+  background: #f8fbff;
+}
+
+.formula-review-page__toolbar .el-button--primary.is-plain:hover,
+.formula-review-page__toolbar .el-button--primary.is-plain:focus {
+  border-color: #8bb8ff;
+  color: #0958d9;
+  background: #eef5ff;
+}
+
+.formula-review-page__toolbar .el-button--danger.is-plain {
+  border-color: #ffd6d9;
+  color: #dc3545;
+  background: #fffafa;
+}
+
+.formula-review-page__toolbar .el-button--danger.is-plain:hover,
+.formula-review-page__toolbar .el-button--danger.is-plain:focus {
+  border-color: #ffb8bf;
+  color: #c92a3a;
+  background: #fff1f2;
+}
+
+.formula-review-page__toolbar .el-button.is-disabled,
+.formula-review-page__toolbar .el-button.is-disabled:hover,
+.formula-review-page__toolbar .el-button.is-disabled:focus {
+  border-color: #eef0f5;
+  color: #b8c2d3;
+  background: #f8fafc;
+}
+
+.formula-review-page__table {
+  width: 100%;
+}
+
+.formula-review-page__table .el-table__inner-wrapper::before,
+.formula-review-page__table .el-table__border-left-patch,
+.formula-review-page__table .el-table__border-bottom-patch {
+  background-color: #eef0f5;
+}
+
+.formula-review-page__table .el-table__header th {
+  background: #f7f9fc;
+  color: #344054;
+  font-weight: 600;
+}
+
+.formula-review-page__table th.el-table__cell,
+.formula-review-page__table td.el-table__cell {
+  border-color: #eef0f5;
+}
+
+.formula-review-page__table .el-table__cell {
+  padding: 8px 0;
+}
+
+.formula-review-page__table .el-table__body tr:hover > td.el-table__cell {
+  background: #f8fbff;
+}
+
+.formula-review-page__table .sort-caret.ascending {
+  border-bottom-color: #c5ccd8;
+}
+
+.formula-review-page__table .sort-caret.descending {
+  border-top-color: #c5ccd8;
+}
+
+.formula-review-page__table .el-tag {
+  height: 24px;
+  padding: 0 8px;
+  line-height: 22px;
+  border-radius: 999px;
+}
+
+.formula-review-page__pagination {
+  border-color: #eef0f5 !important;
+  box-shadow: none !important;
+}

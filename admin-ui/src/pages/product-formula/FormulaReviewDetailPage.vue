@@ -10,13 +10,17 @@
           <span>{{ t('productCenter.formula.productType') }}：{{ formula.productTypeNameCn || '-' }}</span>
           <span>{{ t('productCenter.formula.sizeSummary') }}：{{ formula.sizeSummary || '-' }}</span>
           <span>{{ t('productCenter.formulaReview.submitBy') }}：{{ review.submitBy || '-' }}</span>
-          <span>{{ t('productCenter.formulaReview.submitTime') }}：{{ formatMinute(review.submitTime) }}</span>
+          <span>{{ t('productCenter.formulaReview.submitTime') }}：{{ formatFormulaReviewMinute(review.submitTime) }}</span>
         </div>
       </div>
       <div class="review-detail-header__actions">
         <el-button icon="Back" @click="router.back()">{{ t('common.back') }}</el-button>
-        <el-button type="success" icon="CircleCheck" @click="approve">{{ t('productCenter.formula.actions.approve') }}</el-button>
-        <el-button type="warning" icon="CircleClose" @click="reject">{{ t('productCenter.formula.actions.reject') }}</el-button>
+        <el-button type="success" icon="CircleCheck" @click="approve" v-hasPermi="['product:formula:approve']">
+          {{ t('productCenter.formula.actions.approve') }}
+        </el-button>
+        <el-button type="warning" icon="CircleClose" @click="reject" v-hasPermi="['product:formula:reject']">
+          {{ t('productCenter.formula.actions.reject') }}
+        </el-button>
       </div>
     </section>
 
@@ -55,9 +59,20 @@
       <div class="section-title">{{ t('productCenter.formulaReview.reviewRecord') }}</div>
       <div class="review-record">
         <span>{{ t('productCenter.formula.currentVersion') }}：{{ review.versionLabel || '-' }}</span>
-        <span>{{ t('productCenter.formula.validationStatus') }}：{{ review.validationStatus || '-' }}</span>
+        <span>
+          {{ t('productCenter.formula.status') }}：
+          <el-tag :type="formulaStatusTagType(review.versionStatus)" effect="plain">
+            {{ formulaStatusText(review.versionStatus, t) }}
+          </el-tag>
+        </span>
+        <span>
+          {{ t('productCenter.formula.validationStatus') }}：
+          <el-tag :type="formulaValidationTagType(review.validationStatus)" effect="plain">
+            {{ formulaValidationStatusText(review.validationStatus, t) }}
+          </el-tag>
+        </span>
         <span>{{ t('productCenter.formula.auditBy') }}：{{ review.auditBy || '-' }}</span>
-        <span>{{ t('productCenter.formula.auditTime') }}：{{ formatMinute(review.auditTime) }}</span>
+        <span>{{ t('productCenter.formula.auditTime') }}：{{ formatFormulaReviewMinute(review.auditTime) }}</span>
         <span>{{ t('productCenter.formula.rejectReason') }}：{{ review.rejectReason || '-' }}</span>
       </div>
     </section>
@@ -71,14 +86,19 @@ import { useRoute, useRouter } from 'vue-router'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 import { productFormulaApi } from '@/api/product-formula/formula'
-import { formatUtc } from '@/utils/datetime'
+import {
+  formulaStatusTagType,
+  formulaStatusText,
+  formulaValidationStatusText,
+  formulaValidationTagType
+} from '@/constants/productStatus'
 import type {
   ProductFormulaMaterialVO,
   ProductFormulaOptionMaterialVO,
   ProductFormulaUsageRuleVO,
-  ProductFormulaVersionVO,
-  ProductRecord
+  ProductFormulaVersionVO
 } from '@/api/product-capability/types'
+import { formatFormulaReviewMinute, parseFormulaReviewJson } from './utils/formulaReviewDisplay'
 
 const route = useRoute()
 const router = useRouter()
@@ -88,24 +108,11 @@ const loading = ref(false)
 const review = ref<ProductFormulaVersionVO>({})
 const reviewId = String(route.params.reviewId || '')
 
-function parseJson<T extends ProductRecord = ProductRecord>(value?: string): T {
-  if (!value) return {} as T
-  try {
-    return JSON.parse(value) as T
-  } catch {
-    return {} as T
-  }
-}
-
-const formula = computed(() => parseJson(review.value.formulaSnapshotJson))
-const setup = computed(() => parseJson(review.value.setupSnapshotJson))
+const formula = computed(() => parseFormulaReviewJson(review.value.formulaSnapshotJson))
+const setup = computed(() => parseFormulaReviewJson(review.value.setupSnapshotJson))
 const materials = computed(() => (setup.value.materials || []) as ProductFormulaMaterialVO[])
 const allUsageRules = computed(() => (setup.value.usageRules || []) as ProductFormulaUsageRuleVO[])
 const allOptionMaterials = computed(() => (setup.value.optionMaterials || []) as ProductFormulaOptionMaterialVO[])
-
-function formatMinute(value?: string) {
-  return formatUtc(value, 'YYYY-MM-DD HH:mm')
-}
 
 function money(value?: number) {
   return value == null ? '-' : Number(value).toFixed(2)

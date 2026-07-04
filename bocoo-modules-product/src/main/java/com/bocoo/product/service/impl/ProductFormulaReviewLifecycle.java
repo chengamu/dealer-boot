@@ -4,8 +4,6 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.bocoo.common.core.exception.ServiceException;
 import com.bocoo.common.core.utils.StringUtils;
 import com.bocoo.common.core.utils.TimeUtils;
-import com.bocoo.common.mybatis.core.page.PageQuery;
-import com.bocoo.common.mybatis.core.page.TableDataInfo;
 import com.bocoo.common.satoken.utils.LoginHelper;
 import com.bocoo.product.domain.entity.ProductFormula;
 import com.bocoo.product.domain.entity.ProductFormulaVersion;
@@ -135,11 +133,6 @@ public class ProductFormulaReviewLifecycle extends ProductServiceSupport {
             .set(ProductFormulaVersion::getAuditTime, TimeUtils.utcNow())
             .set(ProductFormulaVersion::getRejectReason, rejectReason.trim()));
         return updateFormulaStatus(current, STATUS_REJECTED, "REJECT", rejectReason.trim());
-    }
-
-    public TableDataInfo<ProductFormulaVersionVo> queryReviewPage(PageQuery pageQuery) {
-        return page(versionMapper, pageQuery, activeQuery(ProductFormulaVersion.class)
-            .eq("version_status", STATUS_PENDING_REVIEW), q -> q.orderByDesc("submit_time", "version_id"));
     }
 
     public ProductFormulaVersionVo queryReviewById(Long reviewId) {

@@ -484,6 +484,14 @@ export interface ProductFormulaVersionVO extends ProductRecord {
   rejectReason?: string
 }
 
+export interface ProductFormulaReviewQuery extends ProductPageQuery {
+  formulaCode?: string
+  formulaName?: string
+  versionLabel?: string
+  submitBy?: string
+  validationStatus?: string
+}
+
 export interface ProductFormulaSimulationBO extends ProductRecord {
   orderWidth?: number
   orderHeight?: number

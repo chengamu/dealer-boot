@@ -3,8 +3,10 @@ package com.bocoo.product.service.impl;
 import com.bocoo.common.core.utils.StringUtils;
 import com.bocoo.product.domain.entity.ProductFormulaMaterial;
 import com.bocoo.product.domain.entity.ProductFormulaOption;
+import com.bocoo.product.domain.entity.ProductFormulaOptionMaterial;
 import com.bocoo.product.domain.entity.ProductFormulaOptionValue;
 import com.bocoo.product.domain.entity.ProductFormulaUsageRule;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -15,6 +17,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Component
+@RequiredArgsConstructor
 public class ProductFormulaUsageRuleValidator {
 
     private static final String CONDITION_DEFAULT = "DEFAULT";
@@ -23,9 +26,11 @@ public class ProductFormulaUsageRuleValidator {
     private static final String STATUS_ENABLED = ProductServiceSupport.STATUS_ENABLED;
     private static final String USAGE_FIXED = "FIXED";
     private static final String USAGE_FORMULA = "FORMULA";
+    private final ProductFormulaExpressionReferenceValidator referenceValidator;
 
     public String validationMessageKey(List<ProductFormulaMaterial> materials, List<ProductFormulaOption> options,
-                                       List<ProductFormulaOptionValue> values, List<ProductFormulaUsageRule> usageRules) {
+                                       List<ProductFormulaOptionValue> values, List<ProductFormulaOptionMaterial> optionMaterials,
+                                       List<ProductFormulaUsageRule> usageRules) {
         Map<String, ProductFormulaMaterial> materialByCode = materials.stream()
             .collect(Collectors.toMap(ProductFormulaMaterial::getMaterialCode, Function.identity(), (left, right) -> left));
         Set<String> optionCodes = options.stream().map(ProductFormulaOption::getOptionCode).collect(Collectors.toSet());
@@ -34,7 +39,7 @@ public class ProductFormulaUsageRuleValidator {
             .filter(rule -> STATUS_ENABLED.equals(rule.getStatus()))
             .collect(Collectors.groupingBy(ProductFormulaUsageRule::getMaterialCode));
         for (ProductFormulaUsageRule rule : usageRules) {
-            String messageKey = validateRuleReference(rule, materialByCode, optionCodes, valueKeys);
+            String messageKey = validateRuleReference(rule, materialByCode, optionCodes, valueKeys, options, values, optionMaterials, materials);
             if (messageKey != null) {
                 return messageKey;
             }
@@ -93,7 +98,9 @@ public class ProductFormulaUsageRuleValidator {
     }
 
     private String validateRuleReference(ProductFormulaUsageRule rule, Map<String, ProductFormulaMaterial> materialByCode,
-                                         Set<String> optionCodes, Set<String> valueKeys) {
+                                         Set<String> optionCodes, Set<String> valueKeys, List<ProductFormulaOption> options,
+                                         List<ProductFormulaOptionValue> values, List<ProductFormulaOptionMaterial> optionMaterials,
+                                         List<ProductFormulaMaterial> materials) {
         if (!materialByCode.containsKey(rule.getMaterialCode())) {
             return "product.formula.usageMaterialInvalid";
         }
@@ -101,9 +108,12 @@ public class ProductFormulaUsageRuleValidator {
             return null;
         }
         if (!CONDITION_OPTION_VALUE.equals(rule.getConditionType())) {
-            return CONDITION_EXPRESSION.equals(rule.getConditionType())
-                && ProductFormulaExpressionValidator.isConditionValid(rule.getConditionExpression())
-                ? null : "product.formula.usageConditionInvalid";
+            if (!CONDITION_EXPRESSION.equals(rule.getConditionType())
+                || !ProductFormulaExpressionValidator.isConditionValid(rule.getConditionExpression())) {
+                return "product.formula.usageConditionInvalid";
+            }
+            String messageKey = referenceValidator.validationMessageKey(rule.getConditionExpression(), options, values, optionMaterials, materials);
+            return messageKey == null ? null : "product.formula.usageConditionInvalid";
         }
         if (!optionCodes.contains(rule.getConditionOptionCode())
             || !valueKeys.contains(key(rule.getConditionOptionCode(), rule.getConditionValueCode()))) {

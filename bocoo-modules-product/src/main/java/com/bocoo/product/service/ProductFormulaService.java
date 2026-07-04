@@ -3,6 +3,7 @@ package com.bocoo.product.service;
 import com.bocoo.common.mybatis.core.page.PageQuery;
 import com.bocoo.common.mybatis.core.page.TableDataInfo;
 import com.bocoo.product.domain.bo.ProductFormulaBo;
+import com.bocoo.product.domain.bo.ProductFormulaReviewBo;
 import com.bocoo.product.domain.vo.BaseEditCheckResultVo;
 import com.bocoo.product.domain.vo.ProductFormulaVersionVo;
 import com.bocoo.product.domain.vo.ProductFormulaVo;
@@ -30,7 +31,7 @@ public interface ProductFormulaService {
 
     Boolean reject(Long id, String rejectReason);
 
-    TableDataInfo<ProductFormulaVersionVo> queryReviewPage(PageQuery pageQuery);
+    TableDataInfo<ProductFormulaVersionVo> queryReviewPage(ProductFormulaReviewBo bo, PageQuery pageQuery);
 
     ProductFormulaVersionVo queryReviewById(Long reviewId);
 

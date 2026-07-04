@@ -125,7 +125,6 @@ public class ProductFormulaVariableServiceImpl extends ProductServiceSupport imp
     public List<ProductFormulaVariable> normalizeVariables(Long formulaId, List<ProductFormulaVariableBo> rows) {
         List<ProductFormulaVariable> result = new ArrayList<>();
         Set<String> codes = new HashSet<>();
-        Set<String> names = new HashSet<>();
         int index = 0;
         for (ProductFormulaVariableBo row : rows == null ? List.<ProductFormulaVariableBo>of() : rows) {
             if (row == null) continue;
@@ -135,7 +134,6 @@ public class ProductFormulaVariableServiceImpl extends ProductServiceSupport imp
             entity.setVariableCode(requiredUpper(entity.getVariableCode(), "product.formula.variableCodeRequired"));
             entity.setVariableName(requiredTrim(entity.getVariableName(), "product.formula.variableNameRequired"));
             if (!codes.add(entity.getVariableCode())) throw ServiceException.ofMessageKey("product.formula.variableCodeDuplicate");
-            if (!names.add(entity.getVariableName())) throw ServiceException.ofMessageKey("product.formula.variableNameDuplicate");
             entity.setDelFlag("0");
             entity.setSortOrder(entity.getSortOrder() == null ? index * 10 + 10 : entity.getSortOrder());
             result.add(entity);

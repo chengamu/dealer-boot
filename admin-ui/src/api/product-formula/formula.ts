@@ -3,6 +3,7 @@ import type {
   EditCheckResult,
   ProductCrudApi,
   ProductFormulaQuery,
+  ProductFormulaReviewQuery,
   ProductFormulaSimulationBO,
   ProductFormulaSimulationVO,
   ProductFormulaSetupVO,
@@ -35,7 +36,7 @@ export const productFormulaApi: ProductCrudApi<ProductFormulaVO, ProductFormulaQ
   simulation: (id: string | number) => Promise<{ data?: ProductFormulaSimulationVO }>
   runSimulation: (id: string | number, data?: ProductFormulaSimulationBO) => Promise<{ data?: ProductFormulaSimulationVO }>
   validateSimulation: (id: string | number, data?: ProductFormulaSimulationBO) => Promise<unknown>
-  reviews: (query?: Record<string, unknown>) => Promise<{ rows?: ProductFormulaVersionVO[]; total?: number }>
+  reviews: (query?: ProductFormulaReviewQuery) => Promise<{ rows?: ProductFormulaVersionVO[]; total?: number }>
   review: (reviewId: string | number) => Promise<{ data?: ProductFormulaVersionVO }>
   approveReview: (reviewId: string | number) => Promise<unknown>
   rejectReview: (reviewId: string | number, rejectReason: string) => Promise<unknown>
@@ -65,7 +66,7 @@ export const productFormulaApi: ProductCrudApi<ProductFormulaVO, ProductFormulaQ
   simulation: (id: string | number) => request<ProductFormulaSimulationVO>({ url: '/product-formula/formulas/' + id + '/simulation', method: 'get' }),
   runSimulation: (id: string | number, data?: ProductFormulaSimulationBO) => request<ProductFormulaSimulationVO>({ url: '/product-formula/formulas/' + id + '/simulation/run', method: 'post', data }),
   validateSimulation: (id: string | number, data?: ProductFormulaSimulationBO) => request({ url: '/product-formula/formulas/' + id + '/simulation/validate', method: 'put', data }),
-  reviews: (query?: Record<string, unknown>) => requestPage<ProductFormulaVersionVO>({ url: '/product-formula/reviews/list', method: 'get', params: query }),
+  reviews: (query?: ProductFormulaReviewQuery) => requestPage<ProductFormulaVersionVO>({ url: '/product-formula/reviews/list', method: 'get', params: query }),
   review: (reviewId: string | number) => request<ProductFormulaVersionVO>({ url: '/product-formula/reviews/' + reviewId, method: 'get' }),
   approveReview: (reviewId: string | number) => request({ url: '/product-formula/reviews/' + reviewId + '/approve', method: 'put' }),
   rejectReview: (reviewId: string | number, rejectReason: string) => request({ url: '/product-formula/reviews/' + reviewId + '/reject', method: 'put', data: { rejectReason } }),

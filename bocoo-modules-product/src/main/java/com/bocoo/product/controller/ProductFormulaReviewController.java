@@ -8,6 +8,7 @@ import com.bocoo.common.mybatis.core.page.PageQuery;
 import com.bocoo.common.mybatis.core.page.TableDataInfo;
 import com.bocoo.common.web.core.BaseController;
 import com.bocoo.product.domain.bo.ProductFormulaRejectBo;
+import com.bocoo.product.domain.bo.ProductFormulaReviewBo;
 import com.bocoo.product.domain.vo.ProductFormulaVersionVo;
 import com.bocoo.product.service.ProductFormulaService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -33,8 +34,8 @@ public class ProductFormulaReviewController extends BaseController {
     @SaCheckPermission("product:formula:review")
     @GetMapping("/list")
     @Operation(summary = "分页查询待审核配方")
-    public TableDataInfo<ProductFormulaVersionVo> list(PageQuery pageQuery) {
-        return formulaService.queryReviewPage(pageQuery);
+    public TableDataInfo<ProductFormulaVersionVo> list(ProductFormulaReviewBo bo, PageQuery pageQuery) {
+        return formulaService.queryReviewPage(bo, pageQuery);
     }
 
     @SaCheckPermission("product:formula:review")

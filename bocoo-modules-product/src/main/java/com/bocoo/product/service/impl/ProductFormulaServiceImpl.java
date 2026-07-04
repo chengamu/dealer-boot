@@ -7,6 +7,7 @@ import com.bocoo.common.core.utils.StringUtils;
 import com.bocoo.common.mybatis.core.page.PageQuery;
 import com.bocoo.common.mybatis.core.page.TableDataInfo;
 import com.bocoo.product.domain.bo.ProductFormulaBo;
+import com.bocoo.product.domain.bo.ProductFormulaReviewBo;
 import com.bocoo.product.domain.entity.ProductFormula;
 import com.bocoo.product.domain.vo.BaseEditCheckResultVo;
 import com.bocoo.product.domain.vo.ProductFormulaVersionVo;
@@ -41,6 +42,7 @@ public class ProductFormulaServiceImpl extends ProductServiceSupport implements 
     private final ProductChangeLogService changeLogService;
     private final ProductFormulaDraftNormalizer draftNormalizer;
     private final ProductFormulaReviewLifecycle reviewLifecycle;
+    private final ProductFormulaReviewQueryService reviewQueryService;
 
     @Override
     public TableDataInfo<ProductFormulaVo> queryPageList(ProductFormulaBo bo, PageQuery pageQuery) {
@@ -143,8 +145,8 @@ public class ProductFormulaServiceImpl extends ProductServiceSupport implements 
     }
 
     @Override
-    public TableDataInfo<ProductFormulaVersionVo> queryReviewPage(PageQuery pageQuery) {
-        return reviewLifecycle.queryReviewPage(pageQuery);
+    public TableDataInfo<ProductFormulaVersionVo> queryReviewPage(ProductFormulaReviewBo bo, PageQuery pageQuery) {
+        return reviewQueryService.queryReviewPage(bo, pageQuery);
     }
 
     @Override

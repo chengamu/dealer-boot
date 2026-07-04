@@ -65,6 +65,7 @@
       :materials="materials || []"
       :options="options"
       :option-values="optionValues"
+      :option-materials="optionMaterials"
       :variables="variables || []"
       :variable-rules="variableRules || []"
       @variables-saved="$emit('variables-saved', $event)"
@@ -87,6 +88,7 @@ import FormulaUsageRuleGrid from './FormulaUsageRuleGrid.vue'
 import { useFormulaUsageEditor } from './useFormulaUsageEditor'
 import type {
   ProductFormulaMaterialVO,
+  ProductFormulaOptionMaterialVO,
   ProductFormulaOptionVO,
   ProductFormulaOptionValueVO,
   ProductFormulaVariableRuleVO,
@@ -106,6 +108,7 @@ const props = defineProps<{
   usageRules: ProductFormulaUsageRuleVO[]
   options: ProductFormulaOptionVO[]
   optionValues: ProductFormulaOptionValueVO[]
+  optionMaterials?: ProductFormulaOptionMaterialVO[]
   unitOptions: ProductOption[]
 }>()
 

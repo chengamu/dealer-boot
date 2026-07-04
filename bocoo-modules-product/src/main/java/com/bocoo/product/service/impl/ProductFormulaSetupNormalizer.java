@@ -43,7 +43,7 @@ public class ProductFormulaSetupNormalizer extends ProductServiceSupport {
         List<ProductFormulaOptionMaterial> optionMaterials =
             normalizeOptionMaterials(formulaId, materials, options, values, safeBo.getOptionMaterials());
         List<ProductFormulaRestriction> restrictions = restrictionNormalizer.normalize(formulaId, options, values, safeBo.getRestrictions());
-        var usageRules = usageRuleService.normalize(formulaId, materials, options, values, safeBo.getUsageRules());
+        var usageRules = usageRuleService.normalize(formulaId, materials, options, values, optionMaterials, safeBo.getUsageRules());
         List<ProductFormulaVariable> variables = variableService.normalizeVariables(formulaId, safeBo.getVariables());
         List<ProductFormulaVariableRule> variableRules = variableService.normalizeRules(formulaId, variables, safeBo.getVariableRules());
         return new ProductFormulaSetupRows(materials, options, values, optionMaterials, restrictions, usageRules, variables, variableRules);
@@ -57,7 +57,8 @@ public class ProductFormulaSetupNormalizer extends ProductServiceSupport {
                 throw ServiceException.ofMessageKey("product.formula.optionMaterialNotInPool");
             }
         }
-        var usageRules = usageRuleService.normalize(formulaId, materials, current.options(), current.values(), safeBo.getUsageRules());
+        var usageRules = usageRuleService.normalize(formulaId, materials, current.options(), current.values(),
+            current.optionMaterials(), safeBo.getUsageRules());
         return new ProductFormulaSetupRows(materials, current.options(), current.values(), current.optionMaterials(), current.restrictions(),
             usageRules, current.variables(), current.variableRules());
     }

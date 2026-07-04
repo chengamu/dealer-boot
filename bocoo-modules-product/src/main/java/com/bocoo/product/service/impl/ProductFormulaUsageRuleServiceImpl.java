@@ -6,6 +6,7 @@ import com.bocoo.common.core.utils.StringUtils;
 import com.bocoo.product.domain.bo.ProductFormulaUsageRuleBo;
 import com.bocoo.product.domain.entity.ProductFormulaMaterial;
 import com.bocoo.product.domain.entity.ProductFormulaOption;
+import com.bocoo.product.domain.entity.ProductFormulaOptionMaterial;
 import com.bocoo.product.domain.entity.ProductFormulaOptionValue;
 import com.bocoo.product.domain.entity.ProductFormulaUsageRule;
 import com.bocoo.product.domain.vo.ProductFormulaUsageRuleVo;
@@ -53,7 +54,7 @@ public class ProductFormulaUsageRuleServiceImpl extends ProductServiceSupport im
     @Override
     public List<ProductFormulaUsageRule> normalize(Long formulaId, List<ProductFormulaMaterial> materials,
                                                    List<ProductFormulaOption> options, List<ProductFormulaOptionValue> values,
-                                                   List<ProductFormulaUsageRuleBo> rows) {
+                                                   List<ProductFormulaOptionMaterial> optionMaterials, List<ProductFormulaUsageRuleBo> rows) {
         Map<Long, ProductFormulaMaterial> materialById = materials.stream()
             .filter(material -> material.getFormulaMaterialId() != null)
             .collect(Collectors.toMap(ProductFormulaMaterial::getFormulaMaterialId, Function.identity(), (left, right) -> left));
@@ -70,7 +71,7 @@ public class ProductFormulaUsageRuleServiceImpl extends ProductServiceSupport im
             result.add(normalizeRule(formulaId, row, materialById, materialByCode, optionMap, valueMap, duplicateKeys, index));
             index++;
         }
-        String messageKey = usageRuleValidator.validationMessageKey(materials, options, values, result);
+        String messageKey = usageRuleValidator.validationMessageKey(materials, options, values, optionMaterials, result);
         if (messageKey != null) {
             throw ServiceException.ofMessageKey(messageKey);
         }
@@ -95,8 +96,9 @@ public class ProductFormulaUsageRuleServiceImpl extends ProductServiceSupport im
 
     @Override
     public String validationMessageKey(List<ProductFormulaMaterial> materials, List<ProductFormulaOption> options,
-                                       List<ProductFormulaOptionValue> values, List<ProductFormulaUsageRule> usageRules) {
-        return usageRuleValidator.validationMessageKey(materials, options, values, usageRules);
+                                       List<ProductFormulaOptionValue> values, List<ProductFormulaOptionMaterial> optionMaterials,
+                                       List<ProductFormulaUsageRule> usageRules) {
+        return usageRuleValidator.validationMessageKey(materials, options, values, optionMaterials, usageRules);
     }
 
     private ProductFormulaUsageRule normalizeRule(Long formulaId, ProductFormulaUsageRuleBo row,

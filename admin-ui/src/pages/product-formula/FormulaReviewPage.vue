@@ -1,58 +1,166 @@
 <template>
   <div class="app-container formula-review-page">
-    <section class="review-panel">
-      <div class="review-header">
-        <div>
-          <h2>{{ t('productCenter.formulaReview.title') }}</h2>
-          <p>{{ t('productCenter.formulaReview.description') }}</p>
-        </div>
-        <el-button icon="Refresh" @click="load">{{ t('common.refresh') }}</el-button>
-      </div>
-      <el-table v-loading="loading" :data="rows" border>
-        <el-table-column type="index" :label="t('common.index')" width="64" align="center" />
-        <el-table-column :label="t('productCenter.formula.code')" width="140" show-overflow-tooltip>
-          <template #default="{ row }">{{ formulaSnapshot(row).formulaCode || '-' }}</template>
-        </el-table-column>
-        <el-table-column :label="t('productCenter.formula.name')" min-width="180" show-overflow-tooltip>
-          <template #default="{ row }">{{ formulaSnapshot(row).formulaName || '-' }}</template>
-        </el-table-column>
-        <el-table-column prop="versionLabel" :label="t('productCenter.formula.currentVersion')" width="120" />
-        <el-table-column prop="submitBy" :label="t('productCenter.formulaReview.submitBy')" width="120" />
-        <el-table-column :label="t('productCenter.formulaReview.submitTime')" width="160">
-          <template #default="{ row }">{{ formatMinute(row.submitTime) }}</template>
-        </el-table-column>
-        <el-table-column prop="validationStatus" :label="t('productCenter.formula.validationStatus')" width="120" />
-        <el-table-column :label="t('common.operate')" width="180" fixed="right" align="center" class-name="small-padding fixed-width">
-          <template #default="{ row }">
-            <AdminTableActions :actions="reviewActions(row)" />
-          </template>
-        </el-table-column>
-      </el-table>
-      <div class="review-pagination">
-        <el-pagination
-          v-model:current-page="query.pageNum"
-          v-model:page-size="query.pageSize"
-          background
-          layout="total, sizes, prev, pager, next"
-          :total="total"
-          @size-change="load"
-          @current-change="load"
+    <el-form
+      v-show="showSearch"
+      ref="queryRef"
+      :model="query"
+      :inline="true"
+      label-width="72px"
+      class="formula-review-page__search"
+    >
+      <el-form-item :label="t('productCenter.formula.code')" prop="formulaCode">
+        <el-input
+          v-model="query.formulaCode"
+          :placeholder="t('productCenter.common.inputPlaceholder')"
+          clearable
+          style="width: 190px"
+          @keyup.enter="handleQuery"
         />
-      </div>
-    </section>
+      </el-form-item>
+      <el-form-item :label="t('productCenter.formula.name')" prop="formulaName">
+        <el-input
+          v-model="query.formulaName"
+          :placeholder="t('productCenter.common.inputPlaceholder')"
+          clearable
+          style="width: 190px"
+          @keyup.enter="handleQuery"
+        />
+      </el-form-item>
+      <el-form-item :label="t('productCenter.formula.currentVersion')" prop="versionLabel">
+        <el-input
+          v-model="query.versionLabel"
+          :placeholder="t('productCenter.common.inputPlaceholder')"
+          clearable
+          style="width: 160px"
+          @keyup.enter="handleQuery"
+        />
+      </el-form-item>
+      <el-form-item :label="t('productCenter.formulaReview.submitBy')" prop="submitBy">
+        <el-input
+          v-model="query.submitBy"
+          :placeholder="t('productCenter.common.inputPlaceholder')"
+          clearable
+          style="width: 160px"
+          @keyup.enter="handleQuery"
+        />
+      </el-form-item>
+      <el-form-item :label="t('productCenter.formula.validationStatus')" prop="validationStatus">
+        <el-select
+          v-model="query.validationStatus"
+          :placeholder="t('productCenter.common.selectPlaceholder')"
+          clearable
+          filterable
+          style="width: 160px"
+        >
+          <el-option v-for="option in validationStatusOptions" :key="option.value" :label="option.label" :value="option.value" />
+        </el-select>
+      </el-form-item>
+      <el-form-item>
+        <el-button type="primary" icon="Search" @click="handleQuery" v-hasPermi="['product:formula:review']">
+          {{ t('common.search') }}
+        </el-button>
+        <el-button icon="Refresh" @click="resetQuery">{{ t('common.reset') }}</el-button>
+      </el-form-item>
+    </el-form>
+
+    <el-row :gutter="10" class="mb8 formula-review-page__toolbar">
+      <el-col :span="1.5">
+        <el-button type="primary" plain icon="View" :disabled="!currentRow" @click="handleCurrentDetail" v-hasPermi="['product:formula:review']">
+          {{ t('common.detail') }}
+        </el-button>
+      </el-col>
+      <el-col :span="1.5">
+        <el-button type="primary" plain icon="CircleCheck" :disabled="!currentRow" @click="handleCurrentApprove" v-hasPermi="['product:formula:approve']">
+          {{ t('productCenter.formula.actions.approve') }}
+        </el-button>
+      </el-col>
+      <el-col :span="1.5">
+        <el-button type="danger" plain icon="CircleClose" :disabled="!currentRow" @click="handleCurrentReject" v-hasPermi="['product:formula:reject']">
+          {{ t('productCenter.formula.actions.reject') }}
+        </el-button>
+      </el-col>
+      <el-col :span="1.5">
+        <el-button type="primary" plain icon="Clock" :disabled="!currentRow" @click="handleCurrentReviewRecord" v-hasPermi="['product:formula:reference']">
+          {{ t('productCenter.formulaReview.reviewRecord') }}
+        </el-button>
+      </el-col>
+      <right-toolbar v-model:showSearch="showSearch" @queryTable="load" />
+    </el-row>
+
+    <el-table
+      v-loading="loading"
+      :data="rows"
+      border
+      highlight-current-row
+      class="formula-review-page__table"
+      @row-click="handleRowClick"
+      @row-dblclick="openDetail"
+    >
+      <el-table-column type="index" :index="rowIndex" :label="t('common.index')" width="64" align="center" fixed />
+      <el-table-column :label="t('productCenter.formula.code')" width="140" show-overflow-tooltip>
+        <template #default="{ row }">{{ parseFormulaReviewJson(row.formulaSnapshotJson).formulaCode || '-' }}</template>
+      </el-table-column>
+      <el-table-column :label="t('productCenter.formula.name')" min-width="180" show-overflow-tooltip>
+        <template #default="{ row }">{{ parseFormulaReviewJson(row.formulaSnapshotJson).formulaName || '-' }}</template>
+      </el-table-column>
+      <el-table-column prop="versionLabel" :label="t('productCenter.formula.currentVersion')" width="120" />
+      <el-table-column :label="t('productCenter.formula.status')" width="120" align="center">
+        <template #default="{ row }">
+          <el-tag :type="formulaStatusTagType(row.versionStatus)" effect="plain">
+            {{ formulaStatusText(row.versionStatus, t) }}
+          </el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column prop="submitBy" :label="t('productCenter.formulaReview.submitBy')" width="120" />
+      <el-table-column :label="t('productCenter.formulaReview.submitTime')" width="160">
+        <template #default="{ row }">{{ formatFormulaReviewMinute(row.submitTime) }}</template>
+      </el-table-column>
+      <el-table-column :label="t('productCenter.formula.validationStatus')" width="120" align="center">
+        <template #default="{ row }">
+          <el-tag :type="formulaValidationTagType(row.validationStatus)" effect="plain">
+            {{ formulaValidationStatusText(row.validationStatus, t) }}
+          </el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column :label="t('common.operate')" width="180" fixed="right" align="center" class-name="small-padding fixed-width">
+        <template #default="{ row }">
+          <AdminTableActions :actions="reviewActions(row)" />
+        </template>
+      </el-table-column>
+    </el-table>
+
+    <pagination
+      v-show="total > 0"
+      v-model:page="query.pageNum"
+      v-model:limit="query.pageSize"
+      :total="total"
+      class="formula-review-page__pagination"
+      @pagination="load"
+    />
+    <FormulaReviewRecordDrawer v-model="reviewRecordOpen" :rows="reviewRecordRows" :loading="reviewRecordLoading" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useRouter } from 'vue-router'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
+import { productChangeLogApi } from '@/api/product-capability/material'
 import { productFormulaApi } from '@/api/product-formula/formula'
-import { formatUtc } from '@/utils/datetime'
 import AdminTableActions, { type AdminTableAction } from '@/components/AdminTableActions/index.vue'
-import type { ProductFormulaVersionVO, ProductRecord } from '@/api/product-capability/types'
+import type { ProductChangeLogVO, ProductFormulaReviewQuery, ProductFormulaVersionVO } from '@/api/product-capability/types'
+import FormulaReviewRecordDrawer from './components/FormulaReviewRecordDrawer.vue'
+import {
+  formulaValidationStatusOptions,
+  formulaStatusTagType,
+  formulaStatusText,
+  formulaValidationStatusText,
+  formulaValidationTagType
+} from '@/constants/productStatus'
+import { formatFormulaReviewMinute, parseFormulaReviewJson } from './utils/formulaReviewDisplay'
+import './FormulaReviewPage.css'
 
 const router = useRouter()
 const localeStore = useLocaleStore()
@@ -60,24 +168,14 @@ const t = (key: string) => getMessage(key, localeStore.language)
 const loading = ref(false)
 const rows = ref<ProductFormulaVersionVO[]>([])
 const total = ref(0)
-const query = reactive({ pageNum: 1, pageSize: 10 })
-
-function parseJson(value?: string) {
-  if (!value) return {}
-  try {
-    return JSON.parse(value) as ProductRecord
-  } catch {
-    return {}
-  }
-}
-
-function formulaSnapshot(row: ProductFormulaVersionVO) {
-  return parseJson(row.formulaSnapshotJson)
-}
-
-function formatMinute(value?: string) {
-  return formatUtc(value, 'YYYY-MM-DD HH:mm')
-}
+const showSearch = ref(true)
+const queryRef = ref()
+const currentRow = ref<ProductFormulaVersionVO>()
+const reviewRecordOpen = ref(false)
+const reviewRecordLoading = ref(false)
+const reviewRecordRows = ref<ProductChangeLogVO[]>([])
+const validationStatusOptions = computed(() => formulaValidationStatusOptions(t))
+const query = reactive<ProductFormulaReviewQuery>({ pageNum: 1, pageSize: 10 })
 
 async function load() {
   loading.value = true
@@ -85,14 +183,69 @@ async function load() {
     const response = await productFormulaApi.reviews(query)
     rows.value = response.rows || []
     total.value = response.total || 0
+    currentRow.value = undefined
   } finally {
     loading.value = false
   }
 }
 
+function rowIndex(index: number) {
+  return ((query.pageNum || 1) - 1) * (query.pageSize || 10) + index + 1
+}
+
+function handleQuery() {
+  query.pageNum = 1
+  load()
+}
+
+function resetQuery() {
+  queryRef.value?.resetFields()
+  handleQuery()
+}
+
+function handleRowClick(row: ProductFormulaVersionVO) {
+  currentRow.value = row
+}
+
 async function openDetail(row: ProductFormulaVersionVO) {
   if (!row.versionId) return
   await router.push(`/product-formula/reviews/${row.versionId}`)
+}
+
+function handleCurrentDetail() {
+  if (currentRow.value) {
+    void openDetail(currentRow.value)
+  }
+}
+
+function handleCurrentApprove() {
+  if (currentRow.value) {
+    void approve(currentRow.value)
+  }
+}
+
+function handleCurrentReject() {
+  if (currentRow.value) {
+    void reject(currentRow.value)
+  }
+}
+
+async function handleCurrentReviewRecord() {
+  if (!currentRow.value?.formulaId) return
+  reviewRecordOpen.value = true
+  reviewRecordLoading.value = true
+  try {
+    const response = await productChangeLogApi.list({
+      bizModule: 'FORMULA',
+      bizType: 'FORMULA',
+      bizId: currentRow.value.formulaId,
+      pageNum: 1,
+      pageSize: 50
+    })
+    reviewRecordRows.value = response.rows || []
+  } finally {
+    reviewRecordLoading.value = false
+  }
 }
 
 async function approve(row: ProductFormulaVersionVO) {
@@ -119,43 +272,10 @@ async function reject(row: ProductFormulaVersionVO) {
 
 function reviewActions(row: ProductFormulaVersionVO): AdminTableAction[] {
   return [
-    { label: t('common.detail'), icon: 'View', primary: true, onClick: () => openDetail(row) },
-    { label: t('productCenter.formula.actions.approve'), icon: 'CircleCheck', type: 'success', onClick: () => approve(row) },
-    { label: t('productCenter.formula.actions.reject'), icon: 'Close', type: 'warning', onClick: () => reject(row) }
+    { label: t('productCenter.formula.actions.approve'), icon: 'CircleCheck', permission: 'product:formula:approve', type: 'primary', onClick: () => approve(row) },
+    { label: t('productCenter.formula.actions.reject'), icon: 'Close', permission: 'product:formula:reject', type: 'danger', danger: true, onClick: () => reject(row) }
   ]
 }
 
 onMounted(load)
 </script>
-
-<style scoped>
-.review-panel {
-  padding: 16px;
-  background: #fff;
-  border: 1px solid #e6ebf2;
-  border-radius: 8px;
-}
-
-.review-header {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 12px;
-}
-
-.review-header h2 {
-  margin: 0 0 4px;
-  color: #111827;
-}
-
-.review-header p {
-  margin: 0;
-  color: #6b7280;
-}
-
-.review-pagination {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 12px;
-}
-</style>

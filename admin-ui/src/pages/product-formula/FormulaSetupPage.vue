@@ -101,6 +101,7 @@
       :usage-rules="setup.usageRules"
       :options="setup.options"
       :option-values="setup.optionValues"
+      :option-materials="setup.optionMaterials"
       :unit-options="unitOptions"
       @select-usage-row="selectUsageRow"
       @variables-saved="handleVariablesSaved"

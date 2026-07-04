@@ -72,6 +72,7 @@
             :materials="materials"
             :options="options"
             :option-values="optionValues"
+            :option-materials="optionMaterials"
             @insert="appendConditionClause"
           />
         </div>
@@ -122,6 +123,7 @@ import {
 import { normalizeDisplayExpression } from './formulaExpressionDisplay'
 import type {
   ProductFormulaMaterialVO,
+  ProductFormulaOptionMaterialVO,
   ProductFormulaOptionVO,
   ProductFormulaOptionValueVO,
   ProductFormulaSetupVO,
@@ -140,6 +142,7 @@ const props = defineProps<{
   materials?: ProductFormulaMaterialVO[]
   options?: ProductFormulaOptionVO[]
   optionValues?: ProductFormulaOptionValueVO[]
+  optionMaterials?: ProductFormulaOptionMaterialVO[]
   variables?: ProductFormulaVariableVO[]
   variableRules?: ProductFormulaVariableRuleVO[]
   enableConditionArithmeticOperators?: boolean

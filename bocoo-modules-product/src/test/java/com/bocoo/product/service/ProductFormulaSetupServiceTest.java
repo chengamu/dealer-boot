@@ -16,6 +16,7 @@ import com.bocoo.product.domain.entity.ProductFormulaOptionValue;
 import com.bocoo.product.domain.entity.ProductFormulaRestriction;
 import com.bocoo.product.domain.entity.ProductFormulaUsageRule;
 import com.bocoo.product.domain.entity.ProductMaterial;
+import com.bocoo.product.domain.entity.ProductMaterialAttribute;
 import com.bocoo.product.domain.entity.ProductUnit;
 import com.bocoo.product.mapper.ProductFormulaMapper;
 import com.bocoo.product.mapper.ProductFormulaMaterialMapper;
@@ -30,6 +31,7 @@ import com.bocoo.product.mapper.ProductMaterialMapper;
 import com.bocoo.product.mapper.ProductMaterialAttributeMapper;
 import com.bocoo.product.mapper.ProductUnitMapper;
 import com.bocoo.product.service.impl.ProductFormulaMaterialSnapshotResolver;
+import com.bocoo.product.service.impl.ProductFormulaExpressionReferenceValidator;
 import com.bocoo.product.service.impl.ProductFormulaRestrictionNormalizer;
 import com.bocoo.product.service.impl.ProductFormulaSetupNormalizer;
 import com.bocoo.product.service.impl.ProductFormulaSetupReader;
@@ -97,7 +99,10 @@ class ProductFormulaSetupServiceTest {
     @BeforeEach
     void setUp() {
         ProductServiceTestSupport.prepareMapperAndConverter();
-        usageRuleService = new ProductFormulaUsageRuleServiceImpl(usageRuleMapper, new ProductFormulaUsageRuleValidator());
+        ProductFormulaExpressionReferenceValidator expressionReferenceValidator =
+            new ProductFormulaExpressionReferenceValidator(materialAttributeMapper);
+        usageRuleService = new ProductFormulaUsageRuleServiceImpl(usageRuleMapper,
+            new ProductFormulaUsageRuleValidator(expressionReferenceValidator));
         ProductFormulaMaterialSnapshotResolver materialSnapshotResolver =
             new ProductFormulaMaterialSnapshotResolver(productMaterialMapper, unitMapper);
         variableService = new ProductFormulaVariableServiceImpl(formulaMapper, variableMapper, variableRuleMapper, usageRuleMapper);
@@ -113,7 +118,8 @@ class ProductFormulaSetupServiceTest {
             usageRuleService,
             variableService
         );
-        ProductFormulaSetupValidator setupValidator = new ProductFormulaSetupValidator(usageRuleService, variableService);
+        ProductFormulaSetupValidator setupValidator =
+            new ProductFormulaSetupValidator(usageRuleService, variableService, expressionReferenceValidator);
         ProductFormulaRestrictionNormalizer restrictionNormalizer = new ProductFormulaRestrictionNormalizer(setupValidator);
         ProductFormulaSetupNormalizer setupNormalizer =
             new ProductFormulaSetupNormalizer(materialSnapshotResolver, restrictionNormalizer, usageRuleService, variableService);
@@ -274,6 +280,35 @@ class ProductFormulaSetupServiceTest {
                 && Long.valueOf(7202L).equals(row.getOptionValueId())
         ));
         verify(changeLogService).record(eq("FORMULA"), eq("FORMULA"), eq(3001L), eq("FORMULA_25_ZEBRA"), eq("SAVE_OPTIONS"), any(), any(), eq(null));
+    }
+
+    @Test
+    void saveOptionsRejectsRemovingOptionReferencedByUsageRule() {
+        ProductFormulaSetupBo bo = validSetup();
+        bo.setMaterials(List.of());
+        bo.setOptions(List.of(optionBo("SYSTEM", "系统")));
+        bo.setOptionValues(List.of(optionValueBo("SYSTEM", "MOTOR", "电机")));
+        bo.setOptionMaterials(List.of(optionMaterialBo("SYSTEM", "MOTOR", "MAT001")));
+        bo.setRestrictions(List.of());
+        bo.setUsageRules(List.of());
+        ProductFormulaUsageRule usageRule = usageRule();
+        usageRule.setConditionType("OPTION_VALUE");
+        usageRule.setConditionOptionCode("FABRIC");
+        usageRule.setConditionValueCode("MAT001");
+        usageRule.setDefaultRuleFlag(Boolean.FALSE);
+        when(formulaMapper.selectById(3001L)).thenReturn(formula("DRAFT"));
+        when(materialMapper.selectList(any())).thenReturn(List.of(formulaMaterial()));
+        when(optionMapper.selectList(any())).thenReturn(List.of(option("FABRIC", "面料")));
+        when(optionValueMapper.selectList(any())).thenReturn(List.of(optionValue("FABRIC", "MAT001", "米色斑马帘面料")));
+        when(optionMaterialMapper.selectList(any())).thenReturn(List.of(optionMaterial()));
+        when(restrictionMapper.selectList(any())).thenReturn(List.of());
+        when(usageRuleMapper.selectList(any())).thenReturn(List.of(usageRule));
+
+        assertThatThrownBy(() -> setupService.saveOptions(3001L, bo))
+            .isInstanceOf(ServiceException.class);
+
+        verify(optionMapper, never()).insert(any());
+        verify(changeLogService, never()).record(any(), any(), any(), any(), eq("SAVE_OPTIONS"), any(), any(), any());
     }
 
     @Test
@@ -493,6 +528,64 @@ class ProductFormulaSetupServiceTest {
 
         assertThat(setupService.validationMessageKey(3001L))
             .isEqualTo("product.formula.usageConditionInvalid");
+    }
+
+    @Test
+    void validationRejectsExpressionReferencingRemovedOption() {
+        ProductFormulaRestriction restriction = restriction();
+        restriction.setConditionType("EXPRESSION");
+        restriction.setConditionExpression("option_REMOVED == 'YES'");
+        restriction.setConditionOperator("EXPRESSION");
+
+        when(materialMapper.selectList(any())).thenReturn(List.of(formulaMaterial()));
+        when(usageRuleMapper.selectList(any())).thenReturn(List.of(usageRule()));
+        when(optionMapper.selectList(any())).thenReturn(List.of(option("FABRIC", "面料")));
+        when(optionValueMapper.selectList(any())).thenReturn(List.of(optionValue("FABRIC", "MAT001", "米色斑马帘面料")));
+        when(optionMaterialMapper.selectList(any())).thenReturn(List.of(optionMaterial()));
+        when(restrictionMapper.selectList(any())).thenReturn(List.of(restriction));
+
+        assertThat(setupService.validationMessageKey(3001L))
+            .isEqualTo("product.formula.restrictionConditionInvalid");
+    }
+
+    @Test
+    void validationRejectsExpressionReferencingMissingLinkedMaterialAttribute() {
+        ProductFormulaRestriction restriction = restriction();
+        restriction.setConditionType("EXPRESSION");
+        restriction.setConditionExpression("material_FABRIC_THICKNESS > 12");
+        restriction.setConditionOperator("EXPRESSION");
+
+        when(materialMapper.selectList(any())).thenReturn(List.of(formulaMaterial()));
+        when(usageRuleMapper.selectList(any())).thenReturn(List.of(usageRule()));
+        when(optionMapper.selectList(any())).thenReturn(List.of(option("FABRIC", "面料")));
+        when(optionValueMapper.selectList(any())).thenReturn(List.of(optionValue("FABRIC", "MAT001", "米色斑马帘面料")));
+        when(optionMaterialMapper.selectList(any())).thenReturn(List.of(optionMaterial()));
+        when(restrictionMapper.selectList(any())).thenReturn(List.of(restriction));
+        when(materialAttributeMapper.selectList(any())).thenReturn(List.of());
+
+        assertThat(setupService.validationMessageKey(3001L))
+            .isEqualTo("product.formula.restrictionConditionInvalid");
+    }
+
+    @Test
+    void validationAllowsExpressionReferencingExistingLinkedMaterialAttribute() {
+        ProductFormulaRestriction restriction = restriction();
+        restriction.setConditionType("EXPRESSION");
+        restriction.setConditionExpression("material_FABRIC_THICKNESS > 12");
+        restriction.setConditionOperator("EXPRESSION");
+
+        ProductMaterialAttribute attribute = new ProductMaterialAttribute();
+        attribute.setMaterialId(4001L);
+        attribute.setAttributeCode("THICKNESS");
+        when(materialMapper.selectList(any())).thenReturn(List.of(formulaMaterial()));
+        when(usageRuleMapper.selectList(any())).thenReturn(List.of(usageRule()));
+        when(optionMapper.selectList(any())).thenReturn(List.of(option("FABRIC", "面料")));
+        when(optionValueMapper.selectList(any())).thenReturn(List.of(optionValue("FABRIC", "MAT001", "米色斑马帘面料")));
+        when(optionMaterialMapper.selectList(any())).thenReturn(List.of(optionMaterial()));
+        when(restrictionMapper.selectList(any())).thenReturn(List.of(restriction));
+        when(materialAttributeMapper.selectList(any())).thenReturn(List.of(attribute));
+
+        assertThat(setupService.validationMessageKey(3001L)).isNull();
     }
 
     private ProductFormulaSetupBo validSetup() {

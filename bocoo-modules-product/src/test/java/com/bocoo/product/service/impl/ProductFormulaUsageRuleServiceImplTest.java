@@ -2,9 +2,11 @@ package com.bocoo.product.service.impl;
 
 import com.bocoo.product.domain.entity.ProductFormulaMaterial;
 import com.bocoo.product.domain.entity.ProductFormulaOption;
+import com.bocoo.product.domain.entity.ProductFormulaOptionMaterial;
 import com.bocoo.product.domain.entity.ProductFormulaOptionValue;
 import com.bocoo.product.domain.entity.ProductFormulaUsageRule;
 import com.bocoo.product.mapper.ProductFormulaUsageRuleMapper;
+import com.bocoo.product.mapper.ProductMaterialAttributeMapper;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -16,11 +18,12 @@ import static org.mockito.Mockito.mock;
 class ProductFormulaUsageRuleServiceImplTest {
 
     private final ProductFormulaUsageRuleServiceImpl service =
-        new ProductFormulaUsageRuleServiceImpl(mock(ProductFormulaUsageRuleMapper.class), new ProductFormulaUsageRuleValidator());
+        new ProductFormulaUsageRuleServiceImpl(mock(ProductFormulaUsageRuleMapper.class), new ProductFormulaUsageRuleValidator(
+            new ProductFormulaExpressionReferenceValidator(mock(ProductMaterialAttributeMapper.class))));
 
     @Test
     void fixedUsageModeAllowsOnlyOneEnabledRulePerMaterial() {
-        assertThat(service.validationMessageKey(materials(), options(), values(), List.of(
+        assertThat(service.validationMessageKey(materials(), options(), values(), optionMaterials(), List.of(
             fixedRule(),
             fixedRule()
         ))).isEqualTo("product.formula.usageRuleDuplicate");
@@ -28,11 +31,11 @@ class ProductFormulaUsageRuleServiceImplTest {
 
     @Test
     void formulaUsageModeRequiresOneDefaultRule() {
-        assertThat(service.validationMessageKey(materials(), options(), values(), List.of(
+        assertThat(service.validationMessageKey(materials(), options(), values(), optionMaterials(), List.of(
             formulaRule(false)
         ))).isEqualTo("product.formula.usageDefaultRuleRequired");
 
-        assertThat(service.validationMessageKey(materials(), options(), values(), List.of(
+        assertThat(service.validationMessageKey(materials(), options(), values(), optionMaterials(), List.of(
             formulaRule(true),
             formulaRule(true)
         ))).isEqualTo("product.formula.usageRuleDuplicate");
@@ -40,7 +43,7 @@ class ProductFormulaUsageRuleServiceImplTest {
 
     @Test
     void usageModesCannotBeMixedForSameMaterial() {
-        assertThat(service.validationMessageKey(materials(), options(), values(), List.of(
+        assertThat(service.validationMessageKey(materials(), options(), values(), optionMaterials(), List.of(
             fixedRule(),
             formulaRule(true)
         ))).isEqualTo("product.formula.usageModeMixedInvalid");
@@ -50,14 +53,14 @@ class ProductFormulaUsageRuleServiceImplTest {
     void formulaRuleRejectsInvalidFormulaAndNonBooleanExpressionCondition() {
         ProductFormulaUsageRule invalidFormula = formulaRule(true);
         invalidFormula.setUsageFormula("if(orderWidthIn > 12, 2, 1)");
-        assertThat(service.validationMessageKey(materials(), options(), values(), List.of(invalidFormula)))
+        assertThat(service.validationMessageKey(materials(), options(), values(), optionMaterials(), List.of(invalidFormula)))
             .isEqualTo("product.formula.usageFormulaInvalid");
 
         ProductFormulaUsageRule invalidCondition = formulaRule(false);
         invalidCondition.setConditionType("EXPRESSION");
         invalidCondition.setConditionExpression("orderWidthIn");
         invalidCondition.setConditionKey("EXPR:orderWidthIn");
-        assertThat(service.validationMessageKey(materials(), options(), values(), List.of(invalidCondition)))
+        assertThat(service.validationMessageKey(materials(), options(), values(), optionMaterials(), List.of(invalidCondition)))
             .isEqualTo("product.formula.usageConditionInvalid");
     }
 
@@ -68,7 +71,7 @@ class ProductFormulaUsageRuleServiceImplTest {
         rule.setWidthFormula("orderWidthCm + 3");
         rule.setHeightFormula("orderLengthCm + 3");
 
-        assertThat(service.validationMessageKey(materials(), options(), values(), List.of(rule))).isNull();
+        assertThat(service.validationMessageKey(materials(), options(), values(), optionMaterials(), List.of(rule))).isNull();
     }
 
     @Test
@@ -80,7 +83,7 @@ class ProductFormulaUsageRuleServiceImplTest {
         rule.setHeightFormula(null);
         rule.setWeightFormula(null);
 
-        assertThat(service.validationMessageKey(materials(), options(), values(), List.of(rule)))
+        assertThat(service.validationMessageKey(materials(), options(), values(), optionMaterials(), List.of(rule)))
             .isEqualTo("product.formula.materialUsageRuleRequired");
     }
 
@@ -89,7 +92,7 @@ class ProductFormulaUsageRuleServiceImplTest {
         ProductFormulaUsageRule rule = formulaRule(false);
         rule.setConditionValueCode("UNKNOWN");
 
-        assertThat(service.validationMessageKey(materials(), options(), values(), List.of(rule)))
+        assertThat(service.validationMessageKey(materials(), options(), values(), optionMaterials(), List.of(rule)))
             .isEqualTo("product.formula.usageConditionInvalid");
     }
 
@@ -121,6 +124,16 @@ class ProductFormulaUsageRuleServiceImplTest {
         value.setStatus("ENABLED");
         value.setDelFlag("0");
         return List.of(value);
+    }
+
+    private List<ProductFormulaOptionMaterial> optionMaterials() {
+        ProductFormulaOptionMaterial row = new ProductFormulaOptionMaterial();
+        row.setOptionCode("FABRIC");
+        row.setValueCode("MAT001");
+        row.setMaterialCode("MAT001");
+        row.setStatus("ENABLED");
+        row.setDelFlag("0");
+        return List.of(row);
     }
 
     private ProductFormulaUsageRule fixedRule() {

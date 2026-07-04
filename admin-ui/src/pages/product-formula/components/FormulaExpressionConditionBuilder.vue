@@ -22,16 +22,16 @@
     <section class="condition-builder__section condition-builder__section--material">
       <h4>{{ t('productCenter.formulaSetup.materialAttributes') }}</h4>
       <div class="condition-builder__row condition-builder__row--material" :class="{ 'condition-builder__row--with-joiner': hasText }">
-        <el-select v-model="materialBuilder.role" class="condition-builder__role" filterable>
-          <el-option v-for="role in materialRoles" :key="role.valueCode" :label="role.valueNameCn || role.valueCode" :value="role.valueCode || ''" />
+        <el-select v-model="materialBuilder.role" class="condition-builder__role" filterable @change="materialBuilder.field = ''">
+          <el-option v-for="option in optionChoices" :key="option.value" :label="option.label" :value="option.value" />
         </el-select>
-        <span class="condition-builder__fixed-field">{{ shortLabel('物料类型', 'Material Type') }}</span>
+        <el-select v-model="materialBuilder.field" class="condition-builder__field" filterable>
+          <el-option v-for="attribute in materialAttributeChoices" :key="attribute.value" :label="attribute.label" :value="attribute.value" />
+        </el-select>
         <el-select v-model="materialBuilder.operator" class="condition-builder__operator">
           <el-option v-for="operator in conditionOperators" :key="operator" :label="operator" :value="operator" />
         </el-select>
-        <el-select v-model="materialBuilder.value" class="condition-builder__value" filterable>
-          <el-option v-for="value in materialValueOptions" :key="value.valueCode" :label="value.valueNameCn || value.valueCode" :value="value.valueCode || ''" />
-        </el-select>
+        <el-input v-model="materialBuilder.value" class="condition-builder__value" :placeholder="t('productCenter.formulaSetup.conditionValue')" />
         <span class="condition-builder__break" />
         <FormulaExpressionJoinerSelect v-if="hasText" v-model="materialBuilder.joiner" />
         <el-button class="condition-builder__action" type="primary" plain @click="appendMaterialCondition">{{ t('productCenter.formulaSetup.insertCondition') }}</el-button>
@@ -61,11 +61,11 @@ import { computed, reactive, watch } from 'vue'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 import { formulaVariables } from '../utils/formulaExpression'
-import { materialAttributeVariableName, optionVariableName } from './formulaExpressionDisplay'
+import { optionVariableName } from './formulaExpressionDisplay'
 import FormulaExpressionJoinerSelect from './FormulaExpressionJoinerSelect.vue'
+import { materialAttributeOptions, optionSelectOptions } from './formulaConditionEditor'
 import {
   buildConditionText,
-  distinctOptions,
   ensureBuilderField,
   resetBuilderValue,
   valueLabel,
@@ -74,12 +74,22 @@ import {
   type ConditionValue,
   type MaterialBuilderState
 } from './formulaExpressionConditionOptions'
-import type { ProductFormulaMaterialVO, ProductFormulaOptionVO, ProductFormulaOptionValueVO } from '@/api/product-capability/types'
+import {
+  optionClientKey,
+  valueOwnerClientKey
+} from '../utils/formulaOptionDraftIdentity'
+import type {
+  ProductFormulaMaterialVO,
+  ProductFormulaOptionMaterialVO,
+  ProductFormulaOptionVO,
+  ProductFormulaOptionValueVO
+} from '@/api/product-capability/types'
 
 const props = defineProps<{
   hasText: boolean
   options?: ProductFormulaOptionVO[]
   optionValues?: ProductFormulaOptionValueVO[]
+  optionMaterials?: ProductFormulaOptionMaterialVO[]
   materials?: ProductFormulaMaterialVO[]
 }>()
 
@@ -93,11 +103,12 @@ const conditionOperators = ['=', '!=', '>', '>=', '<', '<=']
 const businessBuilder = reactive<BuilderState>({ field: 'productType', operator: '=', value: '', joiner: '并且' })
 const materialBuilder = reactive<MaterialBuilderState>({ role: '', field: 'materialType', operator: '=', value: '', joiner: '并且' })
 const orderBuilder = reactive<BuilderState>({ field: 'orderWidthIn', operator: '=', value: '', joiner: '并且' })
+const optionChoices = computed(() => optionSelectOptions(props.options || []))
 
 const businessFields = computed<ConditionField[]>(() => {
   const optionFields = (props.options || []).map((option) => ({
     label: option.optionNameCn || option.optionCode || '-',
-    name: optionVariableName(option.optionCode),
+    name: optionClientKey(option) || option.optionCode || optionVariableName(option.optionCode),
     insert: option.optionNameCn || option.optionCode || optionVariableName(option.optionCode),
     optionCode: option.optionCode,
     stringValue: true
@@ -106,7 +117,7 @@ const businessFields = computed<ConditionField[]>(() => {
 })
 const selectedBusinessField = computed(() => businessFields.value.find((field) => field.name === businessBuilder.field))
 const businessValueOptions = computed<ConditionValue[]>(() => selectedBusinessField.value?.optionCode
-  ? (props.optionValues || []).filter((value) => value.optionCode === selectedBusinessField.value?.optionCode)
+  ? optionValuesFor(selectedBusinessField.value.optionCode)
   : [])
 
 const orderFields = computed(() => formulaVariables
@@ -115,34 +126,31 @@ const orderFields = computed(() => formulaVariables
 )
 
 const selectedOrderField = computed(() => orderFields.value.find((field) => field.name === orderBuilder.field))
-const materialRoles = computed(() => distinctOptions((props.materials || []).map((item) => ({
-  valueCode: item.attributeGroupCode || '',
-  valueNameCn: item.attributeGroupNameCn || item.attributeGroupCode
-}))))
-const materialValueOptions = computed<ConditionValue[]>(() => materialTypeValues())
+const materialAttributeChoices = computed(() => materialAttributeOptions(materialBuilder.role, props.options || [], props.optionMaterials || [], props.materials || []))
 
 watch(businessFields, () => ensureBuilderField(businessBuilder, businessFields.value), { immediate: true })
 watch(() => businessBuilder.field, () => resetBuilderValue(businessBuilder, businessValueOptions.value))
-watch(materialRoles, () => {
-  materialBuilder.role = materialRoles.value.some((role) => role.valueCode === materialBuilder.role) ? materialBuilder.role : materialRoles.value[0]?.valueCode || ''
-  resetBuilderValue(materialBuilder, materialValueOptions.value)
+watch(optionChoices, () => {
+  materialBuilder.role = optionChoices.value.some((option) => option.value === materialBuilder.role) ? materialBuilder.role : optionChoices.value[0]?.value || ''
+  materialBuilder.field = materialAttributeChoices.value.some((attribute) => attribute.value === materialBuilder.field) ? materialBuilder.field : materialAttributeChoices.value[0]?.value || ''
 }, { immediate: true })
-watch(() => materialBuilder.role, () => resetBuilderValue(materialBuilder, materialValueOptions.value))
+watch(() => materialBuilder.role, () => {
+  materialBuilder.field = materialAttributeChoices.value[0]?.value || ''
+})
 
 function appendBusinessCondition() {
   appendCondition(selectedBusinessField.value, businessBuilder, businessValueOptions.value)
 }
 
 function appendMaterialCondition() {
-  const role = materialRoles.value.find((item) => item.valueCode === materialBuilder.role)
-  if (!role) return
-  const fieldLabel = shortLabel('物料类型', 'Material Type')
+  const option = optionChoices.value.find((item) => item.value === materialBuilder.role)
+  const attribute = materialAttributeChoices.value.find((item) => item.value === materialBuilder.field)
+  if (!option || !attribute) return
   appendCondition({
-    label: fieldLabel,
-    name: materialAttributeVariableName(role.valueCode, 'materialType'),
-    insert: `${role.valueNameCn || role.valueCode}.${fieldLabel}`,
-    stringValue: true
-  }, materialBuilder, materialValueOptions.value)
+    label: attribute.label,
+    name: `${option.value}.${attribute.value}`,
+    insert: `${option.label}.${attribute.label}`
+  }, materialBuilder, [])
 }
 
 function appendOrderCondition() {
@@ -154,19 +162,13 @@ function appendCondition(field: ConditionField | undefined, builder: BuilderStat
   if (text) emit('insert', text, builder.joiner)
 }
 
-function materialTypeValues() {
-  return distinctOptions(filteredMaterials().map((item) => ({
-    valueCode: item.materialTypeCode || '',
-    valueNameCn: item.materialTypeNameCn || item.materialTypeCode
-  })))
-}
-
-function shortLabel(zh: string, en: string) {
-  return localeStore.language === 'zh_CN' ? zh : en
-}
-
-function filteredMaterials() {
-  return (props.materials || []).filter((item) => item.attributeGroupCode === materialBuilder.role)
+function optionValuesFor(optionCode?: string) {
+  const option = (props.options || []).find((row) => row.optionCode === optionCode)
+  const ownerKey = optionClientKey(option)
+  return (props.optionValues || []).filter((value) => {
+    const valueOwnerKey = valueOwnerClientKey(value)
+    return valueOwnerKey ? valueOwnerKey === ownerKey : value.optionCode === optionCode
+  })
 }
 
 </script>
