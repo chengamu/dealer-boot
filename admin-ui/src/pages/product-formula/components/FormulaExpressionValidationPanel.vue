@@ -4,7 +4,7 @@
       <h4>{{ title }}</h4>
       <el-tag effect="plain" :type="valid ? 'success' : 'danger'">{{ statusText }}</el-tag>
     </div>
-    <dl>
+    <dl class="expression-editor__result-expression">
       <dt>{{ normalizedTitle }}</dt>
       <dd>{{ expression || '-' }}</dd>
     </dl>
