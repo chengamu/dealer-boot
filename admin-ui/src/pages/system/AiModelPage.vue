@@ -1,6 +1,6 @@
 <template>
-  <div class="app-container">
-    <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true">
+  <div class="app-container ai-table-page">
+    <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true" class="ai-table-page__search">
       <el-form-item :label="t('ai.settings.channel')" prop="providerCode">
         <el-select v-model="queryParams.providerCode" clearable filterable style="width: 220px">
           <el-option v-for="item in providers" :key="item.providerCode" :label="providerLabel(item)" :value="item.providerCode || ''" />
@@ -20,7 +20,7 @@
       </el-form-item>
     </el-form>
 
-    <el-row :gutter="10" class="mb8">
+    <el-row :gutter="10" class="mb8 ai-table-page__toolbar">
       <el-col :span="1.5">
         <el-button type="primary" plain icon="Plus" @click="openModelDrawer()" v-hasPermi="['ai:model:add']">
           {{ t('common.add') }}
@@ -29,19 +29,19 @@
       <right-toolbar v-model:showSearch="showSearch" @queryTable="getList" />
     </el-row>
 
-    <el-table v-loading="loading" :data="dataList" border>
+    <el-table v-loading="loading" :data="dataList" border class="ai-table-page__table">
       <el-table-column type="index" :label="t('common.index')" width="70" align="center" />
       <el-table-column :label="t('ai.settings.channel')" min-width="160" show-overflow-tooltip>
         <template #default="{ row }">{{ channelName(row) }}</template>
       </el-table-column>
       <el-table-column :label="t('ai.settings.modelName')" prop="modelName" min-width="180" show-overflow-tooltip />
       <el-table-column :label="t('ai.settings.modelCode')" prop="modelCode" min-width="180" show-overflow-tooltip />
-      <el-table-column :label="t('ai.settings.modelType')" prop="modelType" width="130">
+      <el-table-column :label="t('ai.settings.modelType')" prop="modelType" width="130" align="center">
         <template #default="{ row }">
           <dict-tag :options="ai_model_type" :value="row.modelType" />
         </template>
       </el-table-column>
-      <el-table-column :label="t('ai.settings.contextWindow')" prop="contextWindow" width="130">
+      <el-table-column :label="t('ai.settings.contextWindow')" prop="contextWindow" width="130" align="center">
         <template #default="{ row }">{{ formatContextWindow(row.contextWindow) }}</template>
       </el-table-column>
       <el-table-column :label="t('ai.settings.defaultModel')" prop="defaultModel" width="110" align="center">
@@ -54,7 +54,7 @@
           <dict-tag :options="sys_normal_disable" :value="row.status" />
         </template>
       </el-table-column>
-      <el-table-column :label="t('common.updateTime')" prop="updateTime" width="180">
+      <el-table-column :label="t('common.updateTime')" prop="updateTime" width="180" align="center">
         <template #default="{ row }">{{ formatUtc(row.updateTime || row.createTime) || '-' }}</template>
       </el-table-column>
       <el-table-column :label="t('common.operate')" width="180" align="center" fixed="right">
@@ -64,7 +64,7 @@
       </el-table-column>
     </el-table>
 
-    <pagination v-show="total > 0" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" :total="total" @pagination="getList" />
+    <pagination v-show="total > 0" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" :total="total" class="ai-table-page__pagination" @pagination="getList" />
 
     <AdminDrawer v-model="drawerOpen" :title="modelForm.modelId ? t('ai.settings.editModel') : t('ai.settings.addModel')" size="640px" append-to-body destroy-on-close>
       <el-form ref="modelRef" :model="modelForm" :rules="modelRules" label-width="132px">
@@ -285,14 +285,13 @@ onMounted(async () => {
   await getList()
 })
 </script>
-
-<style scoped>
+<style scoped lang="scss">
+@use './styles/ai-table-page';
 .model-number-field {
   display: flex;
   align-items: center;
   gap: 8px;
 }
-
 .model-number-field__unit {
   color: var(--el-text-color-secondary);
   font-size: 13px;

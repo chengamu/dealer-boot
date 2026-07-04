@@ -1,6 +1,6 @@
 <template>
-  <div class="app-container">
-    <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true">
+  <div class="app-container ai-table-page">
+    <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true" class="ai-table-page__search">
       <el-form-item :label="t('ai.settings.user')" prop="userId">
         <el-input v-model="queryUserLabel" readonly clearable style="width: 220px" @clear="clearQueryUser">
           <template #append>
@@ -25,12 +25,12 @@
       </el-form-item>
     </el-form>
 
-    <el-row :gutter="10" class="mb8">
+    <el-row :gutter="10" class="mb8 ai-table-page__toolbar">
       <right-toolbar v-model:showSearch="showSearch" @queryTable="getList" />
     </el-row>
 
-    <el-table v-loading="loading" :data="dataList" border>
-      <el-table-column :label="t('ai.settings.createdTime')" prop="createdTime" width="180">
+    <el-table v-loading="loading" :data="dataList" border class="ai-table-page__table">
+      <el-table-column :label="t('ai.settings.createdTime')" prop="createdTime" width="180" align="center">
         <template #default="{ row }">{{ formatUtc(row.createdTime) || '-' }}</template>
       </el-table-column>
       <el-table-column :label="t('ai.settings.user')" min-width="160" show-overflow-tooltip>
@@ -38,14 +38,14 @@
       </el-table-column>
       <el-table-column :label="t('ai.settings.channel')" prop="provider" min-width="130" show-overflow-tooltip />
       <el-table-column :label="t('ai.settings.modelName')" prop="model" min-width="180" show-overflow-tooltip />
-      <el-table-column :label="t('ai.settings.inputTokens')" prop="inputTokens" width="120" />
-      <el-table-column :label="t('ai.settings.outputTokens')" prop="outputTokens" width="120" />
-      <el-table-column :label="t('ai.settings.costAmount')" prop="costAmount" width="120" />
-      <el-table-column :label="t('ai.settings.latencyMs')" prop="latencyMs" width="120" />
-      <el-table-column :label="t('common.status')" prop="status" width="110" />
+      <el-table-column :label="t('ai.settings.inputTokens')" prop="inputTokens" width="120" align="center" />
+      <el-table-column :label="t('ai.settings.outputTokens')" prop="outputTokens" width="120" align="center" />
+      <el-table-column :label="t('ai.settings.costAmount')" prop="costAmount" width="120" align="center" />
+      <el-table-column :label="t('ai.settings.latencyMs')" prop="latencyMs" width="120" align="center" />
+      <el-table-column :label="t('common.status')" prop="status" width="110" align="center" />
     </el-table>
 
-    <pagination v-show="total > 0" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" :total="total" @pagination="getList" />
+    <pagination v-show="total > 0" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" :total="total" class="ai-table-page__pagination" @pagination="getList" />
     <AiUserSelectorDialog ref="queryUserSelectorRef" :multiple="false" :title="t('ai.settings.selectUser')" @confirm="selectQueryUser" />
   </div>
 </template>
@@ -126,3 +126,7 @@ onMounted(async () => {
   await getList()
 })
 </script>
+
+<style scoped lang="scss">
+@use './styles/ai-table-page';
+</style>

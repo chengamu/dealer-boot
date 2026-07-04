@@ -1,6 +1,6 @@
 <template>
-  <div class="app-container">
-    <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true">
+  <div class="app-container ai-table-page">
+    <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true" class="ai-table-page__search">
       <el-form-item :label="t('ai.settings.user')" prop="userId">
         <el-input v-model="queryUserLabel" readonly clearable style="width: 220px" @clear="clearQueryUser">
           <template #append>
@@ -20,7 +20,7 @@
       </el-form-item>
     </el-form>
 
-    <el-row :gutter="10" class="mb8">
+    <el-row :gutter="10" class="mb8 ai-table-page__toolbar">
       <el-col :span="1.5">
         <el-button type="primary" plain icon="Plus" @click="openAddUserSelector" v-hasPermi="['ai:quota:add']">
           {{ t('ai.settings.addUserQuota') }}
@@ -29,14 +29,14 @@
       <right-toolbar v-model:showSearch="showSearch" @queryTable="getList" />
     </el-row>
 
-    <el-table v-loading="loading" :data="dataList" border>
+    <el-table v-loading="loading" :data="dataList" border class="ai-table-page__table">
       <el-table-column type="index" :label="t('common.index')" width="70" align="center" />
       <el-table-column :label="t('ai.settings.user')" min-width="180" show-overflow-tooltip>
         <template #default="{ row }">{{ userLabel(row) }}</template>
       </el-table-column>
-      <el-table-column :label="t('ai.settings.dailyRequestLimit')" prop="dailyRequestLimit" min-width="150" />
-      <el-table-column :label="t('ai.settings.dailyTokenLimit')" prop="dailyTokenLimit" min-width="150" />
-      <el-table-column :label="t('ai.settings.dailyCostLimit')" prop="dailyCostLimit" min-width="150">
+      <el-table-column :label="t('ai.settings.dailyRequestLimit')" prop="dailyRequestLimit" min-width="150" align="center" />
+      <el-table-column :label="t('ai.settings.dailyTokenLimit')" prop="dailyTokenLimit" min-width="150" align="center" />
+      <el-table-column :label="t('ai.settings.dailyCostLimit')" prop="dailyCostLimit" min-width="150" align="center">
         <template #default="{ row }">{{ formatAmount(row.dailyCostLimit) }}</template>
       </el-table-column>
       <el-table-column :label="t('common.status')" prop="status" width="100" align="center">
@@ -44,7 +44,7 @@
           <el-tag :type="row.status === '1' ? 'success' : 'info'">{{ row.status === '1' ? t('common.normal') : t('common.disabled') }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column :label="t('common.updateTime')" prop="updateTime" width="180">
+      <el-table-column :label="t('common.updateTime')" prop="updateTime" width="180" align="center">
         <template #default="{ row }">{{ formatUtc(row.updateTime || row.createTime) || '-' }}</template>
       </el-table-column>
       <el-table-column :label="t('common.operate')" width="120" align="center" fixed="right">
@@ -54,7 +54,7 @@
       </el-table-column>
     </el-table>
 
-    <pagination v-show="total > 0" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" :total="total" @pagination="getList" />
+    <pagination v-show="total > 0" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" :total="total" class="ai-table-page__pagination" @pagination="getList" />
 
     <AdminDrawer v-model="drawerOpen" :title="quotaForm.quotaId ? t('ai.settings.editQuota') : t('ai.settings.addUserQuota')" size="620px" append-to-body destroy-on-close>
       <el-form ref="quotaRef" :model="quotaForm" :rules="rules" label-width="148px">
@@ -260,7 +260,9 @@ onMounted(() => {
 })
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@use './styles/ai-table-page';
+
 .ai-selected-users {
   display: flex;
   flex-wrap: wrap;
