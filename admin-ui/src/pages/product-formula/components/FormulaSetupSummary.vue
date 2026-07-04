@@ -19,24 +19,24 @@
       </div>
       <div class="summary-metric summary-metric--warning">
         <span class="summary-metric__icon"><Warning /></span>
-        <span class="summary-metric__text">
+        <span class="summary-metric__text" :title="t('productCenter.formulaSetup.unsetUsageCountFull')">
           <span>{{ t('productCenter.formulaSetup.unsetUsageCount') }}</span>
         </span>
         <strong class="summary-metric__warning">{{ unsetUsageCount }}</strong>
       </div>
-      <div class="summary-metric summary-metric--danger">
-        <span class="summary-metric__icon"><CircleCloseFilled /></span>
+      <div class="summary-metric summary-metric--restriction">
+        <span class="summary-metric__icon"><Lock /></span>
         <span class="summary-metric__text">
           <span>{{ t('productCenter.formulaSetup.exceptionCount') }}</span>
         </span>
-        <strong class="summary-metric__danger">{{ exceptionCount }}</strong>
+        <strong class="summary-metric__restriction">{{ exceptionCount }}</strong>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { CircleCloseFilled, DataAnalysis, Warning } from '@element-plus/icons-vue'
+import { DataAnalysis, Lock, Warning } from '@element-plus/icons-vue'
 import fabricIcon from '@/assets/product-formula/icons/group-fabric.png'
 import aluminumIcon from '@/assets/product-formula/icons/group-aluminum.png'
 import systemIcon from '@/assets/product-formula/icons/group-system.png'
@@ -89,7 +89,7 @@ function displayName(card: MaterialGroupCard) {
   display: flex;
   flex-wrap: wrap;
   align-items: stretch;
-  gap: 8px;
+  gap: 7px;
   margin-top: 12px;
   padding: 10px;
   background: #fff;
@@ -100,13 +100,13 @@ function displayName(card: MaterialGroupCard) {
 .summary-card {
   display: flex;
   align-items: center;
-  gap: 10px;
-  flex: 0 1 150px;
+  gap: 8px;
+  flex: 0 1 132px;
   min-width: 0;
   min-height: 58px;
   border: 1px solid #e5ecf6;
   border-radius: 8px;
-  padding: 9px 10px;
+  padding: 9px 8px;
   background: linear-gradient(180deg, #fff, #f8fbff);
   box-shadow: 0 4px 14px rgb(15 23 42 / 3%);
 }
@@ -115,17 +115,17 @@ function displayName(card: MaterialGroupCard) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  flex: 0 0 32px;
-  width: 32px;
-  height: 32px;
+  flex: 0 0 30px;
+  width: 30px;
+  height: 30px;
   border-radius: 10px;
   background: #f9fbff;
   overflow: hidden;
 }
 
 .summary-card__icon img {
-  width: 30px;
-  height: 30px;
+  width: 28px;
+  height: 28px;
   object-fit: contain;
   display: block;
 }
@@ -145,7 +145,7 @@ function displayName(card: MaterialGroupCard) {
 .summary-card strong {
   margin-left: auto;
   color: #111827;
-  font-size: 21px;
+  font-size: 20px;
   line-height: 1;
 }
 
@@ -156,11 +156,11 @@ function displayName(card: MaterialGroupCard) {
 .summary-metric {
   display: flex;
   align-items: center;
-  gap: 10px;
-  flex: 0 1 154px;
+  gap: 8px;
+  flex: 0 1 132px;
   min-width: 0;
   min-height: 58px;
-  padding: 9px 10px;
+  padding: 9px 8px;
   color: #1f2937;
   background: linear-gradient(180deg, #fff, #f8fbff);
   border: 1px solid #e5ecf6;
@@ -172,11 +172,11 @@ function displayName(card: MaterialGroupCard) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  flex: 0 0 32px;
-  width: 32px;
-  height: 32px;
+  flex: 0 0 30px;
+  width: 30px;
+  height: 30px;
   color: #1677ff;
-  font-size: 21px;
+  font-size: 20px;
   background: #f1f7ff;
   border-radius: 10px;
 }
@@ -186,9 +186,9 @@ function displayName(card: MaterialGroupCard) {
   background: #fff8eb;
 }
 
-.summary-metric--danger .summary-metric__icon {
-  color: #dc2626;
-  background: #fff1f1;
+.summary-metric--restriction .summary-metric__icon {
+  color: #f59e0b;
+  background: #fff8eb;
 }
 
 .summary-metric__text {
@@ -207,7 +207,7 @@ function displayName(card: MaterialGroupCard) {
 .summary-metric strong {
   margin-left: auto;
   color: #111827;
-  font-size: 21px;
+  font-size: 20px;
   line-height: 1;
 }
 
@@ -215,8 +215,8 @@ function displayName(card: MaterialGroupCard) {
   color: #f59e0b !important;
 }
 
-.summary-metric__danger {
-  color: #dc2626 !important;
+.summary-metric__restriction {
+  color: #f59e0b !important;
 }
 
 @media (max-width: 1440px) {

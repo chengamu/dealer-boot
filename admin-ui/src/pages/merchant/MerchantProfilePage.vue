@@ -1,6 +1,6 @@
 <template>
   <div class="app-container merchant-profile-editor">
-    <el-card shadow="never">
+    <el-card shadow="never" class="merchant-profile-editor__card">
       <template #header>
         <div class="page-header">
           <span>{{ t('merchantProfile.selfTitle') }}</span>
@@ -144,7 +144,22 @@ loadProfile()
 
 <style scoped lang="scss">
 .merchant-profile-editor {
-  background: #fff;
+  background: transparent;
+}
+
+.merchant-profile-editor__card {
+  border-color: #eef0f5;
+  border-radius: 8px;
+
+  :deep(.el-card__header) {
+    min-height: 42px;
+    padding: 10px 12px;
+    border-bottom-color: #eef0f5;
+  }
+
+  :deep(.el-card__body) {
+    padding: 12px;
+  }
 }
 
 .page-header {
@@ -155,12 +170,12 @@ loadProfile()
 }
 
 .mb16 {
-  margin-bottom: 16px;
+  margin-bottom: 10px;
 }
 
 .grid {
   display: grid;
-  gap: 0 20px;
+  gap: 0 16px;
 }
 
 .two {
@@ -170,7 +185,40 @@ loadProfile()
 .form-actions {
   display: flex;
   justify-content: flex-end;
-  padding-top: 8px;
+  padding-top: 4px;
+  gap: 8px;
+}
+
+.profile-form {
+  :deep(.el-divider) {
+    margin: 12px 0;
+  }
+
+  :deep(.el-divider__text) {
+    color: #1d2129;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  :deep(.el-form-item) {
+    margin-bottom: 12px;
+  }
+
+  :deep(.el-form-item__label) {
+    color: #475467;
+    font-weight: 500;
+  }
+
+  :deep(.el-input__wrapper),
+  :deep(.el-select__wrapper) {
+    min-height: 32px;
+  }
+
+  :deep(.el-button) {
+    height: 32px;
+    padding: 0 12px;
+    border-radius: 6px;
+  }
 }
 
 @media (max-width: 900px) {

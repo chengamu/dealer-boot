@@ -61,8 +61,8 @@
 
     <pagination v-show="total > 0" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" :total="total" class="ai-table-page__pagination" @pagination="getList" />
 
-    <AdminDialog v-model="generateOpen" :title="t('ai.settings.generateKey')" width="560px" append-to-body>
-      <el-form ref="generateRef" :model="generateForm" :rules="generateRules" label-width="110px">
+    <AdminDialog v-model="generateOpen" :title="t('ai.settings.generateKey')" width="560px" class="ai-credential-dialog" append-to-body>
+      <el-form ref="generateRef" :model="generateForm" :rules="generateRules" label-width="110px" class="ai-credential-dialog__form">
         <el-form-item :label="t('ai.settings.serviceName')" prop="serviceName">
           <el-input v-model="generateForm.serviceName" />
         </el-form-item>
@@ -78,7 +78,7 @@
       </template>
     </AdminDialog>
 
-    <AdminDialog v-model="secretOpen" :title="t('ai.settings.copySecretTitle')" width="680px" append-to-body>
+    <AdminDialog v-model="secretOpen" :title="t('ai.settings.copySecretTitle')" width="680px" class="ai-credential-dialog" append-to-body>
       <el-alert :title="t('ai.settings.copySecretAlert')" type="warning" :closable="false" show-icon />
       <el-input v-model="generatedSecret" class="secret-input" type="textarea" :rows="4" readonly />
       <template #footer>
@@ -225,5 +225,43 @@ onMounted(() => {
 
 .secret-input {
   margin-top: 12px;
+}
+
+:deep(.ai-credential-dialog__form) {
+  padding-top: 4px;
+
+  .el-form-item {
+    margin-bottom: 12px;
+  }
+
+  .el-form-item__label {
+    color: #475467;
+    font-weight: 500;
+  }
+
+  .el-input__wrapper {
+    min-height: 32px;
+  }
+}
+
+:deep(.ai-credential-dialog .el-alert) {
+  margin-bottom: 10px;
+  border: 1px solid #fde7bd;
+  border-radius: 8px;
+  background: #fffbf0;
+}
+
+:deep(.ai-credential-dialog .el-textarea__inner) {
+  border-color: #d9e0ea;
+  border-radius: 8px;
+  background: #fbfcfe;
+  box-shadow: none;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+:deep(.ai-credential-dialog .el-button) {
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 6px;
 }
 </style>

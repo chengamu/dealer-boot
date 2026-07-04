@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 public class ProductFormulaSetupValidator extends ProductServiceSupport {
 
     private static final String VISIBILITY_CONDITIONAL = "CONDITIONAL";
+    private static final String SOURCE_MATERIAL_POOL = "MATERIAL_POOL";
 
     private final ProductFormulaUsageRuleService usageRuleService;
     private final ProductFormulaVariableService variableService;
@@ -129,7 +130,8 @@ public class ProductFormulaSetupValidator extends ProductServiceSupport {
             .collect(Collectors.toSet());
         for (ProductFormulaOptionValue value : context.values()) {
             String valueKey = key(value.getOptionCode(), value.getValueCode());
-            if (!parentValueKeys.contains(valueKey) && !valuesWithMaterials.contains(valueKey)) {
+            ProductFormulaOption ownerOption = optionMap.get(value.getOptionCode());
+            if (requiresLinkedMaterial(ownerOption) && !parentValueKeys.contains(valueKey) && !valuesWithMaterials.contains(valueKey)) {
                 return "product.formula.optionValueMaterialRequired";
             }
         }
@@ -269,6 +271,10 @@ public class ProductFormulaSetupValidator extends ProductServiceSupport {
             return "product.formula.optionVisibilityValueInvalid";
         }
         return null;
+    }
+
+    private boolean requiresLinkedMaterial(ProductFormulaOption option) {
+        return option != null && SOURCE_MATERIAL_POOL.equals(option.getSourceType());
     }
 
     private String key(String... parts) {

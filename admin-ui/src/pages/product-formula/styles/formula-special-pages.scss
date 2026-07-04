@@ -1,0 +1,141 @@
+.formula-simulation-page {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.simulation-header,
+.simulation-panel {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid #eef0f5;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.simulation-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+
+  h2 {
+    margin: 6px 0;
+    color: #1d2129;
+    font-size: 20px;
+    line-height: 1.3;
+  }
+}
+
+.simulation-header__breadcrumb,
+.simulation-header__meta {
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.simulation-header__meta,
+.simulation-header__actions,
+.simulation-result {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+}
+
+.simulation-header__actions,
+.simulation-result {
+  align-items: flex-start;
+  justify-content: flex-end;
+}
+
+.simulation-header__actions .el-button,
+.simulation-form .el-button {
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 6px;
+}
+
+.simulation-panel {
+  overflow-x: auto;
+
+  .el-table {
+    min-width: 1280px;
+    border-color: #eef0f5;
+  }
+
+  .el-table__header th {
+    background: #f7f9fc;
+    color: #344054;
+    font-weight: 600;
+  }
+
+  th.el-table__cell,
+  td.el-table__cell {
+    border-color: #eef0f5;
+  }
+
+  .el-table__cell {
+    padding: 8px 0;
+  }
+
+  .el-table__body tr:hover > td.el-table__cell {
+    background: #f8fbff;
+  }
+
+  .sort-caret.ascending {
+    border-bottom-color: #c5ccd8;
+  }
+
+  .sort-caret.descending {
+    border-top-color: #c5ccd8;
+  }
+
+  &:first-of-type {
+    overflow-x: visible;
+
+    .el-table {
+      min-width: 0;
+    }
+  }
+}
+
+.simulation-form {
+  .el-form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 0 12px;
+  }
+
+  .el-form-item {
+    margin-bottom: 10px;
+  }
+
+  .el-form-item__label {
+    color: #475467;
+    font-weight: 500;
+  }
+
+  .el-input__wrapper,
+  .el-select__wrapper {
+    min-height: 32px;
+  }
+
+  .el-input-number {
+    width: 190px;
+  }
+}
+
+.simulation-result {
+  justify-content: flex-start;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #eef0f5;
+  color: #475467;
+  font-size: 13px;
+}
+
+.simulation-panel .section-title {
+  margin-bottom: 12px;
+  color: #111827;
+  font-size: 16px;
+  font-weight: 700;
+}

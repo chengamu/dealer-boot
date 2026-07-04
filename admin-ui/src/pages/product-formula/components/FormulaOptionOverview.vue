@@ -108,6 +108,6 @@ const t = (key: string) => getMessage(key, localeStore.language)
 
 .option-overview__card--exception .option-overview__icon,
 .option-overview__card--exception strong {
-  color: #dc2626;
+  color: #f59e0b;
 }
 </style>

@@ -102,20 +102,30 @@ getUser()
 <style scoped lang="scss">
 .user-profile-page {
   .user-profile-page__layout {
-    row-gap: 16px;
+    row-gap: 10px;
   }
 
   .user-profile-page__card,
   .user-profile-page__main-card {
+    border-color: #eef0f5;
     border-radius: 8px;
+    box-shadow: none;
   }
 
   .user-profile-page__main-card {
-    min-height: 420px;
+    min-height: 360px;
   }
 
   :deep(.el-card__header) {
+    min-height: 42px;
+    padding: 10px 12px;
+    border-bottom-color: #eef0f5;
+    color: #1d2129;
     font-weight: 600;
+  }
+
+  :deep(.el-card__body) {
+    padding: 12px;
   }
 
   :deep(.el-tabs__nav-wrap::after) {
@@ -123,12 +133,22 @@ getUser()
   }
 
   :deep(.el-tabs__content) {
-    padding: 22px 24px 8px;
+    padding: 14px 16px 4px;
+  }
+
+  :deep(.el-input__wrapper) {
+    min-height: 32px;
+  }
+
+  :deep(.el-button) {
+    height: 32px;
+    padding: 0 12px;
+    border-radius: 6px;
   }
 
   .user-profile-page__list {
-    margin: 18px 16px 16px;
-    border: 1px solid var(--el-border-color-lighter);
+    margin: 12px 0 0;
+    border: 1px solid #eef0f5;
     border-radius: 8px;
     overflow: hidden;
 
@@ -137,8 +157,8 @@ getUser()
       grid-template-columns: 24px minmax(86px, 1fr) minmax(120px, auto);
       column-gap: 8px;
       align-items: center;
-      min-height: 54px;
-      padding: 10px 16px;
+      min-height: 44px;
+      padding: 8px 12px;
       word-break: break-word;
     }
 

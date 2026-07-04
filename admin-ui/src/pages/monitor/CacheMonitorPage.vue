@@ -172,7 +172,34 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .cache-monitor-page .card-box {
-  margin-bottom: 16px;
+  margin-bottom: 10px;
+}
+
+.cache-monitor-page :deep(.el-card) {
+  border-color: #eef0f5;
+  border-radius: 8px;
+  box-shadow: none;
+}
+
+.cache-monitor-page :deep(.el-card__header) {
+  min-height: 40px;
+  padding: 10px 12px;
+  border-bottom-color: #eef0f5;
+  color: #1d2129;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.cache-monitor-page :deep(.el-card__body) {
+  padding: 12px;
+}
+
+.cache-monitor-page :deep(.el-descriptions__cell) {
+  padding-bottom: 8px;
+}
+
+.cache-monitor-page :deep(.el-descriptions__label) {
+  color: #667085;
 }
 
 .card-icon {
@@ -183,6 +210,6 @@ onBeforeUnmount(() => {
 }
 
 .chart-panel {
-  height: 420px;
+  height: 360px;
 }
 </style>

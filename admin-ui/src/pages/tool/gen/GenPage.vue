@@ -1,6 +1,6 @@
 <template>
-  <div class="app-container gen-page">
-    <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true">
+  <div class="app-container gen-page system-table-page">
+    <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true" class="system-table-page__search">
       <el-form-item :label="t('gen.dataName')" prop="dataName">
         <el-input v-model="queryParams.dataName" :placeholder="t('gen.dataNamePlaceholder')" clearable style="width: 200px" @keyup.enter="handleQuery" />
       </el-form-item>
@@ -19,7 +19,7 @@
       </el-form-item>
     </el-form>
 
-    <el-row :gutter="10" class="mb8">
+    <el-row :gutter="10" class="mb8 system-table-page__toolbar">
       <el-col :span="1.5">
         <el-button type="primary" plain icon="Download" @click="handleGenTable()" v-hasPermi="['tool:gen:code']">{{ t('gen.generate') }}</el-button>
       </el-col>
@@ -36,7 +36,7 @@
       <right-toolbar v-model:showSearch="showSearch" @queryTable="getList" />
     </el-row>
 
-    <el-table v-loading="loading" :data="tableList" @selection-change="handleSelectionChange">
+    <el-table v-loading="loading" :data="tableList" border class="system-table-page__table" @selection-change="handleSelectionChange">
       <el-table-column type="selection" align="center" width="55" />
       <el-table-column :label="t('common.index')" type="index" width="60" align="center">
         <template #default="{ $index }">
@@ -70,7 +70,7 @@
       </template>
     </el-table>
 
-    <pagination v-show="total > 0" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" :total="total" @pagination="getList" />
+    <pagination v-show="total > 0" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" :total="total" class="system-table-page__pagination" @pagination="getList" />
 
     <AdminDialog v-model="preview.open" :title="preview.title" width="80%" top="5vh" variant="detail" append-to-body class="gen-preview-dialog scrollbar">
       <el-tabs v-model="preview.activeName">

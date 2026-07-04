@@ -15,7 +15,7 @@
       </el-form>
     </div>
     <div class="admin-dialog__table admin-selector-dialog__table">
-      <el-table ref="tableRef" :data="dbTableList" height="100%" border @row-click="clickRow" @selection-change="handleSelectionChange">
+      <el-table ref="tableRef" :data="dbTableList" height="100%" border class="import-table-dialog__table" @row-click="clickRow" @selection-change="handleSelectionChange">
         <el-table-column type="selection" width="55" />
         <el-table-column prop="tableName" :label="t('gen.tableName')" :show-overflow-tooltip="true" />
         <el-table-column prop="tableComment" :label="t('gen.tableComment')" :show-overflow-tooltip="true" />
@@ -119,3 +119,75 @@ async function handleImportTable() {
 
 defineExpose({ show })
 </script>
+
+<style scoped lang="scss">
+:deep(.admin-dialog__toolbar) {
+  margin-bottom: 8px;
+  padding: 8px 10px;
+  border: 1px solid #eef0f5;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+:deep(.admin-selector-dialog__form) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+
+  .el-form-item {
+    margin: 0;
+  }
+
+  .el-form-item:last-child {
+    margin-left: auto;
+  }
+
+  .el-input {
+    width: 190px;
+  }
+
+  .el-input__wrapper {
+    min-height: 32px;
+  }
+
+  .el-button {
+    height: 32px;
+    padding: 0 12px;
+    border-radius: 6px;
+  }
+
+  .el-button:not(.el-button--primary) {
+    border-color: #d9e0ea;
+    color: #475467;
+    background: #ffffff;
+  }
+}
+
+:deep(.admin-selector-dialog__table) {
+  border: 1px solid #eef0f5;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+:deep(.import-table-dialog__table) {
+  .el-table__header th {
+    background: #f7f9fc;
+    color: #344054;
+    font-weight: 600;
+  }
+
+  th.el-table__cell,
+  td.el-table__cell {
+    border-color: #eef0f5;
+  }
+
+  .el-table__cell {
+    padding: 8px 0;
+  }
+
+  .el-table__body tr:hover > td.el-table__cell {
+    background: #f8fbff;
+  }
+}
+</style>

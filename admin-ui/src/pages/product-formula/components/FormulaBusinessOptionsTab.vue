@@ -213,7 +213,7 @@ const {
 const businessExceptionCount = computed(() => {
   const optionIssues = props.options.filter((row) => !row.optionCode || !row.optionNameCn || valuesForOption(row).length === 0).length
   const valueIssues = props.allOptionValues.filter((row) => !row.valueCode || !row.valueNameCn).length
-  const materialIssues = props.allOptionValues.filter((row) => !row.valueCode || (!valueHasChildOption(row) && materialsForValue(row).length === 0)).length
+  const materialIssues = props.allOptionValues.filter((row) => !row.valueCode || (valueRequiresLinkedMaterial(row) && !valueHasChildOption(row) && materialsForValue(row).length === 0)).length
     + props.allOptionMaterials.filter((row) => !row.valueCode || !row.materialCode).length
   const restrictionIssues = props.restrictions.filter((row) => !row.conditionExpression || !row.actionType).length
   const visibilityIssues = props.options.filter((row) => row.visibilityMode === 'CONDITIONAL' && (!row.visibleConditionOptionCode || !row.visibleConditionValueCode)).length
@@ -236,6 +236,13 @@ function valueHasChildOption(row: ProductFormulaOptionValueVO) {
       ? (option as DraftOption).visibleConditionValueClientKey === valueClientKey(row)
       : option.visibleConditionValueCode === row.valueCode)
   ))
+}
+
+function valueRequiresLinkedMaterial(row: ProductFormulaOptionValueVO) {
+  const ownerOption = props.options.find((option) => (
+    valueOwnerClientKey(row) ? optionClientKey(option) === valueOwnerClientKey(row) : option.optionCode === row.optionCode
+  ))
+  return ownerOption?.sourceType === 'MATERIAL_POOL'
 }
 
 const canAddChildOption = computed(() => selectedNode.value?.type === 'value' && Boolean(selectedValue.value))

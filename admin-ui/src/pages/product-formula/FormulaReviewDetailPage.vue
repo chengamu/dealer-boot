@@ -15,10 +15,10 @@
       </div>
       <div class="review-detail-header__actions">
         <el-button icon="Back" @click="router.back()">{{ t('common.back') }}</el-button>
-        <el-button type="success" icon="CircleCheck" @click="approve" v-hasPermi="['product:formula:approve']">
+        <el-button type="primary" plain icon="CircleCheck" @click="approve" v-hasPermi="['product:formula:approve']">
           {{ t('productCenter.formula.actions.approve') }}
         </el-button>
-        <el-button type="warning" icon="CircleClose" @click="reject" v-hasPermi="['product:formula:reject']">
+        <el-button type="danger" plain icon="CircleClose" @click="reject" v-hasPermi="['product:formula:reject']">
           {{ t('productCenter.formula.actions.reject') }}
         </el-button>
       </div>
@@ -26,7 +26,7 @@
 
     <section class="review-detail-panel">
       <div class="section-title">{{ t('productCenter.formulaReview.materialDetail') }}</div>
-      <el-table v-loading="loading" :data="materials" border>
+      <el-table v-loading="loading" :data="materials" border class="review-detail-table">
         <el-table-column type="index" :label="t('common.index')" width="64" align="center" />
         <el-table-column prop="attributeGroupNameCn" :label="t('productCenter.formulaSetup.attributeGroup')" width="110" show-overflow-tooltip />
         <el-table-column prop="materialTypeNameCn" :label="t('productCenter.formulaSetup.materialType')" width="130" show-overflow-tooltip />
@@ -180,9 +180,9 @@ onMounted(load)
 
 .review-detail-header,
 .review-detail-panel {
-  padding: 16px;
+  padding: 12px;
   background: #fff;
-  border: 1px solid #e6ebf2;
+  border: 1px solid #eef0f5;
   border-radius: 8px;
 }
 
@@ -193,8 +193,10 @@ onMounted(load)
 }
 
 .review-detail-header h2 {
-  margin: 8px 0;
-  color: #111827;
+  margin: 6px 0;
+  color: #1d2129;
+  font-size: 20px;
+  line-height: 1.3;
 }
 
 .review-detail-header__breadcrumb,
@@ -216,15 +218,49 @@ onMounted(load)
   align-items: flex-start;
 }
 
+.review-detail-header__actions :deep(.el-button) {
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 6px;
+}
+
 .section-title {
-  margin-bottom: 12px;
-  color: #111827;
-  font-size: 16px;
-  font-weight: 700;
+  margin-bottom: 10px;
+  color: #1d2129;
+  font-size: 15px;
+  font-weight: 600;
 }
 
 .row-detail {
   padding: 8px 16px;
   color: #4b5563;
+}
+
+.review-detail-panel :deep(.el-table) {
+  border-color: #eef0f5;
+}
+
+.review-detail-panel :deep(.el-table__header th) {
+  background: #f7f9fc;
+  color: #344054;
+  font-weight: 600;
+}
+
+.review-detail-panel :deep(th.el-table__cell),
+.review-detail-panel :deep(td.el-table__cell) {
+  border-color: #eef0f5;
+}
+
+.review-detail-panel :deep(.el-table__cell) {
+  padding: 8px 0;
+}
+
+.review-detail-panel :deep(.el-table__body tr:hover > td.el-table__cell) {
+  background: #f8fbff;
+}
+
+.review-record {
+  color: #475467;
+  font-size: 13px;
 }
 </style>

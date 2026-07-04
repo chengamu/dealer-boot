@@ -110,6 +110,7 @@
       v-model="open"
       :title="title"
       width="520px"
+      class="oss-upload-dialog"
       append-to-body
       destroy-on-close
       :close-on-click-modal="false"

@@ -13,7 +13,7 @@
       </div>
       <div class="simulation-header__actions">
         <el-button icon="Back" @click="router.back()">{{ t('common.back') }}</el-button>
-        <el-button icon="DataAnalysis" :loading="running" @click="run">{{ t('productCenter.formulaSimulation.run') }}</el-button>
+        <el-button icon="DataAnalysis" plain :loading="running" @click="run">{{ t('productCenter.formulaSimulation.run') }}</el-button>
         <el-button type="primary" icon="CircleCheck" :loading="validating" @click="validate">{{ t('productCenter.formulaSimulation.validate') }}</el-button>
       </div>
     </div>
@@ -57,7 +57,7 @@
 
     <section class="simulation-panel">
       <div class="section-title">{{ t('productCenter.formulaSimulation.bomItems') }}</div>
-      <el-table v-loading="loading" :data="result.items || []" border>
+      <el-table v-loading="loading" :data="result.items || []" border class="simulation-table">
         <el-table-column type="index" :label="t('common.index')" width="64" align="center" />
         <el-table-column prop="attributeGroupNameCn" :label="t('productCenter.formulaSetup.attributeGroup')" width="110" show-overflow-tooltip />
         <el-table-column prop="materialTypeNameCn" :label="t('productCenter.formulaSetup.materialType')" width="130" show-overflow-tooltip />
@@ -205,84 +205,3 @@ async function validate() {
 
 onMounted(load)
 </script>
-
-<style scoped>
-.formula-simulation-page {
-  display: grid;
-  gap: 12px;
-  min-width: 0;
-}
-
-.simulation-header,
-.simulation-panel {
-  min-width: 0;
-  padding: 16px;
-  background: #fff;
-  border: 1px solid #e6ebf2;
-  border-radius: 8px;
-}
-
-.simulation-header {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.simulation-panel {
-  overflow-x: auto;
-}
-
-.simulation-panel :deep(.el-table) {
-  min-width: 1280px;
-}
-
-.simulation-panel:first-of-type {
-  overflow-x: visible;
-}
-
-.simulation-panel:first-of-type :deep(.el-table) {
-  min-width: 0;
-}
-
-.simulation-header h2 {
-  margin: 8px 0;
-  color: #1f2937;
-}
-
-.simulation-header__breadcrumb,
-.simulation-header__meta {
-  color: #6b7280;
-  font-size: 13px;
-}
-
-.simulation-header__meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 20px;
-}
-
-.simulation-header__actions,
-.simulation-result {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-}
-
-.simulation-form :deep(.el-input-number) {
-  width: 220px;
-}
-
-.simulation-result {
-  justify-content: flex-start;
-  margin-top: 8px;
-}
-
-.section-title {
-  margin-bottom: 12px;
-  color: #111827;
-  font-size: 16px;
-  font-weight: 700;
-}
-</style>

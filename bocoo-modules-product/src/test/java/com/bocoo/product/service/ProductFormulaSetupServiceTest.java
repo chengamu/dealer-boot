@@ -498,6 +498,20 @@ class ProductFormulaSetupServiceTest {
     }
 
     @Test
+    void validationAllowsBooleanLeafOptionValueWithoutLinkedMaterial() {
+        ProductFormulaOption option = option("WRAP", "包布");
+        option.setSourceType("BOOLEAN");
+        when(materialMapper.selectList(any())).thenReturn(List.of(formulaMaterial()));
+        when(usageRuleMapper.selectList(any())).thenReturn(List.of(usageRule()));
+        when(optionMapper.selectList(any())).thenReturn(List.of(option));
+        when(optionValueMapper.selectList(any())).thenReturn(List.of(optionValue("WRAP", "NO", "不包")));
+        when(optionMaterialMapper.selectList(any())).thenReturn(List.of());
+        when(restrictionMapper.selectList(any())).thenReturn(List.of());
+
+        assertThat(setupService.validationMessageKey(3001L)).isNull();
+    }
+
+    @Test
     void validateSetupPersistsFailureStatusBeforeThrowingBusinessException() throws Exception {
         Method method = ProductFormulaSetupServiceImpl.class.getMethod("validateSetup", Long.class);
         Transactional transactional = method.getAnnotation(Transactional.class);
@@ -713,6 +727,7 @@ class ProductFormulaSetupServiceTest {
         option.setFormulaId(3001L);
         option.setOptionCode(optionCode);
         option.setOptionNameCn(optionNameCn);
+        option.setSourceType("MATERIAL_POOL");
         option.setVisibilityMode("ALWAYS");
         option.setStatus("ENABLED");
         option.setDelFlag("0");

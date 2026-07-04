@@ -10,6 +10,9 @@
 @use '../../pages/monitor/styles/monitor-table-page.scss';
 @use '../../pages/merchant/styles/merchant-table-page.scss';
 @use '../../pages/system/styles/system-table-page.scss';
+@use '../../pages/system/styles/system-special-pages.scss';
+@use '../../pages/tool/gen/gen-page.scss';
+@use '../../pages/product-formula/styles/formula-special-pages.scss';
 
 body {
   height: 100%;

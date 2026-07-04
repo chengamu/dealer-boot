@@ -19,11 +19,14 @@ const { t } = useI18n()
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 320px;
+  min-height: 240px;
+  border: 1px solid #eef0f5;
+  border-radius: 8px;
+  background: #ffffff;
 }
 
 .form-build-page__icon {
-  width: 42px;
-  height: 42px;
+  width: 36px;
+  height: 36px;
 }
 </style>

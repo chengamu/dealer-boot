@@ -49,11 +49,12 @@
       v-model="open"
       :title="form.documentId ? t('common.edit') : t('common.add')"
       size="720px"
+      class="legal-document-page__drawer"
       :close-on-click-modal="false"
       :before-close="formCloseGuard.beforeClose"
       @closed="formCloseGuard.handleClosed"
     >
-      <el-form :model="form" label-width="120px">
+      <el-form :model="form" label-width="120px" class="legal-document-page__form">
         <el-form-item :label="t('legal.documentType')"><el-select v-model="form.documentType"><el-option v-for="item in documentTypeOptions" :key="item.value" :label="item.label" :value="item.value" /></el-select></el-form-item>
         <el-form-item :label="t('legal.locale')"><el-select v-model="form.locale"><el-option v-for="item in localeOptions" :key="item.value" :label="item.label" :value="item.value" /></el-select></el-form-item>
         <el-form-item :label="t('legal.title')"><el-input v-model="form.title" /></el-form-item>
@@ -173,5 +174,38 @@ getList()
 <style scoped>
 .legal-document-page__select {
   width: 180px;
+}
+
+:deep(.legal-document-page__drawer .el-drawer__header) {
+  margin-bottom: 0;
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid #eef0f5;
+  color: #1d2129;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.legal-document-page__form {
+  padding: 12px 4px 0;
+
+  :deep(.el-form-item) {
+    margin-bottom: 12px;
+  }
+
+  :deep(.el-form-item__label) {
+    color: #475467;
+    font-weight: 500;
+  }
+
+  :deep(.el-input__wrapper),
+  :deep(.el-select__wrapper) {
+    min-height: 32px;
+  }
+
+  :deep(.el-textarea__inner) {
+    border-color: #d9e0ea;
+    border-radius: 8px;
+    box-shadow: none;
+  }
 }
 </style>
