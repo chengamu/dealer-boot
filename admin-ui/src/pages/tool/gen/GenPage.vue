@@ -66,9 +66,6 @@
       <template #empty>
         <div class="table-empty-action">
           <el-empty :description="t('gen.emptyTableDescription')" />
-          <el-button type="primary" plain icon="Upload" @click="openImportTable" v-hasPermi="['tool:gen:import']">
-            {{ t('gen.emptyImportAction') }}
-          </el-button>
         </div>
       </template>
     </el-table>
