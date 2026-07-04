@@ -282,7 +282,7 @@ function handleScroll() {
   width: 100%;
   padding: 0 16px;
   background: #fff;
-  border-bottom: 1px solid #eef0f5;
+  border-bottom: 1px solid #f3f5f8;
   .tags-view-wrapper {
     .tags-view-item {
       display: inline-flex;
@@ -299,22 +299,16 @@ function handleScroll() {
       padding: 0 12px;
       font-size: 13px;
       gap: 6px;
-      margin: 3px 2px;
+      margin: 3px;
       white-space: nowrap;
       transition: color 0.18s ease, background-color 0.18s ease;
-      &:first-of-type {
-        margin-left: 0;
-      }
-      &:last-of-type {
-        margin-right: 0;
-      }
       &:hover {
         color: #1677ff;
         background: #f3f6fb;
       }
       &.active {
         color: #1677ff;
-        font-weight: 600;
+        font-weight: 700;
         background: transparent;
         &::after {
           content: "";
@@ -339,8 +333,13 @@ function handleScroll() {
         opacity: 0;
         transition: opacity 0.18s ease, color 0.18s ease;
       }
-      &:hover .tags-view-close,
       &.active .tags-view-close {
+        opacity: 0.42;
+      }
+      &:hover .tags-view-close {
+        opacity: 0.72;
+      }
+      .tags-view-close:hover {
         opacity: 1;
       }
     }
@@ -376,7 +375,7 @@ function handleScroll() {
     .el-icon-close {
       width: 14px;
       height: 14px;
-      color: #98a2b3;
+      color: #c4ccd8;
       vertical-align: middle;
       border-radius: 50%;
       text-align: center;

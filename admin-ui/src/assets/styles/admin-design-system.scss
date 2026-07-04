@@ -469,7 +469,7 @@
     align-items: center;
     padding: 0 16px;
     background: #ffffff !important;
-    border-bottom: 1px solid #eef0f5 !important;
+    border-bottom: 1px solid #f3f5f8 !important;
 
     .tags-view-wrapper .tags-view-item {
       display: inline-flex;
@@ -478,7 +478,7 @@
       max-width: 156px;
       height: 32px;
       line-height: 32px;
-      margin: 3px 2px;
+      margin: 3px;
       padding: 0 12px;
       border: 0 !important;
       border-radius: 6px;
@@ -497,13 +497,13 @@
       &.active {
         background: transparent !important;
         color: var(--admin-primary) !important;
-        font-weight: 600;
+        font-weight: 700;
 
-        &::before {
+        &::after {
           position: absolute;
-          right: 10px;
+          right: 12px;
           bottom: 0;
-          left: 10px;
+          left: 12px;
           display: block !important;
           height: 2px;
           border-radius: 2px;
@@ -526,14 +526,21 @@
         transition: opacity 0.18s ease, color 0.18s ease;
       }
 
-      &:hover .tags-view-close,
       &.active .tags-view-close {
+        opacity: 0.42;
+      }
+
+      &:hover .tags-view-close {
+        opacity: 0.72;
+      }
+
+      .tags-view-close:hover {
         opacity: 1;
       }
 
       .el-icon-close {
         margin-left: 6px;
-        color: #98a2b3;
+        color: #c4ccd8;
         width: 14px;
         height: 14px;
 
