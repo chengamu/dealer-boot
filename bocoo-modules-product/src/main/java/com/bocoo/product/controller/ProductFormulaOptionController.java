@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/product-formula/formulas/{id}/options")
-@Tag(name = "产品配方选项", description = "配置树、选项值、选项物料和异常限制接口")
+@Tag(name = "产品配方选项", description = "配置树、选项值、选项物料和限制规则接口")
 public class ProductFormulaOptionController extends BaseController {
 
     private final ProductFormulaSetupService setupService;

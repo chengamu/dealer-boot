@@ -42,10 +42,12 @@ class ProductFormulaSimulationEngine extends ProductServiceSupport {
         if (messageKey != null) {
             return fail(vo, messageKey);
         }
-        List<ProductFormulaMaterialVo> bomMaterials = resolveBomMaterials(setup, vo.getSelectedOptionValues());
+        Map<String, String> visibleSelectedValues = visibleSelectedValues(setup, vo.getSelectedOptionValues());
+        vo.setSelectedOptionValues(visibleSelectedValues);
+        List<ProductFormulaMaterialVo> bomMaterials = resolveBomMaterials(setup, visibleSelectedValues);
         Map<String, Object> context = expressionContext(formula, vo);
-        context.putAll(selectedOptionMaterialContext(setup, vo.getSelectedOptionValues()));
-        messageKey = validateRestrictions(setup.getRestrictions(), vo.getSelectedOptionValues(), context);
+        context.putAll(selectedOptionMaterialContext(setup, visibleSelectedValues));
+        messageKey = validateRestrictions(setup.getRestrictions(), visibleSelectedValues, context);
         if (messageKey != null) {
             return fail(vo, messageKey);
         }
@@ -127,6 +129,19 @@ class ProductFormulaSimulationEngine extends ProductServiceSupport {
         return !"CONDITIONAL".equals(option.getVisibilityMode())
             || (StringUtils.isNotBlank(option.getVisibleConditionOptionCode())
             && Objects.equals(selectedValues.get(option.getVisibleConditionOptionCode()), option.getVisibleConditionValueCode()));
+    }
+    private Map<String, String> visibleSelectedValues(ProductFormulaSetupVo setup, Map<String, String> selectedValues) {
+        Map<String, String> result = new LinkedHashMap<>();
+        for (ProductFormulaOptionVo option : setup.getOptions()) {
+            if (!isEnabledStatus(option.getStatus()) || !isOptionVisible(option, result)) {
+                continue;
+            }
+            String selected = selectedValues.get(option.getOptionCode());
+            if (StringUtils.isNotBlank(selected)) {
+                result.put(option.getOptionCode(), selected);
+            }
+        }
+        return result;
     }
     private List<ProductFormulaMaterialVo> resolveBomMaterials(ProductFormulaSetupVo setup, Map<String, String> selectedValues) {
         Map<String, ProductFormulaMaterialVo> materialsByCode = setup.getMaterials().stream()

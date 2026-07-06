@@ -9,6 +9,7 @@ import com.bocoo.product.domain.vo.ProductFormulaOptionValueVo;
 import com.bocoo.product.domain.vo.ProductFormulaOptionVo;
 import com.bocoo.product.domain.vo.ProductFormulaRestrictionVo;
 import com.bocoo.product.domain.vo.ProductFormulaSetupVo;
+import com.bocoo.product.domain.vo.ProductFormulaSimulationItemVo;
 import com.bocoo.product.domain.vo.ProductFormulaSimulationVo;
 import com.bocoo.product.domain.vo.ProductFormulaUsageRuleVo;
 import com.bocoo.product.domain.vo.ProductMaterialAttributeVo;
@@ -20,6 +21,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -104,6 +106,32 @@ class ProductFormulaSimulationServiceImplTest {
 
         assertThat(result.getStatus()).isEqualTo("FAIL");
         assertThat(result.getMessage()).isEqualTo("product.formula.notConfigured");
+    }
+
+    @Test
+    void runIgnoresHiddenOptionMaterials() {
+        ProductFormulaSetupVo setup = setup();
+        setup.setOptions(new ArrayList<>(setup.getOptions()));
+        setup.setOptionValues(new ArrayList<>(setup.getOptionValues()));
+        setup.setOptionMaterials(new ArrayList<>(setup.getOptionMaterials()));
+        setup.getOptions().add(conditionalOption("MOTOR", "电机", "SYSTEM", "MOTOR"));
+        setup.getOptionValues().add(optionValue("MOTOR", "MOTOR001", "电机"));
+        setup.getOptionMaterials().add(optionMaterial("MOTOR", "MOTOR001", 7002L, 4002L));
+        when(setupService.querySetup(3001L)).thenReturn(setup);
+        ProductMaterial price = new ProductMaterial();
+        price.setMaterialId(4001L);
+        price.setSalesPrice(new BigDecimal("3.00"));
+        when(productMaterialMapper.selectList(any())).thenReturn(List.of(price));
+
+        ProductFormulaSimulationVo result = service.run(3001L, simulationBo(Map.of(
+            "FABRIC", "MAT001",
+            "MOTOR", "MOTOR001"
+        )));
+
+        assertThat(result.getStatus()).isEqualTo("PASS");
+        assertThat(result.getItems()).extracting(ProductFormulaSimulationItemVo::getMaterialCode)
+            .containsExactly("MAT001");
+        assertThat(result.getSelectedOptionValues()).doesNotContainKey("MOTOR");
     }
 
     @Test
@@ -215,6 +243,14 @@ class ProductFormulaSimulationServiceImplTest {
         option.setVisibilityMode("ALWAYS");
         option.setRequiredFlag(Boolean.TRUE);
         option.setStatus("ENABLED");
+        return option;
+    }
+
+    private ProductFormulaOptionVo conditionalOption(String optionCode, String optionNameCn, String parentOptionCode, String parentValueCode) {
+        ProductFormulaOptionVo option = option(optionCode, optionNameCn);
+        option.setVisibilityMode("CONDITIONAL");
+        option.setVisibleConditionOptionCode(parentOptionCode);
+        option.setVisibleConditionValueCode(parentValueCode);
         return option;
     }
 

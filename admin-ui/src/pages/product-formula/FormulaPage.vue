@@ -6,6 +6,7 @@
 
 <script setup lang="ts" name="ProductFormulaPage">
 import { computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
@@ -24,6 +25,7 @@ import {
 } from '@/constants/productStatus'
 
 const localeStore = useLocaleStore()
+const router = useRouter()
 const t = (key: string) => getMessage(key, localeStore.language)
 
 const formulaStatusOptionList = computed(() => formulaStatusOptions(t))
@@ -120,6 +122,14 @@ const formulaConfig = computed<ProductGridConfig>(() => ({
     { prop: 'remark', labelKey: 'productCenter.common.remark', type: 'textarea', table: false, formSpan: 2 }
   ],
   rowActions: [
+    {
+      labelKey: 'productCenter.formula.actions.simulation',
+      icon: 'DataAnalysis',
+      type: 'primary',
+      permission: 'product:formula:setup',
+      primary: true,
+      handler: (row) => { void router.push({ name: 'ProductFormulaSimulation', query: { formulaId: String(row.formulaId || '') } }) }
+    },
     {
       labelKey: 'productCenter.formula.actions.submitReview',
       icon: 'Promotion',
