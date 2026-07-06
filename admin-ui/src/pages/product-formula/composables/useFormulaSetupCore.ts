@@ -89,7 +89,7 @@ export function useFormulaSetupCore(props: { setupSection?: 'content' | 'options
     })
     return result
   })
-  const unitOptions = computed<ProductOption[]>(() => unitRows.value.map((row) => ({ value: row.unitCode || '', label: labelOf(row, 'unitCode', 'unitNameCn', 'unitNameEn') })).filter((item) => item.value))
+  const unitOptions = computed<ProductOption[]>(() => unitRows.value.map((row) => ({ value: row.unitCode || '', label: row.unitNameCn || row.unitCode || '' })).filter((item) => item.value))
   const materialGroupCards = computed(() => groupRows.value
     .filter((group) => group.status === PRODUCT_STATUS_ENABLED && group.formulaSummaryVisibleFlag !== false)
     .map((group) => ({

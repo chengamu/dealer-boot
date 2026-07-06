@@ -56,8 +56,10 @@ class ProductFormulaSimulationEngine extends ProductServiceSupport {
                 return fail(vo, "product.formula.notConfigured");
             }
             vo.setItems(items);
-            vo.setTotalAmount(items.stream().map(ProductFormulaSimulationItemVo::getAmount)
-                .filter(Objects::nonNull).reduce(BigDecimal.ZERO, BigDecimal::add).setScale(2, RoundingMode.HALF_UP));
+            BigDecimal singleAmount = items.stream().map(ProductFormulaSimulationItemVo::getAmount)
+                .filter(Objects::nonNull).reduce(BigDecimal.ZERO, BigDecimal::add).setScale(2, RoundingMode.HALF_UP);
+            vo.setSingleAmount(singleAmount);
+            vo.setTotalAmount(singleAmount.multiply(BigDecimal.valueOf(vo.getOrderQuantity())).setScale(2, RoundingMode.HALF_UP));
             vo.setStatus(VALIDATION_PASS);
             vo.setMessage("product.formula.simulationPassed");
             return vo;
@@ -70,6 +72,8 @@ class ProductFormulaSimulationEngine extends ProductServiceSupport {
         vo.setFormulaId(formulaId);
         vo.setOrderWidth(bo == null ? null : bo.getOrderWidth());
         vo.setOrderHeight(bo == null ? null : bo.getOrderHeight());
+        vo.setOrderQuantity(bo == null || bo.getOrderQuantity() == null ? 1 : bo.getOrderQuantity());
+        vo.setRoom(bo == null ? null : bo.getRoom());
         vo.setSelectedOptionValues(bo == null || bo.getSelectedOptionValues() == null
             ? new LinkedHashMap<>() : new LinkedHashMap<>(bo.getSelectedOptionValues()));
         vo.setSimulationTime(TimeUtils.utcNow());
@@ -86,6 +90,9 @@ class ProductFormulaSimulationEngine extends ProductServiceSupport {
         if (width == null || height == null) {
             return "product.formula.simulationSizeRequired";
         }
+        if (vo.getOrderQuantity() == null || vo.getOrderQuantity() < 1) {
+            return "product.formula.simulationQuantityRequired";
+        }
         if ((formula.getMinWidthInch() != null && width.compareTo(formula.getMinWidthInch()) < 0)
             || (formula.getMaxWidthInch() != null && width.compareTo(formula.getMaxWidthInch()) > 0)
             || (formula.getMinHeightInch() != null && height.compareTo(formula.getMinHeightInch()) < 0)
@@ -96,9 +103,12 @@ class ProductFormulaSimulationEngine extends ProductServiceSupport {
     }
     private String validateOptions(ProductFormulaSetupVo setup, Map<String, String> selectedValues) {
         Map<String, List<ProductFormulaOptionValueVo>> valuesByOption = setup.getOptionValues().stream()
-            .filter(value -> StringUtils.isNotBlank(value.getOptionCode()))
+            .filter(value -> isEnabledStatus(value.getStatus()) && StringUtils.isNotBlank(value.getOptionCode()))
             .collect(Collectors.groupingBy(ProductFormulaOptionValueVo::getOptionCode));
         for (ProductFormulaOptionVo option : setup.getOptions()) {
+            if (!isEnabledStatus(option.getStatus())) {
+                continue;
+            }
             if (!isOptionVisible(option, selectedValues)) {
                 continue;
             }
@@ -120,13 +130,14 @@ class ProductFormulaSimulationEngine extends ProductServiceSupport {
     }
     private List<ProductFormulaMaterialVo> resolveBomMaterials(ProductFormulaSetupVo setup, Map<String, String> selectedValues) {
         Map<String, ProductFormulaMaterialVo> materialsByCode = setup.getMaterials().stream()
-            .filter(material -> StringUtils.isNotBlank(material.getMaterialCode()))
+            .filter(material -> isEnabledStatus(material.getStatus()) && StringUtils.isNotBlank(material.getMaterialCode()))
             .collect(Collectors.toMap(ProductFormulaMaterialVo::getMaterialCode, material -> material, (l, r) -> l, LinkedHashMap::new));
         Map<String, ProductFormulaMaterialVo> bom = new LinkedHashMap<>();
-        setup.getMaterials().stream().filter(material -> Boolean.TRUE.equals(material.getRequiredFlag()))
+        setup.getMaterials().stream().filter(material -> isEnabledStatus(material.getStatus()) && Boolean.TRUE.equals(material.getRequiredFlag()))
             .forEach(material -> bom.put(material.getMaterialCode(), material));
         setup.getOptionMaterials().stream()
-            .filter(optionMaterial -> Objects.equals(selectedValues.get(optionMaterial.getOptionCode()), optionMaterial.getValueCode()))
+            .filter(optionMaterial -> isEnabledStatus(optionMaterial.getStatus())
+                && Objects.equals(selectedValues.get(optionMaterial.getOptionCode()), optionMaterial.getValueCode()))
             .map(ProductFormulaOptionMaterialVo::getMaterialCode).map(materialsByCode::get).filter(Objects::nonNull)
             .forEach(material -> bom.put(material.getMaterialCode(), material));
         return bom.values().stream()
@@ -172,11 +183,12 @@ class ProductFormulaSimulationEngine extends ProductServiceSupport {
 
     private Map<String, Object> selectedOptionMaterialContext(ProductFormulaSetupVo setup, Map<String, String> selectedValues) {
         Map<String, ProductFormulaMaterialVo> materialsByCode = setup.getMaterials().stream()
-            .filter(material -> StringUtils.isNotBlank(material.getMaterialCode()))
+            .filter(material -> isEnabledStatus(material.getStatus()) && StringUtils.isNotBlank(material.getMaterialCode()))
             .collect(Collectors.toMap(ProductFormulaMaterialVo::getMaterialCode, material -> material, (left, right) -> left));
         Map<String, Object> context = new HashMap<>();
         setup.getOptionMaterials().stream()
-            .filter(optionMaterial -> Objects.equals(selectedValues.get(optionMaterial.getOptionCode()), optionMaterial.getValueCode()))
+            .filter(optionMaterial -> isEnabledStatus(optionMaterial.getStatus())
+                && Objects.equals(selectedValues.get(optionMaterial.getOptionCode()), optionMaterial.getValueCode()))
             .sorted(Comparator.comparing(ProductFormulaOptionMaterialVo::getDefaultFlag, Comparator.nullsLast(Comparator.reverseOrder()))
                 .thenComparing(ProductFormulaOptionMaterialVo::getSortOrder, Comparator.nullsLast(Integer::compareTo)))
             .forEach(optionMaterial -> applyOptionMaterialContext(context, optionMaterial.getOptionCode(), materialsByCode.get(optionMaterial.getMaterialCode())));
@@ -218,6 +230,9 @@ class ProductFormulaSimulationEngine extends ProductServiceSupport {
     private String validateRestrictions(List<ProductFormulaRestrictionVo> restrictions, Map<String, String> selectedValues,
                                         Map<String, Object> context) {
         for (ProductFormulaRestrictionVo restriction : restrictions) {
+            if (!isEnabledStatus(restriction.getStatus())) {
+                continue;
+            }
             if (restrictionTargetsSelection(restriction, selectedValues) && restrictionConditionMatched(restriction, selectedValues, context)
                 && "DISABLE".equals(restriction.getActionType())) {
                 return StringUtils.blankToDefault(restriction.getMessageText(), "product.formula.simulationRestrictionHit");

@@ -59,8 +59,7 @@ const valueTypeOptions = computed(() => [
 
 function unitOption(unit: ProductUnitVO) {
   const code = String(unit.unitCode || '')
-  const name = localeStore.language === 'zh_CN' ? unit.unitNameCn : unit.unitNameEn || unit.unitNameCn
-  return { value: code, label: `${code} ${name || ''}`.trim() }
+  return { value: code, label: String(unit.unitNameCn || code) }
 }
 
 const unitOptions = computed(() => unitList.value.map(unitOption))

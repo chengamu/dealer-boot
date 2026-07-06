@@ -43,7 +43,7 @@ class ProductFormulaSimulationUsageCalculator {
         return item;
     }
     private ProductFormulaUsageRuleVo matchUsageRule(List<ProductFormulaUsageRuleVo> usageRules, Map<String, Object> context) {
-        List<ProductFormulaUsageRuleVo> sortedRules = usageRules.stream().filter(rule -> !"DISABLED".equals(rule.getStatus()))
+        List<ProductFormulaUsageRuleVo> sortedRules = usageRules.stream().filter(rule -> "ENABLED".equals(rule.getStatus()))
             .sorted(Comparator.comparing(ProductFormulaUsageRuleVo::getSortOrder, Comparator.nullsLast(Integer::compareTo))).toList();
         for (ProductFormulaUsageRuleVo rule : sortedRules) {
             if (Boolean.TRUE.equals(rule.getDefaultRuleFlag()) || "DEFAULT".equals(rule.getConditionType())) {

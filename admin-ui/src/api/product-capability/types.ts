@@ -495,6 +495,8 @@ export interface ProductFormulaReviewQuery extends ProductPageQuery {
 export interface ProductFormulaSimulationBO extends ProductRecord {
   orderWidth?: number
   orderHeight?: number
+  orderQuantity?: number
+  room?: string
   selectedOptionValues?: Record<string, string>
   saveResult?: boolean
   remark?: string
@@ -525,8 +527,11 @@ export interface ProductFormulaSimulationVO extends ProductRecord {
   simulationTime?: string
   orderWidth?: number
   orderHeight?: number
+  orderQuantity?: number
+  room?: string
   selectedOptionValues?: Record<string, string>
   items?: ProductFormulaSimulationItemVO[]
+  singleAmount?: number
   totalAmount?: number
 }
 

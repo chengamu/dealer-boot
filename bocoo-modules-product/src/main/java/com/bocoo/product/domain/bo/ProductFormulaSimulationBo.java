@@ -10,6 +10,8 @@ import java.util.Map;
 public class ProductFormulaSimulationBo {
     private BigDecimal orderWidth;
     private BigDecimal orderHeight;
+    private Integer orderQuantity;
+    private String room;
     private Map<String, String> selectedOptionValues = new LinkedHashMap<>();
     private Boolean saveResult;
     private String remark;

@@ -1,98 +1,68 @@
 <template>
   <div class="app-container formula-simulation-page">
-    <div class="simulation-header">
-      <div>
-        <div class="simulation-header__breadcrumb">{{ t('productCenter.formula.title') }} / {{ t('productCenter.formula.actions.simulation') }}</div>
-        <h2>{{ formula.formulaName || '-' }}</h2>
-        <div class="simulation-header__meta">
-          <span>{{ t('productCenter.formula.code') }}：{{ formula.formulaCode || '-' }}</span>
-          <span>{{ t('productCenter.formula.category') }}：{{ formula.categoryNameCn || '-' }}</span>
-          <span>{{ t('productCenter.formula.productType') }}：{{ formula.productTypeNameCn || '-' }}</span>
-          <span>{{ t('productCenter.formulaSimulation.status') }}：{{ validationText(simulationStatus) }}</span>
-        </div>
-      </div>
-      <div class="simulation-header__actions">
-        <el-button icon="Back" @click="router.back()">{{ t('common.back') }}</el-button>
-        <el-button icon="DataAnalysis" plain :loading="running" @click="run">{{ t('productCenter.formulaSimulation.run') }}</el-button>
-        <el-button type="primary" icon="CircleCheck" :loading="validating" @click="validate">{{ t('productCenter.formulaSimulation.validate') }}</el-button>
-      </div>
-    </div>
+    <FormulaSimulationHeader
+      :formula="formula"
+      :status="simulationStatus"
+      :message="result.message"
+      :running="running"
+      :validating="validating"
+      :formula-options="formulaOptions"
+      :selected-formula-id="selectedFormulaId"
+      :formula-selecting="formulaSelecting"
+      :can-operate="Boolean(currentFormulaId)"
+      :validation-text="validationText"
+      :message-text="messageText"
+      @back="router.back()"
+      @run="run"
+      @validate="validate"
+      @formula-change="handleFormulaChange"
+    />
 
-    <section class="simulation-panel">
-      <div class="simulation-form">
-        <el-form :model="form" label-width="110px">
-          <el-form-item :label="t('productCenter.formulaSimulation.orderWidth')">
-            <el-input-number v-model="form.orderWidth" :precision="2" :step="1" />
-          </el-form-item>
-          <el-form-item :label="t('productCenter.formulaSimulation.orderHeight')">
-            <el-input-number v-model="form.orderHeight" :precision="2" :step="1" />
-          </el-form-item>
-          <el-form-item
-            v-for="option in visibleOptions"
-            :key="option.optionCode"
-            :label="option.optionNameCn || option.optionCode"
-          >
-            <el-select
-              v-model="selectedOptionValues[option.optionCode!]"
-              filterable
-              clearable
-              :placeholder="t('productCenter.formulaSetup.optionValueNamePlaceholder')"
-            >
-              <el-option
-                v-for="value in optionValuesOf(option.optionCode)"
-                :key="value.valueCode"
-                :label="value.valueNameCn || value.valueCode"
-                :value="value.valueCode"
-              />
-            </el-select>
-          </el-form-item>
-        </el-form>
-      </div>
-      <div class="simulation-result">
-        <el-tag :type="formulaValidationTagType(result.status)">{{ validationText(result.status) }}</el-tag>
-        <span>{{ messageText(result.message) }}</span>
-        <strong>{{ t('productCenter.formulaSimulation.totalAmount') }}：{{ money(result.totalAmount) }}</strong>
-      </div>
-    </section>
+    <FormulaSimulationOrderSheet
+      :form="form"
+      :options="visibleOptions"
+      :option-values="setup.optionValues || []"
+      :option-materials="enabledOptionMaterials"
+      :selected-option-values="selectedOptionValues"
+      :quantity="quantity"
+      :room="room"
+      :hidden-count="hiddenOptionCount"
+      :show-validation="showValidation"
+      :value-label="optionValueLabel"
+      @update:quantity="quantity = $event"
+      @update:room="room = $event"
+    />
 
-    <section class="simulation-panel">
-      <div class="section-title">{{ t('productCenter.formulaSimulation.bomItems') }}</div>
-      <el-table v-loading="loading" :data="result.items || []" border class="simulation-table">
-        <el-table-column type="index" :label="t('common.index')" width="64" align="center" />
-        <el-table-column prop="attributeGroupNameCn" :label="t('productCenter.formulaSetup.attributeGroup')" width="110" show-overflow-tooltip />
-        <el-table-column prop="materialTypeNameCn" :label="t('productCenter.formulaSetup.materialType')" width="130" show-overflow-tooltip />
-        <el-table-column prop="materialCode" :label="t('productCenter.formulaSetup.materialCode')" width="130" show-overflow-tooltip />
-        <el-table-column prop="materialNameCn" :label="t('productCenter.formulaSetup.materialName')" min-width="220" show-overflow-tooltip />
-        <el-table-column prop="specModelText" :label="t('productCenter.formulaSetup.specModel')" min-width="180" show-overflow-tooltip />
-        <el-table-column :label="t('productCenter.formulaSetup.unit')" width="90">
-          <template #default="{ row }">{{ unitLabel(row.unitCode) }}</template>
-        </el-table-column>
-        <el-table-column :label="t('productCenter.formulaSimulation.usageQty')" width="110" align="right">
-          <template #default="{ row }">{{ quantity(row.usageQty) }}</template>
-        </el-table-column>
-        <el-table-column :label="t('productCenter.formulaSimulation.unitPrice')" width="110" align="right">
-          <template #default="{ row }">{{ money(row.unitPrice) }}</template>
-        </el-table-column>
-        <el-table-column :label="t('productCenter.formulaSimulation.salesPrice')" width="110" align="right">
-          <template #default="{ row }">{{ money(row.salesPrice) }}</template>
-        </el-table-column>
-        <el-table-column :label="t('productCenter.formulaSimulation.amount')" width="110" align="right">
-          <template #default="{ row }">{{ money(row.amount) }}</template>
-        </el-table-column>
-        <el-table-column prop="productionRemark" :label="t('productCenter.formulaSetup.productionRemark')" min-width="160" show-overflow-tooltip />
-      </el-table>
-    </section>
+    <FormulaSimulationResultPanel
+      v-loading="loading"
+      :result="result"
+      :formula="formula"
+      :quantity="quantity"
+      :selected-option-values="selectedOptionValues"
+      :visible-options="visibleOptions"
+      :option-materials="enabledOptionMaterials"
+      :unit-label="unitLabel"
+      :value-label="optionValueLabel"
+      :quantity-format="quantityText"
+      :money-format="moneyText"
+      :validation-text="validationText"
+      :message-text="messageText"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
-import { useRoute, useRouter } from 'vue-router'
+import { useRouter } from 'vue-router'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 import { productFormulaApi } from '@/api/product-formula/formula'
 import { productUnitApi } from '@/api/product-capability/base'
+import FormulaSimulationHeader from './components/FormulaSimulationHeader.vue'
+import FormulaSimulationOrderSheet from './components/FormulaSimulationOrderSheet.vue'
+import FormulaSimulationResultPanel from './components/FormulaSimulationResultPanel.vue'
+import { useFormulaSimulationSelection } from './composables/useFormulaSimulationSelection'
 import type {
   ProductFormulaOptionVO,
   ProductFormulaOptionValueVO,
@@ -102,13 +72,20 @@ import type {
   ProductFormulaVO,
   ProductUnitVO
 } from '@/api/product-capability/types'
-import { FORMULA_VALIDATION_STATUS, PRODUCT_STATUS_ENABLED, formulaValidationStatusText, formulaValidationTagType } from '@/constants/productStatus'
+import { FORMULA_VALIDATION_STATUS, PRODUCT_STATUS_ENABLED, formulaValidationStatusText } from '@/constants/productStatus'
 
-const route = useRoute()
 const router = useRouter()
 const localeStore = useLocaleStore()
 const t = (key: string) => getMessage(key, localeStore.language)
-const formulaId = String(route.params.id || '')
+const {
+  selectedFormulaId,
+  currentFormulaId,
+  formulaOptions,
+  formulaSelecting,
+  loadFormulaOptions,
+  handleFormulaChange
+} = useFormulaSimulationSelection(t)
+
 const loading = ref(false)
 const running = ref(false)
 const validating = ref(false)
@@ -116,14 +93,28 @@ const formula = ref<ProductFormulaVO>({})
 const result = ref<ProductFormulaSimulationVO>({})
 const setup = ref<ProductFormulaSetupVO>({})
 const unitRows = ref<ProductUnitVO[]>([])
+const quantity = ref(1)
+const room = ref('')
+const showValidation = ref(false)
 const selectedOptionValues = reactive<Record<string, string>>({})
 const form = reactive<ProductFormulaSimulationBO>({
   orderWidth: undefined,
   orderHeight: undefined,
   selectedOptionValues
 })
-const visibleOptions = computed(() => (setup.value.options || []).filter((option) => isOptionVisible(option)))
+
+const orderedOptions = computed(() => sortRows((setup.value.options || []).filter((option) => option.status === PRODUCT_STATUS_ENABLED)))
+const visibleOptions = computed(() => orderedOptions.value.filter((option) => isOptionVisible(option)))
+const enabledOptionMaterials = computed(() => sortRows((setup.value.optionMaterials || []).filter((row) => row.status === PRODUCT_STATUS_ENABLED)))
+const hiddenOptionCount = computed(() => Math.max(0, orderedOptions.value.length - visibleOptions.value.length))
 const simulationStatus = computed(() => result.value.status || formula.value.simulationValidationStatus || FORMULA_VALIDATION_STATUS.NOT_VALIDATED)
+
+watch(visibleOptions, () => {
+  applyVisibleDefaults()
+  clearHiddenSelections()
+}, { deep: true })
+
+watch(currentFormulaId, async () => { await load() })
 
 function validationText(status?: string) {
   return formulaValidationStatusText(status, t)
@@ -133,11 +124,11 @@ function messageText(message?: string) {
   return message ? t(message) : '-'
 }
 
-function quantity(value?: number) {
+function quantityText(value?: number) {
   return value == null ? '-' : Number(value).toFixed(2)
 }
 
-function money(value?: number) {
+function moneyText(value?: number) {
   return value == null ? '-' : Number(value).toFixed(2)
 }
 
@@ -148,7 +139,11 @@ function unitLabel(unitCode?: string) {
 }
 
 async function load() {
-  if (!formulaId) return
+  const formulaId = currentFormulaId.value
+  if (!formulaId) {
+    resetSimulation()
+    return
+  }
   loading.value = true
   try {
     const [formulaResponse, simulationResponse, setupResponse, unitResponse] = await Promise.all([
@@ -161,13 +156,38 @@ async function load() {
     result.value = simulationResponse.data || {}
     setup.value = setupResponse.data || {}
     unitRows.value = responseRows(unitResponse)
+    quantity.value = result.value.orderQuantity || quantity.value
+    room.value = result.value.room || room.value
+    Object.keys(selectedOptionValues).forEach((optionCode) => delete selectedOptionValues[optionCode])
+    Object.assign(selectedOptionValues, result.value.selectedOptionValues || {})
+    applyVisibleDefaults()
+    clearHiddenSelections()
   } finally {
     loading.value = false
   }
 }
 
+function resetSimulation() {
+  formula.value = {}
+  result.value = {}
+  setup.value = {}
+  quantity.value = 1
+  room.value = ''
+  showValidation.value = false
+  form.orderWidth = undefined
+  form.orderHeight = undefined
+  Object.keys(selectedOptionValues).forEach((optionCode) => delete selectedOptionValues[optionCode])
+}
+
 function optionValuesOf(optionCode?: string) {
-  return (setup.value.optionValues || []).filter((value: ProductFormulaOptionValueVO) => value.optionCode === optionCode)
+  return sortRows((setup.value.optionValues || [])
+    .filter((value: ProductFormulaOptionValueVO) => value.status === PRODUCT_STATUS_ENABLED && value.optionCode === optionCode))
+}
+
+function optionValueLabel(optionCode?: string, valueCode?: string) {
+  if (!optionCode || !valueCode) return valueCode || '-'
+  const value = optionValuesOf(optionCode).find((row) => row.valueCode === valueCode)
+  return value?.valueNameCn || value?.valueNameEn || value?.valueCode || valueCode
 }
 
 function responseRows<T>(response: { data?: T[] } | T[] | undefined): T[] {
@@ -177,14 +197,50 @@ function responseRows<T>(response: { data?: T[] } | T[] | undefined): T[] {
 function isOptionVisible(option: ProductFormulaOptionVO) {
   if (option.visibilityMode !== 'CONDITIONAL') return true
   const conditionOptionCode = option.visibleConditionOptionCode
-  return Boolean(conditionOptionCode)
-    && selectedOptionValues[conditionOptionCode as string] === option.visibleConditionValueCode
+  return Boolean(conditionOptionCode) && selectedOptionValues[conditionOptionCode as string] === option.visibleConditionValueCode
+}
+
+function applyVisibleDefaults() {
+  visibleOptions.value.forEach((option) => {
+    const optionCode = option.optionCode
+    if (!optionCode || selectedOptionValues[optionCode]) return
+    const values = optionValuesOf(optionCode)
+    const defaultValue = option.defaultValueCode || values.find((row) => row.defaultFlag)?.valueCode
+    if (defaultValue) selectedOptionValues[optionCode] = defaultValue
+  })
+}
+
+function clearHiddenSelections() {
+  const visibleCodes = new Set(visibleOptions.value.map((option) => option.optionCode).filter(Boolean))
+  Object.keys(selectedOptionValues).forEach((optionCode) => {
+    if (!visibleCodes.has(optionCode)) delete selectedOptionValues[optionCode]
+  })
+}
+
+function sortRows<T extends { sortOrder?: number }>(rows: T[]) {
+  return [...rows].sort((left, right) => (left.sortOrder ?? 999999) - (right.sortOrder ?? 999999))
+}
+
+function runPayload(): ProductFormulaSimulationBO {
+  return {
+    orderWidth: form.orderWidth,
+    orderHeight: form.orderHeight,
+    orderQuantity: quantity.value,
+    room: room.value,
+    selectedOptionValues: { ...selectedOptionValues }
+  }
 }
 
 async function run() {
+  const formulaId = currentFormulaId.value
+  if (!formulaId) {
+    ElMessage.warning(t('productCenter.formulaSimulation.selectFormulaHint'))
+    return
+  }
+  if (!validateBeforeSubmit()) return
   running.value = true
   try {
-    const response = await productFormulaApi.runSimulation(formulaId, form)
+    const response = await productFormulaApi.runSimulation(formulaId, runPayload())
     result.value = response.data || {}
     formula.value.simulationValidationStatus = result.value.status
   } finally {
@@ -193,9 +249,15 @@ async function run() {
 }
 
 async function validate() {
+  const formulaId = currentFormulaId.value
+  if (!formulaId) {
+    ElMessage.warning(t('productCenter.formulaSimulation.selectFormulaHint'))
+    return
+  }
+  if (!validateBeforeSubmit()) return
   validating.value = true
   try {
-    await productFormulaApi.validateSimulation(formulaId, form)
+    await productFormulaApi.validateSimulation(formulaId, runPayload())
     ElMessage.success(t('productCenter.formula.validation.pass'))
     await load()
   } finally {
@@ -203,5 +265,21 @@ async function validate() {
   }
 }
 
-onMounted(load)
+function validateBeforeSubmit() {
+  showValidation.value = true
+  if (!form.orderWidth || !form.orderHeight) {
+    ElMessage.warning(t('productCenter.formulaSimulation.sizeRequired'))
+    return false
+  }
+  const missingOption = visibleOptions.value.find((option) => option.requiredFlag && !selectedOptionValues[option.optionCode || ''])
+  if (missingOption) {
+    ElMessage.warning(t('productCenter.formulaSimulation.requiredMissing'))
+    return false
+  }
+  return true
+}
+
+onMounted(async () => {
+  await loadFormulaOptions()
+})
 </script>

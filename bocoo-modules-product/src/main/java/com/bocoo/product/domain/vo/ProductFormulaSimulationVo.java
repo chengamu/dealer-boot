@@ -22,7 +22,10 @@ public class ProductFormulaSimulationVo implements Serializable {
     private LocalDateTime simulationTime;
     private BigDecimal orderWidth;
     private BigDecimal orderHeight;
+    private Integer orderQuantity;
+    private String room;
     private Map<String, String> selectedOptionValues = new LinkedHashMap<>();
     private List<ProductFormulaSimulationItemVo> items = new ArrayList<>();
+    private BigDecimal singleAmount;
     private BigDecimal totalAmount;
 }

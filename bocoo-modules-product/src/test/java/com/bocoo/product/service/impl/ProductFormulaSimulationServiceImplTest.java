@@ -69,13 +69,18 @@ class ProductFormulaSimulationServiceImplTest {
         price.setSalesPrice(new BigDecimal("3.00"));
         when(productMaterialMapper.selectList(any())).thenReturn(List.of(price));
 
-        ProductFormulaSimulationVo result = service.run(3001L, simulationBo(Map.of("FABRIC", "MAT001")));
+        ProductFormulaSimulationBo bo = simulationBo(Map.of("FABRIC", "MAT001"));
+        bo.setOrderQuantity(2);
+
+        ProductFormulaSimulationVo result = service.run(3001L, bo);
 
         assertThat(result.getStatus()).isEqualTo("PASS");
+        assertThat(result.getOrderQuantity()).isEqualTo(2);
         assertThat(result.getItems()).hasSize(1);
         assertThat(result.getItems().get(0).getMaterialCode()).isEqualTo("MAT001");
         assertThat(result.getItems().get(0).getUsageQty()).isEqualByComparingTo("50.80");
-        assertThat(result.getTotalAmount()).isEqualByComparingTo("152.40");
+        assertThat(result.getSingleAmount()).isEqualByComparingTo("152.40");
+        assertThat(result.getTotalAmount()).isEqualByComparingTo("304.80");
     }
 
     @Test
@@ -87,6 +92,35 @@ class ProductFormulaSimulationServiceImplTest {
 
         assertThat(result.getStatus()).isEqualTo("FAIL");
         assertThat(result.getMessage()).isEqualTo("product.formula.simulationRestrictionHit");
+    }
+
+    @Test
+    void runDoesNotBringDisabledOptionMaterials() {
+        ProductFormulaSetupVo setup = setup();
+        setup.getOptionMaterials().get(0).setStatus("DISABLED");
+        when(setupService.querySetup(3001L)).thenReturn(setup);
+
+        ProductFormulaSimulationVo result = service.run(3001L, simulationBo(Map.of("FABRIC", "MAT001")));
+
+        assertThat(result.getStatus()).isEqualTo("FAIL");
+        assertThat(result.getMessage()).isEqualTo("product.formula.notConfigured");
+    }
+
+    @Test
+    void runIgnoresDisabledRestrictions() {
+        ProductFormulaSetupVo setup = setup();
+        setup.getRestrictions().get(0).setStatus("DISABLED");
+        when(setupService.querySetup(3001L)).thenReturn(setup);
+        ProductMaterial price = new ProductMaterial();
+        price.setMaterialId(4001L);
+        price.setSalesPrice(new BigDecimal("3.00"));
+        when(productMaterialMapper.selectList(any())).thenReturn(List.of(price));
+        ProductFormulaSimulationBo bo = simulationBo(Map.of("FABRIC", "MAT001"));
+        bo.setOrderWidth(new BigDecimal("130"));
+
+        ProductFormulaSimulationVo result = service.run(3001L, bo);
+
+        assertThat(result.getStatus()).isEqualTo("PASS");
     }
 
     @Test
