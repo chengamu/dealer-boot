@@ -1,4 +1,5 @@
 import type { ProductFormulaMaterialVO, ProductFormulaOptionVO, ProductFormulaOptionValueVO, ProductFormulaVariableVO } from '@/api/product-capability/types'
+import { formulaVariables } from '../utils/formulaExpression'
 
 type AliasPair = { from: string; to: string }
 
@@ -28,6 +29,7 @@ export function normalizeDisplayExpression(
 
 function buildAliasPairs(options: ProductFormulaOptionVO[], optionValues: ProductFormulaOptionValueVO[], materials: ProductFormulaMaterialVO[], variables: ProductFormulaVariableVO[]) {
   const aliases: AliasPair[] = []
+  formulaVariables.forEach((variable) => pushAlias(aliases, variable.label, variable.name))
   options.forEach((option) => {
     const variableName = optionVariableName(option.optionCode)
     pushAlias(aliases, option.optionNameCn, variableName)
@@ -116,6 +118,7 @@ function pushAlias(aliases: AliasPair[], from?: string, to?: string) {
 
 function internalVariableName(variable: ProductFormulaVariableVO) {
   const key = variable.variableKey || variable.variableCode
+  if (key?.startsWith('var_')) return key
   return key ? `var_${key}` : ''
 }
 

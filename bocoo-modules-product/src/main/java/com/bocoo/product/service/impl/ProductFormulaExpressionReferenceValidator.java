@@ -66,6 +66,9 @@ public class ProductFormulaExpressionReferenceValidator extends ProductServiceSu
                                              List<ProductFormulaOptionMaterial> optionMaterials,
                                              List<ProductFormulaMaterial> materials) {
         String body = identifier.substring("material_".length());
+        if (validMaterialPoolReference(body, materials)) {
+            return false;
+        }
         List<String> optionCodes = options.stream().map(ProductFormulaOption::getOptionCode)
             .filter(StringUtils::isNotBlank)
             .sorted(Comparator.comparingInt((String value) -> identifierPart(value).length()).reversed())
@@ -79,6 +82,33 @@ public class ProductFormulaExpressionReferenceValidator extends ProductServiceSu
             return !optionHasAttribute(optionCode, attributeCode, optionMaterials, materials);
         }
         return true;
+    }
+
+    private boolean validMaterialPoolReference(String body, List<ProductFormulaMaterial> materials) {
+        List<String> groupCodes = materials.stream()
+            .map(ProductFormulaMaterial::getAttributeGroupCode)
+            .filter(StringUtils::isNotBlank)
+            .distinct()
+            .sorted(Comparator.comparingInt((String value) -> identifierPart(value).length()).reversed())
+            .toList();
+        for (String groupCode : groupCodes) {
+            String prefix = identifierPart(groupCode) + "_";
+            if (!body.startsWith(prefix)) {
+                continue;
+            }
+            String attributeCode = body.substring(prefix.length());
+            if (MATERIAL_FIELDS.contains(attributeCode)) {
+                return true;
+            }
+            Set<Long> materialIds = materials.stream()
+                .filter(material -> groupCode.equals(material.getAttributeGroupCode()) && material.getMaterialId() != null)
+                .map(ProductFormulaMaterial::getMaterialId)
+                .collect(Collectors.toSet());
+            return !materialIds.isEmpty() && !materialAttributeMapper.selectList(activeQuery(ProductMaterialAttribute.class)
+                .in("material_id", materialIds)
+                .eq("attribute_code", attributeCode)).isEmpty();
+        }
+        return false;
     }
 
     private boolean optionHasAttribute(String optionCode, String attributeCode,

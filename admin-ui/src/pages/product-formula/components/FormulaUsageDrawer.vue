@@ -49,6 +49,7 @@
         :variables="variables || []"
         @generate-fabric-rules="generateFabricRules"
         @add-rule="addConditionalUsageRule"
+        @manage-variables="variableManagerOpen = true"
         @copy-rule="copySelectedRule"
         @remove-rule="removeSelectedRule"
         @default-rule-change="handleDefaultRuleChange"
@@ -68,8 +69,19 @@
       :option-materials="optionMaterials"
       :variables="variables || []"
       :variable-rules="variableRules || []"
-      @variables-saved="$emit('variables-saved', $event)"
       @confirm="confirmExpressionEditor"
+    />
+    <FormulaInternalVariableManagerDialog
+      v-model="variableManagerOpen"
+      :formula-id="formulaId"
+      :variables="variables || []"
+      :variable-rules="variableRules || []"
+      :materials="materials || []"
+      :options="options"
+      :option-values="optionValues"
+      :option-materials="optionMaterials"
+      :t="t"
+      @variables-saved="$emit('variables-saved', $event)"
     />
     <template #footer>
       <el-button @click="closeDrawerWithGuard">{{ t('common.cancel') }}</el-button>
@@ -81,7 +93,9 @@
 <script setup lang="ts">
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
+import { ref } from 'vue'
 import FormulaExpressionEditorDialog from './FormulaExpressionEditorDialog.vue'
+import FormulaInternalVariableManagerDialog from './FormulaInternalVariableManagerDialog.vue'
 import FormulaUsageFixedPanel from './FormulaUsageFixedPanel.vue'
 import FormulaUsageMaterialSummary from './FormulaUsageMaterialSummary.vue'
 import FormulaUsageRuleGrid from './FormulaUsageRuleGrid.vue'
@@ -123,6 +137,7 @@ const t = (key: string) => {
   const message = getMessage(key, localeStore.language)
   return message
 }
+const variableManagerOpen = ref(false)
 
 const {
   selectedRule,

@@ -2,7 +2,7 @@
   <section class="internal-variable-grid">
     <div class="internal-variable-grid__head">
       <h4>{{ t('productCenter.formulaSetup.internalVariables') }}</h4>
-      <div class="internal-variable-grid__actions">
+      <div v-if="!readonly" class="internal-variable-grid__actions">
         <el-button size="small" plain @click="$emit('copy')">{{ t('productCenter.formulaSetup.copyVariables') }}</el-button>
         <el-button size="small" type="primary" plain @click="$emit('add')">{{ t('common.add') }}</el-button>
       </div>
@@ -22,7 +22,7 @@
       >
         <div class="internal-variable-row__top">
           <strong>{{ row.variableName || '-' }}</strong>
-          <span class="internal-variable-row__actions">
+          <span v-if="!readonly" class="internal-variable-row__actions">
             <AdminTableActions :actions="variableActions(row)" />
           </span>
         </div>
@@ -43,6 +43,7 @@ const props = defineProps<{
   variables: ProductFormulaVariableVO[]
   variableRules: ProductFormulaVariableRuleVO[]
   t: (key: string) => string
+  readonly?: boolean
 }>()
 
 const emit = defineEmits<{

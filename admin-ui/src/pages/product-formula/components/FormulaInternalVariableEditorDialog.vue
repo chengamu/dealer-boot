@@ -5,6 +5,8 @@
     width="840px"
     class="variable-editor-dialog"
     append-to-body
+    :close-on-press-escape="false"
+    :close-on-click-modal="false"
     @update:model-value="$emit('update:modelValue', $event)"
   >
     <div class="variable-editor">
@@ -35,11 +37,16 @@
       <el-table :data="draftRules" border size="small" row-key="__key" class="variable-rule-table">
         <el-table-column :label="t('productCenter.formulaSetup.valueCondition')" min-width="180">
           <template #default="{ row }">
-            <el-input
-              v-model="row.conditionText"
-              :disabled="row.defaultRuleFlag"
-              :placeholder="conditionPlaceholder(row)"
-            />
+            <div class="variable-editor__condition-cell">
+              <el-input
+                v-model="row.conditionText"
+                :disabled="row.defaultRuleFlag"
+                :placeholder="conditionPlaceholder(row)"
+              />
+              <el-button v-if="!row.defaultRuleFlag" plain @click="openConditionEditor(row)">
+                {{ t('productCenter.formulaSetup.conditionExpressionEditor') }}
+              </el-button>
+            </div>
           </template>
         </el-table-column>
         <el-table-column :label="t('productCenter.formulaSetup.valueType')" width="112">
@@ -53,7 +60,10 @@
         <el-table-column :label="t('productCenter.formulaSetup.valueSummary')" min-width="210">
           <template #default="{ row }">
             <el-input-number v-if="row.valueType !== 'FORMULA'" v-model="row.fixedValue" :precision="2" controls-position="right" />
-            <el-input v-else v-model="row.formulaText" :placeholder="t('productCenter.formulaSetup.usageFormulaPlaceholder')" />
+            <div v-else class="variable-editor__formula-cell">
+              <el-input v-model="row.formulaText" :placeholder="t('productCenter.formulaSetup.usageFormulaPlaceholder')" />
+              <el-button plain @click="openFormulaEditor(row)">{{ t('productCenter.formulaSetup.formulaSelectorShort') }}</el-button>
+            </div>
           </template>
         </el-table-column>
         <el-table-column :label="t('productCenter.formulaSetup.defaultUsageRule')" width="84" align="center">
@@ -68,6 +78,25 @@
         </el-table-column>
       </el-table>
     </div>
+    <FormulaVariableFormulaEditorDialog
+      v-model="formulaEditorOpen"
+      v-model:text="formulaEditorText"
+      :variables="variables"
+      :current-variable="draft"
+      :t="t"
+      @confirm="confirmFormulaEditor"
+    />
+    <FormulaExpressionEditorDialog
+      v-model="conditionEditorOpen"
+      v-model:text="conditionEditorText"
+      target="condition"
+      :materials="materials || []"
+      :options="options || []"
+      :option-values="optionValues || []"
+      :option-materials="optionMaterials || []"
+      :variables="variables"
+      @confirm="confirmConditionEditor"
+    />
     <template #footer>
       <AdminDialogFooter>
         <el-button @click="$emit('update:modelValue', false)">{{ t('common.cancel') }}</el-button>
@@ -80,7 +109,18 @@
 <script setup lang="ts">
 import { watch, reactive, ref } from 'vue'
 import AdminTableActions, { type AdminTableAction } from '@/components/AdminTableActions/index.vue'
-import type { ProductFormulaVariableRuleVO, ProductFormulaVariableVO } from '@/api/product-capability/types'
+import FormulaExpressionEditorDialog from './FormulaExpressionEditorDialog.vue'
+import FormulaVariableFormulaEditorDialog from './FormulaVariableFormulaEditorDialog.vue'
+import { validateConditionExpression } from '../utils/formulaExpression'
+import { normalizeDisplayExpression } from './formulaExpressionDisplay'
+import type {
+  ProductFormulaMaterialVO,
+  ProductFormulaOptionMaterialVO,
+  ProductFormulaOptionVO,
+  ProductFormulaOptionValueVO,
+  ProductFormulaVariableRuleVO,
+  ProductFormulaVariableVO
+} from '@/api/product-capability/types'
 
 type DraftRule = ProductFormulaVariableRuleVO & { __key: string }
 
@@ -88,6 +128,11 @@ const props = defineProps<{
   modelValue: boolean
   variable?: ProductFormulaVariableVO | null
   rules: ProductFormulaVariableRuleVO[]
+  variables: ProductFormulaVariableVO[]
+  materials?: ProductFormulaMaterialVO[]
+  options?: ProductFormulaOptionVO[]
+  optionValues?: ProductFormulaOptionValueVO[]
+  optionMaterials?: ProductFormulaOptionMaterialVO[]
   t: (key: string) => string
 }>()
 
@@ -98,12 +143,18 @@ const emit = defineEmits<{
 
 const draft = reactive<ProductFormulaVariableVO>({})
 const draftRules = ref<DraftRule[]>([])
+const formulaEditorOpen = ref(false)
+const formulaEditorText = ref('')
+const formulaEditorRule = ref<DraftRule>()
+const conditionEditorOpen = ref(false)
+const conditionEditorText = ref('')
+const conditionEditorRule = ref<DraftRule>()
 
 watch(() => props.modelValue, (open) => {
   if (!open) return
   Object.assign(draft, { ...(props.variable || {}), sortOrder: props.variable?.sortOrder ?? 10 })
   draftRules.value = props.rules.length
-    ? props.rules.map((rule, index) => ({ ...rule, __key: String(rule.ruleId || index) }))
+    ? props.rules.map((rule, index) => ({ ...rule, formulaText: rule.formulaText || rule.formulaExpression, __key: String(rule.ruleId || index) }))
     : [emptyRule(true)]
 })
 
@@ -144,6 +195,32 @@ function handleDefaultChange(row: DraftRule) {
   })
 }
 
+function openFormulaEditor(row: DraftRule) {
+  formulaEditorRule.value = row
+  formulaEditorText.value = row.formulaText || row.formulaExpression || ''
+  formulaEditorOpen.value = true
+}
+
+function confirmFormulaEditor() {
+  if (formulaEditorRule.value) formulaEditorRule.value.formulaText = formulaEditorText.value
+  formulaEditorOpen.value = false
+}
+
+function openConditionEditor(row: DraftRule) {
+  conditionEditorRule.value = row
+  conditionEditorText.value = row.conditionText || row.conditionExpression || ''
+  conditionEditorOpen.value = true
+}
+
+function confirmConditionEditor() {
+  const row = conditionEditorRule.value
+  if (!row) return
+  row.conditionText = conditionEditorText.value
+  row.conditionExpression = normalizeDisplayExpression(conditionEditorText.value, props.options || [], props.optionValues || [], props.materials || [], props.variables)
+  if (!validateConditionExpression(row.conditionExpression).valid) row.conditionExpression = undefined
+  conditionEditorOpen.value = false
+}
+
 function conditionPlaceholder(row: DraftRule) {
   return row.defaultRuleFlag
     ? props.t('productCenter.formulaSetup.defaultUsageRule')
@@ -166,59 +243,4 @@ function confirm() {
 }
 </script>
 
-<style scoped>
-.variable-editor {
-  display: grid;
-  gap: 14px;
-}
-
-.variable-editor__base {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px 18px;
-  align-items: start;
-}
-
-.variable-editor__base :deep(.el-form-item) {
-  margin-bottom: 0;
-}
-
-.variable-editor__rule-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.variable-editor__rule-head p {
-  margin: 3px 0 0;
-  color: var(--el-text-color-secondary);
-  font-size: 12px;
-  line-height: 1.4;
-}
-
-.variable-editor :deep(.el-input-number) {
-  width: 100%;
-}
-
-.variable-rule-table {
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.variable-rule-table :deep(.el-table__header th) {
-  background: #f7faff !important;
-  color: #1f2937;
-  font-weight: 700;
-}
-
-.variable-rule-table :deep(.el-table__cell) {
-  padding: 8px 0;
-}
-
-.variable-rule-table :deep(.el-input .el-input__wrapper),
-.variable-rule-table :deep(.el-input-number .el-input__wrapper),
-.variable-rule-table :deep(.el-select .el-select__wrapper) {
-  min-height: 32px;
-  border-radius: 6px;
-}
-</style>
+<style scoped src="./FormulaInternalVariableEditorDialog.css"></style>

@@ -7,6 +7,7 @@
     <div class="usage-editor__actions">
       <el-button plain :icon="MagicStick" @click="$emit('generate-fabric-rules')">{{ t('productCenter.formulaSetup.generateUsageFromFabric') }}</el-button>
       <el-button type="primary" plain :icon="Plus" @click="$emit('add-rule')">{{ t('productCenter.formulaSetup.addUsageRule') }}</el-button>
+      <el-button plain :icon="Setting" @click="$emit('manage-variables')">{{ t('productCenter.formulaSetup.variableEditor') }}</el-button>
       <el-button plain :icon="CopyDocument" :disabled="!selectedRule" @click="$emit('copy-rule')">{{ t('common.copy') }}</el-button>
       <el-button type="danger" plain :icon="Delete" :disabled="!selectedRule" @click="$emit('remove-rule')">{{ t('common.delete') }}</el-button>
     </div>
@@ -66,7 +67,7 @@
 </template>
 
 <script setup lang="ts">
-import { CopyDocument, Delete, MagicStick, Plus } from '@element-plus/icons-vue'
+import { CopyDocument, Delete, MagicStick, Plus, Setting } from '@element-plus/icons-vue'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 import FormulaUsageConditionEditor from './FormulaUsageConditionEditor.vue'
@@ -89,6 +90,7 @@ defineEmits<{
   'update:selectedRule': [row: ProductFormulaUsageRuleVO | null]
   'generate-fabric-rules': []
   'add-rule': []
+  'manage-variables': []
   'copy-rule': []
   'remove-rule': []
   'default-rule-change': [row: ProductFormulaUsageRuleVO]

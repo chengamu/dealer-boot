@@ -1,0 +1,61 @@
+.variable-editor {
+  display: grid;
+  gap: 14px;
+}
+
+.variable-editor__base {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 18px;
+  align-items: start;
+}
+
+.variable-editor__base :deep(.el-form-item) {
+  margin-bottom: 0;
+}
+
+.variable-editor__rule-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.variable-editor__rule-head p {
+  margin: 3px 0 0;
+  color: var(--el-text-color-secondary);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.variable-editor :deep(.el-input-number) {
+  width: 100%;
+}
+
+.variable-editor__formula-cell,
+.variable-editor__condition-cell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.variable-rule-table {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.variable-rule-table :deep(.el-table__header th) {
+  background: #f7faff !important;
+  color: #1f2937;
+  font-weight: 700;
+}
+
+.variable-rule-table :deep(.el-table__cell) {
+  padding: 8px 0;
+}
+
+.variable-rule-table :deep(.el-input .el-input__wrapper),
+.variable-rule-table :deep(.el-input-number .el-input__wrapper),
+.variable-rule-table :deep(.el-select .el-select__wrapper) {
+  min-height: 32px;
+  border-radius: 6px;
+}

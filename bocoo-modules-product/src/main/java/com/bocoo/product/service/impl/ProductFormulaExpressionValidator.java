@@ -69,6 +69,9 @@ final class ProductFormulaExpressionValidator {
     }
 
     static String variableName(String variableCode) {
+        if (variableCode != null && variableCode.startsWith("var_")) {
+            return variableCode;
+        }
         return "var_" + variableCode;
     }
     static boolean evaluateCondition(String expression, Map<String, Object> context) {

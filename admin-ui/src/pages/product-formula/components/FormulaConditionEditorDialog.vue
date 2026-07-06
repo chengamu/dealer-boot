@@ -5,6 +5,8 @@
     width="min(980px, calc(100vw - 32px))"
     class="formula-condition-dialog"
     append-to-body
+    :close-on-press-escape="false"
+    :close-on-click-modal="false"
     @update:model-value="$emit('update:modelValue', $event)"
   >
     <div class="formula-condition-editor">

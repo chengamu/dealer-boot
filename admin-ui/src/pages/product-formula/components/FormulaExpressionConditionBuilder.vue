@@ -23,15 +23,18 @@
       <h4>{{ t('productCenter.formulaSetup.materialAttributes') }}</h4>
       <div class="condition-builder__row condition-builder__row--material" :class="{ 'condition-builder__row--with-joiner': hasText }">
         <el-select v-model="materialBuilder.role" class="condition-builder__role" filterable @change="materialBuilder.field = ''">
-          <el-option v-for="option in optionChoices" :key="option.value" :label="option.label" :value="option.value" />
+          <el-option v-for="group in materialGroupChoices" :key="group.name" :label="group.label" :value="group.name" />
         </el-select>
         <el-select v-model="materialBuilder.field" class="condition-builder__field" filterable>
-          <el-option v-for="attribute in materialAttributeChoices" :key="attribute.value" :label="attribute.label" :value="attribute.value" />
+          <el-option v-for="field in materialFieldChoices" :key="field.name" :label="field.label" :value="field.name" />
         </el-select>
         <el-select v-model="materialBuilder.operator" class="condition-builder__operator">
           <el-option v-for="operator in conditionOperators" :key="operator" :label="operator" :value="operator" />
         </el-select>
-        <el-input v-model="materialBuilder.value" class="condition-builder__value" :placeholder="t('productCenter.formulaSetup.conditionValue')" />
+        <el-select v-if="materialValueOptions.length" v-model="materialBuilder.value" class="condition-builder__value" filterable>
+          <el-option v-for="value in materialValueOptions" :key="value.valueCode" :label="valueLabel(value)" :value="value.valueCode || ''" />
+        </el-select>
+        <el-input v-else v-model="materialBuilder.value" class="condition-builder__value" :placeholder="t('productCenter.formulaSetup.conditionValue')" />
         <span class="condition-builder__break" />
         <FormulaExpressionJoinerSelect v-if="hasText" v-model="materialBuilder.joiner" />
         <el-button class="condition-builder__action" type="primary" plain @click="appendMaterialCondition">{{ t('productCenter.formulaSetup.insertCondition') }}</el-button>
@@ -63,7 +66,6 @@ import { useLocaleStore } from '@/stores/locale'
 import { formulaVariables } from '../utils/formulaExpression'
 import { optionVariableName } from './formulaExpressionDisplay'
 import FormulaExpressionJoinerSelect from './FormulaExpressionJoinerSelect.vue'
-import { materialAttributeOptions, optionSelectOptions } from './formulaConditionEditor'
 import {
   buildConditionText,
   ensureBuilderField,
@@ -103,7 +105,18 @@ const conditionOperators = ['=', '!=', '>', '>=', '<', '<=']
 const businessBuilder = reactive<BuilderState>({ field: 'productType', operator: '=', value: '', joiner: '并且' })
 const materialBuilder = reactive<MaterialBuilderState>({ role: '', field: 'materialType', operator: '=', value: '', joiner: '并且' })
 const orderBuilder = reactive<BuilderState>({ field: 'orderWidthIn', operator: '=', value: '', joiner: '并且' })
-const optionChoices = computed(() => optionSelectOptions(props.options || []))
+const materialGroupChoices = computed<ConditionField[]>(() => {
+  const map = new Map<string, ConditionField>()
+  ;(props.materials || []).forEach((material) => {
+    if (!material.attributeGroupCode || map.has(material.attributeGroupCode)) return
+    map.set(material.attributeGroupCode, {
+      label: material.attributeGroupNameCn || material.attributeGroupCode,
+      name: material.attributeGroupCode,
+      insert: material.attributeGroupNameCn || material.attributeGroupCode
+    })
+  })
+  return Array.from(map.values())
+})
 
 const businessFields = computed<ConditionField[]>(() => {
   const optionFields = (props.options || []).map((option) => ({
@@ -126,16 +139,43 @@ const orderFields = computed(() => formulaVariables
 )
 
 const selectedOrderField = computed(() => orderFields.value.find((field) => field.name === orderBuilder.field))
-const materialAttributeChoices = computed(() => materialAttributeOptions(materialBuilder.role, props.options || [], props.optionMaterials || [], props.materials || []))
+const selectedMaterialGroup = computed(() => materialGroupChoices.value.find((group) => group.name === materialBuilder.role))
+const materialFieldChoices = computed<ConditionField[]>(() => {
+  const rows = materialsInGroup(materialBuilder.role)
+  const fields: ConditionField[] = [
+    { label: t('productCenter.formulaSetup.materialType'), name: 'materialType', insert: `${selectedMaterialGroup.value?.insert || ''}.物料类型`, stringValue: true },
+    { label: t('productCenter.formulaSetup.materialCode'), name: 'materialCode', insert: `${selectedMaterialGroup.value?.insert || ''}.物料编码`, stringValue: true },
+    { label: t('productCenter.formulaSetup.materialName'), name: 'materialName', insert: `${selectedMaterialGroup.value?.insert || ''}.物料名称`, stringValue: true },
+    { label: t('productCenter.formulaSetup.attributeGroup'), name: 'attributeGroup', insert: `${selectedMaterialGroup.value?.insert || ''}.属性分组`, stringValue: true }
+  ]
+  const attributes = new Map<string, ConditionField>()
+  rows.flatMap((material) => material.attributeList || []).forEach((attribute) => {
+    if (!attribute.attributeCode || attributes.has(attribute.attributeCode)) return
+    const allValues = rows.flatMap((material) => material.attributeList || []).filter((item) => item.attributeCode === attribute.attributeCode)
+    attributes.set(attribute.attributeCode, {
+      label: attribute.attributeNameCn || attribute.attributeNameEn || attribute.attributeCode,
+      name: attribute.attributeCode,
+      insert: `${selectedMaterialGroup.value?.insert || ''}.${attribute.attributeNameCn || attribute.attributeCode}`,
+      stringValue: !allValues.some((item) => item.valueNumber !== undefined && item.valueNumber !== null)
+    })
+  })
+  return fields.concat(Array.from(attributes.values()))
+})
+const selectedMaterialField = computed(() => materialFieldChoices.value.find((field) => field.name === materialBuilder.field))
+const materialValueOptions = computed<ConditionValue[]>(() => materialValueOptionsFor(materialBuilder.role, materialBuilder.field))
 
 watch(businessFields, () => ensureBuilderField(businessBuilder, businessFields.value), { immediate: true })
 watch(() => businessBuilder.field, () => resetBuilderValue(businessBuilder, businessValueOptions.value))
-watch(optionChoices, () => {
-  materialBuilder.role = optionChoices.value.some((option) => option.value === materialBuilder.role) ? materialBuilder.role : optionChoices.value[0]?.value || ''
-  materialBuilder.field = materialAttributeChoices.value.some((attribute) => attribute.value === materialBuilder.field) ? materialBuilder.field : materialAttributeChoices.value[0]?.value || ''
+watch(materialGroupChoices, () => {
+  materialBuilder.role = materialGroupChoices.value.some((group) => group.name === materialBuilder.role) ? materialBuilder.role : materialGroupChoices.value[0]?.name || ''
+  materialBuilder.field = materialFieldChoices.value.some((field) => field.name === materialBuilder.field) ? materialBuilder.field : materialFieldChoices.value[0]?.name || ''
 }, { immediate: true })
 watch(() => materialBuilder.role, () => {
-  materialBuilder.field = materialAttributeChoices.value[0]?.value || ''
+  materialBuilder.field = materialFieldChoices.value[0]?.name || ''
+  resetBuilderValue(materialBuilder, materialValueOptions.value)
+})
+watch(() => materialBuilder.field, () => {
+  resetBuilderValue(materialBuilder, materialValueOptions.value)
 })
 
 function appendBusinessCondition() {
@@ -143,14 +183,8 @@ function appendBusinessCondition() {
 }
 
 function appendMaterialCondition() {
-  const option = optionChoices.value.find((item) => item.value === materialBuilder.role)
-  const attribute = materialAttributeChoices.value.find((item) => item.value === materialBuilder.field)
-  if (!option || !attribute) return
-  appendCondition({
-    label: attribute.label,
-    name: `${option.value}.${attribute.value}`,
-    insert: `${option.label}.${attribute.label}`
-  }, materialBuilder, [])
+  if (!selectedMaterialGroup.value) return
+  appendCondition(selectedMaterialField.value, materialBuilder, materialValueOptions.value)
 }
 
 function appendOrderCondition() {
@@ -169,6 +203,54 @@ function optionValuesFor(optionCode?: string) {
     const valueOwnerKey = valueOwnerClientKey(value)
     return valueOwnerKey ? valueOwnerKey === ownerKey : value.optionCode === optionCode
   })
+}
+
+function materialsInGroup(groupCode?: string) {
+  return (props.materials || []).filter((material) => !groupCode || material.attributeGroupCode === groupCode)
+}
+
+function materialValueOptionsFor(groupCode: string, fieldName: string): ConditionValue[] {
+  const rows = materialsInGroup(groupCode)
+  if (fieldName === 'materialType') {
+    return distinctMaterialValues(rows.map((material) => ({
+      valueCode: material.materialTypeCode,
+      valueNameCn: material.materialTypeNameCn || material.materialTypeCode,
+      label: material.materialTypeNameCn && material.materialTypeNameCn !== material.materialTypeCode
+        ? `${material.materialTypeNameCn} (${material.materialTypeCode})`
+        : material.materialTypeCode
+    })))
+  }
+  if (fieldName === 'materialCode') {
+    return distinctMaterialValues(rows.map((material) => ({
+      valueCode: material.materialCode,
+      valueNameCn: material.materialCode,
+      label: `${material.materialCode || ''} ${material.materialNameCn || ''}`.trim()
+    })))
+  }
+  if (fieldName === 'materialName') {
+    return distinctMaterialValues(rows.map((material) => ({
+      valueCode: material.materialNameCn,
+      valueNameCn: material.materialNameCn,
+      label: material.materialNameCn
+    })))
+  }
+  if (fieldName === 'attributeGroup') {
+    return distinctMaterialValues(rows.map((material) => ({
+      valueCode: material.attributeGroupCode,
+      valueNameCn: material.attributeGroupNameCn || material.attributeGroupCode,
+      label: material.attributeGroupNameCn || material.attributeGroupCode
+    })))
+  }
+  return []
+}
+
+function distinctMaterialValues(values: ConditionValue[]) {
+  const map = new Map<string, ConditionValue>()
+  values.forEach((value) => {
+    if (!value.valueCode || map.has(value.valueCode)) return
+    map.set(value.valueCode, value)
+  })
+  return Array.from(map.values())
 }
 
 </script>

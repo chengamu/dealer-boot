@@ -13,6 +13,7 @@ export type ConditionValue = {
   valueCode?: string
   valueNameCn?: string
   valueNameEn?: string
+  label?: string
 }
 
 export type ConditionField = {
@@ -41,6 +42,7 @@ export function resetBuilderValue(builder: BuilderState, values: ConditionValue[
 }
 
 export function valueLabel(value: ConditionValue) {
+  if (value.label) return value.label
   return value.valueNameCn && value.valueNameCn !== value.valueCode ? `${value.valueNameCn} (${value.valueCode})` : value.valueCode || '-'
 }
 

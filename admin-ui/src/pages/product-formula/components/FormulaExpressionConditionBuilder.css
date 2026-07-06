@@ -39,6 +39,11 @@
   flex: 0 0 180px;
 }
 
+.condition-builder__section--business .condition-builder__value,
+.condition-builder__section--order .condition-builder__value {
+  flex-basis: 150px;
+}
+
 .condition-builder__break {
   display: none;
 }
