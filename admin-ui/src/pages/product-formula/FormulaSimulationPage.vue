@@ -28,7 +28,6 @@
       :room="room"
       :hidden-count="hiddenOptionCount"
       :show-validation="showValidation"
-      :value-label="optionValueLabel"
       :disabled-option-values="disabledOptionValues"
       :restriction-messages="restrictionMessages"
       @update:quantity="quantity = $event"
@@ -103,10 +102,12 @@ const visibleOptions = computed(() => orderedOptions.value.filter((option) => is
 const enabledOptionMaterials = computed(() => sortRows((setup.value.optionMaterials || []).filter((row) => row.status === PRODUCT_STATUS_ENABLED)))
 const hiddenOptionCount = computed(() => Math.max(0, orderedOptions.value.length - visibleOptions.value.length))
 const simulationStatus = computed(() => result.value.status || formula.value.simulationValidationStatus || FORMULA_VALIDATION_STATUS.NOT_VALIDATED)
-const { disabledOptionValues, restrictionMessages, hasRestrictedSelection } = useFormulaSimulationRestrictions({
+const { disabledOptionValues, restrictionMessages, hasBlockingRestriction, blockingRestrictionMessages } = useFormulaSimulationRestrictions({
   form,
   formula,
   restrictions: computed(() => setup.value.restrictions || []),
+  materials: computed(() => setup.value.materials || []),
+  optionMaterials: enabledOptionMaterials,
   selectedOptionValues
 })
 
@@ -285,14 +286,14 @@ function validateBeforeSubmit() {
     ElMessage.warning(t('productCenter.formulaSimulation.requiredMissing'))
     return false
   }
-  if (hasRestrictedSelection.value) {
-    ElMessage.warning(t('product.formula.simulationRestrictionHit'))
+  if (hasBlockingRestriction.value) {
+    const message = blockingRestrictionMessages.value[0] || 'product.formula.simulationRestrictionHit'
+    result.value = { ...runPayload(), formulaId: Number(currentFormulaId.value), status: 'FAIL', message }
+    ElMessage.warning(messageText(message))
     return false
   }
   return true
 }
 
-onMounted(async () => {
-  await loadFormulaOptions()
-})
+onMounted(async () => { await loadFormulaOptions() })
 </script>

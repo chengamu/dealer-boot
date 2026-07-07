@@ -66,7 +66,6 @@ const props = defineProps<{
   room: string
   hiddenCount: number
   showValidation: boolean
-  valueLabel: (optionCode?: string, valueCode?: string) => string
   disabledOptionValues: Record<string, string[]>
   restrictionMessages: Record<string, string[]>
 }>()

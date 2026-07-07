@@ -1,10 +1,10 @@
 <template>
   <div class="simulation-inch-input">
-    <el-input-number
-      :model-value="wholeInch"
-      :controls="false"
-      :precision="0"
-      :min="0"
+    <el-input
+      :model-value="wholeInput"
+      type="number"
+      min="0"
+      inputmode="numeric"
       @update:model-value="updateWhole"
     />
     <el-select :model-value="fractionValue" @change="updateFraction(String($event || ''))">
@@ -42,9 +42,11 @@ const fractionValue = computed(() => {
   const match = fractionOptions.slice(1).find((item) => Math.abs(Number(item.value) - fraction) < 0.001)
   return match?.value || ''
 })
+const wholeInput = computed(() => wholeInch.value == null ? '' : String(wholeInch.value))
 
-function updateWhole(value?: number | null) {
-  emitValue(value ?? undefined, fractionValue.value)
+function updateWhole(value: string | number) {
+  const whole = value === '' ? undefined : Math.floor(Math.max(0, Number(value)))
+  emitValue(Number.isFinite(whole) ? whole : undefined, fractionValue.value)
 }
 
 function updateFraction(value: string) {

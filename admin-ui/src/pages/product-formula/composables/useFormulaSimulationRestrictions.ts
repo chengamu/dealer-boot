@@ -1,7 +1,8 @@
 import jsep from 'jsep'
 import { computed, type Ref } from 'vue'
 import { normalizeConditionExpression } from '../utils/formulaExpression'
-import type { ProductFormulaRestrictionVO, ProductFormulaSimulationBO, ProductFormulaVO } from '@/api/product-capability/types'
+import { materialAttributeVariableName } from '../components/formulaExpressionDisplay'
+import type { ProductFormulaMaterialVO, ProductFormulaOptionMaterialVO, ProductFormulaRestrictionVO, ProductFormulaSimulationBO, ProductFormulaVO } from '@/api/product-capability/types'
 
 type ExpressionNode = {
   type: string
@@ -17,6 +18,8 @@ type SimulationRestrictionOptions = {
   form: ProductFormulaSimulationBO
   formula: Ref<ProductFormulaVO>
   restrictions: Ref<ProductFormulaRestrictionVO[]>
+  materials: Ref<ProductFormulaMaterialVO[]>
+  optionMaterials: Ref<ProductFormulaOptionMaterialVO[]>
   selectedOptionValues: Record<string, string>
 }
 
@@ -50,12 +53,17 @@ export function useFormulaSimulationRestrictions(options: SimulationRestrictionO
     return selectedCodes.some((code) => disabledCodes.includes('*') || disabledCodes.includes(code))
   }))
 
-  function context(): Record<string, number | string> {
+  const blockingRestrictionMessages = computed(() => matchedRestrictions.value
+    .filter((row) => !row.targetOptionCode)
+    .map((row) => row.messageText || 'product.formula.simulationRestrictionHit'))
+  const hasBlockingRestriction = computed(() => blockingRestrictionMessages.value.length > 0 || hasRestrictedSelection.value)
+
+  function context(): Record<string, number | boolean | string> {
     const widthIn = Number(options.form.orderWidth || 0)
     const lengthIn = Number(options.form.orderHeight || 0)
     const widthCm = widthIn * 2.54
     const lengthCm = lengthIn * 2.54
-    const ctx: Record<string, number | string> = {
+    const ctx: Record<string, number | boolean | string> = {
       orderWidthIn: widthIn,
       orderLengthIn: lengthIn,
       orderWidthCm: widthCm,
@@ -68,20 +76,66 @@ export function useFormulaSimulationRestrictions(options: SimulationRestrictionO
     Object.entries(options.selectedOptionValues).forEach(([code, value]) => {
       ctx[`option_${code}`] = value
     })
+    Object.assign(ctx, selectedOptionMaterialContext())
     return ctx
   }
 
-  return { disabledOptionValues, restrictionMessages, hasRestrictedSelection }
+  function selectedOptionMaterialContext(): Record<string, number | boolean | string> {
+    const materialMap = new Map(options.materials.value
+      .filter((row) => row.status === 'ENABLED' && row.materialCode)
+      .map((row) => [row.materialCode, row]))
+    const ctx: Record<string, number | boolean | string> = {}
+    sortOptionMaterials(options.optionMaterials.value)
+      .filter((row) => row.status === 'ENABLED' && selectedMatches(options.selectedOptionValues[row.optionCode || ''], row.valueCode))
+      .forEach((row) => applyOptionMaterialContext(ctx, row.optionCode, materialMap.get(row.materialCode || '')))
+    return ctx
+  }
+
+  return { disabledOptionValues, restrictionMessages, hasRestrictedSelection, hasBlockingRestriction, blockingRestrictionMessages }
 }
 
-function restrictionMatched(row: ProductFormulaRestrictionVO, ctx: Record<string, number | string>) {
+function sortOptionMaterials(rows: ProductFormulaOptionMaterialVO[]) {
+  return [...rows].sort((left, right) => {
+    const defaultCompared = defaultRank(left.defaultFlag) - defaultRank(right.defaultFlag)
+    return defaultCompared || (left.sortOrder ?? 999999) - (right.sortOrder ?? 999999)
+  })
+}
+
+function defaultRank(value?: boolean) {
+  if (value === true) return 0
+  if (value === false) return 1
+  return 2
+}
+
+function applyOptionMaterialContext(ctx: Record<string, number | boolean | string>, optionCode?: string, material?: ProductFormulaMaterialVO) {
+  if (!optionCode || !material) return
+  putIfEmpty(ctx, materialAttributeVariableName(optionCode, 'materialType'), material.materialTypeCode)
+  putIfEmpty(ctx, materialAttributeVariableName(optionCode, 'materialCode'), material.materialCode)
+  putIfEmpty(ctx, materialAttributeVariableName(optionCode, 'materialName'), material.materialNameCn)
+  const attributes = material.attributeList || []
+  attributes.forEach((attribute) => {
+    putIfEmpty(ctx, materialAttributeVariableName(optionCode, attribute.attributeCode), attributeValue(attribute))
+  })
+}
+
+function attributeValue(attribute: NonNullable<ProductFormulaMaterialVO['attributeList']>[number]) {
+  if (attribute.valueNumber !== undefined && attribute.valueNumber !== null) return attribute.valueNumber
+  if (attribute.valueBool !== undefined && attribute.valueBool !== null) return String(attribute.valueBool) === 'true'
+  return attribute.valueText || ''
+}
+
+function putIfEmpty(ctx: Record<string, number | boolean | string>, key: string, value?: number | boolean | string) {
+  if (ctx[key] === undefined && value !== undefined && value !== null) ctx[key] = value
+}
+
+function restrictionMatched(row: ProductFormulaRestrictionVO, ctx: Record<string, number | boolean | string>) {
   if (row.conditionType === 'WIDTH') return compareNumber(ctx.orderWidthIn, row.conditionValueNumber, row.conditionOperator)
   if (row.conditionType === 'HEIGHT') return compareNumber(ctx.orderLengthIn, row.conditionValueNumber, row.conditionOperator)
   if (row.conditionType === 'OPTION_VALUE') return compareString(ctx[`option_${row.conditionOptionCode}`], row.conditionValueCode, row.conditionOperator)
   return evaluateCondition(row.conditionExpression || row.conditionText, ctx)
 }
 
-function evaluateCondition(expressionText: string | undefined, ctx: Record<string, number | string>) {
+function evaluateCondition(expressionText: string | undefined, ctx: Record<string, number | boolean | string>) {
   const expression = normalizeConditionExpression(expressionText)
   if (!expression) return false
   try {
@@ -91,7 +145,7 @@ function evaluateCondition(expressionText: string | undefined, ctx: Record<strin
   }
 }
 
-function evaluate(node: ExpressionNode, ctx: Record<string, number | string>): number | boolean | string {
+function evaluate(node: ExpressionNode, ctx: Record<string, number | boolean | string>): number | boolean | string {
   if (node.type === 'Literal') return node.value as number | string
   if (node.type === 'Identifier') return ctx[node.name || ''] ?? ''
   if (node.type === 'UnaryExpression') {
@@ -136,7 +190,9 @@ function compareString(left: unknown, right: unknown, operator?: string) {
 }
 
 function selectedMatches(left: unknown, right: unknown) {
-  return splitCodes(String(left || '')).includes(String(right || ''))
+  const leftText = String(left || '')
+  const rightText = String(right || '')
+  return leftText === rightText || splitCodes(leftText).includes(rightText) || splitCodes(rightText).includes(leftText)
 }
 
 function splitCodes(value?: string) {

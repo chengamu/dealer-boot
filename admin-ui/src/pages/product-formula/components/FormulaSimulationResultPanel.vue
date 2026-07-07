@@ -52,6 +52,9 @@
           <el-table-column :label="t('productCenter.formulaSimulation.usageQty')" width="110" align="right">
             <template #default="{ row }">{{ quantityFormat(row.usageQty) }}</template>
           </el-table-column>
+          <el-table-column :label="t('productCenter.formulaSetup.lossRate')" width="96" align="right">
+            <template #default="{ row }">{{ percentFormat(row.lossRate) }}</template>
+          </el-table-column>
           <el-table-column :label="t('productCenter.formulaSimulation.unitPrice')" width="110" align="right">
             <template #default="{ row }">{{ moneyFormat(row.unitPrice) }}</template>
           </el-table-column>
@@ -112,6 +115,10 @@ function linkedMaterialSummary(optionCode?: string) {
   const materials = selectedMaterials(optionCode)
   return materials.map((row) => row.materialNameCn || row.materialCode).filter(Boolean).slice(0, 3).join('、')
     + (materials.length > 3 ? ` +${materials.length - 3}` : '')
+}
+
+function percentFormat(value?: number) {
+  return value == null ? '-' : `${Number(value).toFixed(2)}%`
 }
 
 function splitCodes(value?: string) {

@@ -164,6 +164,116 @@ class ProductFormulaSimulationServiceImplTest {
         assertThat(result.getMessage()).isEqualTo("product.formula.simulationRestrictionHit");
     }
 
+    @Test
+    void runAppliesWholeOrderRestrictionWithoutTargetOption() {
+        ProductFormulaSetupVo setup = setup();
+        ProductFormulaRestrictionVo restriction = restriction();
+        restriction.setTargetOptionCode(null);
+        restriction.setTargetValueCode(null);
+        setup.setRestrictions(List.of(restriction));
+        when(setupService.querySetup(3001L)).thenReturn(setup);
+        ProductFormulaSimulationBo bo = simulationBo(Map.of("FABRIC", "MAT001"));
+        bo.setOrderWidth(new BigDecimal("130"));
+
+        ProductFormulaSimulationVo result = service.run(3001L, bo);
+
+        assertThat(result.getStatus()).isEqualTo("FAIL");
+        assertThat(result.getMessage()).isEqualTo("product.formula.simulationRestrictionHit");
+    }
+
+    @Test
+    void runMatchesExpressionRestrictionWhenOptionIsMultiSelected() {
+        ProductFormulaSetupVo setup = setup();
+        setup.setOptionValues(List.of(
+            optionValue(),
+            optionValue("FABRIC", "MAT002", "备用面料")
+        ));
+        ProductFormulaRestrictionVo restriction = restriction();
+        restriction.setConditionType("EXPRESSION");
+        restriction.setConditionExpression("fabric == \"MAT001\"");
+        setup.setRestrictions(List.of(restriction));
+        when(setupService.querySetup(3001L)).thenReturn(setup);
+
+        ProductFormulaSimulationVo result = service.run(3001L, simulationBo(Map.of("FABRIC", "MAT001,MAT002")));
+
+        assertThat(result.getStatus()).isEqualTo("FAIL");
+        assertThat(result.getMessage()).isEqualTo("product.formula.simulationRestrictionHit");
+    }
+
+    @Test
+    void runDoesNotApplyMaterialLossRateWhenFormulaRuleMatches() {
+        ProductFormulaSetupVo setup = setup();
+        ProductFormulaMaterialVo material = material();
+        material.setLossRate(new BigDecimal("10"));
+        setup.setMaterials(List.of(material));
+        when(setupService.querySetup(3001L)).thenReturn(setup);
+
+        ProductFormulaSimulationVo result = service.run(3001L, simulationBo(Map.of("FABRIC", "MAT001")));
+
+        assertThat(result.getStatus()).isEqualTo("PASS");
+        assertThat(result.getItems().get(0).getUsageQty()).isEqualByComparingTo("50.80");
+    }
+
+    @Test
+    void runDoesNotApplyUsageRuleLossRateWhenFormulaRuleMatches() {
+        ProductFormulaSetupVo setup = setup();
+        setup.getUsageRules().get(0).setLossRate(new BigDecimal("10"));
+        when(setupService.querySetup(3001L)).thenReturn(setup);
+
+        ProductFormulaSimulationVo result = service.run(3001L, simulationBo(Map.of("FABRIC", "MAT001")));
+
+        assertThat(result.getStatus()).isEqualTo("PASS");
+        assertThat(result.getItems().get(0).getUsageQty()).isEqualByComparingTo("50.80");
+    }
+
+    @Test
+    void runMatchesOptionValueUsageRuleWhenOptionIsMultiSelected() {
+        ProductFormulaSetupVo setup = setup();
+        setup.setOptionValues(List.of(
+            optionValue(),
+            optionValue("FABRIC", "MAT002", "备用面料")
+        ));
+        when(setupService.querySetup(3001L)).thenReturn(setup);
+
+        ProductFormulaSimulationVo result = service.run(3001L, simulationBo(Map.of("FABRIC", "MAT001,MAT002")));
+
+        assertThat(result.getStatus()).isEqualTo("PASS");
+        assertThat(result.getItems().get(0).getUsageQty()).isEqualByComparingTo("50.80");
+    }
+
+    @Test
+    void runDoesNotApplyMaterialLossWhenNoUsageRuleExists() {
+        ProductFormulaSetupVo setup = setup();
+        ProductFormulaMaterialVo material = material();
+        material.setFixedUsageQty(new BigDecimal("2"));
+        material.setLossRate(new BigDecimal("10"));
+        setup.setMaterials(List.of(material));
+        setup.setUsageRules(List.of());
+        when(setupService.querySetup(3001L)).thenReturn(setup);
+
+        ProductFormulaSimulationVo result = service.run(3001L, simulationBo(Map.of("FABRIC", "MAT001")));
+
+        assertThat(result.getStatus()).isEqualTo("PASS");
+        assertThat(result.getItems().get(0).getUsageQty()).isEqualByComparingTo("2.00");
+    }
+
+    @Test
+    void runMultipliesDimensionFormulaFieldsWhenUsageFormulaIsBlank() {
+        ProductFormulaSetupVo setup = setup();
+        ProductFormulaUsageRuleVo rule = usageRule(true);
+        rule.setUsageFormula(null);
+        rule.setLengthFormula("orderWidthCm");
+        rule.setWidthFormula("2");
+        rule.setHeightFormula("3");
+        setup.setUsageRules(List.of(rule));
+        when(setupService.querySetup(3001L)).thenReturn(setup);
+
+        ProductFormulaSimulationVo result = service.run(3001L, simulationBo(Map.of("FABRIC", "MAT001")));
+
+        assertThat(result.getStatus()).isEqualTo("PASS");
+        assertThat(result.getItems().get(0).getUsageQty()).isEqualByComparingTo("152.40");
+    }
+
     private ProductFormula formula() {
         ProductFormula formula = new ProductFormula();
         formula.setFormulaId(3001L);

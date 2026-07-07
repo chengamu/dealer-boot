@@ -14,6 +14,7 @@ import com.bocoo.product.mapper.ProductFormulaVersionMapper;
 import com.bocoo.product.service.impl.ProductFormulaDraftNormalizer;
 import com.bocoo.product.service.impl.ProductFormulaReviewLifecycle;
 import com.bocoo.product.service.impl.ProductFormulaReviewQueryService;
+import com.bocoo.product.service.impl.ProductFormulaReviewRecordQueryService;
 import com.bocoo.product.service.impl.ProductFormulaServiceImpl;
 import com.bocoo.product.service.impl.ProductFormulaSnapshotJson;
 import org.junit.jupiter.api.BeforeEach;
@@ -76,7 +77,8 @@ class ProductFormulaServiceTest {
             changeLogService,
             draftNormalizer,
             reviewLifecycle,
-            new ProductFormulaReviewQueryService(versionMapper)
+            new ProductFormulaReviewQueryService(versionMapper),
+            new ProductFormulaReviewRecordQueryService(versionMapper)
         );
     }
 

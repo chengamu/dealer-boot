@@ -215,11 +215,9 @@ final class ProductFormulaExpressionParser {
     }
 
     private boolean compare(Object left, Object right, String operator) {
-        if ("==".equals(operator)) {
-            return String.valueOf(left).equals(String.valueOf(right));
-        }
-        if ("!=".equals(operator)) {
-            return !String.valueOf(left).equals(String.valueOf(right));
+        if ("==".equals(operator) || "!=".equals(operator)) {
+            boolean matches = expressionEquals(left, right);
+            return "!=".equals(operator) ? !matches : matches;
         }
         double leftNumber = toNumber(left);
         double rightNumber = toNumber(right);
@@ -230,6 +228,14 @@ final class ProductFormulaExpressionParser {
             case "<=" -> leftNumber <= rightNumber;
             default -> throw new IllegalArgumentException("invalid comparison");
         };
+    }
+
+    private boolean expressionEquals(Object left, Object right) {
+        String leftText = left == null ? "" : String.valueOf(left);
+        String rightText = right == null ? "" : String.valueOf(right);
+        return leftText.equals(rightText)
+            || ProductFormulaSimulationSelections.selectedValueMatches(leftText, rightText)
+            || ProductFormulaSimulationSelections.selectedValueMatches(rightText, leftText);
     }
 
     private boolean match(String token) {

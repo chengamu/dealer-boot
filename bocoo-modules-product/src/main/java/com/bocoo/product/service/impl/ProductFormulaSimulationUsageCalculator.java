@@ -1,18 +1,20 @@
 package com.bocoo.product.service.impl;
+
 import com.bocoo.common.core.utils.StringUtils;
 import com.bocoo.product.domain.entity.ProductMaterial;
 import com.bocoo.product.domain.vo.ProductFormulaMaterialVo;
 import com.bocoo.product.domain.vo.ProductFormulaSimulationItemVo;
 import com.bocoo.product.domain.vo.ProductFormulaUsageRuleVo;
 import org.springframework.stereotype.Component;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
+
 @Component
 class ProductFormulaSimulationUsageCalculator {
     ProductFormulaSimulationItemVo buildItem(ProductFormulaMaterialVo material, ProductMaterial source,
@@ -50,7 +52,8 @@ class ProductFormulaSimulationUsageCalculator {
                 continue;
             }
             if ("OPTION_VALUE".equals(rule.getConditionType())
-                && Objects.equals(context.get("option_" + rule.getConditionOptionCode()), rule.getConditionValueCode())) {
+                && ProductFormulaSimulationSelections.selectedValueMatches(
+                    stringValue(context.get("option_" + rule.getConditionOptionCode())), rule.getConditionValueCode())) {
                 return rule;
             }
             if ("EXPRESSION".equals(rule.getConditionType())
@@ -98,13 +101,13 @@ class ProductFormulaSimulationUsageCalculator {
 
     private BigDecimal resolveUsageQty(ProductFormulaMaterialVo material, ProductFormulaUsageRuleVo rule, Map<String, Object> context) {
         if (rule == null) {
-            return applyLimitsAndLoss(material.getFixedUsageQty() == null ? BigDecimal.ONE : material.getFixedUsageQty(),
-                material.getMinUsageQty(), material.getMaxUsageQty(), material.getLossRate());
+            return applyLimits(material.getFixedUsageQty() == null ? BigDecimal.ONE : material.getFixedUsageQty(),
+                material.getMinUsageQty(), material.getMaxUsageQty());
         }
         BigDecimal usageQty = "FIXED".equals(rule.getUsageMode())
             ? Optional.ofNullable(rule.getFixedUsageQty()).orElse(BigDecimal.ONE)
             : formulaUsageQty(rule, context);
-        return applyLimitsAndLoss(usageQty, rule.getMinUsageQty(), rule.getMaxUsageQty(), rule.getLossRate());
+        return applyLimits(usageQty, rule.getMinUsageQty(), rule.getMaxUsageQty());
     }
     private BigDecimal formulaUsageQty(ProductFormulaUsageRuleVo rule, Map<String, Object> context) {
         if (StringUtils.isNotBlank(rule.getUsageFormula())) {
@@ -128,11 +131,8 @@ class ProductFormulaSimulationUsageCalculator {
         }
         return result;
     }
-    private BigDecimal applyLimitsAndLoss(BigDecimal usageQty, BigDecimal minUsageQty, BigDecimal maxUsageQty, BigDecimal lossRate) {
+    private BigDecimal applyLimits(BigDecimal usageQty, BigDecimal minUsageQty, BigDecimal maxUsageQty) {
         BigDecimal result = usageQty == null ? BigDecimal.ZERO : usageQty;
-        if (lossRate != null && lossRate.compareTo(BigDecimal.ZERO) > 0) {
-            result = result.multiply(BigDecimal.ONE.add(lossRate.divide(BigDecimal.valueOf(100), 6, RoundingMode.HALF_UP)));
-        }
         if (minUsageQty != null && result.compareTo(minUsageQty) < 0) {
             result = minUsageQty;
         }
@@ -141,6 +141,11 @@ class ProductFormulaSimulationUsageCalculator {
         }
         return result.setScale(2, RoundingMode.HALF_UP);
     }
+
+    private String stringValue(Object value) {
+        return value == null ? null : String.valueOf(value);
+    }
+
     private String resolveUsageSummary(BigDecimal usageQty, ProductFormulaUsageRuleVo rule) {
         if (rule == null || "FIXED".equals(rule.getUsageMode())) {
             return usageQty == null ? "product.formula.simulation.fixedUsage" : usageQty.toPlainString();
