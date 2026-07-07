@@ -70,21 +70,22 @@ const t = (key: string) => getMessage(key, localeStore.language)
 
 const label = computed(() => props.option.optionNameCn || props.option.optionNameEn || props.option.optionCode || '-')
 const materialOption = computed(() => props.option.sourceType === 'MATERIAL_POOL' && props.option.displayMode === 'IMAGE_SELECT')
-const switchOption = computed(() => props.option.sourceType === 'BOOLEAN' || props.option.selectionMode === 'SWITCH')
+const switchValueCodes = computed(() => {
+  if (props.option.sourceType === 'BOOLEAN') return { active: 'TRUE', inactive: 'FALSE' }
+  const enabledValues = props.values.filter((value) => value.valueCode)
+  const active = props.option.defaultValueCode || enabledValues.find((value) => value.defaultFlag)?.valueCode || enabledValues[1]?.valueCode || enabledValues[0]?.valueCode || ''
+  const inactive = enabledValues.find((value) => value.valueCode !== active)?.valueCode || ''
+  return { active, inactive }
+})
+const switchOption = computed(() => (
+  props.option.sourceType === 'BOOLEAN'
+  || (props.option.selectionMode === 'SWITCH' && Boolean(switchValueCodes.value.active && switchValueCodes.value.inactive))
+))
 const multipleOption = computed(() => props.option.selectionMode === 'MULTIPLE')
 const selectedCodes = computed(() => splitCodes(props.modelValue))
 const requiredMissing = computed(() => Boolean(props.showValidation && props.option.requiredFlag && !props.modelValue))
 const selectModelValue = computed(() => multipleOption.value ? selectedCodes.value : props.modelValue)
-const switchValues = computed(() => props.values.slice(0, 2))
-const switchActiveValue = computed(() => {
-  return props.option.defaultValueCode
-    || switchValues.value.find((row) => row.defaultFlag)?.valueCode
-    || switchValues.value.find((row) => truthyValue(row))?.valueCode
-    || switchValues.value[0]?.valueCode
-    || 'true'
-})
-const switchInactiveValue = computed(() => switchValues.value.find((row) => row.valueCode !== switchActiveValue.value)?.valueCode || 'false')
-const switchChecked = computed(() => props.modelValue === switchActiveValue.value)
+const switchChecked = computed(() => props.modelValue === switchValueCodes.value.active)
 
 function splitCodes(value?: string) {
   return String(value || '').split(',').map((code) => code.trim()).filter(Boolean)
@@ -96,13 +97,8 @@ function updateSelect(value: string | string[]) {
 }
 
 function updateSwitch(checked: string | number | boolean) {
-  emit('update:modelValue', checked ? String(switchActiveValue.value) : String(switchInactiveValue.value))
-}
-
-function truthyValue(value?: ProductFormulaOptionValueVO) {
-  return [value?.valueCode, value?.valueNameCn, value?.valueNameEn]
-    .map((item) => String(item || '').trim().toLowerCase())
-    .some((item) => ['true', 'yes', 'y', '1'].includes(item))
+  const codes = switchValueCodes.value
+  emit('update:modelValue', checked ? codes.active : codes.inactive)
 }
 </script>
 

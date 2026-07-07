@@ -129,6 +129,7 @@
       :default-expand-all="isTreeGrid && isExpandAll"
       :default-sort="config.defaultSort"
       :highlight-current-row="isSingleRowActions && !isTreeGrid"
+      :row-class-name="tableRowClassName"
       :data-testid="`product-grid-${config.key}`"
       data-agent-scope="product-base-table"
       :data-agent-entity="config.key"
@@ -600,6 +601,15 @@ const rules = computed<FormRules>(() => {
 
 function isRecordId(value: unknown): value is string | number {
   return typeof value === 'string' || typeof value === 'number'
+}
+
+function tableRowClassName({ row }: { row: ProductRecord }) {
+  const classes: string[] = []
+  const tone = props.config.rowTone?.(row)
+  const customClassName = props.config.rowClassName?.(row)
+  if (tone) classes.push(`product-grid-row--${tone}`)
+  if (customClassName) classes.push(customClassName)
+  return classes.join(' ')
 }
 
 function optionLabel(field: ProductFieldConfig, value: unknown) {
@@ -1798,6 +1808,36 @@ defineExpose({
 
   :deep(.el-switch) {
     vertical-align: middle;
+  }
+}
+
+.product-grid-page__table {
+  :deep(.el-table__body tr.product-grid-row--danger > td.el-table__cell),
+  :deep(.el-table__body tr.product-grid-row--danger.current-row > td.el-table__cell),
+  :deep(.el-table__body tr.product-grid-row--danger:hover > td.el-table__cell) {
+    background: #fff1f0;
+    color: #7f1d1d;
+  }
+
+  :deep(.el-table__body tr.product-grid-row--warning > td.el-table__cell),
+  :deep(.el-table__body tr.product-grid-row--warning.current-row > td.el-table__cell),
+  :deep(.el-table__body tr.product-grid-row--warning:hover > td.el-table__cell) {
+    background: #fff7e6;
+    color: #7c2d12;
+  }
+
+  :deep(.el-table__body tr.product-grid-row--success > td.el-table__cell),
+  :deep(.el-table__body tr.product-grid-row--success.current-row > td.el-table__cell),
+  :deep(.el-table__body tr.product-grid-row--success:hover > td.el-table__cell) {
+    background: #f0fdf4;
+    color: #14532d;
+  }
+
+  :deep(.el-table__body tr.product-grid-row--muted > td.el-table__cell),
+  :deep(.el-table__body tr.product-grid-row--muted.current-row > td.el-table__cell),
+  :deep(.el-table__body tr.product-grid-row--muted:hover > td.el-table__cell) {
+    background: #f8fafc;
+    color: #64748b;
   }
 }
 

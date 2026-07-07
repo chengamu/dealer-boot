@@ -46,6 +46,9 @@ app-container
 - 普通 grid 支持双击行打开详情抽屉。
 - 业务状态使用开关或明确状态标签，不裸显示 `true/false`、`1/0`、`ENABLED/DISABLED`。
 - Boolean 业务字段展示为“是/否”，表单里用 `el-switch`。
+- 普通 grid 需要整行强调时，业务页使用 `ProductGridConfig.rowTone` 声明语义，不在业务页面手写行背景色或复制 CSS class。
+- `rowTone` 只表达业务风险或状态语义：`danger` 用于驳回、失败、严重异常；`warning` 用于待处理、未校验、风险提示；`success` 用于已通过、已启用、生效；`muted` 用于停用、作废、归档。
+- `rowClassName` 仅作为底层兼容和特殊扩展保留；普通业务状态优先使用 `rowTone`。
 
 ## 3. Drawer 和 Dialog
 

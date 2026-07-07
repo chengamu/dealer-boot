@@ -81,6 +81,7 @@ const formulaConfig = computed<ProductGridConfig>(() => ({
     latestValidationStatus: FORMULA_VALIDATION_STATUS.NOT_VALIDATED,
     status: FORMULA_STATUS.DRAFT
   },
+  rowTone: (row) => row.status === FORMULA_STATUS.REJECTED ? 'danger' : undefined,
   submitFields: [
     'formulaId',
     'formulaCode',

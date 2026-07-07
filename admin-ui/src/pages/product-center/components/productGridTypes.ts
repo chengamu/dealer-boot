@@ -1,5 +1,7 @@
 import type { ProductPageQuery, ProductRecord, ReferenceCheckResult } from '@/api/product-capability/types'
 
+export type ProductGridRowTone = 'danger' | 'warning' | 'success' | 'muted'
+
 export interface ProductFieldConfig {
   prop: string
   labelKey: string
@@ -63,6 +65,8 @@ export interface ProductGridConfig {
   hideReference?: boolean
   showDetail?: boolean
   closePath?: string
+  rowTone?: (row: ProductRecord) => ProductGridRowTone | undefined
+  rowClassName?: (row: ProductRecord) => string
   rowActions?: Array<{
     labelKey: string
     icon?: string

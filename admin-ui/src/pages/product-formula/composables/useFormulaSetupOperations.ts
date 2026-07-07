@@ -120,6 +120,7 @@ export function useFormulaSetupOperations(ctx: SetupOperationContext) {
   function addOptionValueRow() {
     const option = selectedOption()
     if (!option) return
+    if (option.sourceType === 'BOOLEAN') return
     const next = selectedValues.value.length + 1
     const optionKey = optionClientKey(option)
     const clientKey = createDraftClientKey('value')

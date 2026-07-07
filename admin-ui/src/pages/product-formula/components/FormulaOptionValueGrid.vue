@@ -11,7 +11,7 @@
             {{ t('productCenter.formulaSetup.importOptionValues') }}
           </el-button>
         </template>
-        <el-button v-else type="primary" plain :icon="Plus" :disabled="!selectedOptionCode" @click="$emit('addValue')">
+        <el-button v-else-if="selectedOption?.sourceType !== 'BOOLEAN'" type="primary" plain :icon="Plus" :disabled="!selectedOptionCode" @click="$emit('addValue')">
           {{ t('productCenter.formulaSetup.addOptionValue') }}
         </el-button>
       </div>
@@ -26,12 +26,12 @@
     >
       <el-table-column :label="t('productCenter.formulaSetup.valueNameCn')" width="220">
         <template #default="{ row }">
-          <el-input :ref="(el: unknown) => setValueNameInputRef(row, el)" v-model="row.valueNameCn" :disabled="selectedOption?.sourceType === 'MATERIAL_POOL'" />
+          <el-input :ref="(el: unknown) => setValueNameInputRef(row, el)" v-model="row.valueNameCn" :disabled="fixedValueNames" />
         </template>
       </el-table-column>
       <el-table-column :label="t('productCenter.formulaSetup.valueNameEn')" width="220">
         <template #default="{ row }">
-          <el-input v-model="row.valueNameEn" />
+          <el-input v-model="row.valueNameEn" :disabled="fixedValueNames" />
         </template>
       </el-table-column>
       <el-table-column :label="t('productCenter.formulaSetup.linkedMaterial')" min-width="320">
@@ -53,7 +53,7 @@
         <template #default="{ row }">
           <AdminTableActions :actions="[
             { label: t('productCenter.formulaSetup.manageLinkedMaterial'), icon: 'Setting', stopPropagation: true, onClick: () => $emit('manageMaterial', row) },
-            { label: t('common.delete'), icon: 'Delete', type: 'danger', stopPropagation: true, onClick: () => $emit('removeValue', row) }
+            { label: t('common.delete'), icon: 'Delete', type: 'danger', disabled: selectedOption?.sourceType === 'BOOLEAN', stopPropagation: true, onClick: () => $emit('removeValue', row) }
           ]" />
         </template>
       </el-table-column>
@@ -66,7 +66,7 @@ import { Plus } from '@element-plus/icons-vue'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 import { materialValueClientKey, valueClientKey } from '../utils/formulaOptionDraftIdentity'
-import { nextTick } from 'vue'
+import { computed, nextTick } from 'vue'
 import type {
   ProductFormulaOptionMaterialVO,
   ProductFormulaOptionVO,
@@ -93,6 +93,7 @@ defineEmits<{
 const localeStore = useLocaleStore()
 const t = (key: string) => getMessage(key, localeStore.language)
 const valueNameInputRefs = new Map<string, { focus: () => void }>()
+const fixedValueNames = computed(() => props.selectedOption?.sourceType === 'MATERIAL_POOL' || props.selectedOption?.sourceType === 'BOOLEAN')
 
 function setValueNameInputRef(row: ProductFormulaOptionValueVO, element: unknown) {
   const key = valueKey(row)

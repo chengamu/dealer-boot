@@ -2,19 +2,19 @@
   <AdminDrawer v-model="open" :title="title" size="720px" variant="detail" append-to-body>
     <el-table v-if="displayRows.length" v-loading="loading" :data="displayRows" border class="formula-review-record">
       <el-table-column type="index" :label="t('common.index')" width="64" align="center" />
-      <el-table-column :label="t('productCenter.changeLog.action')" width="136">
+      <el-table-column :label="t('productCenter.formulaReview.recordAction')" width="136">
         <template #default="{ row }">
           <el-tag :type="actionTagType(row.actionType)" effect="plain">{{ row.actionName || actionText(row.actionType) }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column :label="t('productCenter.formula.currentVersion')" prop="versionLabel" width="96" />
-      <el-table-column :label="t('productCenter.changeLog.operator')" prop="operatorName" width="128" show-overflow-tooltip />
-      <el-table-column :label="t('productCenter.changeLog.operateTime')" width="152" align="center">
+      <el-table-column :label="t('productCenter.formulaReview.recordOperator')" prop="operatorName" width="128" show-overflow-tooltip />
+      <el-table-column :label="t('productCenter.formulaReview.recordTime')" width="152" align="center">
         <template #default="{ row }">{{ formatFormulaReviewMinute(row.operateTime) }}</template>
       </el-table-column>
-      <el-table-column :label="t('productCenter.changeLog.diff')" min-width="260" prop="remark" show-overflow-tooltip />
+      <el-table-column :label="t('productCenter.formulaReview.recordRemark')" min-width="260" prop="remark" show-overflow-tooltip />
     </el-table>
-    <el-empty v-else v-loading="loading" :description="t('productCenter.changeLog.empty')" />
+    <el-empty v-else v-loading="loading" :description="t('productCenter.formulaReview.recordEmpty')" />
   </AdminDrawer>
 </template>
 

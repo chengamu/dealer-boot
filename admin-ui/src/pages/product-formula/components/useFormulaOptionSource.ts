@@ -1,5 +1,10 @@
 import { computed, type Ref } from 'vue'
 import type { ProductFormulaMaterialVO, ProductFormulaOptionVO, ProductFormulaOptionValueVO } from '@/api/product-capability/types'
+import {
+  createDraftClientKey,
+  optionClientKey,
+  type DraftOptionValue
+} from '../utils/formulaOptionDraftIdentity'
 
 type OptionSourceProps = {
   options: ProductFormulaOptionVO[]
@@ -59,6 +64,10 @@ export function useFormulaOptionSource(props: OptionSourceProps, options: UseOpt
 
   function handleSourceTypeChange() {
     if (!options.selectedOption.value) return
+    if (options.selectedOption.value.sourceType === 'BOOLEAN') {
+      normalizeBooleanOption(options.selectedOption.value)
+      return
+    }
     if (options.selectedOption.value.sourceType === 'MATERIAL_POOL' && !options.selectedOption.value.sourceScope) {
       const firstGroup = materialGroupOptions.value[0]?.value || ''
       options.selectedOption.value.sourceScope = firstGroup ? `attributeGroupCode=${firstGroup}` : ''
@@ -68,6 +77,45 @@ export function useFormulaOptionSource(props: OptionSourceProps, options: UseOpt
       return
     }
     options.selectedOption.value.displayMode ||= 'SELECT'
+  }
+
+  function normalizeBooleanOption(option: ProductFormulaOptionVO) {
+    option.sourceScope = ''
+    option.selectionMode = 'SWITCH'
+    option.displayMode = 'SELECT'
+    option.defaultValueCode = String(option.defaultValueCode || '').toUpperCase() === 'TRUE' ? 'TRUE' : 'FALSE'
+    option.defaultValueNameCn = option.defaultValueCode.toLowerCase()
+    const optionKey = optionClientKey(option)
+    const booleanRows = [
+      booleanValueRow(option, optionKey, 'FALSE', 10, option.defaultValueCode !== 'TRUE'),
+      booleanValueRow(option, optionKey, 'TRUE', 20, option.defaultValueCode === 'TRUE')
+    ]
+    props.allOptionValues.splice(
+      0,
+      props.allOptionValues.length,
+      ...props.allOptionValues.filter((row) => !valueBelongsToOption(row, option, optionKey)),
+      ...booleanRows
+    )
+  }
+
+  function booleanValueRow(option: ProductFormulaOptionVO, optionKey: string, valueCode: 'TRUE' | 'FALSE', sortOrder: number, defaultFlag: boolean) {
+    const existing = props.allOptionValues.find((row) => valueBelongsToOption(row, option, optionKey) && row.valueCode === valueCode) as DraftOptionValue | undefined
+    const row = existing || ({ clientKey: createDraftClientKey('value') } as DraftOptionValue)
+    row.optionClientKey = optionKey
+    row.optionCode = option.optionCode
+    row.valueCode = valueCode
+    row.valueNameCn = valueCode.toLowerCase()
+    row.valueNameEn = valueCode.toLowerCase()
+    row.defaultFlag = defaultFlag
+    row.status ||= 'ENABLED'
+    row.sortOrder = sortOrder
+    return row as ProductFormulaOptionValueVO
+  }
+
+  function valueBelongsToOption(row: ProductFormulaOptionValueVO, option: ProductFormulaOptionVO, optionKey: string) {
+    return (row as DraftOptionValue).optionClientKey
+      ? (row as DraftOptionValue).optionClientKey === optionKey
+      : row.optionCode === option.optionCode
   }
 
   return {

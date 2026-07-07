@@ -336,7 +336,6 @@ export function useFormulaUsageRules(
       if (!targetRow.materialCode || targetRow.materialCode === sourceRow.materialCode) return
       targetRow.usageMode = sourceRow.usageMode
       targetRow.fixedUsageQty = sourceRow.fixedUsageQty
-      targetRow.lossRate = sourceRow.lossRate
       targetRow.calculationUnitCode = sourceRow.calculationUnitCode || sourceRow.unitCode
       removeRulesForMaterial(targetRow.materialCode)
       sourceRules.forEach((rule, index) => {
