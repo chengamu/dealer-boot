@@ -1,12 +1,12 @@
 package com.bocoo.product.service.impl;
 
 import com.bocoo.common.core.utils.StringUtils;
+import com.bocoo.product.domain.entity.ProductBaseAttribute;
 import com.bocoo.product.domain.entity.ProductFormulaMaterial;
 import com.bocoo.product.domain.entity.ProductFormulaOption;
 import com.bocoo.product.domain.entity.ProductFormulaOptionMaterial;
 import com.bocoo.product.domain.entity.ProductFormulaOptionValue;
-import com.bocoo.product.domain.entity.ProductMaterialAttribute;
-import com.bocoo.product.mapper.ProductMaterialAttributeMapper;
+import com.bocoo.product.mapper.ProductBaseAttributeMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -26,7 +26,7 @@ public class ProductFormulaExpressionReferenceValidator extends ProductServiceSu
         Pattern.compile("\\b(option_([A-Za-z0-9_]+)|fabric)\\s*(==|!=)\\s*(['\"])(.*?)\\4");
     private static final Set<String> MATERIAL_FIELDS = Set.of("materialType", "materialCode", "materialName", "attributeGroup");
 
-    private final ProductMaterialAttributeMapper materialAttributeMapper;
+    private final ProductBaseAttributeMapper baseAttributeMapper;
 
     String validationMessageKey(String expression, List<ProductFormulaOption> options,
                                 List<ProductFormulaOptionValue> values,
@@ -104,9 +104,7 @@ public class ProductFormulaExpressionReferenceValidator extends ProductServiceSu
                 .filter(material -> groupCode.equals(material.getAttributeGroupCode()) && material.getMaterialId() != null)
                 .map(ProductFormulaMaterial::getMaterialId)
                 .collect(Collectors.toSet());
-            return !materialIds.isEmpty() && !materialAttributeMapper.selectList(activeQuery(ProductMaterialAttribute.class)
-                .in("material_id", materialIds)
-                .eq("attribute_code", attributeCode)).isEmpty();
+            return !materialIds.isEmpty() && groupHasAttribute(Set.of(groupCode), attributeCode);
         }
         return false;
     }
@@ -129,9 +127,22 @@ public class ProductFormulaExpressionReferenceValidator extends ProductServiceSu
         if (MATERIAL_FIELDS.contains(attributeCode)) {
             return true;
         }
-        return !materialAttributeMapper.selectList(activeQuery(ProductMaterialAttribute.class)
-            .in("material_id", materialIds)
-            .eq("attribute_code", attributeCode)).isEmpty();
+        Set<String> groupCodes = materials.stream()
+            .filter(material -> materialIds.contains(material.getMaterialId()))
+            .map(ProductFormulaMaterial::getAttributeGroupCode)
+            .filter(StringUtils::isNotBlank)
+            .collect(Collectors.toSet());
+        return groupHasAttribute(groupCodes, attributeCode);
+    }
+
+    private boolean groupHasAttribute(Set<String> groupCodes, String attributeCode) {
+        if (groupCodes.isEmpty() || StringUtils.isBlank(attributeCode)) {
+            return false;
+        }
+        return baseAttributeMapper.selectCount(activeQuery(ProductBaseAttribute.class)
+            .in("attribute_group_code", groupCodes)
+            .eq("attribute_code", attributeCode)
+            .eq("status", "ENABLED")) > 0;
     }
 
     private String identifierPart(String value) {

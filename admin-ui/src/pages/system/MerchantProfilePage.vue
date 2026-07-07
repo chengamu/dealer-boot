@@ -27,8 +27,12 @@
       <el-table-column :label="t('merchantProfile.companyName')" prop="companyName" min-width="180" :show-overflow-tooltip="true" />
       <el-table-column :label="t('merchantProfile.primaryEmail')" prop="primaryEmail" min-width="220" :show-overflow-tooltip="true" />
       <el-table-column :label="t('merchantLevel.name')" prop="levelName" min-width="120" :show-overflow-tooltip="true" />
-      <el-table-column :label="t('merchantLevel.discount')" prop="discountRate" width="120" align="right" />
-      <el-table-column :label="t('merchantLevel.credit')" prop="creditLimit" width="140" align="right" />
+      <el-table-column :label="t('merchantLevel.discount')" width="120" align="right">
+        <template #default="{ row }">{{ formatDiscountRate(row.discountRate) }}</template>
+      </el-table-column>
+      <el-table-column :label="t('merchantLevel.credit')" width="140" align="right">
+        <template #default="{ row }">{{ formatCreditLimit(row.creditLimit) }}</template>
+      </el-table-column>
       <el-table-column :label="t('merchantProfile.country')" prop="country" width="120" :show-overflow-tooltip="true" />
       <el-table-column :label="t('merchantProfile.status')" prop="status" width="110" align="center">
         <template #default="{ row }">
@@ -72,7 +76,7 @@
             <el-option v-for="item in levelOptions" :key="item.levelId" :label="item.levelName" :value="item.levelId" />
           </el-select>
         </el-form-item>
-        <el-form-item :label="t('merchantLevel.discount')"><el-input-number v-model="editForm.discountRate" :precision="4" :min="0" :max="1" controls-position="right" /></el-form-item>
+        <el-form-item :label="t('merchantLevel.discount')"><el-input-number v-model="editForm.discountRate" :precision="2" :min="0" :max="1" controls-position="right" /></el-form-item>
         <el-form-item :label="t('merchantLevel.credit')"><el-input-number v-model="editForm.creditLimit" :precision="2" :min="0" controls-position="right" /></el-form-item>
         <el-form-item :label="t('apply.firstName')"><el-input v-model="editForm.contactFirstName" /></el-form-item>
         <el-form-item :label="t('apply.lastName')"><el-input v-model="editForm.contactLastName" /></el-form-item>
@@ -101,6 +105,7 @@ import { ElMessage, type FormInstance } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import { getMerchantProfile, listMerchantProfiles, updateMerchantProfile, type MerchantProfile, type MerchantProfileQuery } from '@/api/merchant/profile'
 import { optionsMerchantLevels, type MerchantLevel } from '@/api/merchant/level'
+import { formatCreditLimit, formatDiscountRate } from '@/api/merchant/format'
 import { formatUtc } from '@/utils/datetime'
 import { useDict } from '@/utils/dict'
 import MerchantProfileDescriptions from '@/pages/merchant/MerchantProfileDescriptions.vue'

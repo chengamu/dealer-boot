@@ -30,6 +30,8 @@ import java.util.stream.Collectors;
 public class ProductFormulaSetupNormalizer extends ProductServiceSupport {
     private static final String VISIBILITY_ALWAYS = "ALWAYS";
     private static final String VISIBILITY_CONDITIONAL = "CONDITIONAL";
+    private static final String DISPLAY_SELECT = "SELECT";
+    private static final String DISPLAY_IMAGE_SELECT = "IMAGE_SELECT";
     private final ProductFormulaMaterialSnapshotResolver materialSnapshotResolver;
     private final ProductFormulaRestrictionNormalizer restrictionNormalizer;
     private final ProductFormulaUsageRuleService usageRuleService;
@@ -129,6 +131,7 @@ public class ProductFormulaSetupNormalizer extends ProductServiceSupport {
             entity.setSourceType(defaultString(trim(entity.getSourceType()), "MANUAL"));
             entity.setSourceScope(trim(entity.getSourceScope()));
             entity.setSelectionMode(defaultString(trim(entity.getSelectionMode()), "SINGLE"));
+            entity.setDisplayMode(normalizeDisplayMode(entity.getDisplayMode()));
             entity.setDefaultValueCode(trim(entity.getDefaultValueCode()));
             entity.setDefaultValueNameCn(trim(entity.getDefaultValueNameCn()));
             entity.setVisibilityMode(defaultString(trimUpper(row.getVisibilityMode()), VISIBILITY_ALWAYS));
@@ -304,6 +307,10 @@ public class ProductFormulaSetupNormalizer extends ProductServiceSupport {
     }
     private String defaultString(String value, String defaultValue) {
         return StringUtils.isBlank(value) ? defaultValue : value;
+    }
+    private String normalizeDisplayMode(String value) {
+        String mode = trimUpper(value);
+        return DISPLAY_IMAGE_SELECT.equals(mode) ? DISPLAY_IMAGE_SELECT : DISPLAY_SELECT;
     }
     private String key(String... parts) {
         return String.join("|", parts);

@@ -1,15 +1,15 @@
 .formula-expression-dialog.admin-dialog.el-dialog {
   display: flex;
   flex-direction: column;
-  width: min(1360px, calc(100vw - 56px)) !important;
-  height: min(760px, calc(100vh - 44px));
+  width: min(1480px, calc(100vw - 32px)) !important;
+  height: min(720px, calc(100vh - 32px));
 }
 
 .formula-expression-dialog.admin-dialog .el-dialog__body {
   flex: 1 1 auto;
   min-height: 0;
   overflow: hidden;
-  padding: 14px 18px 12px;
+  padding: 12px 18px 10px;
 }
 
 .formula-expression-dialog.admin-dialog .el-dialog__footer {
@@ -40,7 +40,7 @@
 
 .formula-expression-dialog .expression-editor__formula-layout {
   display: grid;
-  grid-template-columns: minmax(0, 58fr) minmax(380px, 42fr);
+  grid-template-columns: minmax(0, 62fr) minmax(360px, 38fr);
   gap: 12px;
   align-items: stretch;
   min-height: 0;
@@ -50,7 +50,7 @@
 .formula-expression-dialog .expression-editor__formula-main {
   display: grid;
   grid-template-rows: auto auto auto auto;
-  gap: 10px;
+  gap: 8px;
   min-width: 0;
   min-height: 0;
   align-content: start;
@@ -88,8 +88,8 @@
 }
 
 .formula-expression-dialog .expression-editor__composer .el-textarea__inner {
-  min-height: 128px !important;
-  max-height: 128px;
+  min-height: 104px !important;
+  max-height: 104px;
   font-size: 14px;
   line-height: 1.6;
 }
@@ -98,11 +98,11 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 10px 8px;
+  gap: 8px 6px;
   align-content: flex-start;
   min-height: 0;
   background: #f8fbff;
-  padding: 10px 12px 12px;
+  padding: 8px 10px 10px;
 }
 
 .formula-expression-dialog .expression-editor__operators h4 {
@@ -112,8 +112,8 @@
 .formula-expression-dialog .expression-editor__operators .el-button {
   flex: 0 0 auto;
   min-width: 34px;
-  height: 32px;
-  padding: 4px 10px;
+  height: 30px;
+  padding: 3px 8px;
   border-color: #d9e2ef;
   background: #fff;
   margin-left: 0;
@@ -164,17 +164,18 @@
   align-items: center;
   gap: 6px;
   background: #fff;
+  padding: 8px 10px;
 }
 
 .formula-expression-dialog .expression-editor__tool-card .el-button {
   margin-left: 0;
-  height: 32px;
-  padding: 4px 12px;
+  height: 30px;
+  padding: 3px 10px;
 }
 
 .formula-expression-dialog .expression-editor__result {
   display: grid;
-  gap: 8px;
+  gap: 6px;
   align-items: stretch;
   background: #f8fbff;
 }
@@ -192,7 +193,7 @@
   border: 1px solid #e5ecf6;
   border-radius: 8px;
   background: #fff;
-  padding: 8px 10px;
+  padding: 7px 10px;
 }
 
 .formula-expression-dialog .expression-editor__result dd {

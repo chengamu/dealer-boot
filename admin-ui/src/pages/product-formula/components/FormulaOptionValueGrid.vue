@@ -26,7 +26,7 @@
     >
       <el-table-column :label="t('productCenter.formulaSetup.valueNameCn')" width="220">
         <template #default="{ row }">
-          <el-input v-model="row.valueNameCn" :disabled="selectedOption?.sourceType === 'MATERIAL_POOL'" />
+          <el-input :ref="(el: unknown) => setValueNameInputRef(row, el)" v-model="row.valueNameCn" :disabled="selectedOption?.sourceType === 'MATERIAL_POOL'" />
         </template>
       </el-table-column>
       <el-table-column :label="t('productCenter.formulaSetup.valueNameEn')" width="220">
@@ -66,6 +66,7 @@ import { Plus } from '@element-plus/icons-vue'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 import { materialValueClientKey, valueClientKey } from '../utils/formulaOptionDraftIdentity'
+import { nextTick } from 'vue'
 import type {
   ProductFormulaOptionMaterialVO,
   ProductFormulaOptionVO,
@@ -91,6 +92,23 @@ defineEmits<{
 
 const localeStore = useLocaleStore()
 const t = (key: string) => getMessage(key, localeStore.language)
+const valueNameInputRefs = new Map<string, { focus: () => void }>()
+
+function setValueNameInputRef(row: ProductFormulaOptionValueVO, element: unknown) {
+  const key = valueKey(row)
+  if (!key) return
+  if (element && typeof (element as { focus?: unknown }).focus === 'function') {
+    valueNameInputRefs.set(key, element as { focus: () => void })
+  } else {
+    valueNameInputRefs.delete(key)
+  }
+}
+
+async function focusValueName(row?: ProductFormulaOptionValueVO) {
+  await nextTick()
+  const input = row ? valueNameInputRefs.get(valueKey(row)) : undefined
+  input?.focus()
+}
 
 function materialsForValue(row?: ProductFormulaOptionValueVO) {
   return props.optionMaterials.filter((item) => (
@@ -103,6 +121,12 @@ function materialsForValue(row?: ProductFormulaOptionValueVO) {
 function optionValueRowClass({ row }: { row: ProductFormulaOptionValueVO }) {
   return (valueClientKey(row) || row.valueCode) === props.selectedValueCode ? 'option-value-row--active' : ''
 }
+
+function valueKey(row?: ProductFormulaOptionValueVO) {
+  return valueClientKey(row) || row?.valueCode || ''
+}
+
+defineExpose({ focusValueName })
 </script>
 
 <style scoped>

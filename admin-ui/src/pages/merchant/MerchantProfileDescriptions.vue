@@ -8,8 +8,8 @@
         <div class="admin-detail__item"><dt>{{ t('merchantProfile.contactName') }}</dt><dd>{{ profile.contactName || '-' }}</dd></div>
         <div class="admin-detail__item"><dt>{{ t('merchantProfile.primaryEmail') }}</dt><dd>{{ profile.primaryEmail || '-' }}</dd></div>
         <div class="admin-detail__item"><dt>{{ t('merchantLevel.name') }}</dt><dd>{{ profile.levelName || '-' }}</dd></div>
-        <div class="admin-detail__item"><dt>{{ t('merchantLevel.discount') }}</dt><dd>{{ profile.discountRate ?? '-' }}</dd></div>
-        <div class="admin-detail__item"><dt>{{ t('merchantLevel.credit') }}</dt><dd>{{ profile.creditLimit ?? '-' }}</dd></div>
+        <div class="admin-detail__item"><dt>{{ t('merchantLevel.discount') }}</dt><dd>{{ formatDiscountRate(profile.discountRate) }}</dd></div>
+        <div class="admin-detail__item"><dt>{{ t('merchantLevel.credit') }}</dt><dd>{{ formatCreditLimit(profile.creditLimit) }}</dd></div>
         <div class="admin-detail__item"><dt>{{ t('merchantProfile.officePhone') }}</dt><dd>{{ profile.officePhone || '-' }}</dd></div>
         <div class="admin-detail__item"><dt>{{ t('merchantProfile.mobilePhone') }}</dt><dd>{{ profile.mobilePhone || '-' }}</dd></div>
         <div class="admin-detail__item"><dt>{{ t('merchantProfile.country') }}</dt><dd>{{ profile.country || '-' }}</dd></div>
@@ -27,6 +27,7 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { MerchantProfile } from '@/api/merchant/profile'
+import { formatCreditLimit, formatDiscountRate } from '@/api/merchant/format'
 import { formatUtc } from '@/utils/datetime'
 
 const props = defineProps<{ profile: MerchantProfile }>()

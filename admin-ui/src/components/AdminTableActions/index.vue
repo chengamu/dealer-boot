@@ -19,7 +19,7 @@
       {{ action.label }}
     </el-button>
     <el-dropdown v-if="dropdownActions.length" trigger="click" popper-class="admin-table-actions__dropdown" @click.stop>
-      <el-button class="admin-table-actions__more" :aria-label="moreLabel" :title="moreLabel">
+      <el-button class="admin-table-actions__more" :aria-label="resolvedMoreLabel" :title="resolvedMoreLabel">
         <el-icon><MoreFilled /></el-icon>
       </el-button>
       <template #dropdown>
@@ -43,6 +43,7 @@
 
 <script setup lang="ts">
 import { computed, type Component, type PropType } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { MoreFilled } from '@element-plus/icons-vue'
 import { checkPermi } from '@/utils/permission'
 
@@ -73,11 +74,13 @@ const props = defineProps({
   },
   moreLabel: {
     type: String,
-    default: '更多'
+    default: ''
   }
 })
 
+const { t } = useI18n()
 const visibleActions = computed(() => props.actions.filter((action) => !action.hidden && hasPermission(action)))
+const resolvedMoreLabel = computed(() => props.moreLabel || t('common.more'))
 const inlineActions = computed(() => {
   if (visibleActions.value.length <= 2) return visibleActions.value
   const primaryAction = visibleActions.value.find((action) => action.primary && !isDanger(action))

@@ -67,7 +67,8 @@
 ## 5. i18n 和排序
 
 - 菜单和按钮建议写 `i18n_key`，显示名由 i18n JSON 提供。
-- 新增菜单 i18n key 要进入 `i18n/locales/en_US.json`，再同步到运行时 JSON。
+- 新增菜单或按钮 i18n key 要写入对应业务模块的 `i18n/source/<module>/{en_US,zh_CN}.json`，再运行 `pnpm i18n` 生成 `i18n/locales/*.json` 和运行时 JSON。
+- `i18n/locales/*.json`、`admin-ui/public/i18n/*.json`、`bocoo-admin/src/main/resources/i18n/*.json` 都是生成产物，不手工修改。
 - 同一父菜单下 `order_num` 要稳定。
 - 按钮顺序通常为 query、add、edit、remove、export，再放业务动作。
 

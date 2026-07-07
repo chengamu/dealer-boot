@@ -63,6 +63,11 @@ export function useFormulaOptionSource(props: OptionSourceProps, options: UseOpt
       const firstGroup = materialGroupOptions.value[0]?.value || ''
       options.selectedOption.value.sourceScope = firstGroup ? `attributeGroupCode=${firstGroup}` : ''
     }
+    if (options.selectedOption.value.sourceType !== 'MATERIAL_POOL') {
+      options.selectedOption.value.displayMode = 'SELECT'
+      return
+    }
+    options.selectedOption.value.displayMode ||= 'SELECT'
   }
 
   return {

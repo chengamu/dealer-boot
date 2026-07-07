@@ -15,12 +15,13 @@
       </div>
     </div>
 
-    <div class="option-tree" role="tree">
+    <div ref="treeRef" class="option-tree" role="tree">
       <button
         v-for="node in nodes"
         :key="node.id"
         type="button"
         class="option-tree__node"
+        :data-node-id="node.id"
         :class="{
           'option-tree__node--active': node.id === selectedNodeId,
           'option-tree__node--group': node.type === 'group',
@@ -62,6 +63,7 @@
 import { ArrowDown, ArrowUp, CaretBottom, CaretRight, Delete, Plus } from '@element-plus/icons-vue'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
+import { nextTick, ref } from 'vue'
 
 export type FormulaOptionTreeViewNode = {
   id: string
@@ -96,6 +98,16 @@ const emit = defineEmits<{
 
 const localeStore = useLocaleStore()
 const t = (key: string) => getMessage(key, localeStore.language)
+const treeRef = ref<HTMLElement>()
+
+async function scrollNodeIntoView(nodeId: string) {
+  await nextTick()
+  const node = Array.from(treeRef.value?.querySelectorAll<HTMLElement>('.option-tree__node') || [])
+    .find((item) => item.dataset.nodeId === nodeId)
+  node?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+}
+
+defineExpose({ scrollNodeIntoView })
 </script>
 
 <style scoped>

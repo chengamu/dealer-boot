@@ -1235,13 +1235,13 @@ SET level_code = EXCLUDED.level_code,
 
 INSERT INTO sys_menu (menu_id, tenant_id, menu_name, i18n_key, parent_id, order_num, path, component, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, remark)
 VALUES
-    (20100, 1, '商户等级', 'sys.menu.merchant.level', 19500, 4, 'merchantLevel', 'merchant/level', '1', '0', 'C', '1', '1', 'merchant:level:list', 'star', 'system', now(), '商户等级管理'),
+    (20100, 1, '商户等级', 'sys.menu.merchant.level', 19500, 4, 'merchantLevel', 'merchant/level', '1', '0', 'C', '1', '1', 'merchant:level:list', 'rate', 'system', now(), '商户等级管理'),
     (20101, 1, '商户等级查询', 'sys.menu.merchant.level.query', 20100, 1, '#', '', '1', '0', 'F', '1', '1', 'merchant:level:query', '#', 'system', now(), ''),
     (20102, 1, '商户等级新增', 'sys.menu.merchant.level.add', 20100, 2, '#', '', '1', '0', 'F', '1', '1', 'merchant:level:add', '#', 'system', now(), ''),
     (20103, 1, '商户等级修改', 'sys.menu.merchant.level.edit', 20100, 3, '#', '', '1', '0', 'F', '1', '1', 'merchant:level:edit', '#', 'system', now(), ''),
     (20104, 1, '商户等级删除', 'sys.menu.merchant.level.remove', 20100, 4, '#', '', '1', '0', 'F', '1', '1', 'merchant:level:remove', '#', 'system', now(), ''),
     (20105, 1, '商户等级导出', 'sys.menu.merchant.level.export', 20100, 5, '#', '', '1', '0', 'F', '1', '1', 'merchant:level:export', '#', 'system', now(), ''),
-    (20120, 1, '等级折扣', 'sys.menu.merchant.levelDiscount', 19500, 5, 'levelDiscount', 'merchant/level-discount', '1', '0', 'C', '1', '1', 'merchant:levelDiscount:list', 'price-tag', 'system', now(), '商户等级产品折扣'),
+    (20120, 1, '等级折扣', 'sys.menu.merchant.levelDiscount', 19500, 5, 'levelDiscount', 'merchant/level-discount', '1', '0', 'C', '1', '1', 'merchant:levelDiscount:list', 'money', 'system', now(), '商户等级产品折扣'),
     (20121, 1, '等级折扣查询', 'sys.menu.merchant.levelDiscount.query', 20120, 1, '#', '', '1', '0', 'F', '1', '1', 'merchant:levelDiscount:query', '#', 'system', now(), ''),
     (20122, 1, '等级折扣新增', 'sys.menu.merchant.levelDiscount.add', 20120, 2, '#', '', '1', '0', 'F', '1', '1', 'merchant:levelDiscount:add', '#', 'system', now(), ''),
     (20123, 1, '等级折扣修改', 'sys.menu.merchant.levelDiscount.edit', 20120, 3, '#', '', '1', '0', 'F', '1', '1', 'merchant:levelDiscount:edit', '#', 'system', now(), ''),
@@ -1296,6 +1296,149 @@ INSERT INTO sys_role_menu (role_id, menu_id, tenant_id)
 SELECT DISTINCT role_id, menu_id, tenant_id
 FROM merchant_customer_menus
 ON CONFLICT DO NOTHING;
+
+INSERT INTO sys_tenant (tenant_id, tenant_name, tenant_type, contact_name, contact_email, country, status, create_by, create_time, remark)
+VALUES (300001, 'Demo Merchant', 'MERCHANT', 'Taylor Smith', 'demo.merchant@example.com', 'US', '1', 'system', now(), 'Local development merchant tenant')
+ON CONFLICT (tenant_id) DO UPDATE
+SET tenant_name = EXCLUDED.tenant_name,
+    tenant_type = EXCLUDED.tenant_type,
+    contact_name = EXCLUDED.contact_name,
+    contact_email = EXCLUDED.contact_email,
+    country = EXCLUDED.country,
+    status = EXCLUDED.status,
+    update_by = 'system',
+    update_time = now(),
+    remark = EXCLUDED.remark;
+
+INSERT INTO sys_dept (dept_id, tenant_id, parent_id, ancestors, dept_name, order_num, leader, email, status, del_flag, create_by, create_time, remark)
+VALUES
+    (300001, 300001, 0, '0', 'Dealer', 1, 'Taylor Smith', 'demo.merchant@example.com', '1', '0', 'system', now(), 'Demo merchant root department'),
+    (300002, 300001, 300001, '0,300001', 'Store', 2, 'Jordan Lee', 'store.demo@example.com', '1', '0', 'system', now(), 'Demo merchant store department')
+ON CONFLICT (dept_id) DO UPDATE
+SET tenant_id = EXCLUDED.tenant_id,
+    parent_id = EXCLUDED.parent_id,
+    ancestors = EXCLUDED.ancestors,
+    dept_name = EXCLUDED.dept_name,
+    order_num = EXCLUDED.order_num,
+    leader = EXCLUDED.leader,
+    email = EXCLUDED.email,
+    status = EXCLUDED.status,
+    del_flag = EXCLUDED.del_flag,
+    update_by = 'system',
+    update_time = now(),
+    remark = EXCLUDED.remark;
+
+INSERT INTO sys_role (role_id, tenant_id, role_name, role_key, role_sort, data_scope, menu_check_strictly, dept_check_strictly, status, del_flag, create_by, create_time, remark)
+VALUES
+    (300001, 300001, 'Merchant Admin', 'merchant_admin', 1, '1', true, true, '1', '0', 'system', now(), 'Demo merchant admin role'),
+    (300002, 300001, 'Merchant Store', 'merchant_store', 2, '1', true, true, '1', '0', 'system', now(), 'Demo merchant store role'),
+    (300003, 300001, 'Merchant Employee', 'merchant_employee', 3, '1', true, true, '1', '0', 'system', now(), 'Demo merchant employee role')
+ON CONFLICT (role_id) DO UPDATE
+SET tenant_id = EXCLUDED.tenant_id,
+    role_name = EXCLUDED.role_name,
+    role_key = EXCLUDED.role_key,
+    role_sort = EXCLUDED.role_sort,
+    data_scope = EXCLUDED.data_scope,
+    status = EXCLUDED.status,
+    del_flag = EXCLUDED.del_flag,
+    update_by = 'system',
+    update_time = now(),
+    remark = EXCLUDED.remark;
+
+INSERT INTO sys_menu (menu_id, tenant_id, menu_name, i18n_key, parent_id, order_num, path, component, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, remark)
+VALUES
+    (300100, 300001, 'Merchant', 'menu.merchant', 0, 10, 'merchant', NULL, '1', '0', 'M', '1', '1', NULL, 'shop', 'system', now(), 'Demo merchant center'),
+    (300101, 300001, 'Merchant Profile', 'menu.merchant.profile', 300100, 1, 'profile', 'merchant/profile', '1', '0', 'C', '1', '1', 'merchant:profile:query', 'store', 'system', now(), 'Current merchant profile'),
+    (300102, 300001, 'Merchant Profile Query', 'menu.merchant.profile.query', 300101, 1, '#', '', '1', '0', 'F', '1', '1', 'merchant:profile:query', '#', 'system', now(), ''),
+    (300103, 300001, 'Merchant Profile Edit', 'menu.merchant.profile.edit', 300101, 2, '#', '', '1', '0', 'F', '1', '1', 'merchant:profile:edit', '#', 'system', now(), ''),
+    (300110, 300001, 'Merchant Users', 'menu.merchant.users', 300100, 2, 'users', 'merchant/user', '1', '0', 'C', '1', '1', 'merchant:user:list', 'user', 'system', now(), 'Current merchant users'),
+    (300111, 300001, 'Merchant User Query', 'menu.merchant.users.query', 300110, 1, '#', '', '1', '0', 'F', '1', '1', 'merchant:user:query', '#', 'system', now(), ''),
+    (300112, 300001, 'Merchant User Add', 'menu.merchant.users.add', 300110, 2, '#', '', '1', '0', 'F', '1', '1', 'merchant:user:add', '#', 'system', now(), ''),
+    (300113, 300001, 'Merchant User Edit', 'menu.merchant.users.edit', 300110, 3, '#', '', '1', '0', 'F', '1', '1', 'merchant:user:edit', '#', 'system', now(), ''),
+    (300114, 300001, 'Merchant User Delete', 'menu.merchant.users.remove', 300110, 4, '#', '', '1', '0', 'F', '1', '1', 'merchant:user:remove', '#', 'system', now(), ''),
+    (300115, 300001, 'Merchant User Reset Password', 'menu.merchant.users.resetPwd', 300110, 5, '#', '', '1', '0', 'F', '1', '1', 'merchant:user:resetPwd', '#', 'system', now(), ''),
+    (300120, 300001, 'Customers', 'menu.customer.profile', 300100, 3, 'customers', 'customer/profile', '1', '0', 'C', '1', '1', 'customer:profile:list', 'customer', 'system', now(), 'Current tenant customers'),
+    (300121, 300001, 'Customer Query', 'menu.customer.profile.query', 300120, 1, '#', '', '1', '0', 'F', '1', '1', 'customer:profile:query', '#', 'system', now(), ''),
+    (300122, 300001, 'Customer Add', 'menu.customer.profile.add', 300120, 2, '#', '', '1', '0', 'F', '1', '1', 'customer:profile:add', '#', 'system', now(), ''),
+    (300123, 300001, 'Customer Edit', 'menu.customer.profile.edit', 300120, 3, '#', '', '1', '0', 'F', '1', '1', 'customer:profile:edit', '#', 'system', now(), ''),
+    (300124, 300001, 'Customer Delete', 'menu.customer.profile.remove', 300120, 4, '#', '', '1', '0', 'F', '1', '1', 'customer:profile:remove', '#', 'system', now(), '')
+ON CONFLICT (menu_id) DO UPDATE
+SET menu_name = EXCLUDED.menu_name,
+    i18n_key = EXCLUDED.i18n_key,
+    parent_id = EXCLUDED.parent_id,
+    order_num = EXCLUDED.order_num,
+    path = EXCLUDED.path,
+    component = EXCLUDED.component,
+    is_frame = EXCLUDED.is_frame,
+    is_cache = EXCLUDED.is_cache,
+    menu_type = EXCLUDED.menu_type,
+    visible = EXCLUDED.visible,
+    status = EXCLUDED.status,
+    perms = EXCLUDED.perms,
+    icon = EXCLUDED.icon,
+    tenant_id = EXCLUDED.tenant_id,
+    update_by = 'system',
+    update_time = now();
+
+INSERT INTO sys_role_menu (role_id, menu_id, tenant_id)
+SELECT 300001, menu_id, 300001
+FROM sys_menu
+WHERE tenant_id = 300001
+  AND menu_id BETWEEN 300100 AND 300124
+ON CONFLICT DO NOTHING;
+
+INSERT INTO sys_user (user_id, tenant_id, dept_id, user_name, nick_name, user_type, email, phonenumber, sex, password, force_password_change, status, del_flag, create_by, create_time, remark)
+VALUES (300001, 300001, 300001, 'demo_merchant', 'Demo Merchant Admin', 'sys_user', 'demo.merchant@example.com', '18830000101', '0',
+        '$2a$10$gkt8GIcTlW28k3a.osOvQus81YBcY9JHr7zLqaaknk4O2x9xX/JMm', '0', '1', '0', 'system', now(), 'Local development merchant administrator')
+ON CONFLICT (user_id) DO UPDATE
+SET tenant_id = EXCLUDED.tenant_id,
+    dept_id = EXCLUDED.dept_id,
+    user_name = EXCLUDED.user_name,
+    nick_name = EXCLUDED.nick_name,
+    email = EXCLUDED.email,
+    phonenumber = EXCLUDED.phonenumber,
+    status = EXCLUDED.status,
+    del_flag = EXCLUDED.del_flag,
+    update_by = 'system',
+    update_time = now(),
+    remark = EXCLUDED.remark;
+
+INSERT INTO sys_user_role (user_id, role_id, tenant_id)
+VALUES (300001, 300001, 300001)
+ON CONFLICT DO NOTHING;
+
+INSERT INTO merchant_profile (merchant_id, tenant_id, merchant_name, company_name, contact_first_name, contact_last_name, contact_name,
+                              primary_email, office_phone, mobile_phone, country, state, city, address_line1, postal_code,
+                              status, audit_status, audit_by, audit_by_id, audit_time, level_id, level_code, level_name,
+                              discount_rate, credit_limit, create_by, create_time, remark)
+VALUES (300001, 300001, 'Demo Merchant', 'Demo Merchant LLC', 'Taylor', 'Smith', 'Taylor Smith',
+        'demo.merchant@example.com', '+1 415 555 0101', '+1 415 555 0102', 'US', 'CA', 'San Francisco',
+        '100 Market Street', '94105', '1', 'APPROVED', 'system', 1, now(), 210002, 'VIP', 'VIP',
+        0.9500, 5000.00, 'system', now(), 'Local development merchant profile')
+ON CONFLICT (merchant_id) DO UPDATE
+SET merchant_name = EXCLUDED.merchant_name,
+    company_name = EXCLUDED.company_name,
+    contact_first_name = EXCLUDED.contact_first_name,
+    contact_last_name = EXCLUDED.contact_last_name,
+    contact_name = EXCLUDED.contact_name,
+    primary_email = EXCLUDED.primary_email,
+    office_phone = EXCLUDED.office_phone,
+    mobile_phone = EXCLUDED.mobile_phone,
+    country = EXCLUDED.country,
+    state = EXCLUDED.state,
+    city = EXCLUDED.city,
+    address_line1 = EXCLUDED.address_line1,
+    postal_code = EXCLUDED.postal_code,
+    status = EXCLUDED.status,
+    audit_status = EXCLUDED.audit_status,
+    level_id = EXCLUDED.level_id,
+    level_code = EXCLUDED.level_code,
+    level_name = EXCLUDED.level_name,
+    discount_rate = EXCLUDED.discount_rate,
+    credit_limit = EXCLUDED.credit_limit,
+    update_by = 'system',
+    update_time = now(),
+    remark = EXCLUDED.remark;
 
 CREATE TABLE IF NOT EXISTS sys_legal_document (
     document_id bigint PRIMARY KEY,

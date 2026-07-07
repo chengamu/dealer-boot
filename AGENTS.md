@@ -22,6 +22,8 @@
 - 不升级依赖，除非用户明确要求且已说明原因。
 - 不删除用户代码或已有注释，除非本任务明确要求。
 - 涉及跨模块、数据库、依赖、架构、i18n、UTC、时区、日期格式时，先说明影响范围和计划。
+- 涉及 i18n 时必须先读 `docs/项目配置和代码风格/i18n-utc-standards.md`。新增或修改翻译只改 `i18n/source/<module>/{en_US,zh_CN}.json`，再运行 `pnpm i18n` 生成产物。
+- 禁止手工修改 i18n 生成产物：`i18n/locales/*.json`、`admin-ui/public/i18n/*.json`、`bocoo-admin/src/main/resources/i18n/*.json`、`admin-ui/src/types/i18n-keys.d.ts`。这些文件只能由脚本生成。
 
 ## 验证
 

@@ -3,6 +3,7 @@ import type {
   EditCheckResult,
   ProductCrudApi,
   ProductFormulaQuery,
+  ProductFormulaReviewRecordVO,
   ProductFormulaReviewQuery,
   ProductFormulaSimulationBO,
   ProductFormulaSimulationVO,
@@ -38,6 +39,7 @@ export const productFormulaApi: ProductCrudApi<ProductFormulaVO, ProductFormulaQ
   validateSimulation: (id: string | number, data?: ProductFormulaSimulationBO) => Promise<unknown>
   reviews: (query?: ProductFormulaReviewQuery) => Promise<{ rows?: ProductFormulaVersionVO[]; total?: number }>
   review: (reviewId: string | number) => Promise<{ data?: ProductFormulaVersionVO }>
+  reviewRecords: (reviewId: string | number) => Promise<{ data?: ProductFormulaReviewRecordVO[] }>
   approveReview: (reviewId: string | number) => Promise<unknown>
   rejectReview: (reviewId: string | number, rejectReason: string) => Promise<unknown>
   validate: (id: string | number) => Promise<unknown>
@@ -68,6 +70,7 @@ export const productFormulaApi: ProductCrudApi<ProductFormulaVO, ProductFormulaQ
   validateSimulation: (id: string | number, data?: ProductFormulaSimulationBO) => request({ url: '/product-formula/formulas/' + id + '/simulation/validate', method: 'put', data }),
   reviews: (query?: ProductFormulaReviewQuery) => requestPage<ProductFormulaVersionVO>({ url: '/product-formula/reviews/list', method: 'get', params: query }),
   review: (reviewId: string | number) => request<ProductFormulaVersionVO>({ url: '/product-formula/reviews/' + reviewId, method: 'get' }),
+  reviewRecords: (reviewId: string | number) => request<ProductFormulaReviewRecordVO[]>({ url: '/product-formula/reviews/' + reviewId + '/records', method: 'get' }),
   approveReview: (reviewId: string | number) => request({ url: '/product-formula/reviews/' + reviewId + '/approve', method: 'put' }),
   rejectReview: (reviewId: string | number, rejectReason: string) => request({ url: '/product-formula/reviews/' + reviewId + '/reject', method: 'put', data: { rejectReason } }),
   validate: (id: string | number) => request({ url: '/product-formula/formulas/' + id + '/validate', method: 'put' }),
@@ -118,6 +121,7 @@ export const productFormulaSimulationApi = {
 export const productFormulaReviewApi = {
   list: productFormulaApi.reviews,
   get: productFormulaApi.review,
+  records: productFormulaApi.reviewRecords,
   approve: productFormulaApi.approveReview,
   reject: productFormulaApi.rejectReview
 }

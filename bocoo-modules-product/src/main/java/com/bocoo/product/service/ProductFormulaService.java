@@ -5,6 +5,7 @@ import com.bocoo.common.mybatis.core.page.TableDataInfo;
 import com.bocoo.product.domain.bo.ProductFormulaBo;
 import com.bocoo.product.domain.bo.ProductFormulaReviewBo;
 import com.bocoo.product.domain.vo.BaseEditCheckResultVo;
+import com.bocoo.product.domain.vo.ProductFormulaReviewRecordVo;
 import com.bocoo.product.domain.vo.ProductFormulaVersionVo;
 import com.bocoo.product.domain.vo.ProductFormulaVo;
 import com.bocoo.product.domain.vo.ReferenceCheckResultVo;
@@ -34,6 +35,8 @@ public interface ProductFormulaService {
     TableDataInfo<ProductFormulaVersionVo> queryReviewPage(ProductFormulaReviewBo bo, PageQuery pageQuery);
 
     ProductFormulaVersionVo queryReviewById(Long reviewId);
+
+    List<ProductFormulaReviewRecordVo> queryReviewRecords(Long reviewId);
 
     Boolean approveReview(Long reviewId);
 

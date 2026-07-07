@@ -37,14 +37,16 @@
     </el-row>
 
     <el-table v-loading="loading" :data="rows" border class="merchant-table-page__table" @selection-change="handleSelectionChange">
-      <el-table-column type="selection" width="48" />
+      <el-table-column type="selection" width="48" :selectable="isSelectable" />
       <el-table-column type="index" :label="t('common.index')" width="70" align="center" />
       <el-table-column :label="t('merchantLevel.name')" prop="levelName" min-width="130" />
       <el-table-column :label="t('merchantDiscount.category')" prop="categoryNameCn" min-width="150" />
       <el-table-column :label="t('merchantDiscount.productType')" prop="productTypeNameCn" min-width="150" />
-      <el-table-column :label="t('merchantDiscount.rate')" prop="discountRate" width="120" align="right" />
+      <el-table-column :label="t('merchantDiscount.rate')" width="120" align="right">
+        <template #default="{ row }">{{ formatDiscountRate(row.discountRate) }}</template>
+      </el-table-column>
       <el-table-column :label="t('common.status')" width="110" align="center">
-        <template #default="{ row }"><el-tag :type="row.status === 'ENABLED' ? 'success' : 'info'">{{ row.status === 'ENABLED' ? t('common.enabled') : t('common.disabled') }}</el-tag></template>
+        <template #default="{ row }"><el-tag :type="row.status === 'ENABLED' ? 'success' : 'info'">{{ merchantStatusText(row.status, t) }}</el-tag></template>
       </el-table-column>
       <el-table-column :label="t('common.updateTime')" width="170" align="center">
         <template #default="{ row }">{{ formatUtc(row.updateTime || row.createTime, 'YYYY-MM-DD HH:mm') }}</template>
@@ -79,14 +81,8 @@
             <el-option v-for="item in productTypeOptions" :key="item.value" :label="item.label" :value="item.value" />
           </el-select>
         </el-form-item>
-        <el-form-item :label="t('merchantDiscount.rate')" prop="discountRate"><el-input-number v-model="form.discountRate" :precision="4" :min="0" :max="1" controls-position="right" /></el-form-item>
+        <el-form-item :label="t('merchantDiscount.rate')" prop="discountRate"><el-input-number v-model="form.discountRate" :precision="2" :min="0" :max="1" controls-position="right" /></el-form-item>
         <el-form-item :label="t('common.sort')"><el-input-number v-model="form.sortOrder" :min="0" controls-position="right" /></el-form-item>
-        <el-form-item :label="t('common.status')">
-          <el-radio-group v-model="form.status">
-            <el-radio value="ENABLED">{{ t('common.enabled') }}</el-radio>
-            <el-radio value="DISABLED">{{ t('common.disabled') }}</el-radio>
-          </el-radio-group>
-        </el-form-item>
         <el-form-item :label="t('common.remark')"><el-input v-model="form.remark" type="textarea" :rows="3" /></el-form-item>
       </el-form>
       <template #footer>
@@ -103,6 +99,7 @@ import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'elem
 import { useI18n } from 'vue-i18n'
 import { changeMerchantLevelDiscountStatus, addMerchantLevelDiscount, deleteMerchantLevelDiscount, getMerchantLevelDiscount, listMerchantLevelDiscounts, updateMerchantLevelDiscount, type MerchantLevelDiscount, type MerchantLevelDiscountQuery } from '@/api/merchant/level-discount'
 import { optionsMerchantLevels, type MerchantLevel } from '@/api/merchant/level'
+import { formatDiscountRate, merchantStatusText } from '@/api/merchant/format'
 import { productCategoryApi } from '@/api/product-capability/base'
 import { getProductDictItems } from '@/api/product-capability/product-dict'
 import type { ProductCategoryVO } from '@/api/product-capability/types'
@@ -115,6 +112,7 @@ const levelOptions = ref<MerchantLevel[]>([])
 const categoryOptions = ref<ProductCategoryVO[]>([])
 const productTypeOptions = ref<Array<{ label: string; value: string }>>([])
 const ids = ref<Array<number | string>>([])
+const selectedRows = ref<MerchantLevelDiscount[]>([])
 const loading = ref(false)
 const open = ref(false)
 const showSearch = ref(true)
@@ -123,8 +121,8 @@ const queryRef = ref<FormInstance>()
 const formRef = ref<FormInstance>()
 const queryParams = reactive<MerchantLevelDiscountQuery>({ pageNum: 1, pageSize: 10 })
 const form = ref<MerchantLevelDiscount>({})
-const single = computed(() => ids.value.length !== 1)
-const multiple = computed(() => ids.value.length === 0)
+const single = computed(() => ids.value.length !== 1 || selectedRows.value.some((item) => item.status === 'ENABLED'))
+const multiple = computed(() => ids.value.length === 0 || selectedRows.value.some((item) => item.status === 'ENABLED'))
 const title = computed(() => (form.value.discountId ? t('merchantDiscount.editTitle') : t('merchantDiscount.addTitle')))
 const rules = computed<FormRules<MerchantLevelDiscount>>(() => ({
   levelId: [{ required: true, message: t('merchantDiscount.levelRequired'), trigger: 'change' }],
@@ -162,7 +160,11 @@ function resetQuery() {
   handleQuery()
 }
 function handleSelectionChange(selection: MerchantLevelDiscount[]) {
+  selectedRows.value = selection
   ids.value = selection.map((item) => item.discountId).filter(Boolean) as number[]
+}
+function isSelectable(row: MerchantLevelDiscount) {
+  return row.status !== 'ENABLED'
 }
 function openAdd() {
   form.value = { discountRate: 1, sortOrder: 0, status: 'DISABLED' }
@@ -172,6 +174,10 @@ async function openEdit(row?: MerchantLevelDiscount) {
   const id = row?.discountId || ids.value[0]
   if (!id) return
   const res = await getMerchantLevelDiscount(id)
+  if (res.data?.status === 'ENABLED') {
+    ElMessage.warning(t('merchantDiscount.enabledEditDenied'))
+    return
+  }
   form.value = { ...res.data }
   open.value = true
 }

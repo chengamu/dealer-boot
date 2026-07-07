@@ -6,7 +6,7 @@ import com.bocoo.product.domain.entity.ProductFormulaOptionMaterial;
 import com.bocoo.product.domain.entity.ProductFormulaOptionValue;
 import com.bocoo.product.domain.entity.ProductFormulaUsageRule;
 import com.bocoo.product.mapper.ProductFormulaUsageRuleMapper;
-import com.bocoo.product.mapper.ProductMaterialAttributeMapper;
+import com.bocoo.product.mapper.ProductBaseAttributeMapper;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -19,7 +19,7 @@ class ProductFormulaUsageRuleServiceImplTest {
 
     private final ProductFormulaUsageRuleServiceImpl service =
         new ProductFormulaUsageRuleServiceImpl(mock(ProductFormulaUsageRuleMapper.class), new ProductFormulaUsageRuleValidator(
-            new ProductFormulaExpressionReferenceValidator(mock(ProductMaterialAttributeMapper.class))));
+            new ProductFormulaExpressionReferenceValidator(mock(ProductBaseAttributeMapper.class))));
 
     @Test
     void fixedUsageModeAllowsOnlyOneEnabledRulePerMaterial() {

@@ -9,7 +9,7 @@
     <div v-if="selectedOption" class="option-form">
       <label>
         <span>{{ t('productCenter.formulaSetup.optionName') }}</span>
-        <el-input v-model="selectedOption.optionNameCn" :placeholder="t('productCenter.formulaSetup.optionNamePlaceholder')" />
+        <el-input ref="optionNameInputRef" v-model="selectedOption.optionNameCn" :placeholder="t('productCenter.formulaSetup.optionNamePlaceholder')" />
       </label>
       <label>
         <span>{{ t('productCenter.formulaSetup.optionNameEn') }}</span>
@@ -38,12 +38,23 @@
           <el-option value="SWITCH" :label="t('productCenter.formulaSetup.switch')" />
         </el-select>
       </label>
+      <label v-if="selectedOption.sourceType === 'MATERIAL_POOL'">
+        <span>{{ t('productCenter.formulaSetup.displayMode') }}</span>
+        <el-select
+          :model-value="selectedOption.displayMode || 'SELECT'"
+          @change="selectedOption.displayMode = String($event)"
+        >
+          <el-option value="SELECT" :label="t('productCenter.formulaSetup.displaySelect')" />
+          <el-option value="IMAGE_SELECT" :label="t('productCenter.formulaSetup.displayImageSelect')" />
+        </el-select>
+      </label>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import type { ProductFormulaOptionVO } from '@/api/product-capability/types'
+import { nextTick, ref } from 'vue'
 
 defineProps<{
   selectedOption?: ProductFormulaOptionVO
@@ -56,6 +67,15 @@ defineEmits<{
   'source-type-change': []
   'source-group-change': [value: string]
 }>()
+
+const optionNameInputRef = ref<{ focus: () => void }>()
+
+async function focusOptionName() {
+  await nextTick()
+  optionNameInputRef.value?.focus()
+}
+
+defineExpose({ focusOptionName })
 </script>
 
 <style scoped>
@@ -79,11 +99,12 @@ defineEmits<{
 .option-form {
   display: grid;
   grid-template-columns:
-    minmax(220px, 1.35fr)
-    minmax(220px, 1.35fr)
+    minmax(150px, 1fr)
+    minmax(140px, 0.9fr)
+    minmax(128px, 0.8fr)
     minmax(120px, 0.75fr)
-    minmax(140px, 0.85fr)
-    minmax(110px, 0.65fr);
+    minmax(108px, 0.7fr)
+    minmax(120px, 0.75fr);
   gap: 12px;
   margin-top: 14px;
 }

@@ -5,6 +5,7 @@ import {getToken} from '@/utils/auth'
 import {useUserStore} from '@/stores/user'
 import {usePermissionStore} from '@/stores/permission'
 import Layout from '@/layout/index.vue'
+import {i18n} from '@/i18n'
 import LoginPage from '@/pages/auth/LoginPage.vue'
 import MerchantApplyPage from '@/pages/auth/MerchantApplyPage.vue'
 import LegalDocumentViewPage from '@/pages/auth/LegalDocumentViewPage.vue'
@@ -361,7 +362,7 @@ router.beforeEach(async (to) => {
     await userStore.logout()
     permissionStore.reset()
     resetDynamicRoutes()
-    ElMessage.error(error instanceof Error ? error.message : 'Unable to load user profile')
+    ElMessage.error(error instanceof Error ? error.message : i18n.global.t('error.loadUserProfileFailed'))
     return '/login'
   }
   return true

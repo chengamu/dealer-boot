@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 const rootDir = path.resolve(__dirname, '..', '..');
+const sourceDir = path.join(rootDir, 'i18n', 'source');
 const localeDir = path.join(rootDir, 'i18n', 'locales');
 const supportedLocales = ['en_US', 'zh_CN'];
 
@@ -16,6 +17,56 @@ function writeJson(file, data) {
 
 function sortObject(data) {
   return Object.fromEntries(Object.entries(data).sort(([a], [b]) => a.localeCompare(b)));
+}
+
+function listSourceModules() {
+  if (!fs.existsSync(sourceDir)) return [];
+  return fs.readdirSync(sourceDir, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+    .sort();
+}
+
+function sourceLocalePath(moduleName, locale) {
+  return path.join(sourceDir, moduleName, `${locale}.json`);
+}
+
+function readSourceModule(moduleName, locale) {
+  const file = sourceLocalePath(moduleName, locale);
+  if (!fs.existsSync(file)) return {};
+  return readJson(file);
+}
+
+function writeSourceModule(moduleName, locale, data) {
+  writeJson(sourceLocalePath(moduleName, locale), data);
+}
+
+function readSourceLocale(locale) {
+  const messages = {};
+  const keyModules = {};
+  const duplicates = [];
+
+  for (const moduleName of listSourceModules()) {
+    const moduleMessages = readSourceModule(moduleName, locale);
+    for (const [key, value] of Object.entries(moduleMessages)) {
+      if (Object.prototype.hasOwnProperty.call(messages, key)) {
+        duplicates.push({
+          key,
+          firstModule: keyModules[key],
+          duplicateModule: moduleName
+        });
+        continue;
+      }
+      messages[key] = value;
+      keyModules[key] = moduleName;
+    }
+  }
+
+  return {
+    messages: sortObject(messages),
+    keyModules,
+    duplicates
+  };
 }
 
 function readLocale(locale) {
@@ -126,10 +177,17 @@ function unquoteSql(value) {
 
 module.exports = {
   rootDir,
+  sourceDir,
   localeDir,
   supportedLocales,
   readJson,
   writeJson,
+  sortObject,
+  listSourceModules,
+  sourceLocalePath,
+  readSourceModule,
+  writeSourceModule,
+  readSourceLocale,
   readLocale,
   localePath,
   placeholderSet,

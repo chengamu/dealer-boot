@@ -9,10 +9,10 @@
   <div v-else class="condition-grid">
     <div v-for="(row, index) in rows" :key="index" class="condition-grid__row">
       <el-select v-if="index > 0" v-model="row.joiner" class="condition-grid__joiner">
-        <el-option label="并且" value="AND" />
-        <el-option label="或者" value="OR" />
+        <el-option :label="t('productCenter.formulaSetup.conditionAnd')" value="AND" />
+        <el-option :label="t('productCenter.formulaSetup.conditionOr')" value="OR" />
       </el-select>
-      <span v-else class="condition-grid__joiner condition-grid__joiner-text">当</span>
+      <span v-else class="condition-grid__joiner condition-grid__joiner-text">{{ t('productCenter.formulaSetup.when') }}</span>
       <el-select v-model="row.optionRef" filterable @change="row.valueRef = ''">
         <el-option v-for="option in optionChoices" :key="option.value" :label="option.label" :value="option.value" />
       </el-select>

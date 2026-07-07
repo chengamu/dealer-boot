@@ -1,5 +1,6 @@
 import { createI18n } from 'vue-i18n'
 import { getLocaleCookie } from '@/utils/auth'
+import type { I18nMessageSchema } from '@/types/i18n-keys'
 
 export type AppLocale = 'zh_CN' | 'en_US'
 export type LocaleMessages = Record<string, string>
@@ -13,6 +14,10 @@ function sanitizeVueI18nMessages(messages: LocaleMessages) {
     const parts = key.split('.')
     return !parts.some((_, index) => index > 0 && keys.has(parts.slice(0, index).join('.')))
   })) as LocaleMessages
+}
+
+function toTypedVueI18nMessages(messages: LocaleMessages) {
+  return sanitizeVueI18nMessages(messages) as unknown as I18nMessageSchema
 }
 
 export const i18n = createI18n({
@@ -50,14 +55,14 @@ export async function loadLocaleMessages(locale: AppLocale) {
   }
   const messages = await response.json() as LocaleMessages
   loadedMessages[locale] = messages
-  i18n.global.setLocaleMessage(locale, sanitizeVueI18nMessages(messages))
+  i18n.global.setLocaleMessage(locale, toTypedVueI18nMessages(messages))
   return messages
 }
 
 function setEmptyLocaleMessages(locale: AppLocale) {
   const messages: LocaleMessages = {}
   loadedMessages[locale] = messages
-  i18n.global.setLocaleMessage(locale, sanitizeVueI18nMessages(messages))
+  i18n.global.setLocaleMessage(locale, toTypedVueI18nMessages(messages))
   return messages
 }
 

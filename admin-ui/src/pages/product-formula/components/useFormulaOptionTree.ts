@@ -83,8 +83,7 @@ export function useFormulaOptionTree(props: OptionTreeProps, options: UseOptionT
 
   watch(() => props.selectedOptionCode, () => {
     ensureSelectedValue()
-    ensureSelectedNode()
-    if (selectedNodeId.value) expandNodePath(selectedNodeId.value, true)
+    ensureSelectedNode(true)
   })
 
   watch(() => optionTreeNodes.value.map((node) => node.id).join('|'), () => {
@@ -182,14 +181,14 @@ export function useFormulaOptionTree(props: OptionTreeProps, options: UseOptionT
     if (node) selectTreeNode(node)
   }
 
-  function ensureSelectedNode() {
+  function ensureSelectedNode(reveal = false) {
     if (optionTreeNodes.value.some((node) => node.id === selectedNodeId.value)) {
-      expandNodePath(selectedNodeId.value, selectedNode.value?.type === 'option')
+      if (reveal) expandNodePath(selectedNodeId.value, selectedNode.value?.type === 'option')
       return
     }
     const option = selectedOption.value || props.options[0]
     selectedNodeId.value = option ? optionNodeId(option) : ''
-    if (selectedNodeId.value) expandNodePath(selectedNodeId.value, true)
+    if (reveal && selectedNodeId.value) expandNodePath(selectedNodeId.value, true)
   }
 
   function ensureSelectedValue() {

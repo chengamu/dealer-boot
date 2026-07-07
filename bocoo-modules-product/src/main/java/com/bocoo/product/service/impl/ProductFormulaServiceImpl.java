@@ -10,6 +10,7 @@ import com.bocoo.product.domain.bo.ProductFormulaBo;
 import com.bocoo.product.domain.bo.ProductFormulaReviewBo;
 import com.bocoo.product.domain.entity.ProductFormula;
 import com.bocoo.product.domain.vo.BaseEditCheckResultVo;
+import com.bocoo.product.domain.vo.ProductFormulaReviewRecordVo;
 import com.bocoo.product.domain.vo.ProductFormulaVersionVo;
 import com.bocoo.product.domain.vo.ProductFormulaVo;
 import com.bocoo.product.domain.vo.ReferenceCheckResultVo;
@@ -43,6 +44,7 @@ public class ProductFormulaServiceImpl extends ProductServiceSupport implements 
     private final ProductFormulaDraftNormalizer draftNormalizer;
     private final ProductFormulaReviewLifecycle reviewLifecycle;
     private final ProductFormulaReviewQueryService reviewQueryService;
+    private final ProductFormulaReviewRecordQueryService reviewRecordQueryService;
 
     @Override
     public TableDataInfo<ProductFormulaVo> queryPageList(ProductFormulaBo bo, PageQuery pageQuery) {
@@ -152,6 +154,11 @@ public class ProductFormulaServiceImpl extends ProductServiceSupport implements 
     @Override
     public ProductFormulaVersionVo queryReviewById(Long reviewId) {
         return reviewLifecycle.queryReviewById(reviewId);
+    }
+
+    @Override
+    public List<ProductFormulaReviewRecordVo> queryReviewRecords(Long reviewId) {
+        return reviewRecordQueryService.queryReviewRecords(reviewId);
     }
 
     @Override

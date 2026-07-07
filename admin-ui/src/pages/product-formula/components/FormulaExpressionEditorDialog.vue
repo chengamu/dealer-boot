@@ -164,13 +164,13 @@ const variableGroups = computed(() => isFormulaTarget.value ? formulaVariableGro
 
 watch(() => props.modelValue, (open) => {
   if (open) {
-    window.addEventListener('keydown', stopEscapeEvent, true)
+    addEscapeListeners()
   } else {
-    window.removeEventListener('keydown', stopEscapeEvent, true)
+    removeEscapeListeners()
   }
 }, { immediate: true })
 
-onBeforeUnmount(() => window.removeEventListener('keydown', stopEscapeEvent, true))
+onBeforeUnmount(removeEscapeListeners)
 
 function appendExpressionText(value: string) {
   editorText.value = `${editorText.value || ''}${editorText.value ? ' ' : ''}${value}`
@@ -181,6 +181,20 @@ function stopEscapeEvent(event: KeyboardEvent) {
   event.preventDefault()
   event.stopPropagation()
   event.stopImmediatePropagation()
+}
+
+function addEscapeListeners() {
+  window.addEventListener('keydown', stopEscapeEvent, true)
+  window.addEventListener('keyup', stopEscapeEvent, true)
+  document.addEventListener('keydown', stopEscapeEvent, true)
+  document.addEventListener('keyup', stopEscapeEvent, true)
+}
+
+function removeEscapeListeners() {
+  window.removeEventListener('keydown', stopEscapeEvent, true)
+  window.removeEventListener('keyup', stopEscapeEvent, true)
+  document.removeEventListener('keydown', stopEscapeEvent, true)
+  document.removeEventListener('keyup', stopEscapeEvent, true)
 }
 
 function appendConditionClause(clause: string, joiner: string) {

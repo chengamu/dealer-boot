@@ -1,5 +1,5 @@
 import type { ProductFormulaMaterialVO, ProductFormulaOptionVO, ProductFormulaOptionValueVO, ProductFormulaVariableVO } from '@/api/product-capability/types'
-import { formulaVariables } from '../utils/formulaExpression'
+import { formulaVariables, normalizeOutsideQuotes } from '../utils/formulaNormalize'
 
 type AliasPair = { from: string; to: string }
 
@@ -18,13 +18,17 @@ export function normalizeDisplayExpression(
   materials: ProductFormulaMaterialVO[] = [],
   variables: ProductFormulaVariableVO[] = []
 ) {
-  let expression = String(input || '')
-  buildAliasPairs(options, optionValues, materials, variables)
+  const aliases = buildAliasPairs(options, optionValues, materials, variables)
     .sort((left, right) => right.from.length - left.from.length)
-    .forEach(({ from, to }) => {
-      expression = expression.replace(new RegExp(escapeRegExp(from), 'g'), to)
-    })
-  return expression
+  return normalizeOutsideQuotes(String(input || ''), (segment) => replaceAliasPairs(segment, aliases))
+}
+
+function replaceAliasPairs(expression: string, aliases: AliasPair[]) {
+  let result = expression
+  aliases.forEach(({ from, to }) => {
+    result = result.replace(new RegExp(escapeRegExp(from), 'g'), to)
+  })
+  return result
 }
 
 function buildAliasPairs(options: ProductFormulaOptionVO[], optionValues: ProductFormulaOptionValueVO[], materials: ProductFormulaMaterialVO[], variables: ProductFormulaVariableVO[]) {

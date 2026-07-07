@@ -15,7 +15,7 @@
             :placeholder="t('productCenter.formulaSetup.attributeGroup')"
             :prefix-icon="Filter"
           >
-            <el-option :label="localeStore.language === 'zh_CN' ? '全部' : 'All'" :value="MATERIAL_TYPE_ALL" />
+            <el-option :label="t('common.all')" :value="MATERIAL_TYPE_ALL" />
             <el-option v-for="group in materialGroupCards" :key="group.code" :label="displayGroupName(group)" :value="group.code" />
           </el-select>
           <el-input

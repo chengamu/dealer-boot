@@ -1,5 +1,5 @@
 const {
-  readLocale,
+  readSourceLocale,
   supportedLocales,
   placeholderSet,
   parseDictCoverageFromSql
@@ -11,9 +11,13 @@ function diff(a, b) {
 
 function main() {
   const [sourceLocale, ...targetLocales] = supportedLocales;
-  const source = readLocale(sourceLocale);
+  const { messages: source, duplicates: sourceDuplicates } = readSourceLocale(sourceLocale);
   const sourceKeys = Object.keys(source).sort();
   const errors = [];
+
+  for (const item of sourceDuplicates) {
+    errors.push(`${sourceLocale}:${item.key} is duplicated in ${item.firstModule} and ${item.duplicateModule}`);
+  }
 
   for (const [key, value] of Object.entries(source)) {
     if (String(value ?? '').trim() === '') {
@@ -22,8 +26,11 @@ function main() {
   }
 
   for (const locale of targetLocales) {
-    const target = readLocale(locale);
+    const { messages: target, duplicates } = readSourceLocale(locale);
     const targetKeys = Object.keys(target).sort();
+    for (const item of duplicates) {
+      errors.push(`${locale}:${item.key} is duplicated in ${item.firstModule} and ${item.duplicateModule}`);
+    }
     for (const key of sourceKeys) {
       if (!(key in target)) {
         errors.push(`${locale}:${key} is missing`);
@@ -50,7 +57,7 @@ function main() {
   const dictRows = parseDictCoverageFromSql();
   for (const row of dictRows) {
     for (const locale of supportedLocales) {
-      const messages = readLocale(locale);
+      const { messages } = readSourceLocale(locale);
       if (!(row.key in messages)) {
         errors.push(`${locale}:${row.key} missing for enabled dict ${row.dictType}/${row.value}`);
       }

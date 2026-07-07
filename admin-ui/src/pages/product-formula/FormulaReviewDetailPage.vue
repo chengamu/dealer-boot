@@ -26,33 +26,15 @@
 
     <section class="review-detail-panel">
       <div class="section-title">{{ t('productCenter.formulaReview.materialDetail') }}</div>
-      <el-table v-loading="loading" :data="materials" border class="review-detail-table">
-        <el-table-column type="index" :label="t('common.index')" width="64" align="center" />
-        <el-table-column prop="attributeGroupNameCn" :label="t('productCenter.formulaSetup.attributeGroup')" width="110" show-overflow-tooltip />
-        <el-table-column prop="materialTypeNameCn" :label="t('productCenter.formulaSetup.materialType')" width="130" show-overflow-tooltip />
-        <el-table-column prop="materialCode" :label="t('productCenter.formulaSetup.materialCode')" width="130" show-overflow-tooltip />
-        <el-table-column prop="materialNameCn" :label="t('productCenter.formulaSetup.materialName')" min-width="220" show-overflow-tooltip />
-        <el-table-column prop="specModelText" :label="t('productCenter.formulaSetup.specModel')" min-width="180" show-overflow-tooltip />
-        <el-table-column prop="unitCode" :label="t('productCenter.formulaSetup.unit')" width="90" />
-        <el-table-column :label="t('productCenter.formulaSetup.usageSummary')" min-width="150">
-          <template #default="{ row }">{{ usageSummary(row) }}</template>
-        </el-table-column>
-        <el-table-column :label="t('productCenter.formulaSimulation.unitPrice')" width="110" align="right">
-          <template #default="{ row }">{{ money(priceSnapshot(row.materialCode)?.unitPrice) }}</template>
-        </el-table-column>
-        <el-table-column :label="t('productCenter.formulaSimulation.salesPrice')" width="110" align="right">
-          <template #default="{ row }">{{ money(priceSnapshot(row.materialCode)?.salesPrice) }}</template>
-        </el-table-column>
-        <el-table-column prop="productionRemark" :label="t('productCenter.formulaSetup.productionRemark')" min-width="160" show-overflow-tooltip />
-        <el-table-column type="expand">
-          <template #default="{ row }">
-            <div class="row-detail">
-              <p>{{ t('productCenter.formulaReview.usageRules') }}：{{ usageRules(row).length }}</p>
-              <p>{{ t('productCenter.formulaReview.optionMaterials') }}：{{ optionMaterials(row).length }}</p>
-            </div>
-          </template>
-        </el-table-column>
-      </el-table>
+      <FormulaReviewMaterialSummary
+        :loading="loading"
+        :materials="materials"
+        :usage-rules="allUsageRules"
+        :option-materials="allOptionMaterials"
+        :price-snapshot-rows="priceSnapshotRows"
+        :unit-rows="unitRows"
+        :t="t"
+      />
     </section>
 
     <section class="review-detail-panel">
@@ -85,8 +67,10 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { useRoute, useRouter } from 'vue-router'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
+import { productUnitApi } from '@/api/product-capability/base'
 import { productFormulaApi } from '@/api/product-formula/formula'
 import {
+  PRODUCT_STATUS_ENABLED,
   formulaStatusTagType,
   formulaStatusText,
   formulaValidationStatusText,
@@ -96,8 +80,10 @@ import type {
   ProductFormulaMaterialVO,
   ProductFormulaOptionMaterialVO,
   ProductFormulaUsageRuleVO,
-  ProductFormulaVersionVO
+  ProductFormulaVersionVO,
+  ProductUnitVO
 } from '@/api/product-capability/types'
+import FormulaReviewMaterialSummary from './components/FormulaReviewMaterialSummary.vue'
 import { formatFormulaReviewMinute, parseFormulaReviewJson } from './utils/formulaReviewDisplay'
 
 const route = useRoute()
@@ -106,6 +92,7 @@ const localeStore = useLocaleStore()
 const t = (key: string) => getMessage(key, localeStore.language)
 const loading = ref(false)
 const review = ref<ProductFormulaVersionVO>({})
+const unitRows = ref<ProductUnitVO[]>([])
 const reviewId = String(route.params.reviewId || '')
 
 const formula = computed(() => parseFormulaReviewJson(review.value.formulaSnapshotJson))
@@ -113,37 +100,18 @@ const setup = computed(() => parseFormulaReviewJson(review.value.setupSnapshotJs
 const materials = computed(() => (setup.value.materials || []) as ProductFormulaMaterialVO[])
 const allUsageRules = computed(() => (setup.value.usageRules || []) as ProductFormulaUsageRuleVO[])
 const allOptionMaterials = computed(() => (setup.value.optionMaterials || []) as ProductFormulaOptionMaterialVO[])
-
-function money(value?: number) {
-  return value == null ? '-' : Number(value).toFixed(2)
-}
-
-function priceSnapshot(materialCode?: string) {
-  const rows = (setup.value.priceSnapshot || []) as Array<Record<string, unknown>>
-  return rows.find((row) => row.materialCode === materialCode) as { unitPrice?: number; salesPrice?: number } | undefined
-}
-
-function usageRules(row: ProductFormulaMaterialVO) {
-  return allUsageRules.value.filter((rule) => rule.formulaMaterialId === row.formulaMaterialId || rule.materialCode === row.materialCode)
-}
-
-function optionMaterials(row: ProductFormulaMaterialVO) {
-  return allOptionMaterials.value.filter((item) => item.materialCode === row.materialCode)
-}
-
-function usageSummary(row: ProductFormulaMaterialVO) {
-  const rules = usageRules(row)
-  if (rules.length > 0) return `${t('productCenter.formulaSetup.ruleCount')} ${rules.length}`
-  if (row.fixedUsageQty != null) return `${t('productCenter.formulaSetup.usageFixed')} ${Number(row.fixedUsageQty).toFixed(2)}`
-  return t('productCenter.formulaSetup.defaultRuleMissing')
-}
+const priceSnapshotRows = computed(() => (setup.value.priceSnapshot || []) as Array<{ materialCode?: string; unitPrice?: number; salesPrice?: number }>)
 
 async function load() {
   if (!reviewId) return
   loading.value = true
   try {
-    const response = await productFormulaApi.review(reviewId)
+    const [response, unitResponse] = await Promise.all([
+      productFormulaApi.review(reviewId),
+      productUnitApi.options?.({ status: PRODUCT_STATUS_ENABLED, pageNum: 1, pageSize: 500 })
+    ])
     review.value = response.data || {}
+    unitRows.value = Array.isArray(unitResponse) ? unitResponse : unitResponse?.data || []
   } finally {
     loading.value = false
   }
@@ -229,11 +197,6 @@ onMounted(load)
   color: #1d2129;
   font-size: 15px;
   font-weight: 600;
-}
-
-.row-detail {
-  padding: 8px 16px;
-  color: #4b5563;
 }
 
 .review-detail-panel :deep(.el-table) {

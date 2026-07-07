@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { rootDir, supportedLocales, localePath } = require('./lib.ts');
+const { buildLocales } = require('./build.ts');
 
 const targets = [
   path.join(rootDir, 'admin-ui', 'public', 'i18n'),
@@ -8,6 +9,7 @@ const targets = [
 ];
 
 function main() {
+  buildLocales();
   for (const targetDir of targets) {
     fs.mkdirSync(targetDir, { recursive: true });
     for (const locale of supportedLocales) {

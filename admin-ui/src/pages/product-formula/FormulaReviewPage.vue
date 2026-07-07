@@ -147,10 +147,9 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { useRouter } from 'vue-router'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
-import { productChangeLogApi } from '@/api/product-capability/material'
 import { productFormulaApi } from '@/api/product-formula/formula'
 import AdminTableActions, { type AdminTableAction } from '@/components/AdminTableActions/index.vue'
-import type { ProductChangeLogVO, ProductFormulaReviewQuery, ProductFormulaVersionVO } from '@/api/product-capability/types'
+import type { ProductFormulaReviewQuery, ProductFormulaReviewRecordVO, ProductFormulaVersionVO } from '@/api/product-capability/types'
 import FormulaReviewRecordDrawer from './components/FormulaReviewRecordDrawer.vue'
 import {
   formulaValidationStatusOptions,
@@ -173,7 +172,7 @@ const queryRef = ref()
 const currentRow = ref<ProductFormulaVersionVO>()
 const reviewRecordOpen = ref(false)
 const reviewRecordLoading = ref(false)
-const reviewRecordRows = ref<ProductChangeLogVO[]>([])
+const reviewRecordRows = ref<ProductFormulaReviewRecordVO[]>([])
 const validationStatusOptions = computed(() => formulaValidationStatusOptions(t))
 const query = reactive<ProductFormulaReviewQuery>({ pageNum: 1, pageSize: 10 })
 
@@ -231,18 +230,12 @@ function handleCurrentReject() {
 }
 
 async function handleCurrentReviewRecord() {
-  if (!currentRow.value?.formulaId) return
+  if (!currentRow.value?.versionId) return
   reviewRecordOpen.value = true
   reviewRecordLoading.value = true
   try {
-    const response = await productChangeLogApi.list({
-      bizModule: 'FORMULA',
-      bizType: 'FORMULA',
-      bizId: currentRow.value.formulaId,
-      pageNum: 1,
-      pageSize: 50
-    })
-    reviewRecordRows.value = response.rows || []
+    const response = await productFormulaApi.reviewRecords(currentRow.value.versionId)
+    reviewRecordRows.value = response.data || []
   } finally {
     reviewRecordLoading.value = false
   }

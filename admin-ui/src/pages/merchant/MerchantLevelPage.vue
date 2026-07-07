@@ -28,17 +28,21 @@
     </el-row>
 
     <el-table v-loading="loading" :data="rows" border class="merchant-table-page__table" @selection-change="handleSelectionChange">
-      <el-table-column type="selection" width="48" />
+      <el-table-column type="selection" width="48" :selectable="isSelectable" />
       <el-table-column type="index" :label="t('common.index')" width="70" align="center" />
       <el-table-column :label="t('merchantLevel.code')" prop="levelCode" min-width="130" />
       <el-table-column :label="t('merchantLevel.name')" prop="levelName" min-width="150" />
-      <el-table-column :label="t('merchantLevel.discount')" prop="defaultDiscountRate" width="130" align="right" />
-      <el-table-column :label="t('merchantLevel.credit')" prop="defaultCreditLimit" width="150" align="right" />
+      <el-table-column :label="t('merchantLevel.discount')" width="130" align="right">
+        <template #default="{ row }">{{ formatDiscountRate(row.defaultDiscountRate) }}</template>
+      </el-table-column>
+      <el-table-column :label="t('merchantLevel.credit')" width="150" align="right">
+        <template #default="{ row }">{{ formatCreditLimit(row.defaultCreditLimit) }}</template>
+      </el-table-column>
       <el-table-column :label="t('merchantLevel.defaultFlag')" width="100" align="center">
         <template #default="{ row }">{{ row.defaultFlag ? t('common.yes') : t('common.no') }}</template>
       </el-table-column>
       <el-table-column :label="t('common.status')" width="110" align="center">
-        <template #default="{ row }"><el-tag :type="row.status === 'ENABLED' ? 'success' : 'info'">{{ statusText(row.status) }}</el-tag></template>
+        <template #default="{ row }"><el-tag :type="row.status === 'ENABLED' ? 'success' : 'info'">{{ merchantStatusText(row.status, t) }}</el-tag></template>
       </el-table-column>
       <el-table-column :label="t('common.updateTime')" width="170" align="center">
         <template #default="{ row }">{{ formatUtc(row.updateTime || row.createTime, 'YYYY-MM-DD HH:mm') }}</template>
@@ -60,16 +64,10 @@
       <el-form ref="formRef" :model="form" :rules="rules" label-width="120px">
         <el-form-item :label="t('merchantLevel.code')" prop="levelCode"><el-input v-model="form.levelCode" /></el-form-item>
         <el-form-item :label="t('merchantLevel.name')" prop="levelName"><el-input v-model="form.levelName" /></el-form-item>
-        <el-form-item :label="t('merchantLevel.discount')" prop="defaultDiscountRate"><el-input-number v-model="form.defaultDiscountRate" :precision="4" :min="0" :max="1" controls-position="right" /></el-form-item>
+        <el-form-item :label="t('merchantLevel.discount')" prop="defaultDiscountRate"><el-input-number v-model="form.defaultDiscountRate" :precision="2" :min="0" :max="1" controls-position="right" /></el-form-item>
         <el-form-item :label="t('merchantLevel.credit')" prop="defaultCreditLimit"><el-input-number v-model="form.defaultCreditLimit" :precision="2" :min="0" controls-position="right" /></el-form-item>
         <el-form-item :label="t('merchantLevel.defaultFlag')"><el-switch v-model="form.defaultFlag" /></el-form-item>
         <el-form-item :label="t('common.sort')" prop="sortOrder"><el-input-number v-model="form.sortOrder" :min="0" controls-position="right" /></el-form-item>
-        <el-form-item :label="t('common.status')">
-          <el-radio-group v-model="form.status">
-            <el-radio value="ENABLED">{{ t('common.enabled') }}</el-radio>
-            <el-radio value="DISABLED">{{ t('common.disabled') }}</el-radio>
-          </el-radio-group>
-        </el-form-item>
         <el-form-item :label="t('common.remark')"><el-input v-model="form.remark" type="textarea" :rows="3" /></el-form-item>
       </el-form>
       <template #footer>
@@ -85,12 +83,14 @@ import { computed, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import { addMerchantLevel, changeMerchantLevelStatus, deleteMerchantLevel, getMerchantLevel, listMerchantLevels, updateMerchantLevel, type MerchantLevel, type MerchantLevelQuery } from '@/api/merchant/level'
+import { formatCreditLimit, formatDiscountRate, merchantStatusText } from '@/api/merchant/format'
 import { download } from '@/utils/request'
 import { formatUtc } from '@/utils/datetime'
 
 const { t } = useI18n()
 const rows = ref<MerchantLevel[]>([])
 const ids = ref<Array<number | string>>([])
+const selectedRows = ref<MerchantLevel[]>([])
 const loading = ref(false)
 const open = ref(false)
 const showSearch = ref(true)
@@ -99,8 +99,8 @@ const queryRef = ref<FormInstance>()
 const formRef = ref<FormInstance>()
 const queryParams = reactive<MerchantLevelQuery>({ pageNum: 1, pageSize: 10 })
 const form = ref<MerchantLevel>({})
-const single = computed(() => ids.value.length !== 1)
-const multiple = computed(() => ids.value.length === 0)
+const single = computed(() => ids.value.length !== 1 || selectedRows.value.some((item) => item.status === 'ENABLED'))
+const multiple = computed(() => ids.value.length === 0 || selectedRows.value.some((item) => item.status === 'ENABLED'))
 const title = computed(() => (form.value.levelId ? t('merchantLevel.editTitle') : t('merchantLevel.addTitle')))
 const rules = computed<FormRules<MerchantLevel>>(() => ({
   levelCode: [{ required: true, message: t('merchantLevel.codeRequired'), trigger: 'blur' }],
@@ -119,9 +119,6 @@ async function getList() {
     loading.value = false
   }
 }
-function statusText(status?: string) {
-  return status === 'ENABLED' ? t('common.enabled') : t('common.disabled')
-}
 function handleQuery() {
   queryParams.pageNum = 1
   getList()
@@ -131,7 +128,11 @@ function resetQuery() {
   handleQuery()
 }
 function handleSelectionChange(selection: MerchantLevel[]) {
+  selectedRows.value = selection
   ids.value = selection.map((item) => item.levelId).filter(Boolean) as number[]
+}
+function isSelectable(row: MerchantLevel) {
+  return row.status !== 'ENABLED'
 }
 function openAdd() {
   form.value = { defaultDiscountRate: 1, defaultCreditLimit: 0, defaultFlag: false, sortOrder: 0, status: 'DISABLED' }
@@ -141,6 +142,10 @@ async function openEdit(row?: MerchantLevel) {
   const id = row?.levelId || ids.value[0]
   if (!id) return
   const res = await getMerchantLevel(id)
+  if (res.data?.status === 'ENABLED') {
+    ElMessage.warning(t('merchantLevel.enabledEditDenied'))
+    return
+  }
   form.value = { ...res.data }
   open.value = true
 }

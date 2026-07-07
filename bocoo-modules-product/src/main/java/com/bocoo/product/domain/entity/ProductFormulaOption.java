@@ -27,6 +27,7 @@ public class ProductFormulaOption extends BaseEntity {
     private String sourceType;
     private String sourceScope;
     private String selectionMode;
+    private String displayMode;
     private String defaultValueCode;
     private String defaultValueNameCn;
     private String visibilityMode;

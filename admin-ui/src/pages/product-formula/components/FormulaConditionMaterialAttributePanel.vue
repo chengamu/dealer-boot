@@ -8,7 +8,7 @@
   />
   <div v-else class="condition-grid condition-grid--material-attribute">
     <div v-for="(row, index) in sources" :key="index" class="condition-grid__row">
-      <span class="condition-grid__joiner-text">{{ index === 0 ? '取' : '+' }}</span>
+      <span class="condition-grid__joiner-text">{{ index === 0 ? t('productCenter.formulaSetup.take') : '+' }}</span>
       <el-select v-model="row.optionRef" filterable :placeholder="t('productCenter.formulaSetup.attributeSourceOption')" @change="row.attributeCode = ''">
         <el-option v-for="option in optionChoices" :key="option.value" :label="option.label" :value="option.value" />
       </el-select>

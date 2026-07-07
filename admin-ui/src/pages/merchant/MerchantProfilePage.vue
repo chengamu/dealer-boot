@@ -1,84 +1,78 @@
 <template>
   <div class="app-container merchant-profile-editor">
-    <el-card shadow="never" class="merchant-profile-editor__card">
-      <template #header>
-        <div class="page-header">
-          <span>{{ t('merchantProfile.selfTitle') }}</span>
-          <el-button :loading="loading" icon="Refresh" @click="loadProfile">{{ t('common.refresh') }}</el-button>
+    <section class="profile-hero">
+      <div class="profile-hero__main">
+        <span class="profile-hero__eyebrow">{{ t('merchantProfile.selfTitle') }}</span>
+        <div class="profile-hero__title-row">
+          <h2>{{ displayValue(form.merchantName) }}</h2>
+          <el-tag :type="form.status === '1' ? 'success' : 'info'">{{ merchantStatusText(form.status, t) }}</el-tag>
         </div>
-      </template>
-
-      <el-alert :title="t('merchantProfile.lockedHint')" type="info" show-icon :closable="false" class="mb16" />
-
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="150px" class="profile-form">
-        <el-divider content-position="left">{{ t('merchantProfile.legalSection') }}</el-divider>
-        <div class="grid two">
-          <el-form-item :label="t('merchantProfile.merchantName')">
-            <el-input v-model="form.merchantName" disabled />
-          </el-form-item>
-          <el-form-item :label="t('merchantProfile.companyName')">
-            <el-input v-model="form.companyName" disabled />
-          </el-form-item>
-          <el-form-item :label="t('merchantProfile.primaryEmail')">
-            <el-input v-model="form.primaryEmail" disabled />
-          </el-form-item>
-          <el-form-item :label="t('merchantProfile.country')">
-            <el-input v-model="form.country" disabled />
-          </el-form-item>
-          <el-form-item :label="t('merchantLevel.name')">
-            <el-input v-model="form.levelName" disabled />
-          </el-form-item>
-          <el-form-item :label="t('merchantLevel.discount')">
-            <el-input :model-value="form.discountRate ?? '-'" disabled />
-          </el-form-item>
-          <el-form-item :label="t('merchantLevel.credit')">
-            <el-input :model-value="form.creditLimit ?? '-'" disabled />
-          </el-form-item>
+        <p>{{ displayValue(form.companyName) }}</p>
+        <div class="profile-hero__meta">
+          <span>{{ displayValue(form.primaryEmail) }}</span>
+          <span>{{ displayValue(form.country) }}</span>
         </div>
+      </div>
+      <div class="profile-hero__actions">
+        <el-button :loading="loading" icon="Refresh" @click="loadProfile">{{ t('common.refresh') }}</el-button>
+      </div>
+    </section>
 
-        <el-divider content-position="left">{{ t('merchantProfile.contactSection') }}</el-divider>
-        <div class="grid two">
-          <el-form-item :label="t('apply.firstName')" prop="contactFirstName">
-            <el-input v-model="form.contactFirstName" />
-          </el-form-item>
-          <el-form-item :label="t('apply.lastName')" prop="contactLastName">
-            <el-input v-model="form.contactLastName" />
-          </el-form-item>
-          <el-form-item :label="t('merchantProfile.officePhone')" prop="officePhone">
-            <el-input v-model="form.officePhone" />
-          </el-form-item>
-          <el-form-item :label="t('merchantProfile.mobilePhone')" prop="mobilePhone">
-            <el-input v-model="form.mobilePhone" />
-          </el-form-item>
-        </div>
+    <div class="profile-layout">
+      <el-form ref="formRef" :model="form" :rules="rules" label-width="108px" class="profile-form">
+        <section class="profile-section">
+          <header>{{ t('merchantProfile.contactSection') }}</header>
+          <div class="grid two">
+            <el-form-item :label="t('apply.firstName')" prop="contactFirstName"><el-input v-model="form.contactFirstName" /></el-form-item>
+            <el-form-item :label="t('apply.lastName')" prop="contactLastName"><el-input v-model="form.contactLastName" /></el-form-item>
+            <el-form-item :label="t('merchantProfile.officePhone')" prop="officePhone"><el-input v-model="form.officePhone" /></el-form-item>
+            <el-form-item :label="t('merchantProfile.mobilePhone')" prop="mobilePhone"><el-input v-model="form.mobilePhone" /></el-form-item>
+          </div>
+        </section>
 
-        <el-divider content-position="left">{{ t('merchantProfile.addressSection') }}</el-divider>
-        <div class="grid two">
-          <el-form-item :label="t('apply.state')" prop="state">
-            <el-input v-model="form.state" />
-          </el-form-item>
-          <el-form-item :label="t('apply.city')" prop="city">
-            <el-input v-model="form.city" />
-          </el-form-item>
-          <el-form-item :label="t('apply.addressLine1')" prop="addressLine1">
-            <el-input v-model="form.addressLine1" />
-          </el-form-item>
-          <el-form-item :label="t('apply.addressLine2')" prop="addressLine2">
-            <el-input v-model="form.addressLine2" />
-          </el-form-item>
-          <el-form-item :label="t('apply.postalCode')" prop="postalCode">
-            <el-input v-model="form.postalCode" />
-          </el-form-item>
-          <el-form-item :label="t('merchantProfile.remark')" prop="remark">
-            <el-input v-model="form.remark" type="textarea" :rows="3" />
-          </el-form-item>
-        </div>
+        <section class="profile-section">
+          <header>{{ t('merchantProfile.addressSection') }}</header>
+          <div class="grid two">
+            <el-form-item :label="t('apply.state')" prop="state"><el-input v-model="form.state" /></el-form-item>
+            <el-form-item :label="t('apply.city')" prop="city"><el-input v-model="form.city" /></el-form-item>
+            <el-form-item :label="t('apply.addressLine1')" prop="addressLine1"><el-input v-model="form.addressLine1" /></el-form-item>
+            <el-form-item :label="t('apply.addressLine2')" prop="addressLine2"><el-input v-model="form.addressLine2" /></el-form-item>
+            <el-form-item :label="t('apply.postalCode')" prop="postalCode"><el-input v-model="form.postalCode" /></el-form-item>
+            <el-form-item :label="t('merchantProfile.remark')" prop="remark"><el-input v-model="form.remark" type="textarea" :rows="3" /></el-form-item>
+          </div>
+        </section>
 
         <div class="form-actions">
           <el-button type="primary" :loading="saving" @click="submit">{{ t('common.save') }}</el-button>
         </div>
       </el-form>
-    </el-card>
+
+      <aside class="profile-side">
+        <section class="profile-side__panel">
+          <header>
+            <strong>{{ t('merchantLevel.name') }}</strong>
+            <span>{{ displayValue(form.levelCode) }}</span>
+          </header>
+          <div class="level-name">{{ displayValue(form.levelName) }}</div>
+          <div class="metric-grid">
+            <div><span>{{ t('merchantLevel.discount') }}</span><strong>{{ formatDiscountRate(form.discountRate) }}</strong></div>
+            <div><span>{{ t('merchantLevel.credit') }}</span><strong>{{ formatCreditLimit(form.creditLimit) }}</strong></div>
+          </div>
+        </section>
+
+        <section class="profile-side__panel">
+          <header><strong>{{ t('merchantProfile.legalSection') }}</strong></header>
+          <dl class="profile-facts">
+            <div><dt>{{ t('merchantProfile.merchantName') }}</dt><dd>{{ displayValue(form.merchantName) }}</dd></div>
+            <div><dt>{{ t('merchantProfile.companyName') }}</dt><dd>{{ displayValue(form.companyName) }}</dd></div>
+            <div><dt>{{ t('merchantProfile.primaryEmail') }}</dt><dd>{{ displayValue(form.primaryEmail) }}</dd></div>
+            <div><dt>{{ t('merchantProfile.country') }}</dt><dd>{{ displayValue(form.country) }}</dd></div>
+          </dl>
+        </section>
+
+        <p class="profile-side__hint">{{ t('merchantProfile.lockedHint') }}</p>
+      </aside>
+    </div>
   </div>
 </template>
 
@@ -87,6 +81,7 @@ import { computed, ref } from 'vue'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import { getCurrentMerchantProfile, updateCurrentMerchantProfile, type MerchantProfile } from '@/api/merchant/profile'
+import { formatCreditLimit, formatDiscountRate, merchantStatusText } from '@/api/merchant/format'
 
 const { t } = useI18n()
 const formRef = ref<FormInstance>()
@@ -148,97 +143,11 @@ function buildEditablePayload(): MerchantProfile {
   }
 }
 
+function displayValue(value?: string | number | null) {
+  return value === null || value === undefined || value === '' ? '-' : String(value)
+}
+
 loadProfile()
 </script>
 
-<style scoped lang="scss">
-.merchant-profile-editor {
-  background: transparent;
-}
-
-.merchant-profile-editor__card {
-  border-color: #eef0f5;
-  border-radius: 8px;
-
-  :deep(.el-card__header) {
-    min-height: 42px;
-    padding: 10px 12px;
-    border-bottom-color: #eef0f5;
-  }
-
-  :deep(.el-card__body) {
-    padding: 12px;
-  }
-}
-
-.page-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-weight: 600;
-}
-
-.mb16 {
-  margin-bottom: 10px;
-}
-
-.grid {
-  display: grid;
-  gap: 0 16px;
-}
-
-.two {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.form-actions {
-  display: flex;
-  justify-content: flex-end;
-  padding-top: 4px;
-  gap: 8px;
-}
-
-.profile-form {
-  :deep(.el-divider) {
-    margin: 12px 0;
-  }
-
-  :deep(.el-divider__text) {
-    color: #1d2129;
-    font-size: 14px;
-    font-weight: 600;
-  }
-
-  :deep(.el-form-item) {
-    margin-bottom: 12px;
-  }
-
-  :deep(.el-form-item__label) {
-    color: #475467;
-    font-weight: 500;
-  }
-
-  :deep(.el-input__wrapper),
-  :deep(.el-select__wrapper) {
-    min-height: 32px;
-  }
-
-  :deep(.el-button) {
-    height: 32px;
-    padding: 0 12px;
-    border-radius: 6px;
-  }
-}
-
-@media (max-width: 900px) {
-  .two {
-    grid-template-columns: 1fr;
-  }
-
-  .profile-form {
-    :deep(.el-form-item) {
-      display: block;
-    }
-  }
-}
-</style>
+<style scoped lang="scss" src="./styles/merchant-profile-editor.scss"></style>

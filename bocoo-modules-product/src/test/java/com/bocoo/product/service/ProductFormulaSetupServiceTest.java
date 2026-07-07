@@ -8,6 +8,7 @@ import com.bocoo.product.domain.bo.ProductFormulaOptionValueBo;
 import com.bocoo.product.domain.bo.ProductFormulaRestrictionBo;
 import com.bocoo.product.domain.bo.ProductFormulaSetupBo;
 import com.bocoo.product.domain.bo.ProductFormulaUsageRuleBo;
+import com.bocoo.product.domain.entity.ProductBaseAttribute;
 import com.bocoo.product.domain.entity.ProductFormula;
 import com.bocoo.product.domain.entity.ProductFormulaMaterial;
 import com.bocoo.product.domain.entity.ProductFormulaOption;
@@ -27,6 +28,7 @@ import com.bocoo.product.mapper.ProductFormulaRestrictionMapper;
 import com.bocoo.product.mapper.ProductFormulaUsageRuleMapper;
 import com.bocoo.product.mapper.ProductFormulaVariableMapper;
 import com.bocoo.product.mapper.ProductFormulaVariableRuleMapper;
+import com.bocoo.product.mapper.ProductBaseAttributeMapper;
 import com.bocoo.product.mapper.ProductMaterialMapper;
 import com.bocoo.product.mapper.ProductMaterialAttributeMapper;
 import com.bocoo.product.mapper.ProductUnitMapper;
@@ -86,6 +88,8 @@ class ProductFormulaSetupServiceTest {
     @Mock
     private ProductMaterialMapper productMaterialMapper;
     @Mock
+    private ProductBaseAttributeMapper baseAttributeMapper;
+    @Mock
     private ProductMaterialAttributeMapper materialAttributeMapper;
     @Mock
     private ProductUnitMapper unitMapper;
@@ -100,7 +104,7 @@ class ProductFormulaSetupServiceTest {
     void setUp() {
         ProductServiceTestSupport.prepareMapperAndConverter();
         ProductFormulaExpressionReferenceValidator expressionReferenceValidator =
-            new ProductFormulaExpressionReferenceValidator(materialAttributeMapper);
+            new ProductFormulaExpressionReferenceValidator(baseAttributeMapper);
         usageRuleService = new ProductFormulaUsageRuleServiceImpl(usageRuleMapper,
             new ProductFormulaUsageRuleValidator(expressionReferenceValidator));
         ProductFormulaMaterialSnapshotResolver materialSnapshotResolver =
@@ -563,7 +567,7 @@ class ProductFormulaSetupServiceTest {
     }
 
     @Test
-    void validationRejectsExpressionReferencingMissingLinkedMaterialAttribute() {
+    void validationRejectsExpressionReferencingUndefinedLinkedMaterialAttribute() {
         ProductFormulaRestriction restriction = restriction();
         restriction.setConditionType("EXPRESSION");
         restriction.setConditionExpression("material_FABRIC_THICKNESS > 12");
@@ -575,7 +579,7 @@ class ProductFormulaSetupServiceTest {
         when(optionValueMapper.selectList(any())).thenReturn(List.of(optionValue("FABRIC", "MAT001", "米色斑马帘面料")));
         when(optionMaterialMapper.selectList(any())).thenReturn(List.of(optionMaterial()));
         when(restrictionMapper.selectList(any())).thenReturn(List.of(restriction));
-        when(materialAttributeMapper.selectList(any())).thenReturn(List.of());
+        when(baseAttributeMapper.selectCount(any())).thenReturn(0L);
 
         assertThat(setupService.validationMessageKey(3001L))
             .isEqualTo("product.formula.restrictionConditionInvalid");
@@ -588,16 +592,13 @@ class ProductFormulaSetupServiceTest {
         restriction.setConditionExpression("material_FABRIC_THICKNESS > 12");
         restriction.setConditionOperator("EXPRESSION");
 
-        ProductMaterialAttribute attribute = new ProductMaterialAttribute();
-        attribute.setMaterialId(4001L);
-        attribute.setAttributeCode("THICKNESS");
         when(materialMapper.selectList(any())).thenReturn(List.of(formulaMaterial()));
         when(usageRuleMapper.selectList(any())).thenReturn(List.of(usageRule()));
         when(optionMapper.selectList(any())).thenReturn(List.of(option("FABRIC", "面料")));
         when(optionValueMapper.selectList(any())).thenReturn(List.of(optionValue("FABRIC", "MAT001", "米色斑马帘面料")));
         when(optionMaterialMapper.selectList(any())).thenReturn(List.of(optionMaterial()));
         when(restrictionMapper.selectList(any())).thenReturn(List.of(restriction));
-        when(materialAttributeMapper.selectList(any())).thenReturn(List.of(attribute));
+        when(baseAttributeMapper.selectCount(any())).thenReturn(1L);
 
         assertThat(setupService.validationMessageKey(3001L)).isNull();
     }
@@ -714,6 +715,7 @@ class ProductFormulaSetupServiceTest {
         material.setMaterialId(4001L);
         material.setMaterialCode("MAT001");
         material.setMaterialNameCn("米色斑马帘面料");
+        material.setAttributeGroupCode("FABRIC");
         material.setUnitCode("米");
         material.setUsageMode("FORMULA");
         material.setUsageFormula("orderWidthCm * 12 - 2.0");

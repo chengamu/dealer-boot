@@ -327,7 +327,12 @@ function agentTypeActionLabel(action: string) {
 }
 
 function agentStatusLabel(rowLabel: string, status: unknown) {
-  return compactParts(rowLabel, t('productCenter.common.status'), `当前${statusLabel(status)}`, '切换需要确认')
+  return compactParts(
+    rowLabel,
+    t('productCenter.common.status'),
+    t('productCenter.common.currentStatus', { status: statusLabel(status) }),
+    t('productCenter.common.statusChangeConfirm')
+  )
 }
 
 async function loadGroups() {

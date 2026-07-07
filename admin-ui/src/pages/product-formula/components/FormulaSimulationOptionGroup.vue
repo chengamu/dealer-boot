@@ -21,6 +21,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import FormulaSimulationOptionField from './FormulaSimulationOptionField.vue'
 import { PRODUCT_STATUS_ENABLED } from '@/constants/productStatus'
 import type { ProductFormulaOptionMaterialVO, ProductFormulaOptionVO, ProductFormulaOptionValueVO } from '@/api/product-capability/types'
@@ -34,10 +35,13 @@ const props = defineProps<{
   showValidation: boolean
 }>()
 
+const { t } = useI18n()
 const title = computed(() => props.root.optionNameCn || props.root.optionNameEn || props.root.optionCode || '-')
 const summary = computed(() => {
   const childCount = Math.max(0, props.options.length - 1)
-  return childCount > 0 ? `带出 ${childCount} 项` : '基础选项'
+  return childCount > 0
+    ? t('productCenter.formulaSimulation.childOptionsSummary', { count: childCount })
+    : t('productCenter.formulaSimulation.baseOption')
 })
 
 function optionValuesOf(optionCode?: string) {

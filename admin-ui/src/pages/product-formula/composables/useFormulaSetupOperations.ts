@@ -102,6 +102,7 @@ export function useFormulaSetupOperations(ctx: SetupOperationContext) {
       optionNameEn: '',
       sourceType: 'MANUAL',
       selectionMode: 'SINGLE',
+      displayMode: 'SELECT',
       requiredFlag: true,
       businessVisibleFlag: true,
       visibilityMode: parent ? 'CONDITIONAL' : 'ALWAYS',

@@ -1,0 +1,13 @@
+{
+  "demo.request.invalid": "Invalid demo request.",
+  "demo.techManagement.contact.max": "Contact must be 64 characters or less",
+  "demo.techManagement.contactInfo.max": "Contact info must be 64 characters or less",
+  "demo.techManagement.customLabel.max": "Custom label must be 64 characters or less",
+  "demo.techManagement.deadline.max": "Deadline must be 64 characters or less",
+  "demo.techManagement.description.max": "Description must be 500 characters or less",
+  "demo.techManagement.img.max": "Image URL must be 512 characters or less",
+  "demo.techManagement.label.max": "Label must be 64 characters or less",
+  "demo.techManagement.title.exists": "Demo title \"{title}\" already exists",
+  "demo.techManagement.title.max": "Title must be 100 characters or less",
+  "demo.techManagement.title.required": "Title is required"
+}

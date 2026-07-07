@@ -158,6 +158,8 @@ export function useFormulaSetupCore(props: { setupSection?: 'content' | 'options
     const loadSeq = ++setupLoadSeq
     const formulaId = currentFormulaId.value
     const setupSection = activeTab.value
+    const selectedOptionBeforeReload = setup.options.find((row) => optionClientKey(row) === selectedOptionCode.value || row.optionCode === selectedOptionCode.value)
+    const rememberedOptionCode = selectedOptionBeforeReload?.optionCode || selectedOptionCode.value
     await draftCache.beforeSetupReload()
     if (!formulaId) {
       resetSetup()
@@ -179,9 +181,9 @@ export function useFormulaSetupCore(props: { setupSection?: 'content' | 'options
       setup.variables = response.data?.variables || []
       setup.variableRules = normalizeFormulaVariableRules(response.data?.variableRules || [])
       normalizeFormulaOptionDraftState(setup)
-      selectedOptionCode.value = optionClientKey(setup.options[0]) || setup.options[0]?.optionCode || ''
+      selectedOptionCode.value = matchedOptionCode(rememberedOptionCode)
       await draftCache.afterSetupLoaded()
-      selectedOptionCode.value = optionClientKey(setup.options.find((row) => optionClientKey(row) === selectedOptionCode.value) || setup.options[0]) || setup.options[0]?.optionCode || ''
+      selectedOptionCode.value = matchedOptionCode(selectedOptionCode.value)
     } finally {
       if (loadSeq === setupLoadSeq) loading.value = false
     }
@@ -257,6 +259,11 @@ export function useFormulaSetupCore(props: { setupSection?: 'content' | 'options
     setup.variables = []
     setup.variableRules = []
     selectedOptionCode.value = ''
+  }
+
+  function matchedOptionCode(value?: string) {
+    const option = setup.options.find((row) => optionClientKey(row) === value || row.optionCode === value) || setup.options[0]
+    return optionClientKey(option) || option?.optionCode || ''
   }
 
   function routeFormulaId() {

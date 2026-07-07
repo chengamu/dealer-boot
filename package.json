@@ -3,10 +3,17 @@
   "private": true,
   "packageManager": "pnpm@11.1.3",
   "scripts": {
+    "i18n:build": "node i18n/scripts/build.ts",
     "i18n:check": "node i18n/scripts/check.ts",
+    "i18n:drift": "node i18n/scripts/drift.ts",
+    "i18n:hardcoded": "node i18n/scripts/hardcoded.ts",
+    "i18n:hardcoded:update": "node i18n/scripts/hardcoded.ts --update-baseline",
+    "i18n:java-keys": "node i18n/scripts/java-keys.ts",
+    "i18n:keys": "node i18n/scripts/keys.ts",
     "i18n:translate": "node i18n/scripts/translate.ts",
+    "i18n:types": "node i18n/scripts/types.ts",
     "i18n:validate": "node i18n/scripts/validate.ts",
     "i18n:sync": "node i18n/scripts/sync.ts",
-    "i18n": "pnpm i18n:translate && pnpm i18n:validate && pnpm i18n:sync"
+    "i18n": "pnpm i18n:validate && pnpm i18n:keys && pnpm i18n:java-keys && pnpm i18n:hardcoded && pnpm i18n:types && pnpm i18n:sync && pnpm i18n:drift"
   }
 }

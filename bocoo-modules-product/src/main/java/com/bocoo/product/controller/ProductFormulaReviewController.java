@@ -9,6 +9,7 @@ import com.bocoo.common.mybatis.core.page.TableDataInfo;
 import com.bocoo.common.web.core.BaseController;
 import com.bocoo.product.domain.bo.ProductFormulaRejectBo;
 import com.bocoo.product.domain.bo.ProductFormulaReviewBo;
+import com.bocoo.product.domain.vo.ProductFormulaReviewRecordVo;
 import com.bocoo.product.domain.vo.ProductFormulaVersionVo;
 import com.bocoo.product.service.ProductFormulaService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -21,6 +22,8 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @Validated
 @RequiredArgsConstructor
@@ -43,6 +46,13 @@ public class ProductFormulaReviewController extends BaseController {
     @Operation(summary = "获取配方审核详情")
     public R<ProductFormulaVersionVo> get(@PathVariable Long reviewId) {
         return R.ok(formulaService.queryReviewById(reviewId));
+    }
+
+    @SaCheckPermission("product:formula:reference")
+    @GetMapping("/{reviewId}/records")
+    @Operation(summary = "查询配方审核记录")
+    public R<List<ProductFormulaReviewRecordVo>> records(@PathVariable Long reviewId) {
+        return R.ok(formulaService.queryReviewRecords(reviewId));
     }
 
     @SaCheckPermission("product:formula:approve")

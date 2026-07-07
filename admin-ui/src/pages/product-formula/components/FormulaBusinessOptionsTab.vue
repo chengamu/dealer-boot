@@ -19,6 +19,7 @@
 
   <section class="option-workbench">
     <FormulaOptionTree
+      ref="optionTreeRef"
       :nodes="visibleOptionTreeViewNodes"
       :total-count="optionTreeNodes.length"
       :selected-node-id="selectedNodeId"
@@ -26,7 +27,7 @@
       :can-remove-option="canRemoveSelectedOption"
       :can-move-up="canMoveSelectedOptionUp"
       :can-move-down="canMoveSelectedOptionDown"
-      @add-root-option="$emit('add-option')"
+      @add-root-option="addRootOption"
       @add-child-option="addChildOptionFromValue"
       @remove-selection="removeSelectedTreeNode"
       @move-selection="moveSelectedTreeNode"
@@ -37,6 +38,7 @@
     <main class="option-node-panel">
       <template v-if="selectedOption">
         <FormulaOptionNodeEditor
+          ref="optionEditorRef"
           :selected-option="selectedOption"
           :material-group-options="materialGroupOptions"
           :t="t"
@@ -47,13 +49,14 @@
 
         <div class="option-edit-grid">
           <FormulaOptionValueGrid
+            ref="optionValueGridRef"
             :selected-option="selectedOption"
             :selected-option-code="selectedOptionCode"
             :selected-value-code="selectedValueCode"
             :option-values="optionValues"
             :option-materials="optionMaterials"
             @import-values="openValueImportDialog"
-            @add-value="$emit('add-option-value')"
+            @add-value="addOptionValue"
             @select-value="selectOptionValue"
             @set-default="setDefaultValue"
             @manage-material="openValueMaterialDialog"
@@ -94,7 +97,7 @@
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 import { ElMessage } from 'element-plus'
-import { computed, ref } from 'vue'
+import { computed, nextTick, ref } from 'vue'
 import FormulaOptionNodeEditor from './FormulaOptionNodeEditor.vue'
 import FormulaOptionOverview from './FormulaOptionOverview.vue'
 import FormulaOptionTree from './FormulaOptionTree.vue'
@@ -153,6 +156,9 @@ const emit = defineEmits<{
 }>()
 
 const localeStore = useLocaleStore()
+const optionTreeRef = ref<{ scrollNodeIntoView: (nodeId: string) => Promise<void> }>()
+const optionEditorRef = ref<{ focusOptionName: () => Promise<void> }>()
+const optionValueGridRef = ref<{ focusValueName: (row?: ProductFormulaOptionValueVO) => Promise<void> }>()
 const t = (key: string, params?: Record<string, string | number>) => {
   const message = getMessage(key, localeStore.language)
   if (!params) return message
@@ -276,6 +282,11 @@ function removeOptionValue(row: ProductFormulaOptionValueVO) {
   if (index >= 0) emit('remove-option-value', index)
 }
 
+function addRootOption() {
+  emit('add-option')
+  void focusSelectedOption()
+}
+
 function addChildOptionFromValue() {
   if (!selectedOption.value || !selectedValue.value) return
   emit('add-option', {
@@ -286,6 +297,31 @@ function addChildOptionFromValue() {
     valueCode: selectedValue.value.valueCode,
     valueNameCn: selectedValue.value.valueNameCn
   })
+  void focusSelectedOption()
+}
+
+function addOptionValue() {
+  const previousCount = props.optionValues.length
+  emit('add-option-value')
+  void focusAddedOptionValue(previousCount)
+}
+
+async function focusSelectedOption() {
+  await nextTick()
+  if (selectedNodeId.value) await optionTreeRef.value?.scrollNodeIntoView(selectedNodeId.value)
+  await optionEditorRef.value?.focusOptionName()
+}
+
+async function focusAddedOptionValue(previousCount: number) {
+  await nextTick()
+  const row = props.optionValues[previousCount] || props.optionValues[props.optionValues.length - 1]
+  if (!row) return
+  selectOptionValue(row)
+  await nextTick()
+  selectTreeNodeById(selectedNodeId.value)
+  await nextTick()
+  if (selectedNodeId.value) await optionTreeRef.value?.scrollNodeIntoView(selectedNodeId.value)
+  await optionValueGridRef.value?.focusValueName(row)
 }
 
 function optionHasChildOption(row?: ProductFormulaOptionVO) {

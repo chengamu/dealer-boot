@@ -153,7 +153,17 @@ export function useFormulaUsageEditor(props: FormulaUsageEditorProps, close: () 
   function handleDrawerShortcut(event: KeyboardEvent) {
     if (event.key !== 'Escape' || !props.modelValue) return
     event.preventDefault()
+    if (hasNestedFormulaDialogOpen()) {
+      event.stopPropagation()
+      return
+    }
     closeDrawerWithGuard()
+  }
+
+  function hasNestedFormulaDialogOpen() {
+    return ['.formula-expression-dialog', '.variable-manager-dialog', '.variable-formula-dialog', '.formula-condition-dialog']
+      .some((selector) => Array.from(document.querySelectorAll(selector))
+        .some((element) => element instanceof HTMLElement && element.getClientRects().length > 0))
   }
 
   return {

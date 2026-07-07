@@ -481,6 +481,7 @@ CREATE TABLE IF NOT EXISTS pc_formula_option (
     source_type varchar(40) NOT NULL DEFAULT 'MANUAL',
     source_scope varchar(300),
     selection_mode varchar(40) NOT NULL DEFAULT 'SINGLE',
+    display_mode varchar(40) NOT NULL DEFAULT 'SELECT',
     default_value_code varchar(80),
     default_value_name_cn varchar(200),
     visibility_mode varchar(40) NOT NULL DEFAULT 'ALWAYS',
@@ -503,12 +504,14 @@ CREATE TABLE IF NOT EXISTS pc_formula_option (
 
 COMMENT ON TABLE pc_formula_option IS '产品配方业务配置项草稿表';
 ALTER TABLE IF EXISTS pc_formula_option ADD COLUMN IF NOT EXISTS option_name_en varchar(200);
+ALTER TABLE IF EXISTS pc_formula_option ADD COLUMN IF NOT EXISTS display_mode varchar(40) NOT NULL DEFAULT 'SELECT';
 ALTER TABLE IF EXISTS pc_formula_option ADD COLUMN IF NOT EXISTS visibility_mode varchar(40) NOT NULL DEFAULT 'ALWAYS';
 ALTER TABLE IF EXISTS pc_formula_option ADD COLUMN IF NOT EXISTS visible_condition_option_code varchar(80);
 ALTER TABLE IF EXISTS pc_formula_option ADD COLUMN IF NOT EXISTS visible_condition_option_name_cn varchar(200);
 ALTER TABLE IF EXISTS pc_formula_option ADD COLUMN IF NOT EXISTS visible_condition_value_code varchar(80);
 ALTER TABLE IF EXISTS pc_formula_option ADD COLUMN IF NOT EXISTS visible_condition_value_name_cn varchar(200);
 COMMENT ON COLUMN pc_formula_option.visibility_mode IS '订单端显示模式：ALWAYS 始终显示，CONDITIONAL 满足条件显示';
+COMMENT ON COLUMN pc_formula_option.display_mode IS '订单端控件展示方式：SELECT 普通下拉，IMAGE_SELECT 图文下拉';
 COMMENT ON COLUMN pc_formula_option.visible_condition_option_code IS '条件显示依赖配置项编码';
 COMMENT ON COLUMN pc_formula_option.visible_condition_option_name_cn IS '条件显示依赖配置项名称快照';
 COMMENT ON COLUMN pc_formula_option.visible_condition_value_code IS '条件显示依赖选项值编码';

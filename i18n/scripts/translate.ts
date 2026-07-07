@@ -1,4 +1,9 @@
-const { readLocale, writeJson, localePath, loadEnv } = require('./lib.ts');
+const {
+  loadEnv,
+  readSourceLocale,
+  readSourceModule,
+  writeSourceModule
+} = require('./lib.ts');
 
 const sourceLocale = 'en_US';
 const targetLocale = 'zh_CN';
@@ -23,8 +28,8 @@ async function main() {
     process.exit(1);
   }
 
-  const source = readLocale(sourceLocale);
-  const target = readLocale(targetLocale);
+  const { messages: source, keyModules } = readSourceLocale(sourceLocale);
+  const { messages: target } = readSourceLocale(targetLocale);
   const missing = Object.fromEntries(Object.entries(source).filter(([key]) => !target[key] || String(target[key]).trim() === ''));
 
   if (!Object.keys(missing).length) {
@@ -65,7 +70,19 @@ async function main() {
     throw new Error('DeepSeek response did not include choices[0].message.content.');
   }
   const translated = extractJsonObject(content);
-  writeJson(localePath(targetLocale), { ...target, ...translated });
+  const translatedByModule = {};
+  for (const [key, value] of Object.entries(translated)) {
+    const moduleName = keyModules[key];
+    if (!moduleName) continue;
+    if (!translatedByModule[moduleName]) translatedByModule[moduleName] = {};
+    translatedByModule[moduleName][key] = value;
+  }
+  for (const [moduleName, moduleMessages] of Object.entries(translatedByModule)) {
+    writeSourceModule(moduleName, targetLocale, {
+      ...readSourceModule(moduleName, targetLocale),
+      ...moduleMessages
+    });
+  }
   console.log(`[i18n:translate] translated ${Object.keys(translated).length} key(s) into ${targetLocale}.`);
 }
 

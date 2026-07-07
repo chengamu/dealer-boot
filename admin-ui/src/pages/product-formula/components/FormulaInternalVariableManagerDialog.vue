@@ -42,7 +42,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { productFormulaApi } from '@/api/product-formula/formula'
 import FormulaInternalVariableEditorDialog from './FormulaInternalVariableEditorDialog.vue'
@@ -79,9 +79,37 @@ const variableEditorOpen = ref(false)
 const editingVariable = ref<ProductFormulaVariableVO | null>(null)
 const editingVariableRules = computed(() => (props.variableRules || []).filter((rule) => sameVariableRef(rule, editingVariable.value)))
 
+watch(() => props.modelValue, (open) => {
+  if (open) addEscapeListeners()
+  else removeEscapeListeners()
+}, { immediate: true })
+
+onBeforeUnmount(removeEscapeListeners)
+
 function openVariableEditor(row?: ProductFormulaVariableVO) {
   editingVariable.value = row || null
   variableEditorOpen.value = true
+}
+
+function stopEscapeEvent(event: KeyboardEvent) {
+  if (event.key !== 'Escape') return
+  event.preventDefault()
+  event.stopPropagation()
+  event.stopImmediatePropagation()
+}
+
+function addEscapeListeners() {
+  window.addEventListener('keydown', stopEscapeEvent, true)
+  window.addEventListener('keyup', stopEscapeEvent, true)
+  document.addEventListener('keydown', stopEscapeEvent, true)
+  document.addEventListener('keyup', stopEscapeEvent, true)
+}
+
+function removeEscapeListeners() {
+  window.removeEventListener('keydown', stopEscapeEvent, true)
+  window.removeEventListener('keyup', stopEscapeEvent, true)
+  document.removeEventListener('keydown', stopEscapeEvent, true)
+  document.removeEventListener('keyup', stopEscapeEvent, true)
 }
 
 async function saveVariable(variable: ProductFormulaVariableVO, rules: ProductFormulaVariableRuleVO[]) {

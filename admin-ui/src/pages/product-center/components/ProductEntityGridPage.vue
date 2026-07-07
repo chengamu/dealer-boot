@@ -700,7 +700,12 @@ function agentSelectedActionLabel(action: string) {
 function agentStatusLabel(row: ProductRecord, field: ProductFieldConfig) {
   const status = normalizeStatus(row[field.prop])
   const statusLabel = status === PRODUCT_STATUS_ENABLED ? t('productCenter.status.enabled') : t('productCenter.status.disabled')
-  return compactParts(agentRecordLabel(row), t(field.labelKey), `当前${statusLabel}`, '切换需要确认')
+  return compactParts(
+    agentRecordLabel(row),
+    t(field.labelKey),
+    t('productCenter.common.currentStatus', { status: statusLabel }),
+    t('productCenter.common.statusChangeConfirm')
+  )
 }
 
 function formatNumberValue(field: ProductFieldConfig, value: unknown) {

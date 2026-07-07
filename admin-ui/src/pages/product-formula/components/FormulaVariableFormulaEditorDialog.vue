@@ -103,22 +103,21 @@ const resultText = computed(() => {
 })
 const visibleVariables = computed(() => {
   const search = keyword.value.trim().toLowerCase()
-  return availableVariables.value
-    .filter((variable) => {
-      if (!search) return true
-      return `${variable.variableName || ''} ${variable.variableCode || ''}`.toLowerCase().includes(search)
-    })
+  return availableVariables.value.filter((variable) => {
+    if (!search) return true
+    return `${variable.variableName || ''} ${variable.variableCode || ''}`.toLowerCase().includes(search)
+  })
 })
 
 watch(() => props.modelValue, (open) => {
   if (open) {
-    window.addEventListener('keydown', stopEscapeEvent, true)
+    addEscapeListeners()
   } else {
-    window.removeEventListener('keydown', stopEscapeEvent, true)
+    removeEscapeListeners()
   }
 }, { immediate: true })
 
-onBeforeUnmount(() => window.removeEventListener('keydown', stopEscapeEvent, true))
+onBeforeUnmount(removeEscapeListeners)
 
 function appendText(value: string) {
   if (!value) return
@@ -132,6 +131,20 @@ function stopEscapeEvent(event: KeyboardEvent) {
   event.stopImmediatePropagation()
 }
 
+function addEscapeListeners() {
+  window.addEventListener('keydown', stopEscapeEvent, true)
+  window.addEventListener('keyup', stopEscapeEvent, true)
+  document.addEventListener('keydown', stopEscapeEvent, true)
+  document.addEventListener('keyup', stopEscapeEvent, true)
+}
+
+function removeEscapeListeners() {
+  window.removeEventListener('keydown', stopEscapeEvent, true)
+  window.removeEventListener('keyup', stopEscapeEvent, true)
+  document.removeEventListener('keydown', stopEscapeEvent, true)
+  document.removeEventListener('keyup', stopEscapeEvent, true)
+}
+
 function sameVariable(left?: ProductFormulaVariableVO, right?: ProductFormulaVariableVO) {
   if (!left || !right) return false
   if (left.variableKey && right.variableKey) return left.variableKey === right.variableKey
@@ -140,149 +153,6 @@ function sameVariable(left?: ProductFormulaVariableVO, right?: ProductFormulaVar
 }
 </script>
 
-<style scoped>
-:global(.variable-formula-dialog.admin-dialog.el-dialog) {
-  display: flex;
-  flex-direction: column;
-  width: min(1180px, calc(100vw - 64px)) !important;
-  height: min(720px, calc(100vh - 56px));
-}
-
-:global(.variable-formula-dialog.admin-dialog .el-dialog__body) {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow: hidden;
-  padding: 14px 18px 12px;
-}
-
-.variable-formula-editor {
-  display: grid;
-  grid-template-columns: minmax(0, 58fr) minmax(360px, 42fr);
-  gap: 12px;
-  height: 100%;
-  min-height: 0;
-}
-
-.variable-formula-editor__main {
-  display: grid;
-  grid-template-rows: auto auto auto auto;
-  gap: 10px;
-  min-width: 0;
-  min-height: 0;
-}
-
-.variable-formula-editor :deep(.expression-editor__composer),
-.variable-formula-editor :deep(.expression-editor__operators),
-.variable-formula-editor :deep(.expression-editor__result) {
-  min-width: 0;
-  border: 1px solid #e5ecf6;
-  border-radius: 8px;
-  background: #fff;
-  padding: 8px 12px;
-}
-
-.variable-formula-editor :deep(.expression-editor__head),
-.variable-formula-editor :deep(.expression-editor__result-head) {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 6px;
-}
-
-.variable-formula-editor :deep(.expression-editor__composer .el-textarea__inner) {
-  min-height: 128px !important;
-  max-height: 128px;
-  line-height: 1.6;
-}
-
-.variable-formula-editor :deep(.expression-editor__operators) {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  background: #f8fbff;
-}
-
-.variable-formula-editor :deep(.expression-editor__operators h4) {
-  width: 100%;
-}
-
-.variable-formula-editor :deep(.expression-editor__operators .el-button),
-.variable-formula-editor__orders .el-button {
-  margin-left: 0;
-}
-
-.variable-formula-editor :deep(.expression-editor__result-expression) {
-  margin: 0;
-}
-
-.variable-formula-editor :deep(.expression-editor__result-expression dt) {
-  display: none;
-}
-
-.variable-formula-editor :deep(.expression-editor__result-expression dd) {
-  margin: 0;
-  min-height: 32px;
-  padding: 7px 10px;
-  border: 1px solid #e5ecf6;
-  border-radius: 6px;
-  background: #fff;
-  color: #334155;
-}
-
-.variable-formula-editor__orders,
-.variable-formula-editor__variables {
-  border: 1px solid #e5ecf6;
-  border-radius: 8px;
-  background: #fff;
-  padding: 10px 12px;
-}
-
-.variable-formula-editor__orders {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
-}
-
-.variable-formula-editor h4 {
-  margin: 0;
-  color: #1f2937;
-  font-size: 14px;
-  white-space: nowrap;
-}
-
-.variable-formula-editor__variables {
-  display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr);
-  gap: 8px;
-  min-height: 0;
-  align-content: start;
-  background: #f8fbff;
-}
-
-.variable-formula-editor__list {
-  display: grid;
-  gap: 8px;
-  min-height: 0;
-  overflow-y: auto;
-  align-content: start;
-}
-
-.variable-formula-editor__item {
-  display: grid;
-  gap: 4px;
-  width: 100%;
-  padding: 10px;
-  cursor: pointer;
-  text-align: left;
-  border: 1px solid #e5ecf6;
-  border-radius: 8px;
-  background: #fff;
-}
-
-.variable-formula-editor__item span {
-  color: #8a95a6;
-  font-size: 12px;
-}
+<style>
+@import './FormulaVariableFormulaEditorDialog.css';
 </style>

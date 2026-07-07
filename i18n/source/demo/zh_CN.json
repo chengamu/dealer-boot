@@ -1,0 +1,13 @@
+{
+  "demo.request.invalid": "示例请求无效",
+  "demo.techManagement.contact.max": "联系人不能超过64个字符",
+  "demo.techManagement.contactInfo.max": "联系方式不能超过64个字符",
+  "demo.techManagement.customLabel.max": "自定义标签不能超过64个字符",
+  "demo.techManagement.deadline.max": "发布有效期不能超过64个字符",
+  "demo.techManagement.description.max": "详细描述不能超过500个字符",
+  "demo.techManagement.img.max": "图片地址不能超过512个字符",
+  "demo.techManagement.label.max": "标签不能超过64个字符",
+  "demo.techManagement.title.exists": "示例标题“{title}”已存在",
+  "demo.techManagement.title.max": "标题不能超过100个字符",
+  "demo.techManagement.title.required": "标题不能为空"
+}

@@ -1,0 +1,6 @@
+{
+  "version": 1,
+  "description": "Historical frontend hardcoded i18n candidates. New candidates must be fixed or deliberately added with pnpm i18n:hardcoded:update.",
+  "entries": [
+  ]
+}

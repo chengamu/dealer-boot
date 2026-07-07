@@ -322,6 +322,7 @@ export interface ProductFormulaOptionVO extends ProductRecord {
   sourceType?: string
   sourceScope?: string
   selectionMode?: string
+  displayMode?: string
   defaultValueCode?: string
   defaultValueNameCn?: string
   visibilityMode?: string
@@ -490,6 +491,21 @@ export interface ProductFormulaReviewQuery extends ProductPageQuery {
   versionLabel?: string
   submitBy?: string
   validationStatus?: string
+}
+
+export interface ProductFormulaReviewRecordVO extends ProductRecord {
+  versionId?: number
+  formulaId?: number
+  versionNo?: number
+  versionLabel?: string
+  actionType?: string
+  actionName?: string
+  operatorName?: string
+  operateTime?: string
+  versionStatus?: string
+  validationStatus?: string
+  rejectReason?: string
+  remark?: string
 }
 
 export interface ProductFormulaSimulationBO extends ProductRecord {
