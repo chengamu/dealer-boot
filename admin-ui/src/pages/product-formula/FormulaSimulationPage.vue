@@ -29,6 +29,8 @@
       :hidden-count="hiddenOptionCount"
       :show-validation="showValidation"
       :value-label="optionValueLabel"
+      :disabled-option-values="disabledOptionValues"
+      :restriction-messages="restrictionMessages"
       @update:quantity="quantity = $event"
       @update:room="room = $event"
     />
@@ -63,15 +65,8 @@ import FormulaSimulationHeader from './components/FormulaSimulationHeader.vue'
 import FormulaSimulationOrderSheet from './components/FormulaSimulationOrderSheet.vue'
 import FormulaSimulationResultPanel from './components/FormulaSimulationResultPanel.vue'
 import { useFormulaSimulationSelection } from './composables/useFormulaSimulationSelection'
-import type {
-  ProductFormulaOptionVO,
-  ProductFormulaOptionValueVO,
-  ProductFormulaSetupVO,
-  ProductFormulaSimulationBO,
-  ProductFormulaSimulationVO,
-  ProductFormulaVO,
-  ProductUnitVO
-} from '@/api/product-capability/types'
+import { useFormulaSimulationRestrictions } from './composables/useFormulaSimulationRestrictions'
+import type { ProductFormulaOptionVO, ProductFormulaOptionValueVO, ProductFormulaSetupVO, ProductFormulaSimulationBO, ProductFormulaSimulationVO, ProductFormulaVO, ProductUnitVO } from '@/api/product-capability/types'
 import { FORMULA_VALIDATION_STATUS, PRODUCT_STATUS_ENABLED, formulaValidationStatusText } from '@/constants/productStatus'
 
 const router = useRouter()
@@ -108,6 +103,12 @@ const visibleOptions = computed(() => orderedOptions.value.filter((option) => is
 const enabledOptionMaterials = computed(() => sortRows((setup.value.optionMaterials || []).filter((row) => row.status === PRODUCT_STATUS_ENABLED)))
 const hiddenOptionCount = computed(() => Math.max(0, orderedOptions.value.length - visibleOptions.value.length))
 const simulationStatus = computed(() => result.value.status || formula.value.simulationValidationStatus || FORMULA_VALIDATION_STATUS.NOT_VALIDATED)
+const { disabledOptionValues, restrictionMessages, hasRestrictedSelection } = useFormulaSimulationRestrictions({
+  form,
+  formula,
+  restrictions: computed(() => setup.value.restrictions || []),
+  selectedOptionValues
+})
 
 watch(visibleOptions, () => {
   applyVisibleDefaults()
@@ -282,6 +283,10 @@ function validateBeforeSubmit() {
   const missingOption = visibleOptions.value.find((option) => option.requiredFlag && !selectedOptionValues[option.optionCode || ''])
   if (missingOption) {
     ElMessage.warning(t('productCenter.formulaSimulation.requiredMissing'))
+    return false
+  }
+  if (hasRestrictedSelection.value) {
+    ElMessage.warning(t('product.formula.simulationRestrictionHit'))
     return false
   }
   return true

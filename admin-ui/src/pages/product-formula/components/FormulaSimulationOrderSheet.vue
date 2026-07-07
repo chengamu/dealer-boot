@@ -40,6 +40,8 @@
           :option-materials="optionMaterials"
           :selected-option-values="selectedOptionValues"
           :show-validation="showValidation"
+          :disabled-option-values="disabledOptionValues"
+          :restriction-messages="restrictionMessages"
         />
       </div>
     </div>
@@ -65,6 +67,8 @@ const props = defineProps<{
   hiddenCount: number
   showValidation: boolean
   valueLabel: (optionCode?: string, valueCode?: string) => string
+  disabledOptionValues: Record<string, string[]>
+  restrictionMessages: Record<string, string[]>
 }>()
 
 defineEmits<{

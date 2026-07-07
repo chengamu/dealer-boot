@@ -1,16 +1,16 @@
 <template>
   <el-select
     :model-value="selectModelValue"
-    class="simulation-material-select"
+    class="formula-order-material-select"
     filterable
     clearable
     :multiple="multiple"
-    popper-class="formula-simulation-material-select-popper"
+    popper-class="formula-order-material-select-popper"
     :placeholder="placeholder"
     @change="updateValue"
   >
     <template v-if="selectedCodes.length === 1" #prefix>
-      <span class="simulation-material-select__thumb simulation-material-select__thumb--small">
+      <span class="formula-order-material-select__thumb formula-order-material-select__thumb--small">
         <img :src="imageOf(selectedCodes[0])" :alt="selectedLabel" />
       </span>
     </template>
@@ -19,12 +19,16 @@
       :key="value.valueCode"
       :label="valueLabel(value)"
       :value="value.valueCode"
+      :disabled="isValueDisabled(value.valueCode)"
     >
-      <div class="simulation-material-select__option">
-        <span class="simulation-material-select__thumb">
+      <div class="formula-order-material-select__option">
+        <span class="formula-order-material-select__thumb">
           <img :src="imageOf(value.valueCode)" :alt="valueLabel(value)" />
         </span>
-        <strong>{{ valueLabel(value) }}</strong>
+        <span class="formula-order-material-select__text">
+          <strong>{{ valueLabel(value) }}</strong>
+          <small v-if="isValueDisabled(value.valueCode)">{{ disabledHint }}</small>
+        </span>
       </div>
     </el-option>
   </el-select>
@@ -42,6 +46,8 @@ const props = defineProps<{
   optionCode?: string
   multiple: boolean
   placeholder: string
+  disabledValueCodes: string[]
+  disabledHint: string
 }>()
 
 const emit = defineEmits<{
@@ -72,6 +78,10 @@ function imageOf(valueCode?: string) {
     || fabricThumbnail
 }
 
+function isValueDisabled(valueCode?: string) {
+  return props.disabledValueCodes.includes('*') || props.disabledValueCodes.includes(String(valueCode || ''))
+}
+
 function stringField(row: Record<string, unknown> | undefined, keys: string[]) {
   if (!row) return ''
   const value = keys.map((key) => row[key]).find((item) => typeof item === 'string' && item)
@@ -80,15 +90,15 @@ function stringField(row: Record<string, unknown> | undefined, keys: string[]) {
 </script>
 
 <style scoped>
-.simulation-material-select {
+.formula-order-material-select {
   width: 100%;
 }
 
-.simulation-material-select :deep(.el-select__prefix) {
+.formula-order-material-select :deep(.el-select__prefix) {
   align-self: center;
 }
 
-.simulation-material-select__option {
+.formula-order-material-select__option {
   display: flex;
   width: 100%;
   min-width: 0;
@@ -96,7 +106,7 @@ function stringField(row: Record<string, unknown> | undefined, keys: string[]) {
   gap: 8px;
 }
 
-.simulation-material-select__option strong {
+.formula-order-material-select__option strong {
   overflow: hidden;
   color: #243044;
   font-size: 13px;
@@ -106,7 +116,22 @@ function stringField(row: Record<string, unknown> | undefined, keys: string[]) {
   white-space: nowrap;
 }
 
-.simulation-material-select__thumb {
+.formula-order-material-select__text {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.formula-order-material-select__text small {
+  overflow: hidden;
+  color: #f59e0b;
+  font-size: 12px;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.formula-order-material-select__thumb {
   display: inline-flex;
   width: 30px;
   height: 30px;
@@ -119,28 +144,29 @@ function stringField(row: Record<string, unknown> | undefined, keys: string[]) {
   background: #edf5ff;
 }
 
-.simulation-material-select__thumb--small {
+.formula-order-material-select__thumb--small {
   width: 22px;
   height: 22px;
   border-radius: 4px;
 }
 
-.simulation-material-select__thumb img {
+.formula-order-material-select__thumb img {
   width: 100%;
   height: 100%;
   object-fit: contain;
 }
 
-:global(.formula-simulation-material-select-popper .el-select-dropdown__item) {
+:global(.formula-order-material-select-popper .el-select-dropdown__item) {
   display: flex;
-  height: 42px !important;
+  height: auto !important;
+  min-height: 46px;
   align-items: center;
-  padding: 4px 12px !important;
+  padding: 6px 12px !important;
   line-height: normal !important;
 }
 
-:global(.formula-simulation-material-select-popper .el-select-dropdown__item.hover),
-:global(.formula-simulation-material-select-popper .el-select-dropdown__item:hover) {
+:global(.formula-order-material-select-popper .el-select-dropdown__item.hover),
+:global(.formula-order-material-select-popper .el-select-dropdown__item:hover) {
   background: #eef5ff;
 }
 </style>

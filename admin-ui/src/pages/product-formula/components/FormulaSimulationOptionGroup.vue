@@ -6,7 +6,7 @@
       <small v-if="root.remark">{{ root.remark }}</small>
     </div>
     <div class="simulation-option-group__fields">
-      <FormulaSimulationOptionField
+      <FormulaOrderOptionField
         v-for="option in options"
         :key="option.optionCode"
         v-model="selectedOptionValues[option.optionCode || '']"
@@ -14,6 +14,8 @@
         :values="optionValuesOf(option.optionCode)"
         :option-materials="optionMaterials"
         :show-validation="showValidation"
+        :disabled-value-codes="disabledOptionValues[option.optionCode || ''] || []"
+        :restriction-messages="restrictionMessages[option.optionCode || ''] || []"
       />
     </div>
   </section>
@@ -22,7 +24,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import FormulaSimulationOptionField from './FormulaSimulationOptionField.vue'
+import FormulaOrderOptionField from './FormulaOrderOptionField.vue'
 import { PRODUCT_STATUS_ENABLED } from '@/constants/productStatus'
 import type { ProductFormulaOptionMaterialVO, ProductFormulaOptionVO, ProductFormulaOptionValueVO } from '@/api/product-capability/types'
 
@@ -33,6 +35,8 @@ const props = defineProps<{
   optionMaterials: ProductFormulaOptionMaterialVO[]
   selectedOptionValues: Record<string, string>
   showValidation: boolean
+  disabledOptionValues: Record<string, string[]>
+  restrictionMessages: Record<string, string[]>
 }>()
 
 const { t } = useI18n()

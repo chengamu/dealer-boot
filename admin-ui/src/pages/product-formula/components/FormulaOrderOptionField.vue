@@ -1,5 +1,5 @@
 <template>
-  <div class="simulation-config-field" :class="{ 'is-required-missing': requiredMissing }">
+  <div class="simulation-config-field" :class="[{ 'is-required-missing': requiredMissing, 'is-restricted-selected': restrictedSelected }, fieldWidthClass]">
     <div class="simulation-config-field__label">
       <span>{{ label }}</span>
       <em v-if="option.requiredFlag">{{ t('productCenter.formulaSimulation.required') }}</em>
@@ -9,10 +9,11 @@
       v-if="switchOption"
       :model-value="switchChecked"
       inline-prompt
+      :disabled="switchDisabled"
       @update:model-value="updateSwitch"
     />
 
-    <FormulaSimulationMaterialSelect
+    <FormulaOrderMaterialSelect
       v-else-if="materialOption"
       :model-value="modelValue"
       :values="values"
@@ -20,6 +21,8 @@
       :option-code="option.optionCode"
       :multiple="multipleOption"
       :placeholder="t('productCenter.formulaSetup.optionValueNamePlaceholder')"
+      :disabled-value-codes="disabledValueCodes"
+      :disabled-hint="restrictionMessage"
       @update:model-value="emit('update:modelValue', $event)"
     />
 
@@ -29,6 +32,7 @@
       filterable
       clearable
       :multiple="multipleOption"
+      popper-class="formula-order-select-popper"
       :placeholder="t('productCenter.formulaSetup.optionValueNamePlaceholder')"
       @change="updateSelect"
     >
@@ -37,11 +41,20 @@
         :key="value.valueCode"
         :label="value.valueNameCn || value.valueNameEn || value.valueCode"
         :value="value.valueCode"
-      />
+        :disabled="isValueDisabled(value.valueCode)"
+      >
+        <div class="formula-order-option-field__option">
+          <span>{{ value.valueNameCn || value.valueNameEn || value.valueCode }}</span>
+          <small v-if="isValueDisabled(value.valueCode)">{{ restrictionMessage }}</small>
+        </div>
+      </el-option>
     </el-select>
 
     <div v-if="requiredMissing" class="simulation-config-field__error">
       {{ t('productCenter.formulaSimulation.requiredMissing') }}
+    </div>
+    <div v-else-if="restrictedSelected" class="simulation-config-field__error">
+      {{ restrictionMessage }}
     </div>
   </div>
 </template>
@@ -50,7 +63,7 @@
 import { computed } from 'vue'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
-import FormulaSimulationMaterialSelect from './FormulaSimulationMaterialSelect.vue'
+import FormulaOrderMaterialSelect from './FormulaOrderMaterialSelect.vue'
 import type { ProductFormulaOptionMaterialVO, ProductFormulaOptionVO, ProductFormulaOptionValueVO } from '@/api/product-capability/types'
 
 const props = defineProps<{
@@ -59,6 +72,8 @@ const props = defineProps<{
   optionMaterials: ProductFormulaOptionMaterialVO[]
   modelValue?: string
   showValidation: boolean
+  disabledValueCodes: string[]
+  restrictionMessages: string[]
 }>()
 
 const emit = defineEmits<{
@@ -86,6 +101,14 @@ const selectedCodes = computed(() => splitCodes(props.modelValue))
 const requiredMissing = computed(() => Boolean(props.showValidation && props.option.requiredFlag && !props.modelValue))
 const selectModelValue = computed(() => multipleOption.value ? selectedCodes.value : props.modelValue)
 const switchChecked = computed(() => props.modelValue === switchValueCodes.value.active)
+const restrictedSelected = computed(() => selectedCodes.value.some((code) => isValueDisabled(code)))
+const restrictionMessage = computed(() => messageText(props.restrictionMessages[0] || 'product.formula.simulationRestrictionHit'))
+const switchDisabled = computed(() => isValueDisabled(switchValueCodes.value.active) && isValueDisabled(switchValueCodes.value.inactive))
+const fieldWidthClass = computed(() => {
+  if (switchOption.value) return 'is-compact'
+  if (multipleOption.value) return 'is-wide'
+  return ''
+})
 
 function splitCodes(value?: string) {
   return String(value || '').split(',').map((code) => code.trim()).filter(Boolean)
@@ -98,7 +121,17 @@ function updateSelect(value: string | string[]) {
 
 function updateSwitch(checked: string | number | boolean) {
   const codes = switchValueCodes.value
-  emit('update:modelValue', checked ? codes.active : codes.inactive)
+  const nextValue = checked ? codes.active : codes.inactive
+  if (isValueDisabled(nextValue)) return
+  emit('update:modelValue', nextValue)
+}
+
+function isValueDisabled(valueCode?: string) {
+  return props.disabledValueCodes.includes('*') || props.disabledValueCodes.includes(String(valueCode || ''))
+}
+
+function messageText(message: string) {
+  return message.startsWith('product.') || message.startsWith('productCenter.') ? t(message) : message
 }
 </script>
 
@@ -151,12 +184,44 @@ function updateSwitch(checked: string | number | boolean) {
   font-size: 12px;
 }
 
+.formula-order-option-field__option {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  justify-content: center;
+  line-height: 1.25;
+}
+
+.formula-order-option-field__option span,
+.formula-order-option-field__option small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.formula-order-option-field__option small {
+  color: #f59e0b;
+  font-size: 12px;
+}
+
 .simulation-config-field.is-required-missing :deep(.el-select .el-input__wrapper) {
   box-shadow: 0 0 0 1px #ef4444 inset;
 }
 
 .simulation-config-field.is-required-missing :deep(.el-select__wrapper) {
   box-shadow: 0 0 0 1px #ef4444 inset;
+}
+
+.simulation-config-field.is-restricted-selected :deep(.el-select .el-input__wrapper),
+.simulation-config-field.is-restricted-selected :deep(.el-select__wrapper) {
+  box-shadow: 0 0 0 1px #f59e0b inset;
+}
+
+:global(.formula-order-select-popper .el-select-dropdown__item) {
+  height: auto !important;
+  min-height: 38px;
+  padding: 6px 12px !important;
+  line-height: normal !important;
 }
 
 </style>

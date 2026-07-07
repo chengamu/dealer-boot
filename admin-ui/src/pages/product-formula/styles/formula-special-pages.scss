@@ -154,12 +154,15 @@
 
 .simulation-option-group__fields {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 520px));
-  gap: 14px 22px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px 18px;
   align-items: start;
-  justify-content: start;
   padding: 14px 16px;
   background: #ffffff;
+}
+
+.simulation-config-field.is-wide {
+  grid-column: span 2;
 }
 
 .simulation-result-strip,
@@ -244,7 +247,15 @@
 
 @media (max-width: 1280px) {
   .simulation-order-entry {
-    grid-template-columns: repeat(2, minmax(220px, 1fr));
+    grid-template-columns: repeat(3, minmax(180px, 1fr));
+  }
+
+  .simulation-order-field--room {
+    grid-column: 1 / -1;
+  }
+
+  .simulation-option-group__fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -259,6 +270,11 @@
 
   .simulation-order-entry {
     grid-template-columns: 1fr;
+  }
+
+  .simulation-order-field--room,
+  .simulation-config-field.is-wide {
+    grid-column: auto;
   }
 
   .simulation-option-group {

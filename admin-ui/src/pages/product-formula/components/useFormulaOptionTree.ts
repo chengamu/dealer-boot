@@ -165,11 +165,11 @@ export function useFormulaOptionTree(props: OptionTreeProps, options: UseOptionT
 
   function selectTreeNode(node: OptionTreeNode) {
     if (node.type === 'group') {
-      toggleTreeNode(node)
+      selectedNodeId.value = node.id
       return
     }
     selectedNodeId.value = node.id
-    expandNodePath(node.id, node.type === 'option')
+    expandNodePath(node.id)
     if (node.option?.optionCode) options.onOptionChange(node.option)
     selectedValueCode.value = node.type === 'value'
       ? valueClientKey(node.value) || node.value?.valueCode || ALL_VALUE_FILTER
@@ -183,12 +183,12 @@ export function useFormulaOptionTree(props: OptionTreeProps, options: UseOptionT
 
   function ensureSelectedNode(reveal = false) {
     if (optionTreeNodes.value.some((node) => node.id === selectedNodeId.value)) {
-      if (reveal) expandNodePath(selectedNodeId.value, selectedNode.value?.type === 'option')
+      if (reveal) expandNodePath(selectedNodeId.value)
       return
     }
     const option = selectedOption.value || props.options[0]
     selectedNodeId.value = option ? optionNodeId(option) : ''
-    if (reveal && selectedNodeId.value) expandNodePath(selectedNodeId.value, true)
+    if (reveal && selectedNodeId.value) expandNodePath(selectedNodeId.value)
   }
 
   function ensureSelectedValue() {
