@@ -332,6 +332,7 @@
   "productCenter.formulaSetup.sourceMaterialGroup": "来源物料分组",
   "productCenter.formulaSetup.sourceMaterialPool": "来源物料池",
   "productCenter.formulaSetup.sourceProductDict": "来源产品字典",
+  "productCenter.formulaSetup.sourceTypeChangeReferencedDenied": "当前配置项已有带出物料、下级选项、限制规则或用量规则引用，请先清理引用后再切换为布尔来源。",
   "productCenter.formulaSetup.sourceType": "来源类型",
   "productCenter.formulaSetup.specModel": "规格型号",
   "productCenter.formulaSetup.store": "店铺",

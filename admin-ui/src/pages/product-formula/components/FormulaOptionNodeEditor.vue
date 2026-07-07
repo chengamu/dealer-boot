@@ -17,7 +17,7 @@
       </label>
       <label>
         <span>{{ t('productCenter.formulaSetup.sourceType') }}</span>
-        <el-select v-model="selectedOption.sourceType" @change="$emit('source-type-change')">
+        <el-select :model-value="selectedOption.sourceType" @change="$emit('source-type-change', String($event))">
           <el-option value="MATERIAL_POOL" :label="t('productCenter.formulaSetup.sourceMaterialPool')" />
           <el-option value="PRODUCT_DICT" :label="t('productCenter.formulaSetup.sourceProductDict')" />
           <el-option value="BOOLEAN" :label="t('productCenter.formulaSetup.sourceBoolean')" />
@@ -64,7 +64,7 @@ defineProps<{
 }>()
 
 defineEmits<{
-  'source-type-change': []
+  'source-type-change': [value: string]
   'source-group-change': [value: string]
 }>()
 

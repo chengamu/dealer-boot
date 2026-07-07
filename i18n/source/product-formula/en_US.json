@@ -332,6 +332,7 @@
   "productCenter.formulaSetup.sourceMaterialGroup": "Source Material Group",
   "productCenter.formulaSetup.sourceMaterialPool": "Source Material Pool",
   "productCenter.formulaSetup.sourceProductDict": "Source Product Dict",
+  "productCenter.formulaSetup.sourceTypeChangeReferencedDenied": "This option is referenced by linked materials, child options, restriction rules, or usage rules. Clear those references before switching it to Boolean source.",
   "productCenter.formulaSetup.sourceType": "Source Type",
   "productCenter.formulaSetup.specModel": "Spec Model",
   "productCenter.formulaSetup.store": "Store",

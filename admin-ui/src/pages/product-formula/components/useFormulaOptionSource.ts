@@ -1,14 +1,30 @@
 import { computed, type Ref } from 'vue'
-import type { ProductFormulaMaterialVO, ProductFormulaOptionVO, ProductFormulaOptionValueVO } from '@/api/product-capability/types'
+import { ElMessage } from 'element-plus'
+import type {
+  ProductFormulaMaterialVO,
+  ProductFormulaOptionMaterialVO,
+  ProductFormulaOptionVO,
+  ProductFormulaOptionValueVO,
+  ProductFormulaRestrictionVO,
+  ProductFormulaUsageRuleVO,
+  ProductFormulaVariableRuleVO
+} from '@/api/product-capability/types'
 import {
   createDraftClientKey,
   optionClientKey,
+  valueClientKey,
+  type DraftOption,
+  type DraftOptionMaterial,
   type DraftOptionValue
 } from '../utils/formulaOptionDraftIdentity'
 
 type OptionSourceProps = {
   options: ProductFormulaOptionVO[]
   allOptionValues: ProductFormulaOptionValueVO[]
+  allOptionMaterials: ProductFormulaOptionMaterialVO[]
+  restrictions: ProductFormulaRestrictionVO[]
+  usageRules: ProductFormulaUsageRuleVO[]
+  variableRules: ProductFormulaVariableRuleVO[]
   materials: ProductFormulaMaterialVO[]
 }
 
@@ -62,21 +78,28 @@ export function useFormulaOptionSource(props: OptionSourceProps, options: UseOpt
     options.selectedOption.value.sourceScope = value ? `attributeGroupCode=${value}` : ''
   }
 
-  function handleSourceTypeChange() {
-    if (!options.selectedOption.value) return
-    if (options.selectedOption.value.sourceType === 'BOOLEAN') {
-      normalizeBooleanOption(options.selectedOption.value)
+  function handleSourceTypeChange(nextSourceType?: string) {
+    const option = options.selectedOption.value
+    if (!option) return
+    const sourceType = nextSourceType || option.sourceType || 'MANUAL'
+    if (sourceType === 'BOOLEAN' && option.sourceType !== 'BOOLEAN' && hasBooleanSourceBlockingReferences(option)) {
+      ElMessage.warning(options.t('productCenter.formulaSetup.sourceTypeChangeReferencedDenied'))
       return
     }
-    if (options.selectedOption.value.sourceType === 'MATERIAL_POOL' && !options.selectedOption.value.sourceScope) {
+    option.sourceType = sourceType
+    if (option.sourceType === 'BOOLEAN') {
+      normalizeBooleanOption(option)
+      return
+    }
+    if (option.sourceType === 'MATERIAL_POOL' && !option.sourceScope) {
       const firstGroup = materialGroupOptions.value[0]?.value || ''
-      options.selectedOption.value.sourceScope = firstGroup ? `attributeGroupCode=${firstGroup}` : ''
+      option.sourceScope = firstGroup ? `attributeGroupCode=${firstGroup}` : ''
     }
-    if (options.selectedOption.value.sourceType !== 'MATERIAL_POOL') {
-      options.selectedOption.value.displayMode = 'SELECT'
+    if (option.sourceType !== 'MATERIAL_POOL') {
+      option.displayMode = 'SELECT'
       return
     }
-    options.selectedOption.value.displayMode ||= 'SELECT'
+    option.displayMode ||= 'SELECT'
   }
 
   function normalizeBooleanOption(option: ProductFormulaOptionVO) {
@@ -116,6 +139,79 @@ export function useFormulaOptionSource(props: OptionSourceProps, options: UseOpt
     return (row as DraftOptionValue).optionClientKey
       ? (row as DraftOptionValue).optionClientKey === optionKey
       : row.optionCode === option.optionCode
+  }
+
+  function hasBooleanSourceBlockingReferences(option: ProductFormulaOptionVO) {
+    const optionKey = optionClientKey(option)
+    const optionCode = option.optionCode
+    return props.allOptionMaterials.some((row) => sameOptionRef(row, optionKey, optionCode))
+      || props.options.some((row) => sameOptionVisibilityRef(row, optionKey, optionCode))
+      || props.restrictions.some((row) => (
+        row.targetOptionCode === optionCode
+        || row.conditionOptionCode === optionCode
+        || expressionReferencesOption(row.conditionExpression || row.conditionText, option)
+      ))
+      || props.usageRules.some((row) => row.conditionOptionCode === optionCode || expressionReferencesOption(row.conditionExpression || row.conditionText, option))
+      || props.variableRules.some((row) => expressionReferencesOption(row.conditionExpression || row.conditionText, option))
+      || optionValuesFor(option, optionKey).some((value) => isValueReferenced(value))
+  }
+
+  function isValueReferenced(value: ProductFormulaOptionValueVO) {
+    const valueKey = valueClientKey(value)
+    return props.options.some((option) => (
+      sameOptionValueVisibilityRef(option, value)
+      || ((option as DraftOption).visibleConditionValueClientKey && (option as DraftOption).visibleConditionValueClientKey === valueKey)
+    ))
+      || props.restrictions.some((row) => (
+        (row.targetOptionCode === value.optionCode && row.targetValueCode === value.valueCode)
+        || (row.conditionOptionCode === value.optionCode && row.conditionValueCode === value.valueCode)
+      ) || expressionReferencesOptionValue(row.conditionExpression || row.conditionText, value))
+      || props.usageRules.some((row) => (
+        row.conditionOptionCode === value.optionCode && row.conditionValueCode === value.valueCode
+      ) || expressionReferencesOptionValue(row.conditionExpression || row.conditionText, value))
+      || props.variableRules.some((row) => expressionReferencesOptionValue(row.conditionExpression || row.conditionText, value))
+  }
+
+  function optionValuesFor(option: ProductFormulaOptionVO, optionKey: string) {
+    return props.allOptionValues.filter((row) => valueBelongsToOption(row, option, optionKey))
+  }
+
+  function sameOptionRef(row: ProductFormulaOptionMaterialVO, optionKey: string, optionCode?: string) {
+    const draft = row as DraftOptionMaterial
+    return draft.optionClientKey ? draft.optionClientKey === optionKey : row.optionCode === optionCode
+  }
+
+  function sameOptionVisibilityRef(row: ProductFormulaOptionVO, optionKey: string, optionCode?: string) {
+    const draft = row as DraftOption
+    return draft.visibleConditionOptionClientKey ? draft.visibleConditionOptionClientKey === optionKey : row.visibleConditionOptionCode === optionCode
+  }
+
+  function sameOptionValueVisibilityRef(option: ProductFormulaOptionVO, value: ProductFormulaOptionValueVO) {
+    const draft = option as DraftOption
+    const valueKey = valueClientKey(value)
+    if (draft.visibleConditionValueClientKey) return draft.visibleConditionValueClientKey === valueKey
+    return option.visibleConditionOptionCode === value.optionCode && option.visibleConditionValueCode === value.valueCode
+  }
+
+  function expressionReferencesOption(expression: unknown, option: ProductFormulaOptionVO) {
+    const text = textOf(expression)
+    if (!text) return false
+    return [optionVariableName(option.optionCode), option.optionCode, option.optionNameCn, option.optionNameEn].some((value) => value && text.includes(value))
+  }
+
+  function expressionReferencesOptionValue(expression: unknown, value: ProductFormulaOptionValueVO) {
+    const option = props.options.find((row) => row.optionCode === value.optionCode)
+    if (!option || !expressionReferencesOption(expression, option)) return false
+    const text = textOf(expression)
+    return [value.valueCode, value.valueNameCn, value.valueNameEn].some((item) => item && text.includes(item))
+  }
+
+  function optionVariableName(optionCode?: string) {
+    return optionCode === 'FABRIC' ? 'fabric' : `option_${optionCode || ''}`
+  }
+
+  function textOf(value: unknown) {
+    return value === undefined || value === null ? '' : String(value)
   }
 
   return {

@@ -118,7 +118,9 @@ import type {
   ProductFormulaOptionMaterialVO,
   ProductFormulaOptionVO,
   ProductFormulaOptionValueVO,
-  ProductFormulaRestrictionVO
+  ProductFormulaRestrictionVO,
+  ProductFormulaUsageRuleVO,
+  ProductFormulaVariableRuleVO
 } from '@/api/product-capability/types'
 
 type ChildOptionPayload = {
@@ -137,6 +139,8 @@ const props = defineProps<{
   optionMaterials: ProductFormulaOptionMaterialVO[]
   allOptionMaterials: ProductFormulaOptionMaterialVO[]
   restrictions: ProductFormulaRestrictionVO[]
+  usageRules: ProductFormulaUsageRuleVO[]
+  variableRules: ProductFormulaVariableRuleVO[]
   selectedOptionCode: string
   materials: ProductFormulaMaterialVO[]
   materialLabel: (row: ProductFormulaMaterialVO) => string

@@ -66,6 +66,8 @@
       :option-materials="selectedOptionMaterials"
       :all-option-materials="setup.optionMaterials"
       :restrictions="setup.restrictions"
+      :usage-rules="setup.usageRules"
+      :variable-rules="setup.variableRules"
       :selected-option-code="selectedOptionCode"
       :materials="setup.materials"
       :material-label="materialLabel"
