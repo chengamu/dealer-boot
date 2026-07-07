@@ -14,7 +14,9 @@
   "customer.name": "Customer Name",
   "customer.nameRequired": "Customer name is required",
   "customer.owner": "Owner",
+  "customer.ownerSubject": "Owning Entity",
   "customer.phone": "Phone",
+  "customer.platformOwned": "Platform / Factory Owned",
   "customer.postalCode": "Postal Code",
   "customer.profile.company.max": "Company name must be 120 characters or less",
   "customer.profile.delete.enabledDenied": "Enabled customers cannot be deleted",
@@ -27,6 +29,5 @@
   "customer.profile.notFound": "Customer profile does not exist",
   "customer.profile.owner.invalid": "Selected owner is invalid",
   "customer.profile.phone.max": "Phone must be 50 characters or less",
-  "customer.state": "State",
-  "customer.tenantId": "Tenant ID"
+  "customer.state": "State"
 }

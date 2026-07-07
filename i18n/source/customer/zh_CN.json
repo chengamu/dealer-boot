@@ -14,7 +14,9 @@
   "customer.name": "客户名称",
   "customer.nameRequired": "客户名称不能为空",
   "customer.owner": "负责人",
+  "customer.ownerSubject": "归属主体",
   "customer.phone": "电话",
+  "customer.platformOwned": "平台/厂家自有",
   "customer.postalCode": "邮编",
   "customer.profile.company.max": "公司名称不能超过120个字符",
   "customer.profile.delete.enabledDenied": "启用状态的客户不能删除",
@@ -27,6 +29,5 @@
   "customer.profile.notFound": "客户资料不存在",
   "customer.profile.owner.invalid": "选择的负责人无效",
   "customer.profile.phone.max": "电话不能超过50个字符",
-  "customer.state": "州/省",
-  "customer.tenantId": "租户ID"
+  "customer.state": "州/省"
 }

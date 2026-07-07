@@ -61,7 +61,7 @@ public class CustomerProfileServiceImpl extends MerchantServiceSupport implement
 
     @Override
     public List<CustomerOwnerOptionVo> queryOwnerOptions(Long tenantId) {
-        Long targetTenantId = LoginHelper.isPlatformTenant() ? tenantId : currentTenantId();
+        Long targetTenantId = LoginHelper.isPlatformTenant() && tenantId != null ? tenantId : currentTenantId();
         if (targetTenantId == null) {
             throw ServiceException.ofMessageKey("tenant.context.missing");
         }

@@ -36,7 +36,7 @@ public class PlatformCustomerController extends BaseController {
     }
 
     @SaCheckPermission("platform:customer:query")
-    @GetMapping("/{id}")
+    @GetMapping("/{id:\\d+}")
     public R<CustomerProfileVo> get(@PathVariable Long id) {
         return R.ok(customerProfileService.queryPlatformById(id));
     }

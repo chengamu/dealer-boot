@@ -45,7 +45,7 @@ public class CustomerProfileController extends BaseController {
     }
 
     @SaCheckPermission("customer:profile:query")
-    @GetMapping("/{id}")
+    @GetMapping("/{id:\\d+}")
     public R<CustomerProfileVo> get(@PathVariable Long id) {
         return R.ok(customerProfileService.queryById(id));
     }
@@ -73,7 +73,7 @@ public class CustomerProfileController extends BaseController {
 
     @SaCheckPermission("customer:profile:remove")
     @Log(title = "客户资料", businessType = BusinessType.DELETE)
-    @DeleteMapping("/{ids}")
+    @DeleteMapping("/{ids:\\d+(?:,\\d+)*}")
     public R<Void> remove(@NotEmpty(message = "{gen.validation.pk.required}") @PathVariable Long[] ids) {
         return toAjax(customerProfileService.deleteWithValidByIds(ids));
     }

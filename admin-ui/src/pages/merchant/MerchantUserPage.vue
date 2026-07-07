@@ -3,7 +3,7 @@
     <el-form v-show="showSearch" ref="queryRef" :model="queryParams" :inline="true" label-width="96px" class="merchant-table-page__search">
       <el-form-item v-if="isPlatformMode" :label="t('merchantProfile.merchantName')" prop="tenantId">
         <el-select v-model="selectedTenantId" clearable filterable :placeholder="t('merchantUser.allMerchants')" style="width: 240px" @change="handleMerchantChange">
-          <el-option v-for="item in merchantOptions" :key="item.tenantId" :label="item.merchantName || item.companyName || String(item.tenantId)" :value="item.tenantId" />
+          <el-option v-for="item in merchantOptions" :key="item.tenantId" :label="merchantOptionLabel(item)" :value="item.tenantId" />
         </el-select>
       </el-form-item>
       <el-form-item :label="t('user.userName')" prop="userName">
@@ -267,6 +267,10 @@ const formCloseGuard = useFormCloseGuard({
 
 function getUserSexLabel(dict: DictOption) {
   return dict.value && userSexLabelKeys[dict.value] ? t(userSexLabelKeys[dict.value]) : dict.label || ''
+}
+
+function merchantOptionLabel(item: MerchantProfile) {
+  return item.merchantName || item.companyName || '-'
 }
 
 function getInitials(row: SysUser) {

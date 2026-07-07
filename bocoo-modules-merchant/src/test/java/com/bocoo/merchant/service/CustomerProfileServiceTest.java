@@ -146,4 +146,20 @@ class CustomerProfileServiceTest {
         assertThat(options.get(0).getUserId()).isEqualTo(10L);
         verify(userMapper).selectList(any());
     }
+
+    @Test
+    void queryOwnerOptionsFallsBackToCurrentTenantForPlatformProfilePage() {
+        TestSaTokenContext.setLoginUser(TenantType.PLATFORM.getCode(), 1L, 1L, "admin");
+        SysUser owner = new SysUser();
+        owner.setUserId(1L);
+        owner.setUserName("admin");
+        owner.setNickName("System Admin");
+        when(userMapper.selectList(any())).thenReturn(List.of(owner));
+
+        List<CustomerOwnerOptionVo> options = service.queryOwnerOptions(null);
+
+        assertThat(options).hasSize(1);
+        assertThat(options.get(0).getUserId()).isEqualTo(1L);
+        verify(userMapper).selectList(any());
+    }
 }
