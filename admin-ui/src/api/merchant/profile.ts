@@ -18,6 +18,11 @@ export interface MerchantProfile {
   addressLine1?: string
   addressLine2?: string
   postalCode?: string
+  levelId?: number
+  levelCode?: string
+  levelName?: string
+  discountRate?: number
+  creditLimit?: number
   status?: string
   auditStatus?: string
   auditBy?: string
@@ -33,6 +38,8 @@ export interface MerchantProfileQuery extends PageQuery {
   merchantName?: string
   companyName?: string
   primaryEmail?: string
+  levelId?: number | string
+  levelName?: string
   status?: string
 }
 

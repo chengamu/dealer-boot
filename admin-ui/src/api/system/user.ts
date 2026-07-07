@@ -10,6 +10,7 @@ export interface UserQuery extends PageQuery {
   phonenumber?: string
   status?: string
   deptId?: number | string
+  tenantId?: number | string
   beginTime?: string
   endTime?: string
 }

@@ -104,13 +104,17 @@ function selectedLabel(optionCode?: string) {
 }
 
 function selectedMaterials(optionCode?: string) {
-  const valueCode = optionCode ? props.selectedOptionValues[optionCode] : ''
-  return props.optionMaterials.filter((row) => row.optionCode === optionCode && row.valueCode === valueCode)
+  const valueCodes = splitCodes(optionCode ? props.selectedOptionValues[optionCode] : '')
+  return props.optionMaterials.filter((row) => row.optionCode === optionCode && valueCodes.includes(String(row.valueCode || '')))
 }
 
 function linkedMaterialSummary(optionCode?: string) {
   const materials = selectedMaterials(optionCode)
   return materials.map((row) => row.materialNameCn || row.materialCode).filter(Boolean).slice(0, 3).join('、')
     + (materials.length > 3 ? ` +${materials.length - 3}` : '')
+}
+
+function splitCodes(value?: string) {
+  return String(value || '').split(',').map((code) => code.trim()).filter(Boolean)
 }
 </script>

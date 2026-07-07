@@ -10,6 +10,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.ObjectProvider;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -21,13 +22,15 @@ class MerchantProfileServiceTest {
 
     @Mock
     private MerchantProfileMapper merchantProfileMapper;
+    @Mock
+    private ObjectProvider<MerchantProfileLevelSupport> levelSupportProvider;
 
     private MerchantProfileService merchantProfileService;
 
     @BeforeEach
     void setUp() {
         TestSaTokenContext.install();
-        merchantProfileService = new MerchantProfileService(merchantProfileMapper);
+        merchantProfileService = new MerchantProfileService(merchantProfileMapper, levelSupportProvider);
     }
 
     @Test

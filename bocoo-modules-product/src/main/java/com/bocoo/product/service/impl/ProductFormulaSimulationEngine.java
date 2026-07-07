@@ -1,4 +1,6 @@
 package com.bocoo.product.service.impl;
+import static com.bocoo.product.service.impl.ProductFormulaSimulationSelections.selectedValueMatches;
+import static com.bocoo.product.service.impl.ProductFormulaSimulationSelections.selectedValues;
 import com.bocoo.common.core.utils.StringUtils;
 import com.bocoo.common.core.utils.TimeUtils;
 import com.bocoo.product.domain.bo.ProductFormulaSimulationBo;
@@ -118,8 +120,9 @@ class ProductFormulaSimulationEngine extends ProductServiceSupport {
             if (Boolean.TRUE.equals(option.getRequiredFlag()) && StringUtils.isBlank(selected)) {
                 return "product.formula.simulationOptionRequired";
             }
-            if (StringUtils.isNotBlank(selected) && valuesByOption.getOrDefault(option.getOptionCode(), List.of()).stream()
-                .noneMatch(value -> selected.equals(value.getValueCode()))) {
+            if (StringUtils.isNotBlank(selected) && !selectedValues(selected).stream().allMatch(selectedValue ->
+                valuesByOption.getOrDefault(option.getOptionCode(), List.of()).stream()
+                    .anyMatch(value -> selectedValue.equals(value.getValueCode())))) {
                 return "product.formula.simulationOptionInvalid";
             }
         }
@@ -128,7 +131,7 @@ class ProductFormulaSimulationEngine extends ProductServiceSupport {
     private boolean isOptionVisible(ProductFormulaOptionVo option, Map<String, String> selectedValues) {
         return !"CONDITIONAL".equals(option.getVisibilityMode())
             || (StringUtils.isNotBlank(option.getVisibleConditionOptionCode())
-            && Objects.equals(selectedValues.get(option.getVisibleConditionOptionCode()), option.getVisibleConditionValueCode()));
+            && selectedValueMatches(selectedValues.get(option.getVisibleConditionOptionCode()), option.getVisibleConditionValueCode()));
     }
     private Map<String, String> visibleSelectedValues(ProductFormulaSetupVo setup, Map<String, String> selectedValues) {
         Map<String, String> result = new LinkedHashMap<>();
@@ -152,7 +155,7 @@ class ProductFormulaSimulationEngine extends ProductServiceSupport {
             .forEach(material -> bom.put(material.getMaterialCode(), material));
         setup.getOptionMaterials().stream()
             .filter(optionMaterial -> isEnabledStatus(optionMaterial.getStatus())
-                && Objects.equals(selectedValues.get(optionMaterial.getOptionCode()), optionMaterial.getValueCode()))
+                && selectedValueMatches(selectedValues.get(optionMaterial.getOptionCode()), optionMaterial.getValueCode()))
             .map(ProductFormulaOptionMaterialVo::getMaterialCode).map(materialsByCode::get).filter(Objects::nonNull)
             .forEach(material -> bom.put(material.getMaterialCode(), material));
         return bom.values().stream()
@@ -203,7 +206,7 @@ class ProductFormulaSimulationEngine extends ProductServiceSupport {
         Map<String, Object> context = new HashMap<>();
         setup.getOptionMaterials().stream()
             .filter(optionMaterial -> isEnabledStatus(optionMaterial.getStatus())
-                && Objects.equals(selectedValues.get(optionMaterial.getOptionCode()), optionMaterial.getValueCode()))
+                && selectedValueMatches(selectedValues.get(optionMaterial.getOptionCode()), optionMaterial.getValueCode()))
             .sorted(Comparator.comparing(ProductFormulaOptionMaterialVo::getDefaultFlag, Comparator.nullsLast(Comparator.reverseOrder()))
                 .thenComparing(ProductFormulaOptionMaterialVo::getSortOrder, Comparator.nullsLast(Integer::compareTo)))
             .forEach(optionMaterial -> applyOptionMaterialContext(context, optionMaterial.getOptionCode(), materialsByCode.get(optionMaterial.getMaterialCode())));
@@ -260,7 +263,7 @@ class ProductFormulaSimulationEngine extends ProductServiceSupport {
             return true;
         }
         String selected = selectedValues.get(restriction.getTargetOptionCode());
-        return StringUtils.isBlank(restriction.getTargetValueCode()) || Objects.equals(selected, restriction.getTargetValueCode());
+        return StringUtils.isBlank(restriction.getTargetValueCode()) || selectedValueMatches(selected, restriction.getTargetValueCode());
     }
     private boolean restrictionConditionMatched(ProductFormulaRestrictionVo restriction, Map<String, String> selectedValues,
                                                 Map<String, Object> context) {
@@ -274,7 +277,7 @@ class ProductFormulaSimulationEngine extends ProductServiceSupport {
         };
     }
     private boolean compareString(String left, String right, String operator) {
-        boolean equals = Objects.equals(left, right);
+        boolean equals = selectedValueMatches(left, right);
         return "NE".equals(operator) || "!=".equals(operator) ? !equals : equals;
     }
     private boolean compareNumber(BigDecimal left, BigDecimal right, String operator) {

@@ -9,6 +9,8 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.math.BigDecimal;
+
 @Data
 @EqualsAndHashCode(callSuper = true)
 @AutoMapper(target = MerchantProfile.class, reverseConvertGenerate = false)
@@ -61,6 +63,18 @@ public class MerchantProfileBo extends BaseBo {
 
     @Size(max = 20, message = "{merchant.profile.postalCode.max}")
     private String postalCode;
+
+    private Long levelId;
+
+    @Size(max = 50, message = "{merchant.profile.levelCode.max}")
+    private String levelCode;
+
+    @Size(max = 100, message = "{merchant.profile.levelName.max}")
+    private String levelName;
+
+    private BigDecimal discountRate;
+
+    private BigDecimal creditLimit;
 
     private String status;
 

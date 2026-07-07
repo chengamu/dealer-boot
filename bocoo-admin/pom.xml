@@ -67,6 +67,13 @@
             <version>${com.bocoo.version}</version>
         </dependency>
 
+        <!-- 商户和客户业务模块 -->
+        <dependency>
+            <groupId>com.bocoo</groupId>
+            <artifactId>bocoo-modules-merchant</artifactId>
+            <version>${com.bocoo.version}</version>
+        </dependency>
+
         <!-- API文档 -->
         <dependency>
             <groupId>com.bocoo</groupId>

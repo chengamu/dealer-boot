@@ -112,6 +112,7 @@
         <module>bocoo-modules-ai</module>
         <module>bocoo-modules-demo</module>
         <module>bocoo-modules-dealer</module>
+        <module>bocoo-modules-merchant</module>
         <module>bocoo-modules-product</module>
         <module>bocoo-module-pay</module>
 

@@ -186,8 +186,12 @@ function optionValuesOf(optionCode?: string) {
 
 function optionValueLabel(optionCode?: string, valueCode?: string) {
   if (!optionCode || !valueCode) return valueCode || '-'
-  const value = optionValuesOf(optionCode).find((row) => row.valueCode === valueCode)
-  return value?.valueNameCn || value?.valueNameEn || value?.valueCode || valueCode
+  const values = optionValuesOf(optionCode)
+  const labels = splitCodes(valueCode).map((code) => {
+    const value = values.find((row) => row.valueCode === code)
+    return value?.valueNameCn || value?.valueNameEn || value?.valueCode || code
+  })
+  return labels.join('、') || valueCode
 }
 
 function responseRows<T>(response: { data?: T[] } | T[] | undefined): T[] {
@@ -197,7 +201,7 @@ function responseRows<T>(response: { data?: T[] } | T[] | undefined): T[] {
 function isOptionVisible(option: ProductFormulaOptionVO) {
   if (option.visibilityMode !== 'CONDITIONAL') return true
   const conditionOptionCode = option.visibleConditionOptionCode
-  return Boolean(conditionOptionCode) && selectedOptionValues[conditionOptionCode as string] === option.visibleConditionValueCode
+  return Boolean(conditionOptionCode) && splitCodes(selectedOptionValues[conditionOptionCode as string]).includes(String(option.visibleConditionValueCode || ''))
 }
 
 function applyVisibleDefaults() {
@@ -219,6 +223,10 @@ function clearHiddenSelections() {
 
 function sortRows<T extends { sortOrder?: number }>(rows: T[]) {
   return [...rows].sort((left, right) => (left.sortOrder ?? 999999) - (right.sortOrder ?? 999999))
+}
+
+function splitCodes(value?: string) {
+  return String(value || '').split(',').map((code) => code.trim()).filter(Boolean)
 }
 
 function runPayload(): ProductFormulaSimulationBO {

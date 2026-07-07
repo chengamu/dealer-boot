@@ -63,7 +63,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import {
   formulaVariables,
   formatUsageNumber,
@@ -110,9 +110,26 @@ const visibleVariables = computed(() => {
     })
 })
 
+watch(() => props.modelValue, (open) => {
+  if (open) {
+    window.addEventListener('keydown', stopEscapeEvent, true)
+  } else {
+    window.removeEventListener('keydown', stopEscapeEvent, true)
+  }
+}, { immediate: true })
+
+onBeforeUnmount(() => window.removeEventListener('keydown', stopEscapeEvent, true))
+
 function appendText(value: string) {
   if (!value) return
   editorText.value = `${editorText.value || ''}${editorText.value ? ' ' : ''}${value}`
+}
+
+function stopEscapeEvent(event: KeyboardEvent) {
+  if (event.key !== 'Escape') return
+  event.preventDefault()
+  event.stopPropagation()
+  event.stopImmediatePropagation()
 }
 
 function sameVariable(left?: ProductFormulaVariableVO, right?: ProductFormulaVariableVO) {
@@ -124,16 +141,34 @@ function sameVariable(left?: ProductFormulaVariableVO, right?: ProductFormulaVar
 </script>
 
 <style scoped>
+:global(.variable-formula-dialog.admin-dialog.el-dialog) {
+  display: flex;
+  flex-direction: column;
+  width: min(1180px, calc(100vw - 64px)) !important;
+  height: min(720px, calc(100vh - 56px));
+}
+
+:global(.variable-formula-dialog.admin-dialog .el-dialog__body) {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  padding: 14px 18px 12px;
+}
+
 .variable-formula-editor {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 340px;
-  gap: 10px;
+  grid-template-columns: minmax(0, 58fr) minmax(360px, 42fr);
+  gap: 12px;
+  height: 100%;
+  min-height: 0;
 }
 
 .variable-formula-editor__main {
   display: grid;
-  gap: 8px;
+  grid-template-rows: auto auto auto auto;
+  gap: 10px;
   min-width: 0;
+  min-height: 0;
 }
 
 .variable-formula-editor :deep(.expression-editor__composer),
@@ -156,7 +191,8 @@ function sameVariable(left?: ProductFormulaVariableVO, right?: ProductFormulaVar
 }
 
 .variable-formula-editor :deep(.expression-editor__composer .el-textarea__inner) {
-  min-height: 118px !important;
+  min-height: 128px !important;
+  max-height: 128px;
   line-height: 1.6;
 }
 
@@ -218,15 +254,19 @@ function sameVariable(left?: ProductFormulaVariableVO, right?: ProductFormulaVar
 
 .variable-formula-editor__variables {
   display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
   gap: 8px;
+  min-height: 0;
   align-content: start;
+  background: #f8fbff;
 }
 
 .variable-formula-editor__list {
   display: grid;
   gap: 8px;
-  max-height: 330px;
+  min-height: 0;
   overflow-y: auto;
+  align-content: start;
 }
 
 .variable-formula-editor__item {
@@ -238,7 +278,7 @@ function sameVariable(left?: ProductFormulaVariableVO, right?: ProductFormulaVar
   text-align: left;
   border: 1px solid #e5ecf6;
   border-radius: 8px;
-  background: #f8fbff;
+  background: #fff;
 }
 
 .variable-formula-editor__item span {

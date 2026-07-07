@@ -7,6 +7,7 @@ import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
@@ -48,6 +49,16 @@ public class MerchantProfileVo implements Serializable {
     private String addressLine2;
 
     private String postalCode;
+
+    private Long levelId;
+
+    private String levelCode;
+
+    private String levelName;
+
+    private BigDecimal discountRate;
+
+    private BigDecimal creditLimit;
 
     private String status;
 

@@ -95,7 +95,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onBeforeUnmount, watch } from 'vue'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 import FormulaExpressionComposer from './FormulaExpressionComposer.vue'
@@ -162,8 +162,25 @@ const editorResultText = computed(() => {
 })
 const variableGroups = computed(() => isFormulaTarget.value ? formulaVariableGroups() : [])
 
+watch(() => props.modelValue, (open) => {
+  if (open) {
+    window.addEventListener('keydown', stopEscapeEvent, true)
+  } else {
+    window.removeEventListener('keydown', stopEscapeEvent, true)
+  }
+}, { immediate: true })
+
+onBeforeUnmount(() => window.removeEventListener('keydown', stopEscapeEvent, true))
+
 function appendExpressionText(value: string) {
   editorText.value = `${editorText.value || ''}${editorText.value ? ' ' : ''}${value}`
+}
+
+function stopEscapeEvent(event: KeyboardEvent) {
+  if (event.key !== 'Escape') return
+  event.preventDefault()
+  event.stopPropagation()
+  event.stopImmediatePropagation()
 }
 
 function appendConditionClause(clause: string, joiner: string) {

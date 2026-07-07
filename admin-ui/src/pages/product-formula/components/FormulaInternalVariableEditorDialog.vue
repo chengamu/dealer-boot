@@ -1,22 +1,16 @@
 <template>
-  <AdminDialog
-    :model-value="modelValue"
-    :title="t('productCenter.formulaSetup.variableEditor')"
-    width="840px"
-    class="variable-editor-dialog"
-    append-to-body
-    :close-on-press-escape="false"
-    :close-on-click-modal="false"
-    @update:model-value="$emit('update:modelValue', $event)"
-  >
+  <section v-if="modelValue" class="variable-editor-panel">
+    <div class="variable-editor-panel__head">
+      <strong>{{ t('productCenter.formulaSetup.variableEditor') }}</strong>
+    </div>
     <div class="variable-editor">
       <el-form label-width="78px">
         <div class="variable-editor__base">
           <el-form-item :label="t('productCenter.formulaSetup.variableName')">
-            <el-input v-model="draft.variableName" @blur="fillCode" />
+            <el-input v-model="draft.variableName" />
           </el-form-item>
           <el-form-item :label="t('productCenter.formulaSetup.variableCode')">
-            <el-input v-model="draft.variableCode" />
+            <el-input v-model="draft.variableCode" disabled />
           </el-form-item>
           <el-form-item :label="t('productCenter.common.sortOrder')">
             <el-input-number v-model="draft.sortOrder" :min="0" controls-position="right" />
@@ -97,13 +91,11 @@
       :variables="variables"
       @confirm="confirmConditionEditor"
     />
-    <template #footer>
-      <AdminDialogFooter>
-        <el-button @click="$emit('update:modelValue', false)">{{ t('common.cancel') }}</el-button>
-        <el-button type="primary" @click="confirm">{{ t('common.confirm') }}</el-button>
-      </AdminDialogFooter>
-    </template>
-  </AdminDialog>
+    <div class="variable-editor-panel__footer">
+      <el-button @click="$emit('update:modelValue', false)">{{ t('common.cancel') }}</el-button>
+      <el-button type="primary" @click="confirm">{{ t('common.confirm') }}</el-button>
+    </div>
+  </section>
 </template>
 
 <script setup lang="ts">
@@ -149,10 +141,11 @@ const formulaEditorRule = ref<DraftRule>()
 const conditionEditorOpen = ref(false)
 const conditionEditorText = ref('')
 const conditionEditorRule = ref<DraftRule>()
-
-watch(() => props.modelValue, (open) => {
+watch(() => [props.modelValue, props.variable] as const, ([open]) => {
   if (!open) return
+  Object.keys(draft).forEach((key) => delete (draft as Record<string, unknown>)[key])
   Object.assign(draft, { ...(props.variable || {}), sortOrder: props.variable?.sortOrder ?? 10 })
+  draft.variableCode = draft.variableCode || newVariableCode()
   draftRules.value = props.rules.length
     ? props.rules.map((rule, index) => ({ ...rule, formulaText: rule.formulaText || rule.formulaExpression, __key: String(rule.ruleId || index) }))
     : [emptyRule(true)]
@@ -227,19 +220,17 @@ function conditionPlaceholder(row: DraftRule) {
     : props.t('productCenter.formulaSetup.valueConditionPlaceholder')
 }
 
-function fillCode() {
-  if (draft.variableCode || !draft.variableName) return
-  const normalized = String(draft.variableName).trim().toUpperCase().replace(/[^A-Z0-9]+/g, '_').replace(/^_+|_+$/g, '')
-  draft.variableCode = normalized || `VAR_${Date.now()}`
-}
-
 function confirm() {
-  fillCode()
+  draft.variableCode = draft.variableCode || newVariableCode()
   draft.variableKey = draft.variableKey || `V_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`.toUpperCase()
   if (!draftRules.value.some((rule) => rule.defaultRuleFlag) && draftRules.value[0]) draftRules.value[0].defaultRuleFlag = true
   const variable = { ...draft }
   const rules = draftRules.value.map(({ __key, ...rule }) => ({ ...rule, variableKey: variable.variableKey, variableCode: variable.variableCode }))
   emit('save', variable, rules)
+}
+
+function newVariableCode() {
+  return `VAR_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`.toUpperCase()
 }
 </script>
 

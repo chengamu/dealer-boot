@@ -21,6 +21,7 @@ app-container
 - 菜单、按钮、表头、placeholder、tooltip、空状态、错误提示使用 i18n key。
 - 按钮使用 `v-hasPermi`，权限码和后端 `@SaCheckPermission`、数据库 `sys_menu.perms` 一致。
 - 时间展示使用 `formatUtc()`；日期范围提交使用 `withUtcDateRange()` / `withUtcDateRangeParams()`。
+- 标准化按业务场景决定，不按组件形态一刀切：单主体自维护页可用卡片表单，多记录资料维护页优先 grid，复杂录入页按业务工作流定制。
 
 ## 2. Grid 页面
 

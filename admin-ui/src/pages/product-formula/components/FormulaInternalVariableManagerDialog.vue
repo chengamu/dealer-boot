@@ -2,34 +2,42 @@
   <AdminDialog
     :model-value="modelValue"
     :title="t('productCenter.formulaSetup.internalVariables')"
-    width="960px"
+    width="92vw"
     class="variable-manager-dialog"
     append-to-body
     :close-on-press-escape="false"
     :close-on-click-modal="false"
     @update:model-value="$emit('update:modelValue', $event)"
   >
-    <FormulaInternalVariableGrid
-      :variables="variables || []"
-      :variable-rules="variableRules || []"
-      :t="t"
-      @add="openVariableEditor()"
-      @edit="openVariableEditor"
-      @remove="removeVariable"
-      @copy="copyVariables"
-    />
-    <FormulaInternalVariableEditorDialog
-      v-model="variableEditorOpen"
-      :variable="editingVariable"
-      :rules="editingVariableRules"
-      :variables="variables || []"
-      :materials="materials || []"
-      :options="options || []"
-      :option-values="optionValues || []"
-      :option-materials="optionMaterials || []"
-      :t="t"
-      @save="saveVariable"
-    />
+    <div class="variable-manager">
+      <FormulaInternalVariableGrid
+        class="variable-manager__list"
+        :variables="variables || []"
+        :variable-rules="variableRules || []"
+        :selected-variable="editingVariable"
+        :t="t"
+        @add="openVariableEditor()"
+        @edit="openVariableEditor"
+        @remove="removeVariable"
+        @copy="copyVariables"
+      />
+      <FormulaInternalVariableEditorDialog
+        v-model="variableEditorOpen"
+        class="variable-manager__editor"
+        :variable="editingVariable"
+        :rules="editingVariableRules"
+        :variables="variables || []"
+        :materials="materials || []"
+        :options="options || []"
+        :option-values="optionValues || []"
+        :option-materials="optionMaterials || []"
+        :t="t"
+        @save="saveVariable"
+      />
+      <div v-if="!variableEditorOpen" class="variable-manager__empty">
+        {{ t('productCenter.formulaSetup.selectVariableToEdit') }}
+      </div>
+    </div>
   </AdminDialog>
 </template>
 
@@ -78,15 +86,16 @@ function openVariableEditor(row?: ProductFormulaVariableVO) {
 
 async function saveVariable(variable: ProductFormulaVariableVO, rules: ProductFormulaVariableRuleVO[]) {
   if (!props.formulaId) return
-  const variables = [...(props.variables || [])]
+  const latest = await productFormulaApi.variables(props.formulaId)
+  const latestSetup = latest.data || {}
+  const variables = [...(latestSetup.variables?.length ? latestSetup.variables : (props.variables || []))]
   variable.variableKey = variable.variableKey || editingVariable.value?.variableKey || newVariableKey()
-  const oldCode = editingVariable.value?.variableCode
-  const oldKey = editingVariable.value?.variableKey
-  const index = variables.findIndex((row) => row.variableKey === variable.variableKey || row.variableId === variable.variableId)
+  const index = variables.findIndex((row) => sameVariableRef(row, variable) || sameVariableRef(row, editingVariable.value))
   if (index >= 0) variables.splice(index, 1, variable)
   else variables.push(variable)
-  const variableRules = (props.variableRules || [])
-    .filter((rule) => rule.variableKey !== variable.variableKey && rule.variableKey !== oldKey && rule.variableCode !== oldCode)
+  const baseRules = latestSetup.variableRules?.length ? latestSetup.variableRules : (props.variableRules || [])
+  const variableRules = baseRules
+    .filter((rule) => !sameVariableRef(rule, variable) && !sameVariableRef(rule, editingVariable.value))
     .concat(rules.map((rule) => normalizeVariableRule(rule, variable, variables)))
   await productFormulaApi.saveVariables(props.formulaId, { variables, variableRules })
   const response = await productFormulaApi.variables(props.formulaId)
@@ -139,7 +148,7 @@ function normalizeVariableRule(rule: ProductFormulaVariableRuleVO, variable: Pro
 function sameVariableRef(left?: { variableKey?: string; variableCode?: string; variableId?: number }, right?: { variableKey?: string; variableCode?: string; variableId?: number } | null) {
   if (!left || !right) return false
   if (left.variableKey && right.variableKey) return left.variableKey === right.variableKey
-  if (left.variableId && right.variableId) return left.variableId === right.variableId
+  if (left.variableId && right.variableId) return String(left.variableId) === String(right.variableId)
   return Boolean(left.variableCode && right.variableCode && left.variableCode === right.variableCode)
 }
 
@@ -149,7 +158,37 @@ function newVariableKey() {
 </script>
 
 <style scoped>
-.variable-manager-dialog :deep(.internal-variable-grid) {
-  min-height: 520px;
+.variable-manager {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  gap: 12px;
+  align-items: stretch;
+  min-height: min(640px, calc(100vh - 180px));
+}
+
+.variable-manager__list {
+  min-height: min(640px, calc(100vh - 180px));
+}
+
+.variable-manager__editor {
+  min-width: 0;
+}
+
+.variable-manager__empty {
+  display: grid;
+  place-items: center;
+  min-height: min(640px, calc(100vh - 180px));
+  border: 1px dashed #d9e2ef;
+  border-radius: 8px;
+  color: #8a95a6;
+  background: #f8fbff;
+}
+
+:global(.variable-manager-dialog.admin-dialog.el-dialog) {
+  width: min(1480px, calc(100vw - 56px)) !important;
+}
+
+:global(.variable-manager-dialog.admin-dialog .el-dialog__body) {
+  padding: 10px 16px 16px;
 }
 </style>

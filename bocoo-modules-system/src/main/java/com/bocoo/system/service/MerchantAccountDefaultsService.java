@@ -114,8 +114,19 @@ public class MerchantAccountDefaultsService {
             "", UserConstants.TYPE_BUTTON, "merchant:profile:query", 1);
         SysMenu profileEdit = selectOrCreateMenu(profile.getMenuId(), "Merchant Profile Edit", "menu.merchant.profile.edit",
             "", UserConstants.TYPE_BUTTON, "merchant:profile:edit", 2);
+        SysMenu customers = selectOrCreateMenu(parent.getMenuId(), "Customers", "menu.customer.profile",
+            "customers", UserConstants.TYPE_MENU, "customer:profile:list", 3);
+        SysMenu customerQuery = selectOrCreateMenu(customers.getMenuId(), "Customer Query", "menu.customer.profile.query",
+            "", UserConstants.TYPE_BUTTON, "customer:profile:query", 1);
+        SysMenu customerAdd = selectOrCreateMenu(customers.getMenuId(), "Customer Add", "menu.customer.profile.add",
+            "", UserConstants.TYPE_BUTTON, "customer:profile:add", 2);
+        SysMenu customerEdit = selectOrCreateMenu(customers.getMenuId(), "Customer Edit", "menu.customer.profile.edit",
+            "", UserConstants.TYPE_BUTTON, "customer:profile:edit", 3);
+        SysMenu customerRemove = selectOrCreateMenu(customers.getMenuId(), "Customer Delete", "menu.customer.profile.remove",
+            "", UserConstants.TYPE_BUTTON, "customer:profile:remove", 4);
 
-        List<Long> menuIds = new ArrayList<>(List.of(parent.getMenuId(), profile.getMenuId(), profileQuery.getMenuId()));
+        List<Long> menuIds = new ArrayList<>(List.of(parent.getMenuId(), profile.getMenuId(), profileQuery.getMenuId(),
+            customers.getMenuId(), customerQuery.getMenuId(), customerAdd.getMenuId(), customerEdit.getMenuId(), customerRemove.getMenuId()));
         if (!includeUserManagement) {
             return menuIds;
         }
@@ -178,7 +189,7 @@ public class MerchantAccountDefaultsService {
         if (UserConstants.TYPE_DIR.equals(menuType)) {
             menu.setComponent(UserConstants.LAYOUT);
         } else if (UserConstants.TYPE_MENU.equals(menuType)) {
-            menu.setComponent("users".equals(path) ? "merchant/User" : "merchant/Profile");
+            menu.setComponent("users".equals(path) ? "merchant/User" : "customers".equals(path) ? "customer/profile" : "merchant/Profile");
         }
         menu.setIsFrame(UserConstants.NO_FRAME);
         menu.setIsCache("0");

@@ -7,13 +7,16 @@
         <div class="admin-detail__item"><dt>{{ t('merchantProfile.companyName') }}</dt><dd>{{ profile.companyName || '-' }}</dd></div>
         <div class="admin-detail__item"><dt>{{ t('merchantProfile.contactName') }}</dt><dd>{{ profile.contactName || '-' }}</dd></div>
         <div class="admin-detail__item"><dt>{{ t('merchantProfile.primaryEmail') }}</dt><dd>{{ profile.primaryEmail || '-' }}</dd></div>
+        <div class="admin-detail__item"><dt>{{ t('merchantLevel.name') }}</dt><dd>{{ profile.levelName || '-' }}</dd></div>
+        <div class="admin-detail__item"><dt>{{ t('merchantLevel.discount') }}</dt><dd>{{ profile.discountRate ?? '-' }}</dd></div>
+        <div class="admin-detail__item"><dt>{{ t('merchantLevel.credit') }}</dt><dd>{{ profile.creditLimit ?? '-' }}</dd></div>
         <div class="admin-detail__item"><dt>{{ t('merchantProfile.officePhone') }}</dt><dd>{{ profile.officePhone || '-' }}</dd></div>
         <div class="admin-detail__item"><dt>{{ t('merchantProfile.mobilePhone') }}</dt><dd>{{ profile.mobilePhone || '-' }}</dd></div>
         <div class="admin-detail__item"><dt>{{ t('merchantProfile.country') }}</dt><dd>{{ profile.country || '-' }}</dd></div>
         <div class="admin-detail__item"><dt>{{ t('merchantProfile.status') }}</dt><dd>{{ profile.status === '1' ? t('common.normal') : t('common.disabled') }}</dd></div>
         <div class="admin-detail__item admin-detail__item--full"><dt>{{ t('merchantProfile.address') }}</dt><dd>{{ address || '-' }}</dd></div>
         <div class="admin-detail__item"><dt>{{ t('merchantProfile.auditStatus') }}</dt><dd>{{ auditStatusText }}</dd></div>
-        <div class="admin-detail__item"><dt>{{ t('merchantProfile.auditTime') }}</dt><dd>{{ formatUtc(profile.auditTime) }}</dd></div>
+        <div class="admin-detail__item"><dt>{{ t('merchantProfile.auditTime') }}</dt><dd>{{ formatUtc(profile.auditTime, 'YYYY-MM-DD HH:mm') }}</dd></div>
         <div class="admin-detail__item admin-detail__item--full"><dt>{{ t('merchantProfile.remark') }}</dt><dd class="admin-detail__value--long">{{ profile.remark || '-' }}</dd></div>
       </dl>
     </section>

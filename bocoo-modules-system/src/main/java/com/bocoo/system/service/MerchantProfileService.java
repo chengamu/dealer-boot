@@ -13,9 +13,11 @@ import com.bocoo.common.mybatis.core.page.TableDataInfo;
 import com.bocoo.common.satoken.utils.LoginHelper;
 import com.bocoo.system.domain.bo.MerchantProfileBo;
 import com.bocoo.system.domain.entity.MerchantProfile;
+import com.bocoo.system.domain.vo.MerchantProfileLevelSnapshot;
 import com.bocoo.system.domain.vo.MerchantProfileVo;
 import com.bocoo.system.mapper.MerchantProfileMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 
 @RequiredArgsConstructor
@@ -23,6 +25,7 @@ import org.springframework.stereotype.Service;
 public class MerchantProfileService {
 
     private final MerchantProfileMapper merchantProfileMapper;
+    private final ObjectProvider<MerchantProfileLevelSupport> levelSupportProvider;
 
     public TableDataInfo<MerchantProfileVo> selectPage(MerchantProfileBo bo, PageQuery pageQuery) {
         checkPlatformTenant();
@@ -44,6 +47,7 @@ public class MerchantProfileService {
             throw ServiceException.ofMessageKey("merchant.profile.notFound");
         }
         applyMerchantEditableFields(profile, bo);
+        applyPlatformPricingFields(profile, bo);
         return TenantContextHolder.callWithIgnore(() -> merchantProfileMapper.updateById(profile));
     }
 
@@ -60,6 +64,7 @@ public class MerchantProfileService {
 
     public int insertProfile(MerchantProfileBo bo) {
         MerchantProfile profile = MapstructUtils.convert(bo, MerchantProfile.class);
+        applyDefaultLevel(profile);
         return merchantProfileMapper.insert(profile);
     }
 
@@ -81,6 +86,8 @@ public class MerchantProfileService {
             .like(StringUtils.isNotBlank(bo.getMerchantName()), MerchantProfile::getMerchantName, bo.getMerchantName())
             .like(StringUtils.isNotBlank(bo.getCompanyName()), MerchantProfile::getCompanyName, bo.getCompanyName())
             .like(StringUtils.isNotBlank(bo.getPrimaryEmail()), MerchantProfile::getPrimaryEmail, bo.getPrimaryEmail())
+            .eq(ObjectUtil.isNotNull(bo.getLevelId()), MerchantProfile::getLevelId, bo.getLevelId())
+            .like(StringUtils.isNotBlank(bo.getLevelName()), MerchantProfile::getLevelName, bo.getLevelName())
             .eq(StringUtils.isNotBlank(bo.getStatus()), MerchantProfile::getStatus, bo.getStatus())
             .orderByDesc(MerchantProfile::getCreateTime);
         return wrapper;
@@ -98,6 +105,48 @@ public class MerchantProfileService {
         profile.setAddressLine2(bo.getAddressLine2());
         profile.setPostalCode(bo.getPostalCode());
         profile.setRemark(bo.getRemark());
+    }
+
+    private void applyPlatformPricingFields(MerchantProfile profile, MerchantProfileBo bo) {
+        if (bo.getLevelId() != null) {
+            MerchantProfileLevelSnapshot level = requireLevelSupport().selectEnabledLevel(bo.getLevelId());
+            profile.setLevelId(level.levelId());
+            profile.setLevelCode(level.levelCode());
+            profile.setLevelName(level.levelName());
+            profile.setDiscountRate(bo.getDiscountRate() == null ? level.defaultDiscountRate() : bo.getDiscountRate());
+            profile.setCreditLimit(bo.getCreditLimit() == null ? level.defaultCreditLimit() : bo.getCreditLimit());
+            return;
+        }
+        if (bo.getDiscountRate() != null) {
+            profile.setDiscountRate(bo.getDiscountRate());
+        }
+        if (bo.getCreditLimit() != null) {
+            profile.setCreditLimit(bo.getCreditLimit());
+        }
+    }
+
+    private void applyDefaultLevel(MerchantProfile profile) {
+        MerchantProfileLevelSupport support = levelSupportProvider.getIfAvailable();
+        if (support == null || profile == null || profile.getLevelId() != null) {
+            return;
+        }
+        MerchantProfileLevelSnapshot level = support.selectDefaultLevel();
+        if (level == null) {
+            return;
+        }
+        profile.setLevelId(level.levelId());
+        profile.setLevelCode(level.levelCode());
+        profile.setLevelName(level.levelName());
+        profile.setDiscountRate(level.defaultDiscountRate());
+        profile.setCreditLimit(level.defaultCreditLimit());
+    }
+
+    private MerchantProfileLevelSupport requireLevelSupport() {
+        MerchantProfileLevelSupport support = levelSupportProvider.getIfAvailable();
+        if (support == null) {
+            throw ServiceException.ofMessageKey("merchant.level.notFound");
+        }
+        return support;
     }
 
     private String resolveContactName(MerchantProfileBo bo) {

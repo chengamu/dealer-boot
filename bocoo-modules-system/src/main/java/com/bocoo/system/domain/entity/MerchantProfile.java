@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -47,6 +48,16 @@ public class MerchantProfile extends BaseEntity {
     private String addressLine2;
 
     private String postalCode;
+
+    private Long levelId;
+
+    private String levelCode;
+
+    private String levelName;
+
+    private BigDecimal discountRate;
+
+    private BigDecimal creditLimit;
 
     private String status;
 

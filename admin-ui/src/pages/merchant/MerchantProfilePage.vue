@@ -25,6 +25,15 @@
           <el-form-item :label="t('merchantProfile.country')">
             <el-input v-model="form.country" disabled />
           </el-form-item>
+          <el-form-item :label="t('merchantLevel.name')">
+            <el-input v-model="form.levelName" disabled />
+          </el-form-item>
+          <el-form-item :label="t('merchantLevel.discount')">
+            <el-input :model-value="form.discountRate ?? '-'" disabled />
+          </el-form-item>
+          <el-form-item :label="t('merchantLevel.credit')">
+            <el-input :model-value="form.creditLimit ?? '-'" disabled />
+          </el-form-item>
         </div>
 
         <el-divider content-position="left">{{ t('merchantProfile.contactSection') }}</el-divider>

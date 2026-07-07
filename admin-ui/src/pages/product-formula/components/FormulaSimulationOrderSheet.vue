@@ -31,39 +31,27 @@
       </div>
       <el-empty v-if="options.length === 0" :description="t('productCenter.formulaSimulation.noOptions')" />
       <div v-else class="simulation-config-list">
-        <FormulaSimulationOptionField
-          v-for="option in options"
-          :key="option.optionCode"
-          v-model="selectedOptionValues[option.optionCode || '']"
-          :option="option"
-          :values="optionValuesOf(option.optionCode)"
+        <FormulaSimulationOptionGroup
+          v-for="group in optionGroups"
+          :key="group.root.optionCode"
+          :root="group.root"
+          :options="group.options"
+          :option-values="optionValues"
           :option-materials="optionMaterials"
+          :selected-option-values="selectedOptionValues"
           :show-validation="showValidation"
-          @open-material="openMaterialDialog"
         />
       </div>
     </div>
-
-    <FormulaSimulationMaterialDialog
-      v-if="activeMaterialOption"
-      v-model:open="materialDialogOpen"
-      :model-value="selectedOptionValues[activeMaterialOption.optionCode || '']"
-      :title="activeMaterialOption.optionNameCn || activeMaterialOption.optionNameEn || activeMaterialOption.optionCode || '-'"
-      :values="optionValuesOf(activeMaterialOption.optionCode)"
-      :materials="materialsOfOption(activeMaterialOption.optionCode)"
-      @update:model-value="selectMaterialValue(String($event || ''))"
-    />
   </section>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed } from 'vue'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
-import { PRODUCT_STATUS_ENABLED } from '@/constants/productStatus'
 import FormulaSimulationInchInput from './FormulaSimulationInchInput.vue'
-import FormulaSimulationMaterialDialog from './FormulaSimulationMaterialDialog.vue'
-import FormulaSimulationOptionField from './FormulaSimulationOptionField.vue'
+import FormulaSimulationOptionGroup from './FormulaSimulationOptionGroup.vue'
 import type { ProductFormulaOptionMaterialVO, ProductFormulaOptionVO, ProductFormulaOptionValueVO, ProductFormulaSimulationBO } from '@/api/product-capability/types'
 
 const props = defineProps<{
@@ -92,28 +80,26 @@ const t = (key: string, named?: Record<string, string | number>) => {
   })
   return message
 }
-const materialDialogOpen = ref(false)
-const activeMaterialOption = ref<ProductFormulaOptionVO | null>(null)
+const optionGroups = computed(() => {
+  const map = new Map(props.options.map((option) => [option.optionCode, option]))
+  const groups = new Map<string, { root: ProductFormulaOptionVO; options: ProductFormulaOptionVO[] }>()
+  props.options.forEach((option) => {
+    const root = rootOption(option, map)
+    const rootCode = root.optionCode || option.optionCode || ''
+    if (!groups.has(rootCode)) groups.set(rootCode, { root, options: [] })
+    groups.get(rootCode)?.options.push(option)
+  })
+  return [...groups.values()]
+})
 
-function optionValuesOf(optionCode?: string) {
-  return props.optionValues
-    .filter((value) => value.status === PRODUCT_STATUS_ENABLED && value.optionCode === optionCode)
-    .sort((left, right) => (left.sortOrder ?? 999999) - (right.sortOrder ?? 999999))
-}
-
-function materialsOfOption(optionCode?: string) {
-  return props.optionMaterials.filter((row) => row.optionCode === optionCode)
-}
-
-function openMaterialDialog(option: ProductFormulaOptionVO) {
-  activeMaterialOption.value = option
-  materialDialogOpen.value = true
-}
-
-function selectMaterialValue(valueCode: string) {
-  const optionCode = activeMaterialOption.value?.optionCode
-  if (!optionCode) return
-  if (valueCode) props.selectedOptionValues[optionCode] = valueCode
-  else delete props.selectedOptionValues[optionCode]
+function rootOption(option: ProductFormulaOptionVO, map: Map<string | undefined, ProductFormulaOptionVO>) {
+  let current = option
+  const visited = new Set<string>()
+  while (current.visibilityMode === 'CONDITIONAL' && current.visibleConditionOptionCode && !visited.has(current.visibleConditionOptionCode)) {
+    visited.add(current.visibleConditionOptionCode)
+    current = map.get(current.visibleConditionOptionCode) || current
+    if (current.optionCode === option.optionCode) break
+  }
+  return current
 }
 </script>

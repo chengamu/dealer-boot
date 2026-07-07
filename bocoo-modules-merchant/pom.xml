@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>bocoo-base</artifactId>
+        <groupId>com.bocoo</groupId>
+        <version>${revision}</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>bocoo-modules-merchant</artifactId>
+    <description>商户和客户业务模块</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.bocoo</groupId>
+            <artifactId>bocoo-common-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.bocoo</groupId>
+            <artifactId>bocoo-common-excel</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.bocoo</groupId>
+            <artifactId>bocoo-common-log</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.bocoo</groupId>
+            <artifactId>bocoo-common-mybatis</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.bocoo</groupId>
+            <artifactId>bocoo-common-security</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.bocoo</groupId>
+            <artifactId>bocoo-common-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.bocoo</groupId>
+            <artifactId>bocoo-common-doc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.bocoo</groupId>
+            <artifactId>bocoo-modules-system</artifactId>
+            <version>${revision}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.bocoo</groupId>
+            <artifactId>bocoo-modules-product</artifactId>
+            <version>${revision}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>

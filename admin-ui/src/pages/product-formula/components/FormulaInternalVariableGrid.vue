@@ -9,8 +9,8 @@
     </div>
     <el-input
       v-model="keyword"
+      class="internal-variable-grid__search"
       clearable
-      size="small"
       :placeholder="t('productCenter.formulaSetup.variableSearchPlaceholder')"
     />
     <div class="internal-variable-list">
@@ -18,6 +18,8 @@
         v-for="row in visibleVariables"
         :key="row.variableKey || row.variableCode"
         class="internal-variable-row"
+        :class="{ 'is-selected': isSelected(row) }"
+        @click="handleRowClick(row)"
         @dblclick="$emit('insert', row)"
       >
         <div class="internal-variable-row__top">
@@ -44,6 +46,7 @@ const props = defineProps<{
   variableRules: ProductFormulaVariableRuleVO[]
   t: (key: string) => string
   readonly?: boolean
+  selectedVariable?: ProductFormulaVariableVO | null
 }>()
 
 const emit = defineEmits<{
@@ -76,12 +79,24 @@ function variableSummary(row: ProductFormulaVariableVO) {
 
 function sameVariableRef(left: ProductFormulaVariableRuleVO, right: ProductFormulaVariableVO) {
   if (left.variableKey && right.variableKey) return left.variableKey === right.variableKey
+  if (left.variableId && right.variableId) return String(left.variableId) === String(right.variableId)
   return left.variableCode === right.variableCode
+}
+
+function isSelected(row: ProductFormulaVariableVO) {
+  const selected = props.selectedVariable
+  if (!selected) return false
+  if (row.variableKey && selected.variableKey) return row.variableKey === selected.variableKey
+  if (row.variableId && selected.variableId) return String(row.variableId) === String(selected.variableId)
+  return Boolean(row.variableCode && selected.variableCode && row.variableCode === selected.variableCode)
+}
+
+function handleRowClick(row: ProductFormulaVariableVO) {
+  if (!props.readonly) emit('edit', row)
 }
 
 function variableActions(row: ProductFormulaVariableVO): AdminTableAction[] {
   return [
-    { label: props.t('common.edit'), icon: 'Edit', primary: true, stopPropagation: true, onClick: () => emit('edit', row) },
     { label: props.t('common.delete'), icon: 'Delete', type: 'danger', danger: true, stopPropagation: true, onClick: () => emit('remove', row) }
   ]
 }
@@ -90,14 +105,14 @@ function variableActions(row: ProductFormulaVariableVO): AdminTableAction[] {
 <style scoped>
 .internal-variable-grid {
   display: grid;
-  grid-template-rows: auto auto auto;
+  grid-template-rows: auto auto minmax(0, 1fr);
   gap: 8px;
   min-width: 0;
   height: 100%;
-  padding: 8px 10px;
+  padding: 10px;
   border: 1px solid #e5ecf6;
   border-radius: 8px;
-  background: #f8fbff;
+  background: #fff;
 }
 
 .internal-variable-grid__head {
@@ -112,25 +127,46 @@ function variableActions(row: ProductFormulaVariableVO): AdminTableAction[] {
   gap: 6px;
 }
 
+.internal-variable-grid__search :deep(.el-input__wrapper) {
+  min-height: 38px;
+  border-radius: 8px;
+}
+
 .internal-variable-list {
   display: grid;
   gap: 6px;
+  align-content: start;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .internal-variable-row {
   display: grid;
-  gap: 4px;
-  padding: 9px 10px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2px 8px;
+  padding: 8px 10px;
   border: 1px solid #e5ecf6;
   border-radius: 8px;
-  background: #fff;
-  cursor: default;
+  background: #f8fbff;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.internal-variable-row:hover,
+.internal-variable-row.is-selected {
+  border-color: #8bbdff;
+  background: #eef6ff;
+}
+
+.internal-variable-row.is-selected {
+  box-shadow: inset 3px 0 0 #2f7df6;
 }
 
 .internal-variable-row__top {
-  display: flex;
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
   gap: 8px;
 }
 
@@ -155,6 +191,7 @@ function variableActions(row: ProductFormulaVariableVO): AdminTableAction[] {
 }
 
 .internal-variable-row__summary {
+  grid-column: 1 / -1;
   color: #6b7280;
   font-size: 12px;
   line-height: 1.45;

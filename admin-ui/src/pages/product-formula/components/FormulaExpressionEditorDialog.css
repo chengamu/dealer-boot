@@ -1,13 +1,28 @@
 .formula-expression-dialog.admin-dialog.el-dialog {
-  width: min(1280px, calc(100vw - 72px)) !important;
+  display: flex;
+  flex-direction: column;
+  width: min(1360px, calc(100vw - 56px)) !important;
+  height: min(760px, calc(100vh - 44px));
+}
+
+.formula-expression-dialog.admin-dialog .el-dialog__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  padding: 14px 18px 12px;
+}
+
+.formula-expression-dialog.admin-dialog .el-dialog__footer {
+  flex: 0 0 auto;
 }
 
 .formula-expression-dialog .expression-editor {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  max-height: none;
-  overflow-y: visible;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
   overflow-x: hidden;
   padding: 0;
 }
@@ -20,20 +35,24 @@
   border: 1px solid #e5ecf6;
   border-radius: 8px;
   background: #fff;
-  padding: 8px 12px;
+  padding: 10px 12px;
 }
 
 .formula-expression-dialog .expression-editor__formula-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 430px;
-  gap: 10px;
+  grid-template-columns: minmax(0, 58fr) minmax(380px, 42fr);
+  gap: 12px;
   align-items: stretch;
+  min-height: 0;
+  height: 100%;
 }
 
 .formula-expression-dialog .expression-editor__formula-main {
   display: grid;
-  gap: 8px;
+  grid-template-rows: auto auto auto auto;
+  gap: 10px;
   min-width: 0;
+  min-height: 0;
   align-content: start;
 }
 
@@ -69,7 +88,8 @@
 }
 
 .formula-expression-dialog .expression-editor__composer .el-textarea__inner {
-  min-height: 119px !important;
+  min-height: 128px !important;
+  max-height: 128px;
   font-size: 14px;
   line-height: 1.6;
 }
@@ -82,7 +102,7 @@
   align-content: flex-start;
   min-height: 0;
   background: #f8fbff;
-  padding: 10px 12px;
+  padding: 10px 12px 12px;
 }
 
 .formula-expression-dialog .expression-editor__operators h4 {
@@ -92,7 +112,7 @@
 .formula-expression-dialog .expression-editor__operators .el-button {
   flex: 0 0 auto;
   min-width: 34px;
-  height: 30px;
+  height: 32px;
   padding: 4px 10px;
   border-color: #d9e2ef;
   background: #fff;
@@ -135,8 +155,7 @@
 }
 
 .formula-expression-dialog .expression-editor__tools {
-  display: grid;
-  gap: 6px;
+  display: block;
 }
 
 .formula-expression-dialog .expression-editor__tool-card {
@@ -144,10 +163,13 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 6px;
+  background: #fff;
 }
 
 .formula-expression-dialog .expression-editor__tool-card .el-button {
   margin-left: 0;
+  height: 32px;
+  padding: 4px 12px;
 }
 
 .formula-expression-dialog .expression-editor__result {
@@ -170,7 +192,7 @@
   border: 1px solid #e5ecf6;
   border-radius: 8px;
   background: #fff;
-  padding: 9px 12px;
+  padding: 8px 10px;
 }
 
 .formula-expression-dialog .expression-editor__result dd {
@@ -189,9 +211,47 @@
   min-height: 30px;
 }
 
+.formula-expression-dialog .internal-variable-grid {
+  height: 100%;
+  min-height: 0;
+  padding: 12px;
+  background: #f8fbff;
+}
+
+.formula-expression-dialog .internal-variable-grid__head {
+  padding-bottom: 2px;
+}
+
+.formula-expression-dialog .internal-variable-grid__search .el-input__wrapper {
+  min-height: 36px;
+}
+
+.formula-expression-dialog .internal-variable-list {
+  gap: 8px;
+  padding-right: 2px;
+}
+
+.formula-expression-dialog .internal-variable-row {
+  padding: 9px 12px;
+  background: #fff;
+}
+
+.formula-expression-dialog .internal-variable-row__top strong {
+  font-size: 14px;
+}
+
+.formula-expression-dialog .internal-variable-row__summary {
+  font-size: 12px;
+}
+
 @media (max-width: 1020px) {
+  .formula-expression-dialog.admin-dialog.el-dialog {
+    height: min(780px, calc(100vh - 32px));
+  }
+
   .formula-expression-dialog .expression-editor__formula-layout {
     grid-template-columns: minmax(0, 1fr);
+    overflow-y: auto;
   }
 
   .formula-expression-dialog .expression-editor__condition-area {
