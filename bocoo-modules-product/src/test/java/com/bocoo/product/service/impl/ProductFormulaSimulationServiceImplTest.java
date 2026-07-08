@@ -1,5 +1,6 @@
 package com.bocoo.product.service.impl;
 
+import com.bocoo.common.core.exception.ServiceException;
 import com.bocoo.product.domain.bo.ProductFormulaSimulationBo;
 import com.bocoo.product.domain.entity.ProductFormula;
 import com.bocoo.product.domain.entity.ProductMaterial;
@@ -27,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -54,6 +56,18 @@ class ProductFormulaSimulationServiceImplTest {
         when(formulaMapper.selectById(3001L)).thenReturn(formula());
         when(setupService.validationMessageKey(3001L)).thenReturn(null);
         when(setupService.querySetup(3001L)).thenReturn(setup());
+    }
+
+    @Test
+    void queryAndRunRejectStoppedFormula() {
+        ProductFormula stopped = formula();
+        stopped.setStatus("STOPPED");
+        when(formulaMapper.selectById(3001L)).thenReturn(stopped);
+
+        assertThatThrownBy(() -> service.query(3001L))
+            .isInstanceOf(ServiceException.class);
+        assertThatThrownBy(() -> service.run(3001L, simulationBo(Map.of("FABRIC", "MAT001"))))
+            .isInstanceOf(ServiceException.class);
     }
 
     @Test

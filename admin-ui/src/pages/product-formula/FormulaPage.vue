@@ -30,6 +30,7 @@ const t = (key: string) => getMessage(key, localeStore.language)
 
 const formulaStatusOptionList = computed(() => formulaStatusOptions(t))
 const validationStatusOptionList = computed(() => formulaValidationStatusOptions(t))
+const simulationFormulaStatuses = new Set<string>([FORMULA_STATUS.DRAFT, FORMULA_STATUS.REJECTED, FORMULA_STATUS.EFFECTIVE])
 
 async function loadCategoryOptions() {
   const response = await productCategoryApi.options?.({ status: PRODUCT_STATUS_ENABLED, pageNum: 1, pageSize: 500 })
@@ -129,6 +130,7 @@ const formulaConfig = computed<ProductGridConfig>(() => ({
       type: 'primary',
       permission: 'product:formula:setup',
       primary: true,
+      visible: (row) => simulationFormulaStatuses.has(String(row.status || '')),
       handler: (row) => { void router.push({ name: 'ProductFormulaSimulation', query: { formulaId: String(row.formulaId || '') } }) }
     },
     {

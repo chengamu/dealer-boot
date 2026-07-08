@@ -1,10 +1,11 @@
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { productFormulaApi } from '@/api/product-formula/formula'
-import { formulaStatusText } from '@/constants/productStatus'
+import { FORMULA_STATUS, formulaStatusText } from '@/constants/productStatus'
 import type { ProductFormulaVO } from '@/api/product-capability/types'
 
 const LAST_FORMULA_STORAGE_KEY = 'productFormula.simulation.lastFormulaId'
+const SIMULATION_FORMULA_STATUSES = [FORMULA_STATUS.DRAFT, FORMULA_STATUS.REJECTED, FORMULA_STATUS.EFFECTIVE]
 
 export function useFormulaSimulationSelection(t: (key: string) => string) {
   const route = useRoute()
@@ -23,15 +24,17 @@ export function useFormulaSimulationSelection(t: (key: string) => string) {
     formulaSelecting.value = true
     try {
       normalizeInvalidRoute()
-      const response = await productFormulaApi.list({ pageNum: 1, pageSize: 500 })
-      formulaRows.value = response.rows || []
+      const responses = await Promise.all(SIMULATION_FORMULA_STATUSES.map((status) =>
+        productFormulaApi.list({ status, pageNum: 1, pageSize: 500 })
+      ))
+      formulaRows.value = distinctRows(responses.flatMap((response) => response.rows || []))
       const routeId = routeFormulaId()
-      if (routeId && formulaRows.value.some((row) => String(row.formulaId) === routeId)) {
+      if (routeId && hasFormula(routeId)) {
         selectFormula(routeId)
         return
       }
       const rememberedId = rememberedFormulaId()
-      if (rememberedId && formulaRows.value.some((row) => String(row.formulaId) === rememberedId)) {
+      if (rememberedId && hasFormula(rememberedId)) {
         selectedFormulaId.value = rememberedId
         return
       }
@@ -64,6 +67,19 @@ export function useFormulaSimulationSelection(t: (key: string) => string) {
 
   function rememberedFormulaId() {
     return window.sessionStorage.getItem(LAST_FORMULA_STORAGE_KEY) || ''
+  }
+
+  function hasFormula(formulaId: string) {
+    return formulaRows.value.some((row) => String(row.formulaId) === formulaId)
+  }
+
+  function distinctRows(rows: ProductFormulaVO[]) {
+    const rowMap = new Map<string, ProductFormulaVO>()
+    rows.forEach((row) => {
+      const id = String(row.formulaId || '')
+      if (id) rowMap.set(id, row)
+    })
+    return [...rowMap.values()]
   }
 
   return {

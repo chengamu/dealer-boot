@@ -22,6 +22,7 @@ public class ProductFormulaSimulationServiceImpl extends ProductServiceSupport i
 
     private static final String STATUS_DRAFT = ProductFormulaServiceImpl.STATUS_DRAFT;
     private static final String STATUS_REJECTED = ProductFormulaServiceImpl.STATUS_REJECTED;
+    private static final String STATUS_EFFECTIVE = ProductFormulaServiceImpl.STATUS_EFFECTIVE;
     private static final String VALIDATION_NOT_VALIDATED = "NOT_VALIDATED";
     private static final String VALIDATION_PASS = "PASS";
     private static final String VALIDATION_FAIL = "FAIL";
@@ -33,6 +34,7 @@ public class ProductFormulaSimulationServiceImpl extends ProductServiceSupport i
     @Override
     public ProductFormulaSimulationVo query(Long formulaId) {
         ProductFormula formula = requireFormula(formulaId);
+        assertRunnable(formula);
         ProductFormulaSimulationVo vo = new ProductFormulaSimulationVo();
         vo.setFormulaId(formulaId);
         vo.setStatus(formula.getSimulationValidationStatus());
@@ -44,6 +46,7 @@ public class ProductFormulaSimulationServiceImpl extends ProductServiceSupport i
     @Override
     public ProductFormulaSimulationVo run(Long formulaId, ProductFormulaSimulationBo bo) {
         ProductFormula formula = requireFormula(formulaId);
+        assertRunnable(formula);
         ProductFormulaSetupVo setup = setupService.querySetup(formulaId);
         return simulationEngine.run(formulaId, formula, setup, bo, setupService.validationMessageKey(formulaId));
     }
@@ -111,6 +114,12 @@ public class ProductFormulaSimulationServiceImpl extends ProductServiceSupport i
     private void assertEditable(ProductFormula formula) {
         if (!STATUS_DRAFT.equals(formula.getStatus()) && !STATUS_REJECTED.equals(formula.getStatus())) {
             throw ServiceException.ofMessageKey("product.formula.editDenied");
+        }
+    }
+
+    private void assertRunnable(ProductFormula formula) {
+        if (!STATUS_DRAFT.equals(formula.getStatus()) && !STATUS_REJECTED.equals(formula.getStatus()) && !STATUS_EFFECTIVE.equals(formula.getStatus())) {
+            throw ServiceException.ofMessageKey("product.formula.statusInvalid");
         }
     }
 }
