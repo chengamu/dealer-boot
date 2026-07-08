@@ -332,6 +332,11 @@ export interface ProductFormulaOptionVO extends ProductRecord {
   visibleConditionValueNameCn?: string
   requiredFlag?: boolean
   businessVisibleFlag?: boolean
+  helpEnabled?: boolean
+  helpType?: string
+  helpTitle?: string
+  helpUrl?: string
+  helpContent?: string
   status?: string
   sortOrder?: number
   remark?: string

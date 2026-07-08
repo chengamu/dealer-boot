@@ -117,7 +117,7 @@ class ProductFormulaSimulationEngine extends ProductServiceSupport {
                 continue;
             }
             String selected = selectedValues.get(option.getOptionCode());
-            if (Boolean.TRUE.equals(option.getRequiredFlag()) && StringUtils.isBlank(selected)) {
+            if (isCustomerVisible(option) && Boolean.TRUE.equals(option.getRequiredFlag()) && StringUtils.isBlank(selected)) {
                 return "product.formula.simulationOptionRequired";
             }
             if (StringUtils.isNotBlank(selected) && !selectedValues(selected).stream().allMatch(selectedValue ->
@@ -132,6 +132,9 @@ class ProductFormulaSimulationEngine extends ProductServiceSupport {
         return !"CONDITIONAL".equals(option.getVisibilityMode())
             || (StringUtils.isNotBlank(option.getVisibleConditionOptionCode())
             && selectedValueMatches(selectedValues.get(option.getVisibleConditionOptionCode()), option.getVisibleConditionValueCode()));
+    }
+    private boolean isCustomerVisible(ProductFormulaOptionVo option) {
+        return !Boolean.FALSE.equals(option.getBusinessVisibleFlag());
     }
     private Map<String, String> visibleSelectedValues(ProductFormulaSetupVo setup, Map<String, String> selectedValues) {
         Map<String, String> result = new LinkedHashMap<>();

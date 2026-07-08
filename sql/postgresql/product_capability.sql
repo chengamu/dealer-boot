@@ -491,6 +491,11 @@ CREATE TABLE IF NOT EXISTS pc_formula_option (
     visible_condition_value_name_cn varchar(200),
     required_flag boolean NOT NULL DEFAULT false,
     business_visible_flag boolean NOT NULL DEFAULT true,
+    help_enabled boolean NOT NULL DEFAULT false,
+    help_type varchar(30) NOT NULL DEFAULT 'LINK',
+    help_title varchar(200),
+    help_url varchar(500),
+    help_content text,
     status varchar(20) NOT NULL DEFAULT 'ENABLED',
     del_flag varchar(1) NOT NULL DEFAULT '0',
     sort_order int NOT NULL DEFAULT 0,
@@ -510,12 +515,26 @@ ALTER TABLE IF EXISTS pc_formula_option ADD COLUMN IF NOT EXISTS visible_conditi
 ALTER TABLE IF EXISTS pc_formula_option ADD COLUMN IF NOT EXISTS visible_condition_option_name_cn varchar(200);
 ALTER TABLE IF EXISTS pc_formula_option ADD COLUMN IF NOT EXISTS visible_condition_value_code varchar(80);
 ALTER TABLE IF EXISTS pc_formula_option ADD COLUMN IF NOT EXISTS visible_condition_value_name_cn varchar(200);
+ALTER TABLE IF EXISTS pc_formula_option ADD COLUMN IF NOT EXISTS required_flag boolean NOT NULL DEFAULT false;
+ALTER TABLE IF EXISTS pc_formula_option ADD COLUMN IF NOT EXISTS business_visible_flag boolean NOT NULL DEFAULT true;
+ALTER TABLE IF EXISTS pc_formula_option ADD COLUMN IF NOT EXISTS help_enabled boolean NOT NULL DEFAULT false;
+ALTER TABLE IF EXISTS pc_formula_option ADD COLUMN IF NOT EXISTS help_type varchar(30) NOT NULL DEFAULT 'LINK';
+ALTER TABLE IF EXISTS pc_formula_option ADD COLUMN IF NOT EXISTS help_title varchar(200);
+ALTER TABLE IF EXISTS pc_formula_option ADD COLUMN IF NOT EXISTS help_url varchar(500);
+ALTER TABLE IF EXISTS pc_formula_option ADD COLUMN IF NOT EXISTS help_content text;
 COMMENT ON COLUMN pc_formula_option.visibility_mode IS '订单端显示模式：ALWAYS 始终显示，CONDITIONAL 满足条件显示';
 COMMENT ON COLUMN pc_formula_option.display_mode IS '订单端控件展示方式：SELECT 普通下拉，IMAGE_SELECT 图文下拉';
 COMMENT ON COLUMN pc_formula_option.visible_condition_option_code IS '条件显示依赖配置项编码';
 COMMENT ON COLUMN pc_formula_option.visible_condition_option_name_cn IS '条件显示依赖配置项名称快照';
 COMMENT ON COLUMN pc_formula_option.visible_condition_value_code IS '条件显示依赖选项值编码';
 COMMENT ON COLUMN pc_formula_option.visible_condition_value_name_cn IS '条件显示依赖选项值名称快照';
+COMMENT ON COLUMN pc_formula_option.required_flag IS '下单必填标记';
+COMMENT ON COLUMN pc_formula_option.business_visible_flag IS '业务下单可见标记';
+COMMENT ON COLUMN pc_formula_option.help_enabled IS '订单端帮助开关';
+COMMENT ON COLUMN pc_formula_option.help_type IS '订单端帮助类型：LINK 超链接，TEXT 纯文本说明';
+COMMENT ON COLUMN pc_formula_option.help_title IS '订单端帮助标题';
+COMMENT ON COLUMN pc_formula_option.help_url IS '订单端帮助超链接';
+COMMENT ON COLUMN pc_formula_option.help_content IS '订单端帮助纯文本说明';
 CREATE INDEX IF NOT EXISTS idx_pc_formula_option_formula_sort ON pc_formula_option (tenant_id, formula_id, sort_order, option_id) WHERE del_flag = '0';
 CREATE INDEX IF NOT EXISTS idx_pc_formula_option_code ON pc_formula_option (tenant_id, formula_id, option_code) WHERE del_flag = '0';
 
@@ -662,6 +681,229 @@ COMMENT ON COLUMN pc_formula_version.validation_status IS '审核时校验状态
 COMMENT ON COLUMN pc_formula_version.validation_report_json IS '审核时校验报告JSON';
 COMMENT ON COLUMN pc_formula_version.audit_time IS '审核时间，UTC timestamptz';
 CREATE INDEX IF NOT EXISTS idx_pc_formula_version_formula_no ON pc_formula_version (tenant_id, formula_id, version_no DESC) WHERE del_flag = '0';
+
+CREATE TABLE IF NOT EXISTS pc_sale_product (
+    sale_product_id bigint PRIMARY KEY,
+    tenant_id bigint NOT NULL DEFAULT 1 CHECK (tenant_id <> 0),
+    sale_product_code varchar(80) NOT NULL,
+    sale_product_name varchar(200) NOT NULL,
+    category_id bigint NOT NULL,
+    category_code varchar(80) NOT NULL,
+    category_name_cn varchar(200) NOT NULL,
+    product_type_code varchar(80) NOT NULL,
+    product_type_name_cn varchar(200) NOT NULL,
+    formula_id bigint NOT NULL,
+    formula_code varchar(80) NOT NULL,
+    formula_name varchar(200) NOT NULL,
+    formula_version_id bigint NOT NULL,
+    formula_version_no int NOT NULL,
+    formula_version_label varchar(40) NOT NULL,
+    min_width_inch numeric(18,4) NOT NULL DEFAULT 0,
+    min_height_inch numeric(18,4) NOT NULL DEFAULT 0,
+    max_width_inch numeric(18,4) NOT NULL,
+    max_height_inch numeric(18,4) NOT NULL,
+    size_summary varchar(200),
+    price_status varchar(30) NOT NULL DEFAULT 'NOT_READY',
+    status varchar(30) NOT NULL DEFAULT 'DISABLED',
+    sort_order int NOT NULL DEFAULT 0,
+    del_flag varchar(1) NOT NULL DEFAULT '0',
+    remark varchar(500),
+    create_by_id bigint,
+    create_by varchar(64),
+    create_time timestamptz,
+    update_by varchar(64),
+    update_time timestamptz
+);
+
+ALTER TABLE IF EXISTS pc_sale_product
+    ADD COLUMN IF NOT EXISTS tenant_id bigint NOT NULL DEFAULT 1 CHECK (tenant_id <> 0),
+    ADD COLUMN IF NOT EXISTS sale_product_code varchar(80),
+    ADD COLUMN IF NOT EXISTS sale_product_name varchar(200),
+    ADD COLUMN IF NOT EXISTS category_id bigint,
+    ADD COLUMN IF NOT EXISTS category_code varchar(80),
+    ADD COLUMN IF NOT EXISTS category_name_cn varchar(200),
+    ADD COLUMN IF NOT EXISTS product_type_code varchar(80),
+    ADD COLUMN IF NOT EXISTS product_type_name_cn varchar(200),
+    ADD COLUMN IF NOT EXISTS formula_id bigint,
+    ADD COLUMN IF NOT EXISTS formula_code varchar(80),
+    ADD COLUMN IF NOT EXISTS formula_name varchar(200),
+    ADD COLUMN IF NOT EXISTS formula_version_id bigint,
+    ADD COLUMN IF NOT EXISTS formula_version_no int,
+    ADD COLUMN IF NOT EXISTS formula_version_label varchar(40),
+    ADD COLUMN IF NOT EXISTS min_width_inch numeric(18,4) NOT NULL DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS min_height_inch numeric(18,4) NOT NULL DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS max_width_inch numeric(18,4),
+    ADD COLUMN IF NOT EXISTS max_height_inch numeric(18,4),
+    ADD COLUMN IF NOT EXISTS size_summary varchar(200),
+    ADD COLUMN IF NOT EXISTS price_status varchar(30) NOT NULL DEFAULT 'NOT_READY',
+    ADD COLUMN IF NOT EXISTS status varchar(30) NOT NULL DEFAULT 'DISABLED',
+    ADD COLUMN IF NOT EXISTS sort_order int NOT NULL DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS del_flag varchar(1) NOT NULL DEFAULT '0',
+    ADD COLUMN IF NOT EXISTS remark varchar(500);
+
+COMMENT ON TABLE pc_sale_product IS '可售产品表，绑定已生效配方版本，不是订单SKU';
+COMMENT ON COLUMN pc_sale_product.sale_product_code IS '可售产品编号，程序校验唯一';
+COMMENT ON COLUMN pc_sale_product.formula_version_id IS '绑定的配方生效版本ID';
+COMMENT ON COLUMN pc_sale_product.price_status IS '价格状态：NOT_READY、READY、WARNING';
+COMMENT ON COLUMN pc_sale_product.status IS '销售状态：ENABLED、DISABLED';
+CREATE INDEX IF NOT EXISTS idx_pc_sale_product_code_active ON pc_sale_product (tenant_id, sale_product_code) WHERE del_flag = '0';
+CREATE INDEX IF NOT EXISTS idx_pc_sale_product_category_status ON pc_sale_product (tenant_id, category_id, status) WHERE del_flag = '0';
+CREATE INDEX IF NOT EXISTS idx_pc_sale_product_formula_version ON pc_sale_product (tenant_id, formula_version_id, status) WHERE del_flag = '0';
+
+CREATE TABLE IF NOT EXISTS pc_price_setting (
+    price_setting_id bigint PRIMARY KEY,
+    tenant_id bigint NOT NULL DEFAULT 1 CHECK (tenant_id <> 0),
+    sale_product_id bigint NOT NULL,
+    sale_product_code varchar(80) NOT NULL,
+    sale_product_name varchar(200) NOT NULL,
+    formula_id bigint NOT NULL,
+    formula_version_id bigint NOT NULL,
+    formula_version_label varchar(40) NOT NULL,
+    currency_code varchar(20) NOT NULL DEFAULT 'USD',
+    validation_status varchar(30) NOT NULL DEFAULT 'NOT_READY',
+    validation_message varchar(500),
+    validation_time timestamptz,
+    status varchar(30) NOT NULL DEFAULT 'DRAFT',
+    del_flag varchar(1) NOT NULL DEFAULT '0',
+    remark varchar(500),
+    create_by_id bigint,
+    create_by varchar(64),
+    create_time timestamptz,
+    update_by varchar(64),
+    update_time timestamptz
+);
+
+ALTER TABLE IF EXISTS pc_price_setting
+    ADD COLUMN IF NOT EXISTS tenant_id bigint NOT NULL DEFAULT 1 CHECK (tenant_id <> 0),
+    ADD COLUMN IF NOT EXISTS sale_product_id bigint,
+    ADD COLUMN IF NOT EXISTS sale_product_code varchar(80),
+    ADD COLUMN IF NOT EXISTS sale_product_name varchar(200),
+    ADD COLUMN IF NOT EXISTS formula_id bigint,
+    ADD COLUMN IF NOT EXISTS formula_version_id bigint,
+    ADD COLUMN IF NOT EXISTS formula_version_label varchar(40),
+    ADD COLUMN IF NOT EXISTS currency_code varchar(20) NOT NULL DEFAULT 'USD',
+    ADD COLUMN IF NOT EXISTS validation_status varchar(30) NOT NULL DEFAULT 'NOT_READY',
+    ADD COLUMN IF NOT EXISTS validation_message varchar(500),
+    ADD COLUMN IF NOT EXISTS validation_time timestamptz,
+    ADD COLUMN IF NOT EXISTS status varchar(30) NOT NULL DEFAULT 'DRAFT',
+    ADD COLUMN IF NOT EXISTS del_flag varchar(1) NOT NULL DEFAULT '0',
+    ADD COLUMN IF NOT EXISTS remark varchar(500);
+
+COMMENT ON TABLE pc_price_setting IS '产品价格设置表，可售产品的价格工作台头表';
+COMMENT ON COLUMN pc_price_setting.sale_product_id IS '可售产品ID';
+COMMENT ON COLUMN pc_price_setting.formula_version_id IS '价格设置绑定的配方版本ID';
+COMMENT ON COLUMN pc_price_setting.validation_time IS '价格校验时间，UTC timestamptz';
+CREATE INDEX IF NOT EXISTS idx_pc_price_setting_sale_product ON pc_price_setting (tenant_id, sale_product_id) WHERE del_flag = '0';
+CREATE INDEX IF NOT EXISTS idx_pc_price_setting_version ON pc_price_setting (tenant_id, formula_version_id, status) WHERE del_flag = '0';
+
+CREATE TABLE IF NOT EXISTS pc_price_fabric_rule (
+    fabric_rule_id bigint PRIMARY KEY,
+    tenant_id bigint NOT NULL DEFAULT 1 CHECK (tenant_id <> 0),
+    price_setting_id bigint NOT NULL,
+    sale_product_id bigint NOT NULL,
+    formula_version_id bigint NOT NULL,
+    material_id bigint,
+    material_code varchar(80),
+    material_name_cn varchar(200),
+    unit_code varchar(40),
+    option_combination_key varchar(300),
+    option_combination_name varchar(300),
+    price_mode varchar(40) NOT NULL DEFAULT 'FORMULA',
+    base_price numeric(18,4),
+    area_formula text,
+    min_bill_area numeric(18,4),
+    loss_rate numeric(8,4),
+    status varchar(30) NOT NULL DEFAULT 'ENABLED',
+    sort_order int NOT NULL DEFAULT 0,
+    del_flag varchar(1) NOT NULL DEFAULT '0',
+    remark varchar(500),
+    create_by_id bigint,
+    create_by varchar(64),
+    create_time timestamptz,
+    update_by varchar(64),
+    update_time timestamptz
+);
+
+ALTER TABLE IF EXISTS pc_price_fabric_rule
+    ADD COLUMN IF NOT EXISTS tenant_id bigint NOT NULL DEFAULT 1 CHECK (tenant_id <> 0),
+    ADD COLUMN IF NOT EXISTS price_setting_id bigint,
+    ADD COLUMN IF NOT EXISTS sale_product_id bigint,
+    ADD COLUMN IF NOT EXISTS formula_version_id bigint,
+    ADD COLUMN IF NOT EXISTS material_id bigint,
+    ADD COLUMN IF NOT EXISTS material_code varchar(80),
+    ADD COLUMN IF NOT EXISTS material_name_cn varchar(200),
+    ADD COLUMN IF NOT EXISTS unit_code varchar(40),
+    ADD COLUMN IF NOT EXISTS option_combination_key varchar(300),
+    ADD COLUMN IF NOT EXISTS option_combination_name varchar(300),
+    ADD COLUMN IF NOT EXISTS price_mode varchar(40) NOT NULL DEFAULT 'FORMULA',
+    ADD COLUMN IF NOT EXISTS base_price numeric(18,4),
+    ADD COLUMN IF NOT EXISTS area_formula text,
+    ADD COLUMN IF NOT EXISTS min_bill_area numeric(18,4),
+    ADD COLUMN IF NOT EXISTS loss_rate numeric(8,4),
+    ADD COLUMN IF NOT EXISTS status varchar(30) NOT NULL DEFAULT 'ENABLED',
+    ADD COLUMN IF NOT EXISTS sort_order int NOT NULL DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS del_flag varchar(1) NOT NULL DEFAULT '0',
+    ADD COLUMN IF NOT EXISTS remark varchar(500);
+ALTER TABLE IF EXISTS pc_price_fabric_rule
+    ALTER COLUMN price_mode SET DEFAULT 'FORMULA';
+
+COMMENT ON TABLE pc_price_fabric_rule IS '面料价格矩阵表，按配方版本面料和选项组合维护单价与价格公式';
+COMMENT ON COLUMN pc_price_fabric_rule.option_combination_key IS '选项组合键，例如 STYLE=ROMAN;CONTROL=MOTORIZED';
+COMMENT ON COLUMN pc_price_fabric_rule.option_combination_name IS '选项组合展示名称，例如 柔式电动';
+COMMENT ON COLUMN pc_price_fabric_rule.price_mode IS '计价方式：FORMULA';
+COMMENT ON COLUMN pc_price_fabric_rule.area_formula IS '价格公式文本，使用 unitPrice、width、drop 等变量';
+CREATE INDEX IF NOT EXISTS idx_pc_price_fabric_rule_setting ON pc_price_fabric_rule (tenant_id, price_setting_id, sort_order) WHERE del_flag = '0';
+CREATE INDEX IF NOT EXISTS idx_pc_price_fabric_rule_material ON pc_price_fabric_rule (tenant_id, material_code, status) WHERE del_flag = '0';
+CREATE INDEX IF NOT EXISTS idx_pc_price_fabric_rule_combo ON pc_price_fabric_rule (tenant_id, price_setting_id, material_code, option_combination_key) WHERE del_flag = '0';
+
+CREATE TABLE IF NOT EXISTS pc_price_fee_rule (
+    fee_rule_id bigint PRIMARY KEY,
+    tenant_id bigint NOT NULL DEFAULT 1 CHECK (tenant_id <> 0),
+    price_setting_id bigint NOT NULL,
+    sale_product_id bigint NOT NULL,
+    formula_version_id bigint NOT NULL,
+    fee_code varchar(80),
+    fee_name varchar(200),
+    fee_category varchar(80),
+    trigger_condition text,
+    fee_mode varchar(40) NOT NULL DEFAULT 'FORMULA',
+    fee_amount numeric(18,4),
+    formula_text text,
+    status varchar(30) NOT NULL DEFAULT 'ENABLED',
+    sort_order int NOT NULL DEFAULT 0,
+    del_flag varchar(1) NOT NULL DEFAULT '0',
+    remark varchar(500),
+    create_by_id bigint,
+    create_by varchar(64),
+    create_time timestamptz,
+    update_by varchar(64),
+    update_time timestamptz
+);
+
+ALTER TABLE IF EXISTS pc_price_fee_rule
+    ADD COLUMN IF NOT EXISTS tenant_id bigint NOT NULL DEFAULT 1 CHECK (tenant_id <> 0),
+    ADD COLUMN IF NOT EXISTS price_setting_id bigint,
+    ADD COLUMN IF NOT EXISTS sale_product_id bigint,
+    ADD COLUMN IF NOT EXISTS formula_version_id bigint,
+    ADD COLUMN IF NOT EXISTS fee_code varchar(80),
+    ADD COLUMN IF NOT EXISTS fee_name varchar(200),
+    ADD COLUMN IF NOT EXISTS fee_category varchar(80),
+    ADD COLUMN IF NOT EXISTS trigger_condition text,
+    ADD COLUMN IF NOT EXISTS fee_mode varchar(40) NOT NULL DEFAULT 'FORMULA',
+    ADD COLUMN IF NOT EXISTS fee_amount numeric(18,4),
+    ADD COLUMN IF NOT EXISTS formula_text text,
+    ADD COLUMN IF NOT EXISTS status varchar(30) NOT NULL DEFAULT 'ENABLED',
+    ADD COLUMN IF NOT EXISTS sort_order int NOT NULL DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS del_flag varchar(1) NOT NULL DEFAULT '0',
+    ADD COLUMN IF NOT EXISTS remark varchar(500);
+ALTER TABLE IF EXISTS pc_price_fee_rule
+    ALTER COLUMN fee_mode SET DEFAULT 'FORMULA';
+
+COMMENT ON TABLE pc_price_fee_rule IS '邮费公式表，按不带电/带电维护运输费用公式';
+COMMENT ON COLUMN pc_price_fee_rule.fee_code IS '邮费类型：MANUAL 不带电、MOTORIZED 带电';
+COMMENT ON COLUMN pc_price_fee_rule.fee_mode IS '费用方式：FORMULA';
+CREATE INDEX IF NOT EXISTS idx_pc_price_fee_rule_setting ON pc_price_fee_rule (tenant_id, price_setting_id, sort_order) WHERE del_flag = '0';
+CREATE INDEX IF NOT EXISTS idx_pc_price_fee_rule_category ON pc_price_fee_rule (tenant_id, fee_category, status) WHERE del_flag = '0';
 
 CREATE TABLE IF NOT EXISTS pc_category (
     category_id bigint PRIMARY KEY,
@@ -1556,6 +1798,8 @@ VALUES
     (24303, 1, 24300, 'Formula Materials', 'productCenter.menu.formulaMaterials', 2, 'formulas/materials', 'product-formula/formulas/materials', NULL, '1', '0', 'C', '1', '1', 'product:formula:setup', 'pc-formula-material', 'system', now(), NULL, NULL, '配方原料'),
     (24304, 1, 24300, 'Formula Options', 'productCenter.menu.formulaOptions', 3, 'formulas/options', 'product-formula/formulas/options', NULL, '1', '0', 'C', '1', '1', 'product:formula:setup', 'pc-formula-option', 'system', now(), NULL, NULL, '配方选项'),
     (24305, 1, 24300, 'Formula Simulation', 'productCenter.menu.formulaSimulation', 4, 'formulas/simulation', 'product-formula/formulas/simulation', NULL, '1', '0', 'C', '1', '1', 'product:formula:setup', 'pc-formula-simulation', 'system', now(), NULL, NULL, '配方模拟'),
+    (24401, 1, 24300, 'Sale Products', 'productCenter.menu.saleProducts', 6, 'sale-products', 'product-pricing/sale-products', NULL, '1', '0', 'C', '1', '1', 'product:sale-product:list', 'pc-sale-product', 'system', now(), NULL, NULL, '可售产品'),
+    (24402, 1, 24300, 'Price Settings', 'productCenter.menu.priceSettings', 7, 'price-settings', 'product-pricing/price-settings', NULL, '1', '0', 'C', '1', '1', 'product:pricing:query', 'pc-pricing', 'system', now(), NULL, NULL, '价格设置'),
     (24212, 1, 24200, 'Product Categories', 'productCenter.menu.categories', 1, 'categories', 'product-center/base', NULL, '1', '0', 'C', '1', '1', 'product:base:list', 'pc-category', 'system', now(), NULL, NULL, '产品分类'),
     (24213, 1, 24200, 'Base Dictionaries', 'productCenter.menu.productDicts', 2, 'product-dicts', 'product-center/product-dicts', NULL, '1', '0', 'C', '1', '1', 'product:dict:list', 'pc-dict', 'system', now(), NULL, NULL, '基础字典'),
     (24206, 1, 24200, 'Units', 'productCenter.menu.units', 3, 'units', 'product-center/base', NULL, '1', '0', 'C', '1', '1', 'product:unit:list', 'pc-unit', 'system', now(), NULL, NULL, '单位管理'),
@@ -1601,6 +1845,16 @@ VALUES
     (24320, 1, 24301, 'Formula Reference', 'productCenter.common.references', 11, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:formula:reference', '#', 'system', now(), NULL, NULL, '配方引用和变更记录'),
     (24321, 1, 24302, 'Formula Review Approve', 'productCenter.formula.actions.approve', 3, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:formula:approve', '#', 'system', now(), NULL, NULL, '配方审核通过'),
     (24322, 1, 24302, 'Formula Review Reject', 'productCenter.formula.actions.reject', 4, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:formula:reject', '#', 'system', now(), NULL, NULL, '配方驳回'),
+    (24410, 1, 24401, 'Sale Product Query', 'common.search', 1, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:sale-product:list', '#', 'system', now(), NULL, NULL, '可售产品查询'),
+    (24411, 1, 24401, 'Sale Product Detail', 'common.detail', 2, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:sale-product:query', '#', 'system', now(), NULL, NULL, '可售产品详情'),
+    (24412, 1, 24401, 'Sale Product Add', 'common.add', 3, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:sale-product:add', '#', 'system', now(), NULL, NULL, '可售产品新增'),
+    (24413, 1, 24401, 'Sale Product Edit', 'common.edit', 4, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:sale-product:edit', '#', 'system', now(), NULL, NULL, '可售产品编辑'),
+    (24414, 1, 24401, 'Sale Product Delete', 'common.delete', 5, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:sale-product:remove', '#', 'system', now(), NULL, NULL, '可售产品删除'),
+    (24415, 1, 24401, 'Sale Product Export', 'common.export', 6, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:sale-product:export', '#', 'system', now(), NULL, NULL, '可售产品导出'),
+    (24416, 1, 24401, 'Sale Product Reference', 'productCenter.common.references', 7, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:sale-product:reference', '#', 'system', now(), NULL, NULL, '可售产品引用检查'),
+    (24420, 1, 24402, 'Price Setting Query', 'common.search', 1, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:pricing:query', '#', 'system', now(), NULL, NULL, '价格设置查询'),
+    (24421, 1, 24402, 'Price Setting Edit', 'common.edit', 2, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:pricing:edit', '#', 'system', now(), NULL, NULL, '价格设置维护'),
+    (24422, 1, 24402, 'Price Setting Validate', 'productCenter.pricing.validatePrice', 3, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:pricing:validate', '#', 'system', now(), NULL, NULL, '价格校验'),
     (24214, 1, 24212, 'Category Query', 'common.search', 1, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:base:list', '#', 'system', now(), NULL, NULL, '产品分类查询'),
     (24215, 1, 24212, 'Category Add', 'common.add', 2, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:base:add', '#', 'system', now(), NULL, NULL, '产品分类新增'),
     (24216, 1, 24212, 'Category Edit', 'common.edit', 3, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:base:edit', '#', 'system', now(), NULL, NULL, '产品分类编辑'),
@@ -1681,7 +1935,7 @@ SET tenant_id = EXCLUDED.tenant_id,
 INSERT INTO sys_role_menu (role_id, menu_id, tenant_id)
 SELECT 1, menu_id, 1
 FROM sys_menu
-WHERE menu_id BETWEEN 24200 AND 24399
+WHERE menu_id BETWEEN 24200 AND 24599
 ON CONFLICT (role_id, menu_id) DO NOTHING;
 
 DELETE FROM sys_dict_data

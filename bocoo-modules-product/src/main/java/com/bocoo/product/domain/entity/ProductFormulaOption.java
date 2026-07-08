@@ -37,6 +37,11 @@ public class ProductFormulaOption extends BaseEntity {
     private String visibleConditionValueNameCn;
     private Boolean requiredFlag;
     private Boolean businessVisibleFlag;
+    private Boolean helpEnabled;
+    private String helpType;
+    private String helpTitle;
+    private String helpUrl;
+    private String helpContent;
     private String status;
     private String delFlag;
     private Integer sortOrder;

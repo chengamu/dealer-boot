@@ -34,6 +34,7 @@ import com.bocoo.product.mapper.ProductMaterialAttributeMapper;
 import com.bocoo.product.mapper.ProductUnitMapper;
 import com.bocoo.product.service.impl.ProductFormulaMaterialSnapshotResolver;
 import com.bocoo.product.service.impl.ProductFormulaExpressionReferenceValidator;
+import com.bocoo.product.service.impl.ProductFormulaOptionSetupNormalizer;
 import com.bocoo.product.service.impl.ProductFormulaRestrictionNormalizer;
 import com.bocoo.product.service.impl.ProductFormulaSetupNormalizer;
 import com.bocoo.product.service.impl.ProductFormulaSetupReader;
@@ -126,7 +127,8 @@ class ProductFormulaSetupServiceTest {
             new ProductFormulaSetupValidator(usageRuleService, variableService, expressionReferenceValidator);
         ProductFormulaRestrictionNormalizer restrictionNormalizer = new ProductFormulaRestrictionNormalizer(setupValidator);
         ProductFormulaSetupNormalizer setupNormalizer =
-            new ProductFormulaSetupNormalizer(materialSnapshotResolver, restrictionNormalizer, usageRuleService, variableService);
+            new ProductFormulaSetupNormalizer(materialSnapshotResolver, new ProductFormulaOptionSetupNormalizer(),
+                restrictionNormalizer, usageRuleService, variableService);
         ProductFormulaSetupWriter setupWriter = new ProductFormulaSetupWriter(
             materialMapper,
             optionMapper,
@@ -284,6 +286,49 @@ class ProductFormulaSetupServiceTest {
                 && Long.valueOf(7202L).equals(row.getOptionValueId())
         ));
         verify(changeLogService).record(eq("FORMULA"), eq("FORMULA"), eq(3001L), eq("FORMULA_25_ZEBRA"), eq("SAVE_OPTIONS"), any(), any(), eq(null));
+    }
+
+    @Test
+    void saveOptionsKeepsPlainTextHelpType() {
+        ProductFormulaSetupBo bo = validSetup();
+        ProductFormulaOptionBo option = optionBo();
+        option.setHelpEnabled(Boolean.TRUE);
+        option.setHelpType("TEXT");
+        option.setHelpTitle("帮助");
+        option.setHelpUrl("https://example.com/help.pdf");
+        option.setHelpContent("<b>普通说明</b>");
+        bo.setMaterials(List.of());
+        bo.setOptions(List.of(option));
+        bo.setUsageRules(List.of());
+        when(formulaMapper.selectById(3001L)).thenReturn(formula("DRAFT"));
+        when(materialMapper.selectList(any())).thenReturn(List.of(formulaMaterial()));
+        when(optionMapper.selectList(any())).thenReturn(List.of(option("FABRIC", "面料")));
+        when(optionValueMapper.selectList(any())).thenReturn(List.of(optionValue("FABRIC", "MAT001", "米色斑马帘面料")));
+        when(optionMaterialMapper.selectList(any())).thenReturn(List.of(optionMaterial()));
+        when(restrictionMapper.selectList(any())).thenReturn(List.of(restriction()));
+        when(usageRuleMapper.selectList(any())).thenReturn(List.of(usageRule()));
+        doAnswer(invocation -> {
+            ProductFormulaOption row = invocation.getArgument(0);
+            row.setOptionId(7103L);
+            return 1;
+        }).when(optionMapper).insert(any(ProductFormulaOption.class));
+        doAnswer(invocation -> {
+            ProductFormulaOptionValue row = invocation.getArgument(0);
+            row.setOptionValueId(7203L);
+            return 1;
+        }).when(optionValueMapper).insert(any(ProductFormulaOptionValue.class));
+        when(optionMaterialMapper.insert(any(ProductFormulaOptionMaterial.class))).thenReturn(1);
+        when(restrictionMapper.insert(any(ProductFormulaRestriction.class))).thenReturn(1);
+
+        assertThat(setupService.saveOptions(3001L, bo)).isTrue();
+
+        verify(optionMapper).insert(argThat(row ->
+            Boolean.TRUE.equals(row.getHelpEnabled())
+                && "TEXT".equals(row.getHelpType())
+                && "帮助".equals(row.getHelpTitle())
+                && row.getHelpUrl() == null
+                && "普通说明".equals(row.getHelpContent())
+        ));
     }
 
     @Test

@@ -19,9 +19,13 @@
       :key="value.valueCode"
       :label="valueLabel(value)"
       :value="value.valueCode"
-      :disabled="isValueDisabled(value.valueCode)"
+      :class="{ 'is-restricted': isValueDisabled(value.valueCode) }"
     >
-      <div class="formula-order-material-select__option">
+      <div
+        class="formula-order-material-select__option"
+        @mousedown="handleOptionIntent($event, value.valueCode)"
+        @click="handleOptionIntent($event, value.valueCode)"
+      >
         <span class="formula-order-material-select__thumb">
           <img :src="imageOf(value.valueCode)" :alt="valueLabel(value)" />
         </span>
@@ -36,6 +40,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { ElMessage } from 'element-plus'
 import fabricThumbnail from '@/assets/product-formula/placeholders/fabric-thumbnail.png'
 import type { ProductFormulaOptionMaterialVO, ProductFormulaOptionValueVO } from '@/api/product-capability/types'
 
@@ -59,7 +64,13 @@ const selectModelValue = computed(() => props.multiple ? selectedCodes.value : p
 const selectedLabel = computed(() => valueLabel(props.values.find((row) => row.valueCode === selectedCodes.value[0])))
 
 function updateValue(value: string | string[]) {
-  emit('update:modelValue', Array.isArray(value) ? value.filter(Boolean).join(',') : String(value || ''))
+  const nextCodes = Array.isArray(value) ? value.filter(Boolean).map(String) : splitCodes(String(value || ''))
+  const blocked = nextCodes.some((code) => isValueDisabled(code) && !selectedCodes.value.includes(code))
+  if (blocked) {
+    warnDisabled()
+    return
+  }
+  emit('update:modelValue', nextCodes.join(','))
 }
 
 function splitCodes(value?: string) {
@@ -80,6 +91,17 @@ function imageOf(valueCode?: string) {
 
 function isValueDisabled(valueCode?: string) {
   return props.disabledValueCodes.includes('*') || props.disabledValueCodes.includes(String(valueCode || ''))
+}
+
+function warnDisabled() {
+  if (props.disabledHint) ElMessage.warning(props.disabledHint)
+}
+
+function handleOptionIntent(event: Event, valueCode?: string) {
+  if (!isValueDisabled(valueCode)) return
+  event.preventDefault()
+  event.stopPropagation()
+  warnDisabled()
 }
 
 function stringField(row: Record<string, unknown> | undefined, keys: string[]) {
@@ -168,5 +190,11 @@ function stringField(row: Record<string, unknown> | undefined, keys: string[]) {
 :global(.formula-order-material-select-popper .el-select-dropdown__item.hover),
 :global(.formula-order-material-select-popper .el-select-dropdown__item:hover) {
   background: #eef5ff;
+}
+
+:global(.formula-order-material-select-popper .el-select-dropdown__item.is-restricted) {
+  cursor: not-allowed;
+  background: #f8fafc;
+  color: #9ca3af;
 }
 </style>

@@ -35,6 +35,10 @@ import com.bocoo.product.domain.entity.ProductMaterialTypeGroup;
 import com.bocoo.product.domain.entity.ProductManufacturer;
 import com.bocoo.product.domain.entity.ProductMediaAsset;
 import com.bocoo.product.domain.entity.ProductMediaBinding;
+import com.bocoo.product.domain.entity.ProductPriceFabricRule;
+import com.bocoo.product.domain.entity.ProductPriceFeeRule;
+import com.bocoo.product.domain.entity.ProductPriceSetting;
+import com.bocoo.product.domain.entity.ProductSaleProduct;
 import io.github.linpeilie.Converter;
 import org.apache.ibatis.builder.MapperBuilderAssistant;
 import org.springframework.context.support.GenericApplicationContext;
@@ -70,6 +74,10 @@ final class ProductServiceTestSupport {
         prepareTableInfo(ProductManufacturer.class);
         prepareTableInfo(ProductMediaAsset.class);
         prepareTableInfo(ProductMediaBinding.class);
+        prepareTableInfo(ProductPriceFabricRule.class);
+        prepareTableInfo(ProductPriceFeeRule.class);
+        prepareTableInfo(ProductPriceSetting.class);
+        prepareTableInfo(ProductSaleProduct.class);
         if (contextPrepared) {
             return;
         }
@@ -189,13 +197,25 @@ final class ProductServiceTestSupport {
             target.setFormulaId(source.getFormulaId());
             target.setOptionCode(source.getOptionCode());
             target.setOptionNameCn(source.getOptionNameCn());
+            target.setOptionNameEn(source.getOptionNameEn());
             target.setSourceType(source.getSourceType());
             target.setSourceScope(source.getSourceScope());
             target.setSelectionMode(source.getSelectionMode());
+            target.setDisplayMode(source.getDisplayMode());
             target.setDefaultValueCode(source.getDefaultValueCode());
             target.setDefaultValueNameCn(source.getDefaultValueNameCn());
+            target.setVisibilityMode(source.getVisibilityMode());
+            target.setVisibleConditionOptionCode(source.getVisibleConditionOptionCode());
+            target.setVisibleConditionOptionNameCn(source.getVisibleConditionOptionNameCn());
+            target.setVisibleConditionValueCode(source.getVisibleConditionValueCode());
+            target.setVisibleConditionValueNameCn(source.getVisibleConditionValueNameCn());
             target.setRequiredFlag(source.getRequiredFlag());
             target.setBusinessVisibleFlag(source.getBusinessVisibleFlag());
+            target.setHelpEnabled(source.getHelpEnabled());
+            target.setHelpType(source.getHelpType());
+            target.setHelpTitle(source.getHelpTitle());
+            target.setHelpUrl(source.getHelpUrl());
+            target.setHelpContent(source.getHelpContent());
             target.setStatus(source.getStatus());
             target.setSortOrder(source.getSortOrder());
             target.setRemark(source.getRemark());

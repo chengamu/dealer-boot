@@ -98,7 +98,8 @@ const form = reactive<ProductFormulaSimulationBO>({
 })
 
 const orderedOptions = computed(() => sortRows((setup.value.options || []).filter((option) => option.status === PRODUCT_STATUS_ENABLED)))
-const visibleOptions = computed(() => orderedOptions.value.filter((option) => isOptionVisible(option)))
+const activeOptions = computed(() => orderedOptions.value.filter((option) => isOptionConditionActive(option)))
+const visibleOptions = computed(() => activeOptions.value.filter((option) => option.businessVisibleFlag !== false))
 const enabledOptionMaterials = computed(() => sortRows((setup.value.optionMaterials || []).filter((row) => row.status === PRODUCT_STATUS_ENABLED)))
 const hiddenOptionCount = computed(() => Math.max(0, orderedOptions.value.length - visibleOptions.value.length))
 const simulationStatus = computed(() => result.value.status || formula.value.simulationValidationStatus || FORMULA_VALIDATION_STATUS.NOT_VALIDATED)
@@ -111,8 +112,8 @@ const { disabledOptionValues, restrictionMessages, hasBlockingRestriction, block
   selectedOptionValues
 })
 
-watch(visibleOptions, () => {
-  applyVisibleDefaults()
+watch(activeOptions, () => {
+  applyActiveDefaults()
   clearHiddenSelections()
 }, { deep: true })
 
@@ -162,7 +163,7 @@ async function load() {
     room.value = result.value.room || room.value
     Object.keys(selectedOptionValues).forEach((optionCode) => delete selectedOptionValues[optionCode])
     Object.assign(selectedOptionValues, result.value.selectedOptionValues || {})
-    applyVisibleDefaults()
+    applyActiveDefaults()
     clearHiddenSelections()
   } finally {
     loading.value = false
@@ -200,14 +201,14 @@ function responseRows<T>(response: { data?: T[] } | T[] | undefined): T[] {
   return Array.isArray(response) ? response : response?.data || []
 }
 
-function isOptionVisible(option: ProductFormulaOptionVO) {
+function isOptionConditionActive(option: ProductFormulaOptionVO) {
   if (option.visibilityMode !== 'CONDITIONAL') return true
   const conditionOptionCode = option.visibleConditionOptionCode
   return Boolean(conditionOptionCode) && splitCodes(selectedOptionValues[conditionOptionCode as string]).includes(String(option.visibleConditionValueCode || ''))
 }
 
-function applyVisibleDefaults() {
-  visibleOptions.value.forEach((option) => {
+function applyActiveDefaults() {
+  activeOptions.value.forEach((option) => {
     const optionCode = option.optionCode
     if (!optionCode || selectedOptionValues[optionCode]) return
     const values = optionValuesOf(optionCode)
@@ -217,7 +218,7 @@ function applyVisibleDefaults() {
 }
 
 function clearHiddenSelections() {
-  const visibleCodes = new Set(visibleOptions.value.map((option) => option.optionCode).filter(Boolean))
+  const visibleCodes = new Set(activeOptions.value.map((option) => option.optionCode).filter(Boolean))
   Object.keys(selectedOptionValues).forEach((optionCode) => {
     if (!visibleCodes.has(optionCode)) delete selectedOptionValues[optionCode]
   })

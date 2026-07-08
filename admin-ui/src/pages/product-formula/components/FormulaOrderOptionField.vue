@@ -3,13 +3,13 @@
     <div class="simulation-config-field__label">
       <span>{{ label }}</span>
       <em v-if="option.requiredFlag">{{ t('productCenter.formulaSimulation.required') }}</em>
+      <FormulaOrderOptionHelp :option="option" :label="label" :t="t" />
     </div>
 
     <el-switch
       v-if="switchOption"
       :model-value="switchChecked"
       inline-prompt
-      :disabled="switchDisabled"
       @update:model-value="updateSwitch"
     />
 
@@ -41,9 +41,13 @@
         :key="value.valueCode"
         :label="value.valueNameCn || value.valueNameEn || value.valueCode"
         :value="value.valueCode"
-        :disabled="isValueDisabled(value.valueCode)"
+        :class="{ 'is-restricted': isValueDisabled(value.valueCode) }"
       >
-        <div class="formula-order-option-field__option">
+        <div
+          class="formula-order-option-field__option"
+          @mousedown="handleOptionIntent($event, value.valueCode)"
+          @click="handleOptionIntent($event, value.valueCode)"
+        >
           <span>{{ value.valueNameCn || value.valueNameEn || value.valueCode }}</span>
           <small v-if="isValueDisabled(value.valueCode)">{{ restrictionMessage }}</small>
         </div>
@@ -61,9 +65,11 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { ElMessage } from 'element-plus'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 import FormulaOrderMaterialSelect from './FormulaOrderMaterialSelect.vue'
+import FormulaOrderOptionHelp from './FormulaOrderOptionHelp.vue'
 import type { ProductFormulaOptionMaterialVO, ProductFormulaOptionVO, ProductFormulaOptionValueVO } from '@/api/product-capability/types'
 
 const props = defineProps<{
@@ -103,7 +109,6 @@ const selectModelValue = computed(() => multipleOption.value ? selectedCodes.val
 const switchChecked = computed(() => props.modelValue === switchValueCodes.value.active)
 const restrictedSelected = computed(() => selectedCodes.value.some((code) => isValueDisabled(code)))
 const restrictionMessage = computed(() => messageText(props.restrictionMessages[0] || 'product.formula.simulationRestrictionHit'))
-const switchDisabled = computed(() => isValueDisabled(switchValueCodes.value.active) && isValueDisabled(switchValueCodes.value.inactive))
 const fieldWidthClass = computed(() => {
   if (switchOption.value) return 'is-compact'
   if (multipleOption.value) return 'is-wide'
@@ -115,14 +120,23 @@ function splitCodes(value?: string) {
 }
 
 function updateSelect(value: string | string[]) {
-  const nextValue = Array.isArray(value) ? value.filter(Boolean).join(',') : String(value || '')
+  const nextCodes = Array.isArray(value) ? value.filter(Boolean).map(String) : splitCodes(String(value || ''))
+  const blocked = nextCodes.some((code) => isValueDisabled(code) && !selectedCodes.value.includes(code))
+  if (blocked) {
+    warnRestricted()
+    return
+  }
+  const nextValue = nextCodes.join(',')
   emit('update:modelValue', nextValue)
 }
 
 function updateSwitch(checked: string | number | boolean) {
   const codes = switchValueCodes.value
   const nextValue = checked ? codes.active : codes.inactive
-  if (isValueDisabled(nextValue)) return
+  if (isValueDisabled(nextValue)) {
+    warnRestricted()
+    return
+  }
   emit('update:modelValue', nextValue)
 }
 
@@ -132,6 +146,17 @@ function isValueDisabled(valueCode?: string) {
 
 function messageText(message: string) {
   return message.startsWith('product.') || message.startsWith('productCenter.') ? t(message) : message
+}
+
+function warnRestricted() {
+  ElMessage.warning(restrictionMessage.value)
+}
+
+function handleOptionIntent(event: Event, valueCode?: string) {
+  if (!isValueDisabled(valueCode)) return
+  event.preventDefault()
+  event.stopPropagation()
+  warnRestricted()
 }
 </script>
 
@@ -222,6 +247,12 @@ function messageText(message: string) {
   min-height: 38px;
   padding: 6px 12px !important;
   line-height: normal !important;
+}
+
+:global(.formula-order-select-popper .el-select-dropdown__item.is-restricted) {
+  cursor: not-allowed;
+  background: #f8fafc;
+  color: #9ca3af;
 }
 
 </style>

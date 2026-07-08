@@ -3,9 +3,7 @@ import com.bocoo.common.core.exception.ServiceException;
 import com.bocoo.common.core.utils.MapstructUtils;
 import com.bocoo.common.core.utils.StringUtils;
 import com.bocoo.product.domain.bo.ProductFormulaMaterialBo;
-import com.bocoo.product.domain.bo.ProductFormulaOptionBo;
 import com.bocoo.product.domain.bo.ProductFormulaOptionMaterialBo;
-import com.bocoo.product.domain.bo.ProductFormulaOptionValueBo;
 import com.bocoo.product.domain.bo.ProductFormulaSetupBo;
 import com.bocoo.product.domain.entity.ProductFormulaMaterial;
 import com.bocoo.product.domain.entity.ProductFormulaOption;
@@ -28,20 +26,17 @@ import java.util.stream.Collectors;
 @Component
 @RequiredArgsConstructor
 public class ProductFormulaSetupNormalizer extends ProductServiceSupport {
-    private static final String VISIBILITY_ALWAYS = "ALWAYS";
-    private static final String VISIBILITY_CONDITIONAL = "CONDITIONAL";
-    private static final String DISPLAY_SELECT = "SELECT";
-    private static final String DISPLAY_IMAGE_SELECT = "IMAGE_SELECT";
     private final ProductFormulaMaterialSnapshotResolver materialSnapshotResolver;
+    private final ProductFormulaOptionSetupNormalizer optionNormalizer;
     private final ProductFormulaRestrictionNormalizer restrictionNormalizer;
     private final ProductFormulaUsageRuleService usageRuleService;
     private final ProductFormulaVariableService variableService;
     ProductFormulaSetupRows normalize(Long formulaId, ProductFormulaSetupBo bo) {
         ProductFormulaSetupBo safeBo = bo == null ? new ProductFormulaSetupBo() : bo;
         List<ProductFormulaMaterial> materials = normalizeMaterials(formulaId, safeBo.getMaterials());
-        List<ProductFormulaOption> options = normalizeOptions(formulaId, safeBo.getOptions());
-        List<ProductFormulaOptionValue> values = normalizeOptionValues(formulaId, options, safeBo.getOptionValues());
-        normalizeOptionVisibility(options, values);
+        List<ProductFormulaOption> options = optionNormalizer.normalizeOptions(formulaId, safeBo.getOptions());
+        List<ProductFormulaOptionValue> values = optionNormalizer.normalizeOptionValues(formulaId, options, safeBo.getOptionValues());
+        optionNormalizer.normalizeOptionVisibility(options, values);
         List<ProductFormulaOptionMaterial> optionMaterials =
             normalizeOptionMaterials(formulaId, materials, options, values, safeBo.getOptionMaterials());
         List<ProductFormulaRestriction> restrictions = restrictionNormalizer.normalize(formulaId, options, values, safeBo.getRestrictions());
@@ -66,9 +61,9 @@ public class ProductFormulaSetupNormalizer extends ProductServiceSupport {
     }
     ProductFormulaSetupRows normalizeOptions(Long formulaId, ProductFormulaSetupBo bo, ProductFormulaSetupContext current) {
         ProductFormulaSetupBo safeBo = bo == null ? new ProductFormulaSetupBo() : bo;
-        List<ProductFormulaOption> options = normalizeOptions(formulaId, safeBo.getOptions());
-        List<ProductFormulaOptionValue> values = normalizeOptionValues(formulaId, options, safeBo.getOptionValues());
-        normalizeOptionVisibility(options, values);
+        List<ProductFormulaOption> options = optionNormalizer.normalizeOptions(formulaId, safeBo.getOptions());
+        List<ProductFormulaOptionValue> values = optionNormalizer.normalizeOptionValues(formulaId, options, safeBo.getOptionValues());
+        optionNormalizer.normalizeOptionVisibility(options, values);
         List<ProductFormulaOptionMaterial> optionMaterials = normalizeOptionMaterials(formulaId, current.materials(), options, values, safeBo.getOptionMaterials());
         List<ProductFormulaRestriction> restrictions = restrictionNormalizer.normalize(formulaId, options, values, safeBo.getRestrictions());
         return new ProductFormulaSetupRows(current.materials(), options, values, optionMaterials, restrictions, current.usageRules(),
@@ -111,121 +106,6 @@ public class ProductFormulaSetupNormalizer extends ProductServiceSupport {
                 throw ServiceException.ofMessageKey("product.formula.materialDuplicate");
             }
         }
-    }
-    private List<ProductFormulaOption> normalizeOptions(Long formulaId, List<ProductFormulaOptionBo> rows) {
-        List<ProductFormulaOption> result = new ArrayList<>();
-        Set<String> codes = new HashSet<>();
-        int index = 0;
-        for (ProductFormulaOptionBo row : rows == null ? List.<ProductFormulaOptionBo>of() : rows) {
-            ProductFormulaOption entity = MapstructUtils.convert(row, ProductFormulaOption.class);
-            if (entity == null) {
-                continue;
-            }
-            entity.setFormulaId(formulaId);
-            entity.setOptionCode(requiredUpper(entity.getOptionCode(), "product.formula.optionCodeRequired"));
-            entity.setOptionNameCn(requiredTrim(entity.getOptionNameCn(), "product.formula.optionNameRequired"));
-            entity.setOptionNameEn(trim(entity.getOptionNameEn()));
-            if (!codes.add(entity.getOptionCode())) {
-                throw ServiceException.ofMessageKey("product.formula.optionCodeDuplicate");
-            }
-            entity.setSourceType(defaultString(trim(entity.getSourceType()), "MANUAL"));
-            entity.setSourceScope(trim(entity.getSourceScope()));
-            entity.setSelectionMode(defaultString(trim(entity.getSelectionMode()), "SINGLE"));
-            entity.setDisplayMode(normalizeDisplayMode(entity.getDisplayMode()));
-            entity.setDefaultValueCode(trim(entity.getDefaultValueCode()));
-            entity.setDefaultValueNameCn(trim(entity.getDefaultValueNameCn()));
-            entity.setVisibilityMode(defaultString(trimUpper(row.getVisibilityMode()), VISIBILITY_ALWAYS));
-            entity.setVisibleConditionOptionCode(trimUpper(row.getVisibleConditionOptionCode()));
-            entity.setVisibleConditionOptionNameCn(trim(row.getVisibleConditionOptionNameCn()));
-            entity.setVisibleConditionValueCode(trimUpper(row.getVisibleConditionValueCode()));
-            entity.setVisibleConditionValueNameCn(trim(row.getVisibleConditionValueNameCn()));
-            entity.setRequiredFlag(Boolean.TRUE.equals(entity.getRequiredFlag()));
-            entity.setBusinessVisibleFlag(entity.getBusinessVisibleFlag() == null || Boolean.TRUE.equals(entity.getBusinessVisibleFlag()));
-            entity.setStatus(defaultString(trim(entity.getStatus()), STATUS_ENABLED));
-            entity.setDelFlag("0");
-            entity.setSortOrder(entity.getSortOrder() == null ? index * 10 + 10 : entity.getSortOrder());
-            result.add(entity);
-            index++;
-        }
-        return result;
-    }
-    private void normalizeOptionVisibility(List<ProductFormulaOption> options, List<ProductFormulaOptionValue> values) {
-        Map<String, ProductFormulaOption> optionMap = options.stream()
-            .collect(Collectors.toMap(ProductFormulaOption::getOptionCode, Function.identity(), (left, right) -> left));
-        Map<String, ProductFormulaOptionValue> valueMap = values.stream()
-            .collect(Collectors.toMap(value -> key(value.getOptionCode(), value.getValueCode()), Function.identity(), (left, right) -> left));
-        for (ProductFormulaOption option : options) {
-            if (!VISIBILITY_CONDITIONAL.equals(option.getVisibilityMode())) {
-                option.setVisibilityMode(VISIBILITY_ALWAYS);
-                clearOptionVisibilityCondition(option);
-                continue;
-            }
-            applyVisibilityCondition(option, optionMap, valueMap);
-        }
-    }
-    private void applyVisibilityCondition(ProductFormulaOption option, Map<String, ProductFormulaOption> optionMap,
-                                          Map<String, ProductFormulaOptionValue> valueMap) {
-        String conditionOptionCode = option.getVisibleConditionOptionCode();
-        if (StringUtils.isBlank(conditionOptionCode)) {
-            throw ServiceException.ofMessageKey("product.formula.optionVisibilityConditionRequired");
-        }
-        if (conditionOptionCode.equals(option.getOptionCode())) {
-            throw ServiceException.ofMessageKey("product.formula.optionVisibilitySelfDenied");
-        }
-        ProductFormulaOption conditionOption = optionMap.get(conditionOptionCode);
-        if (conditionOption == null) {
-            throw ServiceException.ofMessageKey("product.formula.optionVisibilityConditionInvalid");
-        }
-        String conditionValueCode = option.getVisibleConditionValueCode();
-        if (StringUtils.isBlank(conditionValueCode)) {
-            throw ServiceException.ofMessageKey("product.formula.optionVisibilityValueRequired");
-        }
-        ProductFormulaOptionValue conditionValue = valueMap.get(key(conditionOptionCode, conditionValueCode));
-        if (conditionValue == null) {
-            throw ServiceException.ofMessageKey("product.formula.optionVisibilityValueInvalid");
-        }
-        option.setVisibleConditionOptionNameCn(conditionOption.getOptionNameCn());
-        option.setVisibleConditionValueNameCn(conditionValue.getValueNameCn());
-    }
-    private void clearOptionVisibilityCondition(ProductFormulaOption option) {
-        option.setVisibleConditionOptionCode(null);
-        option.setVisibleConditionOptionNameCn(null);
-        option.setVisibleConditionValueCode(null);
-        option.setVisibleConditionValueNameCn(null);
-    }
-    private List<ProductFormulaOptionValue> normalizeOptionValues(Long formulaId, List<ProductFormulaOption> options,
-                                                                  List<ProductFormulaOptionValueBo> rows) {
-        Map<String, ProductFormulaOption> optionMap =
-            options.stream().collect(Collectors.toMap(ProductFormulaOption::getOptionCode, Function.identity()));
-        Set<String> keys = new HashSet<>();
-        List<ProductFormulaOptionValue> result = new ArrayList<>();
-        int index = 0;
-        for (ProductFormulaOptionValueBo row : rows == null ? List.<ProductFormulaOptionValueBo>of() : rows) {
-            ProductFormulaOptionValue entity = MapstructUtils.convert(row, ProductFormulaOptionValue.class);
-            if (entity == null) {
-                continue;
-            }
-            entity.setFormulaId(formulaId);
-            entity.setOptionCode(requiredUpper(entity.getOptionCode(), "product.formula.optionCodeRequired"));
-            ProductFormulaOption option = optionMap.get(entity.getOptionCode());
-            if (option == null) {
-                throw ServiceException.ofMessageKey("product.formula.optionValueOptionInvalid");
-            }
-            entity.setOptionId(option.getOptionId());
-            entity.setValueCode(requiredUpper(entity.getValueCode(), "product.formula.optionValueCodeRequired"));
-            entity.setValueNameCn(requiredTrim(entity.getValueNameCn(), "product.formula.optionValueNameRequired"));
-            entity.setValueNameEn(trim(entity.getValueNameEn()));
-            if (!keys.add(key(entity.getOptionCode(), entity.getValueCode()))) {
-                throw ServiceException.ofMessageKey("product.formula.optionValueDuplicate");
-            }
-            entity.setDefaultFlag(Boolean.TRUE.equals(entity.getDefaultFlag()));
-            entity.setStatus(defaultString(trim(entity.getStatus()), STATUS_ENABLED));
-            entity.setDelFlag("0");
-            entity.setSortOrder(entity.getSortOrder() == null ? index * 10 + 10 : entity.getSortOrder());
-            result.add(entity);
-            index++;
-        }
-        return result;
     }
     private List<ProductFormulaOptionMaterial> normalizeOptionMaterials(Long formulaId, List<ProductFormulaMaterial> materials,
                                                                         List<ProductFormulaOption> options, List<ProductFormulaOptionValue> values,
@@ -284,13 +164,6 @@ public class ProductFormulaSetupNormalizer extends ProductServiceSupport {
         }
         return material;
     }
-    private String requiredTrim(String value, String messageKey) {
-        String trimmed = trim(value);
-        if (StringUtils.isBlank(trimmed)) {
-            throw ServiceException.ofMessageKey(messageKey);
-        }
-        return trimmed;
-    }
     private String requiredUpper(String value, String messageKey) {
         String trimmed = trimUpper(value);
         if (StringUtils.isBlank(trimmed)) {
@@ -307,10 +180,6 @@ public class ProductFormulaSetupNormalizer extends ProductServiceSupport {
     }
     private String defaultString(String value, String defaultValue) {
         return StringUtils.isBlank(value) ? defaultValue : value;
-    }
-    private String normalizeDisplayMode(String value) {
-        String mode = trimUpper(value);
-        return DISPLAY_IMAGE_SELECT.equals(mode) ? DISPLAY_IMAGE_SELECT : DISPLAY_SELECT;
     }
     private String key(String... parts) {
         return String.join("|", parts);

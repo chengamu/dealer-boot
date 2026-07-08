@@ -79,6 +79,43 @@ class ProductFormulaSimulationServiceImplTest {
     }
 
     @Test
+    void runDoesNotRequireCustomerHiddenOption() {
+        ProductFormulaSetupVo setup = setup();
+        setup.getOptions().get(0).setBusinessVisibleFlag(Boolean.FALSE);
+        setup.getMaterials().get(0).setRequiredFlag(Boolean.TRUE);
+        when(setupService.querySetup(3001L)).thenReturn(setup);
+        ProductMaterial price = new ProductMaterial();
+        price.setMaterialId(4001L);
+        price.setSalesPrice(new BigDecimal("3.00"));
+        when(productMaterialMapper.selectList(any())).thenReturn(List.of(price));
+
+        ProductFormulaSimulationVo result = service.run(3001L, simulationBo(Map.of()));
+
+        assertThat(result.getStatus()).isEqualTo("PASS");
+        assertThat(result.getSelectedOptionValues()).doesNotContainKey("FABRIC");
+        assertThat(result.getItems()).extracting(ProductFormulaSimulationItemVo::getMaterialCode)
+            .containsExactly("MAT001");
+    }
+
+    @Test
+    void runKeepsCustomerHiddenSelectionForBom() {
+        ProductFormulaSetupVo setup = setup();
+        setup.getOptions().get(0).setBusinessVisibleFlag(Boolean.FALSE);
+        when(setupService.querySetup(3001L)).thenReturn(setup);
+        ProductMaterial price = new ProductMaterial();
+        price.setMaterialId(4001L);
+        price.setSalesPrice(new BigDecimal("3.00"));
+        when(productMaterialMapper.selectList(any())).thenReturn(List.of(price));
+
+        ProductFormulaSimulationVo result = service.run(3001L, simulationBo(Map.of("FABRIC", "MAT001")));
+
+        assertThat(result.getStatus()).isEqualTo("PASS");
+        assertThat(result.getSelectedOptionValues()).containsEntry("FABRIC", "MAT001");
+        assertThat(result.getItems()).extracting(ProductFormulaSimulationItemVo::getMaterialCode)
+            .containsExactly("MAT001");
+    }
+
+    @Test
     void runBuildsBomFromRequiredAndSelectedOptionMaterialsWithConditionalUsageRule() {
         ProductMaterial price = new ProductMaterial();
         price.setMaterialId(4001L);

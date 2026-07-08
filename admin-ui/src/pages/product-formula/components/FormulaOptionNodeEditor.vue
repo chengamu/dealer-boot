@@ -7,47 +7,64 @@
     </div>
 
     <div v-if="selectedOption" class="option-form">
-      <label>
-        <span>{{ t('productCenter.formulaSetup.optionName') }}</span>
-        <el-input ref="optionNameInputRef" v-model="selectedOption.optionNameCn" :placeholder="t('productCenter.formulaSetup.optionNamePlaceholder')" />
-      </label>
-      <label>
-        <span>{{ t('productCenter.formulaSetup.optionNameEn') }}</span>
-        <el-input v-model="selectedOption.optionNameEn" :placeholder="t('productCenter.formulaSetup.optionNameEnPlaceholder')" />
-      </label>
-      <label>
-        <span>{{ t('productCenter.formulaSetup.sourceType') }}</span>
-        <el-select :model-value="selectedOption.sourceType" @change="$emit('source-type-change', String($event))">
-          <el-option value="MATERIAL_POOL" :label="t('productCenter.formulaSetup.sourceMaterialPool')" />
-          <el-option value="PRODUCT_DICT" :label="t('productCenter.formulaSetup.sourceProductDict')" />
-          <el-option value="BOOLEAN" :label="t('productCenter.formulaSetup.sourceBoolean')" />
-          <el-option value="MANUAL" :label="t('productCenter.formulaSetup.sourceManual')" />
-        </el-select>
-      </label>
-      <label v-if="selectedOption.sourceType === 'MATERIAL_POOL'">
-        <span>{{ t('productCenter.formulaSetup.sourceMaterialGroup') }}</span>
-        <el-select :model-value="sourceGroupCode(selectedOption)" filterable @change="$emit('source-group-change', String($event))">
-          <el-option v-for="group in materialGroupOptions" :key="group.value" :label="group.label" :value="group.value" />
-        </el-select>
-      </label>
-      <label>
-        <span>{{ t('productCenter.formulaSetup.selectionMode') }}</span>
-        <el-select v-model="selectedOption.selectionMode">
-          <el-option value="SINGLE" :label="t('productCenter.formulaSetup.single')" />
-          <el-option value="MULTIPLE" :label="t('productCenter.formulaSetup.multiple')" />
-          <el-option value="SWITCH" :label="t('productCenter.formulaSetup.switch')" />
-        </el-select>
-      </label>
-      <label v-if="selectedOption.sourceType === 'MATERIAL_POOL'">
-        <span>{{ t('productCenter.formulaSetup.displayMode') }}</span>
-        <el-select
-          :model-value="selectedOption.displayMode || 'SELECT'"
-          @change="selectedOption.displayMode = String($event)"
-        >
-          <el-option value="SELECT" :label="t('productCenter.formulaSetup.displaySelect')" />
-          <el-option value="IMAGE_SELECT" :label="t('productCenter.formulaSetup.displayImageSelect')" />
-        </el-select>
-      </label>
+      <div class="option-form__row option-form__row--main">
+        <label>
+          <span>{{ t('productCenter.formulaSetup.optionName') }}</span>
+          <el-input ref="optionNameInputRef" v-model="selectedOption.optionNameCn" :placeholder="t('productCenter.formulaSetup.optionNamePlaceholder')" />
+        </label>
+        <label>
+          <span>{{ t('productCenter.formulaSetup.optionNameEn') }}</span>
+          <el-input v-model="selectedOption.optionNameEn" :placeholder="t('productCenter.formulaSetup.optionNameEnPlaceholder')" />
+        </label>
+        <label>
+          <span>{{ t('productCenter.formulaSetup.sourceType') }}</span>
+          <el-select :model-value="selectedOption.sourceType" @change="$emit('source-type-change', String($event))">
+            <el-option value="MATERIAL_POOL" :label="t('productCenter.formulaSetup.sourceMaterialPool')" />
+            <el-option value="PRODUCT_DICT" :label="t('productCenter.formulaSetup.sourceProductDict')" />
+            <el-option value="BOOLEAN" :label="t('productCenter.formulaSetup.sourceBoolean')" />
+            <el-option value="MANUAL" :label="t('productCenter.formulaSetup.sourceManual')" />
+          </el-select>
+        </label>
+        <label v-if="selectedOption.sourceType === 'MATERIAL_POOL'">
+          <span>{{ t('productCenter.formulaSetup.sourceMaterialGroup') }}</span>
+          <el-select :model-value="sourceGroupCode(selectedOption)" filterable @change="$emit('source-group-change', String($event))">
+            <el-option v-for="group in materialGroupOptions" :key="group.value" :label="group.label" :value="group.value" />
+          </el-select>
+        </label>
+        <label>
+          <span>{{ t('productCenter.formulaSetup.selectionMode') }}</span>
+          <el-select v-model="selectedOption.selectionMode">
+            <el-option value="SINGLE" :label="t('productCenter.formulaSetup.single')" />
+            <el-option value="MULTIPLE" :label="t('productCenter.formulaSetup.multiple')" />
+            <el-option value="SWITCH" :label="t('productCenter.formulaSetup.switch')" />
+          </el-select>
+        </label>
+      </div>
+
+      <div class="option-settings-bar" :class="{ 'is-display-hidden': selectedOption.sourceType !== 'MATERIAL_POOL' }">
+        <label class="option-setting-card">
+          <span>{{ t('productCenter.formulaSetup.optionRequired') }}</span>
+          <el-switch v-model="selectedOption.requiredFlag" />
+        </label>
+        <label class="option-setting-card">
+          <span>{{ t('productCenter.formulaSetup.businessVisible') }}</span>
+          <el-switch
+            :model-value="selectedOption.businessVisibleFlag !== false"
+            @update:model-value="selectedOption.businessVisibleFlag = Boolean($event)"
+          />
+        </label>
+        <label v-if="selectedOption.sourceType === 'MATERIAL_POOL'" class="option-display-field">
+          <span>{{ t('productCenter.formulaSetup.displayMode') }}</span>
+          <el-select
+            :model-value="selectedOption.displayMode || 'SELECT'"
+            @change="selectedOption.displayMode = String($event)"
+          >
+            <el-option value="SELECT" :label="t('productCenter.formulaSetup.displaySelect')" />
+            <el-option value="IMAGE_SELECT" :label="t('productCenter.formulaSetup.displayImageSelect')" />
+          </el-select>
+        </label>
+        <FormulaOptionHelpEditor :option="selectedOption" :t="t" />
+      </div>
     </div>
   </div>
 </template>
@@ -55,6 +72,7 @@
 <script setup lang="ts">
 import type { ProductFormulaOptionVO } from '@/api/product-capability/types'
 import { nextTick, ref } from 'vue'
+import FormulaOptionHelpEditor from './FormulaOptionHelpEditor.vue'
 
 defineProps<{
   selectedOption?: ProductFormulaOptionVO
@@ -98,18 +116,30 @@ defineExpose({ focusOptionName })
 
 .option-form {
   display: grid;
-  grid-template-columns:
-    minmax(150px, 1fr)
-    minmax(140px, 0.9fr)
-    minmax(128px, 0.8fr)
-    minmax(120px, 0.75fr)
-    minmax(108px, 0.7fr)
-    minmax(120px, 0.75fr);
-  gap: 12px;
+  gap: 10px;
   margin-top: 14px;
 }
 
-.option-form label {
+.option-form__row {
+  display: grid;
+  gap: 12px;
+  align-items: end;
+}
+
+.option-form__row--main {
+  grid-template-columns: minmax(170px, 1.2fr) minmax(150px, 1fr) minmax(130px, 0.8fr) minmax(128px, 0.8fr) minmax(108px, 0.7fr);
+}
+
+.option-settings-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-start;
+  padding-top: 2px;
+}
+
+.option-form label,
+.option-setting-card {
   display: grid;
   gap: 6px;
   min-width: 0;
@@ -118,8 +148,22 @@ defineExpose({ focusOptionName })
   font-weight: 600;
 }
 
+.option-setting-card {
+  width: 72px;
+  padding: 0;
+}
+
+.option-setting-card :deep(.el-switch) {
+  align-self: center;
+}
+
+.option-display-field {
+  width: 190px;
+}
+
 @media (max-width: 980px) {
-  .option-form {
+  .option-form__row,
+  .option-form__row--main {
     grid-template-columns: repeat(2, minmax(150px, 1fr));
   }
 }
