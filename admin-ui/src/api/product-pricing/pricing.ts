@@ -15,7 +15,7 @@ export const saleProductApi = {
 export const productPriceApi = {
   setup: (saleProductId: string | number) => request<PriceSetupVO>({ url: '/product-pricing/price-settings/' + saleProductId, method: 'get' }),
   generateFabricPrices: (saleProductId: string | number, overwrite = false) => request({ url: '/product-pricing/price-settings/' + saleProductId + '/generate-fabric-prices/' + overwrite, method: 'put' }),
-  saveFabricRules: (saleProductId: string | number, data: FabricPriceRule[]) => request({ url: '/product-pricing/price-settings/' + saleProductId + '/fabric-rules', method: 'put', data }),
+  saveFabricRules: (saleProductId: string | number, priceFabricId: string | number, data: FabricPriceRule[]) => request({ url: '/product-pricing/price-settings/' + saleProductId + '/fabrics/' + priceFabricId + '/rules', method: 'put', data }),
   saveExtraFeeRules: (saleProductId: string | number, data: ExtraFeeRule[]) => request({ url: '/product-pricing/price-settings/' + saleProductId + '/fee-rules', method: 'put', data }),
   validate: (saleProductId: string | number) => request<PriceValidationIssue[]>({ url: '/product-pricing/price-settings/' + saleProductId + '/validate', method: 'put' })
 }

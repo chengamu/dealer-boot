@@ -1,4 +1,5 @@
 import type { PageQuery } from '@/types/api'
+import type { ProductFormulaMaterialVO, ProductFormulaOptionMaterialVO, ProductFormulaOptionVO, ProductFormulaOptionValueVO } from '@/api/product-capability/types'
 
 export interface SaleProductVO {
   saleProductId?: string | number
@@ -80,6 +81,27 @@ export interface PriceSettingVO {
 export interface FabricPriceRule {
   fabricRuleId?: number
   tenantId?: number
+  priceFabricId?: number
+  priceSettingId?: number
+  saleProductId?: string | number
+  formulaVersionId?: number
+  conditionType?: string
+  conditionExpression?: string
+  conditionText?: string
+  conditionKey?: string
+  priceMode?: string
+  unitPrice?: number
+  priceFormula?: string
+  defaultRuleFlag?: boolean
+  status?: string
+  sortOrder?: number
+  delFlag?: string
+  remark?: string
+}
+
+export interface PriceFabricVO {
+  priceFabricId?: number
+  tenantId?: number
   priceSettingId?: number
   saleProductId?: string | number
   formulaVersionId?: number
@@ -87,17 +109,12 @@ export interface FabricPriceRule {
   materialCode?: string
   materialNameCn?: string
   unitCode?: string
-  optionCombinationKey?: string
-  optionCombinationName?: string
-  priceMode?: string
-  basePrice?: number
-  areaFormula?: string
-  minBillArea?: number
-  lossRate?: number
   status?: string
   sortOrder?: number
   delFlag?: string
   remark?: string
+  ruleCount?: number
+  defaultRuleFlag?: boolean
 }
 
 export interface PriceOptionCombination {
@@ -137,8 +154,13 @@ export interface PriceSetupVO {
   setting?: PriceSettingVO
   fabricCandidates?: PriceFabricCandidate[]
   fabricPriceColumns?: PriceOptionCombination[]
+  priceFabrics?: PriceFabricVO[]
   fabricRules?: FabricPriceRule[]
   feeRules?: ExtraFeeRule[]
   issues?: PriceValidationIssue[]
+  formulaMaterials?: ProductFormulaMaterialVO[]
+  formulaOptions?: ProductFormulaOptionVO[]
+  formulaOptionValues?: ProductFormulaOptionValueVO[]
+  formulaOptionMaterials?: ProductFormulaOptionMaterialVO[]
   materialGroupCounts?: Record<string, number>
 }

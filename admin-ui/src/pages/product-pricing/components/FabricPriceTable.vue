@@ -17,72 +17,89 @@
         </el-button>
       </div>
     </div>
-    <PriceFormulaEditor
-      :model-value="formula"
-      :label="t('productCenter.pricing.fabricFormula')"
-      :rows="1"
-      :disabled="!editable"
-      @update:model-value="$emit('formula-change', $event)"
-    />
-    <el-table :data="rows" border class="price-rule-table" height="460">
+    <el-table :data="rows" border class="price-rule-table" height="520">
       <el-table-column type="index" :label="t('common.index')" width="58" align="center" />
-      <el-table-column prop="materialCode" :label="t('productCenter.formulaSetup.materialCode')" width="128" />
-      <el-table-column prop="materialNameCn" :label="t('productCenter.formulaSetup.materialName')" min-width="260" show-overflow-tooltip />
-      <el-table-column prop="unitCode" :label="t('productCenter.common.unitCode')" width="76" align="center" />
-      <el-table-column prop="optionCombinationName" :label="t('productCenter.pricing.optionCombination')" min-width="180" show-overflow-tooltip />
-      <el-table-column :label="t('productCenter.pricing.unitPrice')" width="130" align="right">
+      <el-table-column prop="materialCode" :label="t('productCenter.formulaSetup.materialCode')" width="132" />
+      <el-table-column prop="materialNameCn" :label="t('productCenter.formulaSetup.materialName')" min-width="360" show-overflow-tooltip />
+      <el-table-column prop="unitCode" :label="t('productCenter.common.unitCode')" width="86" align="center" />
+      <el-table-column :label="t('productCenter.pricing.priceSummary')" min-width="420">
         <template #default="{ row }">
-          <span>{{ money(row.basePrice) }}</span>
+          <div class="price-summary">
+            <div v-for="item in summaryRows(row)" :key="item.key" class="price-summary__line">
+              <div class="price-summary__meta">
+                <el-tag size="small" effect="plain" :type="item.defaultRule ? 'primary' : 'success'">{{ item.label }}</el-tag>
+                <span>{{ item.unitPriceText }}</span>
+              </div>
+              <div class="price-summary__formula">{{ item.formulaText }}</div>
+            </div>
+          </div>
         </template>
       </el-table-column>
-      <el-table-column prop="areaFormula" :label="t('productCenter.pricing.fabricFormula')" min-width="320" show-overflow-tooltip />
-      <el-table-column :label="t('common.operate')" width="112" align="center" fixed="right">
+      <el-table-column :label="t('productCenter.pricing.ruleCount')" width="112" align="center">
+        <template #default="{ row }">{{ row.ruleCount || 0 }}</template>
+      </el-table-column>
+      <el-table-column :label="t('productCenter.pricing.defaultRule')" width="112" align="center">
         <template #default="{ row }">
-          <el-button v-if="editable" v-hasPermi="['product:pricing:edit']" link type="primary" @click="openRule(row)">
-            {{ t('productCenter.pricing.priceSetting') }}
+          <el-tag :type="row.defaultRuleFlag ? 'success' : 'danger'" effect="plain">
+            {{ row.defaultRuleFlag ? t('common.yes') : t('common.no') }}
+          </el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column :label="t('common.operate')" width="128" align="center" fixed="right">
+        <template #default="{ row }">
+          <el-button v-hasPermi="['product:pricing:edit']" link type="primary" @click="$emit('open-rules', row)">
+            {{ t('productCenter.pricing.priceRuleSetting') }}
           </el-button>
         </template>
       </el-table-column>
     </el-table>
-    <FabricPriceRuleDialog
-      v-model="dialogOpen"
-      :row="activeRow"
-      :formula="formula"
-      @save="$emit('row-change', $event)"
-    />
   </section>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
-import type { FabricPriceRule } from '@/api/product-pricing/types'
-import { money } from '../utils/pricingDisplay'
-import PriceFormulaEditor from './PriceFormulaEditor.vue'
-import FabricPriceRuleDialog from './FabricPriceRuleDialog.vue'
-
-defineProps<{
-  rows: FabricPriceRule[]
-  formula: string
-  editable?: boolean
-}>()
+import type { FabricPriceRule, PriceFabricVO } from '@/api/product-pricing/types'
+import { displayFabricPriceFormula } from '../utils/pricingDisplay'
 
 defineEmits<{
   generate: [overwrite: boolean]
   batch: []
-  'row-change': [row: FabricPriceRule]
-  'formula-change': [value: string]
+  'open-rules': [row: PriceFabricVO]
 }>()
 
 const localeStore = useLocaleStore()
 const t = (key: string) => getMessage(key, localeStore.language)
-const dialogOpen = ref(false)
-const activeRow = ref<FabricPriceRule>()
 
-function openRule(row: FabricPriceRule) {
-  activeRow.value = row
-  dialogOpen.value = true
+const props = defineProps<{
+  rows: PriceFabricVO[]
+  rules: FabricPriceRule[]
+  editable?: boolean
+}>()
+
+function summaryRows(row: PriceFabricVO) {
+  const rowRules = props.rules.filter(rule => rule.priceFabricId === row.priceFabricId)
+  if (!rowRules.length) {
+    return [{
+      key: 'missing',
+      label: t('productCenter.pricing.unset'),
+      unitPriceText: '-',
+      formulaText: '-',
+      defaultRule: false
+    }]
+  }
+  return rowRules.map((rule, index) => ({
+    key: String(rule.fabricRuleId || `${rule.conditionKey || 'rule'}-${index}`),
+    label: rule.defaultRuleFlag ? t('productCenter.pricing.defaultRule') : (rule.conditionText || rule.conditionExpression || t('productCenter.pricing.conditionRule')),
+    unitPriceText: `${t('productCenter.pricing.unitPrice')} ${formatMoney(rule.unitPrice)}`,
+    formulaText: displayFabricPriceFormula(rule.priceFormula, rule.unitPrice),
+    defaultRule: Boolean(rule.defaultRuleFlag)
+  }))
+}
+
+function formatMoney(value?: number) {
+  const numeric = Number(value)
+  return Number.isFinite(numeric) ? numeric.toFixed(2) : '-'
 }
 </script>
 
@@ -125,12 +142,38 @@ function openRule(row: FabricPriceRule) {
   gap: 8px;
 }
 
-.price-rule-table {
-  margin-top: 12px;
-}
-
 .price-rule-table :deep(.el-table__header th) {
   background: #f7f9fc;
   color: #344054;
+}
+
+.price-summary {
+  display: grid;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.price-summary__line {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.price-summary__meta {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 8px;
+}
+
+.price-summary__meta span {
+  color: #344054;
+}
+
+.price-summary__formula {
+  color: #344054;
+  line-height: 1.45;
+  white-space: normal;
+  word-break: break-word;
 }
 </style>

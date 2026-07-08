@@ -49,3 +49,12 @@ export function money(value?: number | string) {
 }
 
 export const DEFAULT_FABRIC_PRICE_FORMULA = 'unitPrice * MAX(drop * 2.54 * width * 2.54 / 10000, 1)'
+export const DEFAULT_FABRIC_AREA_FORMULA = 'MAX(drop * 2.54 * width * 2.54 / 10000, 1)'
+
+export function fabricPriceFormulaForUnitPrice(unitPrice?: number | string, areaFormula = DEFAULT_FABRIC_AREA_FORMULA) {
+  return `${money(unitPrice)} * ${areaFormula}`
+}
+
+export function displayFabricPriceFormula(formula?: string, unitPrice?: number | string) {
+  return String(formula || DEFAULT_FABRIC_PRICE_FORMULA).replace(/\bunitPrice\b/g, money(unitPrice))
+}

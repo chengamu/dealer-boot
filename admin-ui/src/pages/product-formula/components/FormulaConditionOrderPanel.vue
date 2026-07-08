@@ -24,9 +24,9 @@ const emit = defineEmits<{
 
 const fields = computed<SelectOption[]>(() => [
   { value: 'orderWidthIn', label: props.t('productCenter.formulaSetup.orderWidthIn') },
-  { value: 'orderLengthIn', label: props.t('productCenter.formulaSetup.orderLengthIn') },
+  { value: 'orderHeightIn', label: props.t('productCenter.formulaSetup.orderHeightIn') },
   { value: 'orderWidthCm', label: props.t('productCenter.formulaSetup.orderWidthCm') },
-  { value: 'orderLengthCm', label: props.t('productCenter.formulaSetup.orderLengthCm') },
+  { value: 'orderHeightCm', label: props.t('productCenter.formulaSetup.orderHeightCm') },
   { value: 'orderAreaM2', label: props.t('productCenter.formulaSetup.orderAreaM2') }
 ])
 const field = ref('orderWidthIn')

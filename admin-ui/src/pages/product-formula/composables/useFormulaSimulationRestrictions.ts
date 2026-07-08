@@ -60,15 +60,15 @@ export function useFormulaSimulationRestrictions(options: SimulationRestrictionO
 
   function context(): Record<string, number | boolean | string> {
     const widthIn = Number(options.form.orderWidth || 0)
-    const lengthIn = Number(options.form.orderHeight || 0)
+    const heightIn = Number(options.form.orderHeight || 0)
     const widthCm = widthIn * 2.54
-    const lengthCm = lengthIn * 2.54
+    const heightCm = heightIn * 2.54
     const ctx: Record<string, number | boolean | string> = {
       orderWidthIn: widthIn,
-      orderLengthIn: lengthIn,
+      orderHeightIn: heightIn,
       orderWidthCm: widthCm,
-      orderLengthCm: lengthCm,
-      orderAreaM2: widthCm * lengthCm / 10000,
+      orderHeightCm: heightCm,
+      orderAreaM2: widthCm * heightCm / 10000,
       productType: options.formula.value.productTypeCode || '',
       fabric: options.selectedOptionValues.FABRIC || '',
       optionValue: ''
@@ -130,7 +130,7 @@ function putIfEmpty(ctx: Record<string, number | boolean | string>, key: string,
 
 function restrictionMatched(row: ProductFormulaRestrictionVO, ctx: Record<string, number | boolean | string>) {
   if (row.conditionType === 'WIDTH') return compareNumber(ctx.orderWidthIn, row.conditionValueNumber, row.conditionOperator)
-  if (row.conditionType === 'HEIGHT') return compareNumber(ctx.orderLengthIn, row.conditionValueNumber, row.conditionOperator)
+  if (row.conditionType === 'HEIGHT') return compareNumber(ctx.orderHeightIn, row.conditionValueNumber, row.conditionOperator)
   if (row.conditionType === 'OPTION_VALUE') return compareString(ctx[`option_${row.conditionOptionCode}`], row.conditionValueCode, row.conditionOperator)
   return evaluateCondition(row.conditionExpression || row.conditionText, ctx)
 }

@@ -49,10 +49,11 @@ public class ProductPriceSettingController extends BaseController {
 
     @SaCheckPermission("product:pricing:edit")
     @Log(title = "保存面料价格规则", businessType = BusinessType.UPDATE)
-    @PutMapping("/{saleProductId}/fabric-rules")
+    @PutMapping("/{saleProductId}/fabrics/{priceFabricId}/rules")
     @Operation(summary = "保存面料价格规则")
-    public R<Void> saveFabricRules(@PathVariable Long saleProductId, @RequestBody List<ProductPriceFabricRuleBo> rules) {
-        return toAjax(priceSettingService.saveFabricRules(saleProductId, rules));
+    public R<Void> saveFabricRules(@PathVariable Long saleProductId, @PathVariable Long priceFabricId,
+                                   @RequestBody List<ProductPriceFabricRuleBo> rules) {
+        return toAjax(priceSettingService.saveFabricRules(saleProductId, priceFabricId, rules));
     }
 
     @SaCheckPermission("product:pricing:edit")

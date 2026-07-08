@@ -28,13 +28,13 @@ export interface ExpressionValidationResult {
   sampleValue?: number | boolean | string
 }
 
-const FORMULA_VARIABLES = new Set(['orderWidthIn', 'orderLengthIn', 'orderWidthCm', 'orderLengthCm', 'orderAreaM2'])
-const CONDITION_VARIABLES = new Set(['orderWidthIn', 'orderLengthIn', 'orderWidthCm', 'orderLengthCm', 'orderAreaM2', 'store', 'fabric', 'productType', 'optionValue'])
+const FORMULA_VARIABLES = new Set(['orderWidthIn', 'orderHeightIn', 'orderWidthCm', 'orderHeightCm', 'orderAreaM2'])
+const CONDITION_VARIABLES = new Set(['orderWidthIn', 'orderHeightIn', 'orderWidthCm', 'orderHeightCm', 'orderAreaM2', 'store', 'fabric', 'productType', 'optionValue'])
 const SAMPLE_CONTEXT: Record<string, number | string> = {
   orderWidthIn: 12,
-  orderLengthIn: 20,
+  orderHeightIn: 20,
   orderWidthCm: 30.48,
-  orderLengthCm: 50.8,
+  orderHeightCm: 50.8,
   orderAreaM2: 0.1548,
   store: 'SHOP_A',
   fabric: 'XLF241801',

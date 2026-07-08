@@ -102,6 +102,30 @@ public class ProductFormulaController extends BaseController {
         return toAjax(formulaService.stop(id));
     }
 
+    @SaCheckPermission("product:formula:edit")
+    @Log(title = "开始配方修订", businessType = BusinessType.UPDATE)
+    @PutMapping("/{id}/start-revision")
+    @Operation(summary = "开始配方修订")
+    public R<Void> startRevision(@PathVariable Long id) {
+        return toAjax(formulaService.startRevision(id));
+    }
+
+    @SaCheckPermission("product:formula:edit")
+    @Log(title = "撤回配方版本", businessType = BusinessType.UPDATE)
+    @PutMapping("/{id}/withdraw")
+    @Operation(summary = "撤回配方版本")
+    public R<Void> withdraw(@PathVariable Long id) {
+        return toAjax(formulaService.withdraw(id));
+    }
+
+    @SaCheckPermission("product:formula:add")
+    @Log(title = "复制配方", businessType = BusinessType.INSERT)
+    @PostMapping("/{id}/copy")
+    @Operation(summary = "复制配方")
+    public R<ProductFormulaVo> copy(@PathVariable Long id, @Validated @RequestBody ProductFormulaBo bo) {
+        return R.ok(formulaService.copyFormula(id, bo));
+    }
+
     @SaCheckPermission("product:formula:setup")
     @Log(title = "校验配方", businessType = BusinessType.UPDATE)
     @PutMapping("/{id}/validate")
@@ -115,6 +139,13 @@ public class ProductFormulaController extends BaseController {
     @Operation(summary = "查询配方版本")
     public R<List<ProductFormulaVersionVo>> versions(@PathVariable Long id) {
         return R.ok(formulaService.queryVersions(id));
+    }
+
+    @SaCheckPermission("product:formula:query")
+    @GetMapping("/{id}/versions/history")
+    @Operation(summary = "查询配方版本历史")
+    public R<List<ProductFormulaVersionVo>> versionHistory(@PathVariable Long id) {
+        return R.ok(formulaService.queryVersionHistory(id));
     }
 
     @SaCheckPermission("product:formula:query")

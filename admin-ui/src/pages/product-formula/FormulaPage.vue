@@ -125,11 +125,18 @@ const formulaConfig = computed<ProductGridConfig>(() => ({
   ],
   rowActions: [
     {
+      labelKey: 'productCenter.formula.actions.workbench',
+      icon: 'Operation',
+      type: 'primary',
+      permission: 'product:formula:setup',
+      primary: true,
+      handler: (row) => { void router.push({ name: 'ProductFormulaWorkbench', query: { formulaId: String(row.formulaId || '') } }) }
+    },
+    {
       labelKey: 'productCenter.formula.actions.simulation',
       icon: 'DataAnalysis',
       type: 'primary',
       permission: 'product:formula:setup',
-      primary: true,
       visible: (row) => simulationFormulaStatuses.has(String(row.status || '')),
       handler: (row) => { void router.push({ name: 'ProductFormulaSimulation', query: { formulaId: String(row.formulaId || '') } }) }
     },

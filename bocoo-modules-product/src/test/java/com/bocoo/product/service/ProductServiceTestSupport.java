@@ -35,6 +35,7 @@ import com.bocoo.product.domain.entity.ProductMaterialTypeGroup;
 import com.bocoo.product.domain.entity.ProductManufacturer;
 import com.bocoo.product.domain.entity.ProductMediaAsset;
 import com.bocoo.product.domain.entity.ProductMediaBinding;
+import com.bocoo.product.domain.entity.ProductPriceFabric;
 import com.bocoo.product.domain.entity.ProductPriceFabricRule;
 import com.bocoo.product.domain.entity.ProductPriceFeeRule;
 import com.bocoo.product.domain.entity.ProductPriceSetting;
@@ -74,6 +75,7 @@ final class ProductServiceTestSupport {
         prepareTableInfo(ProductManufacturer.class);
         prepareTableInfo(ProductMediaAsset.class);
         prepareTableInfo(ProductMediaBinding.class);
+        prepareTableInfo(ProductPriceFabric.class);
         prepareTableInfo(ProductPriceFabricRule.class);
         prepareTableInfo(ProductPriceFeeRule.class);
         prepareTableInfo(ProductPriceSetting.class);

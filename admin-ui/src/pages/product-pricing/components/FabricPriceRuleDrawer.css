@@ -1,0 +1,73 @@
+.fabric-rule-editor {
+  display: grid;
+  gap: 12px;
+}
+
+.fabric-rule-editor__summary,
+.fabric-rule-editor__toolbar,
+.fabric-rule-editor__actions {
+  display: flex;
+  align-items: center;
+}
+
+.fabric-rule-editor__summary {
+  gap: 10px;
+  padding: 12px 14px;
+  background: #f8fbff;
+  border: 1px solid #e5ecf6;
+  border-radius: 8px;
+}
+
+.fabric-rule-editor__toolbar {
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.fabric-rule-editor__summary strong,
+.fabric-rule-editor__toolbar h3 {
+  margin: 0 0 4px;
+  color: #1f2937;
+  font-size: 15px;
+}
+
+.fabric-rule-editor__toolbar p {
+  margin: 0;
+  color: #667085;
+  font-size: 12px;
+}
+
+.fabric-rule-editor__actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.fabric-rule-table,
+.rule-cell {
+  overflow: hidden;
+}
+
+.fabric-rule-table {
+  border-radius: 8px;
+}
+
+.fabric-rule-table :deep(.el-table__header th) {
+  background: #f7faff !important;
+  color: #1f2937;
+  font-weight: 700;
+}
+
+.rule-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rule-cell :deep(.el-input),
+.rule-cell :deep(.el-select) {
+  flex: 1;
+}
+
+.rule-cell--condition :deep(.el-select) {
+  flex: 0 0 124px;
+}

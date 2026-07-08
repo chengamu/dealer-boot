@@ -3,7 +3,7 @@
     :model-value="modelValue"
     :title="editorTitle"
     width="1280px"
-    class="formula-expression-dialog"
+    :class="['formula-expression-dialog', { 'formula-expression-dialog--condition': !isFormulaTarget }]"
     append-to-body
     :close-on-press-escape="false"
     :close-on-click-modal="false"
@@ -211,7 +211,7 @@ function insertVariable(row: ProductFormulaVariableVO) {
 }
 
 function formulaVariableGroups() {
-  const names = new Set(['orderWidthIn', 'orderLengthIn', 'orderWidthCm', 'orderLengthCm', 'orderAreaM2'])
+  const names = new Set(['orderWidthIn', 'orderHeightIn', 'orderWidthCm', 'orderHeightCm', 'orderAreaM2'])
   return [{ title: t('productCenter.formulaSetup.orderVariables'), variables: formulaVariables.filter((item) => names.has(item.name)).map(toInsertVariable) }]
 }
 

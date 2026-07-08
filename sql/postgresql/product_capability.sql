@@ -372,8 +372,8 @@ COMMENT ON COLUMN pc_formula_usage_rule.length_formula IS '长度公式内部表
 COMMENT ON COLUMN pc_formula_usage_rule.length_formula_text IS '长度公式展示文本';
 COMMENT ON COLUMN pc_formula_usage_rule.width_formula IS '宽度公式内部表达式';
 COMMENT ON COLUMN pc_formula_usage_rule.width_formula_text IS '宽度公式展示文本';
-COMMENT ON COLUMN pc_formula_usage_rule.height_formula IS '高度或厚度公式内部表达式';
-COMMENT ON COLUMN pc_formula_usage_rule.height_formula_text IS '高度或厚度公式展示文本';
+COMMENT ON COLUMN pc_formula_usage_rule.height_formula IS '高度公式内部表达式';
+COMMENT ON COLUMN pc_formula_usage_rule.height_formula_text IS '高度公式展示文本';
 COMMENT ON COLUMN pc_formula_usage_rule.weight_formula IS '重量公式内部表达式';
 COMMENT ON COLUMN pc_formula_usage_rule.weight_formula_text IS '重量公式展示文本';
 COMMENT ON COLUMN pc_formula_usage_rule.usage_formula_text IS '用量公式展示文本，保留技术科输入口径';
@@ -796,8 +796,8 @@ COMMENT ON COLUMN pc_price_setting.validation_time IS '价格校验时间，UTC 
 CREATE INDEX IF NOT EXISTS idx_pc_price_setting_sale_product ON pc_price_setting (tenant_id, sale_product_id) WHERE del_flag = '0';
 CREATE INDEX IF NOT EXISTS idx_pc_price_setting_version ON pc_price_setting (tenant_id, formula_version_id, status) WHERE del_flag = '0';
 
-CREATE TABLE IF NOT EXISTS pc_price_fabric_rule (
-    fabric_rule_id bigint PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS pc_price_fabric (
+    price_fabric_id bigint PRIMARY KEY,
     tenant_id bigint NOT NULL DEFAULT 1 CHECK (tenant_id <> 0),
     price_setting_id bigint NOT NULL,
     sale_product_id bigint NOT NULL,
@@ -806,13 +806,51 @@ CREATE TABLE IF NOT EXISTS pc_price_fabric_rule (
     material_code varchar(80),
     material_name_cn varchar(200),
     unit_code varchar(40),
-    option_combination_key varchar(300),
-    option_combination_name varchar(300),
+    status varchar(30) NOT NULL DEFAULT 'ENABLED',
+    sort_order int NOT NULL DEFAULT 0,
+    del_flag varchar(1) NOT NULL DEFAULT '0',
+    remark varchar(500),
+    create_by_id bigint,
+    create_by varchar(64),
+    create_time timestamptz,
+    update_by varchar(64),
+    update_time timestamptz
+);
+
+ALTER TABLE IF EXISTS pc_price_fabric
+    ADD COLUMN IF NOT EXISTS tenant_id bigint NOT NULL DEFAULT 1 CHECK (tenant_id <> 0),
+    ADD COLUMN IF NOT EXISTS price_setting_id bigint,
+    ADD COLUMN IF NOT EXISTS sale_product_id bigint,
+    ADD COLUMN IF NOT EXISTS formula_version_id bigint,
+    ADD COLUMN IF NOT EXISTS material_id bigint,
+    ADD COLUMN IF NOT EXISTS material_code varchar(80),
+    ADD COLUMN IF NOT EXISTS material_name_cn varchar(200),
+    ADD COLUMN IF NOT EXISTS unit_code varchar(40),
+    ADD COLUMN IF NOT EXISTS status varchar(30) NOT NULL DEFAULT 'ENABLED',
+    ADD COLUMN IF NOT EXISTS sort_order int NOT NULL DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS del_flag varchar(1) NOT NULL DEFAULT '0',
+    ADD COLUMN IF NOT EXISTS remark varchar(500);
+
+COMMENT ON TABLE pc_price_fabric IS '价格设置面料清单，按可售产品绑定的配方版本快照同步生成';
+COMMENT ON COLUMN pc_price_fabric.material_code IS '配方版本快照中的面料物料编码';
+CREATE INDEX IF NOT EXISTS idx_pc_price_fabric_setting ON pc_price_fabric (tenant_id, price_setting_id, sort_order) WHERE del_flag = '0';
+CREATE INDEX IF NOT EXISTS idx_pc_price_fabric_material ON pc_price_fabric (tenant_id, price_setting_id, material_code) WHERE del_flag = '0';
+
+CREATE TABLE IF NOT EXISTS pc_price_fabric_rule (
+    fabric_rule_id bigint PRIMARY KEY,
+    tenant_id bigint NOT NULL DEFAULT 1 CHECK (tenant_id <> 0),
+    price_fabric_id bigint,
+    price_setting_id bigint NOT NULL,
+    sale_product_id bigint NOT NULL,
+    formula_version_id bigint NOT NULL,
+    condition_type varchar(40) NOT NULL DEFAULT 'DEFAULT',
+    condition_expression text,
+    condition_text varchar(500),
+    condition_key varchar(500),
     price_mode varchar(40) NOT NULL DEFAULT 'FORMULA',
-    base_price numeric(18,4),
-    area_formula text,
-    min_bill_area numeric(18,4),
-    loss_rate numeric(8,4),
+    unit_price numeric(18,4),
+    price_formula text,
+    default_rule_flag boolean NOT NULL DEFAULT false,
     status varchar(30) NOT NULL DEFAULT 'ENABLED',
     sort_order int NOT NULL DEFAULT 0,
     del_flag varchar(1) NOT NULL DEFAULT '0',
@@ -826,20 +864,18 @@ CREATE TABLE IF NOT EXISTS pc_price_fabric_rule (
 
 ALTER TABLE IF EXISTS pc_price_fabric_rule
     ADD COLUMN IF NOT EXISTS tenant_id bigint NOT NULL DEFAULT 1 CHECK (tenant_id <> 0),
+    ADD COLUMN IF NOT EXISTS price_fabric_id bigint,
     ADD COLUMN IF NOT EXISTS price_setting_id bigint,
     ADD COLUMN IF NOT EXISTS sale_product_id bigint,
     ADD COLUMN IF NOT EXISTS formula_version_id bigint,
-    ADD COLUMN IF NOT EXISTS material_id bigint,
-    ADD COLUMN IF NOT EXISTS material_code varchar(80),
-    ADD COLUMN IF NOT EXISTS material_name_cn varchar(200),
-    ADD COLUMN IF NOT EXISTS unit_code varchar(40),
-    ADD COLUMN IF NOT EXISTS option_combination_key varchar(300),
-    ADD COLUMN IF NOT EXISTS option_combination_name varchar(300),
+    ADD COLUMN IF NOT EXISTS condition_type varchar(40) NOT NULL DEFAULT 'DEFAULT',
+    ADD COLUMN IF NOT EXISTS condition_expression text,
+    ADD COLUMN IF NOT EXISTS condition_text varchar(500),
+    ADD COLUMN IF NOT EXISTS condition_key varchar(500),
     ADD COLUMN IF NOT EXISTS price_mode varchar(40) NOT NULL DEFAULT 'FORMULA',
-    ADD COLUMN IF NOT EXISTS base_price numeric(18,4),
-    ADD COLUMN IF NOT EXISTS area_formula text,
-    ADD COLUMN IF NOT EXISTS min_bill_area numeric(18,4),
-    ADD COLUMN IF NOT EXISTS loss_rate numeric(8,4),
+    ADD COLUMN IF NOT EXISTS unit_price numeric(18,4),
+    ADD COLUMN IF NOT EXISTS price_formula text,
+    ADD COLUMN IF NOT EXISTS default_rule_flag boolean NOT NULL DEFAULT false,
     ADD COLUMN IF NOT EXISTS status varchar(30) NOT NULL DEFAULT 'ENABLED',
     ADD COLUMN IF NOT EXISTS sort_order int NOT NULL DEFAULT 0,
     ADD COLUMN IF NOT EXISTS del_flag varchar(1) NOT NULL DEFAULT '0',
@@ -847,14 +883,134 @@ ALTER TABLE IF EXISTS pc_price_fabric_rule
 ALTER TABLE IF EXISTS pc_price_fabric_rule
     ALTER COLUMN price_mode SET DEFAULT 'FORMULA';
 
-COMMENT ON TABLE pc_price_fabric_rule IS '面料价格矩阵表，按配方版本面料和选项组合维护单价与价格公式';
-COMMENT ON COLUMN pc_price_fabric_rule.option_combination_key IS '选项组合键，例如 STYLE=ROMAN;CONTROL=MOTORIZED';
-COMMENT ON COLUMN pc_price_fabric_rule.option_combination_name IS '选项组合展示名称，例如 柔式电动';
+DO $$
+DECLARE
+    has_material_code boolean;
+    material_id_expr text := 'NULL::bigint';
+    material_name_expr text := 'NULL::varchar';
+    unit_code_expr text := 'NULL::varchar';
+BEGIN
+    SELECT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'pc_price_fabric_rule' AND column_name = 'material_code'
+    ) INTO has_material_code;
+
+    IF NOT has_material_code THEN
+        RETURN;
+    END IF;
+
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'pc_price_fabric_rule' AND column_name = 'material_id'
+    ) THEN
+        material_id_expr := 'material_id';
+    END IF;
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'pc_price_fabric_rule' AND column_name = 'material_name_cn'
+    ) THEN
+        material_name_expr := 'material_name_cn';
+    END IF;
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'pc_price_fabric_rule' AND column_name = 'unit_code'
+    ) THEN
+        unit_code_expr := 'unit_code';
+    END IF;
+
+    EXECUTE format($sql$
+        WITH source_rules AS (
+            SELECT
+                COALESCE(tenant_id, 1) AS tenant_id,
+                price_setting_id,
+                sale_product_id,
+                formula_version_id,
+                %1$s AS material_id,
+                NULLIF(material_code, '') AS material_code,
+                %2$s AS material_name_cn,
+                %3$s AS unit_code,
+                MIN(sort_order) AS sort_order
+            FROM pc_price_fabric_rule
+            WHERE price_fabric_id IS NULL
+              AND price_setting_id IS NOT NULL
+              AND sale_product_id IS NOT NULL
+              AND formula_version_id IS NOT NULL
+              AND material_code IS NOT NULL
+              AND material_code <> ''
+              AND COALESCE(del_flag, '0') = '0'
+            GROUP BY COALESCE(tenant_id, 1), price_setting_id, sale_product_id,
+                formula_version_id, %1$s, material_code, %2$s, %3$s
+        ),
+        prepared AS (
+            SELECT
+                abs(('x' || substr(md5(concat_ws('|', tenant_id, price_setting_id, sale_product_id,
+                    formula_version_id, material_code)), 1, 15))::bit(60)::bigint)
+                    + 1000000000000000000 AS price_fabric_id,
+                tenant_id,
+                price_setting_id,
+                sale_product_id,
+                formula_version_id,
+                material_id,
+                material_code,
+                material_name_cn,
+                unit_code,
+                COALESCE(sort_order, 0) AS sort_order
+            FROM source_rules
+        )
+        INSERT INTO pc_price_fabric (
+            price_fabric_id, tenant_id, price_setting_id, sale_product_id, formula_version_id,
+            material_id, material_code, material_name_cn, unit_code, status, sort_order, del_flag
+        )
+        SELECT
+            price_fabric_id, tenant_id, price_setting_id, sale_product_id, formula_version_id,
+            material_id, material_code, material_name_cn, unit_code, 'ENABLED', sort_order, '0'
+        FROM prepared p
+        WHERE NOT EXISTS (
+            SELECT 1 FROM pc_price_fabric f
+            WHERE f.price_setting_id = p.price_setting_id
+              AND f.material_code = p.material_code
+              AND COALESCE(f.del_flag, '0') = '0'
+        )
+        ON CONFLICT (price_fabric_id) DO NOTHING;
+
+        UPDATE pc_price_fabric_rule r
+        SET price_fabric_id = f.price_fabric_id
+        FROM pc_price_fabric f
+        WHERE r.price_fabric_id IS NULL
+          AND r.price_setting_id = f.price_setting_id
+          AND r.material_code = f.material_code
+          AND COALESCE(r.del_flag, '0') = '0'
+          AND COALESCE(f.del_flag, '0') = '0';
+    $sql$, material_id_expr, material_name_expr, unit_code_expr);
+END $$;
+
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'pc_price_fabric_rule' AND column_name = 'base_price'
+    ) THEN
+        EXECUTE 'UPDATE pc_price_fabric_rule
+            SET condition_type = COALESCE(condition_type, ''DEFAULT''),
+                condition_expression = COALESCE(condition_expression, ''DEFAULT''),
+                condition_text = COALESCE(condition_text, ''默认规则''),
+                condition_key = COALESCE(condition_key, ''DEFAULT''),
+                unit_price = COALESCE(unit_price, base_price, 0),
+                price_formula = COALESCE(price_formula, area_formula),
+                default_rule_flag = COALESCE(default_rule_flag, true)
+            WHERE price_fabric_id IS NOT NULL';
+    END IF;
+END $$;
+
+DELETE FROM pc_price_fabric_rule WHERE price_fabric_id IS NULL;
+
+COMMENT ON TABLE pc_price_fabric_rule IS '面料条件价格规则表，同一面料可按尺寸和配方选项维护多条价格规则';
+COMMENT ON COLUMN pc_price_fabric_rule.condition_expression IS '价格规则生效条件，默认规则为 DEFAULT';
 COMMENT ON COLUMN pc_price_fabric_rule.price_mode IS '计价方式：FORMULA';
-COMMENT ON COLUMN pc_price_fabric_rule.area_formula IS '价格公式文本，使用 unitPrice、width、drop 等变量';
+COMMENT ON COLUMN pc_price_fabric_rule.price_formula IS '价格公式文本，使用 unitPrice、width、drop、MAX/MIN/ROUND 等变量';
 CREATE INDEX IF NOT EXISTS idx_pc_price_fabric_rule_setting ON pc_price_fabric_rule (tenant_id, price_setting_id, sort_order) WHERE del_flag = '0';
-CREATE INDEX IF NOT EXISTS idx_pc_price_fabric_rule_material ON pc_price_fabric_rule (tenant_id, material_code, status) WHERE del_flag = '0';
-CREATE INDEX IF NOT EXISTS idx_pc_price_fabric_rule_combo ON pc_price_fabric_rule (tenant_id, price_setting_id, material_code, option_combination_key) WHERE del_flag = '0';
+CREATE INDEX IF NOT EXISTS idx_pc_price_fabric_rule_fabric ON pc_price_fabric_rule (tenant_id, price_fabric_id, sort_order) WHERE del_flag = '0';
+CREATE INDEX IF NOT EXISTS idx_pc_price_fabric_rule_condition ON pc_price_fabric_rule (tenant_id, price_fabric_id, condition_key) WHERE del_flag = '0';
 
 CREATE TABLE IF NOT EXISTS pc_price_fee_rule (
     fee_rule_id bigint PRIMARY KEY,

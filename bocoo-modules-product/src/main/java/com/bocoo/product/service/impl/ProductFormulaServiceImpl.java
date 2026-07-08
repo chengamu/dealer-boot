@@ -43,6 +43,7 @@ public class ProductFormulaServiceImpl extends ProductServiceSupport implements 
     private final ProductChangeLogService changeLogService;
     private final ProductFormulaDraftNormalizer draftNormalizer;
     private final ProductFormulaReviewLifecycle reviewLifecycle;
+    private final ProductFormulaRevisionLifecycle revisionLifecycle;
     private final ProductFormulaReviewQueryService reviewQueryService;
     private final ProductFormulaReviewRecordQueryService reviewRecordQueryService;
 
@@ -181,6 +182,24 @@ public class ProductFormulaServiceImpl extends ProductServiceSupport implements 
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    public Boolean startRevision(Long id) {
+        return revisionLifecycle.startRevision(id);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Boolean withdraw(Long id) {
+        return revisionLifecycle.withdraw(id);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public ProductFormulaVo copyFormula(Long id, ProductFormulaBo bo) {
+        return revisionLifecycle.copyFormula(id, bo);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
     public Boolean validateFormula(Long id) {
         return setupService.validateSetup(id);
     }
@@ -188,6 +207,11 @@ public class ProductFormulaServiceImpl extends ProductServiceSupport implements 
     @Override
     public List<ProductFormulaVersionVo> queryVersions(Long formulaId) {
         return reviewLifecycle.queryVersions(formulaId);
+    }
+
+    @Override
+    public List<ProductFormulaVersionVo> queryVersionHistory(Long formulaId) {
+        return revisionLifecycle.queryVersionHistory(formulaId);
     }
 
     @Override

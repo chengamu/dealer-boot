@@ -17,7 +17,7 @@
     <el-empty v-else :description="t('productCenter.pricing.noSaleProduct')" />
     <template v-if="currentProduct.saleProductId">
       <PriceSetupOverview
-        :fabric-rule-count="fabricRows.length"
+        :fabric-rule-count="priceFabrics.length"
         :fee-rule-count="feeRows.length"
         :issue-count="issues.length"
         :material-group-counts="setup.materialGroupCounts"
@@ -30,13 +30,12 @@
         :closable="false"
       />
       <FabricPriceTable
-        :rows="fabricRows"
-        :formula="fabricFormula"
+        :rows="priceFabrics"
+        :rules="fabricRules"
         :editable="editable"
         @generate="generateFabricPrices"
         @batch="batchOpen = true"
-        @row-change="updateFabricRule"
-        @formula-change="updateFabricFormula"
+        @open-rules="openFabricRules"
       />
       <div class="price-setting-page__lower">
         <ShippingFormulaPanel
@@ -49,10 +48,19 @@
     </template>
     <FabricPriceBatchDialog
       v-model="batchOpen"
-      :fabrics="fabricCandidates"
-      :columns="fabricColumns"
-      :formula="fabricFormula"
+      :fabrics="priceFabrics"
+      :options="setup.formulaOptions || []"
+      :option-values="setup.formulaOptionValues || []"
       @save="applyBatchFabricPrice"
+    />
+    <FabricPriceRuleDrawer
+      v-model="ruleDrawerOpen"
+      :fabric="activeFabric"
+      :rules="activeFabricRules"
+      :editable="editable"
+      :options="setup.formulaOptions || []"
+      :option-values="setup.formulaOptionValues || []"
+      @save="saveFabricRules"
     />
   </div>
 </template>
@@ -66,8 +74,7 @@ import { useLocaleStore } from '@/stores/locale'
 import type {
   ExtraFeeRule,
   FabricPriceRule,
-  PriceFabricCandidate,
-  PriceOptionCombination,
+  PriceFabricVO,
   PriceSetupVO,
   PriceValidationIssue,
   SaleProductVO
@@ -78,9 +85,10 @@ import PriceSetupHeader from './components/PriceSetupHeader.vue'
 import PriceSetupOverview from './components/PriceSetupOverview.vue'
 import FabricPriceTable from './components/FabricPriceTable.vue'
 import FabricPriceBatchDialog from './components/FabricPriceBatchDialog.vue'
+import FabricPriceRuleDrawer from './components/FabricPriceRuleDrawer.vue'
 import ShippingFormulaPanel from './components/ShippingFormulaPanel.vue'
 import PriceIssuePanel from './components/PriceIssuePanel.vue'
-import { DEFAULT_FABRIC_PRICE_FORMULA } from './utils/pricingDisplay'
+import { fabricPriceFormulaForUnitPrice } from './utils/pricingDisplay'
 
 const route = useRoute()
 const router = useRouter()
@@ -90,21 +98,20 @@ const t = (key: string) => getMessage(key, localeStore.language)
 const products = ref<SaleProductVO[]>([])
 const selectedProductId = ref(toIdString(route.query.saleProductId))
 const setup = ref<PriceSetupVO>({})
-const fabricRows = ref<FabricPriceRule[]>([])
+const priceFabrics = ref<PriceFabricVO[]>([])
+const fabricRules = ref<FabricPriceRule[]>([])
 const feeRows = ref<ExtraFeeRule[]>([])
 const issues = ref<PriceValidationIssue[]>([])
 const loading = ref(false)
 const saving = ref(false)
 const validating = ref(false)
 const batchOpen = ref(false)
-const fabricFormula = ref(DEFAULT_FABRIC_PRICE_FORMULA)
+const ruleDrawerOpen = ref(false)
+const activeFabric = ref<PriceFabricVO>()
 
 const currentProduct = computed(() => setup.value.saleProduct || products.value.find((item) => toIdString(item.saleProductId) === selectedProductId.value) || {})
 const editable = computed(() => currentProduct.value.status !== PRODUCT_STATUS_ENABLED)
-const fabricCandidates = computed(() => setup.value.fabricCandidates || [])
-const fabricColumns = computed(() => setup.value.fabricPriceColumns?.length
-  ? setup.value.fabricPriceColumns
-  : [{ optionCombinationKey: 'DEFAULT', optionCombinationName: t('productCenter.pricing.defaultCombination') }])
+const activeFabricRules = computed(() => fabricRules.value.filter(row => row.priceFabricId === activeFabric.value?.priceFabricId))
 
 onMounted(async () => {
   await loadProducts()
@@ -123,10 +130,10 @@ async function reload() {
   try {
     const response = await productPriceApi.setup(selectedProductId.value)
     setup.value = response.data || {}
-    fabricRows.value = (setup.value.fabricRules || []).map((row) => ({ ...row }))
+    priceFabrics.value = (setup.value.priceFabrics || []).map((row) => ({ ...row }))
+    fabricRules.value = (setup.value.fabricRules || []).map((row) => ({ ...row }))
     feeRows.value = (setup.value.feeRules || []).map((row) => ({ ...row }))
     issues.value = setup.value.issues || []
-    fabricFormula.value = fabricRows.value.find(row => row.areaFormula)?.areaFormula || DEFAULT_FABRIC_PRICE_FORMULA
   } finally {
     loading.value = false
   }
@@ -140,35 +147,35 @@ async function selectProduct(value: string | number) {
 
 async function generateFabricPrices(overwrite: boolean) {
   if (!selectedProductId.value) return
-  if (overwrite) {
-    await ElMessageBox.confirm(t('productCenter.pricing.confirmOverwriteGenerate'), t('common.prompt'), { type: 'warning' })
-  }
+  await ElMessageBox.confirm(
+    t(overwrite ? 'productCenter.pricing.confirmOverwriteGenerate' : 'productCenter.pricing.confirmSyncGenerate'),
+    t('common.prompt'),
+    { type: overwrite ? 'warning' : 'info' }
+  )
   await productPriceApi.generateFabricPrices(selectedProductId.value, overwrite)
   ElMessage.success(t('common.success'))
   await reload()
 }
 
-function updateFabricRule(row: FabricPriceRule) {
-  fabricRows.value = upsertFabricRule(fabricRows.value, row)
+function openFabricRules(row: PriceFabricVO) {
+  activeFabric.value = row
+  ruleDrawerOpen.value = true
 }
 
-function updateFabricFormula(value: string) {
-  fabricFormula.value = value
-  fabricRows.value = fabricRows.value.map(row => ({ ...row, areaFormula: value }))
-}
-
-async function applyBatchFabricPrice(payload: { materialCodes: string[], combinationKeys: string[], unitPrice: number, formula: string, blankOnly: boolean }) {
-  fabricFormula.value = payload.formula || fabricFormula.value
-  let next = fabricRows.value
-  for (const material of fabricCandidates.value.filter(item => payload.materialCodes.includes(String(item.materialCode || '')))) {
-    for (const column of fabricColumns.value.filter(item => payload.combinationKeys.includes(item.optionCombinationKey || 'DEFAULT'))) {
-      const existing = findFabricRule(next, material, column)
-      if (payload.blankOnly && Number(existing?.basePrice || 0) > 0) continue
-      next = upsertFabricRule(next, buildFabricRule(material, column, payload.unitPrice, fabricFormula.value))
-    }
+async function applyBatchFabricPrice(payload: { priceFabricIds: number[], conditionExpression: string, unitPrice: number, priceFormula: string, blankOnly: boolean }) {
+  if (!selectedProductId.value) return
+  for (const priceFabricId of payload.priceFabricIds) {
+    const existing = fabricRules.value.filter(row => row.priceFabricId === priceFabricId)
+    if (payload.blankOnly && existing.length) continue
+    const defaultRule = buildFabricRule(priceFabricId, payload)
+    const nextRows = existing.filter((row) => {
+      if (defaultRule.defaultRuleFlag) return !row.defaultRuleFlag
+      return row.conditionKey !== defaultRule.conditionKey
+    })
+    await productPriceApi.saveFabricRules(selectedProductId.value, priceFabricId, nextRows.concat(defaultRule))
   }
-  fabricRows.value = next
-  await saveFabricRules()
+  ElMessage.success(t('common.success'))
+  await reload()
 }
 
 function updateShippingRules(rows: ExtraFeeRule[]) {
@@ -178,7 +185,7 @@ function updateShippingRules(rows: ExtraFeeRule[]) {
 async function saveAll() {
   saving.value = true
   try {
-    await Promise.all([saveFabricRules(false), saveFeeRules(false)])
+    await saveFeeRules(false)
     ElMessage.success(t('common.success'))
     await reload()
   } finally {
@@ -186,9 +193,10 @@ async function saveAll() {
   }
 }
 
-async function saveFabricRules(refresh = true) {
+async function saveFabricRules(priceFabricId?: number, rows?: FabricPriceRule[], refresh = true) {
   if (!selectedProductId.value) return
-  await productPriceApi.saveFabricRules(selectedProductId.value, fabricRows.value)
+  if (!priceFabricId || !rows) return
+  await productPriceApi.saveFabricRules(selectedProductId.value, priceFabricId, rows)
   if (refresh) {
     ElMessage.success(t('common.success'))
     await reload()
@@ -217,32 +225,19 @@ async function validatePrice() {
   }
 }
 
-function upsertFabricRule(rows: FabricPriceRule[], row: FabricPriceRule) {
-  const index = rows.findIndex(item => item.materialCode === row.materialCode
-    && (item.optionCombinationKey || 'DEFAULT') === (row.optionCombinationKey || 'DEFAULT'))
-  if (index < 0) return rows.concat(row)
-  return rows.map((item, itemIndex) => itemIndex === index ? { ...item, ...row } : item)
-}
-
-function findFabricRule(rows: FabricPriceRule[], material: PriceFabricCandidate, column: PriceOptionCombination) {
-  return rows.find(item => item.materialCode === material.materialCode
-    && (item.optionCombinationKey || 'DEFAULT') === (column.optionCombinationKey || 'DEFAULT'))
-}
-
-function buildFabricRule(material: PriceFabricCandidate, column: PriceOptionCombination, basePrice: number, formula: string): FabricPriceRule {
+function buildFabricRule(priceFabricId: number, payload: { conditionExpression: string, unitPrice: number, priceFormula: string }): FabricPriceRule {
+  const expression = payload.conditionExpression?.trim()
+  const defaultRule = !expression
   return {
-    ...findFabricRule(fabricRows.value, material, column),
-    materialId: material.materialId,
-    materialCode: material.materialCode,
-    materialNameCn: material.materialNameCn,
-    unitCode: material.unitCode,
-    optionCombinationKey: column.optionCombinationKey || 'DEFAULT',
-    optionCombinationName: column.optionCombinationName || t('productCenter.pricing.defaultCombination'),
+    priceFabricId,
+    conditionType: defaultRule ? 'DEFAULT' : 'EXPRESSION',
+    conditionExpression: defaultRule ? 'DEFAULT' : expression,
+    conditionText: defaultRule ? t('productCenter.pricing.defaultRule') : expression,
+    conditionKey: defaultRule ? 'DEFAULT' : expression,
     priceMode: 'FORMULA',
-    basePrice,
-    areaFormula: formula || DEFAULT_FABRIC_PRICE_FORMULA,
-    minBillArea: 1,
-    lossRate: 0,
+    unitPrice: payload.unitPrice,
+    priceFormula: payload.priceFormula || fabricPriceFormulaForUnitPrice(payload.unitPrice),
+    defaultRuleFlag: defaultRule,
     status: 'ENABLED'
   }
 }

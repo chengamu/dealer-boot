@@ -61,6 +61,12 @@ const hiddenLayoutRoutes: RouteRecordRaw[] = [
     meta: { title: 'productCenter.formula.actions.materials', activeMenu: '/product-formula/formulas', hidden: true, setupSection: 'content' }
   },
   {
+    path: '/product-formula/formulas/workbench',
+    name: 'ProductFormulaWorkbench',
+    component: () => import('@/pages/product-formula/FormulaWorkbenchPage.vue'),
+    meta: { title: 'productCenter.formulaWorkbench.title', activeMenu: '/product-formula/formulas', hidden: true }
+  },
+  {
     path: '/product-formula/formulas/options',
     name: 'ProductFormulaOptions',
     component: () => import('@/pages/product-formula/FormulaOptionPage.vue'),

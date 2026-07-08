@@ -45,7 +45,6 @@ const localeStore = useLocaleStore()
 const t = (key: string) => getMessage(key, localeStore.language)
 
 const variables = [
-  { label: 'unitPrice', value: 'unitPrice' },
   { label: 'width', value: 'width' },
   { label: 'drop', value: 'drop' },
   { label: 'widthCm', value: 'width * 2.54' },

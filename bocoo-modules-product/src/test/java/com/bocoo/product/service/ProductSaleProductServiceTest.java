@@ -3,10 +3,13 @@ package com.bocoo.product.service;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.bocoo.common.core.exception.ServiceException;
 import com.bocoo.product.domain.bo.ProductSaleProductBo;
+import com.bocoo.product.domain.entity.ProductFormula;
+import com.bocoo.product.domain.entity.ProductFormulaVersion;
 import com.bocoo.product.domain.entity.ProductPriceSetting;
 import com.bocoo.product.domain.entity.ProductSaleProduct;
 import com.bocoo.product.mapper.ProductFormulaMapper;
 import com.bocoo.product.mapper.ProductFormulaVersionMapper;
+import com.bocoo.product.mapper.ProductPriceFabricMapper;
 import com.bocoo.product.mapper.ProductPriceFabricRuleMapper;
 import com.bocoo.product.mapper.ProductPriceFeeRuleMapper;
 import com.bocoo.product.mapper.ProductPriceSettingMapper;
@@ -17,6 +20,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.math.BigDecimal;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -36,6 +42,8 @@ class ProductSaleProductServiceTest {
     @Mock
     private ProductPriceSettingMapper settingMapper;
     @Mock
+    private ProductPriceFabricMapper fabricMapper;
+    @Mock
     private ProductPriceFabricRuleMapper fabricRuleMapper;
     @Mock
     private ProductPriceFeeRuleMapper feeRuleMapper;
@@ -54,6 +62,7 @@ class ProductSaleProductServiceTest {
         saleProductService = new ProductSaleProductServiceImpl(
             saleProductMapper,
             settingMapper,
+            fabricMapper,
             fabricRuleMapper,
             feeRuleMapper,
             formulaMapper,
@@ -111,8 +120,8 @@ class ProductSaleProductServiceTest {
         ProductSaleProduct product = saleProduct("READY", "DISABLED");
         ProductPriceSetting setting = new ProductPriceSetting();
         setting.setPriceSettingId(9101L);
-        when(saleProductMapper.selectBatchIds(java.util.List.of(9001L))).thenReturn(java.util.List.of(product));
-        when(settingMapper.selectOne(any())).thenReturn(setting);
+        when(saleProductMapper.selectBatchIds(List.of(9001L))).thenReturn(List.of(product));
+        when(settingMapper.selectList(any())).thenReturn(List.of(setting));
         when(fabricRuleMapper.selectCount(any())).thenReturn(1L);
         when(feeRuleMapper.selectCount(any())).thenReturn(0L);
 
@@ -120,6 +129,33 @@ class ProductSaleProductServiceTest {
             .isInstanceOf(ServiceException.class);
 
         verify(saleProductMapper, never()).deleteBatchIds(any());
+    }
+
+    @Test
+    void versionChangeKeepsHistoricalPriceSettings() {
+        ProductSaleProduct current = saleProduct("READY", "DISABLED");
+        ProductSaleProduct saved = saleProduct("NOT_READY", "DISABLED");
+        saved.setFormulaVersionId(7002L);
+        saved.setFormulaVersionLabel("V2");
+        when(saleProductMapper.selectById(9001L)).thenReturn(current, saved);
+        when(formulaMapper.selectById(3001L)).thenReturn(formula());
+        when(versionMapper.selectById(7002L)).thenReturn(version());
+        when(saleProductMapper.selectCount(any())).thenReturn(0L);
+        when(saleProductMapper.updateById(any())).thenReturn(1);
+        when(settingMapper.selectOne(any())).thenReturn(null);
+        when(settingMapper.insert(any())).thenReturn(1);
+
+        ProductSaleProductBo bo = saleProductBo();
+
+        assertThat(saleProductService.updateByBo(bo)).isTrue();
+
+        verify(settingMapper).selectOne(argThat(wrapper ->
+            wrapper != null && wrapper.getSqlSegment().contains("formula_version_id")));
+        verify(settingMapper).insert(argThat(setting ->
+            setting != null && Long.valueOf(7002L).equals(setting.getFormulaVersionId())));
+        verify(fabricMapper, never()).delete(any());
+        verify(fabricRuleMapper, never()).delete(any());
+        verify(feeRuleMapper, never()).delete(any());
     }
 
     private ProductSaleProduct saleProduct(String priceStatus, String status) {
@@ -133,5 +169,46 @@ class ProductSaleProductServiceTest {
         product.setStatus(status);
         product.setDelFlag("0");
         return product;
+    }
+
+    private ProductSaleProductBo saleProductBo() {
+        ProductSaleProductBo bo = new ProductSaleProductBo();
+        bo.setSaleProductId(9001L);
+        bo.setSaleProductCode("SP-001");
+        bo.setSaleProductName("斑马帘");
+        bo.setFormulaId(3001L);
+        bo.setStatus("DISABLED");
+        return bo;
+    }
+
+    private ProductFormula formula() {
+        ProductFormula formula = new ProductFormula();
+        formula.setFormulaId(3001L);
+        formula.setTenantId(1L);
+        formula.setFormulaCode("FM-001");
+        formula.setFormulaName("斑马帘");
+        formula.setCategoryId(1001L);
+        formula.setCategoryCode("ZEBRA");
+        formula.setCategoryNameCn("斑马帘");
+        formula.setProductTypeCode("CUSTOM_CURTAIN");
+        formula.setProductTypeNameCn("定制帘");
+        formula.setCurrentVersionId(7002L);
+        formula.setMinWidthInch(BigDecimal.ONE);
+        formula.setMinHeightInch(BigDecimal.ONE);
+        formula.setMaxWidthInch(BigDecimal.TEN);
+        formula.setMaxHeightInch(BigDecimal.TEN);
+        formula.setStatus("EFFECTIVE");
+        formula.setDelFlag("0");
+        return formula;
+    }
+
+    private ProductFormulaVersion version() {
+        ProductFormulaVersion version = new ProductFormulaVersion();
+        version.setVersionId(7002L);
+        version.setVersionNo(2);
+        version.setVersionLabel("V2");
+        version.setVersionStatus("EFFECTIVE");
+        version.setDelFlag("0");
+        return version;
     }
 }

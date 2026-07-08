@@ -3,48 +3,54 @@ package com.bocoo.product.service.impl;
 import com.bocoo.common.core.exception.ServiceException;
 import com.bocoo.common.core.utils.StringUtils;
 import com.bocoo.product.domain.bo.ProductPriceFabricRuleBo;
-import com.bocoo.product.domain.entity.ProductFormulaVersion;
-import com.bocoo.product.domain.vo.ProductPriceOptionCombinationVo;
-import lombok.RequiredArgsConstructor;
+import com.bocoo.product.domain.entity.ProductPriceFabric;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Component
-@RequiredArgsConstructor
 public class ProductPriceFabricRuleGuard {
 
-    private final ProductPriceSnapshotReader snapshotReader;
-
-    public void assertSavable(ProductFormulaVersion version, List<ProductPriceFabricRuleBo> rules) {
-        Set<String> allowedKeys = allowedKeys(version);
+    public void assertSavable(ProductPriceFabric fabric, List<ProductPriceFabricRuleBo> rules) {
+        if (fabric == null) {
+            throw ServiceException.ofMessageKey("product.priceSetting.fabricPriceNotInFormulaVersion");
+        }
         Set<String> seenKeys = new HashSet<>();
+        boolean hasDefault = false;
         for (ProductPriceFabricRuleBo rule : rules == null ? List.<ProductPriceFabricRuleBo>of() : rules) {
-            String key = key(rule.getMaterialCode(), rule.getOptionCombinationKey());
+            String key = ruleKey(rule);
             if (!seenKeys.add(key)) {
-                throw ServiceException.ofMessageKey("product.priceSetting.duplicateFabricPrice");
+                throw ServiceException.ofMessageKey("product.priceSetting.duplicateFabricCondition");
             }
-            if (!allowedKeys.contains(key)) {
-                throw ServiceException.ofMessageKey("product.priceSetting.fabricPriceNotInFormulaVersion");
+            if (Boolean.TRUE.equals(rule.getDefaultRuleFlag()) || "DEFAULT".equals(rule.getConditionType())) {
+                hasDefault = true;
             }
+            if (isNotPositive(rule.getUnitPrice())) {
+                throw ServiceException.ofMessageKey("product.priceSetting.fabricPriceRequired");
+            }
+            if (!ProductPriceExpressionValidator.isPriceFormulaValid(rule.getPriceFormula())) {
+                throw ServiceException.ofMessageKey("product.priceSetting.priceFormulaInvalid");
+            }
+            if (!ProductPriceExpressionValidator.isConditionValid(rule.getConditionExpression())) {
+                throw ServiceException.ofMessageKey("product.priceSetting.conditionInvalid");
+            }
+        }
+        if (!hasDefault) {
+            throw ServiceException.ofMessageKey("product.priceSetting.defaultFabricPriceRequired");
         }
     }
 
-    private Set<String> allowedKeys(ProductFormulaVersion version) {
-        List<ProductPriceOptionCombinationVo> combinations = snapshotReader.optionCombinations(version);
-        return snapshotReader.fabricMaterials(version).stream()
-            .map(material -> String.valueOf(material.get("materialCode")))
-            .flatMap(materialCode -> combinations.stream()
-                .map(combo -> key(materialCode, combo.getOptionCombinationKey())))
-            .collect(Collectors.toSet());
+    private String ruleKey(ProductPriceFabricRuleBo rule) {
+        if (Boolean.TRUE.equals(rule.getDefaultRuleFlag()) || "DEFAULT".equals(rule.getConditionType())) {
+            return "DEFAULT";
+        }
+        return StringUtils.blankToDefault(rule.getConditionKey(), rule.getConditionExpression());
     }
 
-    private String key(String materialCode, String optionCombinationKey) {
-        return StringUtils.blankToDefault(materialCode, "") + "||"
-            + StringUtils.blankToDefault(optionCombinationKey, "DEFAULT");
+    private boolean isNotPositive(BigDecimal value) {
+        return value == null || value.compareTo(BigDecimal.ZERO) <= 0;
     }
 }

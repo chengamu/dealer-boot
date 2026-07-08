@@ -1,8 +1,13 @@
 .formula-expression-dialog.admin-dialog.el-dialog {
   display: flex;
   flex-direction: column;
-  width: min(1480px, calc(100vw - 32px)) !important;
-  height: min(720px, calc(100vh - 32px));
+  width: min(1280px, calc(100vw - 72px)) !important;
+  height: min(660px, calc(100vh - 48px));
+}
+
+.formula-expression-dialog--condition.admin-dialog.el-dialog {
+  width: min(1280px, calc(100vw - 72px)) !important;
+  height: min(660px, calc(100vh - 48px));
 }
 
 .formula-expression-dialog.admin-dialog .el-dialog__body {
@@ -40,8 +45,8 @@
 
 .formula-expression-dialog .expression-editor__formula-layout {
   display: grid;
-  grid-template-columns: minmax(0, 62fr) minmax(360px, 38fr);
-  gap: 12px;
+  grid-template-columns: minmax(0, 64fr) minmax(320px, 36fr);
+  gap: 10px;
   align-items: stretch;
   min-height: 0;
   height: 100%;
@@ -121,8 +126,8 @@
 
 .formula-expression-dialog .expression-editor__condition-area {
   display: grid;
-  grid-template-columns: minmax(0, 54fr) minmax(0, 46fr);
-  gap: 10px 12px;
+  grid-template-columns: minmax(0, 55fr) minmax(0, 45fr);
+  gap: 8px 10px;
 }
 
 .formula-expression-dialog .expression-editor__condition-area > .expression-editor__operators {

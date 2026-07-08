@@ -18,7 +18,7 @@
       </div>
       <div class="price-overview__card">
         <span class="price-overview__icon price-overview__icon--warning"><WarningFilled /></span>
-        <span>{{ t('productCenter.pricing.pendingIssues') }}</span>
+        <span>{{ t('productCenter.pricing.exceptions') }}</span>
         <strong class="price-overview__warning">{{ issueCount }}</strong>
       </div>
     </div>
@@ -76,16 +76,17 @@ function count(code: string) {
 
 .price-overview__cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(168px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(128px, 168px));
+  justify-content: start;
+  gap: 8px;
 }
 
 .price-overview__card {
   display: grid;
-  grid-template-columns: 32px minmax(70px, 1fr) minmax(34px, auto);
-  gap: 10px;
-  min-height: 58px;
-  padding: 10px 14px;
+  grid-template-columns: 30px minmax(34px, 1fr) minmax(24px, auto);
+  gap: 6px;
+  min-height: 52px;
+  padding: 8px 12px;
   background: linear-gradient(180deg, #fff, #f8fbff);
   border: 1px solid #e5ecf6;
   border-radius: 8px;
@@ -110,14 +111,15 @@ function count(code: string) {
   object-fit: contain;
 }
 
-.price-overview__card span {
+.price-overview__card > span:not(.price-overview__group-icon):not(.price-overview__icon) {
   color: #1f2937;
   font-weight: 600;
+  white-space: nowrap;
 }
 
 .price-overview strong {
   color: #111827;
-  font-size: 22px;
+  font-size: 20px;
   line-height: 1;
 }
 

@@ -12,7 +12,7 @@ public interface ProductPriceSettingService {
 
     Boolean generateFabricPrices(Long saleProductId, Boolean overwrite);
 
-    Boolean saveFabricRules(Long saleProductId, List<ProductPriceFabricRuleBo> rules);
+    Boolean saveFabricRules(Long saleProductId, Long priceFabricId, List<ProductPriceFabricRuleBo> rules);
 
     Boolean saveFeeRules(Long saleProductId, List<ProductPriceFeeRuleBo> rules);
 

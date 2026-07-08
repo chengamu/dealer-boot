@@ -92,7 +92,7 @@ const emit = defineEmits<{
 const keyword = ref('')
 const operators = ['+', '-', '*', '/', '(', ')', { label: '四舍五入(x, 2)', insert: '四舍五入()' }, { label: '向上取整(x, 2)', insert: '向上取整()' }, { label: '向下取整(x, 2)', insert: '向下取整()' }]
 const editorText = computed({ get: () => props.text, set: (value: string) => emit('update:text', value) })
-const orderNames = new Set(['orderWidthIn', 'orderLengthIn', 'orderWidthCm', 'orderLengthCm', 'orderAreaM2'])
+const orderNames = new Set(['orderWidthIn', 'orderHeightIn', 'orderWidthCm', 'orderHeightCm', 'orderAreaM2'])
 const orderVariables = computed(() => formulaVariables.filter((item) => orderNames.has(item.name)))
 const availableVariables = computed(() => props.variables.filter((variable) => !sameVariable(variable, props.currentVariable)))
 const normalizedText = computed(() => normalizeDisplayExpression(props.text, [], [], [], availableVariables.value))

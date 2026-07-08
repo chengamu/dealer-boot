@@ -1,0 +1,71 @@
+package com.bocoo.product.service.impl;
+
+import com.bocoo.common.core.utils.StringUtils;
+
+import java.util.Map;
+import java.util.Set;
+
+final class ProductPriceExpressionValidator {
+    private static final Set<String> PRICE_VARIABLES = Set.of(
+        "unitPrice", "width", "drop", "widthCm", "dropCm", "areaM2", "areaSqft",
+        "orderWidthIn", "orderHeightIn", "orderWidthCm", "orderHeightCm", "orderAreaM2"
+    );
+    private static final Set<String> CONDITION_VARIABLES = Set.of(
+        "width", "drop", "widthCm", "dropCm", "areaM2", "areaSqft",
+        "orderWidthIn", "orderHeightIn", "orderWidthCm", "orderHeightCm", "orderAreaM2",
+        "fabric", "productType", "optionValue"
+    );
+    private static final Map<String, Object> SAMPLE = Map.ofEntries(
+        Map.entry("unitPrice", 20D),
+        Map.entry("width", 25D),
+        Map.entry("drop", 72D),
+        Map.entry("widthCm", 63.5D),
+        Map.entry("dropCm", 182.88D),
+        Map.entry("areaM2", 1.16D),
+        Map.entry("areaSqft", 12.5D),
+        Map.entry("orderWidthIn", 25D),
+        Map.entry("orderHeightIn", 72D),
+        Map.entry("orderWidthCm", 63.5D),
+        Map.entry("orderHeightCm", 182.88D),
+        Map.entry("orderAreaM2", 1.16D),
+        Map.entry("fabric", "FABRIC_A"),
+        Map.entry("productType", "CUSTOM_CURTAIN"),
+        Map.entry("optionValue", "MOTOR")
+    );
+
+    private ProductPriceExpressionValidator() {
+    }
+
+    static boolean isPriceFormulaValid(String expression) {
+        String normalized = ProductFormulaExpressionNormalizer.normalizeFormulaExpression(expression);
+        if (StringUtils.isBlank(normalized)) {
+            return false;
+        }
+        try {
+            ProductFormulaExpressionParser parser = new ProductFormulaExpressionParser(normalized, PRICE_VARIABLES, false, SAMPLE, true);
+            Object result = parser.parseExpression();
+            parser.expectEnd();
+            return result instanceof Number number && Double.isFinite(number.doubleValue()) && number.doubleValue() >= 0D;
+        } catch (RuntimeException ex) {
+            return false;
+        }
+    }
+
+    static boolean isConditionValid(String expression) {
+        String normalized = ProductFormulaExpressionNormalizer.normalizeConditionExpression(expression);
+        if ("DEFAULT".equals(normalized)) {
+            return true;
+        }
+        if (StringUtils.isBlank(normalized)) {
+            return false;
+        }
+        try {
+            ProductFormulaExpressionParser parser = new ProductFormulaExpressionParser(normalized, CONDITION_VARIABLES, true, SAMPLE, true);
+            Object result = parser.parseOr();
+            parser.expectEnd();
+            return result instanceof Boolean;
+        } catch (RuntimeException ex) {
+            return false;
+        }
+    }
+}

@@ -2,8 +2,13 @@ package com.bocoo.product.service.impl;
 
 import com.bocoo.common.core.utils.StringUtils;
 import com.bocoo.product.domain.entity.ProductFormulaVersion;
+import com.bocoo.product.domain.vo.ProductFormulaMaterialVo;
+import com.bocoo.product.domain.vo.ProductFormulaOptionMaterialVo;
+import com.bocoo.product.domain.vo.ProductFormulaOptionValueVo;
+import com.bocoo.product.domain.vo.ProductFormulaOptionVo;
 import com.bocoo.product.domain.vo.ProductPriceOptionCombinationVo;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import org.springframework.stereotype.Component;
 
@@ -12,13 +17,19 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Component
 public class ProductPriceSnapshotReader {
 
-    private static final JsonMapper JSON = new JsonMapper();
+    private static final JsonMapper JSON = JsonMapper.builder()
+        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+        .build();
     private static final TypeReference<Map<String, Object>> MAP_TYPE = new TypeReference<>() {
     };
+    private static final Set<String> AUDIT_FIELDS = Set.of(
+        "createById", "createBy", "createTime", "updateBy", "updateTime", "delFlag"
+    );
     private static final ProductPriceOptionCombinationVo DEFAULT_COMBINATION =
         new ProductPriceOptionCombinationVo("DEFAULT", "默认");
 
@@ -26,6 +37,22 @@ public class ProductPriceSnapshotReader {
         return maps(snapshot(version).get("materials")).stream()
             .filter(row -> "FABRIC".equals(String.valueOf(row.get("attributeGroupCode"))))
             .toList();
+    }
+
+    public List<ProductFormulaMaterialVo> formulaMaterials(ProductFormulaVersion version) {
+        return voList(snapshot(version).get("materials"), ProductFormulaMaterialVo.class);
+    }
+
+    public List<ProductFormulaOptionVo> formulaOptions(ProductFormulaVersion version) {
+        return voList(snapshot(version).get("options"), ProductFormulaOptionVo.class);
+    }
+
+    public List<ProductFormulaOptionValueVo> formulaOptionValues(ProductFormulaVersion version) {
+        return voList(snapshot(version).get("optionValues"), ProductFormulaOptionValueVo.class);
+    }
+
+    public List<ProductFormulaOptionMaterialVo> formulaOptionMaterials(ProductFormulaVersion version) {
+        return voList(snapshot(version).get("optionMaterials"), ProductFormulaOptionMaterialVo.class);
     }
 
     public Map<String, Integer> materialGroupCounts(ProductFormulaVersion version) {
@@ -150,14 +177,30 @@ public class ProductPriceSnapshotReader {
             .toList();
     }
 
+    private <T> List<T> voList(Object value, Class<T> targetType) {
+        return maps(value).stream()
+            .map(row -> JSON.convertValue(row, targetType))
+            .toList();
+    }
+
     private Map<String, Object> copyMap(Map<?, ?> source) {
         Map<String, Object> result = new LinkedHashMap<>();
         source.forEach((key, value) -> {
-            if (key != null) {
-                result.put(String.valueOf(key), value);
+            if (key != null && !AUDIT_FIELDS.contains(String.valueOf(key))) {
+                result.put(String.valueOf(key), cleanValue(value));
             }
         });
         return result;
+    }
+
+    private Object cleanValue(Object value) {
+        if (value instanceof Map<?, ?> map) {
+            return copyMap(map);
+        }
+        if (value instanceof List<?> list) {
+            return list.stream().map(this::cleanValue).toList();
+        }
+        return value;
     }
 
     private String value(Map<String, Object> row, String key) {

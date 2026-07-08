@@ -23,6 +23,9 @@ function editCheckApi(url: string) {
 
 export const productFormulaApi: ProductCrudApi<ProductFormulaVO, ProductFormulaQuery> & {
   submitReview: (id: string | number) => Promise<unknown>
+  startRevision: (id: string | number) => Promise<unknown>
+  withdraw: (id: string | number) => Promise<unknown>
+  copyFormula: (id: string | number, data: Partial<ProductFormulaVO>) => Promise<{ data?: ProductFormulaVO }>
   stop: (id: string | number) => Promise<unknown>
   materials: (id: string | number) => Promise<{ data?: ProductFormulaSetupVO }>
   saveMaterials: (id: string | number, data: ProductFormulaSetupVO) => Promise<unknown>
@@ -44,6 +47,7 @@ export const productFormulaApi: ProductCrudApi<ProductFormulaVO, ProductFormulaQ
   rejectReview: (reviewId: string | number, rejectReason: string) => Promise<unknown>
   validate: (id: string | number) => Promise<unknown>
   versions: (id: string | number) => Promise<{ data?: ProductFormulaVersionVO[] }>
+  versionHistory: (id: string | number) => Promise<{ data?: ProductFormulaVersionVO[] }>
   version: (id: string | number, versionId: string | number) => Promise<{ data?: ProductFormulaVersionVO }>
 } = {
   list: (query?: ProductFormulaQuery) => requestPage<ProductFormulaVO>({ url: '/product-formula/formulas/list', method: 'get', params: query }),
@@ -54,6 +58,9 @@ export const productFormulaApi: ProductCrudApi<ProductFormulaVO, ProductFormulaQ
   editCheck: (id: string | number) => editCheckApi('/product-formula/formulas/' + id + '/edit-check'),
   references: (id: string | number) => referencesApi('/product-formula/formulas/' + id + '/references'),
   submitReview: (id: string | number) => request({ url: '/product-formula/formulas/' + id + '/submit-review', method: 'put' }),
+  startRevision: (id: string | number) => request({ url: '/product-formula/formulas/' + id + '/start-revision', method: 'put' }),
+  withdraw: (id: string | number) => request({ url: '/product-formula/formulas/' + id + '/withdraw', method: 'put' }),
+  copyFormula: (id: string | number, data: Partial<ProductFormulaVO>) => request<ProductFormulaVO>({ url: '/product-formula/formulas/' + id + '/copy', method: 'post', data }),
   stop: (id: string | number) => request({ url: '/product-formula/formulas/' + id + '/stop', method: 'put' }),
   materials: (id: string | number) => request<ProductFormulaSetupVO>({ url: '/product-formula/formulas/' + id + '/materials', method: 'get' }),
   saveMaterials: (id: string | number, data: ProductFormulaSetupVO) => request({ url: '/product-formula/formulas/' + id + '/materials', method: 'put', data }),
@@ -75,6 +82,7 @@ export const productFormulaApi: ProductCrudApi<ProductFormulaVO, ProductFormulaQ
   rejectReview: (reviewId: string | number, rejectReason: string) => request({ url: '/product-formula/reviews/' + reviewId + '/reject', method: 'put', data: { rejectReason } }),
   validate: (id: string | number) => request({ url: '/product-formula/formulas/' + id + '/validate', method: 'put' }),
   versions: (id: string | number) => request<ProductFormulaVersionVO[]>({ url: '/product-formula/formulas/' + id + '/versions', method: 'get' }),
+  versionHistory: (id: string | number) => request<ProductFormulaVersionVO[]>({ url: '/product-formula/formulas/' + id + '/versions/history', method: 'get' }),
   version: (id: string | number, versionId: string | number) => request<ProductFormulaVersionVO>({ url: '/product-formula/formulas/' + id + '/versions/' + versionId, method: 'get' })
 }
 
@@ -87,9 +95,13 @@ export const productFormulaArchiveApi = {
   editCheck: productFormulaApi.editCheck,
   references: productFormulaApi.references,
   submitReview: productFormulaApi.submitReview,
+  startRevision: productFormulaApi.startRevision,
+  withdraw: productFormulaApi.withdraw,
+  copyFormula: productFormulaApi.copyFormula,
   stop: productFormulaApi.stop,
   validate: productFormulaApi.validate,
   versions: productFormulaApi.versions,
+  versionHistory: productFormulaApi.versionHistory,
   version: productFormulaApi.version
 }
 

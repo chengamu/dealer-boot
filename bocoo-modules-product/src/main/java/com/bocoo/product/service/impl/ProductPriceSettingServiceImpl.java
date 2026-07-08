@@ -7,14 +7,17 @@ import com.bocoo.common.core.utils.TimeUtils;
 import com.bocoo.product.domain.bo.ProductPriceFabricRuleBo;
 import com.bocoo.product.domain.bo.ProductPriceFeeRuleBo;
 import com.bocoo.product.domain.entity.ProductFormulaVersion;
+import com.bocoo.product.domain.entity.ProductPriceFabric;
 import com.bocoo.product.domain.entity.ProductPriceFabricRule;
 import com.bocoo.product.domain.entity.ProductPriceFeeRule;
 import com.bocoo.product.domain.entity.ProductPriceSetting;
 import com.bocoo.product.domain.entity.ProductSaleProduct;
+import com.bocoo.product.domain.vo.ProductPriceFabricVo;
 import com.bocoo.product.domain.vo.ProductPriceFeeRuleVo;
 import com.bocoo.product.domain.vo.ProductPriceSetupVo;
 import com.bocoo.product.domain.vo.ProductPriceValidationIssueVo;
 import com.bocoo.product.mapper.ProductFormulaVersionMapper;
+import com.bocoo.product.mapper.ProductPriceFabricMapper;
 import com.bocoo.product.mapper.ProductPriceFabricRuleMapper;
 import com.bocoo.product.mapper.ProductPriceFeeRuleMapper;
 import com.bocoo.product.mapper.ProductPriceSettingMapper;
@@ -27,6 +30,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -38,13 +43,14 @@ public class ProductPriceSettingServiceImpl extends ProductServiceSupport implem
 
     private final ProductSaleProductMapper saleProductMapper;
     private final ProductPriceSettingMapper settingMapper;
+    private final ProductPriceFabricMapper fabricMapper;
     private final ProductPriceFabricRuleMapper fabricRuleMapper;
     private final ProductPriceFeeRuleMapper feeRuleMapper;
     private final ProductFormulaVersionMapper versionMapper;
     private final ProductPriceSettingValidator validator;
     private final ProductPriceSnapshotReader snapshotReader;
     private final ProductPriceFabricCandidateFactory fabricCandidateFactory;
-    private final ProductPriceFabricRuleGenerator fabricRuleGenerator;
+    private final ProductPriceFabricSyncService fabricSyncService;
     private final ProductPriceFabricRuleGuard fabricRuleGuard;
     private final ProductPriceShippingRuleFactory shippingRuleFactory;
     private final ProductChangeLogService changeLogService;
@@ -57,6 +63,9 @@ public class ProductPriceSettingServiceImpl extends ProductServiceSupport implem
         ProductPriceSetupVo vo = new ProductPriceSetupVo();
         vo.setSaleProduct(saleProductMapper.selectVoById(saleProductId));
         vo.setSetting(settingMapper.selectVoById(setting.getPriceSettingId()));
+        List<ProductPriceFabric> fabrics = queryFabrics(setting);
+        List<ProductPriceFabricRule> fabricRules = queryFabricRules(setting);
+        vo.setPriceFabrics(toFabricVos(fabrics, fabricRules));
         vo.setFabricRules(fabricRuleMapper.selectVoList(activeQuery(ProductPriceFabricRule.class)
             .eq("price_setting_id", setting.getPriceSettingId()).orderByAsc("sort_order", "fabric_rule_id")));
         List<ProductPriceFeeRuleVo> feeRules = feeRuleMapper.selectVoList(activeQuery(ProductPriceFeeRule.class)
@@ -65,8 +74,13 @@ public class ProductPriceSettingServiceImpl extends ProductServiceSupport implem
         vo.setFabricCandidates(fabricCandidateFactory.candidates(version));
         vo.setFabricPriceColumns(snapshotReader.optionCombinations(version));
         vo.setMaterialGroupCounts(snapshotReader.materialGroupCounts(version));
+        vo.setFormulaMaterials(snapshotReader.formulaMaterials(version));
+        vo.setFormulaOptions(snapshotReader.formulaOptions(version));
+        vo.setFormulaOptionValues(snapshotReader.formulaOptionValues(version));
+        vo.setFormulaOptionMaterials(snapshotReader.formulaOptionMaterials(version));
         vo.setIssues(validator.validate(version,
-            fabricRuleMapper.selectList(activeQuery(ProductPriceFabricRule.class).eq("price_setting_id", setting.getPriceSettingId())),
+            fabrics,
+            fabricRules,
             feeRuleMapper.selectList(activeQuery(ProductPriceFeeRule.class).eq("price_setting_id", setting.getPriceSettingId()))));
         return vo;
     }
@@ -78,16 +92,8 @@ public class ProductPriceSettingServiceImpl extends ProductServiceSupport implem
         assertPriceEditable(saleProduct);
         ProductPriceSetting setting = ensureSetting(saleProduct);
         ProductFormulaVersion version = versionMapper.selectById(saleProduct.getFormulaVersionId());
-        List<ProductPriceFabricRule> before = fabricRuleMapper.selectList(activeQuery(ProductPriceFabricRule.class)
-            .eq("price_setting_id", setting.getPriceSettingId()));
-        List<ProductPriceFabricRule> previous = previousFabricRules(setting);
-        List<ProductPriceFabricRule> generated = fabricRuleGenerator.generate(setting, snapshotReader.fabricMaterials(version),
-            snapshotReader.optionCombinations(version), before, previous, Boolean.TRUE.equals(overwrite));
-        fabricRuleMapper.delete(activeQuery(ProductPriceFabricRule.class).eq("price_setting_id", setting.getPriceSettingId()));
-        for (ProductPriceFabricRule rule : generated) {
-            ProductEntityDefaults.prepareInsert(rule);
-            fabricRuleMapper.insert(rule);
-        }
+        List<ProductPriceFabric> before = queryFabrics(setting);
+        List<ProductPriceFabric> generated = fabricSyncService.sync(setting, version, Boolean.TRUE.equals(overwrite));
         markNotReady(setting);
         recordChange(setting, "GENERATE_FABRIC_PRICES", before, generated);
         return Boolean.TRUE;
@@ -95,18 +101,18 @@ public class ProductPriceSettingServiceImpl extends ProductServiceSupport implem
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Boolean saveFabricRules(Long saleProductId, List<ProductPriceFabricRuleBo> rules) {
+    public Boolean saveFabricRules(Long saleProductId, Long priceFabricId, List<ProductPriceFabricRuleBo> rules) {
         ProductSaleProduct saleProduct = requireSaleProduct(saleProductId);
         assertPriceEditable(saleProduct);
         ProductPriceSetting setting = ensureSetting(saleProduct);
-        ProductFormulaVersion version = versionMapper.selectById(saleProduct.getFormulaVersionId());
-        fabricRuleGuard.assertSavable(version, rules);
+        ProductPriceFabric fabric = requirePriceFabric(setting, priceFabricId);
+        fabricRuleGuard.assertSavable(fabric, rules);
         List<ProductPriceFabricRule> before = fabricRuleMapper.selectList(activeQuery(ProductPriceFabricRule.class)
-            .eq("price_setting_id", setting.getPriceSettingId()));
-        fabricRuleMapper.delete(activeQuery(ProductPriceFabricRule.class).eq("price_setting_id", setting.getPriceSettingId()));
+            .eq("price_fabric_id", priceFabricId));
+        fabricRuleMapper.delete(activeQuery(ProductPriceFabricRule.class).eq("price_fabric_id", priceFabricId));
         int index = 0;
         for (ProductPriceFabricRuleBo rule : rules == null ? List.<ProductPriceFabricRuleBo>of() : rules) {
-            ProductPriceFabricRule entity = toFabricRule(rule, setting, index++);
+            ProductPriceFabricRule entity = toFabricRule(rule, setting, fabric, index++);
             ProductEntityDefaults.prepareInsert(entity);
             fabricRuleMapper.insert(entity);
         }
@@ -142,7 +148,8 @@ public class ProductPriceSettingServiceImpl extends ProductServiceSupport implem
         ProductPriceSetting setting = ensureSetting(saleProduct);
         ProductFormulaVersion version = versionMapper.selectById(saleProduct.getFormulaVersionId());
         List<ProductPriceValidationIssueVo> issues = validator.validate(version,
-            fabricRuleMapper.selectList(activeQuery(ProductPriceFabricRule.class).eq("price_setting_id", setting.getPriceSettingId())),
+            queryFabrics(setting),
+            queryFabricRules(setting),
             feeRuleMapper.selectList(activeQuery(ProductPriceFeeRule.class).eq("price_setting_id", setting.getPriceSettingId())));
         String validationStatus = issues.isEmpty() ? VALIDATION_PASS : VALIDATION_FAIL;
         String priceStatus = issues.isEmpty() ? ProductSaleProductServiceImpl.PRICE_READY : "WARNING";
@@ -200,19 +207,6 @@ public class ProductPriceSettingServiceImpl extends ProductServiceSupport implem
         return setting;
     }
 
-    private List<ProductPriceFabricRule> previousFabricRules(ProductPriceSetting setting) {
-        ProductPriceSetting previous = settingMapper.selectOne(activeQuery(ProductPriceSetting.class)
-            .eq("sale_product_id", setting.getSaleProductId())
-            .ne("formula_version_id", setting.getFormulaVersionId())
-            .orderByDesc("update_time")
-            .last("limit 1"));
-        if (previous == null) {
-            return List.of();
-        }
-        return fabricRuleMapper.selectList(activeQuery(ProductPriceFabricRule.class)
-            .eq("price_setting_id", previous.getPriceSettingId()));
-    }
-
     private void markNotReady(ProductPriceSetting setting) {
         settingMapper.update(null, new LambdaUpdateWrapper<ProductPriceSetting>()
             .eq(ProductPriceSetting::getPriceSettingId, setting.getPriceSettingId())
@@ -225,31 +219,78 @@ public class ProductPriceSettingServiceImpl extends ProductServiceSupport implem
             .set(ProductSaleProduct::getPriceStatus, ProductSaleProductServiceImpl.PRICE_NOT_READY));
     }
 
-    private ProductPriceFabricRule toFabricRule(ProductPriceFabricRuleBo bo, ProductPriceSetting setting, int index) {
+    private ProductPriceFabricRule toFabricRule(ProductPriceFabricRuleBo bo, ProductPriceSetting setting, ProductPriceFabric fabric, int index) {
         ProductPriceFabricRule entity = new ProductPriceFabricRule();
         entity.setTenantId(setting.getTenantId());
+        entity.setPriceFabricId(fabric.getPriceFabricId());
         entity.setPriceSettingId(setting.getPriceSettingId());
         entity.setSaleProductId(setting.getSaleProductId());
         entity.setFormulaVersionId(setting.getFormulaVersionId());
-        entity.setMaterialId(bo.getMaterialId());
-        entity.setMaterialCode(bo.getMaterialCode());
-        entity.setMaterialNameCn(bo.getMaterialNameCn());
-        entity.setUnitCode(bo.getUnitCode());
-        entity.setOptionCombinationKey(StringUtils.blankToDefault(bo.getOptionCombinationKey(), "DEFAULT"));
-        entity.setOptionCombinationName(StringUtils.blankToDefault(bo.getOptionCombinationName(), "默认"));
+        entity.setConditionType(Boolean.TRUE.equals(bo.getDefaultRuleFlag()) ? "DEFAULT" : StringUtils.blankToDefault(bo.getConditionType(), "EXPRESSION"));
+        entity.setConditionExpression(Boolean.TRUE.equals(bo.getDefaultRuleFlag()) ? "DEFAULT" : bo.getConditionExpression());
+        entity.setConditionText(Boolean.TRUE.equals(bo.getDefaultRuleFlag()) ? "默认规则" : bo.getConditionText());
+        entity.setConditionKey(Boolean.TRUE.equals(bo.getDefaultRuleFlag()) ? "DEFAULT" : bo.getConditionKey());
         entity.setPriceMode("FORMULA");
-        entity.setBasePrice(bo.getBasePrice());
-        entity.setAreaFormula(bo.getAreaFormula());
-        entity.setMinBillArea(bo.getMinBillArea());
-        entity.setLossRate(bo.getLossRate());
+        entity.setUnitPrice(bo.getUnitPrice());
+        entity.setPriceFormula(bo.getPriceFormula());
+        entity.setDefaultRuleFlag(Boolean.TRUE.equals(bo.getDefaultRuleFlag()));
         entity.setStatus(STATUS_ENABLED);
         entity.setSortOrder(bo.getSortOrder() == null ? index : bo.getSortOrder());
         entity.setRemark(bo.getRemark());
         return entity;
     }
 
+    private List<ProductPriceFabric> queryFabrics(ProductPriceSetting setting) {
+        return fabricMapper.selectList(activeQuery(ProductPriceFabric.class)
+            .eq("price_setting_id", setting.getPriceSettingId()).orderByAsc("sort_order", "price_fabric_id"));
+    }
+
+    private List<ProductPriceFabricRule> queryFabricRules(ProductPriceSetting setting) {
+        return fabricRuleMapper.selectList(activeQuery(ProductPriceFabricRule.class)
+            .eq("price_setting_id", setting.getPriceSettingId()).orderByAsc("sort_order", "fabric_rule_id"));
+    }
+
+    private ProductPriceFabric requirePriceFabric(ProductPriceSetting setting, Long priceFabricId) {
+        ProductPriceFabric fabric = priceFabricId == null ? null : fabricMapper.selectById(priceFabricId);
+        if (fabric == null || !setting.getPriceSettingId().equals(fabric.getPriceSettingId())) {
+            throw ServiceException.ofMessageKey("product.priceSetting.fabricPriceNotInFormulaVersion");
+        }
+        return fabric;
+    }
+
+    private List<ProductPriceFabricVo> toFabricVos(List<ProductPriceFabric> fabrics, List<ProductPriceFabricRule> rules) {
+        Map<Long, List<ProductPriceFabricRule>> rulesByFabric = rules.stream()
+            .collect(Collectors.groupingBy(ProductPriceFabricRule::getPriceFabricId));
+        return fabrics.stream().map(fabric -> {
+            ProductPriceFabricVo vo = new ProductPriceFabricVo();
+            vo.setPriceFabricId(fabric.getPriceFabricId());
+            vo.setTenantId(fabric.getTenantId());
+            vo.setPriceSettingId(fabric.getPriceSettingId());
+            vo.setSaleProductId(fabric.getSaleProductId());
+            vo.setFormulaVersionId(fabric.getFormulaVersionId());
+            vo.setMaterialId(fabric.getMaterialId());
+            vo.setMaterialCode(fabric.getMaterialCode());
+            vo.setMaterialNameCn(fabric.getMaterialNameCn());
+            vo.setUnitCode(fabric.getUnitCode());
+            vo.setStatus(fabric.getStatus());
+            vo.setSortOrder(fabric.getSortOrder());
+            vo.setRemark(fabric.getRemark());
+            List<ProductPriceFabricRule> fabricRules = rulesByFabric.getOrDefault(fabric.getPriceFabricId(), List.of());
+            vo.setRuleCount(fabricRules.size());
+            vo.setDefaultRuleFlag(fabricRules.stream().anyMatch(rule -> Boolean.TRUE.equals(rule.getDefaultRuleFlag())));
+            return vo;
+        }).toList();
+    }
+
     private void recordChange(ProductPriceSetting setting, String action, Object before, Object after) {
         changeLogService.record("PRODUCT_PRICING", "PRICE_SETTING", setting.getPriceSettingId(),
-            setting.getSaleProductCode(), action, before, after, null);
+            setting.getSaleProductCode(), action, changeLogPayload(before), changeLogPayload(after), null);
+    }
+
+    private Object changeLogPayload(Object value) {
+        if (value instanceof List<?> list) {
+            return Map.of("rowCount", list.size());
+        }
+        return value;
     }
 }

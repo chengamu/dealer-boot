@@ -69,7 +69,7 @@ class ProductFormulaUsageRuleServiceImplTest {
         ProductFormulaUsageRule rule = formulaRule(true);
         rule.setUsageFormula(null);
         rule.setWidthFormula("orderWidthCm + 3");
-        rule.setHeightFormula("orderLengthCm + 3");
+        rule.setHeightFormula("orderHeightCm + 3");
 
         assertThat(service.validationMessageKey(materials(), options(), values(), optionMaterials(), List.of(rule))).isNull();
     }

@@ -2,6 +2,7 @@ package com.bocoo.product.service.impl;
 
 import com.bocoo.common.core.utils.StringUtils;
 import com.bocoo.product.domain.entity.ProductFormulaVersion;
+import com.bocoo.product.domain.entity.ProductPriceFabric;
 import com.bocoo.product.domain.entity.ProductPriceFabricRule;
 import com.bocoo.product.domain.entity.ProductPriceFeeRule;
 import com.bocoo.product.domain.vo.ProductPriceOptionCombinationVo;
@@ -23,6 +24,7 @@ public class ProductPriceSettingValidator {
     private final ProductPriceSnapshotReader snapshotReader;
 
     public List<ProductPriceValidationIssueVo> validate(ProductFormulaVersion version,
+                                                        List<ProductPriceFabric> fabrics,
                                                         List<ProductPriceFabricRule> fabricRules,
                                                         List<ProductPriceFeeRule> feeRules) {
         List<ProductPriceValidationIssueVo> issues = new ArrayList<>();
@@ -30,10 +32,7 @@ public class ProductPriceSettingValidator {
             issues.add(issue("ERROR", "FORMULA_VERSION", null, "product.priceSetting.formulaVersionRequired"));
         }
         List<Map<String, Object>> fabricMaterials = snapshotReader.fabricMaterials(version);
-        if (!fabricMaterials.isEmpty() && fabricRules.isEmpty()) {
-            issues.add(issue("ERROR", "FABRIC_RULE", null, "product.priceSetting.fabricRuleRequired"));
-        }
-        validateFabricMatrix(version, fabricRules, issues);
+        validateFabrics(fabricMaterials, fabrics, fabricRules, issues);
         for (ProductPriceFeeRule rule : feeRules) {
             validateFeeRule(rule, issues);
         }
@@ -45,39 +44,54 @@ public class ProductPriceSettingValidator {
         return snapshotReader.materialGroupCounts(version);
     }
 
-    private void validateFabricMatrix(ProductFormulaVersion version, List<ProductPriceFabricRule> rules,
-                                      List<ProductPriceValidationIssueVo> issues) {
-        Set<String> expectedKeys = snapshotReader.fabricMaterials(version).stream()
+    private void validateFabrics(List<Map<String, Object>> expectedMaterials, List<ProductPriceFabric> fabrics,
+                                 List<ProductPriceFabricRule> rules, List<ProductPriceValidationIssueVo> issues) {
+        if (!expectedMaterials.isEmpty() && fabrics.isEmpty()) {
+            issues.add(issue("ERROR", "FABRIC", null, "product.priceSetting.fabricRuleRequired"));
+        }
+        Set<String> expectedCodes = expectedMaterials.stream()
             .map(material -> String.valueOf(material.get("materialCode")))
-            .flatMap(materialCode -> snapshotReader.optionCombinations(version).stream()
-                .map(combo -> fabricKey(materialCode, combo.getOptionCombinationKey())))
             .collect(Collectors.toSet());
-        Set<String> actualKeys = rules.stream()
-            .map(rule -> fabricKey(rule.getMaterialCode(), rule.getOptionCombinationKey()))
+        Set<String> actualCodes = fabrics.stream()
+            .map(ProductPriceFabric::getMaterialCode)
             .collect(Collectors.toSet());
-        for (String expectedKey : expectedKeys) {
-            if (!actualKeys.contains(expectedKey)) {
-                issues.add(issue("ERROR", "FABRIC_PRICE", expectedKey, "product.priceSetting.fabricPriceMissing"));
+        for (String expectedCode : expectedCodes) {
+            if (!actualCodes.contains(expectedCode)) {
+                issues.add(issue("ERROR", "FABRIC_PRICE", expectedCode, "product.priceSetting.fabricPriceMissing"));
             }
         }
-        for (ProductPriceFabricRule rule : rules) {
-            validateFabricRule(rule, expectedKeys, issues);
+        Map<Long, List<ProductPriceFabricRule>> rulesByFabric = rules.stream()
+            .collect(Collectors.groupingBy(ProductPriceFabricRule::getPriceFabricId));
+        for (ProductPriceFabric fabric : fabrics) {
+            validateFabric(fabric, expectedCodes, rulesByFabric.getOrDefault(fabric.getPriceFabricId(), List.of()), issues);
         }
     }
 
-    private void validateFabricRule(ProductPriceFabricRule rule, Set<String> expectedKeys, List<ProductPriceValidationIssueVo> issues) {
-        if (StringUtils.isBlank(rule.getMaterialCode())) {
+    private void validateFabric(ProductPriceFabric fabric, Set<String> expectedCodes, List<ProductPriceFabricRule> rules,
+                                List<ProductPriceValidationIssueVo> issues) {
+        if (StringUtils.isBlank(fabric.getMaterialCode())) {
             issues.add(issue("ERROR", "FABRIC_RULE", null, "product.priceSetting.materialRequired"));
         }
-        String rowKey = fabricKey(rule.getMaterialCode(), rule.getOptionCombinationKey());
-        if (!expectedKeys.contains(rowKey)) {
-            issues.add(issue("ERROR", "FABRIC_PRICE", rowKey, "product.priceSetting.fabricPriceNotInFormulaVersion"));
+        if (!expectedCodes.contains(fabric.getMaterialCode())) {
+            issues.add(issue("ERROR", "FABRIC_PRICE", fabric.getMaterialCode(), "product.priceSetting.fabricPriceNotInFormulaVersion"));
         }
-        if (isNotPositive(rule.getBasePrice())) {
-            issues.add(issue("ERROR", "FABRIC_RULE", rule.getMaterialCode(), "product.priceSetting.fabricPriceRequired"));
+        if (rules.stream().noneMatch(rule -> Boolean.TRUE.equals(rule.getDefaultRuleFlag()))) {
+            issues.add(issue("ERROR", "FABRIC_RULE", fabric.getMaterialCode(), "product.priceSetting.defaultFabricPriceRequired"));
         }
-        if (StringUtils.isBlank(rule.getAreaFormula())) {
-            issues.add(issue("ERROR", "FABRIC_RULE", rule.getMaterialCode(), "product.priceSetting.areaFormulaRequired"));
+        for (ProductPriceFabricRule rule : rules) {
+            validateFabricRule(fabric, rule, issues);
+        }
+    }
+
+    private void validateFabricRule(ProductPriceFabric fabric, ProductPriceFabricRule rule, List<ProductPriceValidationIssueVo> issues) {
+        if (isNotPositive(rule.getUnitPrice())) {
+            issues.add(issue("ERROR", "FABRIC_RULE", fabric.getMaterialCode(), "product.priceSetting.fabricPriceRequired"));
+        }
+        if (!ProductPriceExpressionValidator.isPriceFormulaValid(rule.getPriceFormula())) {
+            issues.add(issue("ERROR", "FABRIC_RULE", fabric.getMaterialCode(), "product.priceSetting.priceFormulaInvalid"));
+        }
+        if (!ProductPriceExpressionValidator.isConditionValid(rule.getConditionExpression())) {
+            issues.add(issue("ERROR", "FABRIC_RULE", fabric.getMaterialCode(), "product.priceSetting.conditionInvalid"));
         }
     }
 
@@ -109,11 +123,6 @@ public class ProductPriceSettingValidator {
                 issues.add(issue("ERROR", "SHIPPING", code, "product.priceSetting.shippingRuleRequired"));
             }
         }
-    }
-
-    private String fabricKey(String materialCode, String optionCombinationKey) {
-        return StringUtils.blankToDefault(materialCode, "") + "||"
-            + StringUtils.blankToDefault(optionCombinationKey, "DEFAULT");
     }
 
     private boolean isNotPositive(BigDecimal value) {

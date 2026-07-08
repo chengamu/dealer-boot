@@ -10,13 +10,13 @@ import java.util.Set;
  * It intentionally supports only arithmetic formulas and simple boolean conditions.
  */
 final class ProductFormulaExpressionValidator {
-    private static final Set<String> FORMULA_VARIABLES = Set.of("orderWidthIn", "orderLengthIn", "orderWidthCm", "orderLengthCm", "orderAreaM2");
-    private static final Set<String> CONDITION_VARIABLES = Set.of("orderWidthIn", "orderLengthIn", "orderWidthCm", "orderLengthCm", "orderAreaM2", "store", "fabric", "productType", "optionValue");
+    private static final Set<String> FORMULA_VARIABLES = Set.of("orderWidthIn", "orderHeightIn", "orderWidthCm", "orderHeightCm", "orderAreaM2");
+    private static final Set<String> CONDITION_VARIABLES = Set.of("orderWidthIn", "orderHeightIn", "orderWidthCm", "orderHeightCm", "orderAreaM2", "store", "fabric", "productType", "optionValue");
     private static final Map<String, Object> SAMPLE = Map.of(
         "orderWidthIn", 12D,
-        "orderLengthIn", 20D,
+        "orderHeightIn", 20D,
         "orderWidthCm", 30.48D,
-        "orderLengthCm", 50.8D,
+        "orderHeightCm", 50.8D,
         "orderAreaM2", 0.1548D,
         "store", "SHOP_A",
         "fabric", "XLF241801",

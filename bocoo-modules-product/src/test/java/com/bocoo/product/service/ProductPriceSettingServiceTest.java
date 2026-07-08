@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.bocoo.common.core.exception.ServiceException;
 import com.bocoo.product.domain.bo.ProductPriceFabricRuleBo;
 import com.bocoo.product.domain.entity.ProductFormulaVersion;
+import com.bocoo.product.domain.entity.ProductPriceFabric;
 import com.bocoo.product.domain.entity.ProductPriceFabricRule;
 import com.bocoo.product.domain.entity.ProductPriceFeeRule;
 import com.bocoo.product.domain.entity.ProductPriceSetting;
@@ -12,6 +13,7 @@ import com.bocoo.product.domain.vo.ProductMaterialVo;
 import com.bocoo.product.domain.vo.ProductPriceSetupVo;
 import com.bocoo.product.domain.vo.ProductPriceValidationIssueVo;
 import com.bocoo.product.mapper.ProductFormulaVersionMapper;
+import com.bocoo.product.mapper.ProductPriceFabricMapper;
 import com.bocoo.product.mapper.ProductPriceFabricRuleMapper;
 import com.bocoo.product.mapper.ProductPriceFeeRuleMapper;
 import com.bocoo.product.mapper.ProductPriceSettingMapper;
@@ -19,8 +21,8 @@ import com.bocoo.product.mapper.ProductSaleProductMapper;
 import com.bocoo.product.service.impl.ProductPriceSettingServiceImpl;
 import com.bocoo.product.service.impl.ProductPriceSettingValidator;
 import com.bocoo.product.service.impl.ProductPriceFabricCandidateFactory;
-import com.bocoo.product.service.impl.ProductPriceFabricRuleGenerator;
 import com.bocoo.product.service.impl.ProductPriceFabricRuleGuard;
+import com.bocoo.product.service.impl.ProductPriceFabricSyncService;
 import com.bocoo.product.service.impl.ProductPriceShippingRuleFactory;
 import com.bocoo.product.service.impl.ProductPriceSnapshotReader;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,6 +33,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -48,6 +51,8 @@ class ProductPriceSettingServiceTest {
     @Mock
     private ProductPriceSettingMapper settingMapper;
     @Mock
+    private ProductPriceFabricMapper fabricMapper;
+    @Mock
     private ProductPriceFabricRuleMapper fabricRuleMapper;
     @Mock
     private ProductPriceFeeRuleMapper feeRuleMapper;
@@ -62,17 +67,19 @@ class ProductPriceSettingServiceTest {
     void setUp() {
         ProductServiceTestSupport.prepareMapperAndConverter();
         ProductPriceSnapshotReader snapshotReader = new ProductPriceSnapshotReader();
+        ProductPriceFabricSyncService fabricSyncService = new ProductPriceFabricSyncService(fabricMapper, fabricRuleMapper, settingMapper, snapshotReader);
         priceSettingService = new ProductPriceSettingServiceImpl(
             saleProductMapper,
             settingMapper,
+            fabricMapper,
             fabricRuleMapper,
             feeRuleMapper,
             versionMapper,
             new ProductPriceSettingValidator(snapshotReader),
             snapshotReader,
             new ProductPriceFabricCandidateFactory(snapshotReader),
-            new ProductPriceFabricRuleGenerator(),
-            new ProductPriceFabricRuleGuard(snapshotReader),
+            fabricSyncService,
+            new ProductPriceFabricRuleGuard(),
             new ProductPriceShippingRuleFactory(),
             changeLogService
         );
@@ -83,7 +90,7 @@ class ProductPriceSettingServiceTest {
         ProductSaleProduct product = saleProduct("ENABLED");
         when(saleProductMapper.selectById(9001L)).thenReturn(product);
 
-        assertThatThrownBy(() -> priceSettingService.saveFabricRules(9001L, List.of(fabricRuleBo())))
+        assertThatThrownBy(() -> priceSettingService.saveFabricRules(9001L, 9201L, List.of(fabricRuleBo())))
             .isInstanceOf(ServiceException.class);
 
         verify(fabricRuleMapper, never()).delete(any());
@@ -96,10 +103,10 @@ class ProductPriceSettingServiceTest {
         ProductPriceSetting setting = setting();
         when(saleProductMapper.selectById(9001L)).thenReturn(product);
         when(settingMapper.selectOne(any())).thenReturn(setting);
-        when(versionMapper.selectById(7001L)).thenReturn(effectiveVersion());
+        when(fabricMapper.selectById(9201L)).thenReturn(priceFabric());
         when(fabricRuleMapper.selectList(any())).thenReturn(List.of());
 
-        assertThat(priceSettingService.saveFabricRules(9001L, List.of(fabricRuleBo()))).isTrue();
+        assertThat(priceSettingService.saveFabricRules(9001L, 9201L, List.of(fabricRuleBo()))).isTrue();
 
         verify(fabricRuleMapper).delete(any());
         verify(fabricRuleMapper).insert(any(ProductPriceFabricRule.class));
@@ -114,6 +121,7 @@ class ProductPriceSettingServiceTest {
         when(saleProductMapper.selectById(9001L)).thenReturn(product);
         when(settingMapper.selectOne(any())).thenReturn(setting);
         when(versionMapper.selectById(7001L)).thenReturn(effectiveVersion());
+        when(fabricMapper.selectList(any())).thenReturn(List.of());
         when(fabricRuleMapper.selectVoList(any())).thenReturn(List.of());
         when(feeRuleMapper.selectVoList(any())).thenReturn(List.of());
         when(fabricRuleMapper.selectList(any())).thenReturn(List.of());
@@ -135,6 +143,7 @@ class ProductPriceSettingServiceTest {
         when(saleProductMapper.selectById(9001L)).thenReturn(product);
         when(settingMapper.selectOne(any())).thenReturn(setting);
         when(versionMapper.selectById(7001L)).thenReturn(effectiveVersion());
+        when(fabricMapper.selectList(any())).thenReturn(List.of(priceFabric()));
         when(fabricRuleMapper.selectList(any())).thenReturn(List.of(fabricRule()));
         when(feeRuleMapper.selectList(any())).thenReturn(shippingRules());
 
@@ -144,7 +153,32 @@ class ProductPriceSettingServiceTest {
         verify(settingMapper).update(isNull(), any(LambdaUpdateWrapper.class));
         verify(saleProductMapper).update(isNull(), any(LambdaUpdateWrapper.class));
         verify(changeLogService).record("PRODUCT_PRICING", "PRICE_SETTING", 9101L,
-            "SP-001", "VALIDATE_PRICE", null, issues, null);
+            "SP-001", "VALIDATE_PRICE", null, Map.of("rowCount", 0), null);
+    }
+
+    @Test
+    void generateFabricPricesRemovesDuplicateFabricRows() {
+        ProductSaleProduct product = saleProduct("DISABLED");
+        ProductPriceSetting setting = setting();
+        ProductPriceFabric first = priceFabric(9201L);
+        ProductPriceFabric duplicate = priceFabric(9202L);
+        when(saleProductMapper.selectById(9001L)).thenReturn(product);
+        when(settingMapper.selectOne(any())).thenReturn(setting);
+        when(versionMapper.selectById(7001L)).thenReturn(effectiveVersion());
+        when(fabricMapper.selectList(any()))
+            .thenReturn(List.of(first, duplicate))
+            .thenReturn(List.of(first, duplicate))
+            .thenReturn(List.of(first))
+            .thenReturn(List.of(first))
+            .thenReturn(List.of(first));
+        when(settingMapper.selectList(any())).thenReturn(List.of(setting));
+        when(fabricRuleMapper.selectList(any())).thenReturn(List.of());
+        when(fabricRuleMapper.selectCount(any())).thenReturn(1L);
+
+        assertThat(priceSettingService.generateFabricPrices(9001L, false)).isTrue();
+
+        verify(fabricMapper).delete(any());
+        verify(fabricMapper).updateById(any(ProductPriceFabric.class));
     }
 
     private ProductSaleProduct saleProduct(String status) {
@@ -180,34 +214,52 @@ class ProductPriceSettingServiceTest {
         version.setVersionId(7001L);
         version.setVersionStatus("EFFECTIVE");
         version.setSetupSnapshotJson("""
-            {"materials":[{"materialId":4001,"attributeGroupCode":"FABRIC","materialCode":"MAT-FABRIC","materialNameCn":"斑马帘面料","unitCode":"m2","specModelText":"宽幅 290"}],"priceSnapshot":[{"materialCode":"MAT-FABRIC","salesPrice":12.30,"unitPrice":8.20}]}
+            {"materials":[{"materialId":4001,"attributeGroupCode":"FABRIC","materialCode":"MAT-FABRIC","materialNameCn":"斑马帘面料","unitCode":"m2","specModelText":"宽幅 290","createById":1,"createTime":"2026-07-08T14:24:18","updateTime":"2026-07-08T14:24:18"}],"priceSnapshot":[{"materialCode":"MAT-FABRIC","salesPrice":12.30,"unitPrice":8.20}]}
             """);
         return version;
     }
 
     private ProductPriceFabricRuleBo fabricRuleBo() {
         ProductPriceFabricRuleBo bo = new ProductPriceFabricRuleBo();
-        bo.setMaterialId(4001L);
-        bo.setMaterialCode("MAT-FABRIC");
-        bo.setMaterialNameCn("斑马帘面料");
-        bo.setUnitCode("m2");
-        bo.setOptionCombinationKey("DEFAULT");
-        bo.setOptionCombinationName("默认");
+        bo.setPriceFabricId(9201L);
+        bo.setConditionType("DEFAULT");
+        bo.setConditionExpression("DEFAULT");
+        bo.setConditionText("默认规则");
+        bo.setConditionKey("DEFAULT");
         bo.setPriceMode("FORMULA");
-        bo.setBasePrice(new BigDecimal("12.50"));
-        bo.setAreaFormula("(width*height)/144");
+        bo.setUnitPrice(new BigDecimal("12.50"));
+        bo.setPriceFormula("unitPrice * MAX(drop * width / 144, 1)");
+        bo.setDefaultRuleFlag(Boolean.TRUE);
         bo.setStatus("ENABLED");
         return bo;
     }
 
+    private ProductPriceFabric priceFabric() {
+        return priceFabric(9201L);
+    }
+
+    private ProductPriceFabric priceFabric(Long id) {
+        ProductPriceFabric fabric = new ProductPriceFabric();
+        fabric.setPriceFabricId(id);
+        fabric.setPriceSettingId(9101L);
+        fabric.setMaterialCode("MAT-FABRIC");
+        fabric.setMaterialNameCn("斑马帘面料");
+        fabric.setUnitCode("m2");
+        fabric.setStatus("ENABLED");
+        return fabric;
+    }
+
     private ProductPriceFabricRule fabricRule() {
         ProductPriceFabricRule rule = new ProductPriceFabricRule();
-        rule.setMaterialCode("MAT-FABRIC");
-        rule.setOptionCombinationKey("DEFAULT");
-        rule.setOptionCombinationName("默认");
+        rule.setPriceFabricId(9201L);
+        rule.setConditionType("DEFAULT");
+        rule.setConditionExpression("DEFAULT");
+        rule.setConditionText("默认规则");
+        rule.setConditionKey("DEFAULT");
         rule.setPriceMode("FORMULA");
-        rule.setBasePrice(new BigDecimal("12.50"));
-        rule.setAreaFormula("(width*height)/144");
+        rule.setUnitPrice(new BigDecimal("12.50"));
+        rule.setPriceFormula("unitPrice * MAX(drop * width / 144, 1)");
+        rule.setDefaultRuleFlag(Boolean.TRUE);
         rule.setStatus("ENABLED");
         return rule;
     }

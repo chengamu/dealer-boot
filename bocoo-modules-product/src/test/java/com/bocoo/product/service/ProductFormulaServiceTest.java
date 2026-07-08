@@ -15,6 +15,7 @@ import com.bocoo.product.service.impl.ProductFormulaDraftNormalizer;
 import com.bocoo.product.service.impl.ProductFormulaReviewLifecycle;
 import com.bocoo.product.service.impl.ProductFormulaReviewQueryService;
 import com.bocoo.product.service.impl.ProductFormulaReviewRecordQueryService;
+import com.bocoo.product.service.impl.ProductFormulaRevisionLifecycle;
 import com.bocoo.product.service.impl.ProductFormulaServiceImpl;
 import com.bocoo.product.service.impl.ProductFormulaSnapshotJson;
 import org.junit.jupiter.api.BeforeEach;
@@ -53,6 +54,8 @@ class ProductFormulaServiceTest {
     private ProductFormulaSetupService setupService;
     @Mock
     private ProductChangeLogService changeLogService;
+    @Mock
+    private ProductFormulaRevisionLifecycle revisionLifecycle;
 
     private ProductFormulaServiceImpl formulaService;
 
@@ -77,6 +80,7 @@ class ProductFormulaServiceTest {
             changeLogService,
             draftNormalizer,
             reviewLifecycle,
+            revisionLifecycle,
             new ProductFormulaReviewQueryService(versionMapper),
             new ProductFormulaReviewRecordQueryService(versionMapper)
         );
@@ -261,6 +265,24 @@ class ProductFormulaServiceTest {
         assertThat(formulaService.validateFormula(3001L)).isTrue();
 
         verify(setupService).validateSetup(3001L);
+    }
+
+    @Test
+    void setupSnapshotJsonRemovesAuditFields() {
+        String json = new ProductFormulaSnapshotJson().toJson(Map.of(
+            "materials", List.of(Map.of(
+                "materialCode", "MAT-FABRIC",
+                "createById", 1L,
+                "createBy", "admin",
+                "updateTime", "2026-07-08T13:00:00Z"
+            ))
+        ));
+
+        assertThat(json)
+            .contains("MAT-FABRIC")
+            .doesNotContain("createById")
+            .doesNotContain("createBy")
+            .doesNotContain("updateTime");
     }
 
     @Test

@@ -44,9 +44,17 @@ public interface ProductFormulaService {
 
     Boolean stop(Long id);
 
+    Boolean startRevision(Long id);
+
+    Boolean withdraw(Long id);
+
+    ProductFormulaVo copyFormula(Long id, ProductFormulaBo bo);
+
     Boolean validateFormula(Long id);
 
     List<ProductFormulaVersionVo> queryVersions(Long formulaId);
+
+    List<ProductFormulaVersionVo> queryVersionHistory(Long formulaId);
 
     ProductFormulaVersionVo queryVersionById(Long formulaId, Long versionId);
 

@@ -9,6 +9,7 @@ import com.bocoo.common.mybatis.core.page.TableDataInfo;
 import com.bocoo.product.domain.bo.ProductSaleProductBo;
 import com.bocoo.product.domain.entity.ProductFormula;
 import com.bocoo.product.domain.entity.ProductFormulaVersion;
+import com.bocoo.product.domain.entity.ProductPriceFabric;
 import com.bocoo.product.domain.entity.ProductPriceFabricRule;
 import com.bocoo.product.domain.entity.ProductPriceFeeRule;
 import com.bocoo.product.domain.entity.ProductPriceSetting;
@@ -17,6 +18,7 @@ import com.bocoo.product.domain.vo.ProductSaleProductVo;
 import com.bocoo.product.domain.vo.ReferenceCheckResultVo;
 import com.bocoo.product.mapper.ProductFormulaMapper;
 import com.bocoo.product.mapper.ProductFormulaVersionMapper;
+import com.bocoo.product.mapper.ProductPriceFabricMapper;
 import com.bocoo.product.mapper.ProductPriceFabricRuleMapper;
 import com.bocoo.product.mapper.ProductPriceFeeRuleMapper;
 import com.bocoo.product.mapper.ProductPriceSettingMapper;
@@ -43,6 +45,7 @@ public class ProductSaleProductServiceImpl extends ProductServiceSupport impleme
 
     private final ProductSaleProductMapper saleProductMapper;
     private final ProductPriceSettingMapper settingMapper;
+    private final ProductPriceFabricMapper fabricMapper;
     private final ProductPriceFabricRuleMapper fabricRuleMapper;
     private final ProductPriceFeeRuleMapper feeRuleMapper;
     private final ProductFormulaMapper formulaMapper;
@@ -95,10 +98,7 @@ public class ProductSaleProductServiceImpl extends ProductServiceSupport impleme
         boolean updated = saleProductMapper.updateById(entity) > 0;
         if (updated) {
             ProductSaleProduct saved = requireSaleProduct(entity.getSaleProductId());
-            ProductPriceSetting setting = ensurePriceSetting(saved, formula);
-            if (versionChanged) {
-                resetPriceRules(setting.getPriceSettingId());
-            }
+            ensurePriceSetting(saved, formula);
             recordChange(saved.getSaleProductId(), saved.getSaleProductCode(), "UPDATE", current, saved);
         }
         return updated;
@@ -144,11 +144,16 @@ public class ProductSaleProductServiceImpl extends ProductServiceSupport impleme
 
     @Override
     public ReferenceCheckResultVo checkReferences(Long id) {
-        ProductPriceSetting setting = settingMapper.selectOne(activeQuery(ProductPriceSetting.class).eq("sale_product_id", id).last("limit 1"));
+        List<ProductPriceSetting> settings = settingMapper.selectList(activeQuery(ProductPriceSetting.class).eq("sale_product_id", id));
+        List<Long> settingIds = settings.stream()
+            .map(ProductPriceSetting::getPriceSettingId)
+            .filter(Objects::nonNull)
+            .toList();
         long count = 0;
-        if (setting != null) {
-            count += fabricRuleMapper.selectCount(activeQuery(ProductPriceFabricRule.class).eq("price_setting_id", setting.getPriceSettingId()));
-            count += feeRuleMapper.selectCount(activeQuery(ProductPriceFeeRule.class).eq("price_setting_id", setting.getPriceSettingId()));
+        if (!settingIds.isEmpty()) {
+            count += fabricMapper.selectCount(activeQuery(ProductPriceFabric.class).in("price_setting_id", settingIds));
+            count += fabricRuleMapper.selectCount(activeQuery(ProductPriceFabricRule.class).in("price_setting_id", settingIds));
+            count += feeRuleMapper.selectCount(activeQuery(ProductPriceFeeRule.class).in("price_setting_id", settingIds));
         }
         return referenceResult(count, "product.saleProduct.priceRuleReferenced", "Price rules: " + count);
     }
@@ -241,7 +246,9 @@ public class ProductSaleProductServiceImpl extends ProductServiceSupport impleme
 
     private ProductPriceSetting ensurePriceSetting(ProductSaleProduct product, ProductFormula formula) {
         ProductPriceSetting setting = settingMapper.selectOne(activeQuery(ProductPriceSetting.class)
-            .eq("sale_product_id", product.getSaleProductId()).last("limit 1"));
+            .eq("sale_product_id", product.getSaleProductId())
+            .eq("formula_version_id", product.getFormulaVersionId())
+            .last("limit 1"));
         if (setting == null) {
             setting = new ProductPriceSetting();
             setting.setStatus("DRAFT");
@@ -262,11 +269,6 @@ public class ProductSaleProductServiceImpl extends ProductServiceSupport impleme
             settingMapper.updateById(setting);
         }
         return setting;
-    }
-
-    private void resetPriceRules(Long settingId) {
-        fabricRuleMapper.delete(activeQuery(ProductPriceFabricRule.class).eq("price_setting_id", settingId));
-        feeRuleMapper.delete(activeQuery(ProductPriceFeeRule.class).eq("price_setting_id", settingId));
     }
 
     private void deleteEmptySettings(Long saleProductId) {

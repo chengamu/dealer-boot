@@ -1,5 +1,7 @@
 package com.bocoo.product.service.impl;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -158,15 +160,23 @@ final class ProductFormulaExpressionParser {
         if (!match("(")) {
             throw new IllegalArgumentException("missing (");
         }
-        double value = toNumber(parseExpression());
-        double scale = 0D;
-        if (match(",")) {
-            scale = toNumber(parseExpression());
+        List<Double> args = new ArrayList<>();
+        if (!peek(")")) {
+            do {
+                args.add(toNumber(parseExpression()));
+            } while (match(","));
         }
         if (!match(")")) {
             throw new IllegalArgumentException("missing )");
         }
+        if (args.isEmpty()) {
+            throw new IllegalArgumentException("invalid function arguments");
+        }
+        double value = args.get(0);
+        double scale = args.size() > 1 ? args.get(1) : 0D;
         return switch (identifier) {
+            case "max" -> args.stream().mapToDouble(Double::doubleValue).max().orElseThrow();
+            case "min" -> args.stream().mapToDouble(Double::doubleValue).min().orElseThrow();
             case "round" -> round(value, scale);
             case "ceil" -> ceil(value, scale);
             case "floor" -> floor(value, scale);

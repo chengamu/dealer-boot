@@ -10,31 +10,29 @@ import lombok.EqualsAndHashCode;
 import java.math.BigDecimal;
 
 /**
- * 面料价格规则 pc_price_fabric_rule
+ * 面料条件价格规则 pc_price_fabric_rule
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
 @TableName("pc_price_fabric_rule")
-@Schema(description = "面料价格规则")
+@Schema(description = "面料条件价格规则")
 public class ProductPriceFabricRule extends BaseEntity {
 
     @TableId(value = "fabric_rule_id")
     private Long fabricRuleId;
     private Long tenantId;
+    private Long priceFabricId;
     private Long priceSettingId;
     private Long saleProductId;
     private Long formulaVersionId;
-    private Long materialId;
-    private String materialCode;
-    private String materialNameCn;
-    private String unitCode;
-    private String optionCombinationKey;
-    private String optionCombinationName;
+    private String conditionType;
+    private String conditionExpression;
+    private String conditionText;
+    private String conditionKey;
     private String priceMode;
-    private BigDecimal basePrice;
-    private String areaFormula;
-    private BigDecimal minBillArea;
-    private BigDecimal lossRate;
+    private BigDecimal unitPrice;
+    private String priceFormula;
+    private Boolean defaultRuleFlag;
     private String status;
     private Integer sortOrder;
     private String delFlag;

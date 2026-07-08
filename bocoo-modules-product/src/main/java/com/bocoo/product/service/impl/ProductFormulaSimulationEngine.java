@@ -186,15 +186,15 @@ class ProductFormulaSimulationEngine extends ProductServiceSupport {
     }
     private Map<String, Object> expressionContext(ProductFormula formula, ProductFormulaSimulationVo vo) {
         double widthIn = vo.getOrderWidth().doubleValue();
-        double lengthIn = vo.getOrderHeight().doubleValue();
+        double heightIn = vo.getOrderHeight().doubleValue();
         double widthCm = widthIn * 2.54D;
-        double lengthCm = lengthIn * 2.54D;
+        double heightCm = heightIn * 2.54D;
         Map<String, Object> context = new HashMap<>();
         context.put("orderWidthIn", widthIn);
-        context.put("orderLengthIn", lengthIn);
+        context.put("orderHeightIn", heightIn);
         context.put("orderWidthCm", widthCm);
-        context.put("orderLengthCm", lengthCm);
-        context.put("orderAreaM2", widthCm * lengthCm / 10000D);
+        context.put("orderHeightCm", heightCm);
+        context.put("orderAreaM2", widthCm * heightCm / 10000D);
         context.put("productType", formula.getProductTypeCode());
         context.put("fabric", vo.getSelectedOptionValues().getOrDefault("FABRIC", ""));
         context.put("optionValue", "");
@@ -275,7 +275,7 @@ class ProductFormulaSimulationEngine extends ProductServiceSupport {
             case "OPTION_VALUE" -> compareString(selectedValues.get(restriction.getConditionOptionCode()),
                 restriction.getConditionValueCode(), restriction.getConditionOperator());
             case "WIDTH" -> compareNumber(numberValue(context.get("orderWidthIn")), restriction.getConditionValueNumber(), restriction.getConditionOperator());
-            case "HEIGHT" -> compareNumber(numberValue(context.get("orderLengthIn")), restriction.getConditionValueNumber(), restriction.getConditionOperator());
+            case "HEIGHT" -> compareNumber(numberValue(context.get("orderHeightIn")), restriction.getConditionValueNumber(), restriction.getConditionOperator());
             default -> false;
         };
     }

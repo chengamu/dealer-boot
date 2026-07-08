@@ -59,5 +59,6 @@ pnpm-debug.log*
 .ai/runtime-validation/
 .ai/tmp/
 .ai/artifacts/
+.codex-tmp/
 .codegraph/
 .cursor/

@@ -134,7 +134,7 @@ const businessValueOptions = computed<ConditionValue[]>(() => selectedBusinessFi
   : [])
 
 const orderFields = computed(() => formulaVariables
-  .filter((item) => ['orderWidthIn', 'orderLengthIn', 'orderWidthCm', 'orderLengthCm', 'orderAreaM2'].includes(item.name))
+  .filter((item) => ['orderWidthIn', 'orderHeightIn', 'orderWidthCm', 'orderHeightCm', 'orderAreaM2'].includes(item.name))
   .map((variable) => ({ label: variable.label, name: variable.name, insert: variable.label }))
 )
 

@@ -2,19 +2,28 @@ package com.bocoo.product.service.impl;
 
 import com.bocoo.product.domain.entity.ProductFormula;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Component
 public class ProductFormulaSnapshotJson {
 
+    private static final Set<String> AUDIT_FIELDS = Set.of(
+        "createById", "createBy", "createTime", "updateBy", "updateTime", "delFlag"
+    );
+
     private static final JsonMapper OBJECT_MAPPER = JsonMapper.builder()
         .addModule(new JavaTimeModule())
+        .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
         .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
         .build();
 
@@ -70,9 +79,45 @@ public class ProductFormulaSnapshotJson {
                 snapshot.put("sizeSummary", formula.getSizeSummary());
                 return OBJECT_MAPPER.writeValueAsString(snapshot);
             }
+            if (value instanceof Map<?, ?> map) {
+                return OBJECT_MAPPER.writeValueAsString(cleanMap(map));
+            }
             return OBJECT_MAPPER.writeValueAsString(value);
         } catch (JsonProcessingException e) {
             throw new IllegalStateException("Failed to serialize formula snapshot", e);
         }
+    }
+
+    public <T> T fromJson(String value, Class<T> type) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        try {
+            return OBJECT_MAPPER.readValue(value, type);
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException("Failed to parse formula snapshot", e);
+        }
+    }
+
+    private Map<String, Object> cleanMap(Map<?, ?> source) {
+        Map<String, Object> result = new LinkedHashMap<>();
+        source.forEach((key, value) -> {
+            if (key != null && !AUDIT_FIELDS.contains(String.valueOf(key))) {
+                result.put(String.valueOf(key), cleanValue(value));
+            }
+        });
+        return result;
+    }
+
+    private Object cleanValue(Object value) {
+        if (value instanceof Map<?, ?> map) {
+            return cleanMap(map);
+        }
+        if (value instanceof List<?> list) {
+            List<Object> result = new ArrayList<>();
+            list.forEach(item -> result.add(cleanValue(item)));
+            return result;
+        }
+        return value;
     }
 }
