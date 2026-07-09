@@ -277,10 +277,13 @@ CREATE TABLE IF NOT EXISTS pc_formula_usage_rule (
     material_name_cn varchar(200),
     rule_name varchar(200),
     condition_type varchar(40) NOT NULL DEFAULT 'OPTION_VALUE',
+    condition_option_ref_key varchar(80),
     condition_option_code varchar(80),
     condition_option_name_cn varchar(200),
+    condition_value_ref_key varchar(80),
     condition_value_code varchar(80),
     condition_value_name_cn varchar(200),
+    condition_json text,
     condition_expression text,
     condition_text varchar(500),
     condition_key varchar(300),
@@ -323,10 +326,13 @@ ALTER TABLE IF EXISTS pc_formula_usage_rule
     ADD COLUMN IF NOT EXISTS material_name_cn varchar(200),
     ADD COLUMN IF NOT EXISTS rule_name varchar(200),
     ADD COLUMN IF NOT EXISTS condition_type varchar(40) NOT NULL DEFAULT 'OPTION_VALUE',
+    ADD COLUMN IF NOT EXISTS condition_option_ref_key varchar(80),
     ADD COLUMN IF NOT EXISTS condition_option_code varchar(80),
     ADD COLUMN IF NOT EXISTS condition_option_name_cn varchar(200),
+    ADD COLUMN IF NOT EXISTS condition_value_ref_key varchar(80),
     ADD COLUMN IF NOT EXISTS condition_value_code varchar(80),
     ADD COLUMN IF NOT EXISTS condition_value_name_cn varchar(200),
+    ADD COLUMN IF NOT EXISTS condition_json text,
     ADD COLUMN IF NOT EXISTS condition_expression text,
     ADD COLUMN IF NOT EXISTS condition_text varchar(500),
     ADD COLUMN IF NOT EXISTS condition_key varchar(300),
@@ -362,8 +368,11 @@ COMMENT ON TABLE pc_formula_usage_rule IS '产品配方条件用量规则草稿�
 COMMENT ON COLUMN pc_formula_usage_rule.usage_rule_id IS '条件用量规则ID';
 COMMENT ON COLUMN pc_formula_usage_rule.formula_material_id IS '配方原料池ID';
 COMMENT ON COLUMN pc_formula_usage_rule.condition_type IS '条件类型：DEFAULT、OPTION_VALUE、EXPRESSION';
+COMMENT ON COLUMN pc_formula_usage_rule.condition_option_ref_key IS '适用配置项稳定引用键，改名不变';
 COMMENT ON COLUMN pc_formula_usage_rule.condition_option_code IS '适用配置项编码，如 FABRIC';
+COMMENT ON COLUMN pc_formula_usage_rule.condition_value_ref_key IS '适用配置项值稳定引用键，改名不变';
 COMMENT ON COLUMN pc_formula_usage_rule.condition_value_code IS '适用配置项值，如面料物料编码';
+COMMENT ON COLUMN pc_formula_usage_rule.condition_json IS '结构化条件快照，ref key 为主、编码名称为展示快照';
 COMMENT ON COLUMN pc_formula_usage_rule.condition_expression IS '内部条件表达式，如 fabric == "XLF241801"';
 COMMENT ON COLUMN pc_formula_usage_rule.condition_text IS '条件展示文本，如 面料 = XLF241801';
 COMMENT ON COLUMN pc_formula_usage_rule.condition_key IS '条件唯一键，默认 DEFAULT 或 OPTION:{option}:{value}';
@@ -381,6 +390,7 @@ COMMENT ON COLUMN pc_formula_usage_rule.default_rule_flag IS '默认规则标记
 CREATE INDEX IF NOT EXISTS idx_pc_formula_usage_rule_material ON pc_formula_usage_rule (tenant_id, formula_id, formula_material_id, status) WHERE del_flag = '0';
 CREATE INDEX IF NOT EXISTS idx_pc_formula_usage_rule_code ON pc_formula_usage_rule (tenant_id, formula_id, material_code) WHERE del_flag = '0';
 CREATE INDEX IF NOT EXISTS idx_pc_formula_usage_rule_condition ON pc_formula_usage_rule (tenant_id, formula_id, condition_option_code, condition_value_code) WHERE del_flag = '0';
+CREATE INDEX IF NOT EXISTS idx_pc_formula_usage_rule_condition_ref ON pc_formula_usage_rule (tenant_id, formula_id, condition_option_ref_key, condition_value_ref_key) WHERE del_flag = '0';
 CREATE INDEX IF NOT EXISTS idx_pc_formula_usage_rule_condition_key ON pc_formula_usage_rule (tenant_id, formula_id, material_code, condition_key, status) WHERE del_flag = '0';
 
 CREATE TABLE IF NOT EXISTS pc_formula_variable (
@@ -427,6 +437,7 @@ CREATE TABLE IF NOT EXISTS pc_formula_variable_rule (
     variable_id bigint,
     variable_key varchar(80) NOT NULL,
     variable_code varchar(80) NOT NULL,
+    condition_json text,
     condition_expression text,
     condition_text varchar(500),
     value_type varchar(40) NOT NULL DEFAULT 'FIXED',
@@ -450,6 +461,7 @@ ALTER TABLE IF EXISTS pc_formula_variable_rule
     ADD COLUMN IF NOT EXISTS variable_id bigint,
     ADD COLUMN IF NOT EXISTS variable_key varchar(80),
     ADD COLUMN IF NOT EXISTS variable_code varchar(80),
+    ADD COLUMN IF NOT EXISTS condition_json text,
     ADD COLUMN IF NOT EXISTS condition_expression text,
     ADD COLUMN IF NOT EXISTS condition_text varchar(500),
     ADD COLUMN IF NOT EXISTS value_type varchar(40) NOT NULL DEFAULT 'FIXED',
@@ -465,6 +477,7 @@ COMMENT ON TABLE pc_formula_variable_rule IS '产品配方内部变量取值规�
 COMMENT ON COLUMN pc_formula_variable_rule.rule_id IS '内部变量规则ID';
 COMMENT ON COLUMN pc_formula_variable_rule.variable_key IS '变量隐藏引用键快照';
 COMMENT ON COLUMN pc_formula_variable_rule.variable_code IS '变量编码快照';
+COMMENT ON COLUMN pc_formula_variable_rule.condition_json IS '结构化条件快照';
 COMMENT ON COLUMN pc_formula_variable_rule.condition_expression IS '规则内部条件表达式';
 COMMENT ON COLUMN pc_formula_variable_rule.value_type IS '取值方式：FIXED、FORMULA';
 COMMENT ON COLUMN pc_formula_variable_rule.default_rule_flag IS '默认规则标记';
@@ -475,6 +488,7 @@ CREATE TABLE IF NOT EXISTS pc_formula_option (
     option_id bigint PRIMARY KEY,
     tenant_id bigint NOT NULL DEFAULT 1 CHECK (tenant_id <> 0),
     formula_id bigint NOT NULL,
+    option_ref_key varchar(80),
     option_code varchar(80) NOT NULL,
     option_name_cn varchar(200) NOT NULL,
     option_name_en varchar(200),
@@ -482,11 +496,14 @@ CREATE TABLE IF NOT EXISTS pc_formula_option (
     source_scope varchar(300),
     selection_mode varchar(40) NOT NULL DEFAULT 'SINGLE',
     display_mode varchar(40) NOT NULL DEFAULT 'SELECT',
+    default_value_ref_key varchar(80),
     default_value_code varchar(80),
     default_value_name_cn varchar(200),
     visibility_mode varchar(40) NOT NULL DEFAULT 'ALWAYS',
+    visible_condition_option_ref_key varchar(80),
     visible_condition_option_code varchar(80),
     visible_condition_option_name_cn varchar(200),
+    visible_condition_value_ref_key varchar(80),
     visible_condition_value_code varchar(80),
     visible_condition_value_name_cn varchar(200),
     required_flag boolean NOT NULL DEFAULT false,
@@ -508,11 +525,15 @@ CREATE TABLE IF NOT EXISTS pc_formula_option (
 );
 
 COMMENT ON TABLE pc_formula_option IS '产品配方业务配置项草稿表';
+ALTER TABLE IF EXISTS pc_formula_option ADD COLUMN IF NOT EXISTS option_ref_key varchar(80);
 ALTER TABLE IF EXISTS pc_formula_option ADD COLUMN IF NOT EXISTS option_name_en varchar(200);
 ALTER TABLE IF EXISTS pc_formula_option ADD COLUMN IF NOT EXISTS display_mode varchar(40) NOT NULL DEFAULT 'SELECT';
+ALTER TABLE IF EXISTS pc_formula_option ADD COLUMN IF NOT EXISTS default_value_ref_key varchar(80);
 ALTER TABLE IF EXISTS pc_formula_option ADD COLUMN IF NOT EXISTS visibility_mode varchar(40) NOT NULL DEFAULT 'ALWAYS';
+ALTER TABLE IF EXISTS pc_formula_option ADD COLUMN IF NOT EXISTS visible_condition_option_ref_key varchar(80);
 ALTER TABLE IF EXISTS pc_formula_option ADD COLUMN IF NOT EXISTS visible_condition_option_code varchar(80);
 ALTER TABLE IF EXISTS pc_formula_option ADD COLUMN IF NOT EXISTS visible_condition_option_name_cn varchar(200);
+ALTER TABLE IF EXISTS pc_formula_option ADD COLUMN IF NOT EXISTS visible_condition_value_ref_key varchar(80);
 ALTER TABLE IF EXISTS pc_formula_option ADD COLUMN IF NOT EXISTS visible_condition_value_code varchar(80);
 ALTER TABLE IF EXISTS pc_formula_option ADD COLUMN IF NOT EXISTS visible_condition_value_name_cn varchar(200);
 ALTER TABLE IF EXISTS pc_formula_option ADD COLUMN IF NOT EXISTS required_flag boolean NOT NULL DEFAULT false;
@@ -524,8 +545,12 @@ ALTER TABLE IF EXISTS pc_formula_option ADD COLUMN IF NOT EXISTS help_url varcha
 ALTER TABLE IF EXISTS pc_formula_option ADD COLUMN IF NOT EXISTS help_content text;
 COMMENT ON COLUMN pc_formula_option.visibility_mode IS '订单端显示模式：ALWAYS 始终显示，CONDITIONAL 满足条件显示';
 COMMENT ON COLUMN pc_formula_option.display_mode IS '订单端控件展示方式：SELECT 普通下拉，IMAGE_SELECT 图文下拉';
+COMMENT ON COLUMN pc_formula_option.option_ref_key IS '配置项稳定引用键，改名不变';
+COMMENT ON COLUMN pc_formula_option.default_value_ref_key IS '默认选项值稳定引用键，改名不变';
+COMMENT ON COLUMN pc_formula_option.visible_condition_option_ref_key IS '条件显示依赖配置项稳定引用键，改名不变';
 COMMENT ON COLUMN pc_formula_option.visible_condition_option_code IS '条件显示依赖配置项编码';
 COMMENT ON COLUMN pc_formula_option.visible_condition_option_name_cn IS '条件显示依赖配置项名称快照';
+COMMENT ON COLUMN pc_formula_option.visible_condition_value_ref_key IS '条件显示依赖选项值稳定引用键，改名不变';
 COMMENT ON COLUMN pc_formula_option.visible_condition_value_code IS '条件显示依赖选项值编码';
 COMMENT ON COLUMN pc_formula_option.visible_condition_value_name_cn IS '条件显示依赖选项值名称快照';
 COMMENT ON COLUMN pc_formula_option.required_flag IS '下单必填标记';
@@ -537,13 +562,16 @@ COMMENT ON COLUMN pc_formula_option.help_url IS '订单端帮助超链接';
 COMMENT ON COLUMN pc_formula_option.help_content IS '订单端帮助纯文本说明';
 CREATE INDEX IF NOT EXISTS idx_pc_formula_option_formula_sort ON pc_formula_option (tenant_id, formula_id, sort_order, option_id) WHERE del_flag = '0';
 CREATE INDEX IF NOT EXISTS idx_pc_formula_option_code ON pc_formula_option (tenant_id, formula_id, option_code) WHERE del_flag = '0';
+CREATE INDEX IF NOT EXISTS idx_pc_formula_option_ref ON pc_formula_option (tenant_id, formula_id, option_ref_key) WHERE del_flag = '0';
 
 CREATE TABLE IF NOT EXISTS pc_formula_option_value (
     option_value_id bigint PRIMARY KEY,
     tenant_id bigint NOT NULL DEFAULT 1 CHECK (tenant_id <> 0),
     formula_id bigint NOT NULL,
     option_id bigint,
+    option_ref_key varchar(80),
     option_code varchar(80) NOT NULL,
+    value_ref_key varchar(80),
     value_code varchar(80) NOT NULL,
     value_name_cn varchar(200) NOT NULL,
     value_name_en varchar(200),
@@ -560,8 +588,13 @@ CREATE TABLE IF NOT EXISTS pc_formula_option_value (
 );
 
 COMMENT ON TABLE pc_formula_option_value IS '产品配方业务配置项可选值草稿表';
+ALTER TABLE IF EXISTS pc_formula_option_value ADD COLUMN IF NOT EXISTS option_ref_key varchar(80);
+ALTER TABLE IF EXISTS pc_formula_option_value ADD COLUMN IF NOT EXISTS value_ref_key varchar(80);
 ALTER TABLE IF EXISTS pc_formula_option_value ADD COLUMN IF NOT EXISTS value_name_en varchar(200);
+COMMENT ON COLUMN pc_formula_option_value.option_ref_key IS '所属配置项稳定引用键快照';
+COMMENT ON COLUMN pc_formula_option_value.value_ref_key IS '配置项值稳定引用键，改名不变';
 CREATE INDEX IF NOT EXISTS idx_pc_formula_option_value_formula_sort ON pc_formula_option_value (tenant_id, formula_id, option_code, sort_order, option_value_id) WHERE del_flag = '0';
+CREATE INDEX IF NOT EXISTS idx_pc_formula_option_value_ref ON pc_formula_option_value (tenant_id, formula_id, option_ref_key, value_ref_key) WHERE del_flag = '0';
 
 CREATE TABLE IF NOT EXISTS pc_formula_option_material (
     option_material_id bigint PRIMARY KEY,
@@ -569,7 +602,9 @@ CREATE TABLE IF NOT EXISTS pc_formula_option_material (
     formula_id bigint NOT NULL,
     option_id bigint,
     option_value_id bigint,
+    option_ref_key varchar(80),
     option_code varchar(80) NOT NULL,
+    value_ref_key varchar(80),
     value_code varchar(80) NOT NULL,
     formula_material_id bigint,
     material_id bigint,
@@ -589,22 +624,32 @@ CREATE TABLE IF NOT EXISTS pc_formula_option_material (
 );
 
 COMMENT ON TABLE pc_formula_option_material IS '产品配方选项值关联原料池物料草稿表';
+ALTER TABLE IF EXISTS pc_formula_option_material ADD COLUMN IF NOT EXISTS option_ref_key varchar(80);
+ALTER TABLE IF EXISTS pc_formula_option_material ADD COLUMN IF NOT EXISTS value_ref_key varchar(80);
+COMMENT ON COLUMN pc_formula_option_material.option_ref_key IS '配置项稳定引用键快照';
+COMMENT ON COLUMN pc_formula_option_material.value_ref_key IS '配置项值稳定引用键快照';
 CREATE INDEX IF NOT EXISTS idx_pc_formula_option_material_formula_sort ON pc_formula_option_material (tenant_id, formula_id, option_code, value_code, sort_order, option_material_id) WHERE del_flag = '0';
+CREATE INDEX IF NOT EXISTS idx_pc_formula_option_material_ref ON pc_formula_option_material (tenant_id, formula_id, option_ref_key, value_ref_key, material_code) WHERE del_flag = '0';
 
 CREATE TABLE IF NOT EXISTS pc_formula_restriction (
     restriction_id bigint PRIMARY KEY,
     tenant_id bigint NOT NULL DEFAULT 1 CHECK (tenant_id <> 0),
     formula_id bigint NOT NULL,
     restriction_name varchar(200),
+    target_option_ref_key varchar(80),
     target_option_code varchar(80) NOT NULL,
     condition_type varchar(40) NOT NULL,
+    condition_option_ref_key varchar(80),
     condition_option_code varchar(80),
     condition_operator varchar(40) NOT NULL,
+    condition_value_ref_key varchar(80),
     condition_value_code varchar(80),
     condition_value_number numeric(18,6),
+    condition_json text,
     condition_expression text,
     condition_text varchar(500),
     action_type varchar(40) NOT NULL,
+    target_value_ref_key varchar(80),
     target_value_code varchar(80),
     message_text varchar(500),
     status varchar(20) NOT NULL DEFAULT 'ENABLED',
@@ -619,11 +664,22 @@ CREATE TABLE IF NOT EXISTS pc_formula_restriction (
 );
 
 COMMENT ON TABLE pc_formula_restriction IS '产品配方限制条件草稿表';
+ALTER TABLE IF EXISTS pc_formula_restriction ADD COLUMN IF NOT EXISTS target_option_ref_key varchar(80);
+ALTER TABLE IF EXISTS pc_formula_restriction ADD COLUMN IF NOT EXISTS condition_option_ref_key varchar(80);
+ALTER TABLE IF EXISTS pc_formula_restriction ADD COLUMN IF NOT EXISTS condition_value_ref_key varchar(80);
+ALTER TABLE IF EXISTS pc_formula_restriction ADD COLUMN IF NOT EXISTS condition_json text;
 ALTER TABLE IF EXISTS pc_formula_restriction ADD COLUMN IF NOT EXISTS condition_expression text;
 ALTER TABLE IF EXISTS pc_formula_restriction ADD COLUMN IF NOT EXISTS condition_text varchar(500);
+ALTER TABLE IF EXISTS pc_formula_restriction ADD COLUMN IF NOT EXISTS target_value_ref_key varchar(80);
+COMMENT ON COLUMN pc_formula_restriction.target_option_ref_key IS '限制目标配置项稳定引用键，改名不变';
+COMMENT ON COLUMN pc_formula_restriction.condition_option_ref_key IS '限制条件配置项稳定引用键，改名不变';
+COMMENT ON COLUMN pc_formula_restriction.condition_value_ref_key IS '限制条件选项值稳定引用键，改名不变';
+COMMENT ON COLUMN pc_formula_restriction.condition_json IS '结构化条件快照，ref key 为主、编码名称为展示快照';
 COMMENT ON COLUMN pc_formula_restriction.condition_expression IS '限制条件表达式，返回 true 时触发限制';
 COMMENT ON COLUMN pc_formula_restriction.condition_text IS '限制条件展示文本';
+COMMENT ON COLUMN pc_formula_restriction.target_value_ref_key IS '限制目标选项值稳定引用键，改名不变';
 CREATE INDEX IF NOT EXISTS idx_pc_formula_restriction_formula_sort ON pc_formula_restriction (tenant_id, formula_id, sort_order, restriction_id) WHERE del_flag = '0';
+CREATE INDEX IF NOT EXISTS idx_pc_formula_restriction_ref ON pc_formula_restriction (tenant_id, formula_id, target_option_ref_key, condition_option_ref_key, condition_value_ref_key) WHERE del_flag = '0';
 
 CREATE TABLE IF NOT EXISTS pc_formula_version (
     version_id bigint PRIMARY KEY,
@@ -844,6 +900,7 @@ CREATE TABLE IF NOT EXISTS pc_price_fabric_rule (
     sale_product_id bigint NOT NULL,
     formula_version_id bigint NOT NULL,
     condition_type varchar(40) NOT NULL DEFAULT 'DEFAULT',
+    condition_json text,
     condition_expression text,
     condition_text varchar(500),
     condition_key varchar(500),
@@ -869,6 +926,7 @@ ALTER TABLE IF EXISTS pc_price_fabric_rule
     ADD COLUMN IF NOT EXISTS sale_product_id bigint,
     ADD COLUMN IF NOT EXISTS formula_version_id bigint,
     ADD COLUMN IF NOT EXISTS condition_type varchar(40) NOT NULL DEFAULT 'DEFAULT',
+    ADD COLUMN IF NOT EXISTS condition_json text,
     ADD COLUMN IF NOT EXISTS condition_expression text,
     ADD COLUMN IF NOT EXISTS condition_text varchar(500),
     ADD COLUMN IF NOT EXISTS condition_key varchar(500),
@@ -1002,9 +1060,11 @@ BEGIN
     END IF;
 END $$;
 
+-- 新系统按 pc_price_fabric 作为面料价格主行；先兼容迁移旧规则，再只清理无法迁移的数据。
 DELETE FROM pc_price_fabric_rule WHERE price_fabric_id IS NULL;
 
 COMMENT ON TABLE pc_price_fabric_rule IS '面料条件价格规则表，同一面料可按尺寸和配方选项维护多条价格规则';
+COMMENT ON COLUMN pc_price_fabric_rule.condition_json IS '结构化条件快照，条件编辑器生成';
 COMMENT ON COLUMN pc_price_fabric_rule.condition_expression IS '价格规则生效条件，默认规则为 DEFAULT';
 COMMENT ON COLUMN pc_price_fabric_rule.price_mode IS '计价方式：FORMULA';
 COMMENT ON COLUMN pc_price_fabric_rule.price_formula IS '价格公式文本，使用 unitPrice、width、drop、MAX/MIN/ROUND 等变量';

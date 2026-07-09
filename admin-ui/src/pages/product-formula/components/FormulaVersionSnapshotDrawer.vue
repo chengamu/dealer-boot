@@ -2,8 +2,9 @@
   <el-drawer
     :model-value="modelValue"
     :title="title"
-    size="76%"
+    size="82%"
     destroy-on-close
+    class="formula-snapshot-drawer"
     @update:model-value="$emit('update:modelValue', $event)"
   >
     <el-empty v-if="!version" :description="t('productCenter.formulaWorkbench.snapshotEmpty')" />
@@ -33,19 +34,13 @@
 
       <section class="snapshot-section">
         <div class="snapshot-section__title">{{ t('productCenter.formulaReview.materialDetail') }}</div>
-        <el-table :data="materials" border height="420">
-          <el-table-column type="index" :label="t('common.index')" width="56" align="center" />
-          <el-table-column prop="attributeGroupNameCn" :label="t('productCenter.formulaSetup.attributeGroup')" width="100" />
-          <el-table-column prop="materialTypeNameCn" :label="t('productCenter.formulaSetup.materialType')" width="120" />
-          <el-table-column prop="materialCode" :label="t('productCenter.formulaSetup.materialCode')" width="130" />
-          <el-table-column prop="materialNameCn" :label="t('productCenter.formulaSetup.materialName')" min-width="220" show-overflow-tooltip />
-          <el-table-column prop="specModelText" :label="t('productCenter.formulaSetup.specModel')" min-width="180" show-overflow-tooltip />
-          <el-table-column prop="unitCode" :label="t('productCenter.formulaSetup.unit')" width="80" align="center" />
-          <el-table-column :label="t('productCenter.formulaSetup.lossRate')" width="90" align="right">
-            <template #default="{ row }">{{ formatNumber(row.lossRate) }}</template>
-          </el-table-column>
-          <el-table-column prop="productionRemark" :label="t('productCenter.formulaSetup.productionRemark')" min-width="160" show-overflow-tooltip />
-        </el-table>
+        <FormulaReviewMaterialSummary
+          :materials="materials"
+          :usage-rules="usageRules"
+          :price-snapshot-rows="priceSnapshotRows"
+          :unit-rows="unitRows || []"
+          :t="t"
+        />
       </section>
     </div>
   </el-drawer>
@@ -56,14 +51,19 @@ import { computed } from 'vue'
 import type {
   ProductFormulaMaterialVO,
   ProductFormulaSetupVO,
+  ProductFormulaUsageRuleVO,
   ProductFormulaVersionVO,
-  ProductFormulaVO
+  ProductFormulaVO,
+  ProductUnitVO
 } from '@/api/product-capability/types'
 import { parseFormulaReviewJson } from '../utils/formulaReviewDisplay'
+import FormulaReviewMaterialSummary from './FormulaReviewMaterialSummary.vue'
+import type { FormulaReviewPriceSnapshotRow } from '../utils/formulaReviewMaterialSummary'
 
 const props = defineProps<{
   modelValue: boolean
   version?: ProductFormulaVersionVO
+  unitRows?: ProductUnitVO[]
   t: (key: string) => string
 }>()
 
@@ -75,17 +75,23 @@ const title = computed(() => `${props.t('productCenter.formulaWorkbench.versionS
 const formula = computed(() => parseFormulaReviewJson<ProductFormulaVO>(props.version?.formulaSnapshotJson))
 const setup = computed(() => parseFormulaReviewJson<ProductFormulaSetupVO>(props.version?.setupSnapshotJson))
 const materials = computed(() => (setup.value.materials || []) as ProductFormulaMaterialVO[])
-
-function formatNumber(value?: number) {
-  if (value == null || Number.isNaN(Number(value))) return '-'
-  return Number(value).toFixed(2)
-}
+const usageRules = computed(() => (setup.value.usageRules || []) as ProductFormulaUsageRuleVO[])
+const priceSnapshotRows = computed(() => (setup.value.priceSnapshot || []) as FormulaReviewPriceSnapshotRow[])
 </script>
 
 <style scoped>
+:deep(.formula-snapshot-drawer .el-drawer__body) {
+  display: flex;
+  min-height: 0;
+  padding: 16px 20px 18px;
+}
+
 .snapshot-drawer {
-  display: grid;
-  gap: 14px;
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .snapshot-summary {
@@ -117,7 +123,10 @@ function formatNumber(value?: number) {
 }
 
 .snapshot-section {
-  display: grid;
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
   gap: 8px;
 }
 
@@ -125,5 +134,9 @@ function formatNumber(value?: number) {
   color: #1d2129;
   font-size: 15px;
   font-weight: 600;
+}
+
+.snapshot-section :deep(.review-material-summary) {
+  min-height: 0;
 }
 </style>

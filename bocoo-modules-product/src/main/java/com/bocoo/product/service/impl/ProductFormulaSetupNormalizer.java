@@ -115,8 +115,7 @@ public class ProductFormulaSetupNormalizer extends ProductServiceSupport {
             .collect(Collectors.toMap(ProductFormulaMaterial::getFormulaMaterialId, Function.identity(), (left, right) -> left));
         Map<String, ProductFormulaMaterial> materialByCode = materials.stream()
             .collect(Collectors.toMap(ProductFormulaMaterial::getMaterialCode, Function.identity(), (left, right) -> left));
-        Set<String> optionCodes = options.stream().map(ProductFormulaOption::getOptionCode).collect(Collectors.toSet());
-        Set<String> valueKeys = values.stream().map(value -> key(value.getOptionCode(), value.getValueCode())).collect(Collectors.toSet());
+        ProductFormulaOptionRefResolver optionResolver = new ProductFormulaOptionRefResolver(options, values);
         Set<String> duplicateKeys = new HashSet<>();
         List<ProductFormulaOptionMaterial> result = new ArrayList<>();
         int index = 0;
@@ -126,15 +125,26 @@ public class ProductFormulaSetupNormalizer extends ProductServiceSupport {
                 continue;
             }
             entity.setFormulaId(formulaId);
-            entity.setOptionCode(requiredUpper(entity.getOptionCode(), "product.formula.optionCodeRequired"));
-            entity.setValueCode(requiredUpper(entity.getValueCode(), "product.formula.optionValueCodeRequired"));
-            validateOptionMaterialValue(entity, optionCodes, valueKeys);
+            ProductFormulaOption option = optionResolver.option(trim(entity.getOptionRefKey()), trimUpper(entity.getOptionCode()));
+            if (option == null) {
+                throw ServiceException.ofMessageKey("product.formula.optionMaterialValueInvalid");
+            }
+            ProductFormulaOptionValue value = optionResolver.value(option, trim(entity.getValueRefKey()), trimUpper(entity.getValueCode()));
+            if (value == null) {
+                throw ServiceException.ofMessageKey("product.formula.optionMaterialValueInvalid");
+            }
+            entity.setOptionId(option.getOptionId());
+            entity.setOptionRefKey(option.getOptionRefKey());
+            entity.setOptionCode(option.getOptionCode());
+            entity.setOptionValueId(value.getOptionValueId());
+            entity.setValueRefKey(value.getValueRefKey());
+            entity.setValueCode(value.getValueCode());
             ProductFormulaMaterial material = resolveOptionMaterial(entity, materialById, materialByCode);
             entity.setFormulaMaterialId(material.getFormulaMaterialId());
             entity.setMaterialId(material.getMaterialId());
             entity.setMaterialCode(material.getMaterialCode());
             entity.setMaterialNameCn(material.getMaterialNameCn());
-            if (!duplicateKeys.add(key(entity.getOptionCode(), entity.getValueCode(), entity.getMaterialCode()))) {
+            if (!duplicateKeys.add(key(entity.getOptionRefKey(), entity.getValueRefKey(), entity.getMaterialCode()))) {
                 throw ServiceException.ofMessageKey("product.formula.optionMaterialDuplicate");
             }
             entity.setRequiredFlag(Boolean.TRUE.equals(entity.getRequiredFlag()));
@@ -146,11 +156,6 @@ public class ProductFormulaSetupNormalizer extends ProductServiceSupport {
             index++;
         }
         return result;
-    }
-    private void validateOptionMaterialValue(ProductFormulaOptionMaterial entity, Set<String> optionCodes, Set<String> valueKeys) {
-        if (!optionCodes.contains(entity.getOptionCode()) || !valueKeys.contains(key(entity.getOptionCode(), entity.getValueCode()))) {
-            throw ServiceException.ofMessageKey("product.formula.optionMaterialValueInvalid");
-        }
     }
     private ProductFormulaMaterial resolveOptionMaterial(ProductFormulaOptionMaterial entity,
                                                          Map<Long, ProductFormulaMaterial> materialById,

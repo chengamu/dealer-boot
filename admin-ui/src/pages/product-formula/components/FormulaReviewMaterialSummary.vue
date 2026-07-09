@@ -31,8 +31,19 @@
         <el-table-column :label="t('productCenter.formulaSetup.unit')" width="74" align="center">
           <template #default="{ row }">{{ unitLabel(row.unitCode) }}</template>
         </el-table-column>
-        <el-table-column :label="t('productCenter.formulaSetup.usageSummary')" width="130" show-overflow-tooltip>
-          <template #default="{ row }">{{ usageSummary(row) }}</template>
+        <el-table-column :label="t('productCenter.formulaSetup.usageSummary')" min-width="360">
+          <template #default="{ row }">
+            <div class="usage-summary-lines">
+              <div
+                v-for="(line, index) in usageSummaryLines(row)"
+                :key="`${row.materialCode || row.lineNo || ''}-${index}`"
+                class="usage-summary-line"
+                :class="{ 'usage-summary-line--condition': isUsageConditionLine(line) }"
+              >
+                {{ line }}
+              </div>
+            </div>
+          </template>
         </el-table-column>
         <el-table-column :label="t('productCenter.formulaSetup.lossRate')" width="92" align="right">
           <template #default="{ row }">{{ formatFormulaReviewPercent(row.lossRate) }}</template>
@@ -54,16 +65,16 @@ import { computed } from 'vue'
 import type { TableColumnCtx } from 'element-plus'
 import type {
   ProductFormulaMaterialVO,
-  ProductFormulaOptionMaterialVO,
   ProductFormulaUsageRuleVO,
   ProductUnitVO
 } from '@/api/product-capability/types'
 import {
   formatFormulaReviewMoney,
-  formatFormulaReviewNumber,
   formatFormulaReviewPercent,
+  formulaReviewIsUsageConditionLine,
   formulaReviewGroupKey,
   formulaReviewGroupRank,
+  formulaReviewUsageSummaryLines,
   type FormulaReviewPriceSnapshotRow
 } from '../utils/formulaReviewMaterialSummary'
 
@@ -76,7 +87,6 @@ const props = defineProps<{
   loading?: boolean
   materials: ProductFormulaMaterialVO[]
   usageRules: ProductFormulaUsageRuleVO[]
-  optionMaterials: ProductFormulaOptionMaterialVO[]
   priceSnapshotRows: FormulaReviewPriceSnapshotRow[]
   unitRows: ProductUnitVO[]
   t: (key: string) => string
@@ -141,21 +151,12 @@ function unitLabel(unitCode?: string) {
   return props.unitRows.find((unit) => unit.unitCode === unitCode)?.unitNameCn || unitCode
 }
 
-function usageRules(row: ProductFormulaMaterialVO) {
-  return props.usageRules.filter((rule) => rule.formulaMaterialId === row.formulaMaterialId || rule.materialCode === row.materialCode)
+function usageSummaryLines(row: ProductFormulaMaterialVO) {
+  return formulaReviewUsageSummaryLines(row, props.usageRules, props.t)
 }
 
-function optionMaterials(row: ProductFormulaMaterialVO) {
-  return props.optionMaterials.filter((item) => item.materialCode === row.materialCode)
-}
-
-function usageSummary(row: ProductFormulaMaterialVO) {
-  const rules = usageRules(row)
-  const linkedCount = optionMaterials(row).length
-  if (rules.length > 0) return `${props.t('productCenter.formulaSetup.ruleCount')} ${rules.length}`
-  if (linkedCount > 0) return `${props.t('productCenter.formulaSetup.linkedMaterial')} ${linkedCount}`
-  if (row.fixedUsageQty != null) return `${props.t('productCenter.formulaSetup.usageFixedShort')} ${formatFormulaReviewNumber(row.fixedUsageQty)}`
-  return props.t('productCenter.formulaSetup.usageNotSet')
+function isUsageConditionLine(line: string) {
+  return formulaReviewIsUsageConditionLine(line)
 }
 </script>
 
@@ -220,5 +221,29 @@ function usageSummary(row: ProductFormulaMaterialVO) {
 .group-cell span {
   color: #98a2b3;
   font-size: 12px;
+}
+
+.usage-summary-lines {
+  display: grid;
+  gap: 4px;
+  padding: 2px 0;
+  line-height: 1.45;
+  white-space: normal;
+}
+
+.usage-summary-line {
+  color: #344054;
+  word-break: break-word;
+}
+
+.usage-summary-line--condition {
+  display: inline-flex;
+  width: fit-content;
+  max-width: 100%;
+  padding: 1px 6px;
+  border-radius: 5px;
+  background: #eef5ff;
+  color: #1677ff;
+  font-weight: 600;
 }
 </style>

@@ -34,7 +34,7 @@
             <div class="expression-editor__tool-card">
               <h4>{{ t('productCenter.pricing.priceVariables') }}</h4>
               <el-button v-for="item in variableButtons" :key="item.name" plain @click="appendText(item.insert || item.name)">
-                {{ item.label }}
+                {{ variableLabel(item) }}
               </el-button>
             </div>
           </section>
@@ -119,6 +119,7 @@ import FormulaExpressionComposer from '../../product-formula/components/FormulaE
 import FormulaExpressionOperatorPanel from '../../product-formula/components/FormulaExpressionOperatorPanel.vue'
 import FormulaExpressionValidationPanel from '../../product-formula/components/FormulaExpressionValidationPanel.vue'
 import { priceConditionVariables, priceFormulaVariables, priceOperators, validatePriceCondition, validatePriceFormula } from '../utils/pricingExpression'
+import type { PriceExpressionVariable } from '../utils/pricingExpression'
 import type { ProductFormulaOptionVO, ProductFormulaOptionValueVO } from '@/api/product-capability/types'
 
 type Target = 'formula' | 'condition'
@@ -182,6 +183,10 @@ function optionLabel(item: ProductFormulaOptionVO) {
 
 function valueLabel(item: ProductFormulaOptionValueVO) {
   return item.valueNameCn || item.valueNameEn || item.valueCode || '-'
+}
+
+function variableLabel(item: PriceExpressionVariable) {
+  return item.labelKey ? t(item.labelKey) : item.label
 }
 
 function formatNumber(value: unknown) {

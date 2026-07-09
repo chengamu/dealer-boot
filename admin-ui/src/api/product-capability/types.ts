@@ -316,6 +316,7 @@ export interface ProductFormulaMaterialVO extends ProductRecord {
 export interface ProductFormulaOptionVO extends ProductRecord {
   optionId?: number
   formulaId?: number
+  optionRefKey?: string
   optionCode?: string
   optionNameCn?: string
   optionNameEn?: string
@@ -323,11 +324,14 @@ export interface ProductFormulaOptionVO extends ProductRecord {
   sourceScope?: string
   selectionMode?: string
   displayMode?: string
+  defaultValueRefKey?: string
   defaultValueCode?: string
   defaultValueNameCn?: string
   visibilityMode?: string
+  visibleConditionOptionRefKey?: string
   visibleConditionOptionCode?: string
   visibleConditionOptionNameCn?: string
+  visibleConditionValueRefKey?: string
   visibleConditionValueCode?: string
   visibleConditionValueNameCn?: string
   requiredFlag?: boolean
@@ -346,7 +350,9 @@ export interface ProductFormulaOptionValueVO extends ProductRecord {
   optionValueId?: number
   formulaId?: number
   optionId?: number
+  optionRefKey?: string
   optionCode?: string
+  valueRefKey?: string
   valueCode?: string
   valueNameCn?: string
   valueNameEn?: string
@@ -361,7 +367,9 @@ export interface ProductFormulaOptionMaterialVO extends ProductRecord {
   formulaId?: number
   optionId?: number
   optionValueId?: number
+  optionRefKey?: string
   optionCode?: string
+  valueRefKey?: string
   valueCode?: string
   formulaMaterialId?: number
   materialId?: number
@@ -378,15 +386,20 @@ export interface ProductFormulaRestrictionVO extends ProductRecord {
   restrictionId?: number
   formulaId?: number
   restrictionName?: string
+  targetOptionRefKey?: string
   targetOptionCode?: string
   conditionType?: string
+  conditionOptionRefKey?: string
   conditionOptionCode?: string
   conditionOperator?: string
+  conditionValueRefKey?: string
   conditionValueCode?: string
   conditionValueNumber?: number
+  conditionJson?: string
   conditionExpression?: string
   conditionText?: string
   actionType?: string
+  targetValueRefKey?: string
   targetValueCode?: string
   messageText?: string
   status?: string
@@ -403,10 +416,13 @@ export interface ProductFormulaUsageRuleVO extends ProductRecord {
   materialNameCn?: string
   ruleName?: string
   conditionType?: string
+  conditionOptionRefKey?: string
   conditionOptionCode?: string
   conditionOptionNameCn?: string
+  conditionValueRefKey?: string
   conditionValueCode?: string
   conditionValueNameCn?: string
+  conditionJson?: string
   conditionExpression?: string
   conditionText?: string
   conditionKey?: string
@@ -450,6 +466,7 @@ export interface ProductFormulaVariableRuleVO extends ProductRecord {
   variableId?: number
   variableKey?: string
   variableCode?: string
+  conditionJson?: string
   conditionExpression?: string
   conditionText?: string
   valueType?: string

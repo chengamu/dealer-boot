@@ -227,6 +227,10 @@ public class ProductPriceSettingServiceImpl extends ProductServiceSupport implem
         entity.setSaleProductId(setting.getSaleProductId());
         entity.setFormulaVersionId(setting.getFormulaVersionId());
         entity.setConditionType(Boolean.TRUE.equals(bo.getDefaultRuleFlag()) ? "DEFAULT" : StringUtils.blankToDefault(bo.getConditionType(), "EXPRESSION"));
+        entity.setConditionJson(Boolean.TRUE.equals(bo.getDefaultRuleFlag())
+            ? ProductFormulaConditionJsonFactory.defaultCondition()
+            : StringUtils.blankToDefault(bo.getConditionJson(),
+            ProductFormulaConditionJsonFactory.expression(bo.getConditionExpression(), bo.getConditionText())));
         entity.setConditionExpression(Boolean.TRUE.equals(bo.getDefaultRuleFlag()) ? "DEFAULT" : bo.getConditionExpression());
         entity.setConditionText(Boolean.TRUE.equals(bo.getDefaultRuleFlag()) ? "默认规则" : bo.getConditionText());
         entity.setConditionKey(Boolean.TRUE.equals(bo.getDefaultRuleFlag()) ? "DEFAULT" : bo.getConditionKey());

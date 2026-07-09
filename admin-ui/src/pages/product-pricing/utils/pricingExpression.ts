@@ -14,6 +14,7 @@ type ExpressionNode = {
 
 export type PriceExpressionVariable = {
   label: string
+  labelKey?: string
   name: string
   insert?: string
   sample: number | string
@@ -27,13 +28,13 @@ export type PriceExpressionResult = {
 }
 
 export const priceFormulaVariables: PriceExpressionVariable[] = [
-  { label: 'unitPrice', name: 'unitPrice', sample: 50 },
-  { label: 'width', name: 'width', sample: 25 },
-  { label: 'drop', name: 'drop', sample: 72 },
-  { label: 'widthCm', name: 'widthCm', insert: 'width * 2.54', sample: 63.5 },
-  { label: 'dropCm', name: 'dropCm', insert: 'drop * 2.54', sample: 182.88 },
-  { label: 'areaM2', name: 'areaM2', insert: 'drop * 2.54 * width * 2.54 / 10000', sample: 1.16 },
-  { label: 'areaSqft', name: 'areaSqft', insert: 'drop * width / 144', sample: 12.5 }
+  { label: 'unitPrice', labelKey: 'productCenter.pricing.variableUnitPrice', name: 'unitPrice', sample: 50 },
+  { label: 'width', labelKey: 'productCenter.pricing.variableWidth', name: 'width', sample: 25 },
+  { label: 'drop', labelKey: 'productCenter.pricing.variableDrop', name: 'drop', sample: 72 },
+  { label: 'widthCm', labelKey: 'productCenter.pricing.variableWidthCm', name: 'widthCm', insert: 'width * 2.54', sample: 63.5 },
+  { label: 'dropCm', labelKey: 'productCenter.pricing.variableDropCm', name: 'dropCm', insert: 'drop * 2.54', sample: 182.88 },
+  { label: 'areaM2', labelKey: 'productCenter.pricing.variableAreaM2', name: 'areaM2', insert: 'drop * 2.54 * width * 2.54 / 10000', sample: 1.16 },
+  { label: 'areaSqft', labelKey: 'productCenter.pricing.variableAreaSqft', name: 'areaSqft', insert: 'drop * width / 144', sample: 12.5 }
 ]
 
 export const priceConditionVariables = priceFormulaVariables.filter((item) => item.name !== 'unitPrice')

@@ -30,7 +30,6 @@
         :loading="loading"
         :materials="materials"
         :usage-rules="allUsageRules"
-        :option-materials="allOptionMaterials"
         :price-snapshot-rows="priceSnapshotRows"
         :unit-rows="unitRows"
         :t="t"
@@ -78,7 +77,6 @@ import {
 } from '@/constants/productStatus'
 import type {
   ProductFormulaMaterialVO,
-  ProductFormulaOptionMaterialVO,
   ProductFormulaUsageRuleVO,
   ProductFormulaVersionVO,
   ProductUnitVO
@@ -99,7 +97,6 @@ const formula = computed(() => parseFormulaReviewJson(review.value.formulaSnapsh
 const setup = computed(() => parseFormulaReviewJson(review.value.setupSnapshotJson))
 const materials = computed(() => (setup.value.materials || []) as ProductFormulaMaterialVO[])
 const allUsageRules = computed(() => (setup.value.usageRules || []) as ProductFormulaUsageRuleVO[])
-const allOptionMaterials = computed(() => (setup.value.optionMaterials || []) as ProductFormulaOptionMaterialVO[])
 const priceSnapshotRows = computed(() => (setup.value.priceSnapshot || []) as Array<{ materialCode?: string; unitPrice?: number; salesPrice?: number }>)
 
 async function load() {

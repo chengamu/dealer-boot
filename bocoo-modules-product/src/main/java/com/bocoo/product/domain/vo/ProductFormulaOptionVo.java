@@ -17,6 +17,7 @@ public class ProductFormulaOptionVo implements Serializable {
     private Long optionId;
     private Long tenantId;
     private Long formulaId;
+    private String optionRefKey;
     private String optionCode;
     private String optionNameCn;
     private String optionNameEn;
@@ -24,11 +25,14 @@ public class ProductFormulaOptionVo implements Serializable {
     private String sourceScope;
     private String selectionMode;
     private String displayMode;
+    private String defaultValueRefKey;
     private String defaultValueCode;
     private String defaultValueNameCn;
     private String visibilityMode;
+    private String visibleConditionOptionRefKey;
     private String visibleConditionOptionCode;
     private String visibleConditionOptionNameCn;
+    private String visibleConditionValueRefKey;
     private String visibleConditionValueCode;
     private String visibleConditionValueNameCn;
     private Boolean requiredFlag;

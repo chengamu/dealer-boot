@@ -20,6 +20,7 @@ public class ProductFormulaVariableRuleVo implements Serializable {
     private Long variableId;
     private String variableKey;
     private String variableCode;
+    private String conditionJson;
     private String conditionExpression;
     private String conditionText;
     private String valueType;

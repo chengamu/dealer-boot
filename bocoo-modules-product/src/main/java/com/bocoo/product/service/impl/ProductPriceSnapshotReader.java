@@ -129,9 +129,10 @@ public class ProductPriceSnapshotReader {
     }
 
     private List<Map<String, Object>> valuesForOption(Map<String, Object> option, List<Map<String, Object>> values) {
+        String optionRefKey = value(option, "optionRefKey");
         String optionCode = value(option, "optionCode");
         return values.stream()
-            .filter(row -> optionCode.equals(value(row, "optionCode")))
+            .filter(row -> sameOption(optionRefKey, optionCode, row))
             .filter(row -> !"DISABLED".equals(value(row, "status")))
             .toList();
     }
@@ -140,7 +141,7 @@ public class ProductPriceSnapshotReader {
                                     int index, List<Map<String, Object>> selected) {
         if (index >= groups.size()) {
             String key = selected.stream()
-                .map(row -> value(row, "optionCode") + "=" + value(row, "valueCode"))
+                .map(row -> stableValue(row, "optionRefKey", "optionCode") + "=" + stableValue(row, "valueRefKey", "valueCode"))
                 .reduce((left, right) -> left + ";" + right)
                 .orElse(DEFAULT_COMBINATION.getOptionCombinationKey());
             String name = selected.stream()
@@ -154,6 +155,17 @@ public class ProductPriceSnapshotReader {
             appendCombinations(result, groups, index + 1, selected);
             selected.remove(selected.size() - 1);
         }
+    }
+
+    private boolean sameOption(String optionRefKey, String optionCode, Map<String, Object> row) {
+        if (StringUtils.isNotBlank(optionRefKey)) {
+            return optionRefKey.equals(value(row, "optionRefKey"));
+        }
+        return optionCode.equals(value(row, "optionCode"));
+    }
+
+    private String stableValue(Map<String, Object> row, String refField, String fallbackField) {
+        return StringUtils.blankToDefault(value(row, refField), value(row, fallbackField));
     }
 
     private Map<String, Object> snapshot(ProductFormulaVersion version) {

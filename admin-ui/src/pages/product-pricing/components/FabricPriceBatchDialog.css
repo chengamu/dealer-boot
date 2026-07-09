@@ -1,0 +1,57 @@
+.batch-price-editor {
+  display: grid;
+  gap: 12px;
+}
+
+.batch-price-editor__summary {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  background: #f8fbff;
+  border: 1px solid #dbe8ff;
+  border-radius: 8px;
+}
+
+.batch-price-editor__summary-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  color: #667085;
+}
+
+.batch-price-editor__summary-head strong {
+  color: #1d4ed8;
+  font-size: 16px;
+}
+
+.batch-price-editor__fabric-list {
+  display: grid;
+  gap: 6px;
+  max-height: 132px;
+  overflow: auto;
+}
+
+.batch-price-editor__fabric-item {
+  display: grid;
+  grid-template-columns: 104px minmax(0, 1fr) 70px;
+  align-items: center;
+  gap: 10px;
+  min-height: 34px;
+  padding: 6px 8px;
+  background: #fff;
+  border: 1px solid #e5ecf6;
+  border-radius: 6px;
+}
+
+.batch-price-editor__fabric-item strong {
+  min-width: 0;
+  overflow: hidden;
+  color: #1f2937;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.batch-price-editor__fabric-item span {
+  color: #667085;
+}

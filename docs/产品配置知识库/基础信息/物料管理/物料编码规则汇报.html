@@ -106,7 +106,7 @@
 
     .segments {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(5, minmax(0, 1fr));
       gap: 10px;
       margin-top: 18px;
     }
@@ -311,7 +311,7 @@
     .steps {
       counter-reset: step;
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(5, minmax(0, 1fr));
       gap: 14px;
       margin: 0;
       padding: 0;
@@ -388,15 +388,16 @@
       <div class="hero-grid">
         <div>
           <h1>物料编码规则 V1</h1>
-          <p>公司统一物料编码规则：使用中文拼音首字母，按“物料大类、物料类型、核心属性、供应商编号”固定 4 段取号；核心属性固定 6 位，正式编码连续书写，不带短横线。</p>
+          <p>公司统一物料编码规则：使用中文拼音首字母，按“物料大类、物料类型、核心属性、颜色、供应商编号”固定 5 段取号；核心属性固定 6 位，颜色固定 1 位数字，正式编码连续书写，不带短横线。</p>
         </div>
         <div class="rule-card">
-          <div class="rule-label">物料编码总规则：物料大类2位 - 物料类型2位 - 核心属性6位 - 供应商编号3位</div>
-          <div class="code large">DL(2)+LX(2)+HX(6)+SUP(3)</div>
+          <div class="rule-label">物料编码总规则：物料大类2位 - 物料类型2位 - 核心属性6位 - 颜色1位 - 供应商编号3位</div>
+          <div class="code large">DL(2)+LX(2)+HX(6)+C(1)+SUP(3)</div>
           <div class="segments">
             <div class="segment"><strong>DL</strong><span>物料大类<br>如：ML 面料、LC 铝材</span></div>
             <div class="segment"><strong>LX</strong><span>物料类型<br>如：JL 卷帘、ZK 罩壳</span></div>
             <div class="segment"><strong>HX</strong><span>核心属性固定 6 位<br>型号、规格、门幅、尺寸</span></div>
+            <div class="segment"><strong>C</strong><span>颜色固定 1 位<br>1白、2米、3灰、4黑</span></div>
             <div class="segment"><strong>SUP</strong><span>供应商编号<br>真实供应商或 900-999</span></div>
           </div>
         </div>
@@ -410,11 +411,11 @@
       </div>
       <div class="principles">
         <div class="principle"><strong>中文首字母</strong><span>面料用 ML，铝材用 LC，业务含义清晰。</span></div>
-        <div class="principle"><strong>固定 4 段</strong><span>正式编码不加分隔符，但含义固定 4 段。</span></div>
-        <div class="principle"><strong>核心属性 6 位</strong><span>门幅、尺寸、型号、参数都放第三段，固定 6 位。</span></div>
+        <div class="principle"><strong>固定 5 段</strong><span>正式编码不加分隔符，但含义固定 5 段。</span></div>
+        <div class="principle"><strong>颜色 1 位</strong><span>颜色统一放第四段，用数字表示，不写中文。</span></div>
         <div class="principle"><strong>通用用 900</strong><span>通用件、暂无供应商、自制件先用 900。</span></div>
       </div>
-      <div class="note">规则格式：<span class="mono">物料大类2位 + 物料类型2位 + 核心属性6位 + 供应商编号3位</span>。正式编码连续书写，不带短横线，例如 <span class="mono">MLJLZG0300001</span>。</div>
+      <div class="note">规则格式：<span class="mono">物料大类2位 + 物料类型2位 + 核心属性6位 + 颜色1位 + 供应商编号3位</span>。正式编码连续书写，不带短横线，例如 <span class="mono">MLJLZG03001001</span>。</div>
     </section>
 
     <section>
@@ -544,9 +545,9 @@
           <table>
             <thead><tr><th>写法</th><th>含义</th></tr></thead>
             <tbody>
-              <tr><td class="mono">B600WH</td><td>6mm拉珠，白色</td></tr>
-              <tr><td class="mono">B450GY</td><td>4.5mm拉珠，灰色</td></tr>
-              <tr><td class="mono">S120WH</td><td>1.2mm拉绳，白色</td></tr>
+              <tr><td class="mono">B60000</td><td>6mm拉珠。颜色放 C 段</td></tr>
+              <tr><td class="mono">B45000</td><td>4.5mm拉珠。颜色放 C 段</td></tr>
+              <tr><td class="mono">S12000</td><td>1.2mm拉绳。颜色放 C 段</td></tr>
             </tbody>
           </table>
         </div>
@@ -568,9 +569,9 @@
           <table>
             <thead><tr><th>写法</th><th>含义</th></tr></thead>
             <tbody>
-              <tr><td class="mono">ZDWH00</td><td>子弹头，白色</td></tr>
-              <tr><td class="mono">FTWH00</td><td>封头，白色</td></tr>
-              <tr><td class="mono">BGWH00</td><td>边盖，白色</td></tr>
+              <tr><td class="mono">ZD0000</td><td>子弹头。颜色放 C 段</td></tr>
+              <tr><td class="mono">FT0000</td><td>封头。颜色放 C 段</td></tr>
+              <tr><td class="mono">BG0000</td><td>边盖。颜色放 C 段</td></tr>
             </tbody>
           </table>
         </div>
@@ -586,19 +587,55 @@
           </table>
         </div>
       </div>
-      <div class="note">核心属性必须固定 6 位。门幅、长度这类米制尺寸统一换算成厘米写入编码：3米写0300，2.5米写0250，6米写0600。位数不足时按本类型规则补 0；超过 6 位时保留最关键的信息。</div>
+      <div class="note">核心属性必须固定 6 位。门幅、长度这类米制尺寸统一换算成厘米写入编码：3米写0300，2.5米写0250，6米写0600。颜色不再写入 HX，统一放到后面的 C 段；位数不足时按本类型规则补 0；超过 6 位时保留最关键的信息。</div>
+    </section>
+
+    <section>
+      <div class="section-title">
+        <h2>颜色编码 C</h2>
+        <p>第四段固定 1 位数字</p>
+      </div>
+      <div class="grid-2">
+        <div class="box">
+          <h3>颜色码表</h3>
+          <table>
+            <thead><tr><th>颜色</th><th>C</th><th>说明</th></tr></thead>
+            <tbody>
+              <tr><td>白色</td><td class="mono">1</td><td>白色、沙纹白用 1</td></tr>
+              <tr><td>米色</td><td class="mono">2</td><td>米色、黄色偏米色时用 2</td></tr>
+              <tr><td>灰色</td><td class="mono">3</td><td>灰色、沙纹灰用 3</td></tr>
+              <tr><td>黑色</td><td class="mono">4</td><td>黑色用 4</td></tr>
+              <tr><td>咖啡色</td><td class="mono">5</td><td>咖啡色、棕咖色用 5</td></tr>
+              <tr><td>亮光色</td><td class="mono">6</td><td>亮光白、白亮光等需要单独区分时用 6</td></tr>
+              <tr><td>本色</td><td class="mono">7</td><td>本色、银色、银白、铝本色用 7</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="box">
+          <h3>取色规则</h3>
+          <table>
+            <thead><tr><th>场景</th><th>处理方式</th></tr></thead>
+            <tbody>
+              <tr><td>物料有明确颜色</td><td>按颜色码表取 1 位数字，放在 HX 后面、SUP 前面。</td></tr>
+              <tr><td>同规格不同颜色</td><td>核心属性 HX 保持一致，只变化颜色段 C。</td></tr>
+              <tr><td>无颜色或颜色无业务意义</td><td>优先按本色 <span class="mono">7</span> 处理；确实无颜色时可在业务系统备注说明。</td></tr>
+            </tbody>
+          </table>
+          <div class="note">例如白色定制卷帘罩壳可以写成 <span class="mono">LCZKDZJL101003</span>：<span class="mono">LC</span> 铝材 + <span class="mono">ZK</span> 罩壳 + <span class="mono">DZJL10</span> 定制卷帘1.0 + <span class="mono">1</span> 白色 + <span class="mono">003</span> 供应商。</div>
+        </div>
+      </div>
     </section>
 
     <section>
       <div class="section-title">
         <h2>供应商编号 SUP</h2>
-        <p>第四段必须保留，不要省略</p>
+        <p>第五段必须保留，不要省略</p>
       </div>
       <div class="grid-2">
         <div class="box">
           <h3>真实供应商</h3>
           <table>
-            <thead><tr><th>供应商编号</th><th>第四段</th><th>说明</th></tr></thead>
+            <thead><tr><th>供应商编号</th><th>第五段</th><th>说明</th></tr></thead>
             <tbody>
               <tr><td class="mono">1</td><td class="mono">001</td><td>不足三位补 0</td></tr>
               <tr><td class="mono">2</td><td class="mono">002</td><td>不足三位补 0</td></tr>
@@ -616,7 +653,7 @@
               <tr><td class="mono">901-999</td><td>通用配件供应商预留</td></tr>
             </tbody>
           </table>
-          <div class="note">例如配件尾塞的正式编码应写成 <span class="mono">PJWS380000900</span>，编码中不使用短横线。</div>
+          <div class="note">例如本色配件尾塞的正式编码应写成 <span class="mono">PJWS3800007900</span>，编码中不使用短横线。</div>
         </div>
       </div>
     </section>
@@ -624,12 +661,13 @@
     <section>
       <div class="section-title">
         <h2>取号流程</h2>
-        <p>技术科按这 4 步确认</p>
+        <p>技术科按这 5 步确认</p>
       </div>
       <ol class="steps">
         <li><strong>先定大类</strong><span>面料、铝材、系统、配件、安装包、包装、印刷品。</span></li>
         <li><strong>再定类型</strong><span>卷帘、罩壳、弹片、尾塞、螺丝、纸箱、彩卡等。</span></li>
         <li><strong>整理核心属性</strong><span>取门幅、型号、尺寸、规格、参数中最关键的信息，整理成固定 6 位。</span></li>
+        <li><strong>确认颜色</strong><span>按颜色码表取 1 位数字，放在核心属性后面。</span></li>
         <li><strong>追加供应商</strong><span>真实供应商用后三位，通用或暂无供应商用 900。</span></li>
       </ol>
     </section>
@@ -637,17 +675,17 @@
     <section>
       <div class="section-title">
         <h2>示例定稿</h2>
-        <p>根据你们当前表格补齐供应商段</p>
+        <p>根据你们当前表格补齐颜色段和供应商段</p>
       </div>
       <div class="examples">
-        <div class="example"><div class="example-title">面料 / 卷帘面料 / 遮光门幅3米 / 供应商001</div><div class="code">MLJLZG0300001</div></div>
-        <div class="example"><div class="example-title">铝材 / 罩壳 / L罩壳6米 / 供应商002</div><div class="code">LCZKL00600002</div></div>
-        <div class="example"><div class="example-title">系统 / 弹片 / 管型5+型号96GR0 / 供应商003</div><div class="code">XTTP596GR0003</div></div>
-        <div class="example"><div class="example-title">配件 / 尾塞 / 38尾塞 / 通用供应商900</div><div class="code">PJWS380000900</div></div>
-        <div class="example"><div class="example-title">安装包 / 螺丝 / 螺丝4*30 / 通用供应商900</div><div class="code">AZLS043000900</div></div>
-        <div class="example"><div class="example-title">包装 / 纸箱 / 内纸箱20英寸 / 通用供应商900</div><div class="code">BZZXN20000900</div></div>
-        <div class="example"><div class="example-title">包装 / 纸箱 / 外纸箱20英寸 / 通用供应商900</div><div class="code">BZZXW20000900</div></div>
-        <div class="example"><div class="example-title">印刷品 / 彩卡 / 冠木19.5*20 / 通用供应商900</div><div class="code">YSCKGM1952900</div></div>
+        <div class="example"><div class="example-title">面料 / 卷帘面料 / 遮光门幅3米 / 白色 / 供应商001</div><div class="code">MLJLZG03001001</div></div>
+        <div class="example"><div class="example-title">铝材 / 罩壳 / L罩壳6米 / 白色 / 供应商002</div><div class="code">LCZKL006001002</div></div>
+        <div class="example"><div class="example-title">系统 / 弹片 / 管型5+型号96GR0 / 本色 / 供应商003</div><div class="code">XTTP596GR07003</div></div>
+        <div class="example"><div class="example-title">配件 / 尾塞 / 38尾塞 / 本色 / 通用供应商900</div><div class="code">PJWS3800007900</div></div>
+        <div class="example"><div class="example-title">安装包 / 螺丝 / 螺丝4*30 / 本色 / 通用供应商900</div><div class="code">AZLS0430007900</div></div>
+        <div class="example"><div class="example-title">包装 / 纸箱 / 内纸箱20英寸 / 本色 / 通用供应商900</div><div class="code">BZZXN200007900</div></div>
+        <div class="example"><div class="example-title">包装 / 纸箱 / 外纸箱20英寸 / 本色 / 通用供应商900</div><div class="code">BZZXW200007900</div></div>
+        <div class="example"><div class="example-title">印刷品 / 彩卡 / 冠木19.5*20 / 本色 / 通用供应商900</div><div class="code">YSCKGM19527900</div></div>
       </div>
     </section>
 
@@ -659,11 +697,12 @@
       <table>
         <thead><tr><th>项目</th><th>要求</th></tr></thead>
         <tbody>
-          <tr><td>段数</td><td>固定 4 段：<span class="mono">DL(2) + LX(2) + HX(6) + SUP(3)</span>，正式编码连续书写。</td></tr>
+          <tr><td>段数</td><td>固定 5 段：<span class="mono">DL(2) + LX(2) + HX(6) + C(1) + SUP(3)</span>，正式编码连续书写。</td></tr>
           <tr><td>短横线</td><td>正式编码不允许出现短横线，页面示例也统一展示正式编码。</td></tr>
           <tr><td>大小写</td><td>字母统一大写。</td></tr>
           <tr><td>中文</td><td>编码里不直接写中文，中文信息保留在物料名称、规格、备注等字段。</td></tr>
-          <tr><td>供应商</td><td>第四段必须有。真实供应商用后三位；通用、暂无供应商、自制件用 900。</td></tr>
+          <tr><td>颜色</td><td>第四段固定 1 位数字：1白、2米、3灰、4黑、5咖啡、6亮光、7本色。</td></tr>
+          <tr><td>供应商</td><td>第五段必须有。真实供应商用后三位；通用、暂无供应商、自制件用 900。</td></tr>
           <tr><td>核心属性</td><td>第三段固定 6 位。同一物料类型内部保持同一种写法，例如纸箱统一使用 N/W + 英寸 + 补 0。</td></tr>
           <tr><td>扩展</td><td>后续新增大类、类型、核心属性写法，先补码表，再新增物料。</td></tr>
         </tbody>

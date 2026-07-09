@@ -1,53 +1,100 @@
 <template>
-  <AdminDialog
+  <AdminDrawer
     :model-value="modelValue"
     :title="t('productCenter.pricing.batchSetPrice')"
-    width="min(1180px, calc(100vw - 48px))"
-    class="fabric-price-batch-dialog"
+    size="96vw"
     append-to-body
+    variant="wide"
+    class="fabric-price-batch-drawer"
     :close-on-click-modal="false"
     @update:model-value="$emit('update:modelValue', $event)"
   >
     <div class="batch-price-editor">
-      <section class="batch-price-editor__scope">
-        <label>{{ t('productCenter.pricing.batchFabrics') }}</label>
-        <el-select v-model="form.priceFabricIds" multiple filterable collapse-tags collapse-tags-tooltip>
-          <el-option
-            v-for="item in fabrics"
-            :key="item.priceFabricId"
-            :label="`${item.materialCode || ''} ${item.materialNameCn || ''}`"
-            :value="Number(item.priceFabricId)"
-          />
-        </el-select>
-      </section>
-
-      <section class="batch-price-editor__grid">
-        <div class="batch-price-editor__field">
-          <label>{{ t('productCenter.pricing.condition') }}</label>
-          <div class="batch-price-editor__inline">
-            <el-input v-model="form.conditionExpression" :placeholder="t('productCenter.pricing.conditionPlaceholder')" />
-            <el-button plain @click="openExpression('condition')">
-              {{ t('productCenter.formulaSetup.conditionExpressionEditor') }}
-            </el-button>
-          </div>
+      <section class="batch-price-editor__summary">
+        <div class="batch-price-editor__summary-head">
+          <span>{{ t('productCenter.pricing.selectedFabricCount') }}</span>
+          <strong>{{ fabrics.length }}</strong>
         </div>
-        <div class="batch-price-editor__field batch-price-editor__field--price">
-          <label>{{ t('productCenter.pricing.unitPrice') }}</label>
-          <el-input-number v-model="form.unitPrice" :min="0" :precision="2" :controls="false" />
-        </div>
-        <div class="batch-price-editor__field batch-price-editor__field--formula">
-          <label>{{ t('productCenter.pricing.fabricFormula') }}</label>
-          <div class="batch-price-editor__inline">
-            <el-input v-model="form.priceFormula" :placeholder="t('productCenter.pricing.formulaPlaceholder')" />
-            <el-button plain @click="openExpression('formula')">
-              {{ t('productCenter.formulaSetup.formulaSelectorShort') }}
-            </el-button>
+        <div class="batch-price-editor__fabric-list">
+          <div v-for="item in fabrics" :key="item.priceFabricId" class="batch-price-editor__fabric-item">
+            <el-tag size="small" effect="plain">{{ item.materialCode || '-' }}</el-tag>
+            <strong>{{ item.materialNameCn || '-' }}</strong>
+            <span>{{ item.unitCode || '-' }}</span>
           </div>
-          <p>{{ t('productCenter.pricing.unitPriceFormulaHint') }}</p>
         </div>
       </section>
 
-      <el-checkbox v-model="form.blankOnly">{{ t('productCenter.pricing.applyToBlankOnly') }}</el-checkbox>
+      <div class="fabric-rule-editor__toolbar">
+        <div>
+          <h3>{{ t('productCenter.pricing.priceRuleSetting') }}</h3>
+          <p>{{ t('productCenter.pricing.batchRuleSettingHint') }}</p>
+        </div>
+        <div class="fabric-rule-editor__actions">
+          <el-button type="primary" plain icon="Plus" @click="addRule">
+            {{ t('productCenter.pricing.addPriceRule') }}
+          </el-button>
+          <el-button plain icon="CopyDocument" :disabled="!selectedRule" @click="copyRule">
+            {{ t('common.copy') }}
+          </el-button>
+          <el-button type="danger" plain icon="Delete" :disabled="!selectedRule" @click="removeRule">
+            {{ t('common.delete') }}
+          </el-button>
+        </div>
+      </div>
+
+      <el-table
+        :data="localRows"
+        border
+        height="520"
+        class="fabric-rule-table"
+        highlight-current-row
+        @current-change="selectedRule = $event"
+      >
+        <el-table-column type="index" :label="t('common.index')" width="58" align="center" />
+        <el-table-column :label="t('productCenter.pricing.condition')" min-width="380">
+          <template #default="{ row }">
+            <div class="rule-cell rule-cell--condition">
+              <el-select v-model="row.conditionType" @change="onConditionTypeChange(row)">
+                <el-option value="DEFAULT" :label="t('productCenter.pricing.defaultRule')" />
+                <el-option value="EXPRESSION" :label="t('productCenter.pricing.conditionRule')" />
+              </el-select>
+              <template v-if="row.conditionType === 'DEFAULT'">
+                <el-tag effect="plain">{{ t('productCenter.pricing.defaultRule') }}</el-tag>
+              </template>
+              <template v-else>
+                <el-input
+                  v-model="row.conditionExpression"
+                  :placeholder="t('productCenter.pricing.conditionPlaceholder')"
+                  @change="syncConditionText(row)"
+                />
+                <el-button plain @click="openExpression(row, 'condition')">
+                  {{ t('productCenter.formulaSetup.conditionExpressionEditor') }}
+                </el-button>
+              </template>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column :label="t('productCenter.pricing.unitPrice')" width="124" align="right" class-name="fabric-rule-table__price-column">
+          <template #default="{ row }">
+            <el-input-number v-model="row.unitPrice" :min="0" :precision="2" :controls="false" @change="syncDefaultPriceFormula(row)" />
+          </template>
+        </el-table-column>
+        <el-table-column :label="t('productCenter.pricing.fabricFormula')" min-width="560">
+          <template #default="{ row }">
+            <div class="rule-cell">
+              <el-input v-model="row.priceFormula" :placeholder="t('productCenter.pricing.formulaPlaceholder')" />
+              <el-button plain @click="openExpression(row, 'formula')">
+                {{ t('productCenter.formulaSetup.formulaSelectorShort') }}
+              </el-button>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column :label="t('common.remark')" min-width="160">
+          <template #default="{ row }">
+            <el-input v-model="row.remark" />
+          </template>
+        </el-table-column>
+      </el-table>
     </div>
 
     <PriceExpressionEditorDialog
@@ -60,19 +107,17 @@
     />
 
     <template #footer>
-      <AdminDialogFooter>
-        <el-button @click="close">{{ t('common.cancel') }}</el-button>
-        <el-button type="primary" @click="save">{{ t('common.confirm') }}</el-button>
-      </AdminDialogFooter>
+      <el-button @click="close">{{ t('common.cancel') }}</el-button>
+      <el-button type="primary" :disabled="!fabrics.length" @click="save">{{ t('common.save') }}</el-button>
     </template>
-  </AdminDialog>
+  </AdminDrawer>
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, watch } from 'vue'
+import { ref, watch } from 'vue'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
-import type { PriceFabricVO } from '@/api/product-pricing/types'
+import type { FabricPriceRule, PriceFabricVO } from '@/api/product-pricing/types'
 import type { ProductFormulaOptionVO, ProductFormulaOptionValueVO } from '@/api/product-capability/types'
 import { fabricPriceFormulaForUnitPrice } from '../utils/pricingDisplay'
 import PriceExpressionEditorDialog from './PriceExpressionEditorDialog.vue'
@@ -88,56 +133,109 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
-  save: [payload: { priceFabricIds: number[], conditionExpression: string, unitPrice: number, priceFormula: string, blankOnly: boolean }]
+  save: [payload: { priceFabricIds: number[], rows: FabricPriceRule[] }]
 }>()
 
 const localeStore = useLocaleStore()
 const t = (key: string) => getMessage(key, localeStore.language)
-const form = reactive({
-  priceFabricIds: [] as number[],
-  conditionExpression: '',
-  unitPrice: 0,
-  priceFormula: fabricPriceFormulaForUnitPrice(0),
-  blankOnly: false
-})
+const localRows = ref<FabricPriceRule[]>([])
+const selectedRule = ref<FabricPriceRule | null>(null)
 const expressionOpen = ref(false)
 const expressionTarget = ref<ExpressionTarget>('formula')
 const expressionText = ref('')
+const editingRule = ref<FabricPriceRule | null>(null)
 
 watch(() => props.modelValue, (open) => {
   if (!open) return
-  form.priceFabricIds = props.fabrics.map(item => Number(item.priceFabricId)).filter(Boolean)
-  form.conditionExpression = ''
-  form.unitPrice = 0
-  form.priceFormula = fabricPriceFormulaForUnitPrice(0)
-  form.blankOnly = false
+  selectedRule.value = null
+  localRows.value = []
+  addRule(true)
 })
 
-watch(() => form.unitPrice, () => {
-  if (!form.priceFormula || /^\s*\d+(\.\d+)?\s*\*\s*MAX\(/.test(form.priceFormula)) {
-    form.priceFormula = fabricPriceFormulaForUnitPrice(form.unitPrice)
+function addRule(defaultRule = false) {
+  const isDefault = defaultRule || !localRows.value.some((row) => row.defaultRuleFlag || row.conditionType === 'DEFAULT')
+  localRows.value.push({
+    conditionType: isDefault ? 'DEFAULT' : 'EXPRESSION',
+    conditionJson: '',
+    conditionExpression: isDefault ? 'DEFAULT' : '',
+    conditionText: isDefault ? t('productCenter.pricing.defaultRule') : '',
+    conditionKey: isDefault ? 'DEFAULT' : '',
+    priceMode: 'FORMULA',
+    unitPrice: 0,
+    priceFormula: fabricPriceFormulaForUnitPrice(0),
+    defaultRuleFlag: isDefault,
+    status: 'ENABLED',
+    sortOrder: localRows.value.length
+  })
+}
+
+function copyRule() {
+  if (!selectedRule.value) return
+  localRows.value.push({
+    ...selectedRule.value,
+    fabricRuleId: undefined,
+    defaultRuleFlag: false,
+    conditionType: 'EXPRESSION',
+    conditionJson: '',
+    conditionExpression: '',
+    conditionText: '',
+    conditionKey: '',
+    sortOrder: localRows.value.length
+  })
+}
+
+function removeRule() {
+  if (!selectedRule.value) return
+  localRows.value = localRows.value.filter((row) => row !== selectedRule.value)
+  selectedRule.value = null
+}
+
+function onConditionTypeChange(row: FabricPriceRule) {
+  const isDefault = row.conditionType === 'DEFAULT'
+  row.defaultRuleFlag = isDefault
+  row.conditionJson = ''
+  row.conditionExpression = isDefault ? 'DEFAULT' : ''
+  row.conditionText = isDefault ? t('productCenter.pricing.defaultRule') : ''
+  row.conditionKey = isDefault ? 'DEFAULT' : ''
+}
+
+function syncConditionText(row: FabricPriceRule) {
+  row.conditionJson = ''
+  row.conditionText = row.conditionExpression
+  row.conditionKey = row.conditionExpression
+}
+
+function syncDefaultPriceFormula(row: FabricPriceRule) {
+  if (!row.priceFormula || /^\s*\d+(\.\d+)?\s*\*\s*MAX\(/.test(row.priceFormula)) {
+    row.priceFormula = fabricPriceFormulaForUnitPrice(row.unitPrice)
   }
-})
+}
 
-function openExpression(target: ExpressionTarget) {
+function openExpression(row: FabricPriceRule, target: ExpressionTarget) {
+  editingRule.value = row
   expressionTarget.value = target
-  expressionText.value = target === 'formula' ? form.priceFormula : form.conditionExpression
+  expressionText.value = target === 'formula' ? row.priceFormula || '' : row.conditionExpression || ''
   expressionOpen.value = true
 }
 
 function confirmExpression() {
-  if (expressionTarget.value === 'formula') form.priceFormula = expressionText.value
-  else form.conditionExpression = expressionText.value
+  if (!editingRule.value) return
+  if (expressionTarget.value === 'formula') {
+    editingRule.value.priceFormula = expressionText.value
+  } else {
+    editingRule.value.conditionType = 'EXPRESSION'
+    editingRule.value.defaultRuleFlag = false
+    editingRule.value.conditionJson = ''
+    editingRule.value.conditionExpression = expressionText.value
+    syncConditionText(editingRule.value)
+  }
   expressionOpen.value = false
 }
 
 function save() {
   emit('save', {
-    priceFabricIds: form.priceFabricIds,
-    conditionExpression: form.conditionExpression,
-    unitPrice: Number(form.unitPrice || 0),
-    priceFormula: form.priceFormula,
-    blankOnly: form.blankOnly
+    priceFabricIds: props.fabrics.map((item) => Number(item.priceFabricId)).filter(Boolean),
+    rows: localRows.value.map((row, index) => ({ ...row, sortOrder: index }))
   })
   close()
 }
@@ -147,57 +245,5 @@ function close() {
 }
 </script>
 
-<style scoped>
-.batch-price-editor {
-  display: grid;
-  gap: 16px;
-}
-
-.batch-price-editor label {
-  color: #344054;
-  font-weight: 700;
-}
-
-.batch-price-editor__scope,
-.batch-price-editor__field {
-  display: grid;
-  gap: 8px;
-}
-
-.batch-price-editor__scope :deep(.el-select) {
-  width: 100%;
-}
-
-.batch-price-editor__grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 180px;
-  gap: 14px 16px;
-  padding: 14px;
-  background: #f8fbff;
-  border: 1px solid #e5ecf6;
-  border-radius: 8px;
-}
-
-.batch-price-editor__field--formula {
-  grid-column: 1 / -1;
-}
-
-.batch-price-editor__field--price :deep(.el-input-number) {
-  width: 100%;
-}
-
-.batch-price-editor__inline {
-  display: flex;
-  gap: 8px;
-}
-
-.batch-price-editor__inline :deep(.el-input) {
-  flex: 1;
-}
-
-.batch-price-editor__field p {
-  margin: 0;
-  color: #667085;
-  font-size: 12px;
-}
-</style>
+<style scoped src="./FabricPriceRuleDrawer.css"></style>
+<style scoped src="./FabricPriceBatchDialog.css"></style>

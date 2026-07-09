@@ -86,6 +86,7 @@ export interface FabricPriceRule {
   saleProductId?: string | number
   formulaVersionId?: number
   conditionType?: string
+  conditionJson?: string
   conditionExpression?: string
   conditionText?: string
   conditionKey?: string

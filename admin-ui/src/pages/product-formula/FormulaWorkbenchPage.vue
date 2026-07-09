@@ -38,6 +38,7 @@
     <FormulaVersionSnapshotDrawer
       v-model="snapshotOpen"
       :version="snapshotVersion"
+      :unit-rows="unitRows"
       :t="t"
     />
   </div>
@@ -49,9 +50,10 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { useRoute, useRouter } from 'vue-router'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
+import { productUnitApi } from '@/api/product-capability/base'
 import { productFormulaApi } from '@/api/product-formula/formula'
-import type { ProductFormulaVO, ProductFormulaVersionVO } from '@/api/product-capability/types'
-import { FORMULA_STATUS } from '@/constants/productStatus'
+import type { ProductFormulaVO, ProductFormulaVersionVO, ProductUnitVO } from '@/api/product-capability/types'
+import { FORMULA_STATUS, PRODUCT_STATUS_ENABLED } from '@/constants/productStatus'
 import FormulaCopyDialog from './components/FormulaCopyDialog.vue'
 import FormulaVersionHistoryPanel from './components/FormulaVersionHistoryPanel.vue'
 import FormulaVersionSnapshotDrawer from './components/FormulaVersionSnapshotDrawer.vue'
@@ -71,6 +73,7 @@ const actionLoading = ref(false)
 const copyDialogOpen = ref(false)
 const snapshotOpen = ref(false)
 const snapshotVersion = ref<ProductFormulaVersionVO>()
+const unitRows = ref<ProductUnitVO[]>([])
 
 const formulaId = computed(() => String(route.query.formulaId || formula.value.formulaId || ''))
 const pendingVersion = computed(() => versions.value.find((item) => item.versionStatus === FORMULA_STATUS.PENDING_REVIEW))
@@ -97,8 +100,13 @@ async function loadVersions() {
   }
 }
 
+async function loadUnits() {
+  const response = await productUnitApi.options?.({ status: PRODUCT_STATUS_ENABLED, pageNum: 1, pageSize: 500 })
+  unitRows.value = Array.isArray(response) ? response : response?.data || []
+}
+
 async function refreshAll() {
-  await Promise.all([loadFormula(), loadVersions()])
+  await Promise.all([loadFormula(), loadVersions(), loadUnits()])
 }
 
 async function withAction(messageKey: string, action: () => Promise<unknown>) {

@@ -33,8 +33,10 @@
         :rows="priceFabrics"
         :rules="fabricRules"
         :editable="editable"
+        :options="setup.formulaOptions || []"
+        :option-values="setup.formulaOptionValues || []"
         @generate="generateFabricPrices"
-        @batch="batchOpen = true"
+        @batch="openBatchPrice"
         @open-rules="openFabricRules"
       />
       <div class="price-setting-page__lower">
@@ -48,7 +50,7 @@
     </template>
     <FabricPriceBatchDialog
       v-model="batchOpen"
-      :fabrics="priceFabrics"
+      :fabrics="batchFabrics"
       :options="setup.formulaOptions || []"
       :option-values="setup.formulaOptionValues || []"
       @save="applyBatchFabricPrice"
@@ -88,7 +90,6 @@ import FabricPriceBatchDialog from './components/FabricPriceBatchDialog.vue'
 import FabricPriceRuleDrawer from './components/FabricPriceRuleDrawer.vue'
 import ShippingFormulaPanel from './components/ShippingFormulaPanel.vue'
 import PriceIssuePanel from './components/PriceIssuePanel.vue'
-import { fabricPriceFormulaForUnitPrice } from './utils/pricingDisplay'
 
 const route = useRoute()
 const router = useRouter()
@@ -108,6 +109,7 @@ const validating = ref(false)
 const batchOpen = ref(false)
 const ruleDrawerOpen = ref(false)
 const activeFabric = ref<PriceFabricVO>()
+const batchFabrics = ref<PriceFabricVO[]>([])
 
 const currentProduct = computed(() => setup.value.saleProduct || products.value.find((item) => toIdString(item.saleProductId) === selectedProductId.value) || {})
 const editable = computed(() => currentProduct.value.status !== PRODUCT_STATUS_ENABLED)
@@ -162,17 +164,16 @@ function openFabricRules(row: PriceFabricVO) {
   ruleDrawerOpen.value = true
 }
 
-async function applyBatchFabricPrice(payload: { priceFabricIds: number[], conditionExpression: string, unitPrice: number, priceFormula: string, blankOnly: boolean }) {
+function openBatchPrice(rows: PriceFabricVO[]) {
+  batchFabrics.value = rows
+  batchOpen.value = true
+}
+
+async function applyBatchFabricPrice(payload: { priceFabricIds: number[], rows: FabricPriceRule[] }) {
   if (!selectedProductId.value) return
   for (const priceFabricId of payload.priceFabricIds) {
-    const existing = fabricRules.value.filter(row => row.priceFabricId === priceFabricId)
-    if (payload.blankOnly && existing.length) continue
-    const defaultRule = buildFabricRule(priceFabricId, payload)
-    const nextRows = existing.filter((row) => {
-      if (defaultRule.defaultRuleFlag) return !row.defaultRuleFlag
-      return row.conditionKey !== defaultRule.conditionKey
-    })
-    await productPriceApi.saveFabricRules(selectedProductId.value, priceFabricId, nextRows.concat(defaultRule))
+    const rows = payload.rows.map((row, index) => ({ ...row, fabricRuleId: undefined, priceFabricId, sortOrder: index }))
+    await productPriceApi.saveFabricRules(selectedProductId.value, priceFabricId, rows)
   }
   ElMessage.success(t('common.success'))
   await reload()
@@ -222,23 +223,6 @@ async function validatePrice() {
     await reload()
   } finally {
     validating.value = false
-  }
-}
-
-function buildFabricRule(priceFabricId: number, payload: { conditionExpression: string, unitPrice: number, priceFormula: string }): FabricPriceRule {
-  const expression = payload.conditionExpression?.trim()
-  const defaultRule = !expression
-  return {
-    priceFabricId,
-    conditionType: defaultRule ? 'DEFAULT' : 'EXPRESSION',
-    conditionExpression: defaultRule ? 'DEFAULT' : expression,
-    conditionText: defaultRule ? t('productCenter.pricing.defaultRule') : expression,
-    conditionKey: defaultRule ? 'DEFAULT' : expression,
-    priceMode: 'FORMULA',
-    unitPrice: payload.unitPrice,
-    priceFormula: payload.priceFormula || fabricPriceFormulaForUnitPrice(payload.unitPrice),
-    defaultRuleFlag: defaultRule,
-    status: 'ENABLED'
   }
 }
 

@@ -1,4 +1,5 @@
 import { PRODUCT_STATUS_DISABLED, PRODUCT_STATUS_ENABLED } from '@/constants/productStatus'
+import type { ProductFormulaOptionVO, ProductFormulaOptionValueVO } from '@/api/product-capability/types'
 
 export const PRICE_STATUS = {
   NOT_READY: 'NOT_READY',
@@ -57,4 +58,45 @@ export function fabricPriceFormulaForUnitPrice(unitPrice?: number | string, area
 
 export function displayFabricPriceFormula(formula?: string, unitPrice?: number | string) {
   return String(formula || DEFAULT_FABRIC_PRICE_FORMULA).replace(/\bunitPrice\b/g, money(unitPrice))
+}
+
+export function displayPriceExpression(
+  expression: string | undefined,
+  t: TranslateFn,
+  options: ProductFormulaOptionVO[] = [],
+  optionValues: ProductFormulaOptionValueVO[] = []
+) {
+  let text = String(expression || '').trim()
+  if (!text) return '-'
+  text = replaceOptionClauses(text, options, optionValues)
+  const variableLabels: Record<string, string> = {
+    width: t('productCenter.pricing.variableWidth'),
+    drop: t('productCenter.pricing.variableDrop'),
+    widthCm: t('productCenter.pricing.variableWidthCm'),
+    dropCm: t('productCenter.pricing.variableDropCm'),
+    areaM2: t('productCenter.pricing.variableAreaM2'),
+    areaSqft: t('productCenter.pricing.variableAreaSqft')
+  }
+  Object.entries(variableLabels).forEach(([key, label]) => {
+    text = text.replace(new RegExp(`\\b${key}\\b`, 'g'), label)
+  })
+  return text
+    .replace(/\s*&&\s*/g, ` ${t('productCenter.pricing.and')} `)
+    .replace(/\s*\|\|\s*/g, ` ${t('productCenter.pricing.or')} `)
+    .replace(/\s*==\s*/g, ' = ')
+    .replace(/\s*!=\s*/g, ' ≠ ')
+}
+
+function replaceOptionClauses(
+  expression: string,
+  options: ProductFormulaOptionVO[],
+  optionValues: ProductFormulaOptionValueVO[]
+) {
+  return expression.replace(/option_([A-Za-z0-9_]+)\s*(==|!=)\s*(['"])(.*?)\3/g, (_match, optionCode, operator, _quote, valueCode) => {
+    const option = options.find((item) => item.optionCode === optionCode)
+    const value = optionValues.find((item) => item.optionCode === optionCode && item.valueCode === valueCode)
+    const optionName = option?.optionNameCn || option?.optionNameEn || optionCode
+    const valueName = value?.valueNameCn || value?.valueNameEn || valueCode
+    return `${optionName} ${operator === '!=' ? '!=' : '=='} "${valueName}"`
+  })
 }

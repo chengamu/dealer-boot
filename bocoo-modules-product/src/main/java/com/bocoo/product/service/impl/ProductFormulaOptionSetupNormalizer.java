@@ -37,6 +37,7 @@ public class ProductFormulaOptionSetupNormalizer extends ProductServiceSupport {
                 continue;
             }
             entity.setFormulaId(formulaId);
+            entity.setOptionRefKey(ProductFormulaRefKeyFactory.optionRefKey(entity.getOptionRefKey(), entity.getOptionId()));
             entity.setOptionCode(requiredUpper(entity.getOptionCode(), "product.formula.optionCodeRequired"));
             entity.setOptionNameCn(requiredTrim(entity.getOptionNameCn(), "product.formula.optionNameRequired"));
             entity.setOptionNameEn(trim(entity.getOptionNameEn()));
@@ -47,11 +48,14 @@ public class ProductFormulaOptionSetupNormalizer extends ProductServiceSupport {
             entity.setSourceScope(trim(entity.getSourceScope()));
             entity.setSelectionMode(defaultString(trim(entity.getSelectionMode()), "SINGLE"));
             entity.setDisplayMode(normalizeDisplayMode(entity.getDisplayMode()));
+            entity.setDefaultValueRefKey(trim(entity.getDefaultValueRefKey()));
             entity.setDefaultValueCode(trim(entity.getDefaultValueCode()));
             entity.setDefaultValueNameCn(trim(entity.getDefaultValueNameCn()));
             entity.setVisibilityMode(defaultString(trimUpper(row.getVisibilityMode()), VISIBILITY_ALWAYS));
+            entity.setVisibleConditionOptionRefKey(trim(row.getVisibleConditionOptionRefKey()));
             entity.setVisibleConditionOptionCode(trimUpper(row.getVisibleConditionOptionCode()));
             entity.setVisibleConditionOptionNameCn(trim(row.getVisibleConditionOptionNameCn()));
+            entity.setVisibleConditionValueRefKey(trim(row.getVisibleConditionValueRefKey()));
             entity.setVisibleConditionValueCode(trimUpper(row.getVisibleConditionValueCode()));
             entity.setVisibleConditionValueNameCn(trim(row.getVisibleConditionValueNameCn()));
             entity.setRequiredFlag(Boolean.TRUE.equals(entity.getRequiredFlag()));
@@ -77,8 +81,10 @@ public class ProductFormulaOptionSetupNormalizer extends ProductServiceSupport {
 
     List<ProductFormulaOptionValue> normalizeOptionValues(Long formulaId, List<ProductFormulaOption> options,
                                                           List<ProductFormulaOptionValueBo> rows) {
-        Map<String, ProductFormulaOption> optionMap =
+        Map<String, ProductFormulaOption> optionByCode =
             options.stream().collect(Collectors.toMap(ProductFormulaOption::getOptionCode, Function.identity()));
+        Map<String, ProductFormulaOption> optionByRef = options.stream()
+            .collect(Collectors.toMap(ProductFormulaOption::getOptionRefKey, Function.identity(), (left, right) -> left));
         Set<String> keys = new HashSet<>();
         List<ProductFormulaOptionValue> result = new ArrayList<>();
         int index = 0;
@@ -88,12 +94,19 @@ public class ProductFormulaOptionSetupNormalizer extends ProductServiceSupport {
                 continue;
             }
             entity.setFormulaId(formulaId);
-            entity.setOptionCode(requiredUpper(entity.getOptionCode(), "product.formula.optionCodeRequired"));
-            ProductFormulaOption option = optionMap.get(entity.getOptionCode());
+            entity.setOptionRefKey(trim(entity.getOptionRefKey()));
+            entity.setOptionCode(trimUpper(entity.getOptionCode()));
+            ProductFormulaOption option = StringUtils.isBlank(entity.getOptionRefKey()) ? null : optionByRef.get(entity.getOptionRefKey());
+            if (option == null && StringUtils.isNotBlank(entity.getOptionCode())) {
+                option = optionByCode.get(entity.getOptionCode());
+            }
             if (option == null) {
                 throw ServiceException.ofMessageKey("product.formula.optionValueOptionInvalid");
             }
             entity.setOptionId(option.getOptionId());
+            entity.setOptionRefKey(option.getOptionRefKey());
+            entity.setOptionCode(option.getOptionCode());
+            entity.setValueRefKey(ProductFormulaRefKeyFactory.valueRefKey(entity.getValueRefKey(), entity.getOptionValueId()));
             entity.setValueCode(requiredUpper(entity.getValueCode(), "product.formula.optionValueCodeRequired"));
             entity.setValueNameCn(requiredTrim(entity.getValueNameCn(), "product.formula.optionValueNameRequired"));
             entity.setValueNameEn(trim(entity.getValueNameEn()));
@@ -111,48 +124,65 @@ public class ProductFormulaOptionSetupNormalizer extends ProductServiceSupport {
     }
 
     void normalizeOptionVisibility(List<ProductFormulaOption> options, List<ProductFormulaOptionValue> values) {
-        Map<String, ProductFormulaOption> optionMap = options.stream()
-            .collect(Collectors.toMap(ProductFormulaOption::getOptionCode, Function.identity(), (left, right) -> left));
-        Map<String, ProductFormulaOptionValue> valueMap = values.stream()
-            .collect(Collectors.toMap(value -> key(value.getOptionCode(), value.getValueCode()), Function.identity(), (left, right) -> left));
+        ProductFormulaOptionRefResolver resolver = new ProductFormulaOptionRefResolver(options, values);
         for (ProductFormulaOption option : options) {
+            applyDefaultValue(option, resolver);
             if (!VISIBILITY_CONDITIONAL.equals(option.getVisibilityMode())) {
                 option.setVisibilityMode(VISIBILITY_ALWAYS);
                 clearOptionVisibilityCondition(option);
                 continue;
             }
-            applyVisibilityCondition(option, optionMap, valueMap);
+            applyVisibilityCondition(option, resolver);
         }
     }
 
-    private void applyVisibilityCondition(ProductFormulaOption option, Map<String, ProductFormulaOption> optionMap,
-                                          Map<String, ProductFormulaOptionValue> valueMap) {
-        String conditionOptionCode = option.getVisibleConditionOptionCode();
-        if (StringUtils.isBlank(conditionOptionCode)) {
+    private void applyDefaultValue(ProductFormulaOption option, ProductFormulaOptionRefResolver resolver) {
+        if (StringUtils.isBlank(option.getDefaultValueRefKey()) && StringUtils.isBlank(option.getDefaultValueCode())) {
+            option.setDefaultValueNameCn(null);
+            return;
+        }
+        ProductFormulaOptionValue defaultValue = resolver.value(option, option.getDefaultValueRefKey(), option.getDefaultValueCode());
+        if (defaultValue == null) {
+            throw ServiceException.ofMessageKey("product.formula.optionVisibilityValueInvalid");
+        }
+        option.setDefaultValueRefKey(defaultValue.getValueRefKey());
+        option.setDefaultValueCode(defaultValue.getValueCode());
+        option.setDefaultValueNameCn(defaultValue.getValueNameCn());
+    }
+
+    private void applyVisibilityCondition(ProductFormulaOption option, ProductFormulaOptionRefResolver resolver) {
+        if (StringUtils.isBlank(option.getVisibleConditionOptionRefKey()) && StringUtils.isBlank(option.getVisibleConditionOptionCode())) {
             throw ServiceException.ofMessageKey("product.formula.optionVisibilityConditionRequired");
         }
-        if (conditionOptionCode.equals(option.getOptionCode())) {
-            throw ServiceException.ofMessageKey("product.formula.optionVisibilitySelfDenied");
-        }
-        ProductFormulaOption conditionOption = optionMap.get(conditionOptionCode);
+        ProductFormulaOption conditionOption =
+            resolver.option(option.getVisibleConditionOptionRefKey(), option.getVisibleConditionOptionCode());
         if (conditionOption == null) {
             throw ServiceException.ofMessageKey("product.formula.optionVisibilityConditionInvalid");
         }
-        String conditionValueCode = option.getVisibleConditionValueCode();
-        if (StringUtils.isBlank(conditionValueCode)) {
+        if (conditionOption.getOptionRefKey().equals(option.getOptionRefKey())) {
+            throw ServiceException.ofMessageKey("product.formula.optionVisibilitySelfDenied");
+        }
+        if (StringUtils.isBlank(option.getVisibleConditionValueRefKey()) && StringUtils.isBlank(option.getVisibleConditionValueCode())) {
             throw ServiceException.ofMessageKey("product.formula.optionVisibilityValueRequired");
         }
-        ProductFormulaOptionValue conditionValue = valueMap.get(key(conditionOptionCode, conditionValueCode));
+        ProductFormulaOptionValue conditionValue =
+            resolver.value(conditionOption, option.getVisibleConditionValueRefKey(), option.getVisibleConditionValueCode());
         if (conditionValue == null) {
             throw ServiceException.ofMessageKey("product.formula.optionVisibilityValueInvalid");
         }
+        option.setVisibleConditionOptionRefKey(conditionOption.getOptionRefKey());
+        option.setVisibleConditionOptionCode(conditionOption.getOptionCode());
         option.setVisibleConditionOptionNameCn(conditionOption.getOptionNameCn());
+        option.setVisibleConditionValueRefKey(conditionValue.getValueRefKey());
+        option.setVisibleConditionValueCode(conditionValue.getValueCode());
         option.setVisibleConditionValueNameCn(conditionValue.getValueNameCn());
     }
 
     private void clearOptionVisibilityCondition(ProductFormulaOption option) {
+        option.setVisibleConditionOptionRefKey(null);
         option.setVisibleConditionOptionCode(null);
         option.setVisibleConditionOptionNameCn(null);
+        option.setVisibleConditionValueRefKey(null);
         option.setVisibleConditionValueCode(null);
         option.setVisibleConditionValueNameCn(null);
     }

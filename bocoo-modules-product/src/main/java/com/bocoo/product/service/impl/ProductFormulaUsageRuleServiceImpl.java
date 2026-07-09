@@ -60,15 +60,12 @@ public class ProductFormulaUsageRuleServiceImpl extends ProductServiceSupport im
             .collect(Collectors.toMap(ProductFormulaMaterial::getFormulaMaterialId, Function.identity(), (left, right) -> left));
         Map<String, ProductFormulaMaterial> materialByCode = materials.stream()
             .collect(Collectors.toMap(ProductFormulaMaterial::getMaterialCode, Function.identity(), (left, right) -> left));
-        Map<String, ProductFormulaOption> optionMap = options.stream()
-            .collect(Collectors.toMap(ProductFormulaOption::getOptionCode, Function.identity(), (left, right) -> left));
-        Map<String, ProductFormulaOptionValue> valueMap = values.stream()
-            .collect(Collectors.toMap(value -> key(value.getOptionCode(), value.getValueCode()), Function.identity(), (left, right) -> left));
+        ProductFormulaOptionRefResolver optionResolver = new ProductFormulaOptionRefResolver(options, values);
         Set<String> duplicateKeys = new HashSet<>();
         List<ProductFormulaUsageRule> result = new java.util.ArrayList<>();
         int index = 0;
         for (ProductFormulaUsageRuleBo row : rows == null ? List.<ProductFormulaUsageRuleBo>of() : rows) {
-            result.add(normalizeRule(formulaId, row, materialById, materialByCode, optionMap, valueMap, duplicateKeys, index));
+            result.add(normalizeRule(formulaId, row, materialById, materialByCode, optionResolver, duplicateKeys, index));
             index++;
         }
         String messageKey = usageRuleValidator.validationMessageKey(materials, options, values, optionMaterials, result);
@@ -104,8 +101,7 @@ public class ProductFormulaUsageRuleServiceImpl extends ProductServiceSupport im
     private ProductFormulaUsageRule normalizeRule(Long formulaId, ProductFormulaUsageRuleBo row,
                                                   Map<Long, ProductFormulaMaterial> materialById,
                                                   Map<String, ProductFormulaMaterial> materialByCode,
-                                                  Map<String, ProductFormulaOption> optionMap,
-                                                  Map<String, ProductFormulaOptionValue> valueMap,
+                                                  ProductFormulaOptionRefResolver optionResolver,
                                                   Set<String> duplicateKeys, int index) {
         ProductFormulaUsageRule entity = MapstructUtils.convert(row, ProductFormulaUsageRule.class);
         if (entity == null) {
@@ -125,10 +121,12 @@ public class ProductFormulaUsageRuleServiceImpl extends ProductServiceSupport im
         entity.setMaterialCode(material.getMaterialCode());
         entity.setMaterialNameCn(material.getMaterialNameCn());
         entity.setConditionType(defaultString(trimUpper(entity.getConditionType()), CONDITION_OPTION_VALUE));
+        entity.setConditionOptionRefKey(trim(entity.getConditionOptionRefKey()));
         entity.setConditionOptionCode(trimUpper(entity.getConditionOptionCode()));
+        entity.setConditionValueRefKey(trim(entity.getConditionValueRefKey()));
         entity.setConditionValueCode(trimUpper(entity.getConditionValueCode()));
         entity.setDefaultRuleFlag(Boolean.TRUE.equals(entity.getDefaultRuleFlag()));
-        normalizeConditionSnapshot(entity, optionMap, valueMap);
+        normalizeConditionSnapshot(entity, optionResolver);
         entity.setRuleName(defaultString(trim(entity.getRuleName()), defaultRuleName(entity)));
         entity.setUsageMode(defaultString(trimUpper(entity.getUsageMode()), USAGE_FIXED));
         entity.setLengthFormula(trim(entity.getLengthFormula()));
@@ -158,42 +156,52 @@ public class ProductFormulaUsageRuleServiceImpl extends ProductServiceSupport im
         return entity;
     }
 
-    private void normalizeConditionSnapshot(ProductFormulaUsageRule entity, Map<String, ProductFormulaOption> optionMap,
-                                            Map<String, ProductFormulaOptionValue> valueMap) {
+    private void normalizeConditionSnapshot(ProductFormulaUsageRule entity, ProductFormulaOptionRefResolver optionResolver) {
         if (Boolean.TRUE.equals(entity.getDefaultRuleFlag()) || CONDITION_DEFAULT.equals(entity.getConditionType())) {
             entity.setConditionType(CONDITION_DEFAULT);
             entity.setDefaultRuleFlag(Boolean.TRUE);
+            entity.setConditionOptionRefKey(null);
             entity.setConditionOptionCode(null);
             entity.setConditionOptionNameCn(null);
+            entity.setConditionValueRefKey(null);
             entity.setConditionValueCode(null);
             entity.setConditionValueNameCn(null);
             entity.setConditionExpression(CONDITION_DEFAULT);
             entity.setConditionText("默认规则");
             entity.setConditionKey(CONDITION_DEFAULT);
+            entity.setConditionJson(ProductFormulaConditionJsonFactory.defaultCondition());
             return;
         }
         if (CONDITION_EXPRESSION.equals(entity.getConditionType())) {
+            entity.setConditionOptionRefKey(null);
+            entity.setConditionValueRefKey(null);
             entity.setConditionExpression(trim(entity.getConditionExpression()));
             entity.setConditionText(defaultString(trim(entity.getConditionText()), entity.getConditionExpression()));
             if (!ProductFormulaExpressionValidator.isConditionValid(entity.getConditionExpression())) {
                 throw ServiceException.ofMessageKey("product.formula.usageConditionInvalid");
             }
-            entity.setConditionKey(defaultString(trim(entity.getConditionKey()), "EXPR:" + entity.getConditionExpression()));
+            entity.setConditionKey("EXPR:" + entity.getConditionExpression());
+            entity.setConditionJson(ProductFormulaConditionJsonFactory.expression(entity.getConditionExpression(), entity.getConditionText()));
             return;
         }
         if (!CONDITION_OPTION_VALUE.equals(entity.getConditionType())) {
             throw ServiceException.ofMessageKey("product.formula.usageConditionInvalid");
         }
-        ProductFormulaOption option = optionMap.get(entity.getConditionOptionCode());
-        ProductFormulaOptionValue value = valueMap.get(key(entity.getConditionOptionCode(), entity.getConditionValueCode()));
+        ProductFormulaOption option = optionResolver.option(entity.getConditionOptionRefKey(), entity.getConditionOptionCode());
+        ProductFormulaOptionValue value = optionResolver.value(option, entity.getConditionValueRefKey(), entity.getConditionValueCode());
         if (option == null || value == null) {
             throw ServiceException.ofMessageKey("product.formula.usageConditionInvalid");
         }
+        entity.setConditionOptionRefKey(option.getOptionRefKey());
+        entity.setConditionOptionCode(option.getOptionCode());
         entity.setConditionOptionNameCn(option.getOptionNameCn());
+        entity.setConditionValueRefKey(value.getValueRefKey());
+        entity.setConditionValueCode(value.getValueCode());
         entity.setConditionValueNameCn(value.getValueNameCn());
         entity.setConditionExpression(defaultString(trim(entity.getConditionExpression()), optionConditionExpression(option.getOptionCode(), value.getValueCode())));
         entity.setConditionText(defaultString(trim(entity.getConditionText()), option.getOptionNameCn() + " = " + value.getValueNameCn()));
-        entity.setConditionKey(defaultString(trim(entity.getConditionKey()), "OPTION:" + option.getOptionCode() + ":" + value.getValueCode()));
+        entity.setConditionKey("OPTION:" + option.getOptionRefKey() + ":" + value.getValueRefKey());
+        entity.setConditionJson(ProductFormulaConditionJsonFactory.optionValue(option, value));
         if (!ProductFormulaExpressionValidator.isConditionValid(entity.getConditionExpression())) {
             throw ServiceException.ofMessageKey("product.formula.usageConditionInvalid");
         }

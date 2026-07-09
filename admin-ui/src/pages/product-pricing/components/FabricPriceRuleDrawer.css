@@ -71,3 +71,7 @@
 .rule-cell--condition :deep(.el-select) {
   flex: 0 0 124px;
 }
+
+.fabric-rule-table :deep(.fabric-rule-table__price-column .el-input-number) {
+  width: 100%;
+}

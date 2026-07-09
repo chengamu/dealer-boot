@@ -19,7 +19,9 @@ public class ProductFormulaOptionMaterialVo implements Serializable {
     private Long formulaId;
     private Long optionId;
     private Long optionValueId;
+    private String optionRefKey;
     private String optionCode;
+    private String valueRefKey;
     private String valueCode;
     private Long formulaMaterialId;
     private Long materialId;

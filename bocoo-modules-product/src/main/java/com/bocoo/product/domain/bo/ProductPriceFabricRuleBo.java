@@ -21,6 +21,7 @@ public class ProductPriceFabricRuleBo extends BaseBo {
     private Long saleProductId;
     private Long formulaVersionId;
     private String conditionType;
+    private String conditionJson;
     private String conditionExpression;
     private String conditionText;
     private String conditionKey;

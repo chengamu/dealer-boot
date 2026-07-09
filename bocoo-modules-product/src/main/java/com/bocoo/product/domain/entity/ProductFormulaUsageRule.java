@@ -29,10 +29,13 @@ public class ProductFormulaUsageRule extends BaseEntity {
     private String materialNameCn;
     private String ruleName;
     private String conditionType;
+    private String conditionOptionRefKey;
     private String conditionOptionCode;
     private String conditionOptionNameCn;
+    private String conditionValueRefKey;
     private String conditionValueCode;
     private String conditionValueNameCn;
+    private String conditionJson;
     private String conditionExpression;
     private String conditionText;
     private String conditionKey;

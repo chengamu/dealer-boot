@@ -218,6 +218,9 @@ public class ProductFormulaVariableServiceImpl extends ProductServiceSupport imp
         entity.setConditionExpression(trim(entity.getConditionExpression()));
         entity.setConditionText(defaultString(trim(entity.getConditionText()), entity.getConditionExpression()));
         entity.setDefaultRuleFlag(Boolean.TRUE.equals(entity.getDefaultRuleFlag()) || StringUtils.isBlank(entity.getConditionExpression()));
+        entity.setConditionJson(Boolean.TRUE.equals(entity.getDefaultRuleFlag())
+            ? ProductFormulaConditionJsonFactory.defaultCondition()
+            : ProductFormulaConditionJsonFactory.expression(entity.getConditionExpression(), entity.getConditionText()));
         if (!Boolean.TRUE.equals(entity.getDefaultRuleFlag()) && !ProductFormulaExpressionValidator.isConditionValid(entity.getConditionExpression())) {
             throw ServiceException.ofMessageKey("product.formula.variableRuleInvalid");
         }
@@ -289,6 +292,9 @@ public class ProductFormulaVariableServiceImpl extends ProductServiceSupport imp
         target.setFormulaText(replaceVariableRefs(target.getFormulaText(), copiedKeys));
         target.setConditionExpression(replaceVariableRefs(target.getConditionExpression(), copiedKeys));
         target.setConditionText(replaceVariableRefs(target.getConditionText(), copiedKeys));
+        target.setConditionJson(Boolean.TRUE.equals(target.getDefaultRuleFlag())
+            ? ProductFormulaConditionJsonFactory.defaultCondition()
+            : ProductFormulaConditionJsonFactory.expression(target.getConditionExpression(), target.getConditionText()));
         return target;
     }
 

@@ -43,7 +43,7 @@
         @current-change="selectedRule = $event"
       >
         <el-table-column type="index" :label="t('common.index')" width="58" align="center" />
-        <el-table-column :label="t('productCenter.pricing.condition')" min-width="430">
+        <el-table-column :label="t('productCenter.pricing.condition')" min-width="380">
           <template #default="{ row }">
             <div class="rule-cell rule-cell--condition">
               <el-select v-model="row.conditionType" :disabled="!editable" @change="onConditionTypeChange(row)">
@@ -67,7 +67,7 @@
             </div>
           </template>
         </el-table-column>
-        <el-table-column :label="t('productCenter.pricing.unitPrice')" width="150" align="right">
+        <el-table-column :label="t('productCenter.pricing.unitPrice')" width="124" align="right" class-name="fabric-rule-table__price-column">
           <template #default="{ row }">
             <el-input-number
               v-model="row.unitPrice"
@@ -79,7 +79,7 @@
             />
           </template>
         </el-table-column>
-        <el-table-column :label="t('productCenter.pricing.fabricFormula')" min-width="440">
+        <el-table-column :label="t('productCenter.pricing.fabricFormula')" min-width="560">
           <template #default="{ row }">
             <div class="rule-cell">
               <el-input v-model="row.priceFormula" :disabled="!editable" :placeholder="t('productCenter.pricing.formulaPlaceholder')" />
@@ -160,6 +160,7 @@ function addRule(defaultRule = false) {
   localRows.value.push({
     priceFabricId: props.fabric?.priceFabricId,
     conditionType: isDefault ? 'DEFAULT' : 'EXPRESSION',
+    conditionJson: '',
     conditionExpression: isDefault ? 'DEFAULT' : '',
     conditionText: isDefault ? t('productCenter.pricing.defaultRule') : '',
     conditionKey: isDefault ? 'DEFAULT' : '',
@@ -179,6 +180,7 @@ function copyRule() {
     fabricRuleId: undefined,
     defaultRuleFlag: false,
     conditionType: 'EXPRESSION',
+    conditionJson: '',
     conditionExpression: '',
     conditionText: '',
     conditionKey: '',
@@ -195,12 +197,14 @@ function removeRule() {
 function onConditionTypeChange(row: FabricPriceRule) {
   const isDefault = row.conditionType === 'DEFAULT'
   row.defaultRuleFlag = isDefault
+  row.conditionJson = ''
   row.conditionExpression = isDefault ? 'DEFAULT' : ''
   row.conditionText = isDefault ? t('productCenter.pricing.defaultRule') : ''
   row.conditionKey = isDefault ? 'DEFAULT' : ''
 }
 
 function syncConditionText(row: FabricPriceRule) {
+  row.conditionJson = ''
   row.conditionText = row.conditionExpression
   row.conditionKey = row.conditionExpression
 }
@@ -225,6 +229,7 @@ function confirmExpression() {
   } else {
     editingRule.value.conditionType = 'EXPRESSION'
     editingRule.value.defaultRuleFlag = false
+    editingRule.value.conditionJson = ''
     editingRule.value.conditionExpression = expressionText.value
     syncConditionText(editingRule.value)
   }

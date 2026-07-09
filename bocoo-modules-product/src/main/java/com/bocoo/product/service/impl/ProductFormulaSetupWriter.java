@@ -94,7 +94,7 @@ public class ProductFormulaSetupWriter extends ProductServiceSupport {
         for (ProductFormulaOption option : options) {
             ProductEntityDefaults.prepareInsert(option);
             optionMapper.insert(option);
-            ids.put(option.getOptionCode(), option.getOptionId());
+            ids.put(option.getOptionRefKey(), option.getOptionId());
         }
         return ids;
     }
@@ -102,10 +102,10 @@ public class ProductFormulaSetupWriter extends ProductServiceSupport {
     private Map<String, Long> insertValues(List<ProductFormulaOptionValue> values, Map<String, Long> optionIds) {
         Map<String, Long> ids = new LinkedHashMap<>();
         for (ProductFormulaOptionValue value : values) {
-            value.setOptionId(optionIds.get(value.getOptionCode()));
+            value.setOptionId(optionIds.get(value.getOptionRefKey()));
             ProductEntityDefaults.prepareInsert(value);
             optionValueMapper.insert(value);
-            ids.put(key(value.getOptionCode(), value.getValueCode()), value.getOptionValueId());
+            ids.put(key(value.getOptionRefKey(), value.getValueRefKey()), value.getOptionValueId());
         }
         return ids;
     }
@@ -115,8 +115,8 @@ public class ProductFormulaSetupWriter extends ProductServiceSupport {
         Map<String, Long> materialIds = materials.stream()
             .collect(Collectors.toMap(ProductFormulaMaterial::getMaterialCode, ProductFormulaMaterial::getFormulaMaterialId, (left, right) -> left));
         for (ProductFormulaOptionMaterial optionMaterial : optionMaterials) {
-            optionMaterial.setOptionId(optionIds.get(optionMaterial.getOptionCode()));
-            optionMaterial.setOptionValueId(valueIds.get(key(optionMaterial.getOptionCode(), optionMaterial.getValueCode())));
+            optionMaterial.setOptionId(optionIds.get(optionMaterial.getOptionRefKey()));
+            optionMaterial.setOptionValueId(valueIds.get(key(optionMaterial.getOptionRefKey(), optionMaterial.getValueRefKey())));
             optionMaterial.setFormulaMaterialId(materialIds.get(optionMaterial.getMaterialCode()));
         }
     }

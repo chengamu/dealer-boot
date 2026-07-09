@@ -18,7 +18,9 @@ public class ProductFormulaOptionValueVo implements Serializable {
     private Long tenantId;
     private Long formulaId;
     private Long optionId;
+    private String optionRefKey;
     private String optionCode;
+    private String valueRefKey;
     private String valueCode;
     private String valueNameCn;
     private String valueNameEn;

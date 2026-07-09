@@ -12,12 +12,13 @@
         <el-button v-if="editable" v-hasPermi="['product:pricing:edit']" icon="CopyDocument" @click="$emit('generate', true)">
           {{ t('productCenter.pricing.overwriteGeneratePrices') }}
         </el-button>
-        <el-button v-if="editable" v-hasPermi="['product:pricing:edit']" type="primary" icon="EditPen" @click="$emit('batch')">
+        <el-button v-if="editable" v-hasPermi="['product:pricing:edit']" type="primary" icon="EditPen" :disabled="!selectedRows.length" @click="$emit('batch', selectedRows)">
           {{ t('productCenter.pricing.batchSetPrice') }}
         </el-button>
       </div>
     </div>
-    <el-table :data="rows" border class="price-rule-table" height="520">
+    <el-table :data="rows" border class="price-rule-table" height="520" row-key="priceFabricId" @selection-change="selectedRows = $event">
+      <el-table-column type="selection" width="48" align="center" />
       <el-table-column type="index" :label="t('common.index')" width="58" align="center" />
       <el-table-column prop="materialCode" :label="t('productCenter.formulaSetup.materialCode')" width="132" />
       <el-table-column prop="materialNameCn" :label="t('productCenter.formulaSetup.materialName')" min-width="360" show-overflow-tooltip />
@@ -57,14 +58,16 @@
 </template>
 
 <script setup lang="ts">
+import { ref, watch } from 'vue'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 import type { FabricPriceRule, PriceFabricVO } from '@/api/product-pricing/types'
-import { displayFabricPriceFormula } from '../utils/pricingDisplay'
+import { displayFabricPriceFormula, displayPriceExpression } from '../utils/pricingDisplay'
+import type { ProductFormulaOptionVO, ProductFormulaOptionValueVO } from '@/api/product-capability/types'
 
 defineEmits<{
   generate: [overwrite: boolean]
-  batch: []
+  batch: [rows: PriceFabricVO[]]
   'open-rules': [row: PriceFabricVO]
 }>()
 
@@ -75,7 +78,14 @@ const props = defineProps<{
   rows: PriceFabricVO[]
   rules: FabricPriceRule[]
   editable?: boolean
+  options?: ProductFormulaOptionVO[]
+  optionValues?: ProductFormulaOptionValueVO[]
 }>()
+const selectedRows = ref<PriceFabricVO[]>([])
+
+watch(() => props.rows, () => {
+  selectedRows.value = []
+})
 
 function summaryRows(row: PriceFabricVO) {
   const rowRules = props.rules.filter(rule => rule.priceFabricId === row.priceFabricId)
@@ -90,9 +100,9 @@ function summaryRows(row: PriceFabricVO) {
   }
   return rowRules.map((rule, index) => ({
     key: String(rule.fabricRuleId || `${rule.conditionKey || 'rule'}-${index}`),
-    label: rule.defaultRuleFlag ? t('productCenter.pricing.defaultRule') : (rule.conditionText || rule.conditionExpression || t('productCenter.pricing.conditionRule')),
+    label: rule.defaultRuleFlag ? t('productCenter.pricing.defaultRule') : displayPriceExpression(rule.conditionText || rule.conditionExpression, t, props.options, props.optionValues),
     unitPriceText: `${t('productCenter.pricing.unitPrice')} ${formatMoney(rule.unitPrice)}`,
-    formulaText: displayFabricPriceFormula(rule.priceFormula, rule.unitPrice),
+    formulaText: displayPriceExpression(displayFabricPriceFormula(rule.priceFormula, rule.unitPrice), t, props.options, props.optionValues),
     defaultRule: Boolean(rule.defaultRuleFlag)
   }))
 }
