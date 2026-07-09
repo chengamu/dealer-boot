@@ -2,9 +2,17 @@ import type { ProductFormulaMaterialVO, ProductFormulaOptionVO, ProductFormulaOp
 import { formulaVariables, normalizeOutsideQuotes } from '../utils/formulaNormalize'
 
 type AliasPair = { from: string; to: string }
+type OptionRefLike = { optionRefKey?: string; optionCode?: string }
+type ValueRefLike = { valueRefKey?: string; valueCode?: string }
 
-export function optionVariableName(optionCode?: string) {
-  return optionCode === 'FABRIC' ? 'fabric' : `option_${optionCode || 'VALUE'}`
+export function optionVariableName(option?: string | OptionRefLike, optionRefKey?: string) {
+  const ref = typeof option === 'string' ? optionRefKey || option : option?.optionRefKey || option?.optionCode
+  return `option_${identifierPart(ref || 'VALUE')}`
+}
+
+export function optionValueLiteral(value?: string | ValueRefLike, valueRefKey?: string) {
+  const ref = typeof value === 'string' ? valueRefKey || value : value?.valueRefKey || value?.valueCode
+  return quoted(ref || '')
 }
 
 export function materialAttributeVariableName(roleCode?: string, fieldName?: string) {
@@ -35,15 +43,17 @@ function buildAliasPairs(options: ProductFormulaOptionVO[], optionValues: Produc
   const aliases: AliasPair[] = []
   formulaVariables.forEach((variable) => pushAlias(aliases, variable.label, variable.name))
   options.forEach((option) => {
-    const variableName = optionVariableName(option.optionCode)
+    const variableName = optionVariableName(option)
     pushAlias(aliases, option.optionNameCn, variableName)
     pushAlias(aliases, option.optionNameEn, variableName)
     pushAlias(aliases, option.optionCode, variableName)
+    pushAlias(aliases, option.optionRefKey, variableName)
   })
   buildOptionMaterialAttributeAliasPairs(aliases, options, materials)
   optionValues.forEach((value) => {
-    pushAlias(aliases, value.valueNameCn, value.valueCode)
-    pushAlias(aliases, value.valueNameEn, value.valueCode)
+    const literal = optionValueLiteral(value)
+    pushAlias(aliases, value.valueNameCn, literal)
+    pushAlias(aliases, value.valueNameEn, literal)
   })
   buildMaterialAliasPairs(aliases, materials)
   variables.forEach((variable) => {
@@ -118,6 +128,10 @@ function pushAlias(aliases: AliasPair[], from?: string, to?: string) {
   if (!from || !to || from === to) return
   if (aliases.some((item) => item.from === from)) return
   aliases.push({ from, to })
+}
+
+function quoted(value: string) {
+  return `"${String(value || '').replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`
 }
 
 function internalVariableName(variable: ProductFormulaVariableVO) {

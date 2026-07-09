@@ -92,11 +92,22 @@ function replaceOptionClauses(
   options: ProductFormulaOptionVO[],
   optionValues: ProductFormulaOptionValueVO[]
 ) {
-  return expression.replace(/option_([A-Za-z0-9_]+)\s*(==|!=)\s*(['"])(.*?)\3/g, (_match, optionCode, operator, _quote, valueCode) => {
-    const option = options.find((item) => item.optionCode === optionCode)
-    const value = optionValues.find((item) => item.optionCode === optionCode && item.valueCode === valueCode)
-    const optionName = option?.optionNameCn || option?.optionNameEn || optionCode
-    const valueName = value?.valueNameCn || value?.valueNameEn || valueCode
+  return expression.replace(/option_([A-Za-z0-9_]+)\s*(==|!=)\s*(['"])(.*?)\3/g, (_match, optionToken, operator, _quote, valueToken) => {
+    const option = options.find((item) => optionMatchesToken(item, optionToken))
+    const value = optionValues.find((item) => valueMatchesToken(item, option, valueToken))
+    const optionName = option?.optionNameCn || option?.optionNameEn || optionToken
+    const valueName = value?.valueNameCn || value?.valueNameEn || valueToken
     return `${optionName} ${operator === '!=' ? '!=' : '=='} "${valueName}"`
   })
+}
+
+function optionMatchesToken(option: ProductFormulaOptionVO, token: string) {
+  return option.optionRefKey === token || option.optionCode === token
+}
+
+function valueMatchesToken(value: ProductFormulaOptionValueVO, option: ProductFormulaOptionVO | undefined, token: string) {
+  const sameValue = value.valueRefKey === token || value.valueCode === token
+  if (!sameValue || !option) return sameValue
+  if (value.optionRefKey && option.optionRefKey) return value.optionRefKey === option.optionRefKey
+  return value.optionCode === option.optionCode
 }

@@ -139,6 +139,7 @@ export function useFormulaUsageRules(
     if (!props.usageRow?.materialCode) return
     props.usageRow.usageMode = 'FORMULA'
     const next = currentRules.value.length + 1
+    const option = optionOf(value?.optionCode || 'FABRIC')
     const rule: ProductFormulaUsageRuleVO = {
       materialCode: props.usageRow.materialCode,
       materialNameCn: props.usageRow.materialNameCn,
@@ -146,13 +147,15 @@ export function useFormulaUsageRules(
       formulaMaterialId: props.usageRow.formulaMaterialId,
       ruleName: defaultRule ? t('productCenter.formulaSetup.defaultUsageRule') : (value?.valueNameCn || t('productCenter.formulaSetup.conditionalUsageRule')),
       conditionType: defaultRule ? 'DEFAULT' : 'EXPRESSION',
-      conditionOptionCode: defaultRule ? undefined : value?.optionCode || 'FABRIC',
-      conditionOptionNameCn: defaultRule ? undefined : optionName(value?.optionCode || 'FABRIC'),
+      conditionOptionRefKey: defaultRule ? undefined : option?.optionRefKey,
+      conditionOptionCode: defaultRule ? undefined : option?.optionCode || value?.optionCode || 'FABRIC',
+      conditionOptionNameCn: defaultRule ? undefined : option?.optionNameCn,
+      conditionValueRefKey: defaultRule ? undefined : value?.valueRefKey,
       conditionValueCode: defaultRule ? undefined : value?.valueCode,
       conditionValueNameCn: defaultRule ? undefined : value?.valueNameCn,
-      conditionExpression: defaultRule ? 'DEFAULT' : conditionExpressionForOption(value?.optionCode || 'FABRIC', value?.valueCode),
-      conditionText: defaultRule ? t('productCenter.formulaSetup.defaultUsageRule') : conditionText(value?.optionCode || 'FABRIC', value?.valueCode),
-      conditionKey: defaultRule ? defaultConditionKey() : conditionKeyForOption(value?.optionCode || 'FABRIC', value?.valueCode),
+      conditionExpression: defaultRule ? 'DEFAULT' : conditionExpressionForOption(option?.optionCode || value?.optionCode || 'FABRIC', value?.valueCode, option?.optionRefKey, value?.valueRefKey),
+      conditionText: defaultRule ? t('productCenter.formulaSetup.defaultUsageRule') : conditionText(option?.optionCode || value?.optionCode || 'FABRIC', value?.valueCode),
+      conditionKey: defaultRule ? defaultConditionKey() : conditionKeyForOption(option?.optionCode || value?.optionCode || 'FABRIC', value?.valueCode, option?.optionRefKey, value?.valueRefKey),
       usageMode: 'FORMULA',
       fixedUsageQty: undefined,
       usageFormula: defaultRule ? '1' : undefined,
@@ -183,7 +186,8 @@ export function useFormulaUsageRules(
       return
     }
     fabricValues.forEach((value) => {
-      const key = conditionKeyForOption(optionCode, value.valueCode)
+      const option = optionOf(optionCode)
+      const key = conditionKeyForOption(optionCode, value.valueCode, option?.optionRefKey, value.valueRefKey)
       const exists = currentRules.value.some((rule) => rule.conditionKey === key)
       if (!exists) addFormulaRule(false, { ...value, optionCode })
     })
@@ -310,6 +314,10 @@ export function useFormulaUsageRules(
     return props.optionValues.filter((value) => value.optionCode === optionCode)
   }
 
+  function optionOf(optionCode?: string) {
+    return props.options.find((option) => option.optionCode === optionCode)
+  }
+
   function fabricOptionCode() {
     const materialPoolOptions = props.options.filter((option) => option.sourceType === 'MATERIAL_POOL')
     return props.options.find((option) => option.optionCode === 'FABRIC')?.optionCode
@@ -319,7 +327,7 @@ export function useFormulaUsageRules(
   }
 
   function optionName(optionCode?: string) {
-    return props.options.find((option) => option.optionCode === optionCode)?.optionNameCn
+    return optionOf(optionCode)?.optionNameCn
   }
 
   function conditionText(optionCode?: string, valueCode?: string) {

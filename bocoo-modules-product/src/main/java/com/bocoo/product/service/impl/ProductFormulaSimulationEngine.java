@@ -47,7 +47,7 @@ class ProductFormulaSimulationEngine extends ProductServiceSupport {
         Map<String, String> visibleSelectedValues = visibleSelectedValues(setup, vo.getSelectedOptionValues());
         vo.setSelectedOptionValues(visibleSelectedValues);
         List<ProductFormulaMaterialVo> bomMaterials = resolveBomMaterials(setup, visibleSelectedValues);
-        Map<String, Object> context = expressionContext(formula, vo);
+        Map<String, Object> context = expressionContext(formula, setup, vo);
         context.putAll(selectedOptionMaterialContext(setup, visibleSelectedValues));
         messageKey = validateRestrictions(setup.getRestrictions(), visibleSelectedValues, context);
         if (messageKey != null) {
@@ -184,11 +184,17 @@ class ProductFormulaSimulationEngine extends ProductServiceSupport {
         return productMaterialMapper.selectList(activeQuery(ProductMaterial.class).in("material_id", materialIds)).stream()
             .collect(Collectors.toMap(ProductMaterial::getMaterialId, material -> material, (left, right) -> left));
     }
-    private Map<String, Object> expressionContext(ProductFormula formula, ProductFormulaSimulationVo vo) {
+    private Map<String, Object> expressionContext(ProductFormula formula, ProductFormulaSetupVo setup, ProductFormulaSimulationVo vo) {
         double widthIn = vo.getOrderWidth().doubleValue();
         double heightIn = vo.getOrderHeight().doubleValue();
         double widthCm = widthIn * 2.54D;
         double heightCm = heightIn * 2.54D;
+        Map<String, ProductFormulaOptionVo> optionByCode = setup.getOptions().stream()
+            .filter(option -> StringUtils.isNotBlank(option.getOptionCode()))
+            .collect(Collectors.toMap(ProductFormulaOptionVo::getOptionCode, option -> option, (left, right) -> left));
+        Map<String, ProductFormulaOptionValueVo> valueByCode = setup.getOptionValues().stream()
+            .filter(value -> StringUtils.isNotBlank(value.getOptionCode()) && StringUtils.isNotBlank(value.getValueCode()))
+            .collect(Collectors.toMap(value -> optionValueKey(value.getOptionCode(), value.getValueCode()), value -> value, (left, right) -> left));
         Map<String, Object> context = new HashMap<>();
         context.put("orderWidthIn", widthIn);
         context.put("orderHeightIn", heightIn);
@@ -198,7 +204,20 @@ class ProductFormulaSimulationEngine extends ProductServiceSupport {
         context.put("productType", formula.getProductTypeCode());
         context.put("fabric", vo.getSelectedOptionValues().getOrDefault("FABRIC", ""));
         context.put("optionValue", "");
-        vo.getSelectedOptionValues().forEach((optionCode, valueCode) -> context.put("option_" + optionCode, valueCode));
+        vo.getSelectedOptionValues().forEach((optionCode, valueCode) -> {
+            context.put("option_" + optionCode, valueCode);
+            ProductFormulaOptionVo option = optionByCode.get(optionCode);
+            if (option == null || StringUtils.isBlank(option.getOptionRefKey())) {
+                return;
+            }
+            String refValues = selectedValues(valueCode).stream()
+                .map(selected -> valueByCode.get(optionValueKey(optionCode, selected)))
+                .filter(Objects::nonNull)
+                .map(value -> StringUtils.blankToDefault(value.getValueRefKey(), value.getValueCode()))
+                .filter(StringUtils::isNotBlank)
+                .collect(Collectors.joining(","));
+            context.put("option_" + identifierPart(option.getOptionRefKey()), StringUtils.blankToDefault(refValues, valueCode));
+        });
         return context;
     }
 
@@ -212,8 +231,21 @@ class ProductFormulaSimulationEngine extends ProductServiceSupport {
                 && selectedValueMatches(selectedValues.get(optionMaterial.getOptionCode()), optionMaterial.getValueCode()))
             .sorted(Comparator.comparing(ProductFormulaOptionMaterialVo::getDefaultFlag, Comparator.nullsLast(Comparator.reverseOrder()))
                 .thenComparing(ProductFormulaOptionMaterialVo::getSortOrder, Comparator.nullsLast(Integer::compareTo)))
-            .forEach(optionMaterial -> applyOptionMaterialContext(context, optionMaterial.getOptionCode(), materialsByCode.get(optionMaterial.getMaterialCode())));
+            .forEach(optionMaterial -> {
+                ProductFormulaOptionVo option = setup.getOptions().stream()
+                    .filter(row -> optionMatches(row, optionMaterial.getOptionCode()))
+                    .findFirst().orElse(null);
+                ProductFormulaMaterialVo material = materialsByCode.get(optionMaterial.getMaterialCode());
+                applyOptionMaterialContext(context, optionMaterial.getOptionCode(), material);
+                if (option != null && StringUtils.isNotBlank(option.getOptionRefKey())) {
+                    applyOptionMaterialContext(context, option.getOptionRefKey(), material);
+                }
+            });
         return context;
+    }
+
+    private boolean optionMatches(ProductFormulaOptionVo option, String optionCode) {
+        return option != null && StringUtils.isNotBlank(optionCode) && optionCode.equals(option.getOptionCode());
     }
 
     private void applyOptionMaterialContext(Map<String, Object> context, String optionCode, ProductFormulaMaterialVo material) {
@@ -246,6 +278,10 @@ class ProductFormulaSimulationEngine extends ProductServiceSupport {
 
     private String identifierPart(String value) {
         return value == null ? "" : value.replaceAll("[^A-Za-z0-9_]", "_");
+    }
+
+    private String optionValueKey(String optionCode, String valueCode) {
+        return optionCode + "|" + valueCode;
     }
 
     private String validateRestrictions(List<ProductFormulaRestrictionVo> restrictions, Map<String, String> selectedValues,

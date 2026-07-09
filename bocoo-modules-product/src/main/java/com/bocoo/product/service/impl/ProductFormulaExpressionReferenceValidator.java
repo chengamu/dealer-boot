@@ -35,31 +35,36 @@ public class ProductFormulaExpressionReferenceValidator extends ProductServiceSu
         if (StringUtils.isBlank(expression) || "DEFAULT".equals(expression)) {
             return null;
         }
-        Set<String> optionCodes = options.stream().map(ProductFormulaOption::getOptionCode).collect(Collectors.toSet());
-        Set<String> valueKeys = values.stream().map(value -> key(value.getOptionCode(), value.getValueCode())).collect(Collectors.toSet());
+        Map<String, ProductFormulaOption> optionByToken = optionTokenMap(options);
+        Set<String> valueKeys = valueKeys(values);
         var matcher = IDENTIFIER_PATTERN.matcher(expression);
         while (matcher.find()) {
             String identifier = matcher.group(1);
             if ("fabric".equals(identifier)) {
-                if (!optionCodes.contains("FABRIC")) return "product.formula.expressionReferenceInvalid";
+                if (!optionByToken.containsKey("FABRIC")) return "product.formula.expressionReferenceInvalid";
             } else if (identifier.startsWith("option_")) {
-                if (!optionCodes.contains(identifier.substring("option_".length()))) return "product.formula.expressionReferenceInvalid";
+                if (!optionByToken.containsKey(identifier.substring("option_".length()))) return "product.formula.expressionReferenceInvalid";
             } else if (invalidMaterialReference(identifier, options, optionMaterials, materials)) {
                 return "product.formula.expressionReferenceInvalid";
             }
         }
-        return invalidOptionValueReference(expression, valueKeys) ? "product.formula.expressionReferenceInvalid" : null;
+        return invalidOptionValueReference(expression, optionByToken, valueKeys) ? "product.formula.expressionReferenceInvalid" : null;
     }
 
-    private boolean invalidOptionValueReference(String expression, Set<String> valueKeys) {
+    private boolean invalidOptionValueReference(String expression, Map<String, ProductFormulaOption> optionByToken, Set<String> valueKeys) {
         var matcher = OPTION_COMPARE_PATTERN.matcher(expression);
         while (matcher.find()) {
-            String optionCode = "fabric".equals(matcher.group(1)) ? "FABRIC" : matcher.group(2);
-            if (!valueKeys.contains(key(optionCode, matcher.group(5)))) {
+            ProductFormulaOption option = optionByToken.get("fabric".equals(matcher.group(1)) ? "FABRIC" : matcher.group(2));
+            if (option == null || invalidOptionValue(option, matcher.group(5), valueKeys)) {
                 return true;
             }
         }
         return false;
+    }
+
+    private boolean invalidOptionValue(ProductFormulaOption option, String valueToken, Set<String> valueKeys) {
+        return !valueKeys.contains(key(option.getOptionRefKey(), valueToken))
+            && !valueKeys.contains(key(option.getOptionCode(), valueToken));
     }
 
     private boolean invalidMaterialReference(String identifier, List<ProductFormulaOption> options,
@@ -69,17 +74,16 @@ public class ProductFormulaExpressionReferenceValidator extends ProductServiceSu
         if (validMaterialPoolReference(body, materials)) {
             return false;
         }
-        List<String> optionCodes = options.stream().map(ProductFormulaOption::getOptionCode)
-            .filter(StringUtils::isNotBlank)
-            .sorted(Comparator.comparingInt((String value) -> identifierPart(value).length()).reversed())
+        List<Map.Entry<String, ProductFormulaOption>> optionTokens = optionTokenMap(options).entrySet().stream()
+            .sorted(Comparator.<Map.Entry<String, ProductFormulaOption>>comparingInt(entry -> identifierPart(entry.getKey()).length()).reversed())
             .toList();
-        for (String optionCode : optionCodes) {
-            String prefix = identifierPart(optionCode) + "_";
+        for (Map.Entry<String, ProductFormulaOption> entry : optionTokens) {
+            String prefix = identifierPart(entry.getKey()) + "_";
             if (!body.startsWith(prefix)) {
                 continue;
             }
             String attributeCode = body.substring(prefix.length());
-            return !optionHasAttribute(optionCode, attributeCode, optionMaterials, materials);
+            return !optionHasAttribute(entry.getValue(), attributeCode, optionMaterials, materials);
         }
         return true;
     }
@@ -109,13 +113,13 @@ public class ProductFormulaExpressionReferenceValidator extends ProductServiceSu
         return false;
     }
 
-    private boolean optionHasAttribute(String optionCode, String attributeCode,
+    private boolean optionHasAttribute(ProductFormulaOption option, String attributeCode,
                                        List<ProductFormulaOptionMaterial> optionMaterials,
                                        List<ProductFormulaMaterial> materials) {
         Map<String, ProductFormulaMaterial> materialByCode = materials.stream()
             .collect(Collectors.toMap(ProductFormulaMaterial::getMaterialCode, material -> material, (left, right) -> left));
         Set<Long> materialIds = optionMaterials.stream()
-            .filter(row -> optionCode.equals(row.getOptionCode()))
+            .filter(row -> optionMatches(option, row))
             .map(ProductFormulaOptionMaterial::getMaterialCode)
             .map(materialByCode::get)
             .filter(material -> material != null && material.getMaterialId() != null)
@@ -133,6 +137,33 @@ public class ProductFormulaExpressionReferenceValidator extends ProductServiceSu
             .filter(StringUtils::isNotBlank)
             .collect(Collectors.toSet());
         return groupHasAttribute(groupCodes, attributeCode);
+    }
+
+    private boolean optionMatches(ProductFormulaOption option, ProductFormulaOptionMaterial material) {
+        return option != null
+            && ((StringUtils.isNotBlank(option.getOptionRefKey()) && option.getOptionRefKey().equals(material.getOptionRefKey()))
+            || (StringUtils.isNotBlank(option.getOptionCode()) && option.getOptionCode().equals(material.getOptionCode())));
+    }
+
+    private Map<String, ProductFormulaOption> optionTokenMap(List<ProductFormulaOption> options) {
+        return options.stream()
+            .flatMap(option -> java.util.stream.Stream.of(
+                Map.entry(StringUtils.blankToDefault(option.getOptionRefKey(), ""), option),
+                Map.entry(StringUtils.blankToDefault(option.getOptionCode(), ""), option)
+            ))
+            .filter(entry -> StringUtils.isNotBlank(entry.getKey()))
+            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (left, right) -> left));
+    }
+
+    private Set<String> valueKeys(List<ProductFormulaOptionValue> values) {
+        return values.stream()
+            .flatMap(value -> java.util.stream.Stream.of(
+                key(value.getOptionRefKey(), value.getValueRefKey()),
+                key(value.getOptionCode(), value.getValueCode()),
+                key(value.getOptionRefKey(), value.getValueCode()),
+                key(value.getOptionCode(), value.getValueRefKey())
+            ))
+            .collect(Collectors.toSet());
     }
 
     private boolean groupHasAttribute(Set<String> groupCodes, String attributeCode) {

@@ -75,15 +75,18 @@ export function validateConditionExpression(input?: string): ExpressionValidatio
   }
 }
 
-export function conditionExpressionForOption(optionCode?: string, valueCode?: string) {
-  if (!optionCode || !valueCode) return ''
-  const variableName = optionCode === 'FABRIC' ? 'fabric' : `option_${optionCode}`
-  return `${variableName} == "${valueCode}"`
+export function conditionExpressionForOption(optionCode?: string, valueCode?: string, optionRefKey?: string, valueRefKey?: string) {
+  const optionRef = optionRefKey || optionCode
+  const valueRef = valueRefKey || valueCode
+  if (!optionRef || !valueRef) return ''
+  return `option_${identifierPart(optionRef)} == "${escapeString(valueRef)}"`
 }
 
-export function conditionKeyForOption(optionCode?: string, valueCode?: string) {
-  if (!optionCode || !valueCode) return ''
-  return `OPTION:${optionCode}:${valueCode}`
+export function conditionKeyForOption(optionCode?: string, valueCode?: string, optionRefKey?: string, valueRefKey?: string) {
+  const optionRef = optionRefKey || optionCode
+  const valueRef = valueRefKey || valueCode
+  if (!optionRef || !valueRef) return ''
+  return `OPTION:${optionRef}:${valueRef}`
 }
 
 export function defaultConditionKey() {
@@ -227,4 +230,12 @@ function sampleDynamicVariable(name?: string) {
 function requiredNode(node?: ExpressionNode) {
   if (!node) throw new Error('missing expression node')
   return node
+}
+
+function identifierPart(value: string) {
+  return value.replace(/[^A-Za-z0-9_]/g, '_')
+}
+
+function escapeString(value: string) {
+  return String(value || '').replace(/\\/g, '\\\\').replace(/"/g, '\\"')
 }

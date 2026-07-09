@@ -33,8 +33,8 @@ public class ProductFormulaUsageRuleValidator {
                                        List<ProductFormulaUsageRule> usageRules) {
         Map<String, ProductFormulaMaterial> materialByCode = materials.stream()
             .collect(Collectors.toMap(ProductFormulaMaterial::getMaterialCode, Function.identity(), (left, right) -> left));
-        Set<String> optionCodes = options.stream().map(ProductFormulaOption::getOptionCode).collect(Collectors.toSet());
-        Set<String> valueKeys = values.stream().map(value -> key(value.getOptionCode(), value.getValueCode())).collect(Collectors.toSet());
+        Set<String> optionCodes = optionTokens(options);
+        Set<String> valueKeys = valueTokens(values);
         Map<String, List<ProductFormulaUsageRule>> rulesByMaterial = usageRules.stream()
             .filter(rule -> STATUS_ENABLED.equals(rule.getStatus()))
             .collect(Collectors.groupingBy(ProductFormulaUsageRule::getMaterialCode));
@@ -115,11 +115,38 @@ public class ProductFormulaUsageRuleValidator {
             String messageKey = referenceValidator.validationMessageKey(rule.getConditionExpression(), options, values, optionMaterials, materials);
             return messageKey == null ? null : "product.formula.usageConditionInvalid";
         }
-        if (!optionCodes.contains(rule.getConditionOptionCode())
-            || !valueKeys.contains(key(rule.getConditionOptionCode(), rule.getConditionValueCode()))) {
+        if (!optionCodes.contains(optionToken(rule))
+            || !valueKeys.contains(valueToken(rule))) {
             return "product.formula.usageConditionInvalid";
         }
         return null;
+    }
+
+    private Set<String> optionTokens(List<ProductFormulaOption> options) {
+        return options.stream()
+            .flatMap(option -> java.util.stream.Stream.of(option.getOptionRefKey(), option.getOptionCode()))
+            .filter(StringUtils::isNotBlank)
+            .collect(Collectors.toSet());
+    }
+
+    private Set<String> valueTokens(List<ProductFormulaOptionValue> values) {
+        return values.stream()
+            .flatMap(value -> java.util.stream.Stream.of(
+                key(value.getOptionRefKey(), value.getValueRefKey()),
+                key(value.getOptionCode(), value.getValueCode()),
+                key(value.getOptionRefKey(), value.getValueCode()),
+                key(value.getOptionCode(), value.getValueRefKey())
+            ))
+            .collect(Collectors.toSet());
+    }
+
+    private String optionToken(ProductFormulaUsageRule rule) {
+        return StringUtils.blankToDefault(rule.getConditionOptionRefKey(), rule.getConditionOptionCode());
+    }
+
+    private String valueToken(ProductFormulaUsageRule rule) {
+        return key(StringUtils.blankToDefault(rule.getConditionOptionRefKey(), rule.getConditionOptionCode()),
+            StringUtils.blankToDefault(rule.getConditionValueRefKey(), rule.getConditionValueCode()));
     }
 
     private boolean hasAnyFormula(ProductFormulaUsageRule rule) {

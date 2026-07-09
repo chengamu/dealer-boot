@@ -293,6 +293,26 @@ class ProductFormulaSimulationServiceImplTest {
     }
 
     @Test
+    void runMatchesRefKeyOptionValueUsageRule() {
+        ProductFormulaSetupVo setup = setup();
+        setup.getOptions().get(0).setOptionRefKey("OPT_FABRIC");
+        setup.getOptionValues().get(0).setOptionRefKey("OPT_FABRIC");
+        setup.getOptionValues().get(0).setValueRefKey("VAL_MAT001");
+        setup.getOptionMaterials().get(0).setOptionRefKey("OPT_FABRIC");
+        setup.getOptionMaterials().get(0).setValueRefKey("VAL_MAT001");
+        ProductFormulaUsageRuleVo rule = setup.getUsageRules().get(0);
+        rule.setConditionOptionRefKey("OPT_FABRIC");
+        rule.setConditionValueRefKey("VAL_MAT001");
+        rule.setConditionExpression("option_OPT_FABRIC == \"VAL_MAT001\"");
+        when(setupService.querySetup(3001L)).thenReturn(setup);
+
+        ProductFormulaSimulationVo result = service.run(3001L, simulationBo(Map.of("FABRIC", "MAT001")));
+
+        assertThat(result.getStatus()).isEqualTo("PASS");
+        assertThat(result.getItems().get(0).getUsageQty()).isEqualByComparingTo("50.80");
+    }
+
+    @Test
     void runDoesNotApplyMaterialLossWhenNoUsageRuleExists() {
         ProductFormulaSetupVo setup = setup();
         ProductFormulaMaterialVo material = material();

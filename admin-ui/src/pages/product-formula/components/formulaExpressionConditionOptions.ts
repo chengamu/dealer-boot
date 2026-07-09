@@ -14,6 +14,7 @@ export type ConditionValue = {
   valueNameCn?: string
   valueNameEn?: string
   label?: string
+  insert?: string
 }
 
 export type ConditionField = {
@@ -56,7 +57,7 @@ export function buildConditionText(field: ConditionField | undefined, builder: B
 
 function conditionValueText(valueCode: string, values: ConditionValue[]) {
   const value = values.find((item) => item.valueCode === valueCode)
-  return value?.valueNameCn || valueCode
+  return value?.insert || value?.valueNameCn || valueCode
 }
 
 function needsQuotedValue(field: ConditionField, value: string) {

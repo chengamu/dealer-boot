@@ -106,6 +106,8 @@ const simulationStatus = computed(() => result.value.status || formula.value.sim
 const { disabledOptionValues, restrictionMessages, hasBlockingRestriction, blockingRestrictionMessages } = useFormulaSimulationRestrictions({
   form,
   formula,
+  options: computed(() => setup.value.options || []),
+  optionValues: computed(() => setup.value.optionValues || []),
   restrictions: computed(() => setup.value.restrictions || []),
   materials: computed(() => setup.value.materials || []),
   optionMaterials: enabledOptionMaterials,

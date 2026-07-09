@@ -17,6 +17,7 @@ import {
   type DraftOptionMaterial,
   type DraftOptionValue
 } from '../utils/formulaOptionDraftIdentity'
+import { optionValueLiteral, optionVariableName } from './formulaExpressionDisplay'
 
 type OptionSourceProps = {
   options: ProductFormulaOptionVO[]
@@ -196,18 +197,27 @@ export function useFormulaOptionSource(props: OptionSourceProps, options: UseOpt
   function expressionReferencesOption(expression: unknown, option: ProductFormulaOptionVO) {
     const text = textOf(expression)
     if (!text) return false
-    return [optionVariableName(option.optionCode), option.optionCode, option.optionNameCn, option.optionNameEn].some((value) => value && text.includes(value))
+    return [
+      optionVariableName(option),
+      optionVariableName(option.optionCode),
+      option.optionRefKey,
+      option.optionCode,
+      option.optionNameCn,
+      option.optionNameEn
+    ].some((value) => value && text.includes(value))
   }
 
   function expressionReferencesOptionValue(expression: unknown, value: ProductFormulaOptionValueVO) {
     const option = props.options.find((row) => row.optionCode === value.optionCode)
     if (!option || !expressionReferencesOption(expression, option)) return false
     const text = textOf(expression)
-    return [value.valueCode, value.valueNameCn, value.valueNameEn].some((item) => item && text.includes(item))
-  }
-
-  function optionVariableName(optionCode?: string) {
-    return optionCode === 'FABRIC' ? 'fabric' : `option_${optionCode || ''}`
+    return [
+      optionValueLiteral(value),
+      value.valueRefKey,
+      value.valueCode,
+      value.valueNameCn,
+      value.valueNameEn
+    ].some((item) => item && text.includes(item))
   }
 
   function textOf(value: unknown) {

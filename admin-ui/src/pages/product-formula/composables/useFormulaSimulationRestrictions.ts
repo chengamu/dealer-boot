@@ -1,8 +1,16 @@
 import jsep from 'jsep'
 import { computed, type Ref } from 'vue'
 import { normalizeConditionExpression } from '../utils/formulaExpression'
-import { materialAttributeVariableName } from '../components/formulaExpressionDisplay'
-import type { ProductFormulaMaterialVO, ProductFormulaOptionMaterialVO, ProductFormulaRestrictionVO, ProductFormulaSimulationBO, ProductFormulaVO } from '@/api/product-capability/types'
+import { materialAttributeVariableName, optionVariableName } from '../components/formulaExpressionDisplay'
+import type {
+  ProductFormulaMaterialVO,
+  ProductFormulaOptionMaterialVO,
+  ProductFormulaOptionVO,
+  ProductFormulaOptionValueVO,
+  ProductFormulaRestrictionVO,
+  ProductFormulaSimulationBO,
+  ProductFormulaVO
+} from '@/api/product-capability/types'
 
 type ExpressionNode = {
   type: string
@@ -17,6 +25,8 @@ type ExpressionNode = {
 type SimulationRestrictionOptions = {
   form: ProductFormulaSimulationBO
   formula: Ref<ProductFormulaVO>
+  options: Ref<ProductFormulaOptionVO[]>
+  optionValues: Ref<ProductFormulaOptionValueVO[]>
   restrictions: Ref<ProductFormulaRestrictionVO[]>
   materials: Ref<ProductFormulaMaterialVO[]>
   optionMaterials: Ref<ProductFormulaOptionMaterialVO[]>
@@ -75,6 +85,14 @@ export function useFormulaSimulationRestrictions(options: SimulationRestrictionO
     }
     Object.entries(options.selectedOptionValues).forEach(([code, value]) => {
       ctx[`option_${code}`] = value
+      const option = options.options.value.find((row) => row.optionCode === code)
+      if (!option?.optionRefKey) return
+      const refValues = splitCodes(value)
+        .map((item) => options.optionValues.value.find((row) => row.optionCode === code && row.valueCode === item))
+        .map((item) => item?.valueRefKey || item?.valueCode || '')
+        .filter(Boolean)
+        .join(',')
+      ctx[optionVariableName(option)] = refValues || value
     })
     Object.assign(ctx, selectedOptionMaterialContext())
     return ctx
@@ -87,7 +105,12 @@ export function useFormulaSimulationRestrictions(options: SimulationRestrictionO
     const ctx: Record<string, number | boolean | string> = {}
     sortOptionMaterials(options.optionMaterials.value)
       .filter((row) => row.status === 'ENABLED' && selectedMatches(options.selectedOptionValues[row.optionCode || ''], row.valueCode))
-      .forEach((row) => applyOptionMaterialContext(ctx, row.optionCode, materialMap.get(row.materialCode || '')))
+      .forEach((row) => {
+        const option = options.options.value.find((item) => item.optionCode === row.optionCode)
+        const material = materialMap.get(row.materialCode || '')
+        applyOptionMaterialContext(ctx, row.optionCode, material)
+        applyOptionMaterialContext(ctx, option?.optionRefKey, material)
+      })
     return ctx
   }
 
@@ -131,7 +154,14 @@ function putIfEmpty(ctx: Record<string, number | boolean | string>, key: string,
 function restrictionMatched(row: ProductFormulaRestrictionVO, ctx: Record<string, number | boolean | string>) {
   if (row.conditionType === 'WIDTH') return compareNumber(ctx.orderWidthIn, row.conditionValueNumber, row.conditionOperator)
   if (row.conditionType === 'HEIGHT') return compareNumber(ctx.orderHeightIn, row.conditionValueNumber, row.conditionOperator)
-  if (row.conditionType === 'OPTION_VALUE') return compareString(ctx[`option_${row.conditionOptionCode}`], row.conditionValueCode, row.conditionOperator)
+  if (row.conditionType === 'OPTION_VALUE') {
+    const refMatched = compareString(
+      ctx[optionVariableName(row.conditionOptionRefKey || row.conditionOptionCode)],
+      row.conditionValueRefKey || row.conditionValueCode,
+      row.conditionOperator
+    )
+    return refMatched || compareString(ctx[`option_${row.conditionOptionCode}`], row.conditionValueCode, row.conditionOperator)
+  }
   return evaluateCondition(row.conditionExpression || row.conditionText, ctx)
 }
 

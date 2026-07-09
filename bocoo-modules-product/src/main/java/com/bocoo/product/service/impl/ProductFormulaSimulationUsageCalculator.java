@@ -52,8 +52,7 @@ class ProductFormulaSimulationUsageCalculator {
                 continue;
             }
             if ("OPTION_VALUE".equals(rule.getConditionType())
-                && ProductFormulaSimulationSelections.selectedValueMatches(
-                    stringValue(context.get("option_" + rule.getConditionOptionCode())), rule.getConditionValueCode())) {
+                && optionValueRuleMatched(rule, context)) {
                 return rule;
             }
             if ("EXPRESSION".equals(rule.getConditionType())
@@ -63,6 +62,17 @@ class ProductFormulaSimulationUsageCalculator {
         }
         return sortedRules.stream().filter(rule -> Boolean.TRUE.equals(rule.getDefaultRuleFlag())
             || "DEFAULT".equals(rule.getConditionType())).findFirst().orElse(null);
+    }
+
+    private boolean optionValueRuleMatched(ProductFormulaUsageRuleVo rule, Map<String, Object> context) {
+        String optionRef = StringUtils.blankToDefault(rule.getConditionOptionRefKey(), rule.getConditionOptionCode());
+        String valueRef = StringUtils.blankToDefault(rule.getConditionValueRefKey(), rule.getConditionValueCode());
+        if (StringUtils.isNotBlank(optionRef) && ProductFormulaSimulationSelections.selectedValueMatches(
+            stringValue(context.get("option_" + identifierPart(optionRef))), valueRef)) {
+            return true;
+        }
+        return ProductFormulaSimulationSelections.selectedValueMatches(
+            stringValue(context.get("option_" + rule.getConditionOptionCode())), rule.getConditionValueCode());
     }
 
     private Map<String, Object> materialContext(Map<String, Object> context, ProductFormulaMaterialVo material) {

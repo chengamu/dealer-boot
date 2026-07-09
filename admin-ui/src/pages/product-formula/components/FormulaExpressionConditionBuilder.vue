@@ -64,7 +64,7 @@ import { computed, reactive, watch } from 'vue'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 import { formulaVariables } from '../utils/formulaExpression'
-import { optionVariableName } from './formulaExpressionDisplay'
+import { optionValueLiteral, optionVariableName } from './formulaExpressionDisplay'
 import FormulaExpressionJoinerSelect from './FormulaExpressionJoinerSelect.vue'
 import {
   buildConditionText,
@@ -199,10 +199,12 @@ function appendCondition(field: ConditionField | undefined, builder: BuilderStat
 function optionValuesFor(optionCode?: string) {
   const option = (props.options || []).find((row) => row.optionCode === optionCode)
   const ownerKey = optionClientKey(option)
-  return (props.optionValues || []).filter((value) => {
-    const valueOwnerKey = valueOwnerClientKey(value)
-    return valueOwnerKey ? valueOwnerKey === ownerKey : value.optionCode === optionCode
-  })
+  return (props.optionValues || [])
+    .filter((value) => {
+      const valueOwnerKey = valueOwnerClientKey(value)
+      return valueOwnerKey ? valueOwnerKey === ownerKey : value.optionCode === optionCode
+    })
+    .map((value) => ({ ...value, insert: optionValueLiteral(value) }))
 }
 
 function materialsInGroup(groupCode?: string) {

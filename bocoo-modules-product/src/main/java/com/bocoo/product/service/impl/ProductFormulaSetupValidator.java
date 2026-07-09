@@ -85,13 +85,11 @@ public class ProductFormulaSetupValidator extends ProductServiceSupport {
         Map<String, ProductFormulaOption> optionMap = context.options().stream()
             .filter(option -> StringUtils.isNotBlank(option.getOptionCode()))
             .collect(Collectors.toMap(ProductFormulaOption::getOptionCode, Function.identity(), (left, right) -> left));
-        Set<String> optionCodes = optionMap.keySet();
+        Set<String> optionCodes = optionTokens(context.options());
         Map<String, Long> optionValueCounts = context.values().stream()
             .filter(value -> StringUtils.isNotBlank(value.getOptionCode()))
             .collect(Collectors.groupingBy(ProductFormulaOptionValue::getOptionCode, Collectors.counting()));
-        Set<String> valueKeys = context.values().stream()
-            .map(value -> key(value.getOptionCode(), value.getValueCode()))
-            .collect(Collectors.toSet());
+        Set<String> valueKeys = valueKeys(context.values());
         for (ProductFormulaOption option : context.options()) {
             if (StringUtils.isBlank(option.getOptionCode()) || StringUtils.isBlank(option.getOptionNameCn())) {
                 return "product.formula.optionRequired";
@@ -99,7 +97,7 @@ public class ProductFormulaSetupValidator extends ProductServiceSupport {
             if (optionValueCounts.getOrDefault(option.getOptionCode(), 0L) == 0L) {
                 return "product.formula.optionValueRequired";
             }
-            String visibilityMessageKey = validateOptionVisibility(option, optionMap, valueKeys);
+            String visibilityMessageKey = validateOptionVisibility(option, optionMap, optionCodes, valueKeys);
             if (visibilityMessageKey != null) {
                 return visibilityMessageKey;
             }
@@ -148,13 +146,8 @@ public class ProductFormulaSetupValidator extends ProductServiceSupport {
     }
 
     String optionReferenceValidationMessageKey(ProductFormulaSetupContext context) {
-        Map<String, ProductFormulaOption> optionMap = context.options().stream()
-            .filter(option -> StringUtils.isNotBlank(option.getOptionCode()))
-            .collect(Collectors.toMap(ProductFormulaOption::getOptionCode, Function.identity(), (left, right) -> left));
-        Set<String> optionCodes = optionMap.keySet();
-        Set<String> valueKeys = context.values().stream()
-            .map(value -> key(value.getOptionCode(), value.getValueCode()))
-            .collect(Collectors.toSet());
+        Set<String> optionCodes = optionTokens(context.options());
+        Set<String> valueKeys = valueKeys(context.values());
         for (ProductFormulaRestriction restriction : context.restrictions()) {
             String restrictionMessageKey = validateRestriction(restriction, optionCodes, valueKeys, context);
             if (restrictionMessageKey != null) {
@@ -190,11 +183,12 @@ public class ProductFormulaSetupValidator extends ProductServiceSupport {
             return messageKey == null ? null : "product.formula.restrictionConditionInvalid";
         }
         if ("OPTION_VALUE".equals(restriction.getConditionType())) {
-            if (StringUtils.isBlank(restriction.getConditionOptionCode()) || !optionCodes.contains(restriction.getConditionOptionCode())) {
+            String optionToken = optionToken(restriction.getConditionOptionRefKey(), restriction.getConditionOptionCode());
+            String valueToken = valueToken(restriction.getConditionValueRefKey(), restriction.getConditionValueCode());
+            if (StringUtils.isBlank(optionToken) || !optionCodes.contains(optionToken)) {
                 return "product.formula.restrictionConditionInvalid";
             }
-            if (StringUtils.isBlank(restriction.getConditionValueCode())
-                || !valueKeys.contains(key(restriction.getConditionOptionCode(), restriction.getConditionValueCode()))) {
+            if (StringUtils.isBlank(valueToken) || !valueKeys.contains(key(optionToken, valueToken))) {
                 return "product.formula.restrictionConditionInvalid";
             }
             return null;
@@ -234,8 +228,9 @@ public class ProductFormulaSetupValidator extends ProductServiceSupport {
                 continue;
             }
             if ("OPTION_VALUE".equals(rule.getConditionType())) {
-                if (!optionCodes.contains(rule.getConditionOptionCode())
-                    || !valueKeys.contains(key(rule.getConditionOptionCode(), rule.getConditionValueCode()))) {
+                String optionToken = optionToken(rule.getConditionOptionRefKey(), rule.getConditionOptionCode());
+                String valueToken = valueToken(rule.getConditionValueRefKey(), rule.getConditionValueCode());
+                if (!optionCodes.contains(optionToken) || !valueKeys.contains(key(optionToken, valueToken))) {
                     return "product.formula.usageConditionInvalid";
                 }
                 continue;
@@ -251,23 +246,26 @@ public class ProductFormulaSetupValidator extends ProductServiceSupport {
         return null;
     }
 
-    private String validateOptionVisibility(ProductFormulaOption option, Map<String, ProductFormulaOption> optionMap, Set<String> valueKeys) {
+    private String validateOptionVisibility(ProductFormulaOption option, Map<String, ProductFormulaOption> optionMap,
+                                            Set<String> optionCodes, Set<String> valueKeys) {
         if (!VISIBILITY_CONDITIONAL.equals(option.getVisibilityMode())) {
             return null;
         }
-        if (StringUtils.isBlank(option.getVisibleConditionOptionCode())) {
+        String conditionOption = optionToken(option.getVisibleConditionOptionRefKey(), option.getVisibleConditionOptionCode());
+        String conditionValue = valueToken(option.getVisibleConditionValueRefKey(), option.getVisibleConditionValueCode());
+        if (StringUtils.isBlank(conditionOption)) {
             return "product.formula.optionVisibilityConditionRequired";
         }
-        if (option.getVisibleConditionOptionCode().equals(option.getOptionCode())) {
+        if (conditionOption.equals(option.getOptionRefKey()) || conditionOption.equals(option.getOptionCode())) {
             return "product.formula.optionVisibilitySelfDenied";
         }
-        if (!optionMap.containsKey(option.getVisibleConditionOptionCode())) {
+        if (!optionCodes.contains(conditionOption) && !optionMap.containsKey(option.getVisibleConditionOptionCode())) {
             return "product.formula.optionVisibilityConditionInvalid";
         }
-        if (StringUtils.isBlank(option.getVisibleConditionValueCode())) {
+        if (StringUtils.isBlank(conditionValue)) {
             return "product.formula.optionVisibilityValueRequired";
         }
-        if (!valueKeys.contains(key(option.getVisibleConditionOptionCode(), option.getVisibleConditionValueCode()))) {
+        if (!valueKeys.contains(key(conditionOption, conditionValue))) {
             return "product.formula.optionVisibilityValueInvalid";
         }
         return null;
@@ -275,6 +273,25 @@ public class ProductFormulaSetupValidator extends ProductServiceSupport {
 
     private boolean requiresLinkedMaterial(ProductFormulaOption option) {
         return option != null && SOURCE_MATERIAL_POOL.equals(option.getSourceType());
+    }
+
+    private Set<String> optionTokens(List<ProductFormulaOption> options) {
+        return options.stream().flatMap(option -> java.util.stream.Stream.of(option.getOptionCode(), option.getOptionRefKey())).filter(StringUtils::isNotBlank).collect(Collectors.toSet());
+    }
+
+    private Set<String> valueKeys(List<ProductFormulaOptionValue> values) {
+        return values.stream().flatMap(value -> java.util.stream.Stream.of(
+            key(optionToken(value.getOptionRefKey(), value.getOptionCode()), valueToken(value.getValueRefKey(), value.getValueCode())),
+            key(value.getOptionCode(), value.getValueCode())
+        )).collect(Collectors.toSet());
+    }
+
+    private String optionToken(String optionRefKey, String optionCode) {
+        return StringUtils.isNotBlank(optionRefKey) ? optionRefKey : optionCode;
+    }
+
+    private String valueToken(String valueRefKey, String valueCode) {
+        return StringUtils.isNotBlank(valueRefKey) ? valueRefKey : valueCode;
     }
 
     private String key(String... parts) {

@@ -1,4 +1,4 @@
-import { materialAttributeVariableName, normalizeDisplayExpression, optionVariableName } from './formulaExpressionDisplay'
+import { materialAttributeVariableName, normalizeDisplayExpression, optionValueLiteral, optionVariableName } from './formulaExpressionDisplay'
 import { validateConditionExpression } from '../utils/formulaExpression'
 import {
   materialOwnerClientKey,
@@ -57,7 +57,7 @@ export function buildOptionCondition(rows: OptionConditionRow[], options: Produc
   }).join('')
   const expression = validRows.map((row, index) => {
     const prefix = index === 0 ? '' : ` ${row.row.joiner === 'AND' ? '&&' : '||'} `
-    return `${prefix}${optionVariableName(row.option?.optionCode)} ${toExpressionOperator(row.row.operator)} ${quoted(row.value?.valueCode || '')}`
+    return `${prefix}${optionVariableName(row.option)} ${toExpressionOperator(row.row.operator)} ${optionValueLiteral(row.value)}`
   }).join('')
   return validateBuildResult(text, expression)
 }
@@ -174,10 +174,6 @@ function attributeLabel(attributeCode: string, attributes: ProductMaterialAttrib
 
 function toExpressionOperator(operator: string) {
   return operator === '=' ? '==' : operator
-}
-
-function quoted(value: string) {
-  return `"${String(value || '').replace(/"/g, '\\"')}"`
 }
 
 function joinerText(joiner: 'AND' | 'OR') {

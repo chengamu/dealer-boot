@@ -107,6 +107,7 @@ import FormulaRestrictionBand from './FormulaRestrictionBand.vue'
 import { useFormulaOptionSource } from './useFormulaOptionSource'
 import { useFormulaOptionTree } from './useFormulaOptionTree'
 import { useFormulaOptionValueDialogs } from './useFormulaOptionValueDialogs'
+import { optionValueLiteral, optionVariableName } from './formulaExpressionDisplay'
 import {
   optionClientKey,
   valueClientKey,
@@ -360,18 +361,27 @@ function optionValueReferenced(row?: ProductFormulaOptionValueVO) {
 function expressionReferencesOption(expression: unknown, option: ProductFormulaOptionVO) {
   const text = String(expression || '')
   if (!text) return false
-  return [optionVariableName(option.optionCode), option.optionCode, option.optionNameCn, option.optionNameEn].some((value) => value && text.includes(value))
+  return [
+    optionVariableName(option),
+    optionVariableName(option.optionCode),
+    option.optionRefKey,
+    option.optionCode,
+    option.optionNameCn,
+    option.optionNameEn
+  ].some((value) => value && text.includes(value))
 }
 
 function expressionReferencesOptionValue(expression: unknown, row: ProductFormulaOptionValueVO) {
   const option = props.options.find((item) => optionClientKey(item) === valueOwnerClientKey(row) || item.optionCode === row.optionCode)
   if (!option || !expressionReferencesOption(expression, option)) return false
   const text = String(expression || '')
-  return [row.valueCode, row.valueNameCn, row.valueNameEn].some((value) => value && text.includes(value))
-}
-
-function optionVariableName(optionCode?: string) {
-  return optionCode === 'FABRIC' ? 'fabric' : `option_${optionCode || ''}`
+  return [
+    optionValueLiteral(row),
+    row.valueRefKey,
+    row.valueCode,
+    row.valueNameCn,
+    row.valueNameEn
+  ].some((value) => value && text.includes(value))
 }
 
 const siblingValues = computed(() => selectedOption.value ? valuesForOption(selectedOption.value) : [])

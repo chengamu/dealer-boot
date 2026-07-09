@@ -198,7 +198,7 @@ public class ProductFormulaUsageRuleServiceImpl extends ProductServiceSupport im
         entity.setConditionValueRefKey(value.getValueRefKey());
         entity.setConditionValueCode(value.getValueCode());
         entity.setConditionValueNameCn(value.getValueNameCn());
-        entity.setConditionExpression(defaultString(trim(entity.getConditionExpression()), optionConditionExpression(option.getOptionCode(), value.getValueCode())));
+        entity.setConditionExpression(defaultString(trim(entity.getConditionExpression()), optionConditionExpression(option, value)));
         entity.setConditionText(defaultString(trim(entity.getConditionText()), option.getOptionNameCn() + " = " + value.getValueNameCn()));
         entity.setConditionKey("OPTION:" + option.getOptionRefKey() + ":" + value.getValueRefKey());
         entity.setConditionJson(ProductFormulaConditionJsonFactory.optionValue(option, value));
@@ -214,9 +214,17 @@ public class ProductFormulaUsageRuleServiceImpl extends ProductServiceSupport im
         return defaultString(entity.getConditionValueNameCn(), "条件规则");
     }
 
-    private String optionConditionExpression(String optionCode, String valueCode) {
-        String variableName = "FABRIC".equals(optionCode) ? "fabric" : "option_" + optionCode;
-        return variableName + " == \"" + valueCode + "\"";
+    private String optionConditionExpression(ProductFormulaOption option, ProductFormulaOptionValue value) {
+        String variableName = "option_" + identifierPart(defaultString(option.getOptionRefKey(), option.getOptionCode()));
+        return variableName + " == \"" + escapeString(defaultString(value.getValueRefKey(), value.getValueCode())) + "\"";
+    }
+
+    private String identifierPart(String value) {
+        return value == null ? "" : value.replaceAll("[^A-Za-z0-9_]", "_");
+    }
+
+    private String escapeString(String value) {
+        return value == null ? "" : value.replace("\\", "\\\\").replace("\"", "\\\"");
     }
 
     private String trimUpper(String value) {

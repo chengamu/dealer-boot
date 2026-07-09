@@ -10,6 +10,7 @@ import com.bocoo.product.mapper.ProductBaseAttributeMapper;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.lang.reflect.Method;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -94,6 +95,20 @@ class ProductFormulaUsageRuleServiceImplTest {
 
         assertThat(service.validationMessageKey(materials(), options(), values(), optionMaterials(), List.of(rule)))
             .isEqualTo("product.formula.usageConditionInvalid");
+    }
+
+    @Test
+    void optionValueExpressionUsesStableRefKeys() throws Exception {
+        ProductFormulaOption option = options().get(0);
+        option.setOptionRefKey("OPT_FABRIC");
+        ProductFormulaOptionValue value = values().get(0);
+        value.setOptionRefKey("OPT_FABRIC");
+        value.setValueRefKey("VAL_MAT001");
+        Method method = ProductFormulaUsageRuleServiceImpl.class
+            .getDeclaredMethod("optionConditionExpression", ProductFormulaOption.class, ProductFormulaOptionValue.class);
+        method.setAccessible(true);
+
+        assertThat(method.invoke(service, option, value)).isEqualTo("option_OPT_FABRIC == \"VAL_MAT001\"");
     }
 
     private List<ProductFormulaMaterial> materials() {

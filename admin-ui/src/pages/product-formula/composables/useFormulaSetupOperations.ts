@@ -2,6 +2,7 @@ import { computed, type Ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { PRODUCT_STATUS_DISABLED, PRODUCT_STATUS_ENABLED, formulaStatusTagType, formulaStatusText, formulaValidationStatusText, formulaValidationTagType } from '@/constants/productStatus'
 import { formatUsageNumber } from '../utils/formulaExpression'
+import { optionValueLiteral, optionVariableName } from '../components/formulaExpressionDisplay'
 import {
   createDraftClientKey,
   materialOwnerClientKey,
@@ -353,15 +354,27 @@ export function useFormulaSetupOperations(ctx: SetupOperationContext) {
   function expressionReferencesOption(expression: unknown, option: ProductFormulaOptionVO) {
     const text = textOf(expression)
     if (!text) return false
-    return [optionVariableName(option.optionCode), option.optionCode, option.optionNameCn, option.optionNameEn].some((value) => value && text.includes(value))
+    return [
+      optionVariableName(option),
+      optionVariableName(option.optionCode),
+      option.optionRefKey,
+      option.optionCode,
+      option.optionNameCn,
+      option.optionNameEn
+    ].some((value) => value && text.includes(value))
   }
   function expressionReferencesOptionValue(expression: unknown, row: ProductFormulaOptionValueVO) {
     const option = ctx.setup.options.find((item) => item.optionCode === row.optionCode)
     if (!option || !expressionReferencesOption(expression, option)) return false
     const text = textOf(expression)
-    return [row.valueCode, row.valueNameCn, row.valueNameEn].some((value) => value && text.includes(value))
+    return [
+      optionValueLiteral(row),
+      row.valueRefKey,
+      row.valueCode,
+      row.valueNameCn,
+      row.valueNameEn
+    ].some((value) => value && text.includes(value))
   }
-  function optionVariableName(optionCode?: string) { return optionCode === 'FABRIC' ? 'fabric' : `option_${optionCode || ''}` }
   function selectedOption() {
     return ctx.setup.options.find((row) => optionClientKey(row) === ctx.selectedOptionCode.value || row.optionCode === ctx.selectedOptionCode.value)
   }
