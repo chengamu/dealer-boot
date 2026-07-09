@@ -41,7 +41,7 @@
           <dict-tag :options="ai_model_type" :value="row.modelType" />
         </template>
       </el-table-column>
-      <el-table-column :label="t('ai.settings.contextWindow')" prop="contextWindow" width="130" align="center">
+      <el-table-column :label="t('ai.settings.contextWindow')" prop="contextWindow" width="130" align="right">
         <template #default="{ row }">{{ formatContextWindow(row.contextWindow) }}</template>
       </el-table-column>
       <el-table-column :label="t('ai.settings.defaultModel')" prop="defaultModel" width="110" align="center">

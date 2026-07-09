@@ -30,7 +30,7 @@
         <template #default="{ row }">{{ formatLocale(row.locale) }}</template>
       </el-table-column>
       <el-table-column :label="t('legal.version')" prop="version" width="130" />
-      <el-table-column :label="t('legal.publishedTime')" width="180">
+      <el-table-column :label="t('legal.publishedTime')" width="180" align="center">
         <template #default="{ row }">{{ formatUtc(row.publishedTime) }}</template>
       </el-table-column>
       <el-table-column :label="t('common.operate')" align="center" width="150" fixed="right" class-name="small-padding fixed-width">

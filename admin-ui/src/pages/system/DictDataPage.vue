@@ -64,7 +64,7 @@
         </template>
       </el-table-column>
       <el-table-column :label="t('legacy.dictValue')" align="left" prop="dictValue" :show-overflow-tooltip="true" />
-      <el-table-column :label="t('legacy.dictSort')" align="center" prop="dictSort" />
+      <el-table-column :label="t('legacy.dictSort')" align="right" prop="dictSort" />
       <el-table-column :label="t('user.status')" align="center" prop="status">
         <template #default="{ row }">
           <dict-tag :options="sys_normal_disable" :value="row.status" />

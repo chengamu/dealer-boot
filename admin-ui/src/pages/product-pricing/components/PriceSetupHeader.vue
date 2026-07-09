@@ -27,7 +27,6 @@
     <div class="price-setup-header__actions">
       <el-button icon="Refresh" :loading="loading" @click="$emit('refresh')">{{ t('productCenter.pricing.refresh') }}</el-button>
       <el-button v-hasPermi="['product:pricing:validate']" icon="CircleCheck" :loading="validating" @click="$emit('validate')">{{ t('productCenter.pricing.validatePrice') }}</el-button>
-      <el-button v-if="editable" v-hasPermi="['product:pricing:edit']" type="primary" icon="DocumentChecked" :loading="saving" @click="$emit('save')">{{ t('productCenter.pricing.saveDraft') }}</el-button>
     </div>
   </section>
 </template>
@@ -49,7 +48,6 @@ defineProps<{
   products: SaleProductVO[]
   selectedProductId: string
   loading?: boolean
-  saving?: boolean
   validating?: boolean
   editable?: boolean
 }>()
@@ -58,7 +56,6 @@ defineEmits<{
   'product-change': [value: string | number]
   refresh: []
   validate: []
-  save: []
 }>()
 
 const localeStore = useLocaleStore()

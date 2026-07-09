@@ -64,6 +64,14 @@ public class ProductPriceSettingController extends BaseController {
         return toAjax(priceSettingService.saveFeeRules(saleProductId, rules));
     }
 
+    @SaCheckPermission("product:pricing:edit")
+    @Log(title = "导入邮费模板", businessType = BusinessType.UPDATE)
+    @PutMapping("/{saleProductId}/shipping-template/{shippingTemplateId}/import")
+    @Operation(summary = "导入邮费模板到当前价格版本")
+    public R<Void> importShippingTemplate(@PathVariable Long saleProductId, @PathVariable Long shippingTemplateId) {
+        return toAjax(priceSettingService.importShippingTemplate(saleProductId, shippingTemplateId));
+    }
+
     @SaCheckPermission("product:pricing:validate")
     @Log(title = "校验产品价格", businessType = BusinessType.UPDATE)
     @PutMapping("/{saleProductId}/validate")

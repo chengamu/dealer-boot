@@ -50,7 +50,7 @@
           <el-table-column type="index" :index="typeRowIndex" :label="t('common.index')" width="58" align="center" />
           <el-table-column :label="t('productCenter.productDict.typeCode')" prop="dictTypeCode" min-width="180" sortable="custom" show-overflow-tooltip />
           <el-table-column :label="t('productCenter.productDict.typeNameCn')" prop="dictTypeNameCn" min-width="150" sortable="custom" show-overflow-tooltip />
-          <el-table-column :label="t('productCenter.common.sortOrder')" prop="sortOrder" width="72" align="center" sortable="custom" />
+          <el-table-column :label="t('productCenter.common.sortOrder')" prop="sortOrder" width="72" align="right" sortable="custom" />
           <el-table-column :label="t('productCenter.common.status')" prop="status" width="88" align="center">
             <template #default="{ row }">
               <el-switch
@@ -105,7 +105,7 @@
           <el-table-column v-if="supportsParentValue" :label="t('productCenter.productDict.parentItem')" prop="parentValue" min-width="140" show-overflow-tooltip>
             <template #default="{ row }">{{ parentItemLabel(row.parentValue) }}</template>
           </el-table-column>
-          <el-table-column :label="t('productCenter.common.sortOrder')" prop="sortOrder" width="72" align="center" sortable="custom" />
+          <el-table-column :label="t('productCenter.common.sortOrder')" prop="sortOrder" width="72" align="right" sortable="custom" />
           <el-table-column :label="t('productCenter.common.status')" prop="status" width="88" align="center">
             <template #default="{ row }">
               <el-switch

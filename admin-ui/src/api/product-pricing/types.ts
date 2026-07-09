@@ -129,12 +129,18 @@ export interface ExtraFeeRule {
   priceSettingId?: number
   saleProductId?: string | number
   formulaVersionId?: number
+  shippingTemplateId?: string | number
+  shippingTemplateCode?: string
+  shippingTemplateName?: string
+  shippingTemplateRuleId?: string | number
   feeCode?: string
   feeName?: string
   feeCategory?: string
   triggerCondition?: string
   feeMode?: string
   feeAmount?: number
+  minAreaSqft?: number
+  maxAreaSqft?: number
   formulaText?: string
   status?: string
   sortOrder?: number
@@ -164,4 +170,41 @@ export interface PriceSetupVO {
   formulaOptionValues?: ProductFormulaOptionValueVO[]
   formulaOptionMaterials?: ProductFormulaOptionMaterialVO[]
   materialGroupCounts?: Record<string, number>
+}
+
+export interface ShippingTemplateRuleVO {
+  shippingTemplateRuleId?: string | number
+  tenantId?: number
+  shippingTemplateId?: string | number
+  feeCode?: string
+  feeName?: string
+  minAreaSqft?: number
+  maxAreaSqft?: number
+  formulaText?: string
+  sortOrder?: number
+  delFlag?: string
+  remark?: string
+}
+
+export interface ShippingTemplateVO {
+  shippingTemplateId?: string | number
+  tenantId?: number
+  templateCode?: string
+  templateName?: string
+  currencyCode?: string
+  defaultFlag?: boolean
+  status?: string
+  sortOrder?: number
+  delFlag?: string
+  remark?: string
+  updateTime?: string
+  updateBy?: string
+  ruleCount?: number
+  rules?: ShippingTemplateRuleVO[]
+}
+
+export interface ShippingTemplateQuery extends PageQuery {
+  templateCode?: string
+  templateName?: string
+  status?: string
 }

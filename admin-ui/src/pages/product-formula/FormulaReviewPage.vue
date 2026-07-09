@@ -112,7 +112,7 @@
         </template>
       </el-table-column>
       <el-table-column prop="submitBy" :label="t('productCenter.formulaReview.submitBy')" width="120" />
-      <el-table-column :label="t('productCenter.formulaReview.submitTime')" width="160">
+      <el-table-column :label="t('productCenter.formulaReview.submitTime')" width="160" align="center">
         <template #default="{ row }">{{ formatFormulaReviewMinute(row.submitTime) }}</template>
       </el-table-column>
       <el-table-column :label="t('productCenter.formula.validationStatus')" width="120" align="center">

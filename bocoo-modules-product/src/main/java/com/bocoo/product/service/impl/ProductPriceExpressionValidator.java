@@ -45,10 +45,19 @@ final class ProductPriceExpressionValidator {
             ProductFormulaExpressionParser parser = new ProductFormulaExpressionParser(normalized, PRICE_VARIABLES, false, SAMPLE, true);
             Object result = parser.parseExpression();
             parser.expectEnd();
-            return result instanceof Number number && Double.isFinite(number.doubleValue()) && number.doubleValue() >= 0D;
+            return result instanceof Number number && Double.isFinite(number.doubleValue()) && number.doubleValue() > 0D;
         } catch (RuntimeException ex) {
             return false;
         }
+    }
+
+    static boolean isShippingFormulaValid(String expression) {
+        String normalized = ProductFormulaExpressionNormalizer.normalizeFormulaExpression(expression);
+        return StringUtils.isNotBlank(normalized) && !usesUnitPrice(normalized) && isPriceFormulaValid(normalized);
+    }
+
+    static boolean usesUnitPrice(String expression) {
+        return ProductFormulaExpressionNormalizer.normalizeFormulaExpression(expression).matches(".*\\bunitPrice\\b.*");
     }
 
     static boolean isConditionValid(String expression) {

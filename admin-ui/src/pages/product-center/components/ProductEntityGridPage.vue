@@ -139,8 +139,8 @@
       @sort-change="handleSortChange"
       @row-dblclick="handleRowDblclick"
     >
-      <el-table-column v-if="!isSingleRowActions" type="selection" width="48" align="center" />
-      <el-table-column v-if="!isTreeGrid" type="index" :index="rowIndex" :label="t('common.index')" width="64" align="center" fixed />
+      <el-table-column v-if="!isSingleRowActions" type="selection" width="48" align="center" header-align="center" />
+      <el-table-column v-if="!isTreeGrid" type="index" :index="rowIndex" :label="t('common.index')" width="64" align="center" header-align="center" fixed />
       <el-table-column
         v-for="field in tableFields"
         :key="field.prop"
@@ -149,7 +149,8 @@
         :width="field.width"
         :min-width="field.minWidth || defaultColumnMinWidth(field)"
         :resizable="true"
-        :align="field.align || 'center'"
+        :align="columnAlign(field)"
+        header-align="center"
         :sortable="field.sortable ? 'custom' : false"
         :sort-by="field.sortProp || field.prop"
         :show-overflow-tooltip="!field.multiline && field.type !== 'status' && field.type !== 'url'"
@@ -185,7 +186,7 @@
           <span v-else>{{ displayValue(row[field.prop]) }}</span>
         </template>
       </el-table-column>
-      <el-table-column v-if="showOperationColumn" :label="t('common.operate')" align="center" width="150" fixed="right" class-name="small-padding fixed-width">
+      <el-table-column v-if="showOperationColumn" :label="t('common.operate')" align="center" header-align="center" width="150" fixed="right" class-name="small-padding fixed-width">
         <template #default="{ row }">
           <AdminTableActions :actions="rowOperationActions(row)" />
         </template>
@@ -230,9 +231,9 @@
         <section v-if="attachmentEnabled" v-loading="attachmentLoading" class="admin-detail__section">
           <div class="admin-detail__section-title">{{ t('productCenter.common.attachments') }}</div>
           <el-table v-if="attachmentRows.length" :data="attachmentRows" border size="small" class="product-grid-page__detail-table">
-            <el-table-column :label="t('productCenter.asset.code')" prop="assetCode" min-width="160" show-overflow-tooltip />
-            <el-table-column :label="t('productCenter.asset.usageType')" prop="usageType" width="120" align="center" />
-            <el-table-column :label="t('common.operate')" width="110" align="center">
+            <el-table-column :label="t('productCenter.asset.code')" prop="assetCode" min-width="160" header-align="center" show-overflow-tooltip />
+            <el-table-column :label="t('productCenter.asset.usageType')" prop="usageType" width="120" align="center" header-align="center" />
+            <el-table-column :label="t('common.operate')" width="110" align="center" header-align="center">
               <template #default="{ row }">
                 <AdminTableActions :actions="[
                   { label: t('productCenter.common.open'), icon: 'View', onClick: () => openAttachment(row) }
@@ -361,9 +362,9 @@
             :closable="false"
           />
           <el-table v-else-if="attachmentRows.length" :data="attachmentRows" border size="small">
-            <el-table-column :label="t('productCenter.asset.code')" prop="assetCode" min-width="160" show-overflow-tooltip />
-            <el-table-column :label="t('productCenter.asset.usageType')" prop="usageType" width="120" align="center" />
-            <el-table-column :label="t('common.operate')" width="150" align="center">
+            <el-table-column :label="t('productCenter.asset.code')" prop="assetCode" min-width="160" header-align="center" show-overflow-tooltip />
+            <el-table-column :label="t('productCenter.asset.usageType')" prop="usageType" width="120" align="center" header-align="center" />
+            <el-table-column :label="t('common.operate')" width="150" align="center" header-align="center">
               <template #default="{ row }">
                 <AdminTableActions :actions="[
                   { label: t('productCenter.common.open'), icon: 'View', onClick: () => openAttachment(row) },
@@ -425,15 +426,15 @@
 
     <AdminDrawer v-model="changeLogOpen" :title="t(config.changeLog?.titleKey || 'productCenter.changeLog.title')" size="720px" variant="detail" append-to-body>
       <el-table v-if="changeLogRows.length" v-loading="changeLogLoading" :data="changeLogRows" border class="admin-change-log">
-        <el-table-column type="index" :label="t('common.index')" width="64" align="center" />
-        <el-table-column :label="t('productCenter.changeLog.action')" prop="actionName" width="116" show-overflow-tooltip />
-        <el-table-column :label="t('productCenter.changeLog.operator')" prop="operatorName" width="128" show-overflow-tooltip />
-        <el-table-column :label="t('productCenter.changeLog.operateTime')" width="152" align="center">
+        <el-table-column type="index" :label="t('common.index')" width="64" align="center" header-align="center" />
+        <el-table-column :label="t('productCenter.changeLog.action')" prop="actionName" width="116" header-align="center" show-overflow-tooltip />
+        <el-table-column :label="t('productCenter.changeLog.operator')" prop="operatorName" width="128" header-align="center" show-overflow-tooltip />
+        <el-table-column :label="t('productCenter.changeLog.operateTime')" width="152" align="center" header-align="center">
           <template #default="{ row }">
             {{ formatUtc(row.operateTime as string | undefined, 'YYYY-MM-DD HH:mm') }}
           </template>
         </el-table-column>
-        <el-table-column :label="t('productCenter.changeLog.diff')" min-width="280">
+        <el-table-column :label="t('productCenter.changeLog.diff')" min-width="280" header-align="center">
           <template #default="{ row }">
             <pre class="admin-detail__code admin-change-log__diff">{{ formatChangeDiff(row.diffJson) }}</pre>
           </template>
@@ -723,6 +724,15 @@ function formatNumberValue(field: ProductFieldConfig, value: unknown) {
   const next = Number(value)
   if (!Number.isFinite(next)) return String(value)
   return typeof field.precision === 'number' ? next.toFixed(field.precision) : String(value)
+}
+
+function columnAlign(field: ProductFieldConfig) {
+  if (field.align) return field.align
+  if (field.type === 'number') return 'right'
+  if (field.type === 'date' || field.type === 'datetime' || field.type === 'status' || field.type === 'boolean' || field.type === 'url') {
+    return 'center'
+  }
+  return 'left'
 }
 
 const CHANGE_LOG_HIDDEN_FIELDS = new Set([

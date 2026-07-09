@@ -58,7 +58,7 @@
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column :label="t('legacy.postCode')" align="left" prop="postCode" :show-overflow-tooltip="true" />
       <el-table-column :label="t('legacy.postName')" align="left" prop="postName" :show-overflow-tooltip="true" />
-      <el-table-column :label="t('legacy.postSort')" align="center" prop="postSort" />
+      <el-table-column :label="t('legacy.postSort')" align="right" prop="postSort" />
       <el-table-column :label="t('user.status')" align="center" prop="status">
         <template #default="{ row }">
           <dict-tag :options="sys_normal_disable" :value="row.status" />

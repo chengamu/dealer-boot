@@ -66,6 +66,7 @@ const migratedViewModules: Record<string, () => Promise<unknown>> = {
   'product-formula/formulas/simulation': () => import('@/pages/product-formula/FormulaSimulationPage.vue'),
   'product-formula/reviews': () => import('@/pages/product-formula/FormulaReviewPage.vue'),
   'product-pricing/sale-products': () => import('@/pages/product-pricing/SaleProductPage.vue'),
+  'product-pricing/shipping-templates': () => import('@/pages/product-pricing/ShippingTemplatePage.vue'),
   'product-pricing/price-settings': () => import('@/pages/product-pricing/PriceSettingPage.vue'),
   'dealer/dashboard': () => import('@/pages/dealer-portal/DealerPortalPage.vue'),
   'dealer/quotes/create': () => import('@/pages/dealer-portal/DealerPortalPage.vue'),

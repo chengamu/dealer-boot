@@ -5,60 +5,76 @@
         <h3>{{ t('productCenter.pricing.extraFeeRules') }}</h3>
         <p>{{ t('productCenter.pricing.extraFeeRulesHint') }}</p>
       </div>
+      <div v-if="editable" class="shipping-panel__actions">
+        <el-select v-model="selectedTemplateId" filterable :placeholder="t('productCenter.shippingTemplate.selectPlaceholder')">
+          <el-option v-for="item in templates" :key="String(item.shippingTemplateId || '')" :label="templateLabel(item)" :value="String(item.shippingTemplateId || '')" />
+        </el-select>
+        <el-button v-hasPermi="['product:pricing:edit']" type="primary" plain icon="Download" :disabled="!selectedTemplateId" @click="$emit('import', selectedTemplateId)">
+          {{ t('productCenter.pricing.importShippingTemplate') }}
+        </el-button>
+      </div>
     </div>
-    <div class="shipping-panel__grid">
-      <article v-for="item in normalizedRows" :key="item.feeCode" class="shipping-card">
-        <div class="shipping-card__title">
-          <span>{{ item.feeName }}</span>
-          <el-tag size="small" type="info">{{ triggerText(item.feeCode) }}</el-tag>
-        </div>
-        <PriceFormulaEditor
-          :model-value="item.formulaText || ''"
-          :label="t('productCenter.pricing.shippingFormula')"
-          :rows="2"
-          :disabled="!editable"
-          @update:model-value="updateFormula(item.feeCode || '', $event)"
-        />
-      </article>
-    </div>
+    <el-table :data="rows" border height="260" :empty-text="t('productCenter.common.empty')">
+      <el-table-column type="index" :label="t('common.index')" width="58" align="center" />
+      <el-table-column :label="t('productCenter.shippingTemplate.scenario')" width="120">
+        <template #default="{ row }">{{ feeName(row.feeCode) }}</template>
+      </el-table-column>
+      <el-table-column :label="t('productCenter.shippingTemplate.areaRange')" width="180">
+        <template #default="{ row }">{{ areaRange(row) }}</template>
+      </el-table-column>
+      <el-table-column :label="t('productCenter.shippingTemplate.template')" min-width="180">
+        <template #default="{ row }">{{ row.shippingTemplateName || '-' }}</template>
+      </el-table-column>
+      <el-table-column :label="t('productCenter.shippingTemplate.formula')" min-width="420">
+        <template #default="{ row }">
+          <pre class="shipping-panel__formula">{{ row.formulaText || '-' }}</pre>
+        </template>
+      </el-table-column>
+    </el-table>
   </section>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ref, watch } from 'vue'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
-import type { ExtraFeeRule } from '@/api/product-pricing/types'
-import PriceFormulaEditor from './PriceFormulaEditor.vue'
+import type { ExtraFeeRule, ShippingTemplateVO } from '@/api/product-pricing/types'
 
 const props = defineProps<{
   rows: ExtraFeeRule[]
+  templates: ShippingTemplateVO[]
   editable?: boolean
 }>()
 
-const emit = defineEmits<{
-  change: [payload: ExtraFeeRule[]]
-}>()
-
+defineEmits<{ import: [shippingTemplateId: string] }>()
 const localeStore = useLocaleStore()
 const t = (key: string) => getMessage(key, localeStore.language)
-const defaults: ExtraFeeRule[] = [
-  { feeCode: 'MANUAL', feeName: t('productCenter.pricing.manualShipping'), feeCategory: 'SHIPPING', triggerCondition: 'motorized = false', feeMode: 'FORMULA', status: 'ENABLED', sortOrder: 0 },
-  { feeCode: 'MOTORIZED', feeName: t('productCenter.pricing.motorizedShipping'), feeCategory: 'SHIPPING', triggerCondition: 'motorized = true', feeMode: 'FORMULA', status: 'ENABLED', sortOrder: 1 }
-]
+const selectedTemplateId = ref('')
 
-const normalizedRows = computed(() => defaults.map(item => ({
-  ...item,
-  ...(props.rows.find(row => row.feeCode === item.feeCode) || {})
-})))
+watch(() => props.templates, (templates) => {
+  const selectedExists = templates.some(item => String(item.shippingTemplateId || '') === selectedTemplateId.value)
+  if (selectedExists) return
+  selectedTemplateId.value = String(templates.find(item => item.defaultFlag)?.shippingTemplateId || '')
+}, { immediate: true })
 
-function updateFormula(code: string, formulaText: string) {
-  if (!props.editable) return
-  emit('change', normalizedRows.value.map(row => row.feeCode === code ? { ...row, formulaText } : row))
+function templateLabel(item: ShippingTemplateVO) {
+  return [item.templateCode, item.templateName].filter(Boolean).join(' ')
 }
 
-function triggerText(code?: string) {
-  return code === 'MOTORIZED' ? t('productCenter.pricing.motorizedTrigger') : t('productCenter.pricing.manualTrigger')
+function feeName(code?: string) {
+  return code === 'MOTORIZED' ? t('productCenter.shippingTemplate.motorized') : t('productCenter.shippingTemplate.manual')
+}
+
+function areaRange(row: ExtraFeeRule) {
+  const min = row.minAreaSqft ?? 0
+  return row.maxAreaSqft === undefined || row.maxAreaSqft === null
+    ? `≥ ${formatNumber(min)} ft²`
+    : `${formatNumber(min)} - ${formatNumber(row.maxAreaSqft)} ft²`
+}
+
+function formatNumber(value?: number) {
+  const number = Number(value)
+  return Number.isFinite(number) ? number.toFixed(2) : '-'
 }
 </script>
 
@@ -72,42 +88,37 @@ function triggerText(code?: string) {
 }
 
 .shipping-panel__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
   margin-bottom: 12px;
 }
 
-.shipping-panel h3 {
+.shipping-panel h3,
+.shipping-panel p {
   margin: 0;
-  color: #1d2129;
-  font-size: 16px;
 }
 
 .shipping-panel p {
-  margin: 4px 0 0;
+  margin-top: 4px;
   color: #667085;
   font-size: 12px;
 }
 
-.shipping-panel__grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.shipping-card {
-  display: grid;
-  gap: 10px;
-  padding: 12px;
-  background: #f8fbff;
-  border: 1px solid #e3ebf7;
-  border-radius: 8px;
-}
-
-.shipping-card__title {
+.shipping-panel__actions {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  color: #1f2937;
-  font-weight: 700;
+  gap: 8px;
+}
+
+.shipping-panel__actions .el-select {
+  width: 260px;
+}
+
+.shipping-panel__formula {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: inherit;
 }
 </style>

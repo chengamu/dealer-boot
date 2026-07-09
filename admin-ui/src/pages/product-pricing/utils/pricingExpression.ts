@@ -38,6 +38,7 @@ export const priceFormulaVariables: PriceExpressionVariable[] = [
 ]
 
 export const priceConditionVariables = priceFormulaVariables.filter((item) => item.name !== 'unitPrice')
+export const shippingFormulaVariables = priceConditionVariables
 
 const FUNCTIONS = new Set(['max', 'min', 'round', 'ceil', 'floor'])
 export function priceOperators() {
@@ -45,7 +46,11 @@ export function priceOperators() {
 }
 
 export function validatePriceFormula(input?: string) {
-  return validateExpression(input, priceFormulaVariables, false)
+  return validateExpression(input, priceFormulaVariables, false, true)
+}
+
+export function validateShippingFormula(input?: string) {
+  return validateExpression(input, shippingFormulaVariables, false, true)
 }
 
 export function validatePriceCondition(input?: string): PriceExpressionResult {
@@ -77,7 +82,7 @@ export function normalizePriceExpression(input?: string, condition = false) {
   return value
 }
 
-function validateExpression(input: string | undefined, variables: PriceExpressionVariable[], condition: boolean): PriceExpressionResult {
+function validateExpression(input: string | undefined, variables: PriceExpressionVariable[], condition: boolean, requirePositive = false): PriceExpressionResult {
   const expression = normalizePriceExpression(input, condition)
   if (!expression) return { valid: false, expression, message: 'empty' }
   try {
@@ -86,7 +91,7 @@ function validateExpression(input: string | undefined, variables: PriceExpressio
     const sampleValue = evaluate(node, sampleContext(variables))
     const valid = condition
       ? typeof sampleValue === 'boolean'
-      : typeof sampleValue === 'number' && Number.isFinite(sampleValue) && sampleValue >= 0
+      : typeof sampleValue === 'number' && Number.isFinite(sampleValue) && (requirePositive ? sampleValue > 0 : sampleValue >= 0)
     return { valid, expression, sampleValue, message: valid ? undefined : condition ? 'conditionMustBeBoolean' : 'invalidResult' }
   } catch (error) {
     return { valid: false, expression, message: error instanceof Error ? error.message : 'invalid' }

@@ -1072,18 +1072,96 @@ CREATE INDEX IF NOT EXISTS idx_pc_price_fabric_rule_setting ON pc_price_fabric_r
 CREATE INDEX IF NOT EXISTS idx_pc_price_fabric_rule_fabric ON pc_price_fabric_rule (tenant_id, price_fabric_id, sort_order) WHERE del_flag = '0';
 CREATE INDEX IF NOT EXISTS idx_pc_price_fabric_rule_condition ON pc_price_fabric_rule (tenant_id, price_fabric_id, condition_key) WHERE del_flag = '0';
 
+CREATE TABLE IF NOT EXISTS pc_shipping_template (
+    shipping_template_id bigint PRIMARY KEY,
+    tenant_id bigint NOT NULL DEFAULT 1 CHECK (tenant_id <> 0),
+    template_code varchar(80) NOT NULL,
+    template_name varchar(200) NOT NULL,
+    currency_code varchar(20) NOT NULL DEFAULT 'USD',
+    default_flag boolean NOT NULL DEFAULT false,
+    status varchar(30) NOT NULL DEFAULT 'ENABLED',
+    sort_order int NOT NULL DEFAULT 0,
+    del_flag varchar(1) NOT NULL DEFAULT '0',
+    remark varchar(500),
+    create_by_id bigint,
+    create_by varchar(64),
+    create_time timestamptz,
+    update_by varchar(64),
+    update_time timestamptz
+);
+
+ALTER TABLE IF EXISTS pc_shipping_template
+    ADD COLUMN IF NOT EXISTS tenant_id bigint NOT NULL DEFAULT 1 CHECK (tenant_id <> 0),
+    ADD COLUMN IF NOT EXISTS template_code varchar(80),
+    ADD COLUMN IF NOT EXISTS template_name varchar(200),
+    ADD COLUMN IF NOT EXISTS currency_code varchar(20) NOT NULL DEFAULT 'USD',
+    ADD COLUMN IF NOT EXISTS default_flag boolean NOT NULL DEFAULT false,
+    ADD COLUMN IF NOT EXISTS status varchar(30) NOT NULL DEFAULT 'ENABLED',
+    ADD COLUMN IF NOT EXISTS sort_order int NOT NULL DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS del_flag varchar(1) NOT NULL DEFAULT '0',
+    ADD COLUMN IF NOT EXISTS remark varchar(500);
+
+COMMENT ON TABLE pc_shipping_template IS '邮费模板表，维护可复用的邮费公式';
+COMMENT ON COLUMN pc_shipping_template.template_code IS '邮费模板编码';
+COMMENT ON COLUMN pc_shipping_template.default_flag IS '默认模板标记';
+CREATE INDEX IF NOT EXISTS idx_pc_shipping_template_code ON pc_shipping_template (tenant_id, template_code, status) WHERE del_flag = '0';
+CREATE INDEX IF NOT EXISTS idx_pc_shipping_template_default ON pc_shipping_template (tenant_id, default_flag, status) WHERE del_flag = '0';
+
+CREATE TABLE IF NOT EXISTS pc_shipping_template_rule (
+    shipping_template_rule_id bigint PRIMARY KEY,
+    tenant_id bigint NOT NULL DEFAULT 1 CHECK (tenant_id <> 0),
+    shipping_template_id bigint NOT NULL,
+    fee_code varchar(80) NOT NULL,
+    fee_name varchar(200) NOT NULL,
+    min_area_sqft numeric(18,4),
+    max_area_sqft numeric(18,4),
+    formula_text text NOT NULL,
+    sort_order int NOT NULL DEFAULT 0,
+    del_flag varchar(1) NOT NULL DEFAULT '0',
+    remark varchar(500),
+    create_by_id bigint,
+    create_by varchar(64),
+    create_time timestamptz,
+    update_by varchar(64),
+    update_time timestamptz
+);
+
+ALTER TABLE IF EXISTS pc_shipping_template_rule
+    ADD COLUMN IF NOT EXISTS tenant_id bigint NOT NULL DEFAULT 1 CHECK (tenant_id <> 0),
+    ADD COLUMN IF NOT EXISTS shipping_template_id bigint,
+    ADD COLUMN IF NOT EXISTS fee_code varchar(80),
+    ADD COLUMN IF NOT EXISTS fee_name varchar(200),
+    ADD COLUMN IF NOT EXISTS min_area_sqft numeric(18,4),
+    ADD COLUMN IF NOT EXISTS max_area_sqft numeric(18,4),
+    ADD COLUMN IF NOT EXISTS formula_text text,
+    ADD COLUMN IF NOT EXISTS sort_order int NOT NULL DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS del_flag varchar(1) NOT NULL DEFAULT '0',
+    ADD COLUMN IF NOT EXISTS remark varchar(500);
+
+COMMENT ON TABLE pc_shipping_template_rule IS '邮费模板规则表，按不带电/带电和面积区间维护公式';
+COMMENT ON COLUMN pc_shipping_template_rule.fee_code IS '邮费类型：MANUAL 不带电、MOTORIZED 带电';
+COMMENT ON COLUMN pc_shipping_template_rule.min_area_sqft IS '最小面积，平方英尺，含边界';
+COMMENT ON COLUMN pc_shipping_template_rule.max_area_sqft IS '最大面积，平方英尺，空表示不封顶';
+CREATE INDEX IF NOT EXISTS idx_pc_shipping_template_rule_template ON pc_shipping_template_rule (tenant_id, shipping_template_id, fee_code, sort_order) WHERE del_flag = '0';
+
 CREATE TABLE IF NOT EXISTS pc_price_fee_rule (
     fee_rule_id bigint PRIMARY KEY,
     tenant_id bigint NOT NULL DEFAULT 1 CHECK (tenant_id <> 0),
     price_setting_id bigint NOT NULL,
     sale_product_id bigint NOT NULL,
     formula_version_id bigint NOT NULL,
+    shipping_template_id bigint,
+    shipping_template_code varchar(80),
+    shipping_template_name varchar(200),
+    shipping_template_rule_id bigint,
     fee_code varchar(80),
     fee_name varchar(200),
     fee_category varchar(80),
     trigger_condition text,
     fee_mode varchar(40) NOT NULL DEFAULT 'FORMULA',
     fee_amount numeric(18,4),
+    min_area_sqft numeric(18,4),
+    max_area_sqft numeric(18,4),
     formula_text text,
     status varchar(30) NOT NULL DEFAULT 'ENABLED',
     sort_order int NOT NULL DEFAULT 0,
@@ -1101,12 +1179,18 @@ ALTER TABLE IF EXISTS pc_price_fee_rule
     ADD COLUMN IF NOT EXISTS price_setting_id bigint,
     ADD COLUMN IF NOT EXISTS sale_product_id bigint,
     ADD COLUMN IF NOT EXISTS formula_version_id bigint,
+    ADD COLUMN IF NOT EXISTS shipping_template_id bigint,
+    ADD COLUMN IF NOT EXISTS shipping_template_code varchar(80),
+    ADD COLUMN IF NOT EXISTS shipping_template_name varchar(200),
+    ADD COLUMN IF NOT EXISTS shipping_template_rule_id bigint,
     ADD COLUMN IF NOT EXISTS fee_code varchar(80),
     ADD COLUMN IF NOT EXISTS fee_name varchar(200),
     ADD COLUMN IF NOT EXISTS fee_category varchar(80),
     ADD COLUMN IF NOT EXISTS trigger_condition text,
     ADD COLUMN IF NOT EXISTS fee_mode varchar(40) NOT NULL DEFAULT 'FORMULA',
     ADD COLUMN IF NOT EXISTS fee_amount numeric(18,4),
+    ADD COLUMN IF NOT EXISTS min_area_sqft numeric(18,4),
+    ADD COLUMN IF NOT EXISTS max_area_sqft numeric(18,4),
     ADD COLUMN IF NOT EXISTS formula_text text,
     ADD COLUMN IF NOT EXISTS status varchar(30) NOT NULL DEFAULT 'ENABLED',
     ADD COLUMN IF NOT EXISTS sort_order int NOT NULL DEFAULT 0,
@@ -1115,9 +1199,13 @@ ALTER TABLE IF EXISTS pc_price_fee_rule
 ALTER TABLE IF EXISTS pc_price_fee_rule
     ALTER COLUMN fee_mode SET DEFAULT 'FORMULA';
 
-COMMENT ON TABLE pc_price_fee_rule IS '邮费公式表，按不带电/带电维护运输费用公式';
+COMMENT ON TABLE pc_price_fee_rule IS '价格设置邮费快照表，从邮费模板导入后按可售产品和配方版本冻结';
 COMMENT ON COLUMN pc_price_fee_rule.fee_code IS '邮费类型：MANUAL 不带电、MOTORIZED 带电';
 COMMENT ON COLUMN pc_price_fee_rule.fee_mode IS '费用方式：FORMULA';
+COMMENT ON COLUMN pc_price_fee_rule.shipping_template_id IS '来源邮费模板ID';
+COMMENT ON COLUMN pc_price_fee_rule.shipping_template_rule_id IS '来源邮费模板规则ID';
+COMMENT ON COLUMN pc_price_fee_rule.min_area_sqft IS '最小面积，平方英尺，含边界';
+COMMENT ON COLUMN pc_price_fee_rule.max_area_sqft IS '最大面积，平方英尺，空表示不封顶';
 CREATE INDEX IF NOT EXISTS idx_pc_price_fee_rule_setting ON pc_price_fee_rule (tenant_id, price_setting_id, sort_order) WHERE del_flag = '0';
 CREATE INDEX IF NOT EXISTS idx_pc_price_fee_rule_category ON pc_price_fee_rule (tenant_id, fee_category, status) WHERE del_flag = '0';
 
@@ -2015,7 +2103,8 @@ VALUES
     (24304, 1, 24300, 'Formula Options', 'productCenter.menu.formulaOptions', 3, 'formulas/options', 'product-formula/formulas/options', NULL, '1', '0', 'C', '1', '1', 'product:formula:setup', 'pc-formula-option', 'system', now(), NULL, NULL, '配方选项'),
     (24305, 1, 24300, 'Formula Simulation', 'productCenter.menu.formulaSimulation', 4, 'formulas/simulation', 'product-formula/formulas/simulation', NULL, '1', '0', 'C', '1', '1', 'product:formula:setup', 'pc-formula-simulation', 'system', now(), NULL, NULL, '配方模拟'),
     (24401, 1, 24300, 'Sale Products', 'productCenter.menu.saleProducts', 6, 'sale-products', 'product-pricing/sale-products', NULL, '1', '0', 'C', '1', '1', 'product:sale-product:list', 'pc-sale-product', 'system', now(), NULL, NULL, '可售产品'),
-    (24402, 1, 24300, 'Price Settings', 'productCenter.menu.priceSettings', 7, 'price-settings', 'product-pricing/price-settings', NULL, '1', '0', 'C', '1', '1', 'product:pricing:query', 'pc-pricing', 'system', now(), NULL, NULL, '价格设置'),
+    (24403, 1, 24300, 'Shipping Templates', 'productCenter.menu.shippingTemplates', 7, 'shipping-templates', 'product-pricing/shipping-templates', NULL, '1', '0', 'C', '1', '1', 'product:shipping-template:list', 'pc-shipping-template', 'system', now(), NULL, NULL, '邮费模板'),
+    (24402, 1, 24300, 'Price Settings', 'productCenter.menu.priceSettings', 8, 'price-settings', 'product-pricing/price-settings', NULL, '1', '0', 'C', '1', '1', 'product:pricing:query', 'pc-pricing', 'system', now(), NULL, NULL, '价格设置'),
     (24212, 1, 24200, 'Product Categories', 'productCenter.menu.categories', 1, 'categories', 'product-center/base', NULL, '1', '0', 'C', '1', '1', 'product:base:list', 'pc-category', 'system', now(), NULL, NULL, '产品分类'),
     (24213, 1, 24200, 'Base Dictionaries', 'productCenter.menu.productDicts', 2, 'product-dicts', 'product-center/product-dicts', NULL, '1', '0', 'C', '1', '1', 'product:dict:list', 'pc-dict', 'system', now(), NULL, NULL, '基础字典'),
     (24206, 1, 24200, 'Units', 'productCenter.menu.units', 3, 'units', 'product-center/base', NULL, '1', '0', 'C', '1', '1', 'product:unit:list', 'pc-unit', 'system', now(), NULL, NULL, '单位管理'),
@@ -2071,6 +2160,11 @@ VALUES
     (24420, 1, 24402, 'Price Setting Query', 'common.search', 1, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:pricing:query', '#', 'system', now(), NULL, NULL, '价格设置查询'),
     (24421, 1, 24402, 'Price Setting Edit', 'common.edit', 2, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:pricing:edit', '#', 'system', now(), NULL, NULL, '价格设置维护'),
     (24422, 1, 24402, 'Price Setting Validate', 'productCenter.pricing.validatePrice', 3, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:pricing:validate', '#', 'system', now(), NULL, NULL, '价格校验'),
+    (24430, 1, 24403, 'Shipping Template Query', 'common.search', 1, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:shipping-template:list', '#', 'system', now(), NULL, NULL, '邮费模板查询'),
+    (24431, 1, 24403, 'Shipping Template Add', 'common.add', 2, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:shipping-template:add', '#', 'system', now(), NULL, NULL, '邮费模板新增'),
+    (24432, 1, 24403, 'Shipping Template Edit', 'common.edit', 3, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:shipping-template:edit', '#', 'system', now(), NULL, NULL, '邮费模板编辑'),
+    (24433, 1, 24403, 'Shipping Template Delete', 'common.delete', 4, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:shipping-template:remove', '#', 'system', now(), NULL, NULL, '邮费模板删除'),
+    (24434, 1, 24403, 'Shipping Template Export', 'common.export', 5, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:shipping-template:export', '#', 'system', now(), NULL, NULL, '邮费模板导出'),
     (24214, 1, 24212, 'Category Query', 'common.search', 1, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:base:list', '#', 'system', now(), NULL, NULL, '产品分类查询'),
     (24215, 1, 24212, 'Category Add', 'common.add', 2, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:base:add', '#', 'system', now(), NULL, NULL, '产品分类新增'),
     (24216, 1, 24212, 'Category Edit', 'common.edit', 3, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'product:base:edit', '#', 'system', now(), NULL, NULL, '产品分类编辑'),

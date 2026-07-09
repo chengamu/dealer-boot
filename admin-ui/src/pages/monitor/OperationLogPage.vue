@@ -79,7 +79,7 @@
           <span>{{ formatUtc(scope.row.operTime) }}</span>
         </template>
       </el-table-column>
-      <el-table-column :label="t('operlog.costTime')" align="center" prop="costTime" width="110" :show-overflow-tooltip="true" sortable="custom" :sort-orders="['descending', 'ascending']">
+      <el-table-column :label="t('operlog.costTime')" align="right" prop="costTime" width="110" :show-overflow-tooltip="true" sortable="custom" :sort-orders="['descending', 'ascending']">
         <template #default="scope">
           <span>{{ scope.row.costTime }}{{ t('common.milliseconds') }}</span>
         </template>

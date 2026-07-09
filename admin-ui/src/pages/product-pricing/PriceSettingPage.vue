@@ -6,13 +6,11 @@
       :products="products"
       :selected-product-id="selectedProductId"
       :loading="loading"
-      :saving="saving"
       :validating="validating"
       :editable="editable"
       @product-change="selectProduct"
       @refresh="reload"
       @validate="validatePrice"
-      @save="saveAll"
     />
     <el-empty v-else :description="t('productCenter.pricing.noSaleProduct')" />
     <template v-if="currentProduct.saleProductId">
@@ -42,8 +40,9 @@
       <div class="price-setting-page__lower">
         <ShippingFormulaPanel
           :rows="feeRows"
+          :templates="shippingTemplates"
           :editable="editable"
-          @change="updateShippingRules"
+          @import="importShippingTemplate"
         />
         <PriceIssuePanel :issues="issues" />
       </div>
@@ -79,9 +78,10 @@ import type {
   PriceFabricVO,
   PriceSetupVO,
   PriceValidationIssue,
-  SaleProductVO
+  SaleProductVO,
+  ShippingTemplateVO
 } from '@/api/product-pricing/types'
-import { productPriceApi, saleProductApi } from '@/api/product-pricing/pricing'
+import { productPriceApi, saleProductApi, shippingTemplateApi } from '@/api/product-pricing/pricing'
 import { PRODUCT_STATUS_ENABLED } from '@/constants/productStatus'
 import PriceSetupHeader from './components/PriceSetupHeader.vue'
 import PriceSetupOverview from './components/PriceSetupOverview.vue'
@@ -103,8 +103,8 @@ const priceFabrics = ref<PriceFabricVO[]>([])
 const fabricRules = ref<FabricPriceRule[]>([])
 const feeRows = ref<ExtraFeeRule[]>([])
 const issues = ref<PriceValidationIssue[]>([])
+const shippingTemplates = ref<ShippingTemplateVO[]>([])
 const loading = ref(false)
-const saving = ref(false)
 const validating = ref(false)
 const batchOpen = ref(false)
 const ruleDrawerOpen = ref(false)
@@ -116,7 +116,7 @@ const editable = computed(() => currentProduct.value.status !== PRODUCT_STATUS_E
 const activeFabricRules = computed(() => fabricRules.value.filter(row => row.priceFabricId === activeFabric.value?.priceFabricId))
 
 onMounted(async () => {
-  await loadProducts()
+  await Promise.all([loadProducts(), loadShippingTemplates()])
   if (!selectedProductId.value && products.value[0]?.saleProductId) selectedProductId.value = toIdString(products.value[0].saleProductId)
   await reload()
 })
@@ -124,6 +124,11 @@ onMounted(async () => {
 async function loadProducts() {
   const response = await saleProductApi.options({ pageNum: 1, pageSize: 500 })
   products.value = Array.isArray(response) ? response : response.data || []
+}
+
+async function loadShippingTemplates() {
+  const response = await shippingTemplateApi.options({ pageNum: 1, pageSize: 500, status: 'ENABLED' })
+  shippingTemplates.value = Array.isArray(response) ? response : response.data || []
 }
 
 async function reload() {
@@ -179,21 +184,6 @@ async function applyBatchFabricPrice(payload: { priceFabricIds: number[], rows: 
   await reload()
 }
 
-function updateShippingRules(rows: ExtraFeeRule[]) {
-  feeRows.value = rows
-}
-
-async function saveAll() {
-  saving.value = true
-  try {
-    await saveFeeRules(false)
-    ElMessage.success(t('common.success'))
-    await reload()
-  } finally {
-    saving.value = false
-  }
-}
-
 async function saveFabricRules(priceFabricId?: number, rows?: FabricPriceRule[], refresh = true) {
   if (!selectedProductId.value) return
   if (!priceFabricId || !rows) return
@@ -204,13 +194,12 @@ async function saveFabricRules(priceFabricId?: number, rows?: FabricPriceRule[],
   }
 }
 
-async function saveFeeRules(refresh = true) {
+async function importShippingTemplate(shippingTemplateId: string) {
   if (!selectedProductId.value) return
-  await productPriceApi.saveExtraFeeRules(selectedProductId.value, feeRows.value)
-  if (refresh) {
-    ElMessage.success(t('common.success'))
-    await reload()
-  }
+  await ElMessageBox.confirm(t('productCenter.pricing.confirmImportShippingTemplate'), t('common.prompt'), { type: 'warning' })
+  await productPriceApi.importShippingTemplate(selectedProductId.value, shippingTemplateId)
+  ElMessage.success(t('common.success'))
+  await reload()
 }
 
 async function validatePrice() {

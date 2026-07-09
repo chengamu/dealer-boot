@@ -41,57 +41,12 @@
         </div>
 
         <div class="price-expression-side">
-          <section v-if="target === 'condition'" class="price-expression-side__card">
-            <h4>{{ t('productCenter.pricing.sizeCondition') }}</h4>
-            <el-select v-model="dimensionBuilder.variable" filterable>
-              <el-option v-for="item in dimensionVariables" :key="item.name" :label="variableLabel(item)" :value="item.name" />
-            </el-select>
-            <div class="price-expression-side__row">
-              <el-select v-model="dimensionBuilder.operator">
-                <el-option label=">" value=">" />
-                <el-option label=">=" value=">=" />
-                <el-option label="<" value="<" />
-                <el-option label="<=" value="<=" />
-                <el-option label="=" value="==" />
-                <el-option label="!=" value="!=" />
-              </el-select>
-              <el-input-number v-model="dimensionBuilder.value" :controls="false" :precision="2" />
-            </div>
-            <div class="price-expression-side__row">
-              <el-select v-model="dimensionBuilder.joiner">
-                <el-option :label="t('productCenter.pricing.and')" value="&&" />
-                <el-option :label="t('productCenter.pricing.or')" value="||" />
-              </el-select>
-              <el-button type="primary" plain @click="appendDimensionCondition">
-                {{ t('productCenter.formulaSetup.insertCondition') }}
-              </el-button>
-            </div>
-          </section>
-
-          <section v-if="target === 'condition'" class="price-expression-side__card">
-            <h4>{{ t('productCenter.formulaSetup.optionCondition') }}</h4>
-            <el-select v-model="optionBuilder.optionRef" filterable :placeholder="t('productCenter.formulaSetup.optionName')">
-              <el-option v-for="item in options" :key="optionRef(item)" :label="optionLabel(item)" :value="optionRef(item)" />
-            </el-select>
-            <div class="price-expression-side__row">
-              <el-select v-model="optionBuilder.operator">
-                <el-option label="=" value="==" />
-                <el-option label="!=" value="!=" />
-              </el-select>
-              <el-select v-model="optionBuilder.valueRef" filterable :placeholder="t('productCenter.formulaSetup.conditionValue')">
-                <el-option v-for="item in optionValueRows" :key="valueRef(item)" :label="valueLabel(item)" :value="valueRef(item)" />
-              </el-select>
-            </div>
-            <div class="price-expression-side__row">
-              <el-select v-model="optionBuilder.joiner">
-                <el-option :label="t('productCenter.pricing.and')" value="&&" />
-                <el-option :label="t('productCenter.pricing.or')" value="||" />
-              </el-select>
-              <el-button type="primary" plain @click="appendOptionCondition">
-                {{ t('productCenter.formulaSetup.insertCondition') }}
-              </el-button>
-            </div>
-          </section>
+          <PriceExpressionConditionBuilder
+            v-if="target === 'condition'"
+            :options="options"
+            :option-values="optionValues"
+            @append="appendCondition"
+          />
 
           <section v-if="target === 'formula'" class="price-expression-side__card">
             <h4>{{ t('productCenter.pricing.priceFormulaTipsTitle') }}</h4>
@@ -120,15 +75,15 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive } from 'vue'
+import { computed } from 'vue'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 import FormulaExpressionComposer from '../../product-formula/components/FormulaExpressionComposer.vue'
 import FormulaExpressionOperatorPanel from '../../product-formula/components/FormulaExpressionOperatorPanel.vue'
 import FormulaExpressionValidationPanel from '../../product-formula/components/FormulaExpressionValidationPanel.vue'
+import PriceExpressionConditionBuilder from './PriceExpressionConditionBuilder.vue'
 import { priceConditionVariables, priceFormulaVariables, priceOperators, validatePriceCondition, validatePriceFormula } from '../utils/pricingExpression'
 import type { PriceExpressionVariable } from '../utils/pricingExpression'
-import { optionValueLiteral, optionVariableName } from '../../product-formula/components/formulaExpressionDisplay'
 import type { ProductFormulaOptionVO, ProductFormulaOptionValueVO } from '@/api/product-capability/types'
 
 type Target = 'formula' | 'condition'
@@ -149,8 +104,6 @@ const emit = defineEmits<{
 
 const localeStore = useLocaleStore()
 const t = (key: string) => getMessage(key, localeStore.language)
-const optionBuilder = reactive({ optionRef: '', valueRef: '', operator: '==', joiner: '&&' })
-const dimensionBuilder = reactive({ variable: 'width', operator: '>', value: 0, joiner: '&&' })
 
 const editorText = computed({ get: () => props.text, set: (value: string) => emit('update:text', value) })
 const title = computed(() => props.target === 'formula' ? t('productCenter.pricing.priceFormulaSelector') : t('productCenter.formulaSetup.conditionExpressionEditor'))
@@ -158,7 +111,6 @@ const placeholder = computed(() => props.target === 'formula' ? t('productCenter
 const variableButtons = computed(() => props.target === 'formula'
   ? priceFormulaVariables.filter((item) => item.name !== 'unitPrice')
   : priceConditionVariables)
-const dimensionVariables = computed(() => priceConditionVariables.filter((item) => ['width', 'drop', 'widthCm', 'dropCm', 'areaM2', 'areaSqft'].includes(item.name)))
 const functionHelpItems = [
   { name: 'MAX', helpKey: 'productCenter.pricing.functionHelpMax' },
   { name: 'MIN', helpKey: 'productCenter.pricing.functionHelpMin' },
@@ -175,48 +127,14 @@ const resultText = computed(() => {
   if (props.target === 'condition') return t('productCenter.formulaSetup.expressionValid')
   return `${t('productCenter.formulaSetup.sampleResult')}：${formatNumber(result.value.sampleValue)}`
 })
-const selectedOption = computed(() => (props.options || []).find((item) => optionRef(item) === optionBuilder.optionRef || item.optionCode === optionBuilder.optionRef))
-const optionValueRows = computed(() => {
-  const option = selectedOption.value
-  return (props.optionValues || []).filter((item) => {
-    if (!option) return false
-    if (item.optionRefKey && option.optionRefKey) return item.optionRefKey === option.optionRefKey
-    return item.optionCode === option.optionCode
-  })
-})
 
 function appendText(value: string) {
   editorText.value = `${editorText.value || ''}${editorText.value ? ' ' : ''}${value}`
 }
 
-function appendDimensionCondition() {
-  if (!dimensionBuilder.variable || dimensionBuilder.value === null || dimensionBuilder.value === undefined) return
-  const clause = `${dimensionBuilder.variable} ${dimensionBuilder.operator} ${dimensionBuilder.value}`
-  editorText.value = `${editorText.value.trim()}${editorText.value.trim() ? ` ${dimensionBuilder.joiner} ` : ''}${clause}`.trim()
-}
-
-function appendOptionCondition() {
-  const option = selectedOption.value
-  const value = optionValueRows.value.find((item) => valueRef(item) === optionBuilder.valueRef || item.valueCode === optionBuilder.valueRef)
-  if (!option || !value) return
-  const clause = `${optionVariableName(option)} ${optionBuilder.operator} ${optionValueLiteral(value)}`
-  editorText.value = `${editorText.value.trim()}${editorText.value.trim() ? ` ${optionBuilder.joiner} ` : ''}${clause}`.trim()
-}
-
-function optionLabel(item: ProductFormulaOptionVO) {
-  return item.optionNameCn || item.optionNameEn || item.optionCode || '-'
-}
-
-function valueLabel(item: ProductFormulaOptionValueVO) {
-  return item.valueNameCn || item.valueNameEn || item.valueCode || '-'
-}
-
-function optionRef(item: ProductFormulaOptionVO) {
-  return item.optionRefKey || item.optionCode || ''
-}
-
-function valueRef(item: ProductFormulaOptionValueVO) {
-  return item.valueRefKey || item.valueCode || ''
+function appendCondition(payload: { clause: string, joiner: string }) {
+  const current = editorText.value.trim()
+  editorText.value = `${current}${current ? ` ${payload.joiner} ` : ''}${payload.clause}`.trim()
 }
 
 function variableLabel(item: PriceExpressionVariable) {
@@ -303,11 +221,5 @@ function formatNumber(value: unknown) {
 
 .price-expression-function-help dd {
   margin: 0;
-}
-
-.price-expression-side__row {
-  display: grid;
-  grid-template-columns: minmax(90px, 0.35fr) minmax(0, 0.65fr);
-  gap: 8px;
 }
 </style>

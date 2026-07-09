@@ -12,7 +12,6 @@ import com.bocoo.product.domain.entity.ProductPriceFabricRule;
 import com.bocoo.product.domain.entity.ProductPriceFeeRule;
 import com.bocoo.product.domain.entity.ProductPriceSetting;
 import com.bocoo.product.domain.entity.ProductSaleProduct;
-import com.bocoo.product.domain.vo.ProductPriceFabricVo;
 import com.bocoo.product.domain.vo.ProductPriceFeeRuleVo;
 import com.bocoo.product.domain.vo.ProductPriceSetupVo;
 import com.bocoo.product.domain.vo.ProductPriceValidationIssueVo;
@@ -31,7 +30,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -53,6 +51,8 @@ public class ProductPriceSettingServiceImpl extends ProductServiceSupport implem
     private final ProductPriceFabricSyncService fabricSyncService;
     private final ProductPriceFabricRuleGuard fabricRuleGuard;
     private final ProductPriceShippingRuleFactory shippingRuleFactory;
+    private final ProductPriceFabricVoAssembler fabricVoAssembler;
+    private final ProductPriceShippingTemplateImporter shippingTemplateImporter;
     private final ProductChangeLogService changeLogService;
 
     @Override
@@ -65,12 +65,12 @@ public class ProductPriceSettingServiceImpl extends ProductServiceSupport implem
         vo.setSetting(settingMapper.selectVoById(setting.getPriceSettingId()));
         List<ProductPriceFabric> fabrics = queryFabrics(setting);
         List<ProductPriceFabricRule> fabricRules = queryFabricRules(setting);
-        vo.setPriceFabrics(toFabricVos(fabrics, fabricRules));
+        vo.setPriceFabrics(fabricVoAssembler.toFabricVos(fabrics, fabricRules));
         vo.setFabricRules(fabricRuleMapper.selectVoList(activeQuery(ProductPriceFabricRule.class)
             .eq("price_setting_id", setting.getPriceSettingId()).orderByAsc("sort_order", "fabric_rule_id")));
         List<ProductPriceFeeRuleVo> feeRules = feeRuleMapper.selectVoList(activeQuery(ProductPriceFeeRule.class)
             .eq("price_setting_id", setting.getPriceSettingId()).orderByAsc("sort_order", "fee_rule_id"));
-        vo.setFeeRules(feeRules.isEmpty() ? shippingRuleFactory.defaultVos(setting) : feeRules);
+        vo.setFeeRules(feeRules);
         vo.setFabricCandidates(fabricCandidateFactory.candidates(version));
         vo.setFabricPriceColumns(snapshotReader.optionCombinations(version));
         vo.setMaterialGroupCounts(snapshotReader.materialGroupCounts(version));
@@ -138,6 +138,20 @@ public class ProductPriceSettingServiceImpl extends ProductServiceSupport implem
         }
         markNotReady(setting);
         recordChange(setting, "SAVE_FEE_RULES", before, rules);
+        return Boolean.TRUE;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Boolean importShippingTemplate(Long saleProductId, Long shippingTemplateId) {
+        ProductSaleProduct saleProduct = requireSaleProduct(saleProductId);
+        assertPriceEditable(saleProduct);
+        ProductPriceSetting setting = ensureSetting(saleProduct);
+        ProductPriceShippingTemplateImporter.ImportResult result =
+            shippingTemplateImporter.importTemplate(setting, shippingTemplateId);
+        markNotReady(setting);
+        recordChange(setting, "IMPORT_SHIPPING_TEMPLATE", result.before(),
+            Map.of("templateCode", result.templateCode(), "rowCount", result.rowCount()));
         return Boolean.TRUE;
     }
 
@@ -260,30 +274,6 @@ public class ProductPriceSettingServiceImpl extends ProductServiceSupport implem
             throw ServiceException.ofMessageKey("product.priceSetting.fabricPriceNotInFormulaVersion");
         }
         return fabric;
-    }
-
-    private List<ProductPriceFabricVo> toFabricVos(List<ProductPriceFabric> fabrics, List<ProductPriceFabricRule> rules) {
-        Map<Long, List<ProductPriceFabricRule>> rulesByFabric = rules.stream()
-            .collect(Collectors.groupingBy(ProductPriceFabricRule::getPriceFabricId));
-        return fabrics.stream().map(fabric -> {
-            ProductPriceFabricVo vo = new ProductPriceFabricVo();
-            vo.setPriceFabricId(fabric.getPriceFabricId());
-            vo.setTenantId(fabric.getTenantId());
-            vo.setPriceSettingId(fabric.getPriceSettingId());
-            vo.setSaleProductId(fabric.getSaleProductId());
-            vo.setFormulaVersionId(fabric.getFormulaVersionId());
-            vo.setMaterialId(fabric.getMaterialId());
-            vo.setMaterialCode(fabric.getMaterialCode());
-            vo.setMaterialNameCn(fabric.getMaterialNameCn());
-            vo.setUnitCode(fabric.getUnitCode());
-            vo.setStatus(fabric.getStatus());
-            vo.setSortOrder(fabric.getSortOrder());
-            vo.setRemark(fabric.getRemark());
-            List<ProductPriceFabricRule> fabricRules = rulesByFabric.getOrDefault(fabric.getPriceFabricId(), List.of());
-            vo.setRuleCount(fabricRules.size());
-            vo.setDefaultRuleFlag(fabricRules.stream().anyMatch(rule -> Boolean.TRUE.equals(rule.getDefaultRuleFlag())));
-            return vo;
-        }).toList();
     }
 
     private void recordChange(ProductPriceSetting setting, String action, Object before, Object after) {

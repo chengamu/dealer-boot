@@ -19,12 +19,18 @@ public class ProductPriceFeeRuleVo implements Serializable {
     private Long priceSettingId;
     private Long saleProductId;
     private Long formulaVersionId;
+    private Long shippingTemplateId;
+    private String shippingTemplateCode;
+    private String shippingTemplateName;
+    private Long shippingTemplateRuleId;
     private String feeCode;
     private String feeName;
     private String feeCategory;
     private String triggerCondition;
     private String feeMode;
     private BigDecimal feeAmount;
+    private BigDecimal minAreaSqft;
+    private BigDecimal maxAreaSqft;
     private String formulaText;
     private String status;
     private Integer sortOrder;

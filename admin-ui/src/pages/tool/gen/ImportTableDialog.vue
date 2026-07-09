@@ -19,10 +19,10 @@
         <el-table-column type="selection" width="55" />
         <el-table-column prop="tableName" :label="t('gen.tableName')" :show-overflow-tooltip="true" />
         <el-table-column prop="tableComment" :label="t('gen.tableComment')" :show-overflow-tooltip="true" />
-        <el-table-column prop="createTime" :label="t('common.createTime')">
+        <el-table-column prop="createTime" :label="t('common.createTime')" align="center">
           <template #default="{ row }">{{ formatUtc(row.createTime) }}</template>
         </el-table-column>
-        <el-table-column prop="updateTime" :label="t('common.updateTime')">
+        <el-table-column prop="updateTime" :label="t('common.updateTime')" align="center">
           <template #default="{ row }">{{ formatUtc(row.updateTime) }}</template>
         </el-table-column>
       </el-table>

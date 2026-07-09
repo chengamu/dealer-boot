@@ -84,7 +84,7 @@ public class ProductPriceSettingValidator {
     }
 
     private void validateFabricRule(ProductPriceFabric fabric, ProductPriceFabricRule rule, List<ProductPriceValidationIssueVo> issues) {
-        if (isNotPositive(rule.getUnitPrice())) {
+        if (ProductPriceExpressionValidator.usesUnitPrice(rule.getPriceFormula()) && isNotPositive(rule.getUnitPrice())) {
             issues.add(issue("ERROR", "FABRIC_RULE", fabric.getMaterialCode(), "product.priceSetting.fabricPriceRequired"));
         }
         if (!ProductPriceExpressionValidator.isPriceFormulaValid(rule.getPriceFormula())) {
@@ -101,6 +101,12 @@ public class ProductPriceSettingValidator {
         }
         if (StringUtils.isBlank(rule.getFormulaText())) {
             issues.add(issue("ERROR", "FEE_RULE", rule.getFeeCode(), "product.priceSetting.shippingFormulaRequired"));
+        } else if (!ProductPriceExpressionValidator.isShippingFormulaValid(rule.getFormulaText())) {
+            issues.add(issue("ERROR", "FEE_RULE", rule.getFeeCode(), "product.priceSetting.priceFormulaInvalid"));
+        }
+        if (rule.getMinAreaSqft() != null && rule.getMaxAreaSqft() != null
+            && rule.getMaxAreaSqft().compareTo(rule.getMinAreaSqft()) <= 0) {
+            issues.add(issue("ERROR", "FEE_RULE", rule.getFeeCode(), "product.shippingTemplate.areaRangeInvalid"));
         }
     }
 

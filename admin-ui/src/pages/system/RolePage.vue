@@ -50,7 +50,7 @@
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column :label="t('role.roleName')" prop="roleName" :show-overflow-tooltip="true" width="150" />
       <el-table-column :label="t('role.roleKey')" prop="roleKey" :show-overflow-tooltip="true" width="150" />
-      <el-table-column :label="t('role.roleSort')" prop="roleSort" width="100" />
+      <el-table-column :label="t('role.roleSort')" prop="roleSort" width="100" align="right" />
       <el-table-column :label="t('user.status')" align="center" width="100">
         <template #default="{ row }">
           <el-switch v-model="row.status" active-value="1" inactive-value="0" @change="handleStatusChange(row)" />

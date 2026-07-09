@@ -16,5 +16,7 @@ public interface ProductPriceSettingService {
 
     Boolean saveFeeRules(Long saleProductId, List<ProductPriceFeeRuleBo> rules);
 
+    Boolean importShippingTemplate(Long saleProductId, Long shippingTemplateId);
+
     List<ProductPriceValidationIssueVo> validatePrice(Long saleProductId);
 }

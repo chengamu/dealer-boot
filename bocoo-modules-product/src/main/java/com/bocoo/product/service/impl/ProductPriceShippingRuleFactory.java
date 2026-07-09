@@ -4,6 +4,8 @@ import com.bocoo.common.core.utils.StringUtils;
 import com.bocoo.product.domain.bo.ProductPriceFeeRuleBo;
 import com.bocoo.product.domain.entity.ProductPriceFeeRule;
 import com.bocoo.product.domain.entity.ProductPriceSetting;
+import com.bocoo.product.domain.entity.ProductShippingTemplate;
+import com.bocoo.product.domain.entity.ProductShippingTemplateRule;
 import com.bocoo.product.domain.vo.ProductPriceFeeRuleVo;
 import org.springframework.stereotype.Component;
 
@@ -24,9 +26,30 @@ public class ProductPriceShippingRuleFactory {
         String code = normalizeCode(StringUtils.blankToDefault(bo.getFeeCode(), index == 0 ? CODE_MANUAL : CODE_MOTORIZED));
         ProductPriceFeeRule entity = defaultRule(setting, code, defaultName(code), defaultTrigger(code), index);
         entity.setFeeRuleId(bo.getFeeRuleId());
+        entity.setShippingTemplateId(bo.getShippingTemplateId());
+        entity.setShippingTemplateCode(bo.getShippingTemplateCode());
+        entity.setShippingTemplateName(bo.getShippingTemplateName());
+        entity.setShippingTemplateRuleId(bo.getShippingTemplateRuleId());
         entity.setFeeAmount(bo.getFeeAmount());
+        entity.setMinAreaSqft(bo.getMinAreaSqft());
+        entity.setMaxAreaSqft(bo.getMaxAreaSqft());
         entity.setFormulaText(bo.getFormulaText());
         entity.setRemark(bo.getRemark());
+        return entity;
+    }
+
+    public ProductPriceFeeRule fromTemplateRule(ProductShippingTemplate template, ProductShippingTemplateRule rule,
+                                                ProductPriceSetting setting, int index) {
+        String code = normalizeCode(rule.getFeeCode());
+        ProductPriceFeeRule entity = defaultRule(setting, code, defaultName(code), defaultTrigger(code), index);
+        entity.setShippingTemplateId(template.getShippingTemplateId());
+        entity.setShippingTemplateCode(template.getTemplateCode());
+        entity.setShippingTemplateName(template.getTemplateName());
+        entity.setShippingTemplateRuleId(rule.getShippingTemplateRuleId());
+        entity.setMinAreaSqft(rule.getMinAreaSqft());
+        entity.setMaxAreaSqft(rule.getMaxAreaSqft());
+        entity.setFormulaText(rule.getFormulaText());
+        entity.setRemark(rule.getRemark());
         return entity;
     }
 
@@ -58,6 +81,12 @@ public class ProductPriceShippingRuleFactory {
         vo.setTriggerCondition(entity.getTriggerCondition());
         vo.setFeeMode(entity.getFeeMode());
         vo.setFeeAmount(entity.getFeeAmount());
+        vo.setShippingTemplateId(entity.getShippingTemplateId());
+        vo.setShippingTemplateCode(entity.getShippingTemplateCode());
+        vo.setShippingTemplateName(entity.getShippingTemplateName());
+        vo.setShippingTemplateRuleId(entity.getShippingTemplateRuleId());
+        vo.setMinAreaSqft(entity.getMinAreaSqft());
+        vo.setMaxAreaSqft(entity.getMaxAreaSqft());
         vo.setFormulaText(entity.getFormulaText());
         vo.setStatus(entity.getStatus());
         vo.setSortOrder(entity.getSortOrder());
