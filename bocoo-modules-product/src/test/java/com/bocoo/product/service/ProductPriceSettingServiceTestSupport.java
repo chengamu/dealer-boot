@@ -4,27 +4,19 @@ import com.bocoo.product.domain.bo.ProductPriceFabricRuleBo;
 import com.bocoo.product.domain.entity.ProductFormulaVersion;
 import com.bocoo.product.domain.entity.ProductPriceFabric;
 import com.bocoo.product.domain.entity.ProductPriceFabricRule;
-import com.bocoo.product.domain.entity.ProductPriceFeeRule;
 import com.bocoo.product.domain.entity.ProductPriceSetting;
 import com.bocoo.product.domain.entity.ProductSaleProduct;
-import com.bocoo.product.domain.entity.ProductShippingTemplate;
-import com.bocoo.product.domain.entity.ProductShippingTemplateRule;
 import com.bocoo.product.mapper.ProductFormulaVersionMapper;
 import com.bocoo.product.mapper.ProductPriceFabricMapper;
 import com.bocoo.product.mapper.ProductPriceFabricRuleMapper;
-import com.bocoo.product.mapper.ProductPriceFeeRuleMapper;
 import com.bocoo.product.mapper.ProductPriceSettingMapper;
 import com.bocoo.product.mapper.ProductSaleProductMapper;
-import com.bocoo.product.mapper.ProductShippingTemplateMapper;
-import com.bocoo.product.mapper.ProductShippingTemplateRuleMapper;
 import com.bocoo.product.service.impl.ProductPriceFabricCandidateFactory;
 import com.bocoo.product.service.impl.ProductPriceFabricRuleGuard;
 import com.bocoo.product.service.impl.ProductPriceFabricSyncService;
 import com.bocoo.product.service.impl.ProductPriceFabricVoAssembler;
 import com.bocoo.product.service.impl.ProductPriceSettingServiceImpl;
 import com.bocoo.product.service.impl.ProductPriceSettingValidator;
-import com.bocoo.product.service.impl.ProductPriceShippingRuleFactory;
-import com.bocoo.product.service.impl.ProductPriceShippingTemplateImporter;
 import com.bocoo.product.service.impl.ProductPriceSnapshotReader;
 import org.junit.jupiter.api.BeforeEach;
 import org.mockito.Mock;
@@ -43,13 +35,7 @@ abstract class ProductPriceSettingServiceTestSupport {
     @Mock
     protected ProductPriceFabricRuleMapper fabricRuleMapper;
     @Mock
-    protected ProductPriceFeeRuleMapper feeRuleMapper;
-    @Mock
     protected ProductFormulaVersionMapper versionMapper;
-    @Mock
-    protected ProductShippingTemplateMapper shippingTemplateMapper;
-    @Mock
-    protected ProductShippingTemplateRuleMapper shippingTemplateRuleMapper;
     @Mock
     protected ProductChangeLogService changeLogService;
 
@@ -61,24 +47,18 @@ abstract class ProductPriceSettingServiceTestSupport {
         ProductPriceSnapshotReader snapshotReader = new ProductPriceSnapshotReader();
         ProductPriceFabricSyncService fabricSyncService =
             new ProductPriceFabricSyncService(fabricMapper, fabricRuleMapper, settingMapper, snapshotReader);
-        ProductPriceShippingRuleFactory shippingRuleFactory = new ProductPriceShippingRuleFactory();
-        ProductPriceShippingTemplateImporter shippingTemplateImporter =
-            new ProductPriceShippingTemplateImporter(shippingTemplateMapper, shippingTemplateRuleMapper, feeRuleMapper, shippingRuleFactory);
         priceSettingService = new ProductPriceSettingServiceImpl(
             saleProductMapper,
             settingMapper,
             fabricMapper,
             fabricRuleMapper,
-            feeRuleMapper,
             versionMapper,
             new ProductPriceSettingValidator(snapshotReader),
             snapshotReader,
             new ProductPriceFabricCandidateFactory(snapshotReader),
             fabricSyncService,
             new ProductPriceFabricRuleGuard(),
-            shippingRuleFactory,
             new ProductPriceFabricVoAssembler(),
-            shippingTemplateImporter,
             changeLogService
         );
     }
@@ -166,40 +146,4 @@ abstract class ProductPriceSettingServiceTestSupport {
         return rule;
     }
 
-    protected List<ProductPriceFeeRule> shippingRules() {
-        ProductPriceFeeRule manual = feeRule("MANUAL", "不带电邮费", "18 + MAX(width - 60, 0) * 0.35");
-        ProductPriceFeeRule motorized = feeRule("MOTORIZED", "带电邮费", "25 + MAX(width - 60, 0) * 0.45");
-        return List.of(manual, motorized);
-    }
-
-    protected ProductShippingTemplate shippingTemplate() {
-        ProductShippingTemplate template = new ProductShippingTemplate();
-        template.setShippingTemplateId(9301L);
-        template.setTemplateCode("SHIP-US");
-        template.setTemplateName("美国邮费模板");
-        template.setCurrencyCode("USD");
-        template.setStatus("ENABLED");
-        template.setDelFlag("0");
-        return template;
-    }
-
-    protected ProductShippingTemplateRule shippingTemplateRule(String code, String formula) {
-        ProductShippingTemplateRule rule = new ProductShippingTemplateRule();
-        rule.setShippingTemplateRuleId("MANUAL".equals(code) ? 9311L : 9312L);
-        rule.setFeeCode(code);
-        rule.setFeeName("MANUAL".equals(code) ? "不带电邮费" : "带电邮费");
-        rule.setMinAreaSqft(BigDecimal.ZERO);
-        rule.setFormulaText(formula);
-        return rule;
-    }
-
-    private ProductPriceFeeRule feeRule(String code, String name, String formula) {
-        ProductPriceFeeRule rule = new ProductPriceFeeRule();
-        rule.setFeeCode(code);
-        rule.setFeeName(name);
-        rule.setFeeMode("FORMULA");
-        rule.setFormulaText(formula);
-        rule.setStatus("ENABLED");
-        return rule;
-    }
 }

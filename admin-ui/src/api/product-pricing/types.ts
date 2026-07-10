@@ -123,31 +123,6 @@ export interface PriceOptionCombination {
   optionCombinationName?: string
 }
 
-export interface ExtraFeeRule {
-  feeRuleId?: number
-  tenantId?: number
-  priceSettingId?: number
-  saleProductId?: string | number
-  formulaVersionId?: number
-  shippingTemplateId?: string | number
-  shippingTemplateCode?: string
-  shippingTemplateName?: string
-  shippingTemplateRuleId?: string | number
-  feeCode?: string
-  feeName?: string
-  feeCategory?: string
-  triggerCondition?: string
-  feeMode?: string
-  feeAmount?: number
-  minAreaSqft?: number
-  maxAreaSqft?: number
-  formulaText?: string
-  status?: string
-  sortOrder?: number
-  delFlag?: string
-  remark?: string
-}
-
 export interface PriceValidationIssue {
   level: 'PASS' | 'WARNING' | 'ERROR'
   sourceType?: string
@@ -163,7 +138,6 @@ export interface PriceSetupVO {
   fabricPriceColumns?: PriceOptionCombination[]
   priceFabrics?: PriceFabricVO[]
   fabricRules?: FabricPriceRule[]
-  feeRules?: ExtraFeeRule[]
   issues?: PriceValidationIssue[]
   formulaMaterials?: ProductFormulaMaterialVO[]
   formulaOptions?: ProductFormulaOptionVO[]
@@ -180,7 +154,7 @@ export interface ShippingTemplateRuleVO {
   feeName?: string
   minAreaSqft?: number
   maxAreaSqft?: number
-  formulaText?: string
+  feeAmount?: number
   sortOrder?: number
   delFlag?: string
   remark?: string

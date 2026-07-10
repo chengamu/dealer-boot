@@ -21,7 +21,7 @@ public class ProductShippingTemplateRuleVo implements Serializable {
     private String feeName;
     private BigDecimal minAreaSqft;
     private BigDecimal maxAreaSqft;
-    private String formulaText;
+    private BigDecimal feeAmount;
     private Integer sortOrder;
     private String delFlag;
     private String remark;

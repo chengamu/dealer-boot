@@ -16,7 +16,6 @@
     <template v-if="currentProduct.saleProductId">
       <PriceSetupOverview
         :fabric-rule-count="priceFabrics.length"
-        :fee-rule-count="feeRows.length"
         :issue-count="issues.length"
         :material-group-counts="setup.materialGroupCounts"
       />
@@ -37,15 +36,7 @@
         @batch="openBatchPrice"
         @open-rules="openFabricRules"
       />
-      <div class="price-setting-page__lower">
-        <ShippingFormulaPanel
-          :rows="feeRows"
-          :templates="shippingTemplates"
-          :editable="editable"
-          @import="importShippingTemplate"
-        />
-        <PriceIssuePanel :issues="issues" />
-      </div>
+      <PriceIssuePanel :issues="issues" />
     </template>
     <FabricPriceBatchDialog
       v-model="batchOpen"
@@ -73,22 +64,19 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 import type {
-  ExtraFeeRule,
   FabricPriceRule,
   PriceFabricVO,
   PriceSetupVO,
   PriceValidationIssue,
-  SaleProductVO,
-  ShippingTemplateVO
+  SaleProductVO
 } from '@/api/product-pricing/types'
-import { productPriceApi, saleProductApi, shippingTemplateApi } from '@/api/product-pricing/pricing'
+import { productPriceApi, saleProductApi } from '@/api/product-pricing/pricing'
 import { PRODUCT_STATUS_ENABLED } from '@/constants/productStatus'
 import PriceSetupHeader from './components/PriceSetupHeader.vue'
 import PriceSetupOverview from './components/PriceSetupOverview.vue'
 import FabricPriceTable from './components/FabricPriceTable.vue'
 import FabricPriceBatchDialog from './components/FabricPriceBatchDialog.vue'
 import FabricPriceRuleDrawer from './components/FabricPriceRuleDrawer.vue'
-import ShippingFormulaPanel from './components/ShippingFormulaPanel.vue'
 import PriceIssuePanel from './components/PriceIssuePanel.vue'
 
 const route = useRoute()
@@ -101,9 +89,7 @@ const selectedProductId = ref(toIdString(route.query.saleProductId))
 const setup = ref<PriceSetupVO>({})
 const priceFabrics = ref<PriceFabricVO[]>([])
 const fabricRules = ref<FabricPriceRule[]>([])
-const feeRows = ref<ExtraFeeRule[]>([])
 const issues = ref<PriceValidationIssue[]>([])
-const shippingTemplates = ref<ShippingTemplateVO[]>([])
 const loading = ref(false)
 const validating = ref(false)
 const batchOpen = ref(false)
@@ -116,7 +102,7 @@ const editable = computed(() => currentProduct.value.status !== PRODUCT_STATUS_E
 const activeFabricRules = computed(() => fabricRules.value.filter(row => row.priceFabricId === activeFabric.value?.priceFabricId))
 
 onMounted(async () => {
-  await Promise.all([loadProducts(), loadShippingTemplates()])
+  await loadProducts()
   if (!selectedProductId.value && products.value[0]?.saleProductId) selectedProductId.value = toIdString(products.value[0].saleProductId)
   await reload()
 })
@@ -124,11 +110,6 @@ onMounted(async () => {
 async function loadProducts() {
   const response = await saleProductApi.options({ pageNum: 1, pageSize: 500 })
   products.value = Array.isArray(response) ? response : response.data || []
-}
-
-async function loadShippingTemplates() {
-  const response = await shippingTemplateApi.options({ pageNum: 1, pageSize: 500, status: 'ENABLED' })
-  shippingTemplates.value = Array.isArray(response) ? response : response.data || []
 }
 
 async function reload() {
@@ -139,7 +120,6 @@ async function reload() {
     setup.value = response.data || {}
     priceFabrics.value = (setup.value.priceFabrics || []).map((row) => ({ ...row }))
     fabricRules.value = (setup.value.fabricRules || []).map((row) => ({ ...row }))
-    feeRows.value = (setup.value.feeRules || []).map((row) => ({ ...row }))
     issues.value = setup.value.issues || []
   } finally {
     loading.value = false
@@ -194,14 +174,6 @@ async function saveFabricRules(priceFabricId?: number, rows?: FabricPriceRule[],
   }
 }
 
-async function importShippingTemplate(shippingTemplateId: string) {
-  if (!selectedProductId.value) return
-  await ElMessageBox.confirm(t('productCenter.pricing.confirmImportShippingTemplate'), t('common.prompt'), { type: 'warning' })
-  await productPriceApi.importShippingTemplate(selectedProductId.value, shippingTemplateId)
-  ElMessage.success(t('common.success'))
-  await reload()
-}
-
 async function validatePrice() {
   if (!selectedProductId.value) return
   validating.value = true
@@ -228,15 +200,4 @@ function toIdString(value: unknown) {
   background: #f3f6fb;
 }
 
-.price-setting-page__lower {
-  display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(360px, 0.65fr);
-  gap: 12px;
-}
-
-@media (max-width: 1280px) {
-  .price-setting-page__lower {
-    grid-template-columns: 1fr;
-  }
-}
 </style>

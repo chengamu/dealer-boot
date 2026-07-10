@@ -3,8 +3,11 @@ package com.bocoo.product.service;
 import com.bocoo.common.mybatis.core.page.PageQuery;
 import com.bocoo.common.mybatis.core.page.TableDataInfo;
 import com.bocoo.product.domain.bo.ProductShippingTemplateBo;
+import com.bocoo.product.domain.vo.ProductShippingTemplateRuleImportVo;
+import com.bocoo.product.domain.vo.ProductShippingTemplateRuleVo;
 import com.bocoo.product.domain.vo.ProductShippingTemplateVo;
 
+import java.io.InputStream;
 import java.util.List;
 
 public interface ProductShippingTemplateService {
@@ -14,8 +17,6 @@ public interface ProductShippingTemplateService {
 
     ProductShippingTemplateVo queryById(Long id);
 
-    ProductShippingTemplateVo queryDefaultEnabled();
-
     Boolean insertByBo(ProductShippingTemplateBo bo);
 
     Boolean updateByBo(ProductShippingTemplateBo bo);
@@ -23,4 +24,8 @@ public interface ProductShippingTemplateService {
     Boolean deleteWithValidByIds(Long[] ids);
 
     Boolean updateStatus(Long id, String status);
+
+    List<ProductShippingTemplateRuleVo> importRules(InputStream inputStream);
+
+    List<ProductShippingTemplateRuleImportVo> importTemplateRows();
 }

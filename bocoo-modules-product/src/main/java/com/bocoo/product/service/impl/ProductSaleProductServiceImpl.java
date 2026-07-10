@@ -11,7 +11,6 @@ import com.bocoo.product.domain.entity.ProductFormula;
 import com.bocoo.product.domain.entity.ProductFormulaVersion;
 import com.bocoo.product.domain.entity.ProductPriceFabric;
 import com.bocoo.product.domain.entity.ProductPriceFabricRule;
-import com.bocoo.product.domain.entity.ProductPriceFeeRule;
 import com.bocoo.product.domain.entity.ProductPriceSetting;
 import com.bocoo.product.domain.entity.ProductSaleProduct;
 import com.bocoo.product.domain.vo.ProductSaleProductVo;
@@ -20,7 +19,6 @@ import com.bocoo.product.mapper.ProductFormulaMapper;
 import com.bocoo.product.mapper.ProductFormulaVersionMapper;
 import com.bocoo.product.mapper.ProductPriceFabricMapper;
 import com.bocoo.product.mapper.ProductPriceFabricRuleMapper;
-import com.bocoo.product.mapper.ProductPriceFeeRuleMapper;
 import com.bocoo.product.mapper.ProductPriceSettingMapper;
 import com.bocoo.product.mapper.ProductSaleProductMapper;
 import com.bocoo.product.service.ProductChangeLogService;
@@ -47,7 +45,6 @@ public class ProductSaleProductServiceImpl extends ProductServiceSupport impleme
     private final ProductPriceSettingMapper settingMapper;
     private final ProductPriceFabricMapper fabricMapper;
     private final ProductPriceFabricRuleMapper fabricRuleMapper;
-    private final ProductPriceFeeRuleMapper feeRuleMapper;
     private final ProductFormulaMapper formulaMapper;
     private final ProductFormulaVersionMapper versionMapper;
     private final ProductChangeLogService changeLogService;
@@ -153,7 +150,6 @@ public class ProductSaleProductServiceImpl extends ProductServiceSupport impleme
         if (!settingIds.isEmpty()) {
             count += fabricMapper.selectCount(activeQuery(ProductPriceFabric.class).in("price_setting_id", settingIds));
             count += fabricRuleMapper.selectCount(activeQuery(ProductPriceFabricRule.class).in("price_setting_id", settingIds));
-            count += feeRuleMapper.selectCount(activeQuery(ProductPriceFeeRule.class).in("price_setting_id", settingIds));
         }
         return referenceResult(count, "product.saleProduct.priceRuleReferenced", "Price rules: " + count);
     }

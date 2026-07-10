@@ -11,7 +11,6 @@ import com.bocoo.product.mapper.ProductFormulaMapper;
 import com.bocoo.product.mapper.ProductFormulaVersionMapper;
 import com.bocoo.product.mapper.ProductPriceFabricMapper;
 import com.bocoo.product.mapper.ProductPriceFabricRuleMapper;
-import com.bocoo.product.mapper.ProductPriceFeeRuleMapper;
 import com.bocoo.product.mapper.ProductPriceSettingMapper;
 import com.bocoo.product.mapper.ProductSaleProductMapper;
 import com.bocoo.product.service.impl.ProductSaleProductServiceImpl;
@@ -46,8 +45,6 @@ class ProductSaleProductServiceTest {
     @Mock
     private ProductPriceFabricRuleMapper fabricRuleMapper;
     @Mock
-    private ProductPriceFeeRuleMapper feeRuleMapper;
-    @Mock
     private ProductFormulaMapper formulaMapper;
     @Mock
     private ProductFormulaVersionMapper versionMapper;
@@ -64,7 +61,6 @@ class ProductSaleProductServiceTest {
             settingMapper,
             fabricMapper,
             fabricRuleMapper,
-            feeRuleMapper,
             formulaMapper,
             versionMapper,
             changeLogService
@@ -123,7 +119,6 @@ class ProductSaleProductServiceTest {
         when(saleProductMapper.selectBatchIds(List.of(9001L))).thenReturn(List.of(product));
         when(settingMapper.selectList(any())).thenReturn(List.of(setting));
         when(fabricRuleMapper.selectCount(any())).thenReturn(1L);
-        when(feeRuleMapper.selectCount(any())).thenReturn(0L);
 
         assertThatThrownBy(() -> saleProductService.deleteWithValidByIds(new Long[]{9001L}))
             .isInstanceOf(ServiceException.class);
@@ -155,7 +150,6 @@ class ProductSaleProductServiceTest {
             setting != null && Long.valueOf(7002L).equals(setting.getFormulaVersionId())));
         verify(fabricMapper, never()).delete(any());
         verify(fabricRuleMapper, never()).delete(any());
-        verify(feeRuleMapper, never()).delete(any());
     }
 
     private ProductSaleProduct saleProduct(String priceStatus, String status) {

@@ -4,17 +4,18 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.bocoo.common.core.context.TenantContextHolder;
 import com.bocoo.common.core.exception.ServiceException;
+import com.bocoo.common.core.uuid.Seq;
 import com.bocoo.common.core.utils.MapstructUtils;
 import com.bocoo.common.core.utils.StringUtils;
 import com.bocoo.common.mybatis.core.page.PageQuery;
 import com.bocoo.common.mybatis.core.page.TableDataInfo;
 import com.bocoo.product.domain.bo.ProductShippingTemplateBo;
 import com.bocoo.product.domain.bo.ProductShippingTemplateRuleBo;
-import com.bocoo.product.domain.entity.ProductPriceFeeRule;
 import com.bocoo.product.domain.entity.ProductShippingTemplate;
 import com.bocoo.product.domain.entity.ProductShippingTemplateRule;
+import com.bocoo.product.domain.vo.ProductShippingTemplateRuleImportVo;
+import com.bocoo.product.domain.vo.ProductShippingTemplateRuleVo;
 import com.bocoo.product.domain.vo.ProductShippingTemplateVo;
-import com.bocoo.product.mapper.ProductPriceFeeRuleMapper;
 import com.bocoo.product.mapper.ProductShippingTemplateMapper;
 import com.bocoo.product.mapper.ProductShippingTemplateRuleMapper;
 import com.bocoo.product.service.ProductEntityDefaults;
@@ -23,12 +24,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.util.Comparator;
+import java.io.InputStream;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -37,7 +37,8 @@ public class ProductShippingTemplateServiceImpl extends ProductServiceSupport im
 
     private final ProductShippingTemplateMapper templateMapper;
     private final ProductShippingTemplateRuleMapper ruleMapper;
-    private final ProductPriceFeeRuleMapper feeRuleMapper;
+    private final ProductShippingTemplateRuleValidator ruleValidator;
+    private final ProductShippingTemplateRuleImporter ruleImporter;
 
     @Override
     public TableDataInfo<ProductShippingTemplateVo> queryPageList(ProductShippingTemplateBo bo, PageQuery pageQuery) {
@@ -64,18 +65,11 @@ public class ProductShippingTemplateServiceImpl extends ProductServiceSupport im
     }
 
     @Override
-    public ProductShippingTemplateVo queryDefaultEnabled() {
-        ProductShippingTemplate template = templateMapper.selectOne(activeQuery(ProductShippingTemplate.class)
-            .eq("status", STATUS_ENABLED).eq("default_flag", true).orderByAsc("sort_order").last("limit 1"));
-        return template == null ? null : queryById(template.getShippingTemplateId());
-    }
-
-    @Override
     @Transactional(rollbackFor = Exception.class)
     public Boolean insertByBo(ProductShippingTemplateBo bo) {
-        normalize(bo);
+        normalize(bo, true);
         validateCodeUnique(bo);
-        validateRules(bo.getRules());
+        ruleValidator.validate(bo.getRules());
         ProductShippingTemplate entity = MapstructUtils.convert(bo, ProductShippingTemplate.class);
         if (entity == null) {
             return Boolean.FALSE;
@@ -90,13 +84,19 @@ public class ProductShippingTemplateServiceImpl extends ProductServiceSupport im
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Boolean updateByBo(ProductShippingTemplateBo bo) {
-        normalize(bo);
-        validateCodeUnique(bo);
-        validateRules(bo.getRules());
         ProductShippingTemplate current = templateMapper.selectById(bo.getShippingTemplateId());
         if (current == null) {
             throw ServiceException.ofMessageKey("product.shippingTemplate.notFound");
         }
+        if (STATUS_ENABLED.equals(current.getStatus())) {
+            throw ServiceException.ofMessageKey("product.shippingTemplate.enabledEditDenied");
+        }
+        bo.setTemplateCode(current.getTemplateCode());
+        bo.setDefaultFlag(current.getDefaultFlag());
+        bo.setSortOrder(current.getSortOrder());
+        normalize(bo, false);
+        validateCodeUnique(bo);
+        ruleValidator.validate(bo.getRules());
         ProductShippingTemplate entity = MapstructUtils.convert(bo, ProductShippingTemplate.class);
         if (entity == null) {
             return Boolean.FALSE;
@@ -111,15 +111,15 @@ public class ProductShippingTemplateServiceImpl extends ProductServiceSupport im
 
     @Override
     public Boolean deleteWithValidByIds(Long[] ids) {
-        for (Long id : ids) {
-            if (feeRuleMapper.selectCount(activeQuery(ProductPriceFeeRule.class).eq("shipping_template_id", id)) > 0) {
-                throw ServiceException.ofMessageKey("product.shippingTemplate.hasPriceReferences");
-            }
+        if (templateMapper.selectBatchIds(Arrays.asList(ids)).stream()
+            .anyMatch(row -> STATUS_ENABLED.equals(row.getStatus()))) {
+            throw ServiceException.ofMessageKey("product.shippingTemplate.enabledDeleteDenied");
         }
         return remove(templateMapper, ids);
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public Boolean updateStatus(Long id, String status) {
         String normalizedStatus = normalizeStatus(status);
         ProductShippingTemplateVo current = queryById(id);
@@ -127,11 +127,28 @@ public class ProductShippingTemplateServiceImpl extends ProductServiceSupport im
             throw ServiceException.ofMessageKey("product.shippingTemplate.notFound");
         }
         if (STATUS_ENABLED.equals(normalizedStatus)) {
-            validateRules(current.getRules().stream().map(this::toBo).toList());
+            validateLegacyRulesMigrated(id);
+            ruleValidator.validate(current.getRules().stream().map(this::toBo).toList());
+            templateMapper.update(null, new LambdaUpdateWrapper<ProductShippingTemplate>()
+                .eq(ProductShippingTemplate::getTenantId, current.getTenantId())
+                .eq(ProductShippingTemplate::getCurrencyCode, current.getCurrencyCode())
+                .eq(ProductShippingTemplate::getDelFlag, "0")
+                .eq(ProductShippingTemplate::getStatus, STATUS_ENABLED)
+                .ne(ProductShippingTemplate::getShippingTemplateId, id)
+                .set(ProductShippingTemplate::getStatus, STATUS_DISABLED));
         }
         return templateMapper.update(null, new LambdaUpdateWrapper<ProductShippingTemplate>()
             .eq(ProductShippingTemplate::getShippingTemplateId, id)
             .set(ProductShippingTemplate::getStatus, normalizedStatus)) > 0;
+    }
+
+    private void validateLegacyRulesMigrated(Long templateId) {
+        long legacyRuleCount = ruleMapper.selectCount(activeQuery(ProductShippingTemplateRule.class)
+            .eq("shipping_template_id", templateId)
+            .isNotNull("formula_text"));
+        if (legacyRuleCount > 0) {
+            throw ServiceException.ofMessageKey("product.shippingTemplate.legacyFormulaMigrationRequired");
+        }
     }
 
     private QueryWrapper<ProductShippingTemplate> buildQueryWrapper(ProductShippingTemplateBo bo) {
@@ -144,16 +161,36 @@ public class ProductShippingTemplateServiceImpl extends ProductServiceSupport im
         return q;
     }
 
-    private void normalize(ProductShippingTemplateBo bo) {
+    @Override
+    public List<ProductShippingTemplateRuleVo> importRules(InputStream inputStream) {
+        List<ProductShippingTemplateRuleVo> rules = ruleImporter.importRules(inputStream);
+        ruleValidator.validate(rules.stream().map(this::toBo).toList());
+        return rules;
+    }
+
+    @Override
+    public List<ProductShippingTemplateRuleImportVo> importTemplateRows() {
+        return ruleImporter.templateRows();
+    }
+
+    private void normalize(ProductShippingTemplateBo bo, boolean insert) {
         if (bo == null) {
             throw ServiceException.ofMessageKey("product.shippingTemplate.notFound");
         }
         bo.setTemplateCode(trimToNull(bo.getTemplateCode()));
+        if (insert) {
+            bo.setTemplateCode("SHIP-" + Seq.getId());
+        }
         bo.setTemplateName(trimToNull(bo.getTemplateName()));
-        bo.setCurrencyCode(StringUtils.blankToDefault(trimToNull(bo.getCurrencyCode()), "USD"));
-        bo.setStatus(normalizeStatus(StringUtils.blankToDefault(trimToNull(bo.getStatus()), STATUS_ENABLED)));
+        bo.setCurrencyCode(StringUtils.blankToDefault(trimToNull(bo.getCurrencyCode()), "USD")
+            .toUpperCase(Locale.ROOT));
+        bo.setStatus(insert
+            ? STATUS_DISABLED
+            : normalizeStatus(StringUtils.blankToDefault(trimToNull(bo.getStatus()), STATUS_DISABLED)));
+        bo.setDefaultFlag(Boolean.TRUE.equals(bo.getDefaultFlag()));
+        bo.setSortOrder(bo.getSortOrder() == null ? 0 : bo.getSortOrder());
         bo.setTenantId(TenantContextHolder.getRequiredTenantId());
-        if (StringUtils.isBlank(bo.getTemplateCode())) {
+        if (!insert && StringUtils.isBlank(bo.getTemplateCode())) {
             throw ServiceException.ofMessageKey("product.shippingTemplate.codeRequired");
         }
         if (StringUtils.isBlank(bo.getTemplateName())) {
@@ -167,50 +204,6 @@ public class ProductShippingTemplateServiceImpl extends ProductServiceSupport im
             .ne(bo.getShippingTemplateId() != null, "shipping_template_id", bo.getShippingTemplateId()));
         if (count > 0) {
             throw ServiceException.ofMessageKey("product.shippingTemplate.codeExists");
-        }
-    }
-
-    private void validateRules(List<ProductShippingTemplateRuleBo> rules) {
-        List<ProductShippingTemplateRuleBo> rows = rules == null ? List.of() : rules;
-        Set<String> supportedCodes = Set.of(
-            ProductPriceShippingRuleFactory.CODE_MANUAL,
-            ProductPriceShippingRuleFactory.CODE_MOTORIZED
-        );
-        if (rows.stream().anyMatch(rule -> !supportedCodes.contains(rule.getFeeCode()))) {
-            throw ServiceException.ofMessageKey("product.shippingTemplate.scenarioInvalid");
-        }
-        for (String code : List.of(ProductPriceShippingRuleFactory.CODE_MANUAL, ProductPriceShippingRuleFactory.CODE_MOTORIZED)) {
-            if (rows.stream().noneMatch(rule -> code.equals(rule.getFeeCode()))) {
-                throw ServiceException.ofMessageKey("product.shippingTemplate.ruleRequired");
-            }
-            validateRanges(rows.stream().filter(rule -> code.equals(rule.getFeeCode())).toList());
-        }
-        for (ProductShippingTemplateRuleBo rule : rows) {
-            if (!ProductPriceExpressionValidator.isShippingFormulaValid(rule.getFormulaText())) {
-                throw ServiceException.ofMessageKey("product.shippingTemplate.formulaInvalid");
-            }
-        }
-    }
-
-    private void validateRanges(List<ProductShippingTemplateRuleBo> rules) {
-        BigDecimal previousMax = null;
-        boolean unbounded = false;
-        for (ProductShippingTemplateRuleBo rule : rules.stream()
-            .sorted(Comparator.comparing(row -> row.getMinAreaSqft() == null ? BigDecimal.ZERO : row.getMinAreaSqft()))
-            .toList()) {
-            BigDecimal min = rule.getMinAreaSqft() == null ? BigDecimal.ZERO : rule.getMinAreaSqft();
-            BigDecimal max = rule.getMaxAreaSqft();
-            if (max != null && max.compareTo(min) <= 0) {
-                throw ServiceException.ofMessageKey("product.shippingTemplate.areaRangeInvalid");
-            }
-            if (unbounded || previousMax != null && min.compareTo(previousMax) < 0) {
-                throw ServiceException.ofMessageKey("product.shippingTemplate.areaRangeOverlap");
-            }
-            if (max != null) {
-                previousMax = max;
-            } else {
-                unbounded = true;
-            }
         }
     }
 
@@ -256,12 +249,12 @@ public class ProductShippingTemplateServiceImpl extends ProductServiceSupport im
         bo.setFeeCode(vo.getFeeCode());
         bo.setMinAreaSqft(vo.getMinAreaSqft());
         bo.setMaxAreaSqft(vo.getMaxAreaSqft());
-        bo.setFormulaText(vo.getFormulaText());
+        bo.setFeeAmount(vo.getFeeAmount());
         return bo;
     }
 
     private String defaultFeeName(String code) {
-        return ProductPriceShippingRuleFactory.CODE_MOTORIZED.equals(code) ? "带电邮费" : "不带电邮费";
+        return ProductShippingRuleSupport.feeName(code);
     }
 
     private String trimToNull(String value) {

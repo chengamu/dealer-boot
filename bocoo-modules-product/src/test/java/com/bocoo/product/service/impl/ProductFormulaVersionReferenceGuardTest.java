@@ -3,7 +3,6 @@ package com.bocoo.product.service.impl;
 import com.bocoo.common.core.exception.ServiceException;
 import com.bocoo.product.mapper.ProductPriceFabricMapper;
 import com.bocoo.product.mapper.ProductPriceFabricRuleMapper;
-import com.bocoo.product.mapper.ProductPriceFeeRuleMapper;
 import com.bocoo.product.mapper.ProductPriceSettingMapper;
 import com.bocoo.product.mapper.ProductSaleProductMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,8 +29,6 @@ class ProductFormulaVersionReferenceGuardTest {
     private ProductPriceFabricMapper priceFabricMapper;
     @Mock
     private ProductPriceFabricRuleMapper priceFabricRuleMapper;
-    @Mock
-    private ProductPriceFeeRuleMapper priceFeeRuleMapper;
 
     private ProductFormulaVersionReferenceGuard guard;
 
@@ -41,8 +38,7 @@ class ProductFormulaVersionReferenceGuardTest {
             saleProductMapper,
             priceSettingMapper,
             priceFabricMapper,
-            priceFabricRuleMapper,
-            priceFeeRuleMapper
+            priceFabricRuleMapper
         );
     }
 
@@ -52,8 +48,6 @@ class ProductFormulaVersionReferenceGuardTest {
         when(priceSettingMapper.selectCount(any())).thenReturn(0L);
         when(priceFabricMapper.selectCount(any())).thenReturn(0L);
         when(priceFabricRuleMapper.selectCount(any())).thenReturn(0L);
-        when(priceFeeRuleMapper.selectCount(any())).thenReturn(0L);
-
         assertThatCode(() -> guard.assertNoBusinessReference(9001L))
             .doesNotThrowAnyException();
     }

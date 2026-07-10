@@ -12,11 +12,6 @@
         <strong>{{ fabricRuleCount }}</strong>
       </div>
       <div class="price-overview__card">
-        <span class="price-overview__icon price-overview__icon--fee"><Van /></span>
-        <span>{{ t('productCenter.pricing.extraFeeRules') }}</span>
-        <strong>{{ feeRuleCount }}</strong>
-      </div>
-      <div class="price-overview__card">
         <span class="price-overview__icon price-overview__icon--warning"><WarningFilled /></span>
         <span>{{ t('productCenter.pricing.exceptions') }}</span>
         <strong class="price-overview__warning">{{ issueCount }}</strong>
@@ -27,7 +22,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Money, Van, WarningFilled } from '@element-plus/icons-vue'
+import { Money, WarningFilled } from '@element-plus/icons-vue'
 import fabricIcon from '@/assets/product-formula/icons/group-fabric.png'
 import aluminumIcon from '@/assets/product-formula/icons/group-aluminum.png'
 import systemIcon from '@/assets/product-formula/icons/group-system.png'
@@ -38,7 +33,6 @@ import { useLocaleStore } from '@/stores/locale'
 
 const props = defineProps<{
   fabricRuleCount: number
-  feeRuleCount: number
   issueCount: number
   materialGroupCounts?: Record<string, number>
 }>()
@@ -121,11 +115,6 @@ function count(code: string) {
   color: #111827;
   font-size: 20px;
   line-height: 1;
-}
-
-.price-overview__icon--fee {
-  color: #22c55e;
-  background: #f0fdf4;
 }
 
 .price-overview__icon--warning,

@@ -4,7 +4,6 @@ import com.bocoo.common.core.utils.StringUtils;
 import com.bocoo.product.domain.entity.ProductFormulaVersion;
 import com.bocoo.product.domain.entity.ProductPriceFabric;
 import com.bocoo.product.domain.entity.ProductPriceFabricRule;
-import com.bocoo.product.domain.entity.ProductPriceFeeRule;
 import com.bocoo.product.domain.vo.ProductPriceOptionCombinationVo;
 import com.bocoo.product.domain.vo.ProductPriceValidationIssueVo;
 import lombok.RequiredArgsConstructor;
@@ -25,18 +24,13 @@ public class ProductPriceSettingValidator {
 
     public List<ProductPriceValidationIssueVo> validate(ProductFormulaVersion version,
                                                         List<ProductPriceFabric> fabrics,
-                                                        List<ProductPriceFabricRule> fabricRules,
-                                                        List<ProductPriceFeeRule> feeRules) {
+                                                        List<ProductPriceFabricRule> fabricRules) {
         List<ProductPriceValidationIssueVo> issues = new ArrayList<>();
         if (version == null || !"EFFECTIVE".equals(version.getVersionStatus())) {
             issues.add(issue("ERROR", "FORMULA_VERSION", null, "product.priceSetting.formulaVersionRequired"));
         }
         List<Map<String, Object>> fabricMaterials = snapshotReader.fabricMaterials(version);
         validateFabrics(fabricMaterials, fabrics, fabricRules, issues);
-        for (ProductPriceFeeRule rule : feeRules) {
-            validateFeeRule(rule, issues);
-        }
-        validateShippingRules(feeRules, issues);
         return issues;
     }
 
@@ -95,21 +89,6 @@ public class ProductPriceSettingValidator {
         }
     }
 
-    private void validateFeeRule(ProductPriceFeeRule rule, List<ProductPriceValidationIssueVo> issues) {
-        if (StringUtils.isBlank(rule.getFeeName())) {
-            issues.add(issue("ERROR", "FEE_RULE", rule.getFeeCode(), "product.priceSetting.feeNameRequired"));
-        }
-        if (StringUtils.isBlank(rule.getFormulaText())) {
-            issues.add(issue("ERROR", "FEE_RULE", rule.getFeeCode(), "product.priceSetting.shippingFormulaRequired"));
-        } else if (!ProductPriceExpressionValidator.isShippingFormulaValid(rule.getFormulaText())) {
-            issues.add(issue("ERROR", "FEE_RULE", rule.getFeeCode(), "product.priceSetting.priceFormulaInvalid"));
-        }
-        if (rule.getMinAreaSqft() != null && rule.getMaxAreaSqft() != null
-            && rule.getMaxAreaSqft().compareTo(rule.getMinAreaSqft()) <= 0) {
-            issues.add(issue("ERROR", "FEE_RULE", rule.getFeeCode(), "product.shippingTemplate.areaRangeInvalid"));
-        }
-    }
-
     public List<Map<String, Object>> fabricMaterials(ProductFormulaVersion version) {
         return snapshotReader.fabricMaterials(version);
     }
@@ -120,15 +99,6 @@ public class ProductPriceSettingValidator {
 
     public List<ProductPriceOptionCombinationVo> optionCombinations(ProductFormulaVersion version) {
         return snapshotReader.optionCombinations(version);
-    }
-
-    private void validateShippingRules(List<ProductPriceFeeRule> feeRules, List<ProductPriceValidationIssueVo> issues) {
-        Set<String> codes = feeRules.stream().map(ProductPriceFeeRule::getFeeCode).collect(Collectors.toSet());
-        for (String code : List.of("MANUAL", "MOTORIZED")) {
-            if (!codes.contains(code)) {
-                issues.add(issue("ERROR", "SHIPPING", code, "product.priceSetting.shippingRuleRequired"));
-            }
-        }
     }
 
     private boolean isNotPositive(BigDecimal value) {

@@ -6,7 +6,6 @@ import com.bocoo.common.log.annotation.Log;
 import com.bocoo.common.log.enums.BusinessType;
 import com.bocoo.common.web.core.BaseController;
 import com.bocoo.product.domain.bo.ProductPriceFabricRuleBo;
-import com.bocoo.product.domain.bo.ProductPriceFeeRuleBo;
 import com.bocoo.product.domain.vo.ProductPriceSetupVo;
 import com.bocoo.product.domain.vo.ProductPriceValidationIssueVo;
 import com.bocoo.product.service.ProductPriceSettingService;
@@ -54,22 +53,6 @@ public class ProductPriceSettingController extends BaseController {
     public R<Void> saveFabricRules(@PathVariable Long saleProductId, @PathVariable Long priceFabricId,
                                    @RequestBody List<ProductPriceFabricRuleBo> rules) {
         return toAjax(priceSettingService.saveFabricRules(saleProductId, priceFabricId, rules));
-    }
-
-    @SaCheckPermission("product:pricing:edit")
-    @Log(title = "保存附加费用规则", businessType = BusinessType.UPDATE)
-    @PutMapping("/{saleProductId}/fee-rules")
-    @Operation(summary = "保存附加费用规则")
-    public R<Void> saveFeeRules(@PathVariable Long saleProductId, @RequestBody List<ProductPriceFeeRuleBo> rules) {
-        return toAjax(priceSettingService.saveFeeRules(saleProductId, rules));
-    }
-
-    @SaCheckPermission("product:pricing:edit")
-    @Log(title = "导入邮费模板", businessType = BusinessType.UPDATE)
-    @PutMapping("/{saleProductId}/shipping-template/{shippingTemplateId}/import")
-    @Operation(summary = "导入邮费模板到当前价格版本")
-    public R<Void> importShippingTemplate(@PathVariable Long saleProductId, @PathVariable Long shippingTemplateId) {
-        return toAjax(priceSettingService.importShippingTemplate(saleProductId, shippingTemplateId));
     }
 
     @SaCheckPermission("product:pricing:validate")

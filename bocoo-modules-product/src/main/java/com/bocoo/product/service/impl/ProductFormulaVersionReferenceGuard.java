@@ -3,12 +3,10 @@ package com.bocoo.product.service.impl;
 import com.bocoo.common.core.exception.ServiceException;
 import com.bocoo.product.domain.entity.ProductPriceFabric;
 import com.bocoo.product.domain.entity.ProductPriceFabricRule;
-import com.bocoo.product.domain.entity.ProductPriceFeeRule;
 import com.bocoo.product.domain.entity.ProductPriceSetting;
 import com.bocoo.product.domain.entity.ProductSaleProduct;
 import com.bocoo.product.mapper.ProductPriceFabricMapper;
 import com.bocoo.product.mapper.ProductPriceFabricRuleMapper;
-import com.bocoo.product.mapper.ProductPriceFeeRuleMapper;
 import com.bocoo.product.mapper.ProductPriceSettingMapper;
 import com.bocoo.product.mapper.ProductSaleProductMapper;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +20,6 @@ class ProductFormulaVersionReferenceGuard extends ProductServiceSupport {
     private final ProductPriceSettingMapper priceSettingMapper;
     private final ProductPriceFabricMapper priceFabricMapper;
     private final ProductPriceFabricRuleMapper priceFabricRuleMapper;
-    private final ProductPriceFeeRuleMapper priceFeeRuleMapper;
 
     void assertNoBusinessReference(Long formulaVersionId) {
         if (formulaVersionId == null) {
@@ -37,8 +34,7 @@ class ProductFormulaVersionReferenceGuard extends ProductServiceSupport {
         return countSaleProducts(formulaVersionId) > 0
             || countPriceSettings(formulaVersionId) > 0
             || countPriceFabrics(formulaVersionId) > 0
-            || countPriceFabricRules(formulaVersionId) > 0
-            || countPriceFeeRules(formulaVersionId) > 0;
+            || countPriceFabricRules(formulaVersionId) > 0;
     }
 
     private long countSaleProducts(Long formulaVersionId) {
@@ -61,8 +57,4 @@ class ProductFormulaVersionReferenceGuard extends ProductServiceSupport {
             .eq("formula_version_id", formulaVersionId));
     }
 
-    private long countPriceFeeRules(Long formulaVersionId) {
-        return priceFeeRuleMapper.selectCount(activeQuery(ProductPriceFeeRule.class)
-            .eq("formula_version_id", formulaVersionId));
-    }
 }

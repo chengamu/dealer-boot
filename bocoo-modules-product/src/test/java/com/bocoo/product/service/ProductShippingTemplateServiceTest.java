@@ -12,9 +12,10 @@ import com.bocoo.product.domain.entity.ProductShippingTemplate;
 import com.bocoo.product.domain.entity.ProductShippingTemplateRule;
 import com.bocoo.product.domain.vo.ProductShippingTemplateRuleVo;
 import com.bocoo.product.domain.vo.ProductShippingTemplateVo;
-import com.bocoo.product.mapper.ProductPriceFeeRuleMapper;
 import com.bocoo.product.mapper.ProductShippingTemplateMapper;
 import com.bocoo.product.mapper.ProductShippingTemplateRuleMapper;
+import com.bocoo.product.service.impl.ProductShippingTemplateRuleImporter;
+import com.bocoo.product.service.impl.ProductShippingTemplateRuleValidator;
 import com.bocoo.product.service.impl.ProductShippingTemplateServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.AfterEach;
@@ -43,16 +44,14 @@ class ProductShippingTemplateServiceTest {
     private ProductShippingTemplateMapper templateMapper;
     @Mock
     private ProductShippingTemplateRuleMapper ruleMapper;
-    @Mock
-    private ProductPriceFeeRuleMapper feeRuleMapper;
-
     private ProductShippingTemplateServiceImpl service;
 
     @BeforeEach
     void setUp() {
         TenantContextHolder.setTenantId(1L);
         ProductServiceTestSupport.prepareMapperAndConverter();
-        service = new ProductShippingTemplateServiceImpl(templateMapper, ruleMapper, feeRuleMapper);
+        service = new ProductShippingTemplateServiceImpl(templateMapper, ruleMapper,
+            new ProductShippingTemplateRuleValidator(), new ProductShippingTemplateRuleImporter());
     }
 
     @AfterEach
@@ -75,7 +74,7 @@ class ProductShippingTemplateServiceTest {
     @Test
     void insertRequiresManualAndMotorizedRules() {
         ProductShippingTemplateBo bo = templateBo();
-        bo.setRules(List.of(ruleBo("MANUAL", "18 + MAX(areaSqft - 20, 0) * 0.35")));
+        bo.setRules(List.of(ruleBo("MANUAL", "18")));
 
         assertThatThrownBy(() -> service.insertByBo(bo))
             .isInstanceOf(ServiceException.class);
@@ -85,9 +84,9 @@ class ProductShippingTemplateServiceTest {
     }
 
     @Test
-    void insertRejectsShippingFormulaWithUnitPrice() {
+    void insertRejectsNegativeShippingFee() {
         ProductShippingTemplateBo bo = templateBo();
-        bo.getRules().get(0).setFormulaText("unitPrice * MAX(areaSqft, 1)");
+        bo.getRules().get(0).setFeeAmount(new BigDecimal("-1"));
 
         assertThatThrownBy(() -> service.insertByBo(bo))
             .isInstanceOf(ServiceException.class);
@@ -100,9 +99,9 @@ class ProductShippingTemplateServiceTest {
     void insertRejectsUnsupportedShippingScenario() {
         ProductShippingTemplateBo bo = templateBo();
         bo.setRules(List.of(
-            ruleBo("MANUAL", "18 + areaSqft"),
-            ruleBo("MOTORIZED", "25 + areaSqft"),
-            ruleBo("EXPRESS", "30 + areaSqft")
+            ruleBo("MANUAL", "18"),
+            ruleBo("MOTORIZED", "25"),
+            ruleBo("EXPRESS", "30")
         ));
 
         assertThatThrownBy(() -> service.insertByBo(bo))
@@ -114,11 +113,26 @@ class ProductShippingTemplateServiceTest {
     @Test
     void insertRejectsRangeAfterUnboundedRule() {
         ProductShippingTemplateBo bo = templateBo();
-        ProductShippingTemplateRuleBo unbounded = ruleBo("MANUAL", "18 + areaSqft");
-        ProductShippingTemplateRuleBo later = ruleBo("MANUAL", "25 + areaSqft");
+        ProductShippingTemplateRuleBo unbounded = ruleBo("MANUAL", "18");
+        ProductShippingTemplateRuleBo later = ruleBo("MANUAL", "25");
         later.setMinAreaSqft(new BigDecimal("100"));
         later.setMaxAreaSqft(new BigDecimal("200"));
-        bo.setRules(List.of(unbounded, later, ruleBo("MOTORIZED", "25 + areaSqft")));
+        bo.setRules(List.of(unbounded, later, ruleBo("MOTORIZED", "25")));
+
+        assertThatThrownBy(() -> service.insertByBo(bo))
+            .isInstanceOf(ServiceException.class);
+
+        verify(templateMapper, never()).insert(any());
+    }
+
+    @Test
+    void insertRejectsAreaRangeGap() {
+        ProductShippingTemplateBo bo = templateBo();
+        ProductShippingTemplateRuleBo first = ruleBo("MANUAL", "18");
+        first.setMaxAreaSqft(new BigDecimal("20"));
+        ProductShippingTemplateRuleBo second = ruleBo("MANUAL", "25");
+        second.setMinAreaSqft(new BigDecimal("25"));
+        bo.setRules(List.of(first, second, ruleBo("MOTORIZED", "25")));
 
         assertThatThrownBy(() -> service.insertByBo(bo))
             .isInstanceOf(ServiceException.class);
@@ -158,6 +172,46 @@ class ProductShippingTemplateServiceTest {
     }
 
     @Test
+    void insertGeneratesTemplateCode() {
+        ProductShippingTemplateBo bo = templateBo();
+        bo.setTemplateCode("USER-INPUT");
+        when(templateMapper.insert(any(ProductShippingTemplate.class))).thenReturn(1);
+        when(ruleMapper.insert(any(ProductShippingTemplateRule.class))).thenReturn(1);
+
+        assertThat(service.insertByBo(bo)).isTrue();
+
+        verify(templateMapper).insert(org.mockito.ArgumentMatchers.argThat(entity ->
+            entity.getTemplateCode() != null && entity.getTemplateCode().startsWith("SHIP-")
+                && !"USER-INPUT".equals(entity.getTemplateCode())));
+    }
+
+    @Test
+    void insertAlwaysCreatesDisabledTemplate() {
+        ProductShippingTemplateBo bo = templateBo();
+        bo.setStatus("ENABLED");
+        when(templateMapper.insert(any(ProductShippingTemplate.class))).thenReturn(1);
+        when(ruleMapper.insert(any(ProductShippingTemplateRule.class))).thenReturn(1);
+
+        assertThat(service.insertByBo(bo)).isTrue();
+
+        verify(templateMapper).insert(org.mockito.ArgumentMatchers.argThat(entity ->
+            "DISABLED".equals(entity.getStatus())));
+    }
+
+    @Test
+    void insertNormalizesCurrencyCode() {
+        ProductShippingTemplateBo bo = templateBo();
+        bo.setCurrencyCode(" usd ");
+        when(templateMapper.insert(any(ProductShippingTemplate.class))).thenReturn(1);
+        when(ruleMapper.insert(any(ProductShippingTemplateRule.class))).thenReturn(1);
+
+        assertThat(service.insertByBo(bo)).isTrue();
+
+        verify(templateMapper).insert(org.mockito.ArgumentMatchers.argThat(entity ->
+            "USD".equals(entity.getCurrencyCode())));
+    }
+
+    @Test
     void insertIgnoresTenantIdFromRequest() {
         ProductShippingTemplateBo bo = templateBo();
         bo.setTenantId(999L);
@@ -171,8 +225,24 @@ class ProductShippingTemplateServiceTest {
     }
 
     @Test
-    void referencedTemplateCannotBeDeleted() {
-        when(feeRuleMapper.selectCount(any())).thenReturn(1L);
+    void enabledTemplateCannotBeEdited() {
+        ProductShippingTemplate current = new ProductShippingTemplate();
+        current.setShippingTemplateId(9301L);
+        current.setStatus("ENABLED");
+        when(templateMapper.selectById(9301L)).thenReturn(current);
+
+        assertThatThrownBy(() -> service.updateByBo(templateBo()))
+            .isInstanceOf(ServiceException.class);
+
+        verify(templateMapper, never()).updateById(any());
+    }
+
+    @Test
+    void enabledTemplateCannotBeDeleted() {
+        ProductShippingTemplate current = new ProductShippingTemplate();
+        current.setShippingTemplateId(9301L);
+        current.setStatus("ENABLED");
+        when(templateMapper.selectBatchIds(List.of(9301L))).thenReturn(List.of(current));
 
         assertThatThrownBy(() -> service.deleteWithValidByIds(new Long[] {9301L}))
             .isInstanceOf(ServiceException.class);
@@ -183,7 +253,18 @@ class ProductShippingTemplateServiceTest {
     @Test
     void enableRejectsBrokenRules() {
         when(templateMapper.selectVoById(9301L)).thenReturn(templateVo());
-        when(ruleMapper.selectVoList(any())).thenReturn(List.of(ruleVo("MANUAL", "18 + areaSqft")));
+        when(ruleMapper.selectVoList(any())).thenReturn(List.of(ruleVo("MANUAL", "18")));
+
+        assertThatThrownBy(() -> service.updateStatus(9301L, "ENABLED"))
+            .isInstanceOf(ServiceException.class);
+
+        verify(templateMapper, never()).update(isNull(), any(LambdaUpdateWrapper.class));
+    }
+
+    @Test
+    void enableRejectsLegacyFormulaRulesUntilTemplateIsResaved() {
+        when(templateMapper.selectVoById(9301L)).thenReturn(templateVo());
+        when(ruleMapper.selectCount(any())).thenReturn(1L);
 
         assertThatThrownBy(() -> service.updateStatus(9301L, "ENABLED"))
             .isInstanceOf(ServiceException.class);
@@ -199,6 +280,25 @@ class ProductShippingTemplateServiceTest {
         verify(templateMapper, never()).update(isNull(), any(LambdaUpdateWrapper.class));
     }
 
+    @Test
+    void enablingTemplateDisablesOtherTemplatesWithSameCurrency() {
+        when(templateMapper.selectVoById(9301L)).thenReturn(templateVo());
+        when(ruleMapper.selectVoList(any())).thenReturn(List.of(
+            ruleVo("MANUAL", "18"), ruleVo("MOTORIZED", "25")));
+        when(templateMapper.update(isNull(), any(LambdaUpdateWrapper.class))).thenReturn(1);
+
+        assertThat(service.updateStatus(9301L, "ENABLED")).isTrue();
+
+        verify(templateMapper, times(2)).update(isNull(), any(LambdaUpdateWrapper.class));
+    }
+
+    @Test
+    void importTemplateContainsManualAndMotorizedRows() {
+        assertThat(service.importTemplateRows())
+            .extracting(row -> row.getCondition())
+            .containsExactly("不带电", "不带电", "带电", "带电");
+    }
+
     private ProductShippingTemplateBo templateBo() {
         ProductShippingTemplateBo bo = new ProductShippingTemplateBo();
         bo.setShippingTemplateId(9301L);
@@ -207,17 +307,17 @@ class ProductShippingTemplateServiceTest {
         bo.setCurrencyCode("USD");
         bo.setStatus("ENABLED");
         bo.setRules(List.of(
-            ruleBo("MANUAL", "18 + MAX(areaSqft - 20, 0) * 0.35"),
-            ruleBo("MOTORIZED", "25 + MAX(areaSqft - 20, 0) * 0.45")
+            ruleBo("MANUAL", "18"),
+            ruleBo("MOTORIZED", "25")
         ));
         return bo;
     }
 
-    private ProductShippingTemplateRuleBo ruleBo(String code, String formula) {
+    private ProductShippingTemplateRuleBo ruleBo(String code, String amount) {
         ProductShippingTemplateRuleBo rule = new ProductShippingTemplateRuleBo();
         rule.setFeeCode(code);
         rule.setMinAreaSqft(BigDecimal.ZERO);
-        rule.setFormulaText(formula);
+        rule.setFeeAmount(new BigDecimal(amount));
         return rule;
     }
 
@@ -226,15 +326,17 @@ class ProductShippingTemplateServiceTest {
         vo.setShippingTemplateId(9301L);
         vo.setTemplateCode("SHIP-US");
         vo.setTemplateName("美国邮费模板");
+        vo.setTenantId(1L);
+        vo.setCurrencyCode("USD");
         vo.setStatus("DISABLED");
         return vo;
     }
 
-    private ProductShippingTemplateRuleVo ruleVo(String code, String formula) {
+    private ProductShippingTemplateRuleVo ruleVo(String code, String amount) {
         ProductShippingTemplateRuleVo rule = new ProductShippingTemplateRuleVo();
         rule.setFeeCode(code);
         rule.setMinAreaSqft(BigDecimal.ZERO);
-        rule.setFormulaText(formula);
+        rule.setFeeAmount(new BigDecimal(amount));
         return rule;
     }
 }

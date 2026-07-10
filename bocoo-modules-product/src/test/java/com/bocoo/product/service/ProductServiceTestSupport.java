@@ -40,7 +40,6 @@ import com.bocoo.product.domain.entity.ProductMediaAsset;
 import com.bocoo.product.domain.entity.ProductMediaBinding;
 import com.bocoo.product.domain.entity.ProductPriceFabric;
 import com.bocoo.product.domain.entity.ProductPriceFabricRule;
-import com.bocoo.product.domain.entity.ProductPriceFeeRule;
 import com.bocoo.product.domain.entity.ProductPriceSetting;
 import com.bocoo.product.domain.entity.ProductSaleProduct;
 import com.bocoo.product.domain.entity.ProductShippingTemplate;
@@ -82,7 +81,6 @@ final class ProductServiceTestSupport {
         prepareTableInfo(ProductMediaBinding.class);
         prepareTableInfo(ProductPriceFabric.class);
         prepareTableInfo(ProductPriceFabricRule.class);
-        prepareTableInfo(ProductPriceFeeRule.class);
         prepareTableInfo(ProductPriceSetting.class);
         prepareTableInfo(ProductSaleProduct.class);
         prepareTableInfo(ProductShippingTemplate.class);
@@ -431,7 +429,7 @@ final class ProductServiceTestSupport {
             target.setFeeName(source.getFeeName());
             target.setMinAreaSqft(source.getMinAreaSqft());
             target.setMaxAreaSqft(source.getMaxAreaSqft());
-            target.setFormulaText(source.getFormulaText());
+            target.setFeeAmount(source.getFeeAmount());
             target.setSortOrder(source.getSortOrder());
             target.setDelFlag(source.getDelFlag());
             target.setRemark(source.getRemark());

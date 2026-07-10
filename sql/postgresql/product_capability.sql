@@ -862,7 +862,7 @@ CREATE TABLE IF NOT EXISTS pc_price_fabric (
     material_code varchar(80),
     material_name_cn varchar(200),
     unit_code varchar(40),
-    status varchar(30) NOT NULL DEFAULT 'ENABLED',
+    status varchar(30) NOT NULL DEFAULT 'DISABLED',
     sort_order int NOT NULL DEFAULT 0,
     del_flag varchar(1) NOT NULL DEFAULT '0',
     remark varchar(500),
@@ -882,7 +882,7 @@ ALTER TABLE IF EXISTS pc_price_fabric
     ADD COLUMN IF NOT EXISTS material_code varchar(80),
     ADD COLUMN IF NOT EXISTS material_name_cn varchar(200),
     ADD COLUMN IF NOT EXISTS unit_code varchar(40),
-    ADD COLUMN IF NOT EXISTS status varchar(30) NOT NULL DEFAULT 'ENABLED',
+    ADD COLUMN IF NOT EXISTS status varchar(30) NOT NULL DEFAULT 'DISABLED',
     ADD COLUMN IF NOT EXISTS sort_order int NOT NULL DEFAULT 0,
     ADD COLUMN IF NOT EXISTS del_flag varchar(1) NOT NULL DEFAULT '0',
     ADD COLUMN IF NOT EXISTS remark varchar(500);
@@ -1079,7 +1079,7 @@ CREATE TABLE IF NOT EXISTS pc_shipping_template (
     template_name varchar(200) NOT NULL,
     currency_code varchar(20) NOT NULL DEFAULT 'USD',
     default_flag boolean NOT NULL DEFAULT false,
-    status varchar(30) NOT NULL DEFAULT 'ENABLED',
+    status varchar(30) NOT NULL DEFAULT 'DISABLED',
     sort_order int NOT NULL DEFAULT 0,
     del_flag varchar(1) NOT NULL DEFAULT '0',
     remark varchar(500),
@@ -1096,14 +1096,15 @@ ALTER TABLE IF EXISTS pc_shipping_template
     ADD COLUMN IF NOT EXISTS template_name varchar(200),
     ADD COLUMN IF NOT EXISTS currency_code varchar(20) NOT NULL DEFAULT 'USD',
     ADD COLUMN IF NOT EXISTS default_flag boolean NOT NULL DEFAULT false,
-    ADD COLUMN IF NOT EXISTS status varchar(30) NOT NULL DEFAULT 'ENABLED',
+    ADD COLUMN IF NOT EXISTS status varchar(30) NOT NULL DEFAULT 'DISABLED',
     ADD COLUMN IF NOT EXISTS sort_order int NOT NULL DEFAULT 0,
     ADD COLUMN IF NOT EXISTS del_flag varchar(1) NOT NULL DEFAULT '0',
     ADD COLUMN IF NOT EXISTS remark varchar(500);
 
-COMMENT ON TABLE pc_shipping_template IS '邮费模板表，维护可复用的邮费公式';
-COMMENT ON COLUMN pc_shipping_template.template_code IS '邮费模板编码';
+COMMENT ON TABLE pc_shipping_template IS '邮费模板表，维护可复用的面积区间邮费';
+COMMENT ON COLUMN pc_shipping_template.template_code IS '邮费模板编码，由程序自动生成';
 COMMENT ON COLUMN pc_shipping_template.default_flag IS '默认模板标记';
+ALTER TABLE IF EXISTS pc_shipping_template ALTER COLUMN status SET DEFAULT 'DISABLED';
 CREATE INDEX IF NOT EXISTS idx_pc_shipping_template_code ON pc_shipping_template (tenant_id, template_code, status) WHERE del_flag = '0';
 CREATE INDEX IF NOT EXISTS idx_pc_shipping_template_default ON pc_shipping_template (tenant_id, default_flag, status) WHERE del_flag = '0';
 
@@ -1115,7 +1116,8 @@ CREATE TABLE IF NOT EXISTS pc_shipping_template_rule (
     fee_name varchar(200) NOT NULL,
     min_area_sqft numeric(18,4),
     max_area_sqft numeric(18,4),
-    formula_text text NOT NULL,
+    fee_amount numeric(18,4) NOT NULL DEFAULT 0,
+    formula_text text,
     sort_order int NOT NULL DEFAULT 0,
     del_flag varchar(1) NOT NULL DEFAULT '0',
     remark varchar(500),
@@ -1133,81 +1135,63 @@ ALTER TABLE IF EXISTS pc_shipping_template_rule
     ADD COLUMN IF NOT EXISTS fee_name varchar(200),
     ADD COLUMN IF NOT EXISTS min_area_sqft numeric(18,4),
     ADD COLUMN IF NOT EXISTS max_area_sqft numeric(18,4),
+    ADD COLUMN IF NOT EXISTS fee_amount numeric(18,4) NOT NULL DEFAULT 0,
     ADD COLUMN IF NOT EXISTS formula_text text,
     ADD COLUMN IF NOT EXISTS sort_order int NOT NULL DEFAULT 0,
     ADD COLUMN IF NOT EXISTS del_flag varchar(1) NOT NULL DEFAULT '0',
     ADD COLUMN IF NOT EXISTS remark varchar(500);
 
-COMMENT ON TABLE pc_shipping_template_rule IS '邮费模板规则表，按不带电/带电和面积区间维护公式';
+ALTER TABLE IF EXISTS pc_shipping_template_rule ALTER COLUMN formula_text DROP NOT NULL;
+
+-- 旧公式无法无损转换为固定邮费。保留原文，迁移纯数字金额，并停用旧模板等待人工复核保存。
+UPDATE pc_shipping_template_rule
+SET fee_amount = trim(formula_text)::numeric
+WHERE formula_text IS NOT NULL
+  AND trim(formula_text) ~ '^[[:space:]]*[0-9]+([.][0-9]+)?[[:space:]]*$'
+  AND fee_amount = 0;
+
+UPDATE pc_shipping_template template
+SET status = 'DISABLED'
+WHERE template.status = 'ENABLED'
+  AND EXISTS (
+      SELECT 1
+      FROM pc_shipping_template_rule rule
+      WHERE rule.shipping_template_id = template.shipping_template_id
+        AND rule.tenant_id = template.tenant_id
+        AND rule.del_flag = '0'
+        AND rule.formula_text IS NOT NULL
+  );
+
+COMMENT ON TABLE pc_shipping_template_rule IS '邮费模板明细表，按不带电/带电和面积区间维护固定邮费';
 COMMENT ON COLUMN pc_shipping_template_rule.fee_code IS '邮费类型：MANUAL 不带电、MOTORIZED 带电';
 COMMENT ON COLUMN pc_shipping_template_rule.min_area_sqft IS '最小面积，平方英尺，含边界';
 COMMENT ON COLUMN pc_shipping_template_rule.max_area_sqft IS '最大面积，平方英尺，空表示不封顶';
+COMMENT ON COLUMN pc_shipping_template_rule.fee_amount IS '该面积区间固定邮费';
 CREATE INDEX IF NOT EXISTS idx_pc_shipping_template_rule_template ON pc_shipping_template_rule (tenant_id, shipping_template_id, fee_code, sort_order) WHERE del_flag = '0';
 
-CREATE TABLE IF NOT EXISTS pc_price_fee_rule (
-    fee_rule_id bigint PRIMARY KEY,
-    tenant_id bigint NOT NULL DEFAULT 1 CHECK (tenant_id <> 0),
-    price_setting_id bigint NOT NULL,
-    sale_product_id bigint NOT NULL,
-    formula_version_id bigint NOT NULL,
-    shipping_template_id bigint,
-    shipping_template_code varchar(80),
-    shipping_template_name varchar(200),
-    shipping_template_rule_id bigint,
-    fee_code varchar(80),
-    fee_name varchar(200),
-    fee_category varchar(80),
-    trigger_condition text,
-    fee_mode varchar(40) NOT NULL DEFAULT 'FORMULA',
-    fee_amount numeric(18,4),
-    min_area_sqft numeric(18,4),
-    max_area_sqft numeric(18,4),
-    formula_text text,
-    status varchar(30) NOT NULL DEFAULT 'ENABLED',
-    sort_order int NOT NULL DEFAULT 0,
-    del_flag varchar(1) NOT NULL DEFAULT '0',
-    remark varchar(500),
-    create_by_id bigint,
-    create_by varchar(64),
-    create_time timestamptz,
-    update_by varchar(64),
-    update_time timestamptz
-);
+-- 升级前可能存在多个启用模板；保留最近更新的一条后再建立数据库级唯一约束。
+WITH ranked_enabled_templates AS (
+    SELECT shipping_template_id,
+           row_number() OVER (
+               PARTITION BY tenant_id, upper(trim(currency_code))
+               ORDER BY update_time DESC NULLS LAST, shipping_template_id DESC
+           ) AS row_number
+    FROM pc_shipping_template
+    WHERE del_flag = '0' AND status = 'ENABLED'
+)
+UPDATE pc_shipping_template template
+SET status = 'DISABLED'
+FROM ranked_enabled_templates ranked
+WHERE template.shipping_template_id = ranked.shipping_template_id
+  AND ranked.row_number > 1;
 
-ALTER TABLE IF EXISTS pc_price_fee_rule
-    ADD COLUMN IF NOT EXISTS tenant_id bigint NOT NULL DEFAULT 1 CHECK (tenant_id <> 0),
-    ADD COLUMN IF NOT EXISTS price_setting_id bigint,
-    ADD COLUMN IF NOT EXISTS sale_product_id bigint,
-    ADD COLUMN IF NOT EXISTS formula_version_id bigint,
-    ADD COLUMN IF NOT EXISTS shipping_template_id bigint,
-    ADD COLUMN IF NOT EXISTS shipping_template_code varchar(80),
-    ADD COLUMN IF NOT EXISTS shipping_template_name varchar(200),
-    ADD COLUMN IF NOT EXISTS shipping_template_rule_id bigint,
-    ADD COLUMN IF NOT EXISTS fee_code varchar(80),
-    ADD COLUMN IF NOT EXISTS fee_name varchar(200),
-    ADD COLUMN IF NOT EXISTS fee_category varchar(80),
-    ADD COLUMN IF NOT EXISTS trigger_condition text,
-    ADD COLUMN IF NOT EXISTS fee_mode varchar(40) NOT NULL DEFAULT 'FORMULA',
-    ADD COLUMN IF NOT EXISTS fee_amount numeric(18,4),
-    ADD COLUMN IF NOT EXISTS min_area_sqft numeric(18,4),
-    ADD COLUMN IF NOT EXISTS max_area_sqft numeric(18,4),
-    ADD COLUMN IF NOT EXISTS formula_text text,
-    ADD COLUMN IF NOT EXISTS status varchar(30) NOT NULL DEFAULT 'ENABLED',
-    ADD COLUMN IF NOT EXISTS sort_order int NOT NULL DEFAULT 0,
-    ADD COLUMN IF NOT EXISTS del_flag varchar(1) NOT NULL DEFAULT '0',
-    ADD COLUMN IF NOT EXISTS remark varchar(500);
-ALTER TABLE IF EXISTS pc_price_fee_rule
-    ALTER COLUMN fee_mode SET DEFAULT 'FORMULA';
+UPDATE pc_shipping_template
+SET currency_code = upper(trim(currency_code))
+WHERE currency_code <> upper(trim(currency_code));
 
-COMMENT ON TABLE pc_price_fee_rule IS '价格设置邮费快照表，从邮费模板导入后按可售产品和配方版本冻结';
-COMMENT ON COLUMN pc_price_fee_rule.fee_code IS '邮费类型：MANUAL 不带电、MOTORIZED 带电';
-COMMENT ON COLUMN pc_price_fee_rule.fee_mode IS '费用方式：FORMULA';
-COMMENT ON COLUMN pc_price_fee_rule.shipping_template_id IS '来源邮费模板ID';
-COMMENT ON COLUMN pc_price_fee_rule.shipping_template_rule_id IS '来源邮费模板规则ID';
-COMMENT ON COLUMN pc_price_fee_rule.min_area_sqft IS '最小面积，平方英尺，含边界';
-COMMENT ON COLUMN pc_price_fee_rule.max_area_sqft IS '最大面积，平方英尺，空表示不封顶';
-CREATE INDEX IF NOT EXISTS idx_pc_price_fee_rule_setting ON pc_price_fee_rule (tenant_id, price_setting_id, sort_order) WHERE del_flag = '0';
-CREATE INDEX IF NOT EXISTS idx_pc_price_fee_rule_category ON pc_price_fee_rule (tenant_id, fee_category, status) WHERE del_flag = '0';
+CREATE UNIQUE INDEX IF NOT EXISTS uk_pc_shipping_template_enabled_currency
+    ON pc_shipping_template (tenant_id, currency_code)
+    WHERE del_flag = '0' AND status = 'ENABLED';
 
 CREATE TABLE IF NOT EXISTS pc_category (
     category_id bigint PRIMARY KEY,

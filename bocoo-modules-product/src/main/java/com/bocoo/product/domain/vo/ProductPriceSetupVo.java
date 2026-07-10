@@ -20,7 +20,6 @@ public class ProductPriceSetupVo implements Serializable {
     private List<ProductPriceOptionCombinationVo> fabricPriceColumns = new ArrayList<>();
     private List<ProductPriceFabricVo> priceFabrics = new ArrayList<>();
     private List<ProductPriceFabricRuleVo> fabricRules = new ArrayList<>();
-    private List<ProductPriceFeeRuleVo> feeRules = new ArrayList<>();
     private List<ProductPriceValidationIssueVo> issues = new ArrayList<>();
     private List<ProductFormulaMaterialVo> formulaMaterials = new ArrayList<>();
     private List<ProductFormulaOptionVo> formulaOptions = new ArrayList<>();

@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.bocoo.common.core.exception.ServiceException;
 import com.bocoo.product.domain.entity.ProductPriceFabric;
 import com.bocoo.product.domain.entity.ProductPriceFabricRule;
-import com.bocoo.product.domain.entity.ProductPriceFeeRule;
 import com.bocoo.product.domain.entity.ProductPriceSetting;
 import com.bocoo.product.domain.entity.ProductSaleProduct;
 import com.bocoo.product.domain.vo.ProductMaterialVo;
@@ -69,9 +68,7 @@ class ProductPriceSettingServiceTest extends ProductPriceSettingServiceTestSuppo
         when(versionMapper.selectById(7001L)).thenReturn(effectiveVersion());
         when(fabricMapper.selectList(any())).thenReturn(List.of());
         when(fabricRuleMapper.selectVoList(any())).thenReturn(List.of());
-        when(feeRuleMapper.selectVoList(any())).thenReturn(List.of());
         when(fabricRuleMapper.selectList(any())).thenReturn(List.of());
-        when(feeRuleMapper.selectList(any())).thenReturn(List.of());
 
         ProductPriceSetupVo setup = priceSettingService.querySetup(9001L);
 
@@ -91,7 +88,6 @@ class ProductPriceSettingServiceTest extends ProductPriceSettingServiceTestSuppo
         when(versionMapper.selectById(7001L)).thenReturn(effectiveVersion());
         when(fabricMapper.selectList(any())).thenReturn(List.of(priceFabric()));
         when(fabricRuleMapper.selectList(any())).thenReturn(List.of(fabricRule()));
-        when(feeRuleMapper.selectList(any())).thenReturn(shippingRules());
 
         List<ProductPriceValidationIssueVo> issues = priceSettingService.validatePrice(9001L);
 
@@ -114,7 +110,6 @@ class ProductPriceSettingServiceTest extends ProductPriceSettingServiceTestSuppo
         when(versionMapper.selectById(7001L)).thenReturn(effectiveVersion());
         when(fabricMapper.selectList(any())).thenReturn(List.of(priceFabric()));
         when(fabricRuleMapper.selectList(any())).thenReturn(List.of(rule));
-        when(feeRuleMapper.selectList(any())).thenReturn(shippingRules());
 
         List<ProductPriceValidationIssueVo> issues = priceSettingService.validatePrice(9001L);
 
@@ -133,7 +128,6 @@ class ProductPriceSettingServiceTest extends ProductPriceSettingServiceTestSuppo
         when(versionMapper.selectById(7001L)).thenReturn(effectiveVersion());
         when(fabricMapper.selectList(any())).thenReturn(List.of(priceFabric()));
         when(fabricRuleMapper.selectList(any())).thenReturn(List.of(rule));
-        when(feeRuleMapper.selectList(any())).thenReturn(shippingRules());
 
         List<ProductPriceValidationIssueVo> issues = priceSettingService.validatePrice(9001L);
 
@@ -164,30 +158,6 @@ class ProductPriceSettingServiceTest extends ProductPriceSettingServiceTestSuppo
 
         verify(fabricMapper).delete(any());
         verify(fabricMapper).updateById(any(ProductPriceFabric.class));
-    }
-
-    @Test
-    void importShippingTemplateRebuildsCurrentVersionShippingSnapshot() {
-        ProductSaleProduct product = saleProduct("DISABLED");
-        ProductPriceSetting setting = setting();
-        when(saleProductMapper.selectById(9001L)).thenReturn(product);
-        when(settingMapper.selectOne(any())).thenReturn(setting);
-        when(shippingTemplateMapper.selectById(9301L)).thenReturn(shippingTemplate());
-        when(shippingTemplateRuleMapper.selectList(any())).thenReturn(List.of(
-            shippingTemplateRule("MANUAL", "18 + MAX(areaSqft - 20, 0) * 0.35"),
-            shippingTemplateRule("MOTORIZED", "25 + MAX(areaSqft - 20, 0) * 0.45")
-        ));
-        when(feeRuleMapper.selectList(any())).thenReturn(shippingRules());
-
-        assertThat(priceSettingService.importShippingTemplate(9001L, 9301L)).isTrue();
-
-        verify(feeRuleMapper).delete(any());
-        verify(feeRuleMapper, times(2)).insert(any(ProductPriceFeeRule.class));
-        verify(settingMapper).update(isNull(), any(LambdaUpdateWrapper.class));
-        verify(saleProductMapper).update(isNull(), any(LambdaUpdateWrapper.class));
-        verify(changeLogService).record(eq("PRODUCT_PRICING"), eq("PRICE_SETTING"), eq(9101L),
-            eq("SP-001"), eq("IMPORT_SHIPPING_TEMPLATE"), any(),
-            eq(Map.of("templateCode", "SHIP-US", "rowCount", 2)), isNull());
     }
 
 }

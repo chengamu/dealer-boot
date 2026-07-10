@@ -5,20 +5,16 @@ import com.bocoo.common.core.exception.ServiceException;
 import com.bocoo.common.core.utils.StringUtils;
 import com.bocoo.common.core.utils.TimeUtils;
 import com.bocoo.product.domain.bo.ProductPriceFabricRuleBo;
-import com.bocoo.product.domain.bo.ProductPriceFeeRuleBo;
 import com.bocoo.product.domain.entity.ProductFormulaVersion;
 import com.bocoo.product.domain.entity.ProductPriceFabric;
 import com.bocoo.product.domain.entity.ProductPriceFabricRule;
-import com.bocoo.product.domain.entity.ProductPriceFeeRule;
 import com.bocoo.product.domain.entity.ProductPriceSetting;
 import com.bocoo.product.domain.entity.ProductSaleProduct;
-import com.bocoo.product.domain.vo.ProductPriceFeeRuleVo;
 import com.bocoo.product.domain.vo.ProductPriceSetupVo;
 import com.bocoo.product.domain.vo.ProductPriceValidationIssueVo;
 import com.bocoo.product.mapper.ProductFormulaVersionMapper;
 import com.bocoo.product.mapper.ProductPriceFabricMapper;
 import com.bocoo.product.mapper.ProductPriceFabricRuleMapper;
-import com.bocoo.product.mapper.ProductPriceFeeRuleMapper;
 import com.bocoo.product.mapper.ProductPriceSettingMapper;
 import com.bocoo.product.mapper.ProductSaleProductMapper;
 import com.bocoo.product.service.ProductChangeLogService;
@@ -43,16 +39,13 @@ public class ProductPriceSettingServiceImpl extends ProductServiceSupport implem
     private final ProductPriceSettingMapper settingMapper;
     private final ProductPriceFabricMapper fabricMapper;
     private final ProductPriceFabricRuleMapper fabricRuleMapper;
-    private final ProductPriceFeeRuleMapper feeRuleMapper;
     private final ProductFormulaVersionMapper versionMapper;
     private final ProductPriceSettingValidator validator;
     private final ProductPriceSnapshotReader snapshotReader;
     private final ProductPriceFabricCandidateFactory fabricCandidateFactory;
     private final ProductPriceFabricSyncService fabricSyncService;
     private final ProductPriceFabricRuleGuard fabricRuleGuard;
-    private final ProductPriceShippingRuleFactory shippingRuleFactory;
     private final ProductPriceFabricVoAssembler fabricVoAssembler;
-    private final ProductPriceShippingTemplateImporter shippingTemplateImporter;
     private final ProductChangeLogService changeLogService;
 
     @Override
@@ -68,9 +61,6 @@ public class ProductPriceSettingServiceImpl extends ProductServiceSupport implem
         vo.setPriceFabrics(fabricVoAssembler.toFabricVos(fabrics, fabricRules));
         vo.setFabricRules(fabricRuleMapper.selectVoList(activeQuery(ProductPriceFabricRule.class)
             .eq("price_setting_id", setting.getPriceSettingId()).orderByAsc("sort_order", "fabric_rule_id")));
-        List<ProductPriceFeeRuleVo> feeRules = feeRuleMapper.selectVoList(activeQuery(ProductPriceFeeRule.class)
-            .eq("price_setting_id", setting.getPriceSettingId()).orderByAsc("sort_order", "fee_rule_id"));
-        vo.setFeeRules(feeRules);
         vo.setFabricCandidates(fabricCandidateFactory.candidates(version));
         vo.setFabricPriceColumns(snapshotReader.optionCombinations(version));
         vo.setMaterialGroupCounts(snapshotReader.materialGroupCounts(version));
@@ -78,10 +68,7 @@ public class ProductPriceSettingServiceImpl extends ProductServiceSupport implem
         vo.setFormulaOptions(snapshotReader.formulaOptions(version));
         vo.setFormulaOptionValues(snapshotReader.formulaOptionValues(version));
         vo.setFormulaOptionMaterials(snapshotReader.formulaOptionMaterials(version));
-        vo.setIssues(validator.validate(version,
-            fabrics,
-            fabricRules,
-            feeRuleMapper.selectList(activeQuery(ProductPriceFeeRule.class).eq("price_setting_id", setting.getPriceSettingId()))));
+        vo.setIssues(validator.validate(version, fabrics, fabricRules));
         return vo;
     }
 
@@ -123,48 +110,12 @@ public class ProductPriceSettingServiceImpl extends ProductServiceSupport implem
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Boolean saveFeeRules(Long saleProductId, List<ProductPriceFeeRuleBo> rules) {
-        ProductSaleProduct saleProduct = requireSaleProduct(saleProductId);
-        assertPriceEditable(saleProduct);
-        ProductPriceSetting setting = ensureSetting(saleProduct);
-        List<ProductPriceFeeRule> before = feeRuleMapper.selectList(activeQuery(ProductPriceFeeRule.class)
-            .eq("price_setting_id", setting.getPriceSettingId()));
-        feeRuleMapper.delete(activeQuery(ProductPriceFeeRule.class).eq("price_setting_id", setting.getPriceSettingId()));
-        int index = 0;
-        for (ProductPriceFeeRuleBo rule : rules == null ? List.<ProductPriceFeeRuleBo>of() : rules) {
-            ProductPriceFeeRule entity = shippingRuleFactory.fromBo(rule, setting, index++);
-            ProductEntityDefaults.prepareInsert(entity);
-            feeRuleMapper.insert(entity);
-        }
-        markNotReady(setting);
-        recordChange(setting, "SAVE_FEE_RULES", before, rules);
-        return Boolean.TRUE;
-    }
-
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public Boolean importShippingTemplate(Long saleProductId, Long shippingTemplateId) {
-        ProductSaleProduct saleProduct = requireSaleProduct(saleProductId);
-        assertPriceEditable(saleProduct);
-        ProductPriceSetting setting = ensureSetting(saleProduct);
-        ProductPriceShippingTemplateImporter.ImportResult result =
-            shippingTemplateImporter.importTemplate(setting, shippingTemplateId);
-        markNotReady(setting);
-        recordChange(setting, "IMPORT_SHIPPING_TEMPLATE", result.before(),
-            Map.of("templateCode", result.templateCode(), "rowCount", result.rowCount()));
-        return Boolean.TRUE;
-    }
-
-    @Override
-    @Transactional(rollbackFor = Exception.class)
     public List<ProductPriceValidationIssueVo> validatePrice(Long saleProductId) {
         ProductSaleProduct saleProduct = requireSaleProduct(saleProductId);
         ProductPriceSetting setting = ensureSetting(saleProduct);
         ProductFormulaVersion version = versionMapper.selectById(saleProduct.getFormulaVersionId());
         List<ProductPriceValidationIssueVo> issues = validator.validate(version,
-            queryFabrics(setting),
-            queryFabricRules(setting),
-            feeRuleMapper.selectList(activeQuery(ProductPriceFeeRule.class).eq("price_setting_id", setting.getPriceSettingId())));
+            queryFabrics(setting), queryFabricRules(setting));
         String validationStatus = issues.isEmpty() ? VALIDATION_PASS : VALIDATION_FAIL;
         String priceStatus = issues.isEmpty() ? ProductSaleProductServiceImpl.PRICE_READY : "WARNING";
         settingMapper.update(null, new LambdaUpdateWrapper<ProductPriceSetting>()
