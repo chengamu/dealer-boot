@@ -31,7 +31,7 @@
 
     <template #footer>
       <div class="shipping-rule-import__footer">
-        <el-button icon="Download" @click="downloadTemplate">
+        <el-button icon="Download" :loading="downloading" :disabled="downloading" @click="downloadTemplate">
           {{ t('productCenter.shippingTemplate.downloadImportTemplate') }}
         </el-button>
         <div>
@@ -63,6 +63,7 @@ const localeStore = useLocaleStore()
 const t = (key: string) => getMessage(key, localeStore.language)
 const file = ref<File>()
 const loading = ref(false)
+const downloading = ref(false)
 
 watch(() => props.modelValue, (open) => {
   if (open) file.value = undefined
@@ -76,8 +77,14 @@ function clearFile() {
   file.value = undefined
 }
 
-function downloadTemplate() {
-  download('product-pricing/shipping-templates/import-template', {}, `shipping_rule_template_${Date.now()}.xlsx`)
+async function downloadTemplate() {
+  if (downloading.value) return
+  downloading.value = true
+  try {
+    await download('product-pricing/shipping-templates/import-template', {}, `shipping_rule_template_${Date.now()}.xlsx`)
+  } finally {
+    downloading.value = false
+  }
 }
 
 async function submit() {

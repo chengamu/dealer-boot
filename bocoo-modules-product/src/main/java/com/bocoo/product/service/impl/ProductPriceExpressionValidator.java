@@ -2,12 +2,13 @@ package com.bocoo.product.service.impl;
 
 import com.bocoo.common.core.utils.StringUtils;
 
+import java.math.BigDecimal;
 import java.util.Map;
 import java.util.Set;
 
 final class ProductPriceExpressionValidator {
     private static final Set<String> PRICE_VARIABLES = Set.of(
-        "unitPrice", "width", "drop", "widthCm", "dropCm", "areaM2", "areaSqft",
+        "unitPrice", "usageQty", "width", "drop", "widthCm", "dropCm", "areaM2", "areaSqft",
         "orderWidthIn", "orderHeightIn", "orderWidthCm", "orderHeightCm", "orderAreaM2"
     );
     private static final Set<String> CONDITION_VARIABLES = Set.of(
@@ -17,6 +18,7 @@ final class ProductPriceExpressionValidator {
     );
     private static final Map<String, Object> SAMPLE = Map.ofEntries(
         Map.entry("unitPrice", 20D),
+        Map.entry("usageQty", 2D),
         Map.entry("width", 25D),
         Map.entry("drop", 72D),
         Map.entry("widthCm", 63.5D),
@@ -76,5 +78,30 @@ final class ProductPriceExpressionValidator {
         } catch (RuntimeException ex) {
             return false;
         }
+    }
+
+    static BigDecimal evaluatePrice(String expression, Map<String, Object> context) {
+        String normalized = ProductFormulaExpressionNormalizer.normalizeFormulaExpression(expression);
+        ProductFormulaExpressionParser parser = new ProductFormulaExpressionParser(normalized, PRICE_VARIABLES, false, context, false);
+        Object result = parser.parseExpression();
+        parser.expectEnd();
+        if (!(result instanceof Number number) || !Double.isFinite(number.doubleValue()) || number.doubleValue() < 0D) {
+            throw new IllegalArgumentException("invalid price result");
+        }
+        return BigDecimal.valueOf(number.doubleValue());
+    }
+
+    static boolean evaluateCondition(String expression, Map<String, Object> context) {
+        String normalized = ProductFormulaExpressionNormalizer.normalizeConditionExpression(expression);
+        if ("DEFAULT".equals(normalized)) {
+            return true;
+        }
+        ProductFormulaExpressionParser parser = new ProductFormulaExpressionParser(normalized, CONDITION_VARIABLES, true, context, false);
+        Object result = parser.parseOr();
+        parser.expectEnd();
+        if (!(result instanceof Boolean matched)) {
+            throw new IllegalArgumentException("condition must be boolean");
+        }
+        return matched;
     }
 }

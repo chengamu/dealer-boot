@@ -5,7 +5,7 @@
         <h3>{{ t('productCenter.formulaSetup.exceptionRestriction') }}</h3>
         <p>{{ t('productCenter.formulaSetup.exceptionRestrictionHint') }}</p>
       </div>
-      <el-button type="primary" plain :icon="Plus" @click="$emit('addRestriction')">{{ t('productCenter.formulaSetup.addRestriction') }}</el-button>
+      <el-button type="primary" :icon="Plus" @click="$emit('addRestriction')">{{ t('productCenter.formulaSetup.addRestriction') }}</el-button>
     </div>
 
     <el-table :data="restrictions" border class="setup-table">
@@ -216,11 +216,11 @@ function optionByRef(ref?: string) {
 
 <style scoped>
 .setup-section {
-  padding: 16px;
-  margin-bottom: 12px;
+  padding: 12px;
+  margin-bottom: 10px;
   background: #fff;
-  border: 1px solid #e6ebf2;
-  border-radius: 8px;
+  border: 1px solid #e9edf5;
+  border-radius: 6px;
 }
 
 .setup-section__toolbar {
@@ -233,7 +233,7 @@ function optionByRef(ref?: string) {
 .setup-section__toolbar h3 {
   margin: 0 0 4px;
   color: #111827;
-  font-size: 16px;
+  font-size: 15px;
 }
 
 .setup-section__toolbar p {

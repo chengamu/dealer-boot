@@ -9,16 +9,16 @@ import com.bocoo.common.mybatis.core.page.TableDataInfo;
 import com.bocoo.product.domain.bo.ProductSaleProductBo;
 import com.bocoo.product.domain.entity.ProductFormula;
 import com.bocoo.product.domain.entity.ProductFormulaVersion;
-import com.bocoo.product.domain.entity.ProductPriceFabric;
-import com.bocoo.product.domain.entity.ProductPriceFabricRule;
+import com.bocoo.product.domain.entity.ProductPriceMaterial;
+import com.bocoo.product.domain.entity.ProductPriceMaterialRule;
 import com.bocoo.product.domain.entity.ProductPriceSetting;
 import com.bocoo.product.domain.entity.ProductSaleProduct;
 import com.bocoo.product.domain.vo.ProductSaleProductVo;
 import com.bocoo.product.domain.vo.ReferenceCheckResultVo;
 import com.bocoo.product.mapper.ProductFormulaMapper;
 import com.bocoo.product.mapper.ProductFormulaVersionMapper;
-import com.bocoo.product.mapper.ProductPriceFabricMapper;
-import com.bocoo.product.mapper.ProductPriceFabricRuleMapper;
+import com.bocoo.product.mapper.ProductPriceMaterialMapper;
+import com.bocoo.product.mapper.ProductPriceMaterialRuleMapper;
 import com.bocoo.product.mapper.ProductPriceSettingMapper;
 import com.bocoo.product.mapper.ProductSaleProductMapper;
 import com.bocoo.product.service.ProductChangeLogService;
@@ -43,11 +43,12 @@ public class ProductSaleProductServiceImpl extends ProductServiceSupport impleme
 
     private final ProductSaleProductMapper saleProductMapper;
     private final ProductPriceSettingMapper settingMapper;
-    private final ProductPriceFabricMapper fabricMapper;
-    private final ProductPriceFabricRuleMapper fabricRuleMapper;
+    private final ProductPriceMaterialMapper materialMapper;
+    private final ProductPriceMaterialRuleMapper priceRuleMapper;
     private final ProductFormulaMapper formulaMapper;
     private final ProductFormulaVersionMapper versionMapper;
     private final ProductChangeLogService changeLogService;
+    private final ProductQuoteReferenceGuard quoteReferenceGuard;
 
     @Override
     public TableDataInfo<ProductSaleProductVo> queryPageList(ProductSaleProductBo bo, PageQuery pageQuery) {
@@ -148,8 +149,12 @@ public class ProductSaleProductServiceImpl extends ProductServiceSupport impleme
             .toList();
         long count = 0;
         if (!settingIds.isEmpty()) {
-            count += fabricMapper.selectCount(activeQuery(ProductPriceFabric.class).in("price_setting_id", settingIds));
-            count += fabricRuleMapper.selectCount(activeQuery(ProductPriceFabricRule.class).in("price_setting_id", settingIds));
+            count += materialMapper.selectCount(activeQuery(ProductPriceMaterial.class).in("price_setting_id", settingIds));
+            count += priceRuleMapper.selectCount(activeQuery(ProductPriceMaterialRule.class).in("price_setting_id", settingIds));
+        }
+        long quoteCount = quoteReferenceGuard.countSaleProductReferences(id);
+        if (quoteCount > 0) {
+            return referenceResult(quoteCount, "product.saleProduct.quoteReferenced", "Customer quotes: " + quoteCount);
         }
         return referenceResult(count, "product.saleProduct.priceRuleReferenced", "Price rules: " + count);
     }

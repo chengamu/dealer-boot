@@ -29,6 +29,7 @@ export type PriceExpressionResult = {
 
 export const priceFormulaVariables: PriceExpressionVariable[] = [
   { label: 'unitPrice', labelKey: 'productCenter.pricing.variableUnitPrice', name: 'unitPrice', sample: 50 },
+  { label: 'usageQty', labelKey: 'productCenter.pricing.variableUsageQty', name: 'usageQty', sample: 2 },
   { label: 'width', labelKey: 'productCenter.pricing.variableWidth', name: 'width', sample: 25 },
   { label: 'drop', labelKey: 'productCenter.pricing.variableDrop', name: 'drop', sample: 72 },
   { label: 'widthCm', labelKey: 'productCenter.pricing.variableWidthCm', name: 'widthCm', insert: 'width * 2.54', sample: 63.5 },
@@ -37,8 +38,7 @@ export const priceFormulaVariables: PriceExpressionVariable[] = [
   { label: 'areaSqft', labelKey: 'productCenter.pricing.variableAreaSqft', name: 'areaSqft', insert: 'drop * width / 144', sample: 12.5 }
 ]
 
-export const priceConditionVariables = priceFormulaVariables.filter((item) => item.name !== 'unitPrice')
-export const shippingFormulaVariables = priceConditionVariables
+export const priceConditionVariables = priceFormulaVariables.filter((item) => !['unitPrice', 'usageQty'].includes(item.name))
 
 const FUNCTIONS = new Set(['max', 'min', 'round', 'ceil', 'floor'])
 export function priceOperators() {
@@ -47,10 +47,6 @@ export function priceOperators() {
 
 export function validatePriceFormula(input?: string) {
   return validateExpression(input, priceFormulaVariables, false, true)
-}
-
-export function validateShippingFormula(input?: string) {
-  return validateExpression(input, shippingFormulaVariables, false, true)
 }
 
 export function validatePriceCondition(input?: string): PriceExpressionResult {

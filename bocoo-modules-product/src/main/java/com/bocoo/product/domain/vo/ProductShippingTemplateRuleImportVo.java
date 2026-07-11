@@ -17,10 +17,10 @@ public class ProductShippingTemplateRuleImportVo {
     @ExcelProperty("适用条件")
     private String condition;
 
-    @ExcelProperty("最小面积(ft²)")
+    @ExcelProperty("最小面积（平方英尺）")
     private BigDecimal minAreaSqft;
 
-    @ExcelProperty("最大面积(ft²)")
+    @ExcelProperty("最大面积（平方英尺）")
     private BigDecimal maxAreaSqft;
 
     @ExcelProperty("邮费")

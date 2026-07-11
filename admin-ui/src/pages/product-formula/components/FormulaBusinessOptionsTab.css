@@ -2,22 +2,22 @@
   display: grid;
   grid-template-columns: minmax(440px, 520px) minmax(0, 1fr);
   align-items: start;
-  gap: 12px;
-  margin-bottom: 12px;
+  gap: 10px;
+  margin-bottom: 10px;
 }
 
 .option-node-panel {
   min-width: 0;
   overflow: hidden;
   background: #fff;
-  border: 1px solid #e6ebf2;
-  border-radius: 8px;
+  border: 1px solid #e9edf5;
+  border-radius: 6px;
 }
 
 .option-edit-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 12px;
+  gap: 10px;
   padding: 12px;
 }
 

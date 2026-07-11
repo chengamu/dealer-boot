@@ -24,11 +24,11 @@
             style="width: 100%"
             @row-click="getCacheKeys"
           >
-            <el-table-column :label="t('common.index')" width="70" type="index" />
-            <el-table-column :label="t('cache.cacheName')" align="center" prop="cacheName" :show-overflow-tooltip="true">
+            <el-table-column :label="t('common.index')" width="70" type="index" align="center" />
+            <el-table-column :label="t('cache.cacheName')" align="left" prop="cacheName" :show-overflow-tooltip="true">
               <template #default="{ row }">{{ nameFormatter(row) }}</template>
             </el-table-column>
-            <el-table-column :label="t('user.remark')" align="center" prop="remark" :show-overflow-tooltip="true" />
+            <el-table-column :label="t('user.remark')" align="left" prop="remark" :show-overflow-tooltip="true" />
             <el-table-column :label="t('common.operate')" width="120" align="center" class-name="small-padding fixed-width">
               <template #default="{ row }">
                 <AdminTableActions :actions="[
@@ -72,8 +72,8 @@
             style="width: 100%"
             @row-click="handleCacheValue"
           >
-            <el-table-column :label="t('common.index')" width="70" type="index" />
-            <el-table-column :label="t('cache.cacheKey')" align="center" :show-overflow-tooltip="true">
+            <el-table-column :label="t('common.index')" width="70" type="index" align="center" />
+            <el-table-column :label="t('cache.cacheKey')" align="left" :show-overflow-tooltip="true">
               <template #default="{ row }">{{ keyFormatter(row) }}</template>
             </el-table-column>
             <el-table-column :label="t('common.operate')" width="120" align="center" class-name="small-padding fixed-width">

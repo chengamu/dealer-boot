@@ -2,6 +2,10 @@ import { createApp } from 'vue'
 import Cookies from 'js-cookie'
 import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
+import VxeUI from 'vxe-pc-ui'
+import 'vxe-pc-ui/lib/style.css'
+import VxeUITable from 'vxe-table'
+import 'vxe-table/lib/style.css'
 import 'nprogress/nprogress.css'
 import 'virtual:svg-icons-register'
 import App from './App.vue'
@@ -73,6 +77,8 @@ async function bootstrap() {
   app.use(router)
   app.use(plugins)
   app.use(elementIcons)
+  app.use(VxeUI)
+  app.use(VxeUITable)
   installLocale(app)
   directive(app)
   app.use(ElementPlus, {

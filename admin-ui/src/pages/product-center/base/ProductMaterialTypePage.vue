@@ -29,8 +29,8 @@
             <strong>{{ t('productCenter.materialType.group') }}</strong>
           </div>
           <div class="material-type-page__actions">
-            <el-button type="primary" plain icon="Plus" :aria-label="t('common.add')" :data-agent-label="t('common.add')" @click="openGroupForm()" v-hasPermi="['product:material-type:add']">{{ t('common.add') }}</el-button>
-            <el-button type="success" plain icon="Edit" :disabled="!selectedGroup" :aria-label="agentGroupActionLabel(t('common.edit'))" :data-agent-label="agentGroupActionLabel(t('common.edit'))" data-agent-action="edit-material-type-group" @click="openGroupForm(selectedGroup)" v-hasPermi="['product:material-type:edit']">{{ t('common.edit') }}</el-button>
+            <el-button type="primary" icon="Plus" :aria-label="t('common.add')" :data-agent-label="t('common.add')" @click="openGroupForm()" v-hasPermi="['product:material-type:add']">{{ t('common.add') }}</el-button>
+            <el-button plain icon="Edit" :disabled="!selectedGroup" :aria-label="agentGroupActionLabel(t('common.edit'))" :data-agent-label="agentGroupActionLabel(t('common.edit'))" data-agent-action="edit-material-type-group" @click="openGroupForm(selectedGroup)" v-hasPermi="['product:material-type:edit']">{{ t('common.edit') }}</el-button>
             <el-button type="danger" plain icon="Delete" :disabled="!selectedGroup" :aria-label="agentGroupActionLabel(t('common.delete'))" :data-agent-label="agentGroupActionLabel(t('common.delete'))" data-agent-action="delete-material-type-group" data-agent-danger="delete" data-agent-risk="confirm-required" data-agent-confirm-required="true" data-agent-confirm-message="需要用户人工确认后才能删除" @click="removeGroup" v-hasPermi="['product:material-type:remove']">{{ t('common.delete') }}</el-button>
           </div>
         </div>
@@ -85,10 +85,10 @@
             <span v-if="selectedGroup">{{ selectedGroup.groupNameCn }} / {{ selectedGroup.groupCode }}</span>
           </div>
           <div class="material-type-page__actions">
-            <el-button type="primary" plain icon="Plus" :disabled="!selectedGroup" :aria-label="t('common.add')" :data-agent-label="t('common.add')" @click="openTypeForm()" v-hasPermi="['product:material-type:add']">{{ t('common.add') }}</el-button>
-            <el-button type="success" plain icon="Edit" :disabled="!selectedType" :aria-label="agentTypeActionLabel(t('common.edit'))" :data-agent-label="agentTypeActionLabel(t('common.edit'))" data-agent-action="edit-material-type" @click="openTypeForm(selectedType)" v-hasPermi="['product:material-type:edit']">{{ t('common.edit') }}</el-button>
+            <el-button type="primary" icon="Plus" :disabled="!selectedGroup" :aria-label="t('common.add')" :data-agent-label="t('common.add')" @click="openTypeForm()" v-hasPermi="['product:material-type:add']">{{ t('common.add') }}</el-button>
+            <el-button plain icon="Edit" :disabled="!selectedType" :aria-label="agentTypeActionLabel(t('common.edit'))" :data-agent-label="agentTypeActionLabel(t('common.edit'))" data-agent-action="edit-material-type" @click="openTypeForm(selectedType)" v-hasPermi="['product:material-type:edit']">{{ t('common.edit') }}</el-button>
             <el-button type="danger" plain icon="Delete" :disabled="!selectedType" :aria-label="agentTypeActionLabel(t('common.delete'))" :data-agent-label="agentTypeActionLabel(t('common.delete'))" data-agent-action="delete-material-type" data-agent-danger="delete" data-agent-risk="confirm-required" data-agent-confirm-required="true" data-agent-confirm-message="需要用户人工确认后才能删除" @click="removeType" v-hasPermi="['product:material-type:remove']">{{ t('common.delete') }}</el-button>
-            <el-button type="info" plain icon="View" :disabled="!selectedType" :aria-label="agentTypeActionLabel(t('productCenter.common.references'))" :data-agent-label="agentTypeActionLabel(t('productCenter.common.references'))" data-agent-action="reference-material-type" @click="openReference('type')" v-hasPermi="['product:material-type:reference']">{{ t('productCenter.common.references') }}</el-button>
+            <el-button plain icon="View" :disabled="!selectedType" :aria-label="agentTypeActionLabel(t('productCenter.common.references'))" :data-agent-label="agentTypeActionLabel(t('productCenter.common.references'))" data-agent-action="reference-material-type" @click="openReference('type')" v-hasPermi="['product:material-type:reference']">{{ t('productCenter.common.references') }}</el-button>
           </div>
         </div>
         <el-alert

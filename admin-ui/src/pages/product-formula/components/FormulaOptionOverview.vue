@@ -49,24 +49,23 @@ const t = (key: string) => getMessage(key, localeStore.language)
 .option-overview {
   display: grid;
   grid-template-columns: repeat(5, minmax(150px, 1fr));
-  gap: 14px;
-  margin-bottom: 12px;
-  padding: 16px;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 10px;
   background: #fff;
-  border: 1px solid #e6ebf2;
-  border-radius: 8px;
+  border: 1px solid #e9edf5;
+  border-radius: 6px;
 }
 
 .option-overview__card {
   display: flex;
   align-items: center;
-  gap: 12px;
-  min-height: 72px;
-  padding: 12px 16px;
-  background: linear-gradient(180deg, #fff, #f8fbff);
-  border: 1px solid #e6ebf2;
-  border-radius: 8px;
-  box-shadow: 0 4px 14px rgb(15 23 42 / 3%);
+  gap: 8px;
+  min-height: 54px;
+  padding: 8px 10px;
+  background: #fff;
+  border: 1px solid #eef0f5;
+  border-radius: 6px;
 }
 
 .option-overview__icon {
@@ -74,23 +73,24 @@ const t = (key: string) => getMessage(key, localeStore.language)
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
-  width: 42px;
-  height: 42px;
+  width: 30px;
+  height: 30px;
   color: #1677ff;
-  font-size: 24px;
+  font-size: 18px;
   background: #f5f9ff;
-  border-radius: 10px;
+  border-radius: 6px;
 }
 
 .option-overview__label {
   color: #1f2937;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 500;
 }
 
 .option-overview__card strong {
   margin-left: auto;
   color: #111827;
-  font-size: 24px;
+  font-size: 18px;
   line-height: 1;
 }
 

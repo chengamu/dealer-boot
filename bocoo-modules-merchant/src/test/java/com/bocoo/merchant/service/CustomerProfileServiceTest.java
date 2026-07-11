@@ -6,6 +6,7 @@ import com.bocoo.merchant.domain.bo.CustomerProfileBo;
 import com.bocoo.merchant.domain.entity.CustomerProfile;
 import com.bocoo.merchant.domain.vo.CustomerOwnerOptionVo;
 import com.bocoo.merchant.mapper.CustomerProfileMapper;
+import com.bocoo.merchant.mapper.CustomerQuoteMapper;
 import com.bocoo.merchant.service.impl.CustomerProfileServiceImpl;
 import com.bocoo.system.domain.entity.SysUser;
 import com.bocoo.system.mapper.MerchantProfileMapper;
@@ -35,6 +36,8 @@ class CustomerProfileServiceTest {
     private MerchantProfileMapper merchantProfileMapper;
     @Mock
     private SysUserMapper userMapper;
+    @Mock
+    private CustomerQuoteMapper quoteMapper;
 
     private CustomerProfileServiceImpl service;
 
@@ -43,7 +46,8 @@ class CustomerProfileServiceTest {
         MerchantServiceTestSupport.prepare();
         TestSaTokenContext.install();
         TestSaTokenContext.setLoginUser(TenantType.MERCHANT.getCode(), 200L, 10L, "merchant");
-        service = new CustomerProfileServiceImpl(customerMapper, merchantProfileMapper, userMapper);
+        service = new CustomerProfileServiceImpl(customerMapper, merchantProfileMapper, userMapper, quoteMapper,
+            org.mockito.Mockito.mock(org.springframework.beans.factory.ObjectProvider.class));
     }
 
     @Test
@@ -105,6 +109,22 @@ class CustomerProfileServiceTest {
 
         verify(customerMapper).delete(any());
         verify(customerMapper, never()).deleteBatchIds(any());
+    }
+
+    @Test
+    void deleteRejectsCustomerReferencedByQuote() {
+        CustomerProfile customer = new CustomerProfile();
+        customer.setCustomerId(1L);
+        customer.setTenantId(200L);
+        customer.setStatus("DISABLED");
+        customer.setDelFlag("0");
+        when(customerMapper.selectOne(any(), eq(false))).thenReturn(customer);
+        when(quoteMapper.selectCount(any())).thenReturn(1L);
+
+        assertThatThrownBy(() -> service.deleteWithValidByIds(new Long[]{1L}))
+            .isInstanceOf(ServiceException.class);
+
+        verify(customerMapper, never()).delete(any());
     }
 
     @Test

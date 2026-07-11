@@ -16,13 +16,17 @@ import com.bocoo.merchant.domain.entity.CustomerProfile;
 import com.bocoo.merchant.domain.vo.CustomerOwnerOptionVo;
 import com.bocoo.merchant.domain.vo.CustomerProfileVo;
 import com.bocoo.merchant.mapper.CustomerProfileMapper;
+import com.bocoo.merchant.domain.entity.CustomerQuote;
+import com.bocoo.merchant.mapper.CustomerQuoteMapper;
 import com.bocoo.merchant.service.CustomerProfileService;
+import com.bocoo.merchant.service.CustomerSalesReferenceProvider;
 import com.bocoo.system.domain.entity.MerchantProfile;
 import com.bocoo.system.domain.entity.SysUser;
 import com.bocoo.system.mapper.MerchantProfileMapper;
 import com.bocoo.system.mapper.SysUserMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.ObjectProvider;
 
 import java.util.Arrays;
 import java.util.List;
@@ -35,6 +39,8 @@ public class CustomerProfileServiceImpl extends MerchantServiceSupport implement
     private final CustomerProfileMapper customerMapper;
     private final MerchantProfileMapper merchantProfileMapper;
     private final SysUserMapper userMapper;
+    private final CustomerQuoteMapper quoteMapper;
+    private final ObjectProvider<CustomerSalesReferenceProvider> salesReferenceProvider;
 
     @Override
     public TableDataInfo<CustomerProfileVo> queryPageList(CustomerProfileBo bo, PageQuery pageQuery) {
@@ -125,6 +131,15 @@ public class CustomerProfileServiceImpl extends MerchantServiceSupport implement
             }
             if (enabled(current.getStatus())) {
                 throw ServiceException.ofMessageKey("customer.profile.delete.enabledDenied");
+            }
+            long quoteCount = quoteMapper.selectCount(this.<CustomerQuote>activeQuery()
+                .eq("tenant_id", tenantId).eq("customer_id", id));
+            if (quoteCount > 0) {
+                throw ServiceException.ofMessageKey("customer.profile.delete.quoteReferenced");
+            }
+            CustomerSalesReferenceProvider provider = salesReferenceProvider.getIfAvailable();
+            if (provider != null && provider.countByCustomer(tenantId, id) > 0) {
+                throw ServiceException.ofMessageKey("customer.profile.delete.salesReferenced");
             }
         }
         return customerMapper.delete(this.<CustomerProfile>activeQuery()

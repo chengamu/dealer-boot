@@ -43,12 +43,12 @@
 
     <el-row :gutter="10" class="mb8 system-table-page__toolbar">
       <el-col :span="1.5">
-        <el-button type="primary" plain icon="Plus" @click="handleAdd" v-hasPermi="['system:config:add']">
+        <el-button type="primary" icon="Plus" @click="handleAdd" v-hasPermi="['system:config:add']">
           {{ t('common.add') }}
         </el-button>
       </el-col>
       <el-col :span="1.5">
-        <el-button type="success" plain icon="Edit" :disabled="single" @click="handleUpdate()" v-hasPermi="['system:config:edit']">
+        <el-button plain icon="Edit" :disabled="single" @click="handleUpdate()" v-hasPermi="['system:config:edit']">
           {{ t('common.edit') }}
         </el-button>
       </el-col>
@@ -58,7 +58,7 @@
         </el-button>
       </el-col>
       <el-col :span="1.5">
-        <el-button type="warning" plain icon="Download" @click="handleExport" v-hasPermi="['system:config:export']">
+        <el-button plain icon="Download" @click="handleExport" v-hasPermi="['system:config:export']">
           {{ t('common.export') }}
         </el-button>
       </el-col>

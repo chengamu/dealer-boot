@@ -11,7 +11,7 @@ import com.bocoo.common.satoken.utils.LoginHelper;
 import java.util.HashMap;
 import java.util.Map;
 
-final class TestSaTokenContext implements SaTokenContext {
+public final class TestSaTokenContext implements SaTokenContext {
 
     private static final TestSaTokenContext INSTANCE = new TestSaTokenContext();
 
@@ -20,12 +20,12 @@ final class TestSaTokenContext implements SaTokenContext {
     private TestSaTokenContext() {
     }
 
-    static void install() {
+    public static void install() {
         SaManager.setSaTokenContext(INSTANCE);
         INSTANCE.storage.get().clear();
     }
 
-    static void setLoginUser(String tenantType, Long tenantId, Long userId, String username) {
+    public static void setLoginUser(String tenantType, Long tenantId, Long userId, String username) {
         LoginUser loginUser = new LoginUser();
         loginUser.setTenantType(tenantType);
         loginUser.setTenantId(tenantId);

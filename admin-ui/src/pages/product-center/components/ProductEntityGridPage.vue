@@ -52,7 +52,7 @@
 
     <el-row :gutter="10" class="mb8 product-grid-page__toolbar" data-agent-scope="product-base-toolbar" :data-agent-entity="config.key">
       <el-col :span="1.5">
-        <el-button v-if="!config.readonly" type="primary" plain icon="Plus" class="product-grid-page__toolbar-button product-grid-page__toolbar-button--add" :aria-label="t('common.add')" :data-agent-label="t('common.add')" @click="handleAdd()" v-hasPermi="[config.permissions.add]">
+        <el-button v-if="!config.readonly" type="primary" icon="Plus" class="product-grid-page__toolbar-button product-grid-page__toolbar-button--add" :aria-label="t('common.add')" :data-agent-label="t('common.add')" @click="handleAdd()" v-hasPermi="[config.permissions.add]">
           {{ t('common.add') }}
         </el-button>
       </el-col>
@@ -62,7 +62,7 @@
         </el-button>
       </el-col>
       <el-col v-if="!isTreeGrid" :span="1.5">
-        <el-button v-if="!config.readonly" type="success" plain icon="Edit" class="product-grid-page__toolbar-button product-grid-page__toolbar-button--edit" :disabled="single" :aria-label="agentSelectedActionLabel(t('common.edit'))" :data-agent-label="agentSelectedActionLabel(t('common.edit'))" data-agent-action="edit-selected" @click="handleUpdate()" v-hasPermi="[config.permissions.edit]">
+        <el-button v-if="!config.readonly" plain icon="Edit" class="product-grid-page__toolbar-button product-grid-page__toolbar-button--edit" :disabled="single" :aria-label="agentSelectedActionLabel(t('common.edit'))" :data-agent-label="agentSelectedActionLabel(t('common.edit'))" data-agent-action="edit-selected" @click="handleUpdate()" v-hasPermi="[config.permissions.edit]">
           {{ t('common.edit') }}
         </el-button>
       </el-col>
@@ -77,16 +77,16 @@
         </el-button>
       </el-col>
       <el-col v-if="isSingleRowActions && !isTreeGrid && !config.hideReference" :span="1.5">
-        <el-button type="success" plain icon="View" class="product-grid-page__toolbar-button product-grid-page__toolbar-button--reference" :disabled="single" :aria-label="agentSelectedActionLabel(t('productCenter.common.references'))" :data-agent-label="agentSelectedActionLabel(t('productCenter.common.references'))" data-agent-action="reference-selected" @click="handleSelectedReference" v-hasPermi="[config.permissions.reference]">
+        <el-button plain icon="View" class="product-grid-page__toolbar-button product-grid-page__toolbar-button--reference" :disabled="single" :aria-label="agentSelectedActionLabel(t('productCenter.common.references'))" :data-agent-label="agentSelectedActionLabel(t('productCenter.common.references'))" data-agent-action="reference-selected" @click="handleSelectedReference" v-hasPermi="[config.permissions.reference]">
           {{ t('productCenter.common.references') }}
         </el-button>
       </el-col>
       <el-col v-if="isSingleRowActions && !isTreeGrid && config.changeLog" :span="1.5">
-        <el-button type="primary" plain icon="Clock" class="product-grid-page__toolbar-button product-grid-page__toolbar-button--change-log" :disabled="single" :aria-label="agentSelectedActionLabel(t(config.changeLog.titleKey || 'productCenter.changeLog.title'))" :data-agent-label="agentSelectedActionLabel(t(config.changeLog.titleKey || 'productCenter.changeLog.title'))" data-agent-action="change-log-selected" @click="handleSelectedChangeLog" v-hasPermi="[config.changeLog.permission]">
+        <el-button plain icon="Clock" class="product-grid-page__toolbar-button product-grid-page__toolbar-button--change-log" :disabled="single" :aria-label="agentSelectedActionLabel(t(config.changeLog.titleKey || 'productCenter.changeLog.title'))" :data-agent-label="agentSelectedActionLabel(t(config.changeLog.titleKey || 'productCenter.changeLog.title'))" data-agent-action="change-log-selected" @click="handleSelectedChangeLog" v-hasPermi="[config.changeLog.permission]">
           {{ t(config.changeLog.titleKey || 'productCenter.changeLog.title') }}
         </el-button>
       </el-col>
-      <el-col v-for="action in visibleSingleRowToolbarActions" :key="action.labelKey" :span="1.5">
+      <el-col v-for="action in visibleSingleRowToolbarActions" :key="action.labelKey" :span="1.5" class="product-grid-page__business-action">
         <el-button
           :type="action.type || 'primary'"
           plain
@@ -729,6 +729,7 @@ function formatNumberValue(field: ProductFieldConfig, value: unknown) {
 function columnAlign(field: ProductFieldConfig) {
   if (field.align) return field.align
   if (field.type === 'number') return 'right'
+  if (/status$/i.test(field.prop)) return 'center'
   if (field.type === 'date' || field.type === 'datetime' || field.type === 'status' || field.type === 'boolean' || field.type === 'url') {
     return 'center'
   }
@@ -1577,36 +1578,14 @@ defineExpose({
 
 <style scoped lang="scss">
 .product-grid-page__search {
-  margin-bottom: 6px;
-  padding: 10px 12px 4px;
-  border: 1px solid var(--admin-border-soft, #e8edf5);
-  border-radius: 8px;
-  background: #fff;
-
-  :deep(.el-form-item) {
-    margin-right: 10px;
-    margin-bottom: 6px;
-  }
-
-  :deep(.el-input),
-  :deep(.el-select) {
-    vertical-align: top;
-  }
-}
-
-.product-grid-page__search[data-agent-entity='category'],
-.product-grid-page__search[data-agent-entity='unit'],
-.product-grid-page__search[data-agent-entity='material'],
-.product-grid-page__search[data-agent-entity='formula'],
-.product-grid-page__search[data-agent-entity='manufacturer'],
-.product-grid-page__search[data-agent-entity='baseAttribute'] {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
   margin-bottom: 8px;
   padding: 10px 12px 2px;
-  border-color: #eef0f5;
+  border: 1px solid #eef0f5;
   border-radius: 8px;
+  background: #fff;
 
   :deep(.el-form-item) {
     margin-right: 12px;
@@ -1625,6 +1604,7 @@ defineExpose({
   :deep(.el-input),
   :deep(.el-select) {
     width: 168px !important;
+    vertical-align: top;
   }
 
   :deep(.el-input__wrapper),
@@ -1652,22 +1632,8 @@ defineExpose({
   margin-bottom: 8px;
 
   :deep(.el-col) {
-    flex: 0 0 auto;
-  }
-}
-
-.product-grid-page__toolbar[data-agent-entity='category'],
-.product-grid-page__toolbar[data-agent-entity='unit'],
-.product-grid-page__toolbar[data-agent-entity='material'],
-.product-grid-page__toolbar[data-agent-entity='formula'],
-.product-grid-page__toolbar[data-agent-entity='manufacturer'],
-.product-grid-page__toolbar[data-agent-entity='baseAttribute'] {
-  align-items: center;
-  min-height: 36px;
-  margin-bottom: 8px;
-
-  :deep(.el-col) {
     display: inline-flex;
+    flex: 0 0 auto;
     align-items: center;
   }
 
@@ -1690,17 +1656,18 @@ defineExpose({
     }
   }
 
-  :deep(.product-grid-page__toolbar-button--edit.el-button--success.is-plain),
-  :deep(.product-grid-page__toolbar-button--change-log.el-button--primary.is-plain) {
-    border-color: #b8d2ff;
-    color: #1677ff;
-    background: #f8fbff;
+  :deep(.product-grid-page__toolbar-button--edit.is-plain),
+  :deep(.product-grid-page__toolbar-button--change-log.is-plain),
+  :deep(.product-grid-page__toolbar-button--reference.is-plain) {
+    border-color: #d9e0ea;
+    color: #475467;
+    background: #ffffff;
 
     &:hover,
     &:focus {
-      border-color: #8bb8ff;
-      color: #0958d9;
-      background: #eef5ff;
+      border-color: #b8d2ff;
+      color: #1677ff;
+      background: #f8fbff;
     }
   }
 
@@ -1730,17 +1697,16 @@ defineExpose({
     }
   }
 
-  :deep(.product-grid-page__toolbar-button--reference.el-button--success.is-plain) {
-    border-color: #bfe8d4;
-    color: #0f9f6e;
-    background: #f6fffb;
+  :deep(.product-grid-page__toolbar-button--row-action.el-button--primary.is-plain) {
+    border-color: #b8d2ff;
+    color: #1677ff;
+    background: #f8fbff;
+  }
 
-    &:hover,
-    &:focus {
-      border-color: #95d9b9;
-      color: #067647;
-      background: #edfbf5;
-    }
+  :deep(.product-grid-page__business-action) {
+    margin-left: 4px;
+    padding-left: 8px;
+    border-left: 1px solid #eef0f5;
   }
 
   :deep(.el-button.is-disabled),
@@ -1753,28 +1719,6 @@ defineExpose({
 }
 
 .product-grid-page__table {
-  :deep(.el-table__header th) {
-    background: #f8fafc;
-    color: #344054;
-    font-weight: 600;
-  }
-
-  :deep(.el-table__cell) {
-    padding-top: 8px;
-    padding-bottom: 8px;
-  }
-
-  :deep(.el-table__body tr) {
-    cursor: pointer;
-  }
-}
-
-.product-grid-page__table[data-agent-entity='category'],
-.product-grid-page__table[data-agent-entity='unit'],
-.product-grid-page__table[data-agent-entity='material'],
-.product-grid-page__table[data-agent-entity='formula'],
-.product-grid-page__table[data-agent-entity='manufacturer'],
-.product-grid-page__table[data-agent-entity='baseAttribute'] {
   :deep(.el-table__inner-wrapper::before),
   :deep(.el-table__border-left-patch),
   :deep(.el-table__border-bottom-patch) {
@@ -1800,6 +1744,10 @@ defineExpose({
     background: #f8fbff;
   }
 
+  :deep(.el-table__body tr) {
+    cursor: pointer;
+  }
+
   :deep(.sort-caret.ascending) {
     border-bottom-color: #c5ccd8;
   }
@@ -1823,48 +1771,55 @@ defineExpose({
 
 .product-grid-page__table {
   :deep(.el-table__body tr.product-grid-row--danger > td.el-table__cell),
-  :deep(.el-table__body tr.product-grid-row--danger.current-row > td.el-table__cell),
   :deep(.el-table__body tr.product-grid-row--danger:hover > td.el-table__cell) {
     background: #fff1f0;
     color: #7f1d1d;
   }
 
   :deep(.el-table__body tr.product-grid-row--warning > td.el-table__cell),
-  :deep(.el-table__body tr.product-grid-row--warning.current-row > td.el-table__cell),
   :deep(.el-table__body tr.product-grid-row--warning:hover > td.el-table__cell) {
     background: #fff7e6;
     color: #7c2d12;
   }
 
   :deep(.el-table__body tr.product-grid-row--success > td.el-table__cell),
-  :deep(.el-table__body tr.product-grid-row--success.current-row > td.el-table__cell),
   :deep(.el-table__body tr.product-grid-row--success:hover > td.el-table__cell) {
     background: #f0fdf4;
     color: #14532d;
   }
 
   :deep(.el-table__body tr.product-grid-row--muted > td.el-table__cell),
-  :deep(.el-table__body tr.product-grid-row--muted.current-row > td.el-table__cell),
   :deep(.el-table__body tr.product-grid-row--muted:hover > td.el-table__cell) {
     background: #f8fafc;
     color: #64748b;
   }
+
+  :deep(.el-table__body tr.current-row > td.el-table__cell),
+  :deep(.el-table__body tr:has(.el-checkbox__input.is-checked) > td.el-table__cell) {
+    background: #e6f0ff;
+    color: #2f3a4a;
+  }
+
+  :deep(.el-table__body tr.current-row:hover > td.el-table__cell),
+  :deep(.el-table__body tr:has(.el-checkbox__input.is-checked):hover > td.el-table__cell) {
+    background: #dcebff;
+    color: #2f3a4a;
+  }
 }
 
-.product-grid-page__pagination--unit,
-.product-grid-page__pagination--material,
-.product-grid-page__pagination--formula,
-.product-grid-page__pagination--manufacturer,
-.product-grid-page__pagination--baseAttribute {
+.product-grid-page__pagination {
   border-color: #eef0f5 !important;
   box-shadow: none !important;
 }
 
 .product-grid-page__multiline-cell {
+  display: -webkit-box;
   overflow: hidden;
   white-space: normal;
   word-break: break-word;
   line-height: 1.45;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
 }
 
 .product-grid-page__drawer-actions {

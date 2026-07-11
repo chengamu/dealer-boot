@@ -7,11 +7,11 @@
       </div>
       <div class="node-card__actions">
         <template v-if="selectedOption?.sourceType === 'MATERIAL_POOL'">
-          <el-button type="primary" plain :icon="Plus" @click="$emit('importValues')">
+          <el-button type="primary" :icon="Plus" @click="$emit('importValues')">
             {{ t('productCenter.formulaSetup.importOptionValues') }}
           </el-button>
         </template>
-        <el-button v-else-if="selectedOption?.sourceType !== 'BOOLEAN'" type="primary" plain :icon="Plus" :disabled="!selectedOptionCode" @click="$emit('addValue')">
+        <el-button v-else-if="selectedOption?.sourceType !== 'BOOLEAN'" type="primary" :icon="Plus" :disabled="!selectedOptionCode" @click="$emit('addValue')">
           {{ t('productCenter.formulaSetup.addOptionValue') }}
         </el-button>
       </div>
@@ -132,10 +132,10 @@ defineExpose({ focusValueName })
 
 <style scoped>
 .node-card {
-  padding: 16px;
+  padding: 12px;
   background: #fff;
-  border: 1px solid #e6ebf2;
-  border-radius: 8px;
+  border: 1px solid #e9edf5;
+  border-radius: 6px;
 }
 
 .node-card__header {
@@ -148,7 +148,7 @@ defineExpose({ focusValueName })
 .node-card__header h4 {
   margin: 0 0 4px;
   color: #111827;
-  font-size: 16px;
+  font-size: 15px;
 }
 
 .node-card__header p {

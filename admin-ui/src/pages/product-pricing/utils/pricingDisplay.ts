@@ -49,15 +49,17 @@ export function money(value?: number | string) {
   return Number.isFinite(numeric) ? numeric.toFixed(2) : '0.00'
 }
 
-export const DEFAULT_FABRIC_PRICE_FORMULA = 'unitPrice * MAX(drop * 2.54 * width * 2.54 / 10000, 1)'
+export const DEFAULT_MATERIAL_PRICE_FORMULA = 'unitPrice * usageQty'
 export const DEFAULT_FABRIC_AREA_FORMULA = 'MAX(drop * 2.54 * width * 2.54 / 10000, 1)'
 
-export function fabricPriceFormulaForUnitPrice(unitPrice?: number | string, areaFormula = DEFAULT_FABRIC_AREA_FORMULA) {
-  return `${money(unitPrice)} * ${areaFormula}`
+export function materialPriceFormulaForUnitPrice(unitPrice?: number | string, attributeGroupCode?: string) {
+  return attributeGroupCode === 'FABRIC'
+    ? `${money(unitPrice)} * ${DEFAULT_FABRIC_AREA_FORMULA}`
+    : `${money(unitPrice)} * usageQty`
 }
 
-export function displayFabricPriceFormula(formula?: string, unitPrice?: number | string) {
-  return String(formula || DEFAULT_FABRIC_PRICE_FORMULA).replace(/\bunitPrice\b/g, money(unitPrice))
+export function displayMaterialPriceFormula(formula?: string, unitPrice?: number | string) {
+  return String(formula || DEFAULT_MATERIAL_PRICE_FORMULA).replace(/\bunitPrice\b/g, money(unitPrice))
 }
 
 export function displayPriceExpression(
@@ -75,7 +77,8 @@ export function displayPriceExpression(
     widthCm: t('productCenter.pricing.variableWidthCm'),
     dropCm: t('productCenter.pricing.variableDropCm'),
     areaM2: t('productCenter.pricing.variableAreaM2'),
-    areaSqft: t('productCenter.pricing.variableAreaSqft')
+    areaSqft: t('productCenter.pricing.variableAreaSqft'),
+    usageQty: t('productCenter.pricing.variableUsageQty')
   }
   Object.entries(variableLabels).forEach(([key, label]) => {
     text = text.replace(new RegExp(`\\b${key}\\b`, 'g'), label)

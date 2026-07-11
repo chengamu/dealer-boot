@@ -1,6 +1,9 @@
 import { request, requestPage } from '@/utils/request'
 import type {
-  FabricPriceRule,
+  MaterialPriceRule,
+  MaterialPriceBatchRule,
+  ProductPriceQuote,
+  ProductPriceQuoteRequest,
   PriceSetupVO,
   PriceValidationIssue,
   SaleProductQuery,
@@ -23,8 +26,10 @@ export const saleProductApi = {
 
 export const productPriceApi = {
   setup: (saleProductId: string | number) => request<PriceSetupVO>({ url: '/product-pricing/price-settings/' + saleProductId, method: 'get' }),
-  generateFabricPrices: (saleProductId: string | number, overwrite = false) => request({ url: '/product-pricing/price-settings/' + saleProductId + '/generate-fabric-prices/' + overwrite, method: 'put' }),
-  saveFabricRules: (saleProductId: string | number, priceFabricId: string | number, data: FabricPriceRule[]) => request({ url: '/product-pricing/price-settings/' + saleProductId + '/fabrics/' + priceFabricId + '/rules', method: 'put', data }),
+  generateMaterialPrices: (saleProductId: string | number, overwrite = false) => request({ url: '/product-pricing/price-settings/' + saleProductId + '/generate-material-prices/' + overwrite, method: 'put' }),
+  saveMaterialRules: (saleProductId: string | number, priceMaterialId: string, data: MaterialPriceRule[]) => request({ url: '/product-pricing/price-settings/' + saleProductId + '/materials/' + priceMaterialId + '/rules', method: 'put', data }),
+  saveMaterialRulesBatch: (saleProductId: string | number, data: MaterialPriceBatchRule) => request({ url: '/product-pricing/price-settings/' + saleProductId + '/materials/rules/batch', method: 'put', data }),
+  quote: (saleProductId: string | number, data: ProductPriceQuoteRequest) => request<ProductPriceQuote>({ url: '/product-pricing/price-settings/' + saleProductId + '/quote', method: 'post', data }),
   validate: (saleProductId: string | number) => request<PriceValidationIssue[]>({ url: '/product-pricing/price-settings/' + saleProductId + '/validate', method: 'put' })
 }
 

@@ -41,7 +41,7 @@
         </el-button>
       </el-col>
       <el-col :span="1.5">
-        <el-button v-hasPermi="['monitor:operlog:export']" type="warning" plain icon="Download" @click="handleExport">
+        <el-button v-hasPermi="['monitor:operlog:export']" plain icon="Download" @click="handleExport">
           {{ t('common.export') }}
         </el-button>
       </el-col>

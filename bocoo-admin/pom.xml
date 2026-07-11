@@ -74,6 +74,13 @@
             <version>${com.bocoo.version}</version>
         </dependency>
 
+        <!-- 正式销售报价与订单模块 -->
+        <dependency>
+            <groupId>com.bocoo</groupId>
+            <artifactId>bocoo-modules-dealer</artifactId>
+            <version>${com.bocoo.version}</version>
+        </dependency>
+
         <!-- API文档 -->
         <dependency>
             <groupId>com.bocoo</groupId>

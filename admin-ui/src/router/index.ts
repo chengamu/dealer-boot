@@ -83,6 +83,24 @@ const hiddenLayoutRoutes: RouteRecordRaw[] = [
     name: 'ProductFormulaReviewDetail',
     component: () => import('@/pages/product-formula/FormulaReviewDetailPage.vue'),
     meta: { title: 'productCenter.formulaReview.detailTitle', activeMenu: '/product-formula/reviews', hidden: true }
+  },
+  {
+    path: '/customer/quotes/workbench',
+    name: 'CustomerQuoteWorkbench',
+    component: () => import('@/pages/customer/CustomerQuoteWorkbenchPage.vue'),
+    meta: { title: 'customer.quote.workbenchTitle', activeMenu: '/customerManagement/quotes', hidden: true }
+  },
+  {
+    path: '/sales-orders/documents/editor',
+    name: 'SalesDocumentEditor',
+    component: () => import('@/pages/dealer-sales/SalesDocumentEditorPage.vue'),
+    meta: { title: 'dealer.sales.edit', activeMenu: '/salesOrders/salesDocuments', hidden: true }
+  },
+  {
+    path: '/sales-orders/documents/:id',
+    name: 'SalesDocumentDetail',
+    component: () => import('@/pages/dealer-sales/SalesDocumentDetailPage.vue'),
+    meta: { title: 'dealer.sales.detail', activeMenu: '/salesOrders/salesDocuments', hidden: true }
   }
 ]
 

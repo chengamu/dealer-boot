@@ -20,10 +20,10 @@
 
     <el-row :gutter="10" class="mb8">
       <el-col :span="1.5">
-        <el-button type="primary" plain icon="Plus" @click="handleAdd" v-hasPermi="['system:oss:add']">{{ t('common.add') }}</el-button>
+        <el-button type="primary" icon="Plus" @click="handleAdd" v-hasPermi="['system:oss:add']">{{ t('common.add') }}</el-button>
       </el-col>
       <el-col :span="1.5">
-        <el-button type="success" plain icon="Edit" :disabled="single" @click="handleUpdate()" v-hasPermi="['system:oss:edit']">{{ t('common.edit') }}</el-button>
+        <el-button plain icon="Edit" :disabled="single" @click="handleUpdate()" v-hasPermi="['system:oss:edit']">{{ t('common.edit') }}</el-button>
       </el-col>
       <el-col :span="1.5">
         <el-button type="danger" plain icon="Delete" :disabled="multiple" @click="handleDelete()" v-hasPermi="['system:oss:remove']">{{ t('common.delete') }}</el-button>
@@ -33,12 +33,12 @@
 
     <el-table v-loading="loading" :data="ossConfigList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column v-if="columns[0].visible" :label="t('legacy.configKey')" align="center" prop="configKey" />
-      <el-table-column v-if="columns[1].visible" :label="t('legacy.endpoint')" align="center" prop="endpoint" width="200" />
-      <el-table-column v-if="columns[2].visible" :label="t('legacy.domain')" align="center" prop="domain" width="200" />
-      <el-table-column v-if="columns[3].visible" :label="t('legacy.bucketName')" align="center" prop="bucketName" />
-      <el-table-column v-if="columns[4].visible" :label="t('legacy.prefix')" align="center" prop="prefix" />
-      <el-table-column v-if="columns[5].visible" :label="t('legacy.region')" align="center" prop="region" />
+      <el-table-column v-if="columns[0].visible" :label="t('legacy.configKey')" align="left" prop="configKey" />
+      <el-table-column v-if="columns[1].visible" :label="t('legacy.endpoint')" align="left" prop="endpoint" width="200" />
+      <el-table-column v-if="columns[2].visible" :label="t('legacy.domain')" align="left" prop="domain" width="200" />
+      <el-table-column v-if="columns[3].visible" :label="t('legacy.bucketName')" align="left" prop="bucketName" />
+      <el-table-column v-if="columns[4].visible" :label="t('legacy.prefix')" align="left" prop="prefix" />
+      <el-table-column v-if="columns[5].visible" :label="t('legacy.region')" align="left" prop="region" />
       <el-table-column v-if="columns[6].visible" :label="t('legacy.accessPolicy')" align="center" prop="accessPolicy">
         <template #default="{ row }">
           <el-tag v-if="row.accessPolicy === '0'" type="warning">private</el-tag>

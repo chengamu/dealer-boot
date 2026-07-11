@@ -2,19 +2,19 @@ import type { PageQuery } from '@/types/api'
 import type { ProductFormulaMaterialVO, ProductFormulaOptionMaterialVO, ProductFormulaOptionVO, ProductFormulaOptionValueVO } from '@/api/product-capability/types'
 
 export interface SaleProductVO {
-  saleProductId?: string | number
+  saleProductId?: string
   tenantId?: number
   saleProductCode?: string
   saleProductName?: string
-  categoryId?: number
+  categoryId?: string
   categoryCode?: string
   categoryNameCn?: string
   productTypeCode?: string
   productTypeNameCn?: string
-  formulaId?: number
+  formulaId?: string
   formulaCode?: string
   formulaName?: string
-  formulaVersionId?: number
+  formulaVersionId?: string
   formulaVersionNo?: number
   formulaVersionLabel?: string
   minWidthInch?: number
@@ -36,37 +36,22 @@ export interface SaleProductVO {
 export interface SaleProductQuery extends PageQuery {
   saleProductCode?: string
   saleProductName?: string
-  categoryId?: number
+  categoryId?: string
   categoryCode?: string
-  formulaId?: number
-  formulaVersionId?: number
+  formulaId?: string
+  formulaVersionId?: string
   priceStatus?: string
   status?: string
 }
 
-export interface PriceFabricCandidate {
-  materialId?: string | number
-  materialCode?: string
-  materialNameCn?: string
-  materialNameEn?: string
-  materialTypeCode?: string
-  materialTypeNameCn?: string
-  attributeGroupCode?: string
-  attributeGroupNameCn?: string
-  unitCode?: string
-  specModelText?: string
-  unitPrice?: number
-  salesPrice?: number
-}
-
 export interface PriceSettingVO {
-  priceSettingId?: number
+  priceSettingId?: string
   tenantId?: number
-  saleProductId?: string | number
+  saleProductId?: string
   saleProductCode?: string
   saleProductName?: string
-  formulaId?: number
-  formulaVersionId?: number
+  formulaId?: string
+  formulaVersionId?: string
   formulaVersionLabel?: string
   currencyCode?: string
   validationStatus?: string
@@ -78,13 +63,13 @@ export interface PriceSettingVO {
   updateBy?: string
 }
 
-export interface FabricPriceRule {
-  fabricRuleId?: number
+export interface MaterialPriceRule {
+  materialRuleId?: string
   tenantId?: number
-  priceFabricId?: number
-  priceSettingId?: number
-  saleProductId?: string | number
-  formulaVersionId?: number
+  priceMaterialId?: string
+  priceSettingId?: string
+  saleProductId?: string
+  formulaVersionId?: string
   conditionType?: string
   conditionJson?: string
   conditionExpression?: string
@@ -100,15 +85,21 @@ export interface FabricPriceRule {
   remark?: string
 }
 
-export interface PriceFabricVO {
-  priceFabricId?: number
+export interface PriceMaterialVO {
+  priceMaterialId?: string
   tenantId?: number
-  priceSettingId?: number
-  saleProductId?: string | number
-  formulaVersionId?: number
-  materialId?: string | number
+  priceSettingId?: string
+  saleProductId?: string
+  formulaVersionId?: string
+  formulaMaterialId?: string
+  materialId?: string
   materialCode?: string
   materialNameCn?: string
+  specModelText?: string
+  attributeGroupCode?: string
+  attributeGroupNameCn?: string
+  materialTypeCode?: string
+  materialTypeNameCn?: string
   unitCode?: string
   status?: string
   sortOrder?: number
@@ -116,11 +107,6 @@ export interface PriceFabricVO {
   remark?: string
   ruleCount?: number
   defaultRuleFlag?: boolean
-}
-
-export interface PriceOptionCombination {
-  optionCombinationKey?: string
-  optionCombinationName?: string
 }
 
 export interface PriceValidationIssue {
@@ -134,16 +120,50 @@ export interface PriceValidationIssue {
 export interface PriceSetupVO {
   saleProduct?: SaleProductVO
   setting?: PriceSettingVO
-  fabricCandidates?: PriceFabricCandidate[]
-  fabricPriceColumns?: PriceOptionCombination[]
-  priceFabrics?: PriceFabricVO[]
-  fabricRules?: FabricPriceRule[]
+  priceMaterials?: PriceMaterialVO[]
+  materialRules?: MaterialPriceRule[]
   issues?: PriceValidationIssue[]
   formulaMaterials?: ProductFormulaMaterialVO[]
   formulaOptions?: ProductFormulaOptionVO[]
   formulaOptionValues?: ProductFormulaOptionValueVO[]
   formulaOptionMaterials?: ProductFormulaOptionMaterialVO[]
   materialGroupCounts?: Record<string, number>
+}
+
+export interface MaterialPriceBatchRule {
+  priceMaterialIds: string[]
+  rules: MaterialPriceRule[]
+}
+
+export interface ProductPriceQuoteRequest {
+  orderWidth: number
+  orderHeight: number
+  orderQuantity?: number
+  selectedOptionValues?: Record<string, string>
+}
+
+export interface ProductPriceQuoteItem {
+  priceMaterialId?: string
+  materialId?: string
+  materialCode?: string
+  materialNameCn?: string
+  attributeGroupNameCn?: string
+  unitCode?: string
+  usageQty?: number
+  unitPrice?: number
+  matchedConditionText?: string
+  priceFormula?: string
+  amount?: number
+}
+
+export interface ProductPriceQuote {
+  saleProductId?: string
+  formulaVersionId?: string
+  currencyCode?: string
+  orderQuantity?: number
+  singleAmount?: number
+  totalAmount?: number
+  items?: ProductPriceQuoteItem[]
 }
 
 export interface ShippingTemplateRuleVO {

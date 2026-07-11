@@ -17,7 +17,7 @@
 
     <el-row :gutter="10" class="mb8 system-table-page__toolbar">
       <el-col :span="1.5">
-        <el-button type="primary" plain icon="Plus" @click="handleAdd()" v-hasPermi="['system:menu:add']">{{ t('common.add') }}</el-button>
+        <el-button type="primary" icon="Plus" @click="handleAdd()" v-hasPermi="['system:menu:add']">{{ t('common.add') }}</el-button>
       </el-col>
       <el-col :span="1.5">
         <el-button type="info" plain icon="Sort" @click="toggleExpandAll">{{ t('common.expandCollapse') }}</el-button>
@@ -41,7 +41,7 @@
           <svg-icon v-if="row.icon" :icon-class="row.icon" />
         </template>
       </el-table-column>
-      <el-table-column prop="orderNum" :label="t('menu.orderNum')" width="96" align="center" />
+      <el-table-column prop="orderNum" :label="t('menu.orderNum')" width="96" align="right" />
       <el-table-column prop="perms" :label="t('menu.perms')" min-width="180" :show-overflow-tooltip="true" />
       <el-table-column prop="component" :label="t('menu.component')" min-width="180" :show-overflow-tooltip="true" />
       <el-table-column prop="status" :label="t('menu.status')" width="104" align="center">

@@ -22,6 +22,10 @@
             <groupId>com.bocoo</groupId>
             <artifactId>bocoo-common-core</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.bocoo</groupId>
+            <artifactId>bocoo-common-json</artifactId>
+        </dependency>
 
         <!-- OSS功能模块 -->
         <dependency>
@@ -89,6 +93,41 @@
         <dependency>
             <groupId>com.bocoo</groupId>
             <artifactId>bocoo-common-doc</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.bocoo</groupId>
+            <artifactId>bocoo-common-mail</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.bocoo</groupId>
+            <artifactId>bocoo-modules-system</artifactId>
+            <version>${revision}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.bocoo</groupId>
+            <artifactId>bocoo-modules-product</artifactId>
+            <version>${revision}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.bocoo</groupId>
+            <artifactId>bocoo-modules-merchant</artifactId>
+            <version>${revision}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.github.librepdf</groupId>
+            <artifactId>openpdf</artifactId>
+            <version>2.0.5</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
         </dependency>
 
     </dependencies>

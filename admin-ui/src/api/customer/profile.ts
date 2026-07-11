@@ -46,6 +46,10 @@ export function listCustomers(query?: CustomerProfileQuery) {
   return requestPage<CustomerProfile>({ url: '/customer/customers/list', method: 'get', params: query })
 }
 
+export function listCustomerOptions(query?: CustomerProfileQuery) {
+  return request<CustomerProfile[]>({ url: '/customer/customers/options', method: 'get', params: query })
+}
+
 export function listPlatformCustomers(query?: CustomerProfileQuery) {
   return requestPage<CustomerProfile>({ url: '/platform/customers/list', method: 'get', params: query })
 }

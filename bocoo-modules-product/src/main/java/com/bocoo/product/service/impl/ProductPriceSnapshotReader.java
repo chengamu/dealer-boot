@@ -6,14 +6,16 @@ import com.bocoo.product.domain.vo.ProductFormulaMaterialVo;
 import com.bocoo.product.domain.vo.ProductFormulaOptionMaterialVo;
 import com.bocoo.product.domain.vo.ProductFormulaOptionValueVo;
 import com.bocoo.product.domain.vo.ProductFormulaOptionVo;
-import com.bocoo.product.domain.vo.ProductPriceOptionCombinationVo;
+import com.bocoo.product.domain.vo.ProductFormulaRestrictionVo;
+import com.bocoo.product.domain.vo.ProductFormulaSetupVo;
+import com.bocoo.product.domain.vo.ProductFormulaUsageRuleVo;
+import com.bocoo.product.domain.vo.ProductFormulaVariableRuleVo;
+import com.bocoo.product.domain.vo.ProductFormulaVariableVo;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,13 +32,8 @@ public class ProductPriceSnapshotReader {
     private static final Set<String> AUDIT_FIELDS = Set.of(
         "createById", "createBy", "createTime", "updateBy", "updateTime", "delFlag"
     );
-    private static final ProductPriceOptionCombinationVo DEFAULT_COMBINATION =
-        new ProductPriceOptionCombinationVo("DEFAULT", "默认");
-
-    public List<Map<String, Object>> fabricMaterials(ProductFormulaVersion version) {
-        return maps(snapshot(version).get("materials")).stream()
-            .filter(row -> "FABRIC".equals(String.valueOf(row.get("attributeGroupCode"))))
-            .toList();
+    public List<Map<String, Object>> priceMaterials(ProductFormulaVersion version) {
+        return maps(snapshot(version).get("materials"));
     }
 
     public List<ProductFormulaMaterialVo> formulaMaterials(ProductFormulaVersion version) {
@@ -53,6 +50,20 @@ public class ProductPriceSnapshotReader {
 
     public List<ProductFormulaOptionMaterialVo> formulaOptionMaterials(ProductFormulaVersion version) {
         return voList(snapshot(version).get("optionMaterials"), ProductFormulaOptionMaterialVo.class);
+    }
+
+    public ProductFormulaSetupVo formulaSetup(ProductFormulaVersion version) {
+        Map<String, Object> source = snapshot(version);
+        ProductFormulaSetupVo setup = new ProductFormulaSetupVo();
+        setup.setMaterials(voList(source.get("materials"), ProductFormulaMaterialVo.class));
+        setup.setOptions(voList(source.get("options"), ProductFormulaOptionVo.class));
+        setup.setOptionValues(voList(source.get("optionValues"), ProductFormulaOptionValueVo.class));
+        setup.setOptionMaterials(voList(source.get("optionMaterials"), ProductFormulaOptionMaterialVo.class));
+        setup.setRestrictions(voList(source.get("restrictions"), ProductFormulaRestrictionVo.class));
+        setup.setUsageRules(voList(source.get("usageRules"), ProductFormulaUsageRuleVo.class));
+        setup.setVariables(voList(source.get("variables"), ProductFormulaVariableVo.class));
+        setup.setVariableRules(voList(source.get("variableRules"), ProductFormulaVariableRuleVo.class));
+        return setup;
     }
 
     public Map<String, Integer> materialGroupCounts(ProductFormulaVersion version) {
@@ -77,95 +88,6 @@ public class ProductPriceSnapshotReader {
             }
         }
         return result;
-    }
-
-    public List<ProductPriceOptionCombinationVo> optionCombinations(ProductFormulaVersion version) {
-        Map<String, Object> snapshot = snapshot(version);
-        List<Map<String, Object>> dimensions = priceDimensions(maps(snapshot.get("options")));
-        if (dimensions.isEmpty()) {
-            return List.of(DEFAULT_COMBINATION);
-        }
-        List<List<Map<String, Object>>> valueGroups = dimensions.stream()
-            .map(option -> valuesForOption(option, maps(snapshot.get("optionValues"))))
-            .filter(values -> !values.isEmpty())
-            .toList();
-        if (valueGroups.isEmpty()) {
-            return List.of(DEFAULT_COMBINATION);
-        }
-        List<ProductPriceOptionCombinationVo> result = new ArrayList<>();
-        appendCombinations(result, valueGroups, 0, new ArrayList<>());
-        return result.isEmpty() ? List.of(DEFAULT_COMBINATION) : result;
-    }
-
-    private List<Map<String, Object>> priceDimensions(List<Map<String, Object>> options) {
-        return options.stream()
-            .filter(option -> !"false".equalsIgnoreCase(String.valueOf(option.get("businessVisibleFlag"))))
-            .filter(option -> !fabricOption(option))
-            .map(option -> Map.entry(option, priceDimensionScore(option)))
-            .filter(entry -> entry.getValue() > 0)
-            .sorted(Comparator.<Map.Entry<Map<String, Object>, Integer>>comparingInt(Map.Entry::getValue).reversed())
-            .limit(2)
-            .map(Map.Entry::getKey)
-            .toList();
-    }
-
-    private int priceDimensionScore(Map<String, Object> option) {
-        String text = (value(option, "optionCode") + " " + value(option, "optionNameCn") + " " + value(option, "optionNameEn")).toLowerCase();
-        int score = 0;
-        if (containsAny(text, "style", "structure", "mode", "款式", "结构", "工艺", "柔式", "平铺", "前穿", "后穿", "堆叠")) {
-            score += 3;
-        }
-        if (containsAny(text, "control", "system", "drive", "motor", "chain", "系统", "控制", "拉珠", "电动", "电机", "无拉")) {
-            score += 3;
-        }
-        return score;
-    }
-
-    private boolean fabricOption(Map<String, Object> option) {
-        String code = value(option, "optionCode");
-        String scope = value(option, "sourceScope");
-        String name = value(option, "optionNameCn");
-        return "FABRIC".equalsIgnoreCase(code) || scope.contains("FABRIC") || name.contains("面料");
-    }
-
-    private List<Map<String, Object>> valuesForOption(Map<String, Object> option, List<Map<String, Object>> values) {
-        String optionRefKey = value(option, "optionRefKey");
-        String optionCode = value(option, "optionCode");
-        return values.stream()
-            .filter(row -> sameOption(optionRefKey, optionCode, row))
-            .filter(row -> !"DISABLED".equals(value(row, "status")))
-            .toList();
-    }
-
-    private void appendCombinations(List<ProductPriceOptionCombinationVo> result, List<List<Map<String, Object>>> groups,
-                                    int index, List<Map<String, Object>> selected) {
-        if (index >= groups.size()) {
-            String key = selected.stream()
-                .map(row -> stableValue(row, "optionRefKey", "optionCode") + "=" + stableValue(row, "valueRefKey", "valueCode"))
-                .reduce((left, right) -> left + ";" + right)
-                .orElse(DEFAULT_COMBINATION.getOptionCombinationKey());
-            String name = selected.stream()
-                .map(row -> StringUtils.blankToDefault(value(row, "valueNameCn"), value(row, "valueCode")))
-                .reduce("", String::concat);
-            result.add(new ProductPriceOptionCombinationVo(key, StringUtils.blankToDefault(name, DEFAULT_COMBINATION.getOptionCombinationName())));
-            return;
-        }
-        for (Map<String, Object> value : groups.get(index)) {
-            selected.add(value);
-            appendCombinations(result, groups, index + 1, selected);
-            selected.remove(selected.size() - 1);
-        }
-    }
-
-    private boolean sameOption(String optionRefKey, String optionCode, Map<String, Object> row) {
-        if (StringUtils.isNotBlank(optionRefKey)) {
-            return optionRefKey.equals(value(row, "optionRefKey"));
-        }
-        return optionCode.equals(value(row, "optionCode"));
-    }
-
-    private String stableValue(Map<String, Object> row, String refField, String fallbackField) {
-        return StringUtils.blankToDefault(value(row, refField), value(row, fallbackField));
     }
 
     private Map<String, Object> snapshot(ProductFormulaVersion version) {
@@ -215,17 +137,4 @@ public class ProductPriceSnapshotReader {
         return value;
     }
 
-    private String value(Map<String, Object> row, String key) {
-        Object value = row.get(key);
-        return value == null ? "" : String.valueOf(value);
-    }
-
-    private boolean containsAny(String text, String... patterns) {
-        for (String pattern : patterns) {
-            if (text.contains(pattern.toLowerCase())) {
-                return true;
-            }
-        }
-        return false;
-    }
 }

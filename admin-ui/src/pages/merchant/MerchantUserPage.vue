@@ -36,10 +36,10 @@
 
     <el-row :gutter="10" class="mb8 merchant-table-page__toolbar">
       <el-col :span="1.5">
-        <el-button type="primary" plain icon="Plus" :disabled="requiresMerchantSelection" @click="handleAdd" v-hasPermi="['merchant:user:add']">{{ t('common.add') }}</el-button>
+        <el-button type="primary" icon="Plus" :disabled="requiresMerchantSelection" @click="handleAdd" v-hasPermi="['merchant:user:add']">{{ t('common.add') }}</el-button>
       </el-col>
       <el-col :span="1.5">
-        <el-button type="success" plain icon="Edit" :disabled="single" @click="handleUpdate()" v-hasPermi="['merchant:user:edit']">{{ t('common.edit') }}</el-button>
+        <el-button plain icon="Edit" :disabled="single" @click="handleUpdate()" v-hasPermi="['merchant:user:edit']">{{ t('common.edit') }}</el-button>
       </el-col>
       <el-col :span="1.5">
         <el-button type="danger" plain icon="Delete" :disabled="multiple" @click="handleDelete()" v-hasPermi="['merchant:user:remove']">{{ t('common.delete') }}</el-button>

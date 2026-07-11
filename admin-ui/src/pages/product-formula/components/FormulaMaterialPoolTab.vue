@@ -28,7 +28,7 @@
           />
         </div>
         <div class="material-pool-toolbar__actions">
-          <el-button type="primary" plain :icon="Connection" @click="$emit('open-picker')">{{ t('productCenter.formulaSetup.batchAddMaterial') }}</el-button>
+          <el-button type="primary" :icon="Connection" @click="$emit('open-picker')">{{ t('productCenter.formulaSetup.batchAddMaterial') }}</el-button>
           <el-button plain :icon="Setting" :disabled="!selectedRows.length" @click="openBatchUsage">{{ t('productCenter.formulaSetup.batchUsageSetting') }}</el-button>
           <el-button type="danger" plain :icon="Delete" :disabled="!selectedRows.length" @click="$emit('remove-materials', selectedRows)">{{ t('common.delete') }}</el-button>
         </div>
@@ -37,12 +37,12 @@
     <el-table v-loading="loading" :data="visibleMaterials" border class="setup-table" row-key="materialCode" @selection-change="selectedRows = $event">
       <el-table-column type="selection" width="48" align="center" />
       <el-table-column type="index" :label="t('common.index')" width="56" align="center" />
-      <el-table-column :label="t('productCenter.formulaSetup.attributeGroup')" width="82">
+      <el-table-column :label="t('productCenter.formulaSetup.attributeGroup')" width="82" align="center">
         <template #default="{ row }">
           <el-tag size="small" :class="`group-tag group-tag--${String(row.attributeGroupCode || '').toLowerCase()}`">{{ row.attributeGroupNameCn || row.attributeGroupCode || '-' }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column :label="t('productCenter.formulaSetup.materialType')" width="96">
+      <el-table-column :label="t('productCenter.formulaSetup.materialType')" width="96" align="center">
         <template #default="{ row }">
           <span class="material-cell-text material-cell-text--compact">{{ row.materialTypeNameCn || row.materialTypeCode || '-' }}</span>
         </template>
@@ -62,7 +62,7 @@
           <span class="material-cell-text spec-model-text">{{ row.specModelText || '-' }}</span>
         </template>
       </el-table-column>
-      <el-table-column :label="t('productCenter.formulaSetup.unit')" prop="unitCode" width="66">
+      <el-table-column :label="t('productCenter.formulaSetup.unit')" prop="unitCode" width="66" align="center">
         <template #default="{ row }">{{ unitLabel(row.unitCode) }}</template>
       </el-table-column>
       <el-table-column :label="t('productCenter.formulaSetup.lossRate')" width="112" align="right">

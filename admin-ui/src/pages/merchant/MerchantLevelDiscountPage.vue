@@ -29,15 +29,15 @@
     </el-form>
 
     <el-row :gutter="10" class="mb8 merchant-table-page__toolbar">
-      <el-button type="primary" plain icon="Plus" @click="openAdd" v-hasPermi="['merchant:levelDiscount:add']">{{ t('common.add') }}</el-button>
-      <el-button type="success" plain icon="Edit" :disabled="single" @click="openEdit()" v-hasPermi="['merchant:levelDiscount:edit']">{{ t('common.edit') }}</el-button>
+      <el-button type="primary" icon="Plus" @click="openAdd" v-hasPermi="['merchant:levelDiscount:add']">{{ t('common.add') }}</el-button>
+      <el-button plain icon="Edit" :disabled="single" @click="openEdit()" v-hasPermi="['merchant:levelDiscount:edit']">{{ t('common.edit') }}</el-button>
       <el-button type="danger" plain icon="Delete" :disabled="multiple" @click="handleDelete()" v-hasPermi="['merchant:levelDiscount:remove']">{{ t('common.delete') }}</el-button>
-      <el-button type="warning" plain icon="Download" @click="handleExport" v-hasPermi="['merchant:levelDiscount:export']">{{ t('common.export') }}</el-button>
+      <el-button plain icon="Download" @click="handleExport" v-hasPermi="['merchant:levelDiscount:export']">{{ t('common.export') }}</el-button>
       <right-toolbar v-model:showSearch="showSearch" @queryTable="getList" />
     </el-row>
 
     <el-table v-loading="loading" :data="rows" border class="merchant-table-page__table" @selection-change="handleSelectionChange">
-      <el-table-column type="selection" width="48" :selectable="isSelectable" />
+      <el-table-column type="selection" width="48" align="center" :selectable="isSelectable" />
       <el-table-column type="index" :label="t('common.index')" width="70" align="center" />
       <el-table-column :label="t('merchantLevel.name')" prop="levelName" min-width="130" />
       <el-table-column :label="t('merchantDiscount.category')" prop="categoryNameCn" min-width="150" />

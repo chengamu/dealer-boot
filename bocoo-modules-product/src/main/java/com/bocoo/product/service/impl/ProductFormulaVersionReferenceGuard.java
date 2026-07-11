@@ -1,12 +1,12 @@
 package com.bocoo.product.service.impl;
 
 import com.bocoo.common.core.exception.ServiceException;
-import com.bocoo.product.domain.entity.ProductPriceFabric;
-import com.bocoo.product.domain.entity.ProductPriceFabricRule;
+import com.bocoo.product.domain.entity.ProductPriceMaterial;
+import com.bocoo.product.domain.entity.ProductPriceMaterialRule;
 import com.bocoo.product.domain.entity.ProductPriceSetting;
 import com.bocoo.product.domain.entity.ProductSaleProduct;
-import com.bocoo.product.mapper.ProductPriceFabricMapper;
-import com.bocoo.product.mapper.ProductPriceFabricRuleMapper;
+import com.bocoo.product.mapper.ProductPriceMaterialMapper;
+import com.bocoo.product.mapper.ProductPriceMaterialRuleMapper;
 import com.bocoo.product.mapper.ProductPriceSettingMapper;
 import com.bocoo.product.mapper.ProductSaleProductMapper;
 import lombok.RequiredArgsConstructor;
@@ -18,8 +18,9 @@ class ProductFormulaVersionReferenceGuard extends ProductServiceSupport {
 
     private final ProductSaleProductMapper saleProductMapper;
     private final ProductPriceSettingMapper priceSettingMapper;
-    private final ProductPriceFabricMapper priceFabricMapper;
-    private final ProductPriceFabricRuleMapper priceFabricRuleMapper;
+    private final ProductPriceMaterialMapper priceMaterialMapper;
+    private final ProductPriceMaterialRuleMapper priceMaterialRuleMapper;
+    private final ProductQuoteReferenceGuard quoteReferenceGuard;
 
     void assertNoBusinessReference(Long formulaVersionId) {
         if (formulaVersionId == null) {
@@ -33,8 +34,9 @@ class ProductFormulaVersionReferenceGuard extends ProductServiceSupport {
     private boolean hasReference(Long formulaVersionId) {
         return countSaleProducts(formulaVersionId) > 0
             || countPriceSettings(formulaVersionId) > 0
-            || countPriceFabrics(formulaVersionId) > 0
-            || countPriceFabricRules(formulaVersionId) > 0;
+            || countPriceMaterials(formulaVersionId) > 0
+            || countPriceMaterialRules(formulaVersionId) > 0
+            || quoteReferenceGuard.countFormulaVersionReferences(formulaVersionId) > 0;
     }
 
     private long countSaleProducts(Long formulaVersionId) {
@@ -47,13 +49,13 @@ class ProductFormulaVersionReferenceGuard extends ProductServiceSupport {
             .eq("formula_version_id", formulaVersionId));
     }
 
-    private long countPriceFabrics(Long formulaVersionId) {
-        return priceFabricMapper.selectCount(activeQuery(ProductPriceFabric.class)
+    private long countPriceMaterials(Long formulaVersionId) {
+        return priceMaterialMapper.selectCount(activeQuery(ProductPriceMaterial.class)
             .eq("formula_version_id", formulaVersionId));
     }
 
-    private long countPriceFabricRules(Long formulaVersionId) {
-        return priceFabricRuleMapper.selectCount(activeQuery(ProductPriceFabricRule.class)
+    private long countPriceMaterialRules(Long formulaVersionId) {
+        return priceMaterialRuleMapper.selectCount(activeQuery(ProductPriceMaterialRule.class)
             .eq("formula_version_id", formulaVersionId));
     }
 

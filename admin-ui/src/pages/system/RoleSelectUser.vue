@@ -16,7 +16,7 @@
     </div>
     <div class="admin-dialog__table admin-selector-dialog__table">
       <el-table ref="tableRef" :data="userList" height="100%" border @row-click="clickRow" @selection-change="handleSelectionChange">
-        <el-table-column type="selection" width="55" />
+        <el-table-column type="selection" width="55" align="center" />
         <el-table-column :label="t('user.userName')" prop="userName" :show-overflow-tooltip="true" />
         <el-table-column :label="t('user.nickName')" prop="nickName" :show-overflow-tooltip="true" />
         <el-table-column :label="t('user.email')" prop="email" :show-overflow-tooltip="true" />

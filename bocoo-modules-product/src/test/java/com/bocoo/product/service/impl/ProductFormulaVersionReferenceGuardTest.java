@@ -1,10 +1,11 @@
 package com.bocoo.product.service.impl;
 
 import com.bocoo.common.core.exception.ServiceException;
-import com.bocoo.product.mapper.ProductPriceFabricMapper;
-import com.bocoo.product.mapper.ProductPriceFabricRuleMapper;
+import com.bocoo.product.mapper.ProductPriceMaterialMapper;
+import com.bocoo.product.mapper.ProductPriceMaterialRuleMapper;
 import com.bocoo.product.mapper.ProductPriceSettingMapper;
 import com.bocoo.product.mapper.ProductSaleProductMapper;
+import com.bocoo.product.service.ProductQuoteReferenceProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,9 +27,11 @@ class ProductFormulaVersionReferenceGuardTest {
     @Mock
     private ProductPriceSettingMapper priceSettingMapper;
     @Mock
-    private ProductPriceFabricMapper priceFabricMapper;
+    private ProductPriceMaterialMapper priceMaterialMapper;
     @Mock
-    private ProductPriceFabricRuleMapper priceFabricRuleMapper;
+    private ProductPriceMaterialRuleMapper priceMaterialRuleMapper;
+    @Mock
+    private ProductQuoteReferenceProvider quoteReferenceProvider;
 
     private ProductFormulaVersionReferenceGuard guard;
 
@@ -37,8 +40,9 @@ class ProductFormulaVersionReferenceGuardTest {
         guard = new ProductFormulaVersionReferenceGuard(
             saleProductMapper,
             priceSettingMapper,
-            priceFabricMapper,
-            priceFabricRuleMapper
+            priceMaterialMapper,
+            priceMaterialRuleMapper,
+            new ProductQuoteReferenceGuard(java.util.List.of(quoteReferenceProvider))
         );
     }
 
@@ -46,8 +50,8 @@ class ProductFormulaVersionReferenceGuardTest {
     void noReferenceAllowsWithdraw() {
         when(saleProductMapper.selectCount(any())).thenReturn(0L);
         when(priceSettingMapper.selectCount(any())).thenReturn(0L);
-        when(priceFabricMapper.selectCount(any())).thenReturn(0L);
-        when(priceFabricRuleMapper.selectCount(any())).thenReturn(0L);
+        when(priceMaterialMapper.selectCount(any())).thenReturn(0L);
+        when(priceMaterialRuleMapper.selectCount(any())).thenReturn(0L);
         assertThatCode(() -> guard.assertNoBusinessReference(9001L))
             .doesNotThrowAnyException();
     }
@@ -68,6 +72,18 @@ class ProductFormulaVersionReferenceGuardTest {
 
         assertThatThrownBy(() -> guard.assertNoBusinessReference(9001L))
             .isInstanceOf(ServiceException.class);
-        verify(priceFabricMapper, never()).selectCount(any());
+        verify(priceMaterialMapper, never()).selectCount(any());
+    }
+
+    @Test
+    void quoteReferenceBlocksWithdraw() {
+        when(saleProductMapper.selectCount(any())).thenReturn(0L);
+        when(priceSettingMapper.selectCount(any())).thenReturn(0L);
+        when(priceMaterialMapper.selectCount(any())).thenReturn(0L);
+        when(priceMaterialRuleMapper.selectCount(any())).thenReturn(0L);
+        when(quoteReferenceProvider.countFormulaVersionReferences(9001L)).thenReturn(1L);
+
+        assertThatThrownBy(() -> guard.assertNoBusinessReference(9001L))
+            .isInstanceOf(ServiceException.class);
     }
 }

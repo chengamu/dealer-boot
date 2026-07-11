@@ -31,16 +31,16 @@
 
     <el-row :gutter="10" class="mb8 system-table-page__toolbar">
       <el-col :span="1.5">
-        <el-button type="primary" plain icon="Plus" @click="handleAdd" v-hasPermi="['system:role:add']">{{ t('common.add') }}</el-button>
+        <el-button type="primary" icon="Plus" @click="handleAdd" v-hasPermi="['system:role:add']">{{ t('common.add') }}</el-button>
       </el-col>
       <el-col :span="1.5">
-        <el-button type="success" plain icon="Edit" :disabled="single" @click="handleUpdate()" v-hasPermi="['system:role:edit']">{{ t('common.edit') }}</el-button>
+        <el-button plain icon="Edit" :disabled="single" @click="handleUpdate()" v-hasPermi="['system:role:edit']">{{ t('common.edit') }}</el-button>
       </el-col>
       <el-col :span="1.5">
         <el-button type="danger" plain icon="Delete" :disabled="multiple" @click="handleDelete()" v-hasPermi="['system:role:remove']">{{ t('common.delete') }}</el-button>
       </el-col>
       <el-col :span="1.5">
-        <el-button type="warning" plain icon="Download" @click="handleExport" v-hasPermi="['system:role:export']">{{ t('common.export') }}</el-button>
+        <el-button plain icon="Download" @click="handleExport" v-hasPermi="['system:role:export']">{{ t('common.export') }}</el-button>
       </el-col>
       <span class="selection-count">{{ t('common.selectedCount', { count: ids.length }) }}</span>
       <right-toolbar v-model:showSearch="showSearch" @queryTable="getList" />

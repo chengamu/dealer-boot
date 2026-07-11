@@ -18,7 +18,7 @@
 
     <el-row :gutter="10" class="mb8 ai-table-page__toolbar">
       <el-col :span="1.5">
-        <el-button type="primary" plain icon="Plus" @click="openGenerateDialog" v-hasPermi="['ai:credential:generate']">
+        <el-button type="primary" icon="Plus" @click="openGenerateDialog" v-hasPermi="['ai:credential:generate']">
           {{ t('ai.settings.generateKey') }}
         </el-button>
       </el-col>

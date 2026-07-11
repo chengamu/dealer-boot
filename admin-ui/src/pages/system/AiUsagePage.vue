@@ -38,10 +38,10 @@
       </el-table-column>
       <el-table-column :label="t('ai.settings.channel')" prop="provider" min-width="130" show-overflow-tooltip />
       <el-table-column :label="t('ai.settings.modelName')" prop="model" min-width="180" show-overflow-tooltip />
-      <el-table-column :label="t('ai.settings.inputTokens')" prop="inputTokens" width="120" align="center" />
-      <el-table-column :label="t('ai.settings.outputTokens')" prop="outputTokens" width="120" align="center" />
-      <el-table-column :label="t('ai.settings.costAmount')" prop="costAmount" width="120" align="center" />
-      <el-table-column :label="t('ai.settings.latencyMs')" prop="latencyMs" width="120" align="center" />
+      <el-table-column :label="t('ai.settings.inputTokens')" prop="inputTokens" width="120" align="right" />
+      <el-table-column :label="t('ai.settings.outputTokens')" prop="outputTokens" width="120" align="right" />
+      <el-table-column :label="t('ai.settings.costAmount')" prop="costAmount" width="120" align="right" />
+      <el-table-column :label="t('ai.settings.latencyMs')" prop="latencyMs" width="120" align="right" />
       <el-table-column :label="t('common.status')" prop="status" width="110" align="center" />
     </el-table>
 

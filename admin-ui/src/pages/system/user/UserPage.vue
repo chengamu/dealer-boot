@@ -66,19 +66,19 @@
 
         <el-row :gutter="10" class="mb8 system-table-page__toolbar">
           <el-col :span="1.5">
-            <el-button type="primary" plain icon="Plus" @click="handleAdd" v-hasPermi="['system:user:add']">{{ t('common.add') }}</el-button>
+            <el-button type="primary" icon="Plus" @click="handleAdd" v-hasPermi="['system:user:add']">{{ t('common.add') }}</el-button>
           </el-col>
           <el-col :span="1.5">
-            <el-button type="success" plain icon="Edit" :disabled="single" @click="handleUpdate()" v-hasPermi="['system:user:edit']">{{ t('common.edit') }}</el-button>
+            <el-button plain icon="Edit" :disabled="single" @click="handleUpdate()" v-hasPermi="['system:user:edit']">{{ t('common.edit') }}</el-button>
           </el-col>
           <el-col :span="1.5">
             <el-button type="danger" plain icon="Delete" :disabled="multiple" @click="handleDelete()" v-hasPermi="['system:user:remove']">{{ t('common.delete') }}</el-button>
           </el-col>
           <el-col :span="1.5">
-            <el-button type="info" plain icon="Upload" @click="handleImport" v-hasPermi="['system:user:import']">{{ t('common.import') }}</el-button>
+            <el-button plain icon="Upload" @click="handleImport" v-hasPermi="['system:user:import']">{{ t('common.import') }}</el-button>
           </el-col>
           <el-col :span="1.5">
-            <el-button type="warning" plain icon="Download" @click="handleExport" v-hasPermi="['system:user:export']">{{ t('common.export') }}</el-button>
+            <el-button plain icon="Download" @click="handleExport" v-hasPermi="['system:user:export']">{{ t('common.export') }}</el-button>
           </el-col>
           <span class="selection-count">{{ t('common.selectedCount', { count: ids.length }) }}</span>
           <right-toolbar v-model:showSearch="showSearch" :columns="columns" @queryTable="getList" />
@@ -97,12 +97,12 @@
               </div>
             </template>
           </el-table-column>
-          <el-table-column v-if="columns[1].visible" :label="t('user.deptName')" align="center" prop="deptName" min-width="150" :show-overflow-tooltip="true">
+          <el-table-column v-if="columns[1].visible" :label="t('user.deptName')" align="left" prop="deptName" min-width="150" :show-overflow-tooltip="true">
             <template #default="{ row }">
               <span class="user-org-pill">{{ row.deptName || '-' }}</span>
             </template>
           </el-table-column>
-          <el-table-column v-if="columns[2].visible" :label="t('user.phonenumber')" align="center" prop="phonenumber" width="142" />
+          <el-table-column v-if="columns[2].visible" :label="t('user.phonenumber')" align="left" prop="phonenumber" width="142" />
           <el-table-column v-if="columns[3].visible" :label="t('user.status')" align="center" width="126">
             <template #default="{ row }">
               <button type="button" class="user-status-pill" :class="`is-${getStatusTone(row)}`" @click="toggleUserStatus(row)">

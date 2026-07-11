@@ -30,7 +30,7 @@
           </div>
           <div class="product-dict-page__actions">
             <el-button type="primary" icon="Plus" :aria-label="t('common.add')" :data-agent-label="t('common.add')" @click="addType" v-hasPermi="['product:dict:add']">{{ t('common.add') }}</el-button>
-            <el-button type="primary" plain icon="Edit" :disabled="selectedTypeIds.length !== 1" :aria-label="t('common.edit')" :data-agent-label="t('common.edit')" @click="editSelectedType" v-hasPermi="['product:dict:edit']">{{ t('common.edit') }}</el-button>
+            <el-button plain icon="Edit" :disabled="selectedTypeIds.length !== 1" :aria-label="t('common.edit')" :data-agent-label="t('common.edit')" @click="editSelectedType" v-hasPermi="['product:dict:edit']">{{ t('common.edit') }}</el-button>
             <el-button type="danger" plain icon="Delete" :disabled="!selectedTypeIds.length" :aria-label="t('common.delete')" :data-agent-label="t('common.delete')" data-agent-danger="delete" data-agent-risk="confirm-required" data-agent-confirm-required="true" data-agent-confirm-message="需要用户人工确认后才能删除" @click="deleteSelectedTypes" v-hasPermi="['product:dict:remove']">{{ t('common.delete') }}</el-button>
           </div>
         </div>
@@ -81,7 +81,7 @@
           </div>
           <div class="product-dict-page__actions">
             <el-button type="primary" icon="Plus" :disabled="!activeType" :aria-label="t('common.add')" :data-agent-label="t('common.add')" @click="addItem" v-hasPermi="['product:dict:add']">{{ t('common.add') }}</el-button>
-            <el-button type="primary" plain icon="Edit" :disabled="selectedItemIds.length !== 1" :aria-label="t('common.edit')" :data-agent-label="t('common.edit')" @click="editSelectedItem" v-hasPermi="['product:dict:edit']">{{ t('common.edit') }}</el-button>
+            <el-button plain icon="Edit" :disabled="selectedItemIds.length !== 1" :aria-label="t('common.edit')" :data-agent-label="t('common.edit')" @click="editSelectedItem" v-hasPermi="['product:dict:edit']">{{ t('common.edit') }}</el-button>
             <el-button type="danger" plain icon="Delete" :disabled="!selectedItemIds.length" :aria-label="t('common.delete')" :data-agent-label="t('common.delete')" data-agent-danger="delete" data-agent-risk="confirm-required" data-agent-confirm-required="true" data-agent-confirm-message="需要用户人工确认后才能删除" @click="deleteSelectedItems" v-hasPermi="['product:dict:remove']">{{ t('common.delete') }}</el-button>
           </div>
         </div>

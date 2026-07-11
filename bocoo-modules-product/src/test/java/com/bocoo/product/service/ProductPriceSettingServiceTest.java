@@ -1,21 +1,26 @@
 package com.bocoo.product.service;
 
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.lock.annotation.Lock4j;
 import com.bocoo.common.core.exception.ServiceException;
-import com.bocoo.product.domain.entity.ProductPriceFabric;
-import com.bocoo.product.domain.entity.ProductPriceFabricRule;
+import com.bocoo.product.domain.entity.ProductPriceMaterial;
+import com.bocoo.product.domain.entity.ProductPriceMaterialRule;
 import com.bocoo.product.domain.entity.ProductPriceSetting;
 import com.bocoo.product.domain.entity.ProductSaleProduct;
-import com.bocoo.product.domain.vo.ProductMaterialVo;
+import com.bocoo.product.domain.bo.ProductPriceMaterialBatchRuleBo;
+import com.bocoo.product.domain.vo.ProductFormulaMaterialVo;
 import com.bocoo.product.domain.vo.ProductPriceSetupVo;
 import com.bocoo.product.domain.vo.ProductPriceValidationIssueVo;
+import com.bocoo.product.service.impl.ProductPriceSettingServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -31,52 +36,68 @@ import static org.mockito.Mockito.when;
 class ProductPriceSettingServiceTest extends ProductPriceSettingServiceTestSupport {
 
     @Test
+    void allPriceWorkspaceOperationsShareTheSameBusinessLock() {
+        Set<String> guardedMethods = Set.of(
+            "querySetup", "generateMaterialPrices", "saveMaterialRules",
+            "saveMaterialRulesBatch", "validatePrice", "quote");
+
+        assertThat(Arrays.stream(ProductPriceSettingServiceImpl.class.getDeclaredMethods())
+            .filter(method -> guardedMethods.contains(method.getName())).toList())
+            .hasSize(guardedMethods.size())
+            .allSatisfy(method -> {
+                Lock4j lock = method.getAnnotation(Lock4j.class);
+                assertThat(lock).isNotNull();
+                assertThat(lock.name()).isEqualTo("product-price-setting");
+                assertThat(lock.keys()).containsExactly("#saleProductId");
+            });
+    }
+
+    @Test
     void enabledSaleProductCannotChangePriceRules() {
         ProductSaleProduct product = saleProduct("ENABLED");
         when(saleProductMapper.selectById(9001L)).thenReturn(product);
 
-        assertThatThrownBy(() -> priceSettingService.saveFabricRules(9001L, 9201L, List.of(fabricRuleBo())))
+        assertThatThrownBy(() -> priceSettingService.saveMaterialRules(9001L, 9201L, List.of(materialRuleBo())))
             .isInstanceOf(ServiceException.class);
 
-        verify(fabricRuleMapper, never()).delete(any());
-        verify(fabricRuleMapper, never()).insert(any());
+        verify(materialRuleMapper, never()).delete(any());
+        verify(materialRuleMapper, never()).insert(any());
     }
 
     @Test
-    void savingFabricRulesResetsPriceReadiness() {
-        ProductSaleProduct product = saleProduct("DISABLED");
-        ProductPriceSetting setting = setting();
-        when(saleProductMapper.selectById(9001L)).thenReturn(product);
-        when(settingMapper.selectOne(any())).thenReturn(setting);
-        when(fabricMapper.selectById(9201L)).thenReturn(priceFabric());
-        when(fabricRuleMapper.selectList(any())).thenReturn(List.of());
-
-        assertThat(priceSettingService.saveFabricRules(9001L, 9201L, List.of(fabricRuleBo()))).isTrue();
-
-        verify(fabricRuleMapper).delete(any());
-        verify(fabricRuleMapper).insert(any(ProductPriceFabricRule.class));
-        verify(settingMapper).update(isNull(), any(LambdaUpdateWrapper.class));
-        verify(saleProductMapper).update(isNull(), any(LambdaUpdateWrapper.class));
-    }
-
-    @Test
-    void querySetupReturnsFabricCandidatesFromFormulaVersionSnapshot() {
+    void savingMaterialRulesResetsPriceReadiness() {
         ProductSaleProduct product = saleProduct("DISABLED");
         ProductPriceSetting setting = setting();
         when(saleProductMapper.selectById(9001L)).thenReturn(product);
         when(settingMapper.selectOne(any())).thenReturn(setting);
         when(versionMapper.selectById(7001L)).thenReturn(effectiveVersion());
-        when(fabricMapper.selectList(any())).thenReturn(List.of());
-        when(fabricRuleMapper.selectVoList(any())).thenReturn(List.of());
-        when(fabricRuleMapper.selectList(any())).thenReturn(List.of());
+        when(materialMapper.selectById(9201L)).thenReturn(priceMaterial());
+        when(materialRuleMapper.selectList(any())).thenReturn(List.of());
+
+        assertThat(priceSettingService.saveMaterialRules(9001L, 9201L, List.of(materialRuleBo()))).isTrue();
+
+        verify(materialRuleMapper).delete(any());
+        verify(materialRuleMapper).insert(any(ProductPriceMaterialRule.class));
+        verify(settingMapper).update(isNull(), any(LambdaUpdateWrapper.class));
+        verify(saleProductMapper).update(isNull(), any(LambdaUpdateWrapper.class));
+    }
+
+    @Test
+    void querySetupReturnsAllFormulaMaterialsFromVersionSnapshot() {
+        ProductSaleProduct product = saleProduct("DISABLED");
+        ProductPriceSetting setting = setting();
+        when(saleProductMapper.selectById(9001L)).thenReturn(product);
+        when(settingMapper.selectOne(any())).thenReturn(setting);
+        when(versionMapper.selectById(7001L)).thenReturn(allMaterialVersion());
+        when(materialMapper.selectList(any())).thenReturn(List.of());
+        when(materialRuleMapper.selectVoList(any())).thenReturn(List.of());
+        when(materialRuleMapper.selectList(any())).thenReturn(List.of());
 
         ProductPriceSetupVo setup = priceSettingService.querySetup(9001L);
 
-        assertThat(setup.getFabricCandidates())
-            .extracting(ProductMaterialVo::getMaterialCode)
-            .containsExactly("MAT-FABRIC");
-        assertThat(setup.getFabricCandidates().get(0).getSalesPrice())
-            .isEqualByComparingTo("12.30");
+        assertThat(setup.getFormulaMaterials())
+            .extracting(ProductFormulaMaterialVo::getMaterialCode)
+            .containsExactly("MAT-FABRIC", "MAT-BAR");
     }
 
     @Test
@@ -86,8 +107,8 @@ class ProductPriceSettingServiceTest extends ProductPriceSettingServiceTestSuppo
         when(saleProductMapper.selectById(9001L)).thenReturn(product);
         when(settingMapper.selectOne(any())).thenReturn(setting);
         when(versionMapper.selectById(7001L)).thenReturn(effectiveVersion());
-        when(fabricMapper.selectList(any())).thenReturn(List.of(priceFabric()));
-        when(fabricRuleMapper.selectList(any())).thenReturn(List.of(fabricRule()));
+        when(materialMapper.selectList(any())).thenReturn(List.of(priceMaterial()));
+        when(materialRuleMapper.selectList(any())).thenReturn(List.of(materialRule()));
 
         List<ProductPriceValidationIssueVo> issues = priceSettingService.validatePrice(9001L);
 
@@ -102,14 +123,14 @@ class ProductPriceSettingServiceTest extends ProductPriceSettingServiceTestSuppo
     void validatePriceAllowsExplicitFormulaWhenUnitPriceIsZero() {
         ProductSaleProduct product = saleProduct("DISABLED");
         ProductPriceSetting setting = setting();
-        ProductPriceFabricRule rule = fabricRule();
+        ProductPriceMaterialRule rule = materialRule();
         rule.setUnitPrice(BigDecimal.ZERO);
         rule.setPriceFormula("50 * MAX(drop * width / 144, 1)");
         when(saleProductMapper.selectById(9001L)).thenReturn(product);
         when(settingMapper.selectOne(any())).thenReturn(setting);
         when(versionMapper.selectById(7001L)).thenReturn(effectiveVersion());
-        when(fabricMapper.selectList(any())).thenReturn(List.of(priceFabric()));
-        when(fabricRuleMapper.selectList(any())).thenReturn(List.of(rule));
+        when(materialMapper.selectList(any())).thenReturn(List.of(priceMaterial()));
+        when(materialRuleMapper.selectList(any())).thenReturn(List.of(rule));
 
         List<ProductPriceValidationIssueVo> issues = priceSettingService.validatePrice(9001L);
 
@@ -120,14 +141,14 @@ class ProductPriceSettingServiceTest extends ProductPriceSettingServiceTestSuppo
     void validatePriceRejectsZeroResultFormula() {
         ProductSaleProduct product = saleProduct("DISABLED");
         ProductPriceSetting setting = setting();
-        ProductPriceFabricRule rule = fabricRule();
+        ProductPriceMaterialRule rule = materialRule();
         rule.setUnitPrice(BigDecimal.ZERO);
         rule.setPriceFormula("0.00 * MAX(drop * width / 144, 1)");
         when(saleProductMapper.selectById(9001L)).thenReturn(product);
         when(settingMapper.selectOne(any())).thenReturn(setting);
         when(versionMapper.selectById(7001L)).thenReturn(effectiveVersion());
-        when(fabricMapper.selectList(any())).thenReturn(List.of(priceFabric()));
-        when(fabricRuleMapper.selectList(any())).thenReturn(List.of(rule));
+        when(materialMapper.selectList(any())).thenReturn(List.of(priceMaterial()));
+        when(materialRuleMapper.selectList(any())).thenReturn(List.of(rule));
 
         List<ProductPriceValidationIssueVo> issues = priceSettingService.validatePrice(9001L);
 
@@ -136,28 +157,51 @@ class ProductPriceSettingServiceTest extends ProductPriceSettingServiceTestSuppo
     }
 
     @Test
-    void generateFabricPricesRemovesDuplicateFabricRows() {
+    void generateMaterialPricesRemovesDuplicateMaterialRows() {
         ProductSaleProduct product = saleProduct("DISABLED");
         ProductPriceSetting setting = setting();
-        ProductPriceFabric first = priceFabric(9201L);
-        ProductPriceFabric duplicate = priceFabric(9202L);
+        ProductPriceMaterial first = priceMaterial(9201L);
+        ProductPriceMaterial duplicate = priceMaterial(9202L);
         when(saleProductMapper.selectById(9001L)).thenReturn(product);
         when(settingMapper.selectOne(any())).thenReturn(setting);
         when(versionMapper.selectById(7001L)).thenReturn(effectiveVersion());
-        when(fabricMapper.selectList(any()))
+        when(materialMapper.selectList(any()))
             .thenReturn(List.of(first, duplicate))
             .thenReturn(List.of(first, duplicate))
             .thenReturn(List.of(first))
             .thenReturn(List.of(first))
             .thenReturn(List.of(first));
         when(settingMapper.selectList(any())).thenReturn(List.of(setting));
-        when(fabricRuleMapper.selectList(any())).thenReturn(List.of());
-        when(fabricRuleMapper.selectCount(any())).thenReturn(1L);
+        when(materialRuleMapper.selectList(any())).thenReturn(List.of());
 
-        assertThat(priceSettingService.generateFabricPrices(9001L, false)).isTrue();
+        assertThat(priceSettingService.generateMaterialPrices(9001L, false)).isTrue();
 
-        verify(fabricMapper).delete(any());
-        verify(fabricMapper).updateById(any(ProductPriceFabric.class));
+        verify(materialMapper).delete(any());
+        verify(materialMapper).updateById(any(ProductPriceMaterial.class));
+    }
+
+    @Test
+    void batchPricingRejectsMixedMaterialGroupsBeforeWriting() {
+        ProductSaleProduct product = saleProduct("DISABLED");
+        ProductPriceMaterial fabric = priceMaterial(9201L);
+        ProductPriceMaterial aluminum = priceMaterial(9202L);
+        aluminum.setMaterialId(4002L);
+        aluminum.setMaterialCode("MAT-BAR");
+        aluminum.setAttributeGroupCode("ALUMINUM");
+        ProductPriceMaterialBatchRuleBo batch = new ProductPriceMaterialBatchRuleBo();
+        batch.setPriceMaterialIds(List.of(9201L, 9202L));
+        batch.setRules(List.of(materialRuleBo()));
+        when(saleProductMapper.selectById(9001L)).thenReturn(product);
+        when(settingMapper.selectOne(any())).thenReturn(setting());
+        when(versionMapper.selectById(7001L)).thenReturn(effectiveVersion());
+        when(materialMapper.selectById(9201L)).thenReturn(fabric);
+        when(materialMapper.selectById(9202L)).thenReturn(aluminum);
+
+        assertThatThrownBy(() -> priceSettingService.saveMaterialRulesBatch(9001L, batch))
+            .isInstanceOf(ServiceException.class);
+
+        verify(materialRuleMapper, never()).delete(any());
+        verify(materialRuleMapper, never()).insert(any());
     }
 
 }

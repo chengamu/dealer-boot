@@ -23,7 +23,7 @@
 
     <el-row :gutter="10" class="mb8 system-table-page__toolbar">
       <el-col :span="1.5">
-        <el-button type="primary" plain icon="Plus" @click="handleAdd()" v-hasPermi="['system:dept:add']">
+        <el-button type="primary" icon="Plus" @click="handleAdd()" v-hasPermi="['system:dept:add']">
           {{ t('common.add') }}
         </el-button>
       </el-col>
@@ -46,8 +46,8 @@
       :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
     >
       <el-table-column prop="deptName" :label="t('legacy.deptName')" width="260" />
-      <el-table-column prop="orderNum" :label="t('legacy.orderNum')" width="200" />
-      <el-table-column prop="status" :label="t('user.status')" width="100">
+      <el-table-column prop="orderNum" :label="t('legacy.orderNum')" width="200" align="right" />
+      <el-table-column prop="status" :label="t('user.status')" width="100" align="center">
         <template #default="{ row }">
           <dict-tag :options="sys_normal_disable" :value="row.status" />
         </template>

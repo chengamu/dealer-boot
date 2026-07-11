@@ -50,6 +50,9 @@ Runtime config and data stay on the host:
 
    docker compose --env-file deploy/base-boot/.env -f deploy/base-boot/docker-compose.prod.yml exec -T postgres \
      sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"' < sql/postgresql/product_capability.sql
+
+   docker compose --env-file deploy/base-boot/.env -f deploy/base-boot/docker-compose.prod.yml exec -T postgres \
+     sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"' < sql/postgresql/dealer_sales.sql
    ```
 
 Add `sql/postgresql/pay.sql` only when the payment module is needed.

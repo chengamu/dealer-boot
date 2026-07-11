@@ -203,6 +203,7 @@ public class AiUsageServiceImpl implements AiUsageService {
             ledger.setCreatedTime(TimeUtils.utcNow());
             usageLedgerMapper.insert(ledger);
             usageDailyMapper.increment(
+                IdUtil.getSnowflakeNextId(),
                 bo.getTenantId(),
                 bo.getUserId(),
                 LocalDate.now(TimeUtils.UTC),

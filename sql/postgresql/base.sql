@@ -173,6 +173,83 @@ CREATE INDEX IF NOT EXISTS idx_customer_profile_tenant_email ON customer_profile
 CREATE INDEX IF NOT EXISTS idx_customer_profile_tenant_owner ON customer_profile (tenant_id, owner_user_id, status);
 CREATE INDEX IF NOT EXISTS idx_customer_profile_merchant ON customer_profile (merchant_id, status);
 
+CREATE TABLE IF NOT EXISTS customer_quote (
+    quote_id bigint PRIMARY KEY,
+    tenant_id bigint NOT NULL CHECK (tenant_id <> 0),
+    quote_no varchar(50) NOT NULL,
+    customer_id bigint NOT NULL,
+    customer_name varchar(120) NOT NULL,
+    company_name varchar(120),
+    customer_email varchar(120),
+    project_name varchar(160) NOT NULL,
+    quote_language varchar(20) NOT NULL DEFAULT 'EN_US',
+    valid_until date,
+    owner_user_id bigint,
+    owner_name varchar(100),
+    currency_code varchar(10),
+    status varchar(20) NOT NULL DEFAULT 'DRAFT',
+    product_amount numeric(18,2) NOT NULL DEFAULT 0,
+    shipping_amount numeric(18,2) NOT NULL DEFAULT 0,
+    discount_amount numeric(18,2) NOT NULL DEFAULT 0,
+    total_amount numeric(18,2) NOT NULL DEFAULT 0,
+    confirmed_by_id bigint,
+    confirmed_by varchar(64),
+    confirmed_time timestamptz,
+    del_flag char(1) NOT NULL DEFAULT '0',
+    create_by_id bigint,
+    create_by varchar(64),
+    create_time timestamptz DEFAULT now(),
+    update_by varchar(64),
+    update_time timestamptz,
+    remark varchar(500)
+);
+CREATE INDEX IF NOT EXISTS idx_customer_quote_no ON customer_quote (tenant_id, quote_no) WHERE del_flag = '0';
+CREATE INDEX IF NOT EXISTS idx_customer_quote_customer ON customer_quote (tenant_id, customer_id, status) WHERE del_flag = '0';
+CREATE INDEX IF NOT EXISTS idx_customer_quote_updated ON customer_quote (tenant_id, update_time DESC, create_time DESC) WHERE del_flag = '0';
+
+CREATE TABLE IF NOT EXISTS customer_quote_item (
+    quote_item_id bigint PRIMARY KEY,
+    quote_id bigint NOT NULL,
+    tenant_id bigint NOT NULL CHECK (tenant_id <> 0),
+    line_no integer NOT NULL,
+    room_location varchar(120),
+    sale_product_id bigint,
+    sale_product_code varchar(80),
+    sale_product_name varchar(200),
+    formula_id bigint,
+    formula_version_id bigint,
+    formula_version_label varchar(30),
+    order_width_inch numeric(18,4),
+    order_height_inch numeric(18,4),
+    quantity integer NOT NULL DEFAULT 1,
+    selected_options_json text,
+    selected_options_summary_cn text,
+    selected_options_summary_en text,
+    calculation_status varchar(20) NOT NULL DEFAULT 'PENDING',
+    calculation_message varchar(500),
+    unit_amount numeric(18,2) NOT NULL DEFAULT 0,
+    product_amount numeric(18,2) NOT NULL DEFAULT 0,
+    unit_shipping_amount numeric(18,2) NOT NULL DEFAULT 0,
+    shipping_template_id bigint,
+    shipping_amount numeric(18,2) NOT NULL DEFAULT 0,
+    discount_amount numeric(18,2) NOT NULL DEFAULT 0,
+    line_amount numeric(18,2) NOT NULL DEFAULT 0,
+    pricing_snapshot_json text,
+    sort_order integer NOT NULL DEFAULT 0,
+    del_flag char(1) NOT NULL DEFAULT '0',
+    create_by_id bigint,
+    create_by varchar(64),
+    create_time timestamptz DEFAULT now(),
+    update_by varchar(64),
+    update_time timestamptz,
+    remark varchar(500)
+);
+ALTER TABLE customer_quote_item ADD COLUMN IF NOT EXISTS shipping_template_id bigint;
+CREATE INDEX IF NOT EXISTS idx_customer_quote_item_quote ON customer_quote_item (tenant_id, quote_id, line_no) WHERE del_flag = '0';
+CREATE INDEX IF NOT EXISTS idx_customer_quote_item_sale_product ON customer_quote_item (sale_product_id) WHERE del_flag = '0';
+CREATE INDEX IF NOT EXISTS idx_customer_quote_item_formula_version ON customer_quote_item (formula_version_id) WHERE del_flag = '0';
+CREATE INDEX IF NOT EXISTS idx_customer_quote_item_shipping_template ON customer_quote_item (shipping_template_id) WHERE del_flag = '0';
+
 CREATE TABLE IF NOT EXISTS sys_dept (
     dept_id bigint PRIMARY KEY,
     tenant_id bigint NOT NULL CHECK (tenant_id <> 0),
@@ -1254,7 +1331,13 @@ VALUES
     (20204, 1, '客户资料修改', 'sys.menu.customer.profile.edit', 20201, 3, '#', '', '1', '0', 'F', '1', '1', 'customer:profile:edit', '#', 'system', now(), ''),
     (20205, 1, '客户资料删除', 'sys.menu.customer.profile.remove', 20201, 4, '#', '', '1', '0', 'F', '1', '1', 'customer:profile:remove', '#', 'system', now(), ''),
     (20220, 1, '全部客户', 'sys.menu.customer.all', 20200, 2, 'allCustomers', 'customer/all', '1', '0', 'C', '1', '1', 'platform:customer:list', 'peoples', 'system', now(), '平台全部客户管理'),
-    (20221, 1, '全部客户查询', 'sys.menu.customer.all.query', 20220, 1, '#', '', '1', '0', 'F', '1', '1', 'platform:customer:query', '#', 'system', now(), '')
+    (20221, 1, '全部客户查询', 'sys.menu.customer.all.query', 20220, 1, '#', '', '1', '0', 'F', '1', '1', 'platform:customer:query', '#', 'system', now(), ''),
+    (20230, 1, '报价管理', 'customer.quote.menu', 20200, 3, 'quotes', 'customer/quotes', '1', '0', 'C', '1', '1', 'customer:quote:list', 'document', 'system', now(), '客户报价工作台'),
+    (20231, 1, '报价查询', 'customer.quote.permission.query', 20230, 1, '#', '', '1', '0', 'F', '1', '1', 'customer:quote:query', '#', 'system', now(), ''),
+    (20232, 1, '报价新增', 'customer.quote.permission.add', 20230, 2, '#', '', '1', '0', 'F', '1', '1', 'customer:quote:add', '#', 'system', now(), ''),
+    (20233, 1, '报价修改', 'customer.quote.permission.edit', 20230, 3, '#', '', '1', '0', 'F', '1', '1', 'customer:quote:edit', '#', 'system', now(), ''),
+    (20234, 1, '报价删除', 'customer.quote.permission.remove', 20230, 4, '#', '', '1', '0', 'F', '1', '1', 'customer:quote:remove', '#', 'system', now(), ''),
+    (20235, 1, '报价导出', 'customer.quote.permission.export', 20230, 5, '#', '', '1', '0', 'F', '1', '1', 'customer:quote:export', '#', 'system', now(), '')
 ON CONFLICT (menu_id) DO UPDATE
 SET menu_name = EXCLUDED.menu_name,
     i18n_key = EXCLUDED.i18n_key,
@@ -1277,7 +1360,8 @@ INSERT INTO sys_role_menu (role_id, menu_id, tenant_id)
 SELECT 1, menu_id, 1 FROM sys_menu
 WHERE tenant_id = 1
   AND menu_id IN (20100, 20101, 20102, 20103, 20104, 20105, 20120, 20121, 20122, 20123, 20124, 20125,
-                  20200, 20201, 20202, 20203, 20204, 20205, 20220, 20221)
+                  20200, 20201, 20202, 20203, 20204, 20205, 20220, 20221,
+                  20230, 20231, 20232, 20233, 20234, 20235)
 ON CONFLICT DO NOTHING;
 
 WITH RECURSIVE merchant_customer_menus AS (
@@ -1286,7 +1370,8 @@ WITH RECURSIVE merchant_customer_menus AS (
     JOIN sys_menu m ON m.tenant_id = r.tenant_id
     WHERE r.role_key IN ('merchant_admin', 'merchant_store', 'merchant_employee')
       AND r.del_flag = '0'
-      AND m.perms IN ('customer:profile:list', 'customer:profile:query', 'customer:profile:add', 'customer:profile:edit', 'customer:profile:remove')
+      AND m.perms IN ('customer:profile:list', 'customer:profile:query', 'customer:profile:add', 'customer:profile:edit', 'customer:profile:remove',
+                      'customer:quote:list', 'customer:quote:query', 'customer:quote:add', 'customer:quote:edit', 'customer:quote:remove', 'customer:quote:export')
     UNION
     SELECT c.role_id, c.tenant_id, p.menu_id, p.parent_id
     FROM merchant_customer_menus c
@@ -1361,7 +1446,13 @@ VALUES
     (300121, 300001, 'Customer Query', 'menu.customer.profile.query', 300120, 1, '#', '', '1', '0', 'F', '1', '1', 'customer:profile:query', '#', 'system', now(), ''),
     (300122, 300001, 'Customer Add', 'menu.customer.profile.add', 300120, 2, '#', '', '1', '0', 'F', '1', '1', 'customer:profile:add', '#', 'system', now(), ''),
     (300123, 300001, 'Customer Edit', 'menu.customer.profile.edit', 300120, 3, '#', '', '1', '0', 'F', '1', '1', 'customer:profile:edit', '#', 'system', now(), ''),
-    (300124, 300001, 'Customer Delete', 'menu.customer.profile.remove', 300120, 4, '#', '', '1', '0', 'F', '1', '1', 'customer:profile:remove', '#', 'system', now(), '')
+    (300124, 300001, 'Customer Delete', 'menu.customer.profile.remove', 300120, 4, '#', '', '1', '0', 'F', '1', '1', 'customer:profile:remove', '#', 'system', now(), ''),
+    (300130, 300001, 'Quotes', 'customer.quote.menu', 300100, 4, 'quotes', 'customer/quotes', '1', '0', 'C', '1', '1', 'customer:quote:list', 'document', 'system', now(), 'Customer quotations'),
+    (300131, 300001, 'Quote Query', 'customer.quote.permission.query', 300130, 1, '#', '', '1', '0', 'F', '1', '1', 'customer:quote:query', '#', 'system', now(), ''),
+    (300132, 300001, 'Quote Add', 'customer.quote.permission.add', 300130, 2, '#', '', '1', '0', 'F', '1', '1', 'customer:quote:add', '#', 'system', now(), ''),
+    (300133, 300001, 'Quote Edit', 'customer.quote.permission.edit', 300130, 3, '#', '', '1', '0', 'F', '1', '1', 'customer:quote:edit', '#', 'system', now(), ''),
+    (300134, 300001, 'Quote Delete', 'customer.quote.permission.remove', 300130, 4, '#', '', '1', '0', 'F', '1', '1', 'customer:quote:remove', '#', 'system', now(), ''),
+    (300135, 300001, 'Quote Export', 'customer.quote.permission.export', 300130, 5, '#', '', '1', '0', 'F', '1', '1', 'customer:quote:export', '#', 'system', now(), '')
 ON CONFLICT (menu_id) DO UPDATE
 SET menu_name = EXCLUDED.menu_name,
     i18n_key = EXCLUDED.i18n_key,
@@ -1384,7 +1475,7 @@ INSERT INTO sys_role_menu (role_id, menu_id, tenant_id)
 SELECT 300001, menu_id, 300001
 FROM sys_menu
 WHERE tenant_id = 300001
-  AND menu_id BETWEEN 300100 AND 300124
+  AND menu_id BETWEEN 300100 AND 300135
 ON CONFLICT DO NOTHING;
 
 INSERT INTO sys_user (user_id, tenant_id, dept_id, user_name, nick_name, user_type, email, phonenumber, sex, password, force_password_change, status, del_flag, create_by, create_time, remark)

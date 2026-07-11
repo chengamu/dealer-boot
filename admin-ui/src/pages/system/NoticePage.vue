@@ -32,12 +32,12 @@
 
     <el-row :gutter="10" class="mb8 system-table-page__toolbar">
       <el-col :span="1.5">
-        <el-button type="primary" plain icon="Plus" @click="handleAdd" v-hasPermi="['system:notice:add']">
+        <el-button type="primary" icon="Plus" @click="handleAdd" v-hasPermi="['system:notice:add']">
           {{ t('common.add') }}
         </el-button>
       </el-col>
       <el-col :span="1.5">
-        <el-button type="success" plain icon="Edit" :disabled="single" @click="handleUpdate()" v-hasPermi="['system:notice:edit']">
+        <el-button plain icon="Edit" :disabled="single" @click="handleUpdate()" v-hasPermi="['system:notice:edit']">
           {{ t('common.edit') }}
         </el-button>
       </el-col>

@@ -24,10 +24,10 @@
         <el-button type="primary" plain icon="Download" @click="handleGenTable()" v-hasPermi="['tool:gen:code']">{{ t('gen.generate') }}</el-button>
       </el-col>
       <el-col :span="1.5">
-        <el-button type="info" plain icon="Upload" @click="openImportTable" v-hasPermi="['tool:gen:import']">{{ t('common.import') }}</el-button>
+        <el-button plain icon="Upload" @click="openImportTable" v-hasPermi="['tool:gen:import']">{{ t('common.import') }}</el-button>
       </el-col>
       <el-col :span="1.5">
-        <el-button type="success" plain icon="Edit" :disabled="single" @click="handleEditTable()" v-hasPermi="['tool:gen:edit']">{{ t('common.edit') }}</el-button>
+        <el-button plain icon="Edit" :disabled="single" @click="handleEditTable()" v-hasPermi="['tool:gen:edit']">{{ t('common.edit') }}</el-button>
       </el-col>
       <el-col :span="1.5">
         <el-button type="danger" plain icon="Delete" :disabled="multiple" @click="handleDelete()" v-hasPermi="['tool:gen:remove']">{{ t('common.delete') }}</el-button>
@@ -43,9 +43,9 @@
           <span>{{ ((queryParams.pageNum || 1) - 1) * (queryParams.pageSize || 10) + $index + 1 }}</span>
         </template>
       </el-table-column>
-      <el-table-column :label="t('gen.tableName')" align="center" prop="tableName" :show-overflow-tooltip="true" />
-      <el-table-column :label="t('gen.tableComment')" align="center" prop="tableComment" :show-overflow-tooltip="true" />
-      <el-table-column :label="t('gen.className')" align="center" prop="className" :show-overflow-tooltip="true" />
+      <el-table-column :label="t('gen.tableName')" align="left" prop="tableName" :show-overflow-tooltip="true" />
+      <el-table-column :label="t('gen.tableComment')" align="left" prop="tableComment" :show-overflow-tooltip="true" />
+      <el-table-column :label="t('gen.className')" align="left" prop="className" :show-overflow-tooltip="true" />
       <el-table-column :label="t('common.createTime')" align="center" prop="createTime" width="170">
         <template #default="{ row }">{{ formatUtc(row.createTime) }}</template>
       </el-table-column>

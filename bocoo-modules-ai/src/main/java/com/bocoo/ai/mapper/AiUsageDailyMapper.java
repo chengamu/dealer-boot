@@ -11,8 +11,8 @@ import java.time.LocalDate;
 public interface AiUsageDailyMapper extends BaseMapper<AiUsageDaily> {
 
     @Insert("""
-        INSERT INTO ai_usage_daily (tenant_id, user_id, usage_date, request_count, input_tokens, output_tokens, cost_amount)
-        VALUES (#{tenantId}, #{userId}, #{usageDate}, 1, #{inputTokens}, #{outputTokens}, #{costAmount})
+        INSERT INTO ai_usage_daily (id, tenant_id, user_id, usage_date, request_count, input_tokens, output_tokens, cost_amount)
+        VALUES (#{id}, #{tenantId}, #{userId}, #{usageDate}, 1, #{inputTokens}, #{outputTokens}, #{costAmount})
         ON CONFLICT (tenant_id, user_id, usage_date) DO UPDATE
         SET request_count = ai_usage_daily.request_count + 1,
             input_tokens = ai_usage_daily.input_tokens + EXCLUDED.input_tokens,
@@ -20,6 +20,7 @@ public interface AiUsageDailyMapper extends BaseMapper<AiUsageDaily> {
             cost_amount = ai_usage_daily.cost_amount + EXCLUDED.cost_amount
         """)
     void increment(
+        @Param("id") Long id,
         @Param("tenantId") Long tenantId,
         @Param("userId") Long userId,
         @Param("usageDate") LocalDate usageDate,

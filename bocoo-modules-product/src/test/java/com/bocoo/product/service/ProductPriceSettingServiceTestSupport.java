@@ -1,20 +1,22 @@
 package com.bocoo.product.service;
 
-import com.bocoo.product.domain.bo.ProductPriceFabricRuleBo;
+import com.bocoo.product.domain.bo.ProductPriceMaterialRuleBo;
 import com.bocoo.product.domain.entity.ProductFormulaVersion;
-import com.bocoo.product.domain.entity.ProductPriceFabric;
-import com.bocoo.product.domain.entity.ProductPriceFabricRule;
+import com.bocoo.product.domain.entity.ProductPriceMaterial;
+import com.bocoo.product.domain.entity.ProductPriceMaterialRule;
 import com.bocoo.product.domain.entity.ProductPriceSetting;
 import com.bocoo.product.domain.entity.ProductSaleProduct;
 import com.bocoo.product.mapper.ProductFormulaVersionMapper;
-import com.bocoo.product.mapper.ProductPriceFabricMapper;
-import com.bocoo.product.mapper.ProductPriceFabricRuleMapper;
+import com.bocoo.product.mapper.ProductPriceMaterialMapper;
+import com.bocoo.product.mapper.ProductPriceMaterialRuleMapper;
 import com.bocoo.product.mapper.ProductPriceSettingMapper;
 import com.bocoo.product.mapper.ProductSaleProductMapper;
-import com.bocoo.product.service.impl.ProductPriceFabricCandidateFactory;
-import com.bocoo.product.service.impl.ProductPriceFabricRuleGuard;
-import com.bocoo.product.service.impl.ProductPriceFabricSyncService;
-import com.bocoo.product.service.impl.ProductPriceFabricVoAssembler;
+import com.bocoo.product.service.impl.ProductPriceMaterialRuleGuard;
+import com.bocoo.product.service.impl.ProductPriceMaterialRuleWriter;
+import com.bocoo.product.service.impl.ProductPriceMaterialSyncService;
+import com.bocoo.product.service.impl.ProductPriceMaterialVoAssembler;
+import com.bocoo.product.service.impl.ProductPriceConditionSnapshotFactory;
+import com.bocoo.product.service.impl.ProductPricingEngine;
 import com.bocoo.product.service.impl.ProductPriceSettingServiceImpl;
 import com.bocoo.product.service.impl.ProductPriceSettingValidator;
 import com.bocoo.product.service.impl.ProductPriceSnapshotReader;
@@ -31,9 +33,9 @@ abstract class ProductPriceSettingServiceTestSupport {
     @Mock
     protected ProductPriceSettingMapper settingMapper;
     @Mock
-    protected ProductPriceFabricMapper fabricMapper;
+    protected ProductPriceMaterialMapper materialMapper;
     @Mock
-    protected ProductPriceFabricRuleMapper fabricRuleMapper;
+    protected ProductPriceMaterialRuleMapper materialRuleMapper;
     @Mock
     protected ProductFormulaVersionMapper versionMapper;
     @Mock
@@ -45,20 +47,28 @@ abstract class ProductPriceSettingServiceTestSupport {
     void setUpPriceSettingService() {
         ProductServiceTestSupport.prepareMapperAndConverter();
         ProductPriceSnapshotReader snapshotReader = new ProductPriceSnapshotReader();
-        ProductPriceFabricSyncService fabricSyncService =
-            new ProductPriceFabricSyncService(fabricMapper, fabricRuleMapper, settingMapper, snapshotReader);
+        ProductPriceConditionSnapshotFactory conditionSnapshotFactory =
+            new ProductPriceConditionSnapshotFactory(snapshotReader);
+        ProductPriceMaterialSyncService materialSyncService =
+            new ProductPriceMaterialSyncService(
+                materialMapper, materialRuleMapper, settingMapper, snapshotReader, conditionSnapshotFactory);
+        ProductPriceMaterialRuleWriter ruleWriter = new ProductPriceMaterialRuleWriter(
+            materialRuleMapper,
+            new ProductPriceMaterialRuleGuard(),
+            conditionSnapshotFactory
+        );
         priceSettingService = new ProductPriceSettingServiceImpl(
             saleProductMapper,
             settingMapper,
-            fabricMapper,
-            fabricRuleMapper,
+            materialMapper,
+            materialRuleMapper,
             versionMapper,
-            new ProductPriceSettingValidator(snapshotReader),
+            new ProductPriceSettingValidator(snapshotReader, conditionSnapshotFactory),
             snapshotReader,
-            new ProductPriceFabricCandidateFactory(snapshotReader),
-            fabricSyncService,
-            new ProductPriceFabricRuleGuard(),
-            new ProductPriceFabricVoAssembler(),
+            materialSyncService,
+            ruleWriter,
+            new ProductPriceMaterialVoAssembler(),
+            org.mockito.Mockito.mock(ProductPricingEngine.class),
             changeLogService
         );
     }
@@ -96,14 +106,22 @@ abstract class ProductPriceSettingServiceTestSupport {
         version.setVersionId(7001L);
         version.setVersionStatus("EFFECTIVE");
         version.setSetupSnapshotJson("""
-            {"materials":[{"materialId":4001,"attributeGroupCode":"FABRIC","materialCode":"MAT-FABRIC","materialNameCn":"斑马帘面料","unitCode":"m2","specModelText":"宽幅 290","createById":1,"createTime":"2026-07-08T14:24:18","updateTime":"2026-07-08T14:24:18"}],"priceSnapshot":[{"materialCode":"MAT-FABRIC","salesPrice":12.30,"unitPrice":8.20}]}
+            {"materials":[{"materialId":4001,"attributeGroupCode":"FABRIC","materialCode":"MAT-FABRIC","materialNameCn":"斑马帘面料","unitCode":"m2","specModelText":"宽幅 290"}],"priceSnapshot":[{"materialCode":"MAT-FABRIC","salesPrice":12.30,"unitPrice":8.20}]}
             """);
         return version;
     }
 
-    protected ProductPriceFabricRuleBo fabricRuleBo() {
-        ProductPriceFabricRuleBo bo = new ProductPriceFabricRuleBo();
-        bo.setPriceFabricId(9201L);
+    protected ProductFormulaVersion allMaterialVersion() {
+        ProductFormulaVersion version = effectiveVersion();
+        version.setSetupSnapshotJson("""
+            {"materials":[{"materialId":4001,"attributeGroupCode":"FABRIC","materialCode":"MAT-FABRIC","materialNameCn":"斑马帘面料","unitCode":"m2","specModelText":"宽幅 290"},{"materialId":4002,"attributeGroupCode":"ALUMINUM","materialCode":"MAT-BAR","materialNameCn":"下杆","unitCode":"m"}],"priceSnapshot":[{"materialCode":"MAT-FABRIC","salesPrice":12.30,"unitPrice":8.20},{"materialCode":"MAT-BAR","salesPrice":3.50,"unitPrice":2.00}]}
+            """);
+        return version;
+    }
+
+    protected ProductPriceMaterialRuleBo materialRuleBo() {
+        ProductPriceMaterialRuleBo bo = new ProductPriceMaterialRuleBo();
+        bo.setPriceMaterialId(9201L);
         bo.setConditionType("DEFAULT");
         bo.setConditionExpression("DEFAULT");
         bo.setConditionText("默认规则");
@@ -116,25 +134,28 @@ abstract class ProductPriceSettingServiceTestSupport {
         return bo;
     }
 
-    protected ProductPriceFabric priceFabric() {
-        return priceFabric(9201L);
+    protected ProductPriceMaterial priceMaterial() {
+        return priceMaterial(9201L);
     }
 
-    protected ProductPriceFabric priceFabric(Long id) {
-        ProductPriceFabric fabric = new ProductPriceFabric();
-        fabric.setPriceFabricId(id);
-        fabric.setPriceSettingId(9101L);
-        fabric.setMaterialCode("MAT-FABRIC");
-        fabric.setMaterialNameCn("斑马帘面料");
-        fabric.setUnitCode("m2");
-        fabric.setStatus("ENABLED");
-        return fabric;
+    protected ProductPriceMaterial priceMaterial(Long id) {
+        ProductPriceMaterial material = new ProductPriceMaterial();
+        material.setPriceMaterialId(id);
+        material.setPriceSettingId(9101L);
+        material.setMaterialId(4001L);
+        material.setAttributeGroupCode("FABRIC");
+        material.setMaterialCode("MAT-FABRIC");
+        material.setMaterialNameCn("斑马帘面料");
+        material.setUnitCode("m2");
+        material.setStatus("ENABLED");
+        return material;
     }
 
-    protected ProductPriceFabricRule fabricRule() {
-        ProductPriceFabricRule rule = new ProductPriceFabricRule();
-        rule.setPriceFabricId(9201L);
+    protected ProductPriceMaterialRule materialRule() {
+        ProductPriceMaterialRule rule = new ProductPriceMaterialRule();
+        rule.setPriceMaterialId(9201L);
         rule.setConditionType("DEFAULT");
+        rule.setConditionJson("{\"type\":\"DEFAULT\"}");
         rule.setConditionExpression("DEFAULT");
         rule.setConditionText("默认规则");
         rule.setConditionKey("DEFAULT");

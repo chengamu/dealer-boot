@@ -9,11 +9,12 @@ import com.bocoo.product.domain.entity.ProductPriceSetting;
 import com.bocoo.product.domain.entity.ProductSaleProduct;
 import com.bocoo.product.mapper.ProductFormulaMapper;
 import com.bocoo.product.mapper.ProductFormulaVersionMapper;
-import com.bocoo.product.mapper.ProductPriceFabricMapper;
-import com.bocoo.product.mapper.ProductPriceFabricRuleMapper;
+import com.bocoo.product.mapper.ProductPriceMaterialMapper;
+import com.bocoo.product.mapper.ProductPriceMaterialRuleMapper;
 import com.bocoo.product.mapper.ProductPriceSettingMapper;
 import com.bocoo.product.mapper.ProductSaleProductMapper;
 import com.bocoo.product.service.impl.ProductSaleProductServiceImpl;
+import com.bocoo.product.service.impl.ProductQuoteReferenceGuard;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -41,9 +42,9 @@ class ProductSaleProductServiceTest {
     @Mock
     private ProductPriceSettingMapper settingMapper;
     @Mock
-    private ProductPriceFabricMapper fabricMapper;
+    private ProductPriceMaterialMapper fabricMapper;
     @Mock
-    private ProductPriceFabricRuleMapper fabricRuleMapper;
+    private ProductPriceMaterialRuleMapper materialRuleMapper;
     @Mock
     private ProductFormulaMapper formulaMapper;
     @Mock
@@ -60,10 +61,11 @@ class ProductSaleProductServiceTest {
             saleProductMapper,
             settingMapper,
             fabricMapper,
-            fabricRuleMapper,
+            materialRuleMapper,
             formulaMapper,
             versionMapper,
-            changeLogService
+            changeLogService,
+            new ProductQuoteReferenceGuard(List.of())
         );
     }
 
@@ -118,7 +120,7 @@ class ProductSaleProductServiceTest {
         setting.setPriceSettingId(9101L);
         when(saleProductMapper.selectBatchIds(List.of(9001L))).thenReturn(List.of(product));
         when(settingMapper.selectList(any())).thenReturn(List.of(setting));
-        when(fabricRuleMapper.selectCount(any())).thenReturn(1L);
+        when(materialRuleMapper.selectCount(any())).thenReturn(1L);
 
         assertThatThrownBy(() -> saleProductService.deleteWithValidByIds(new Long[]{9001L}))
             .isInstanceOf(ServiceException.class);
@@ -149,7 +151,7 @@ class ProductSaleProductServiceTest {
         verify(settingMapper).insert(argThat(setting ->
             setting != null && Long.valueOf(7002L).equals(setting.getFormulaVersionId())));
         verify(fabricMapper, never()).delete(any());
-        verify(fabricRuleMapper, never()).delete(any());
+        verify(materialRuleMapper, never()).delete(any());
     }
 
     private ProductSaleProduct saleProduct(String priceStatus, String status) {

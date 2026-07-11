@@ -30,9 +30,9 @@
           <span>{{ (pageNum - 1) * pageSize + $index + 1 }}</span>
         </template>
       </el-table-column>
-      <el-table-column type="selection" :reserve-selection="true" width="55" />
-      <el-table-column :label="t('role.roleName')" align="center" prop="roleName" />
-      <el-table-column :label="t('role.roleKey')" align="center" prop="roleKey" />
+      <el-table-column type="selection" :reserve-selection="true" width="55" align="center" />
+      <el-table-column :label="t('role.roleName')" align="left" prop="roleName" />
+      <el-table-column :label="t('role.roleKey')" align="left" prop="roleKey" />
       <el-table-column :label="t('common.createTime')" align="center" prop="createTime" width="180">
         <template #default="{ row }">
           <span>{{ formatUtc(row.createTime) }}</span>

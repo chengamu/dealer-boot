@@ -8,8 +8,8 @@
       </div>
       <div class="price-overview__card">
         <span class="price-overview__icon"><Money /></span>
-        <span>{{ t('productCenter.pricing.fabricRules') }}</span>
-        <strong>{{ fabricRuleCount }}</strong>
+        <span>{{ t('productCenter.pricing.materialPrices') }}</span>
+        <strong>{{ materialRuleCount }}</strong>
       </div>
       <div class="price-overview__card">
         <span class="price-overview__icon price-overview__icon--warning"><WarningFilled /></span>
@@ -28,27 +28,44 @@ import aluminumIcon from '@/assets/product-formula/icons/group-aluminum.png'
 import systemIcon from '@/assets/product-formula/icons/group-system.png'
 import accessoryIcon from '@/assets/product-formula/icons/group-accessory.png'
 import packagingIcon from '@/assets/product-formula/icons/group-packaging.png'
+import partPackIcon from '@/assets/product-formula/icons/group-part-pack.png'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
+import type { ProductFormulaMaterialVO } from '@/api/product-capability/types'
 
 const props = defineProps<{
-  fabricRuleCount: number
+  materialRuleCount: number
   issueCount: number
   materialGroupCounts?: Record<string, number>
+  formulaMaterials?: ProductFormulaMaterialVO[]
 }>()
 
 const localeStore = useLocaleStore()
 const t = (key: string) => getMessage(key, localeStore.language)
-const cards = computed(() => [
-  { code: 'FABRIC', name: t('productCenter.pricing.groupFabric'), count: count('FABRIC'), icon: fabricIcon },
-  { code: 'ALUMINUM', name: t('productCenter.pricing.groupAluminum'), count: count('ALUMINUM'), icon: aluminumIcon },
-  { code: 'SYSTEM', name: t('productCenter.pricing.groupSystem'), count: count('SYSTEM'), icon: systemIcon },
-  { code: 'ACCESSORY', name: t('productCenter.pricing.groupAccessory'), count: count('ACCESSORY'), icon: accessoryIcon },
-  { code: 'PACKAGING', name: t('productCenter.pricing.groupPackaging'), count: count('PACKAGING'), icon: packagingIcon }
+const baseCards = computed(() => [
+  { code: 'FABRIC', name: t('productCenter.pricing.groupFabric'), icon: fabricIcon },
+  { code: 'ALUMINUM', name: t('productCenter.pricing.groupAluminum'), icon: aluminumIcon },
+  { code: 'SYSTEM', name: t('productCenter.pricing.groupSystem'), icon: systemIcon },
+  { code: 'ACCESSORY', name: t('productCenter.pricing.groupAccessory'), icon: accessoryIcon },
+  { code: 'PART_PACK', name: t('productCenter.pricing.groupPartPack'), icon: partPackIcon },
+  { code: 'PACKAGING', name: t('productCenter.pricing.groupPackaging'), icon: packagingIcon }
 ])
+const cards = computed(() => {
+  const knownCodes = new Set(baseCards.value.map((item) => item.code))
+  const extras = Object.keys(props.materialGroupCounts || {})
+    .filter((code) => !knownCodes.has(code))
+    .map((code) => ({ code, name: groupName(code), icon: accessoryIcon }))
+  return [...baseCards.value, ...extras].map((item) => ({ ...item, count: count(item.code) }))
+})
 
 function count(code: string) {
   return props.materialGroupCounts?.[code] || 0
+}
+
+function groupName(code: string) {
+  const material = props.formulaMaterials?.find((item) =>
+    (item.attributeGroupCode || item.materialTypeCode || 'UNCLASSIFIED') === code)
+  return material?.attributeGroupNameCn || material?.materialTypeNameCn || code
 }
 </script>
 
@@ -70,9 +87,10 @@ function count(code: string) {
 
 .price-overview__cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(128px, 168px));
-  justify-content: start;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(112px, 1fr);
   gap: 8px;
+  overflow-x: auto;
 }
 
 .price-overview__card {

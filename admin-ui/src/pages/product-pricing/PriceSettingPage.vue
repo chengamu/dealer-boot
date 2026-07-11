@@ -15,9 +15,10 @@
     <el-empty v-else :description="t('productCenter.pricing.noSaleProduct')" />
     <template v-if="currentProduct.saleProductId">
       <PriceSetupOverview
-        :fabric-rule-count="priceFabrics.length"
+        :material-rule-count="priceMaterials.length"
         :issue-count="issues.length"
         :material-group-counts="setup.materialGroupCounts"
+        :formula-materials="setup.formulaMaterials || []"
       />
       <el-alert
         v-if="!editable"
@@ -26,33 +27,33 @@
         show-icon
         :closable="false"
       />
-      <FabricPriceTable
-        :rows="priceFabrics"
-        :rules="fabricRules"
+      <MaterialPriceTable
+        :rows="priceMaterials"
+        :rules="materialRules"
         :editable="editable"
         :options="setup.formulaOptions || []"
         :option-values="setup.formulaOptionValues || []"
-        @generate="generateFabricPrices"
+        @generate="generateMaterialPrices"
         @batch="openBatchPrice"
-        @open-rules="openFabricRules"
+        @open-rules="openMaterialRules"
       />
       <PriceIssuePanel :issues="issues" />
     </template>
-    <FabricPriceBatchDialog
+    <MaterialPriceBatchDrawer
       v-model="batchOpen"
-      :fabrics="batchFabrics"
+      :materials="batchMaterials"
       :options="setup.formulaOptions || []"
       :option-values="setup.formulaOptionValues || []"
-      @save="applyBatchFabricPrice"
+      @save="applyBatchMaterialPrice"
     />
-    <FabricPriceRuleDrawer
+    <MaterialPriceRuleDrawer
       v-model="ruleDrawerOpen"
-      :fabric="activeFabric"
-      :rules="activeFabricRules"
+      :material="activeMaterial"
+      :rules="activeMaterialRules"
       :editable="editable"
       :options="setup.formulaOptions || []"
       :option-values="setup.formulaOptionValues || []"
-      @save="saveFabricRules"
+      @save="saveMaterialRules"
     />
   </div>
 </template>
@@ -64,8 +65,8 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 import type {
-  FabricPriceRule,
-  PriceFabricVO,
+  MaterialPriceRule,
+  PriceMaterialVO,
   PriceSetupVO,
   PriceValidationIssue,
   SaleProductVO
@@ -74,9 +75,9 @@ import { productPriceApi, saleProductApi } from '@/api/product-pricing/pricing'
 import { PRODUCT_STATUS_ENABLED } from '@/constants/productStatus'
 import PriceSetupHeader from './components/PriceSetupHeader.vue'
 import PriceSetupOverview from './components/PriceSetupOverview.vue'
-import FabricPriceTable from './components/FabricPriceTable.vue'
-import FabricPriceBatchDialog from './components/FabricPriceBatchDialog.vue'
-import FabricPriceRuleDrawer from './components/FabricPriceRuleDrawer.vue'
+import MaterialPriceTable from './components/MaterialPriceTable.vue'
+import MaterialPriceBatchDrawer from './components/MaterialPriceBatchDrawer.vue'
+import MaterialPriceRuleDrawer from './components/MaterialPriceRuleDrawer.vue'
 import PriceIssuePanel from './components/PriceIssuePanel.vue'
 
 const route = useRoute()
@@ -87,19 +88,19 @@ const t = (key: string) => getMessage(key, localeStore.language)
 const products = ref<SaleProductVO[]>([])
 const selectedProductId = ref(toIdString(route.query.saleProductId))
 const setup = ref<PriceSetupVO>({})
-const priceFabrics = ref<PriceFabricVO[]>([])
-const fabricRules = ref<FabricPriceRule[]>([])
+const priceMaterials = ref<PriceMaterialVO[]>([])
+const materialRules = ref<MaterialPriceRule[]>([])
 const issues = ref<PriceValidationIssue[]>([])
 const loading = ref(false)
 const validating = ref(false)
 const batchOpen = ref(false)
 const ruleDrawerOpen = ref(false)
-const activeFabric = ref<PriceFabricVO>()
-const batchFabrics = ref<PriceFabricVO[]>([])
+const activeMaterial = ref<PriceMaterialVO>()
+const batchMaterials = ref<PriceMaterialVO[]>([])
 
 const currentProduct = computed(() => setup.value.saleProduct || products.value.find((item) => toIdString(item.saleProductId) === selectedProductId.value) || {})
 const editable = computed(() => currentProduct.value.status !== PRODUCT_STATUS_ENABLED)
-const activeFabricRules = computed(() => fabricRules.value.filter(row => row.priceFabricId === activeFabric.value?.priceFabricId))
+const activeMaterialRules = computed(() => materialRules.value.filter(row => String(row.priceMaterialId || '') === String(activeMaterial.value?.priceMaterialId || '')))
 
 onMounted(async () => {
   await loadProducts()
@@ -118,8 +119,8 @@ async function reload() {
   try {
     const response = await productPriceApi.setup(selectedProductId.value)
     setup.value = response.data || {}
-    priceFabrics.value = (setup.value.priceFabrics || []).map((row) => ({ ...row }))
-    fabricRules.value = (setup.value.fabricRules || []).map((row) => ({ ...row }))
+    priceMaterials.value = (setup.value.priceMaterials || []).map((row) => ({ ...row }))
+    materialRules.value = (setup.value.materialRules || []).map((row) => ({ ...row }))
     issues.value = setup.value.issues || []
   } finally {
     loading.value = false
@@ -132,42 +133,46 @@ async function selectProduct(value: string | number) {
   await reload()
 }
 
-async function generateFabricPrices(overwrite: boolean) {
+async function generateMaterialPrices(overwrite: boolean) {
   if (!selectedProductId.value) return
   await ElMessageBox.confirm(
     t(overwrite ? 'productCenter.pricing.confirmOverwriteGenerate' : 'productCenter.pricing.confirmSyncGenerate'),
     t('common.prompt'),
     { type: overwrite ? 'warning' : 'info' }
   )
-  await productPriceApi.generateFabricPrices(selectedProductId.value, overwrite)
+  await productPriceApi.generateMaterialPrices(selectedProductId.value, overwrite)
   ElMessage.success(t('common.success'))
   await reload()
 }
 
-function openFabricRules(row: PriceFabricVO) {
-  activeFabric.value = row
+function openMaterialRules(row: PriceMaterialVO) {
+  activeMaterial.value = row
   ruleDrawerOpen.value = true
 }
 
-function openBatchPrice(rows: PriceFabricVO[]) {
-  batchFabrics.value = rows
+function openBatchPrice(rows: PriceMaterialVO[]) {
+  const groups = new Set(rows.map((row) => row.attributeGroupCode || 'UNCLASSIFIED'))
+  if (groups.size > 1) {
+    ElMessage.warning(t('productCenter.pricing.batchSameGroupRequired'))
+    return
+  }
+  batchMaterials.value = rows
   batchOpen.value = true
 }
 
-async function applyBatchFabricPrice(payload: { priceFabricIds: number[], rows: FabricPriceRule[] }) {
+async function applyBatchMaterialPrice(payload: { priceMaterialIds: string[], rules: MaterialPriceRule[] }) {
   if (!selectedProductId.value) return
-  for (const priceFabricId of payload.priceFabricIds) {
-    const rows = payload.rows.map((row, index) => ({ ...row, fabricRuleId: undefined, priceFabricId, sortOrder: index }))
-    await productPriceApi.saveFabricRules(selectedProductId.value, priceFabricId, rows)
-  }
+  await productPriceApi.saveMaterialRulesBatch(selectedProductId.value, payload)
+  batchOpen.value = false
   ElMessage.success(t('common.success'))
   await reload()
 }
 
-async function saveFabricRules(priceFabricId?: number, rows?: FabricPriceRule[], refresh = true) {
+async function saveMaterialRules(priceMaterialId?: string, rows?: MaterialPriceRule[], refresh = true) {
   if (!selectedProductId.value) return
-  if (!priceFabricId || !rows) return
-  await productPriceApi.saveFabricRules(selectedProductId.value, priceFabricId, rows)
+  if (!priceMaterialId || !rows) return
+  await productPriceApi.saveMaterialRules(selectedProductId.value, priceMaterialId, rows)
+  ruleDrawerOpen.value = false
   if (refresh) {
     ElMessage.success(t('common.success'))
     await reload()

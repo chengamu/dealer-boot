@@ -22,7 +22,7 @@
 
     <el-row :gutter="10" class="mb8 ai-table-page__toolbar">
       <el-col :span="1.5">
-        <el-button type="primary" plain icon="Plus" @click="openModelDrawer()" v-hasPermi="['ai:model:add']">
+        <el-button type="primary" icon="Plus" @click="openModelDrawer()" v-hasPermi="['ai:model:add']">
           {{ t('common.add') }}
         </el-button>
       </el-col>

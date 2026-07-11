@@ -2,6 +2,7 @@ package com.bocoo.product.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.lock.annotation.Lock4j;
 import com.bocoo.common.core.context.TenantContextHolder;
 import com.bocoo.common.core.exception.ServiceException;
 import com.bocoo.common.core.uuid.Seq;
@@ -39,6 +40,7 @@ public class ProductShippingTemplateServiceImpl extends ProductServiceSupport im
     private final ProductShippingTemplateRuleMapper ruleMapper;
     private final ProductShippingTemplateRuleValidator ruleValidator;
     private final ProductShippingTemplateRuleImporter ruleImporter;
+    private final ProductQuoteReferenceGuard quoteReferenceGuard;
 
     @Override
     public TableDataInfo<ProductShippingTemplateVo> queryPageList(ProductShippingTemplateBo bo, PageQuery pageQuery) {
@@ -110,15 +112,20 @@ public class ProductShippingTemplateServiceImpl extends ProductServiceSupport im
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public Boolean deleteWithValidByIds(Long[] ids) {
         if (templateMapper.selectBatchIds(Arrays.asList(ids)).stream()
             .anyMatch(row -> STATUS_ENABLED.equals(row.getStatus()))) {
             throw ServiceException.ofMessageKey("product.shippingTemplate.enabledDeleteDenied");
         }
+        Arrays.stream(ids).forEach(quoteReferenceGuard::assertNoShippingTemplateReferences);
+        ruleMapper.delete(activeQuery(ProductShippingTemplateRule.class)
+            .in("shipping_template_id", Arrays.asList(ids)));
         return remove(templateMapper, ids);
     }
 
     @Override
+    @Lock4j(keys = {"'shipping-template-status'"})
     @Transactional(rollbackFor = Exception.class)
     public Boolean updateStatus(Long id, String status) {
         String normalizedStatus = normalizeStatus(status);
@@ -156,6 +163,7 @@ public class ProductShippingTemplateServiceImpl extends ProductServiceSupport im
         if (bo != null) {
             like(q, "template_code", bo.getTemplateCode());
             like(q, "template_name", bo.getTemplateName());
+            eq(q, "currency_code", bo.getCurrencyCode());
             eq(q, "status", bo.getStatus());
         }
         return q;

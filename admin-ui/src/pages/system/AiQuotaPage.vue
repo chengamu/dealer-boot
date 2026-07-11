@@ -22,7 +22,7 @@
 
     <el-row :gutter="10" class="mb8 ai-table-page__toolbar">
       <el-col :span="1.5">
-        <el-button type="primary" plain icon="Plus" @click="openAddUserSelector" v-hasPermi="['ai:quota:add']">
+        <el-button type="primary" icon="Plus" @click="openAddUserSelector" v-hasPermi="['ai:quota:add']">
           {{ t('ai.settings.addUserQuota') }}
         </el-button>
       </el-col>
@@ -34,9 +34,9 @@
       <el-table-column :label="t('ai.settings.user')" min-width="180" show-overflow-tooltip>
         <template #default="{ row }">{{ userLabel(row) }}</template>
       </el-table-column>
-      <el-table-column :label="t('ai.settings.dailyRequestLimit')" prop="dailyRequestLimit" min-width="150" align="center" />
-      <el-table-column :label="t('ai.settings.dailyTokenLimit')" prop="dailyTokenLimit" min-width="150" align="center" />
-      <el-table-column :label="t('ai.settings.dailyCostLimit')" prop="dailyCostLimit" min-width="150" align="center">
+      <el-table-column :label="t('ai.settings.dailyRequestLimit')" prop="dailyRequestLimit" min-width="150" align="right" />
+      <el-table-column :label="t('ai.settings.dailyTokenLimit')" prop="dailyTokenLimit" min-width="150" align="right" />
+      <el-table-column :label="t('ai.settings.dailyCostLimit')" prop="dailyCostLimit" min-width="150" align="right">
         <template #default="{ row }">{{ formatAmount(row.dailyCostLimit) }}</template>
       </el-table-column>
       <el-table-column :label="t('common.status')" prop="status" width="100" align="center">

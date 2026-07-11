@@ -21,14 +21,14 @@
     </el-form>
 
     <el-row :gutter="10" class="mb8 merchant-table-page__toolbar">
-      <el-button type="primary" plain icon="Plus" @click="openAdd" v-hasPermi="['customer:profile:add']">{{ t('common.add') }}</el-button>
-      <el-button type="success" plain icon="Edit" :disabled="single" @click="openEdit()" v-hasPermi="['customer:profile:edit']">{{ t('common.edit') }}</el-button>
+      <el-button type="primary" icon="Plus" @click="openAdd" v-hasPermi="['customer:profile:add']">{{ t('common.add') }}</el-button>
+      <el-button plain icon="Edit" :disabled="single" @click="openEdit()" v-hasPermi="['customer:profile:edit']">{{ t('common.edit') }}</el-button>
       <el-button type="danger" plain icon="Delete" :disabled="multiple" @click="handleDelete()" v-hasPermi="['customer:profile:remove']">{{ t('common.delete') }}</el-button>
       <right-toolbar v-model:showSearch="showSearch" @queryTable="getList" />
     </el-row>
 
     <el-table v-loading="loading" :data="rows" border class="merchant-table-page__table" @selection-change="handleSelectionChange">
-      <el-table-column type="selection" width="48" />
+      <el-table-column type="selection" width="48" align="center" />
       <el-table-column type="index" :label="t('common.index')" width="70" align="center" />
       <el-table-column :label="t('customer.name')" prop="customerName" min-width="150" :show-overflow-tooltip="true" />
       <el-table-column :label="t('customer.company')" prop="companyName" min-width="160" :show-overflow-tooltip="true" />
@@ -41,11 +41,12 @@
       <el-table-column :label="t('common.updateTime')" width="170" align="center">
         <template #default="{ row }">{{ formatUtc(row.updateTime || row.createTime, 'YYYY-MM-DD HH:mm') }}</template>
       </el-table-column>
-      <el-table-column :label="t('common.operate')" width="170" fixed="right" align="center">
+      <el-table-column :label="t('common.operate')" width="220" fixed="right" align="center">
         <template #default="{ row }">
           <AdminTableActions :actions="[
             { label: t('common.edit'), icon: 'Edit', permission: 'customer:profile:edit', hidden: row.status === 'ENABLED', onClick: () => openEdit(row) },
             { label: row.status === 'ENABLED' ? t('common.disable') : t('common.enable'), icon: 'Switch', permission: 'customer:profile:edit', onClick: () => toggleStatus(row) },
+            { label: t('dealer.sales.history'), icon: 'List', permission: 'dealer:sales:query', onClick: () => openHistory(row) },
             { label: t('common.delete'), icon: 'Delete', type: 'danger', permission: 'customer:profile:remove', hidden: row.status === 'ENABLED', onClick: () => handleDelete(row) }
           ]" />
         </template>
@@ -84,6 +85,16 @@
         <el-button type="primary" @click="submit">{{ t('common.confirm') }}</el-button>
       </template>
     </AdminDrawer>
+    <AdminDrawer v-model="historyOpen" :title="t('dealer.sales.history')" size="860px">
+      <el-table :data="historyRows" border>
+        <el-table-column prop="quoteNo" :label="t('dealer.sales.quoteNo')" min-width="160" />
+        <el-table-column prop="orderNo" :label="t('dealer.sales.orderNo')" min-width="160" />
+        <el-table-column prop="projectName" :label="t('dealer.sales.project')" min-width="150" />
+        <el-table-column :label="t('common.status')" width="110"><template #default="{ row }">{{ documentStatusText(t, row.documentStatus) }}</template></el-table-column>
+        <el-table-column :label="t('dealer.sales.totalAmount')" width="120" align="right"><template #default="{ row }">{{ money(row.totalAmount, row.currencyCode) }}</template></el-table-column>
+        <el-table-column :label="t('common.operate')" width="90"><template #default="{ row }"><el-button link type="primary" @click="openSalesDocument(row)">{{ t('common.detail') }}</el-button></template></el-table-column>
+      </el-table>
+    </AdminDrawer>
   </div>
 </template>
 
@@ -93,13 +104,19 @@ import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'elem
 import { useI18n } from 'vue-i18n'
 import { addCustomer, changeCustomerStatus, deleteCustomer, getCustomer, listCustomerOwnerOptions, listCustomers, updateCustomer, type CustomerOwnerOption, type CustomerProfile, type CustomerProfileQuery } from '@/api/customer/profile'
 import { formatUtc } from '@/utils/datetime'
+import { salesApi, type SalesDocument } from '@/api/dealer-sales'
+import { documentStatusText } from '@/pages/dealer-sales/salesPresentation'
+import { useRouter } from 'vue-router'
 
 const { t } = useI18n()
+const router = useRouter()
 const rows = ref<CustomerProfile[]>([])
 const ownerOptions = ref<CustomerOwnerOption[]>([])
 const ids = ref<Array<number | string>>([])
 const loading = ref(false)
 const open = ref(false)
+const historyOpen = ref(false)
+const historyRows = ref<SalesDocument[]>([])
 const showSearch = ref(true)
 const total = ref(0)
 const queryRef = ref<FormInstance>()
@@ -172,6 +189,18 @@ async function handleDelete(row?: CustomerProfile) {
   await deleteCustomer(target)
   ElMessage.success(t('common.deleteSuccess'))
   await getList()
+}
+async function openHistory(row: CustomerProfile) {
+  if (!row.customerId) return
+  historyRows.value = (await salesApi.history(String(row.customerId))).data || []
+  historyOpen.value = true
+}
+function openSalesDocument(row: SalesDocument) {
+  if (!row.salesDocumentId) return
+  void router.push({ name: 'SalesDocumentDetail', params: { id: row.salesDocumentId } })
+}
+function money(value?: number, currency = 'USD') {
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(value || 0)
 }
 loadOwners()
 getList()

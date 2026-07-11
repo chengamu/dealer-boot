@@ -3,7 +3,7 @@
     <div class="option-tree-panel__header">
       <h3>{{ t('productCenter.formulaSetup.optionTree') }}</h3>
       <div class="option-tree-panel__actions">
-        <el-button type="primary" plain :icon="Plus" @click="$emit('addRootOption')">
+        <el-button type="primary" :icon="Plus" @click="$emit('addRootOption')">
           {{ t('productCenter.formulaSetup.addRootOption') }}
         </el-button>
         <el-button plain :icon="Plus" :disabled="!canAddChildOption" @click="$emit('addChildOption')">
@@ -113,8 +113,8 @@ defineExpose({ scrollNodeIntoView })
 <style scoped>
 .option-tree-panel {
   background: #fff;
-  border: 1px solid #e6ebf2;
-  border-radius: 8px;
+  border: 1px solid #e9edf5;
+  border-radius: 6px;
 }
 
 .option-tree-panel__header {
@@ -122,7 +122,7 @@ defineExpose({ scrollNodeIntoView })
   align-items: center;
   justify-content: space-between;
   gap: 14px;
-  padding: 16px;
+  padding: 12px;
   border-bottom: 1px solid #edf1f7;
 }
 
@@ -130,7 +130,7 @@ defineExpose({ scrollNodeIntoView })
   flex: 0 0 auto;
   margin: 0;
   color: #111827;
-  font-size: 16px;
+  font-size: 15px;
 }
 
 .option-tree-panel__actions {
@@ -157,12 +157,12 @@ defineExpose({ scrollNodeIntoView })
   width: 100%;
   align-items: center;
   gap: 8px;
-  min-height: 46px;
+  min-height: 42px;
   padding: 6px 10px 6px calc(8px + var(--tree-indent));
   color: #1f2937;
   background: transparent;
   border: 1px solid transparent;
-  border-radius: 8px;
+  border-radius: 6px;
   cursor: pointer;
   text-align: left;
 }
@@ -228,7 +228,7 @@ defineExpose({ scrollNodeIntoView })
   font-weight: 700;
   background: #edf5ff;
   border: 1px solid #bfdaff;
-  border-radius: 999px;
+  border-radius: 4px;
 }
 
 .option-tree__node--value .option-tree__kind {

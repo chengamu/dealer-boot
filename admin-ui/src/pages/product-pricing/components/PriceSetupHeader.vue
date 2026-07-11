@@ -26,7 +26,7 @@
     </div>
     <div class="price-setup-header__actions">
       <el-button icon="Refresh" :loading="loading" @click="$emit('refresh')">{{ t('productCenter.pricing.refresh') }}</el-button>
-      <el-button v-hasPermi="['product:pricing:validate']" icon="CircleCheck" :loading="validating" @click="$emit('validate')">{{ t('productCenter.pricing.validatePrice') }}</el-button>
+      <el-button v-if="editable" v-hasPermi="['product:pricing:validate']" icon="CircleCheck" :loading="validating" @click="$emit('validate')">{{ t('productCenter.pricing.validatePrice') }}</el-button>
     </div>
   </section>
 </template>

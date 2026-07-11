@@ -17,6 +17,7 @@ import com.bocoo.product.mapper.ProductShippingTemplateRuleMapper;
 import com.bocoo.product.service.impl.ProductShippingTemplateRuleImporter;
 import com.bocoo.product.service.impl.ProductShippingTemplateRuleValidator;
 import com.bocoo.product.service.impl.ProductShippingTemplateServiceImpl;
+import com.bocoo.product.service.impl.ProductQuoteReferenceGuard;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -51,7 +52,8 @@ class ProductShippingTemplateServiceTest {
         TenantContextHolder.setTenantId(1L);
         ProductServiceTestSupport.prepareMapperAndConverter();
         service = new ProductShippingTemplateServiceImpl(templateMapper, ruleMapper,
-            new ProductShippingTemplateRuleValidator(), new ProductShippingTemplateRuleImporter());
+            new ProductShippingTemplateRuleValidator(), new ProductShippingTemplateRuleImporter(),
+            new ProductQuoteReferenceGuard(List.of()));
     }
 
     @AfterEach
@@ -248,6 +250,21 @@ class ProductShippingTemplateServiceTest {
             .isInstanceOf(ServiceException.class);
 
         verify(templateMapper, never()).deleteBatchIds(any());
+        verify(ruleMapper, never()).delete(any());
+    }
+
+    @Test
+    void deletingDisabledTemplateAlsoDeletesItsRules() {
+        ProductShippingTemplate current = new ProductShippingTemplate();
+        current.setShippingTemplateId(9301L);
+        current.setStatus("DISABLED");
+        when(templateMapper.selectBatchIds(List.of(9301L))).thenReturn(List.of(current));
+        when(templateMapper.deleteBatchIds(any())).thenReturn(1);
+
+        assertThat(service.deleteWithValidByIds(new Long[] {9301L})).isTrue();
+
+        verify(ruleMapper).delete(any());
+        verify(templateMapper).deleteBatchIds(any());
     }
 
     @Test

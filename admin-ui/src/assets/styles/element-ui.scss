@@ -21,6 +21,13 @@
   }
 }
 
+.el-table__header-wrapper,
+.el-table__fixed-header-wrapper {
+  th.el-table__cell > .cell {
+    text-align: center;
+  }
+}
+
 .small-padding {
   .cell {
     padding-left: 5px;
