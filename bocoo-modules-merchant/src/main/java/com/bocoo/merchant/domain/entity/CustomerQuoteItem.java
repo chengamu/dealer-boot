@@ -22,6 +22,11 @@ public class CustomerQuoteItem extends BaseEntity {
     private Long saleProductId;
     private String saleProductCode;
     private String saleProductName;
+    private Long categoryId;
+    private String categoryCode;
+    private String categoryNameCn;
+    private String productTypeCode;
+    private String productTypeNameCn;
     private Long formulaId;
     private Long formulaVersionId;
     private String formulaVersionLabel;
@@ -40,6 +45,7 @@ public class CustomerQuoteItem extends BaseEntity {
     private BigDecimal shippingAmount;
     private BigDecimal discountAmount;
     private BigDecimal lineAmount;
+    private String bomSnapshotJson;
     private String pricingSnapshotJson;
     private Integer sortOrder;
     private String delFlag;

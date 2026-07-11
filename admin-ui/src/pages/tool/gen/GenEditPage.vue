@@ -48,6 +48,12 @@
             <template #default="{ row }">
               <el-select v-model="row.htmlType">
                 <el-option :label="t('gen.textInput')" value="input" />
+                <el-option :label="t('gen.numberCount')" value="number-count" />
+                <el-option :label="t('gen.numberQuantity')" value="number-quantity" />
+                <el-option :label="t('gen.numberUnitPrice')" value="number-unit-price" />
+                <el-option :label="t('gen.numberMoney')" value="number-money" />
+                <el-option :label="t('gen.numberRate')" value="number-rate" />
+                <el-option :label="t('gen.inchInput')" value="inch" />
                 <el-option :label="t('gen.textarea')" value="textarea" />
                 <el-option :label="t('gen.select')" value="select" />
                 <el-option :label="t('gen.radio')" value="radio" />

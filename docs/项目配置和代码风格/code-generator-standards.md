@@ -44,6 +44,9 @@ app-container
 - 导出下载路径对应后端 `POST /export`。
 - 菜单 SQL 默认生成 list/query/add/edit/remove/export 权限。
 - 前端按钮权限、后端 `@SaCheckPermission`、数据库 `sys_menu.perms` 三方一致。
+- 数值字段必须在生成器列配置中明确选择业务控件：`number-count`、`number-quantity`、`number-unit-price`、`number-money`、`number-rate` 或 `inch`。
+- `BigDecimal` 默认生成 `number-quantity`，整数默认生成 `number-count`；单价、金额、比例和英寸必须由开发者在生成前改成准确类型。
+- 生成页面必须使用 `BusinessNumberInput`、`BusinessNumberText`、`BusinessInchInput` 和公共 formatter，禁止生成 `precision=2` 或 `toFixed(2)`。
 
 ## SQL 口径
 
@@ -60,3 +63,4 @@ app-container
 - 前端页面是否符合普通 grid 结构。
 - 新增文案是否补 i18n。
 - 时间字段是否走 UTC 工具。
+- 每个数值字段的生成类型是否与单位、币种、保存精度和业务语义一致。

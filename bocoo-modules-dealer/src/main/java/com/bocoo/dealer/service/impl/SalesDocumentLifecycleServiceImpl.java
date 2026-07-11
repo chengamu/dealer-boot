@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.lock.annotation.Lock4j;
 import com.bocoo.common.core.exception.ServiceException;
 import com.bocoo.common.core.utils.TimeUtils;
-import com.bocoo.common.core.uuid.Seq;
 import com.bocoo.common.satoken.utils.LoginHelper;
 import com.bocoo.dealer.domain.bo.SalesPaymentBo;
 import com.bocoo.dealer.domain.bo.SalesShipmentBo;
@@ -19,52 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class SalesDocumentLifecycleServiceImpl extends DealerServiceSupport implements SalesDocumentLifecycleService {
     private final SalesDocumentMapper mapper;
-    private final SalesDocumentItemWriter itemWriter;
     private final SalesDocumentEventRecorder events;
-
-    @Override
-    @Lock4j(name = "sales-document-lifecycle", keys = {"#id"})
-    @Transactional(rollbackFor = Exception.class)
-    public Boolean quote(Long id) {
-        SalesDocument row = merchantDocument(id);
-        requireStatus(row, "DRAFT");
-        recalculate(row);
-        return commit(row, "QUOTE", "DRAFT", "QUOTED", null, baseUpdate(row)
-            .eq(SalesDocument::getDocumentStatus, "DRAFT")
-            .set(SalesDocument::getDocumentStatus, "QUOTED")
-            .set(SalesDocument::getQuotedTime, TimeUtils.utcNow()), "dealer.sales.statusDenied");
-    }
-
-    @Override
-    @Lock4j(name = "sales-document-lifecycle", keys = {"#id"})
-    @Transactional(rollbackFor = Exception.class)
-    public Boolean reopen(Long id) {
-        SalesDocument row = merchantDocument(id);
-        requireStatus(row, "QUOTED");
-        return commit(row, "REOPEN", "QUOTED", "DRAFT", null, baseUpdate(row)
-            .eq(SalesDocument::getDocumentStatus, "QUOTED")
-            .set(SalesDocument::getDocumentStatus, "DRAFT"), "dealer.sales.statusDenied");
-    }
-
-    @Override
-    @Lock4j(name = "sales-document-lifecycle", keys = {"#id"})
-    @Transactional(rollbackFor = Exception.class)
-    public String submit(Long id) {
-        SalesDocument row = merchantDocument(id);
-        if ("SUBMITTED".equals(row.getDocumentStatus())) return row.getOrderNo();
-        if (!"DRAFT".equals(row.getDocumentStatus()) && !"QUOTED".equals(row.getDocumentStatus())) {
-            throw ServiceException.ofMessageKey("dealer.sales.submitDenied");
-        }
-        String from = row.getDocumentStatus();
-        recalculate(row);
-        String orderNo = "SO-" + Seq.getId();
-        commit(row, "SUBMIT", from, "SUBMITTED", null, baseUpdate(row)
-            .eq(SalesDocument::getDocumentStatus, from)
-            .set(SalesDocument::getOrderNo, orderNo)
-            .set(SalesDocument::getSubmittedTime, TimeUtils.utcNow())
-            .set(SalesDocument::getDocumentStatus, "SUBMITTED"), "dealer.sales.submitDenied");
-        return orderNo;
-    }
 
     @Override
     @Lock4j(name = "sales-document-lifecycle", keys = {"#id"})
@@ -168,16 +122,6 @@ public class SalesDocumentLifecycleServiceImpl extends DealerServiceSupport impl
             .set(SalesDocument::getShipmentStatus, "DELIVERED")
             .set(SalesDocument::getDeliveredTime, TimeUtils.utcNow())
             .set(SalesDocument::getDocumentStatus, "COMPLETED"), "dealer.sales.deliverDenied");
-    }
-
-    private void recalculate(SalesDocument row) {
-        SalesDocumentItemWriter.SalesTotals totals = itemWriter.replace(row.getSalesDocumentId(), row.getTenantId(),
-            itemWriter.current(row.getSalesDocumentId(), row.getTenantId()));
-        if (!totals.allPassed()) throw ServiceException.ofMessageKey("dealer.sales.calculationRequired");
-        row.setCurrencyCode(totals.currency()); row.setListAmount(totals.listAmount());
-        row.setDiscountAmount(totals.discountAmount()); row.setProductAmount(totals.productAmount());
-        row.setShippingAmount(totals.shippingAmount()); row.setTotalAmount(totals.totalAmount());
-        mapper.updateById(row);
     }
 
     private SalesDocument merchantDocument(Long id) {

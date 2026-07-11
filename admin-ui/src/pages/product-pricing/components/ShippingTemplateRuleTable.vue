@@ -28,15 +28,15 @@
       <el-table-column :label="t('productCenter.shippingTemplate.areaRange')" width="260">
         <template #default="{ row }">
           <div class="shipping-template-rules__range">
-            <el-input-number v-model="row.minAreaSqft" :controls="false" :min="0" :precision="2" />
+            <BusinessNumberInput v-model="row.minAreaSqft" mode="QUANTITY" :min="0" :unit-precision="4" />
             <span>-</span>
-            <el-input-number v-model="row.maxAreaSqft" :controls="false" :min="0" :precision="2" :placeholder="t('productCenter.shippingTemplate.unlimited')" />
+            <BusinessNumberInput v-model="row.maxAreaSqft" mode="QUANTITY" :min="0" :unit-precision="4" :placeholder="t('productCenter.shippingTemplate.unlimited')" />
           </div>
         </template>
       </el-table-column>
       <el-table-column :label="t('productCenter.shippingTemplate.feeAmount')" width="180" align="right">
         <template #default="{ row }">
-          <el-input-number v-model="row.feeAmount" :min="0" :precision="2" controls-position="right" />
+          <BusinessNumberInput v-model="row.feeAmount" mode="UNIT_PRICE" :min="0" :max-fraction-digits="4" />
         </template>
       </el-table-column>
       <el-table-column :label="t('productCenter.common.remark')" min-width="220">

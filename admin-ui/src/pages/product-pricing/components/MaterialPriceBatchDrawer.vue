@@ -77,7 +77,7 @@
         </el-table-column>
         <el-table-column :label="t('productCenter.pricing.unitPrice')" width="124" align="right" class-name="fabric-rule-table__price-column">
           <template #default="{ row }">
-            <el-input-number v-model="row.unitPrice" :min="0" :precision="2" :controls="false" @change="syncDefaultPriceFormula(row)" />
+            <BusinessNumberInput v-model="row.unitPrice" mode="UNIT_PRICE" :min="0" :max-fraction-digits="4" @change="syncDefaultPriceFormula(row)" />
           </template>
         </el-table-column>
         <el-table-column :label="t('productCenter.pricing.materialFormula')" min-width="560">

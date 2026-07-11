@@ -102,11 +102,11 @@ class ProductFormulaVariableServiceImplTest {
         Map<String, Object> result = service.evaluateVariables(
             List.of(deduct, bead),
             List.of(deductRule, beadRule),
-            Map.of("orderWidthCm", 25D)
+            Map.of("orderWidthCm", new BigDecimal("25"))
         );
 
-        assertThat(result.get("var_ALU_DEDUCT")).isEqualTo(8.1D);
-        assertThat(result.get("var_BEAD_COUNT")).isEqualTo(3D);
+        assertThat((BigDecimal) result.get("var_ALU_DEDUCT")).isEqualByComparingTo("8.1");
+        assertThat((BigDecimal) result.get("var_BEAD_COUNT")).isEqualByComparingTo("3");
     }
 
     private ProductFormulaVariableBo variableBo(String code, String name, int sortOrder) {

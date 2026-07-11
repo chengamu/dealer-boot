@@ -13,7 +13,7 @@ import { useLocaleStore } from '@/stores/locale'
 import { productCategoryApi } from '@/api/product-capability/base'
 import { getProductDictItems } from '@/api/product-capability/product-dict'
 import { productFormulaApi } from '@/api/product-formula/formula'
-import type { ProductDictOption } from '@/api/product-capability/types'
+import type { ProductDictOption, ProductRecord } from '@/api/product-capability/types'
 import ProductEntityGridPage from '@/pages/product-center/components/ProductEntityGridPage.vue'
 import type { ProductGridConfig } from '@/pages/product-center/components/productGridTypes'
 import {
@@ -23,6 +23,7 @@ import {
   formulaStatusOptions,
   formulaValidationStatusOptions
 } from '@/constants/productStatus'
+import { formatInchRange } from '@/utils/businessNumber'
 
 const localeStore = useLocaleStore()
 const router = useRouter()
@@ -31,6 +32,11 @@ const t = (key: string) => getMessage(key, localeStore.language)
 const formulaStatusOptionList = computed(() => formulaStatusOptions(t))
 const validationStatusOptionList = computed(() => formulaValidationStatusOptions(t))
 const simulationFormulaStatuses = new Set<string>([FORMULA_STATUS.DRAFT, FORMULA_STATUS.REJECTED, FORMULA_STATUS.EFFECTIVE])
+
+function sizeSummary(_value: unknown, row: ProductRecord) {
+  return formatInchRange(row.minWidthInch as number | string, row.maxWidthInch as number | string,
+    row.minHeightInch as number | string, row.maxHeightInch as number | string)
+}
 
 async function loadCategoryOptions() {
   const response = await productCategoryApi.options?.({ status: PRODUCT_STATUS_ENABLED, pageNum: 1, pageSize: 500 })
@@ -106,11 +112,11 @@ const formulaConfig = computed<ProductGridConfig>(() => ({
     { prop: 'categoryNameCn', labelKey: 'productCenter.formula.category', form: false, minWidth: 140 },
     { prop: 'productTypeCode', labelKey: 'productCenter.formula.productType', type: 'remote-select', optionLoader: loadProductTypeOptions, fillFields: { productTypeNameCn: 'productTypeNameCn' }, search: true, required: true, table: false },
     { prop: 'productTypeNameCn', labelKey: 'productCenter.formula.productType', form: false, minWidth: 120 },
-    { prop: 'minWidthInch', labelKey: 'productCenter.formula.minWidthInch', type: 'number', required: true, minWidth: 160, sortable: true, precision: 2, step: 0.01 },
-    { prop: 'minHeightInch', labelKey: 'productCenter.formula.minHeightInch', type: 'number', required: true, minWidth: 160, sortable: true, precision: 2, step: 0.01 },
-    { prop: 'maxWidthInch', labelKey: 'productCenter.formula.maxWidthInch', type: 'number', required: true, minWidth: 160, sortable: true, precision: 2, step: 0.01 },
-    { prop: 'maxHeightInch', labelKey: 'productCenter.formula.maxHeightInch', type: 'number', required: true, minWidth: 160, sortable: true, precision: 2, step: 0.01 },
-    { prop: 'sizeSummary', labelKey: 'productCenter.formula.sizeSummary', form: false, minWidth: 140 },
+    { prop: 'minWidthInch', labelKey: 'productCenter.formula.minWidthInch', type: 'inch', required: true, minWidth: 160, sortable: true },
+    { prop: 'minHeightInch', labelKey: 'productCenter.formula.minHeightInch', type: 'inch', required: true, minWidth: 160, sortable: true },
+    { prop: 'maxWidthInch', labelKey: 'productCenter.formula.maxWidthInch', type: 'inch', required: true, minWidth: 160, sortable: true },
+    { prop: 'maxHeightInch', labelKey: 'productCenter.formula.maxHeightInch', type: 'inch', required: true, minWidth: 160, sortable: true },
+    { prop: 'sizeSummary', labelKey: 'productCenter.formula.sizeSummary', form: false, minWidth: 210, formatter: sizeSummary },
     { prop: 'materialLineCount', labelKey: 'productCenter.formula.materialLineCount', type: 'number', form: false, minWidth: 110 },
     { prop: 'latestValidationStatus', labelKey: 'productCenter.formula.validationStatus', type: 'select', options: validationStatusOptionList.value, form: false, minWidth: 120 },
     { prop: 'currentVersionLabel', labelKey: 'productCenter.formula.currentVersion', form: false, minWidth: 120 },

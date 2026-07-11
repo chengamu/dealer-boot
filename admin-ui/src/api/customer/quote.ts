@@ -18,6 +18,11 @@ export interface CustomerQuoteItem {
   formulaId?: string
   formulaVersionId?: string
   formulaVersionLabel?: string
+  categoryId?: string
+  categoryCode?: string
+  categoryNameCn?: string
+  productTypeCode?: string
+  productTypeNameCn?: string
   orderWidthInch?: number
   orderHeightInch?: number
   quantity?: number
@@ -43,6 +48,11 @@ export interface CustomerQuote {
   customerName?: string
   companyName?: string
   customerEmail?: string
+  customerPhone?: string
+  customerPoNo?: string
+  recipientName?: string
+  recipientPhone?: string
+  shippingAddress?: string
   projectName?: string
   quoteLanguage: QuoteLanguage
   validUntil?: string
@@ -55,6 +65,10 @@ export interface CustomerQuote {
   totalAmount?: number
   confirmedBy?: string
   confirmedTime?: string
+  salesDocumentId?: string
+  orderNo?: string
+  convertedBy?: string
+  convertedTime?: string
   itemCount?: number
   remark?: string
   createBy?: string
@@ -62,6 +76,57 @@ export interface CustomerQuote {
   updateBy?: string
   updateTime?: string
   items: CustomerQuoteItem[]
+}
+
+export interface QuoteOrderLinePreview {
+  quoteItemId?: string
+  lineNo?: number
+  roomLocation?: string
+  saleProductName?: string
+  quantity?: number
+  listAmount?: number
+  discountRate?: number
+  discountAmount?: number
+  productAmount?: number
+  shippingAmount?: number
+  lineAmount?: number
+}
+
+export interface QuoteOrderPreview {
+  quoteId?: string
+  quoteNo?: string
+  customerName?: string
+  projectName?: string
+  merchantLevelCode?: string
+  merchantLevelName?: string
+  currencyCode?: string
+  customerQuoteAmount?: number
+  listAmount?: number
+  discountAmount?: number
+  productAmount?: number
+  shippingAmount?: number
+  totalAmount?: number
+  items?: QuoteOrderLinePreview[]
+}
+
+export interface QuoteConvertOrderRequest {
+  recipientName: string
+  recipientPhone: string
+  shippingAddress: string
+  customerPoNo?: string
+  remark?: string
+  expectedTotalAmount: number
+}
+
+export interface QuoteOrderResult {
+  salesDocumentId: string
+  orderNo: string
+  totalAmount: number
+}
+
+export interface QuoteEmailRequest {
+  recipient: string
+  message?: string
 }
 
 export interface CustomerQuoteQuery extends PageQuery {
@@ -87,7 +152,16 @@ export const customerQuoteApi = {
   }),
   calculateAll: (id: string | number) => request<CustomerQuote>({ url: `/customer/quotes/${id}/calculate`, method: 'put' }),
   confirm: (id: string | number) => request({ url: `/customer/quotes/${id}/confirm`, method: 'put' }),
-  void: (id: string | number) => request({ url: `/customer/quotes/${id}/void`, method: 'put' })
+  void: (id: string | number) => request({ url: `/customer/quotes/${id}/void`, method: 'put' }),
+  copy: (id: string | number) => request<string>({ url: `/customer/quotes/${id}/copy`, method: 'post' }),
+  orderPreview: (id: string | number) => request<QuoteOrderPreview>({ url: `/customer/quotes/${id}/order-preview`, method: 'post' }),
+  convertOrder: (id: string | number, data: QuoteConvertOrderRequest) => request<QuoteOrderResult>({
+    url: `/customer/quotes/${id}/convert-order`, method: 'post', data
+  }),
+  email: (id: string | number, data: QuoteEmailRequest) => request({ url: `/customer/quotes/${id}/email`, method: 'post', data }),
+  pdf: (id: string | number) => request<Blob>({
+    url: `/customer/quotes/${id}/pdf`, method: 'get', responseType: 'blob'
+  }) as unknown as Promise<Blob>
 }
 
 export const customerQuoteCatalogApi = {

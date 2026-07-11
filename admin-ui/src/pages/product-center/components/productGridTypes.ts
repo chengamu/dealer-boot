@@ -1,11 +1,12 @@
 import type { ProductPageQuery, ProductRecord, ReferenceCheckResult } from '@/api/product-capability/types'
+import type { BusinessNumberMode } from '@/utils/businessNumber'
 
 export type ProductGridRowTone = 'danger' | 'warning' | 'success' | 'muted'
 
 export interface ProductFieldConfig {
   prop: string
   labelKey: string
-  type?: 'text' | 'textarea' | 'number' | 'status' | 'date' | 'datetime' | 'url' | 'select' | 'boolean' | 'remote-select' | 'tree-select' | 'material-attributes'
+  type?: 'text' | 'textarea' | 'number' | 'inch' | 'status' | 'date' | 'datetime' | 'url' | 'select' | 'boolean' | 'remote-select' | 'tree-select' | 'material-attributes'
   options?: Array<{ label?: string; value?: string | number; record?: ProductRecord }>
   optionLoader?: (form: ProductRecord) => Promise<Array<{ label?: string; value?: string | number; record?: ProductRecord }>>
   fillFields?: Record<string, string | undefined>
@@ -23,6 +24,12 @@ export interface ProductFieldConfig {
   sortable?: boolean
   sortProp?: string
   precision?: number
+  numberMode?: BusinessNumberMode
+  unitPrecision?: number
+  currencyDigits?: number
+  min?: number
+  max?: number
+  denominator?: number
   step?: number
   search?: boolean
   table?: boolean
@@ -30,6 +37,7 @@ export interface ProductFieldConfig {
   required?: boolean
   formSpan?: 1 | 2
   onChange?: (value: unknown, form: ProductRecord) => void
+  formatter?: (value: unknown, row: ProductRecord) => string
 }
 
 export interface ProductGridConfig {

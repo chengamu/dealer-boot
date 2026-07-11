@@ -15,6 +15,7 @@ public class SalesDocumentItem extends BaseEntity {
     @TableId(value = "sales_item_id")
     private Long salesItemId;
     private Long salesDocumentId;
+    private Long sourceQuoteItemId;
     private Long tenantId;
     private Integer lineNo;
     private String itemCode;

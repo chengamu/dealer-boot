@@ -20,13 +20,10 @@ class SalesDocumentPdfRenderer {
 
     byte[] render(SalesDocumentVo row, String requestedType) {
         String type = requestedType == null ? "ORDER" : requestedType.toUpperCase(Locale.ROOT);
-        if (!java.util.Set.of("QUOTE", "ORDER", "PRODUCTION").contains(type)) {
+        if (!java.util.Set.of("ORDER", "PRODUCTION").contains(type)) {
             throw ServiceException.ofMessageKey("dealer.sales.pdfTypeInvalid");
         }
-        if ("QUOTE".equals(type) && "DRAFT".equals(row.getDocumentStatus())) {
-            throw ServiceException.ofMessageKey("dealer.sales.quoteRequired");
-        }
-        if (!"QUOTE".equals(type) && row.getOrderNo() == null) {
+        if (row.getOrderNo() == null) {
             throw ServiceException.ofMessageKey("dealer.sales.orderRequired");
         }
         try (ByteArrayOutputStream output = new ByteArrayOutputStream()) {
@@ -118,8 +115,8 @@ class SalesDocumentPdfRenderer {
         catch (Exception e) { throw new IllegalStateException("Unable to initialize PDF font", e); }
     }
 
-    private String title(String type) { return switch (type) { case "QUOTE" -> "QUOTATION"; case "PRODUCTION" -> "PRODUCTION SHEET"; default -> "SALES ORDER"; }; }
-    private String number(SalesDocumentVo row, String type) { return "QUOTE".equals(type) ? row.getQuoteNo() : row.getOrderNo(); }
+    private String title(String type) { return "PRODUCTION".equals(type) ? "PRODUCTION SHEET" : "SALES ORDER"; }
+    private String number(SalesDocumentVo row, String type) { return row.getOrderNo(); }
     private String text(String value) { return value == null || value.isBlank() ? "-" : value; }
     private String money(BigDecimal value) { return "$" + (value == null ? "0.00" : value.setScale(2)); }
 }

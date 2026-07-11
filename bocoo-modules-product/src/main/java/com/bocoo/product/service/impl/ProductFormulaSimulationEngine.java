@@ -6,6 +6,7 @@ import com.bocoo.common.core.utils.TimeUtils;
 import com.bocoo.product.domain.bo.ProductFormulaSimulationBo;
 import com.bocoo.product.domain.entity.ProductFormula;
 import com.bocoo.product.domain.entity.ProductMaterial;
+import com.bocoo.product.domain.entity.ProductUnit;
 import com.bocoo.product.domain.vo.ProductFormulaMaterialVo;
 import com.bocoo.product.domain.vo.ProductFormulaOptionMaterialVo;
 import com.bocoo.product.domain.vo.ProductFormulaOptionValueVo;
@@ -16,6 +17,7 @@ import com.bocoo.product.domain.vo.ProductFormulaSimulationItemVo;
 import com.bocoo.product.domain.vo.ProductFormulaSimulationVo;
 import com.bocoo.product.domain.vo.ProductFormulaUsageRuleVo;
 import com.bocoo.product.mapper.ProductMaterialMapper;
+import com.bocoo.product.mapper.ProductUnitMapper;
 import com.bocoo.product.service.ProductFormulaVariableService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -35,6 +37,7 @@ class ProductFormulaSimulationEngine extends ProductServiceSupport {
     private static final String VALIDATION_FAIL = "FAIL";
     private static final String VALIDATION_PASS = "PASS";
     private final ProductMaterialMapper productMaterialMapper;
+    private final ProductUnitMapper productUnitMapper;
     private final ProductFormulaSimulationUsageCalculator usageCalculator;
     private final ProductFormulaVariableService variableService;
     ProductFormulaSimulationVo run(Long formulaId, ProductFormula formula, ProductFormulaSetupVo setup,
@@ -170,10 +173,28 @@ class ProductFormulaSimulationEngine extends ProductServiceSupport {
         Map<Long, List<ProductFormulaUsageRuleVo>> rulesByMaterial = setup.getUsageRules().stream()
             .filter(rule -> rule.getFormulaMaterialId() != null)
             .collect(Collectors.groupingBy(ProductFormulaUsageRuleVo::getFormulaMaterialId));
+        Map<String, ProductUnit> unitMap = batchUnitMap(bomMaterials, rulesByMaterial, materialMap);
         return bomMaterials.stream().filter(material -> material.getMaterialId() != null)
             .map(material -> usageCalculator.buildItem(material, materialMap.get(material.getMaterialId()),
-                rulesByMaterial.getOrDefault(material.getFormulaMaterialId(), List.of()), context))
+                rulesByMaterial.getOrDefault(material.getFormulaMaterialId(), List.of()), unitMap, context))
             .toList();
+    }
+    private Map<String, ProductUnit> batchUnitMap(List<ProductFormulaMaterialVo> materials,
+                                                  Map<Long, List<ProductFormulaUsageRuleVo>> rulesByMaterial,
+                                                  Map<Long, ProductMaterial> materialMap) {
+        Set<String> unitCodes = materials.stream().flatMap(material -> {
+            ProductMaterial source = materialMap.get(material.getMaterialId());
+            List<String> codes = new java.util.ArrayList<>();
+            if (source != null) codes.add(source.getUnitCode());
+            codes.add(material.getUnitCode());
+            codes.add(material.getCalculationUnitCode());
+            rulesByMaterial.getOrDefault(material.getFormulaMaterialId(), List.of()).stream()
+                .map(ProductFormulaUsageRuleVo::getCalculationUnitCode).forEach(codes::add);
+            return codes.stream();
+        }).filter(StringUtils::isNotBlank).collect(Collectors.toSet());
+        if (unitCodes.isEmpty()) return Map.of();
+        return productUnitMapper.selectList(activeQuery(ProductUnit.class).in("unit_code", unitCodes)).stream()
+            .collect(Collectors.toMap(ProductUnit::getUnitCode, unit -> unit, (left, right) -> left));
     }
     private Map<Long, ProductMaterial> batchMaterialMap(List<ProductFormulaMaterialVo> materials) {
         Set<Long> materialIds = materials.stream().map(ProductFormulaMaterialVo::getMaterialId)
@@ -185,10 +206,10 @@ class ProductFormulaSimulationEngine extends ProductServiceSupport {
             .collect(Collectors.toMap(ProductMaterial::getMaterialId, material -> material, (left, right) -> left));
     }
     private Map<String, Object> expressionContext(ProductFormula formula, ProductFormulaSetupVo setup, ProductFormulaSimulationVo vo) {
-        double widthIn = vo.getOrderWidth().doubleValue();
-        double heightIn = vo.getOrderHeight().doubleValue();
-        double widthCm = widthIn * 2.54D;
-        double heightCm = heightIn * 2.54D;
+        BigDecimal widthIn = vo.getOrderWidth();
+        BigDecimal heightIn = vo.getOrderHeight();
+        BigDecimal widthCm = widthIn.multiply(new BigDecimal("2.54"));
+        BigDecimal heightCm = heightIn.multiply(new BigDecimal("2.54"));
         Map<String, ProductFormulaOptionVo> optionByCode = setup.getOptions().stream()
             .filter(option -> StringUtils.isNotBlank(option.getOptionCode()))
             .collect(Collectors.toMap(ProductFormulaOptionVo::getOptionCode, option -> option, (left, right) -> left));
@@ -200,7 +221,7 @@ class ProductFormulaSimulationEngine extends ProductServiceSupport {
         context.put("orderHeightIn", heightIn);
         context.put("orderWidthCm", widthCm);
         context.put("orderHeightCm", heightCm);
-        context.put("orderAreaM2", widthCm * heightCm / 10000D);
+        context.put("orderAreaM2", widthCm.multiply(heightCm).divide(new BigDecimal("10000")));
         context.put("productType", formula.getProductTypeCode());
         context.put("fabric", vo.getSelectedOptionValues().getOrDefault("FABRIC", ""));
         context.put("optionValue", "");
@@ -268,7 +289,7 @@ class ProductFormulaSimulationEngine extends ProductServiceSupport {
 
     private Object attributeValue(com.bocoo.product.domain.vo.ProductMaterialAttributeVo attribute) {
         if (attribute.getValueNumber() != null) {
-            return attribute.getValueNumber().doubleValue();
+            return attribute.getValueNumber();
         }
         if (attribute.getValueBool() != null) {
             return attribute.getValueBool();
@@ -334,6 +355,7 @@ class ProductFormulaSimulationEngine extends ProductServiceSupport {
         };
     }
     private BigDecimal numberValue(Object value) {
-        return value instanceof Number number ? BigDecimal.valueOf(number.doubleValue()) : null;
+        if (value instanceof BigDecimal decimal) return decimal;
+        return value instanceof Number number ? new BigDecimal(number.toString()) : null;
     }
 }

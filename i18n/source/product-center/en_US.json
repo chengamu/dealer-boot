@@ -115,6 +115,8 @@
   "product.saleProduct.statusInvalid": "Sale product status is invalid.",
   "product.unit.baseUnitNotFound": "Base unit does not exist.",
   "product.unit.baseUnitTypeMismatch": "Base unit must use the same unit type.",
+  "product.unit.precisionInvalid": "Unit precision must be between 0 and 6; count units must use 0.",
+  "product.unit.roundingModeInvalid": "The unit rounding mode is invalid.",
   "product.unit.codeExists": "Unit code already exists.",
   "product.unit.hasReferences": "This unit is used by product master data.",
   "productCenter.asset.code": "Asset Code",
@@ -831,5 +833,11 @@
   "productCenter.workbench.unassigned": "Unassigned",
   "productCenter.workbench.updatedTime": "Updated Time",
   "productCenter.workbench.viewMore": "More",
-  "productCenter.workbench.warningCount": "Warnings"
+  "productCenter.workbench.warningCount": "Warnings",
+  "productCenter.unit.roundingModeHALFUP": "Half up",
+  "productCenter.unit.roundingModeHALFEVEN": "Half even",
+  "productCenter.unit.roundingModeCEILING": "Toward positive infinity",
+  "productCenter.unit.roundingModeFLOOR": "Toward negative infinity",
+  "productCenter.unit.roundingModeUP": "Away from zero",
+  "productCenter.unit.roundingModeDOWN": "Toward zero"
 }

@@ -50,6 +50,7 @@ import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 import type { ProductFormulaVO } from '@/api/product-capability/types'
 import { FORMULA_VALIDATION_STATUS, formulaStatusText as resolveFormulaStatusText, formulaValidationTagType } from '@/constants/productStatus'
+import { formatInch } from '@/utils/businessNumber'
 
 const props = defineProps<{
   formula: ProductFormulaVO
@@ -78,8 +79,6 @@ const t = (key: string) => getMessage(key, localeStore.language)
 const formulaStatusText = computed(() => props.formula.status ? resolveFormulaStatusText(props.formula.status, t) : '-')
 const validationTagType = computed(() => formulaValidationTagType(props.status || FORMULA_VALIDATION_STATUS.NOT_VALIDATED))
 const sizeRange = computed(() => {
-  const width = props.formula.maxWidthInch == null ? '-' : Number(props.formula.maxWidthInch).toFixed(2)
-  const height = props.formula.maxHeightInch == null ? '-' : Number(props.formula.maxHeightInch).toFixed(2)
-  return `W<=${width}in, H<=${height}in`
+  return `W<=${formatInch(props.formula.maxWidthInch)}, H<=${formatInch(props.formula.maxHeightInch)}`
 })
 </script>

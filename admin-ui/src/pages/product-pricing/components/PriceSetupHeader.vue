@@ -35,6 +35,7 @@
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 import { formatUtc } from '@/utils/datetime'
+import { formatInch } from '@/utils/businessNumber'
 import type { SaleProductVO } from '@/api/product-pricing/types'
 import {
   enabledStatusTagType,
@@ -66,8 +67,7 @@ function productLabel(item: SaleProductVO) {
 }
 
 function formatNumber(value?: number | string) {
-  const numeric = Number(value)
-  return Number.isFinite(numeric) ? numeric.toFixed(2) : '-'
+  return formatInch(value)
 }
 
 function formatMinute(value?: string) {

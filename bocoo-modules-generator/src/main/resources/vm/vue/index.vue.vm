@@ -11,7 +11,21 @@
             #else
               #set($comment=$column.columnComment)
             #end
-            #if($column.htmlType == "input" || $column.htmlType == "textarea")
+            #set($numberMode="")
+            #if($column.htmlType == "number-count")#set($numberMode="COUNT")#end
+            #if($column.htmlType == "number-quantity")#set($numberMode="QUANTITY")#end
+            #if($column.htmlType == "number-unit-price")#set($numberMode="UNIT_PRICE")#end
+            #if($column.htmlType == "number-money")#set($numberMode="MONEY")#end
+            #if($column.htmlType == "number-rate")#set($numberMode="RATE")#end
+            #if($column.htmlType == "inch")
+              <el-form-item :label="fieldLabel('${column.javaField}')" prop="${column.javaField}">
+                <BusinessInchInput v-model="queryParams.${column.javaField}" />
+              </el-form-item>
+            #elseif($numberMode != "")
+              <el-form-item :label="fieldLabel('${column.javaField}')" prop="${column.javaField}">
+                <BusinessNumberInput v-model="queryParams.${column.javaField}" mode="$numberMode" />
+              </el-form-item>
+            #elseif($column.htmlType == "input" || $column.htmlType == "textarea")
               <el-form-item :label="fieldLabel('${column.javaField}')" prop="${column.javaField}">
                 <el-input
                   v-model="queryParams.${column.javaField}"
@@ -103,8 +117,22 @@
         #else
           #set($comment=$column.columnComment)
         #end
+        #set($numberMode="")
+        #if($column.htmlType == "number-count")#set($numberMode="COUNT")#end
+        #if($column.htmlType == "number-quantity")#set($numberMode="QUANTITY")#end
+        #if($column.htmlType == "number-unit-price")#set($numberMode="UNIT_PRICE")#end
+        #if($column.htmlType == "number-money")#set($numberMode="MONEY")#end
+        #if($column.htmlType == "number-rate")#set($numberMode="RATE")#end
         #if($column.pk)
           <el-table-column :label="fieldLabel('${column.javaField}')" align="center" prop="${javaField}" v-if="${column.list}"/>
+        #elseif($column.list && $column.htmlType == "inch")
+          <el-table-column :label="fieldLabel('${column.javaField}')" align="right" prop="${javaField}">
+            <template #default="scope">{{ formatInch(scope.row.${javaField}) }}</template>
+          </el-table-column>
+        #elseif($column.list && $numberMode != "")
+          <el-table-column :label="fieldLabel('${column.javaField}')" align="right" prop="${javaField}">
+            <template #default="scope"><BusinessNumberText :value="scope.row.${javaField}" mode="$numberMode" /></template>
+          </el-table-column>
         #elseif($column.list && $column.htmlType == "datetime")
           <el-table-column :label="fieldLabel('${column.javaField}')" align="center" prop="${javaField}" width="180">
             <template #default="scope">
@@ -159,7 +187,21 @@
               #set($comment=$column.columnComment)
             #end
             #set($dictType=$column.dictType)
-            #if($column.htmlType == "input")
+            #set($numberMode="")
+            #if($column.htmlType == "number-count")#set($numberMode="COUNT")#end
+            #if($column.htmlType == "number-quantity")#set($numberMode="QUANTITY")#end
+            #if($column.htmlType == "number-unit-price")#set($numberMode="UNIT_PRICE")#end
+            #if($column.htmlType == "number-money")#set($numberMode="MONEY")#end
+            #if($column.htmlType == "number-rate")#set($numberMode="RATE")#end
+            #if($column.htmlType == "inch")
+              <el-form-item :label="fieldLabel('${column.javaField}')" prop="${field}">
+                <BusinessInchInput v-model="form.${field}" />
+              </el-form-item>
+            #elseif($numberMode != "")
+              <el-form-item :label="fieldLabel('${column.javaField}')" prop="${field}">
+                <BusinessNumberInput v-model="form.${field}" mode="$numberMode" />
+              </el-form-item>
+            #elseif($column.htmlType == "input")
               <el-form-item :label="fieldLabel('${column.javaField}')" prop="${field}">
                 <el-input v-model="form.${field}" :placeholder="fieldLabel('${column.javaField}')" />
               </el-form-item>
@@ -268,7 +310,21 @@
               #else
                 #set($comment=$column.columnComment)
               #end
+              #set($numberMode="")
+              #if($column.htmlType == "number-count")#set($numberMode="COUNT")#end
+              #if($column.htmlType == "number-quantity")#set($numberMode="QUANTITY")#end
+              #if($column.htmlType == "number-unit-price")#set($numberMode="UNIT_PRICE")#end
+              #if($column.htmlType == "number-money")#set($numberMode="MONEY")#end
+              #if($column.htmlType == "number-rate")#set($numberMode="RATE")#end
               #if($column.pk || $javaField == ${subTableFkclassName})
+              #elseif($column.list && $column.htmlType == "inch")
+                <el-table-column :label="fieldLabel('$javaField')" prop="${javaField}" width="220">
+                  <template #default="scope"><BusinessInchInput v-model="scope.row.$javaField" /></template>
+                </el-table-column>
+              #elseif($column.list && $numberMode != "")
+                <el-table-column :label="fieldLabel('$javaField')" prop="${javaField}" width="170">
+                  <template #default="scope"><BusinessNumberInput v-model="scope.row.$javaField" mode="$numberMode" /></template>
+                </el-table-column>
               #elseif($column.list && $column.htmlType == "input")
                 <el-table-column :label="fieldLabel('$javaField')" prop="${javaField}" width="150">
                   <template #default="scope">
@@ -333,6 +389,7 @@
 <script setup name="${BusinessName}">
   import { list${BusinessName}, get${BusinessName}, del${BusinessName}, add${BusinessName}, update${BusinessName} } from "@/api/${moduleName}/${businessName}";
   import { formatUtc, withUtcDateRangeParams } from "@/utils/datetime";
+  import { formatInch } from "@/utils/businessNumber";
   import { getMessage } from "@/locales";
   import { useLocaleStore } from "@/stores/locale";
 

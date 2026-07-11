@@ -52,7 +52,7 @@
 - `monitor/`：缓存、日志、在线用户等监控页面。
 - `tool-gen/`：代码生成器。
 - `demo/`：演示模块后端校验和示例页面文案。
-- `dashboard/`、`dealer-portal/`、`legal/`、`legacy/`：对应独立页面域或历史兼容文案。
+- `dashboard/`、`legal/`、`legacy/`：对应独立页面域或历史兼容文案。
 
 ## 字典和菜单
 

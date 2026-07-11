@@ -51,6 +51,13 @@ public class CustomerQuoteController extends BaseController {
         return toAjax(draftService.update(bo));
     }
 
+    @SaCheckPermission("customer:quote:add")
+    @Log(title = "复制订单测算", businessType = BusinessType.INSERT)
+    @PostMapping("/{id:\\d+}/copy")
+    public R<Long> copy(@PathVariable Long id) {
+        return R.ok(draftService.copy(id));
+    }
+
     @SaCheckPermission("customer:quote:remove")
     @Log(title = "客户报价", businessType = BusinessType.DELETE)
     @DeleteMapping("/{ids:\\d+(?:,\\d+)*}")

@@ -65,7 +65,7 @@ public class SalesDocumentQueryServiceImpl extends DealerServiceSupport implemen
 
     @Override
     public List<SalesDocumentVo> customerHistory(Long customerId) {
-        QueryWrapper<SalesDocument> q = this.<SalesDocument>active().eq("customer_id", customerId).ne("document_status", "DRAFT");
+        QueryWrapper<SalesDocument> q = this.<SalesDocument>active().eq("customer_id", customerId);
         if (!LoginHelper.isPlatformTenant()) q.eq("tenant_id", tenantId());
         return ignoreTenant(() -> mapper.selectVoList(q.orderByDesc("update_time")));
     }

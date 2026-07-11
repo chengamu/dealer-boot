@@ -72,7 +72,7 @@
           <el-input-number v-model="quotaForm.dailyTokenLimit" :min="0" controls-position="right" />
         </el-form-item>
         <el-form-item :label="t('ai.settings.dailyCostLimit')" prop="dailyCostLimit">
-          <el-input-number v-model="quotaForm.dailyCostLimit" :min="0" :precision="2" :step="0.01" controls-position="right" />
+          <BusinessNumberInput v-model="quotaForm.dailyCostLimit" mode="MONEY" :currency-digits="2" :min="0" />
         </el-form-item>
         <el-form-item :label="t('common.status')" prop="status">
           <el-radio-group v-model="quotaForm.status">
@@ -102,6 +102,7 @@ import AdminTableActions, { type AdminTableAction } from '@/components/AdminTabl
 import { addAiUserQuota, listAiUserQuotas, updateAiUserQuota, type AiTenantUserQuery, type AiUserQuota } from '@/api/ai-admin'
 import type { SysUser } from '@/api/system/user'
 import { formatUtc } from '@/utils/datetime'
+import { formatMoney } from '@/utils/businessNumber'
 import { useAiI18n } from './useAiI18n'
 import AiUserSelectorDialog from './components/AiUserSelectorDialog.vue'
 
@@ -151,7 +152,7 @@ function displayUser(user: SysUser | AiUserQuota) {
 }
 
 function formatAmount(value?: number) {
-  return value == null ? '-' : Number(value).toFixed(2)
+  return formatMoney(value)
 }
 
 async function getList() {

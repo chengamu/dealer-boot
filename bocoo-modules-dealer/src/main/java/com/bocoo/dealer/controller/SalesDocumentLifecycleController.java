@@ -2,7 +2,6 @@ package com.bocoo.dealer.controller;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import com.bocoo.common.core.domain.R;
-import com.bocoo.common.idempotent.annotation.RepeatSubmit;
 import com.bocoo.common.web.core.BaseController;
 import com.bocoo.dealer.domain.bo.SalesPaymentBo;
 import com.bocoo.dealer.domain.bo.SalesShipmentBo;
@@ -17,12 +16,6 @@ import org.springframework.web.bind.annotation.*;
 public class SalesDocumentLifecycleController extends BaseController {
     private final SalesDocumentLifecycleService service;
 
-    @SaCheckPermission("dealer:sales:quote") @PutMapping("/{id:\\d+}/quote")
-    public R<Void> quote(@PathVariable Long id) { return toAjax(service.quote(id)); }
-    @SaCheckPermission("dealer:sales:quote") @PutMapping("/{id:\\d+}/reopen")
-    public R<Void> reopen(@PathVariable Long id) { return toAjax(service.reopen(id)); }
-    @RepeatSubmit @SaCheckPermission("dealer:sales:submit") @PutMapping("/{id:\\d+}/submit")
-    public R<String> submit(@PathVariable Long id) { return R.ok(service.submit(id)); }
     @SaCheckPermission("dealer:sales:cancel") @PutMapping("/{id:\\d+}/cancel")
     public R<Void> cancel(@PathVariable Long id, @RequestParam(required = false) String reason) { return toAjax(service.cancel(id, reason)); }
     @SaCheckPermission("dealer:sales:payment") @PutMapping("/{id:\\d+}/payment")

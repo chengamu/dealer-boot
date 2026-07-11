@@ -45,7 +45,7 @@ public class SalesDocumentArtifactServiceImpl implements SalesDocumentArtifactSe
         try {
             file = java.io.File.createTempFile("sales-" + id + "-", ".pdf");
             Files.write(file.toPath(), bytes);
-            String subject = StringUtils.blankToDefault(bo.getSubject(), type + " " + ("QUOTE".equals(type) ? row.getQuoteNo() : row.getOrderNo()));
+            String subject = StringUtils.blankToDefault(bo.getSubject(), type + " " + row.getOrderNo());
             String message = HtmlUtils.htmlEscape(StringUtils.blankToDefault(
                 bo.getMessage(), "Please find the attached document.")).replace("\n", "<br>");
             String messageId = MailUtils.sendHtml(bo.getRecipient(), subject, "<p>" + message + "</p>", file);
@@ -68,7 +68,7 @@ public class SalesDocumentArtifactServiceImpl implements SalesDocumentArtifactSe
     @Override
     public java.util.List<com.bocoo.dealer.domain.vo.SalesDocumentExportVo> export(Long id) {
         SalesDocumentVo row = queryService.queryById(id);
-        events.record(id, row.getTenantId(), "EXCEL_EXPORTED", null, row.getOrderNo() == null ? "QUOTE" : "ORDER", null);
+        events.record(id, row.getTenantId(), "EXCEL_EXPORTED", null, "ORDER", null);
         return exportAssembler.rows(row);
     }
 

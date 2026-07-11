@@ -30,6 +30,9 @@ import AdminEmptyState from '@/components/AdminEmptyState/index.vue'
 import AdminSection from '@/components/AdminSection/index.vue'
 import AdminSkeletonTable from '@/components/AdminSkeletonTable/index.vue'
 import AdminTableActions from '@/components/AdminTableActions/index.vue'
+import BusinessInchInput from '@/components/BusinessInchInput/index.vue'
+import BusinessNumberInput from '@/components/BusinessNumberInput/index.vue'
+import BusinessNumberText from '@/components/BusinessNumberText/index.vue'
 import DictTag from '@/components/DictTag/index.vue'
 import Editor from '@/components/Editor/index.vue'
 import FileUpload from '@/components/FileUpload/index.vue'
@@ -62,6 +65,9 @@ async function bootstrap() {
   app.component('AdminSection', AdminSection)
   app.component('AdminSkeletonTable', AdminSkeletonTable)
   app.component('AdminTableActions', AdminTableActions)
+  app.component('BusinessInchInput', BusinessInchInput)
+  app.component('BusinessNumberInput', BusinessNumberInput)
+  app.component('BusinessNumberText', BusinessNumberText)
   app.component('DictTag', DictTag)
   app.component('Editor', Editor)
   app.component('FileUpload', FileUpload)

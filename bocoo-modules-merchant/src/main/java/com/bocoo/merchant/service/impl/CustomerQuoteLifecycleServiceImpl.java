@@ -77,10 +77,14 @@ public class CustomerQuoteLifecycleServiceImpl extends MerchantServiceSupport im
         if (!"CONFIRMED".equals(quote.getStatus())) {
             throw ServiceException.ofMessageKey("customer.quote.void.confirmedOnly");
         }
+        if (quote.getSalesDocumentId() != null) {
+            throw ServiceException.ofMessageKey("customer.quote.void.convertedDenied");
+        }
         boolean updated = quoteMapper.update(null, new UpdateWrapper<CustomerQuote>()
             .eq("quote_id", id)
             .eq("tenant_id", quote.getTenantId())
             .eq("status", "CONFIRMED")
+            .isNull("sales_document_id")
             .set("status", "VOID")) > 0;
         if (!updated) {
             throw ServiceException.ofMessageKey("customer.quote.void.confirmedOnly");

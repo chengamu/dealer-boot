@@ -5,11 +5,11 @@
       <div class="simulation-order-entry">
         <label class="simulation-order-field">
           <span>{{ t('productCenter.formulaSimulation.orderWidth') }}</span>
-          <FormulaSimulationInchInput v-model="form.orderWidth" />
+          <BusinessInchInput v-model="form.orderWidth" />
         </label>
         <label class="simulation-order-field">
           <span>{{ t('productCenter.formulaSimulation.orderHeight') }}</span>
-          <FormulaSimulationInchInput v-model="form.orderHeight" />
+          <BusinessInchInput v-model="form.orderHeight" />
         </label>
         <label class="simulation-order-field simulation-order-field--quantity">
           <span>{{ t('productCenter.formulaSimulation.quantity') }}</span>
@@ -52,7 +52,6 @@
 import { computed } from 'vue'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
-import FormulaSimulationInchInput from './FormulaSimulationInchInput.vue'
 import FormulaSimulationOptionGroup from './FormulaSimulationOptionGroup.vue'
 import type { ProductFormulaOptionMaterialVO, ProductFormulaOptionVO, ProductFormulaOptionValueVO, ProductFormulaSimulationBO } from '@/api/product-capability/types'
 

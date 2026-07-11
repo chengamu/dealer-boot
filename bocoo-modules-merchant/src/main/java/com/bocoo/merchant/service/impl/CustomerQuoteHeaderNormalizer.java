@@ -62,7 +62,12 @@ class CustomerQuoteHeaderNormalizer extends MerchantServiceSupport {
         quote.setCustomerName(customer.getCustomerName());
         quote.setCompanyName(customer.getCompanyName());
         quote.setCustomerEmail(customer.getEmail());
+        quote.setCustomerPhone(customer.getPhone());
         quote.setProjectName(StringUtils.trim(bo.getProjectName()));
+        quote.setCustomerPoNo(StringUtils.trim(bo.getCustomerPoNo()));
+        quote.setRecipientName(StringUtils.trim(bo.getRecipientName()));
+        quote.setRecipientPhone(StringUtils.trim(bo.getRecipientPhone()));
+        quote.setShippingAddress(StringUtils.trim(bo.getShippingAddress()));
         quote.setQuoteLanguage(normalizeLanguage(bo.getQuoteLanguage()));
         quote.setValidUntil(bo.getValidUntil() == null ? LocalDate.now().plusDays(14) : bo.getValidUntil());
         resolveOwner(quote, bo.getOwnerUserId(), tenantId);

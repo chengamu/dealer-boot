@@ -121,8 +121,8 @@ public class ProductPricingEngine extends ProductServiceSupport {
             throw ServiceException.ofMessageKey("product.priceSetting.defaultMaterialPriceRequired");
         }
         Map<String, Object> context = new HashMap<>(baseContext);
-        context.put("unitPrice", rule.getUnitPrice() == null ? 0D : rule.getUnitPrice().doubleValue());
-        context.put("usageQty", item.getUsageQty() == null ? 0D : item.getUsageQty().doubleValue());
+        context.put("unitPrice", rule.getUnitPrice() == null ? BigDecimal.ZERO : rule.getUnitPrice());
+        context.put("usageQty", item.getUsageQty() == null ? BigDecimal.ZERO : item.getUsageQty());
         BigDecimal amount;
         try {
             amount = ProductPriceExpressionValidator.evaluatePrice(rule.getPriceFormula(), context).setScale(2, RoundingMode.HALF_UP);
@@ -166,22 +166,22 @@ public class ProductPricingEngine extends ProductServiceSupport {
 
     private Map<String, Object> priceContext(ProductSaleProduct product, ProductFormulaSetupVo setup,
                                              ProductPriceQuoteBo input, Map<String, String> selections) {
-        double width = input.getOrderWidth().doubleValue();
-        double drop = input.getOrderHeight().doubleValue();
-        double widthCm = width * 2.54D;
-        double dropCm = drop * 2.54D;
+        BigDecimal width = input.getOrderWidth();
+        BigDecimal drop = input.getOrderHeight();
+        BigDecimal widthCm = width.multiply(new BigDecimal("2.54"));
+        BigDecimal dropCm = drop.multiply(new BigDecimal("2.54"));
         Map<String, Object> context = new HashMap<>();
         context.put("width", width);
         context.put("drop", drop);
         context.put("widthCm", widthCm);
         context.put("dropCm", dropCm);
-        context.put("areaM2", widthCm * dropCm / 10000D);
-        context.put("areaSqft", width * drop / 144D);
+        context.put("areaM2", widthCm.multiply(dropCm).divide(new BigDecimal("10000")));
+        context.put("areaSqft", width.multiply(drop).divide(new BigDecimal("144"), java.math.MathContext.DECIMAL128));
         context.put("orderWidthIn", width);
         context.put("orderHeightIn", drop);
         context.put("orderWidthCm", widthCm);
         context.put("orderHeightCm", dropCm);
-        context.put("orderAreaM2", widthCm * dropCm / 10000D);
+        context.put("orderAreaM2", widthCm.multiply(dropCm).divide(new BigDecimal("10000")));
         context.put("productType", product.getProductTypeCode());
         addOptionContext(context, setup, selections);
         return context;

@@ -64,8 +64,8 @@
       <el-form ref="formRef" :model="form" :rules="rules" label-width="120px">
         <el-form-item :label="t('merchantLevel.code')" prop="levelCode"><el-input v-model="form.levelCode" /></el-form-item>
         <el-form-item :label="t('merchantLevel.name')" prop="levelName"><el-input v-model="form.levelName" /></el-form-item>
-        <el-form-item :label="t('merchantLevel.discount')" prop="defaultDiscountRate"><el-input-number v-model="form.defaultDiscountRate" :precision="2" :min="0" :max="1" controls-position="right" /></el-form-item>
-        <el-form-item :label="t('merchantLevel.credit')" prop="defaultCreditLimit"><el-input-number v-model="form.defaultCreditLimit" :precision="2" :min="0" controls-position="right" /></el-form-item>
+        <el-form-item :label="t('merchantLevel.discount')" prop="defaultDiscountRate"><BusinessNumberInput v-model="form.defaultDiscountRate" mode="RATE" :max-fraction-digits="4" :min="0" :max="1" /></el-form-item>
+        <el-form-item :label="t('merchantLevel.credit')" prop="defaultCreditLimit"><BusinessNumberInput v-model="form.defaultCreditLimit" mode="MONEY" :currency-digits="2" :min="0" /></el-form-item>
         <el-form-item :label="t('merchantLevel.defaultFlag')"><el-switch v-model="form.defaultFlag" /></el-form-item>
         <el-form-item :label="t('common.sort')" prop="sortOrder"><el-input-number v-model="form.sortOrder" :min="0" controls-position="right" /></el-form-item>
         <el-form-item :label="t('common.remark')"><el-input v-model="form.remark" type="textarea" :rows="3" /></el-form-item>

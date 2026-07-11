@@ -47,7 +47,7 @@ final class ProductPriceExpressionValidator {
             ProductFormulaExpressionParser parser = new ProductFormulaExpressionParser(normalized, PRICE_VARIABLES, false, SAMPLE, true);
             Object result = parser.parseExpression();
             parser.expectEnd();
-            return result instanceof Number number && Double.isFinite(number.doubleValue()) && number.doubleValue() > 0D;
+            return result instanceof BigDecimal decimal && decimal.signum() > 0;
         } catch (RuntimeException ex) {
             return false;
         }
@@ -85,10 +85,10 @@ final class ProductPriceExpressionValidator {
         ProductFormulaExpressionParser parser = new ProductFormulaExpressionParser(normalized, PRICE_VARIABLES, false, context, false);
         Object result = parser.parseExpression();
         parser.expectEnd();
-        if (!(result instanceof Number number) || !Double.isFinite(number.doubleValue()) || number.doubleValue() < 0D) {
+        if (!(result instanceof BigDecimal decimal) || decimal.signum() < 0) {
             throw new IllegalArgumentException("invalid price result");
         }
-        return BigDecimal.valueOf(number.doubleValue());
+        return decimal;
     }
 
     static boolean evaluateCondition(String expression, Map<String, Object> context) {

@@ -4,9 +4,6 @@ import com.bocoo.dealer.domain.bo.SalesPaymentBo;
 import com.bocoo.dealer.domain.bo.SalesShipmentBo;
 
 public interface SalesDocumentLifecycleService {
-    Boolean quote(Long id);
-    Boolean reopen(Long id);
-    String submit(Long id);
     Boolean cancel(Long id, String reason);
     Boolean confirmPayment(Long id, SalesPaymentBo bo);
     Boolean startProduction(Long id);

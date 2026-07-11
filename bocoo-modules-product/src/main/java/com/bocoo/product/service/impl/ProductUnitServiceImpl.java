@@ -23,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 
 @Service
@@ -132,6 +133,7 @@ public class ProductUnitServiceImpl extends ProductServiceSupport implements Pro
         if (bo == null) {
             return;
         }
+        normalizePrecision(bo);
         if (StringUtils.isBlank(bo.getBaseUnitCode())) {
             bo.setBaseUnitCode(bo.getUnitCode());
         }
@@ -150,6 +152,20 @@ public class ProductUnitServiceImpl extends ProductServiceSupport implements Pro
         }
         if (!StringUtils.equals(bo.getUnitType(), baseUnit.getUnitType())) {
             throw ServiceException.ofMessageKey("product.unit.baseUnitTypeMismatch");
+        }
+    }
+
+    private void normalizePrecision(ProductUnitBo bo) {
+        int precision = bo.getPrecisionScale() == null ? ("COUNT".equals(bo.getUnitType()) ? 0 : 6) : bo.getPrecisionScale();
+        if (precision < 0 || precision > 6 || ("COUNT".equals(bo.getUnitType()) && precision != 0)) {
+            throw ServiceException.ofMessageKey("product.unit.precisionInvalid");
+        }
+        bo.setPrecisionScale(precision);
+        bo.setRoundingMode(StringUtils.blankToDefault(bo.getRoundingMode(), RoundingMode.HALF_UP.name()));
+        try {
+            RoundingMode.valueOf(bo.getRoundingMode());
+        } catch (IllegalArgumentException ex) {
+            throw ServiceException.ofMessageKey("product.unit.roundingModeInvalid");
         }
     }
 

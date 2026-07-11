@@ -19,10 +19,15 @@ public class CustomerQuoteBo extends BaseBo {
     private Long customerId;
     @NotBlank(message = "{customer.quote.project.required}")
     private String projectName;
+    private String customerPoNo;
+    private String recipientName;
+    private String recipientPhone;
+    private String shippingAddress;
     private String quoteLanguage;
     private LocalDate validUntil;
     private Long ownerUserId;
     private String status;
+    private Long salesDocumentId;
     private String remark;
     private List<CustomerQuoteItemBo> items = new ArrayList<>();
 }

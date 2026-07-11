@@ -13,7 +13,8 @@
         <el-option label="=" value="==" />
         <el-option label="!=" value="!=" />
       </el-select>
-      <el-input-number v-model="dimensionBuilder.value" :controls="false" :precision="2" />
+      <BusinessInchInput v-if="dimensionIsInch" v-model="dimensionBuilder.value" />
+      <BusinessNumberInput v-else v-model="dimensionBuilder.value" mode="QUANTITY" :allow-negative="true" :unit-precision="6" />
     </div>
     <div class="price-condition-builder__row">
       <el-select v-model="dimensionBuilder.joiner">
@@ -78,6 +79,7 @@ const dimensionBuilder = reactive({ variable: 'width', operator: '>', value: 0, 
 const dimensionVariables = computed(() =>
   priceConditionVariables.filter((item) => ['width', 'drop', 'widthCm', 'dropCm', 'areaM2', 'areaSqft'].includes(item.name))
 )
+const dimensionIsInch = computed(() => ['width', 'drop'].includes(dimensionBuilder.variable))
 const selectedOption = computed(() =>
   (props.options || []).find((item) => optionRef(item) === optionBuilder.optionRef || item.optionCode === optionBuilder.optionRef)
 )

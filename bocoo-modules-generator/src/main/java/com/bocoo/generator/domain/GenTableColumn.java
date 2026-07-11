@@ -126,9 +126,9 @@ public class GenTableColumn extends BaseEntity {
     private String queryType;
 
     /**
-     * 显示类型（input文本框、textarea文本域、select下拉框、checkbox复选框、radio单选框、datetime日期控件、image图片上传控件、upload文件上传控件、editor富文本控件）
+     * 显示类型，数值字段必须使用明确的 number-* 或 inch 业务类型
      */
-    @Schema(description = "显示类型（input文本框、textarea文本域、select下拉框、checkbox复选框、radio单选框、datetime日期控件、image图片上传控件、upload文件上传控件、editor富文本控件）")
+    @Schema(description = "显示类型，数值支持 number-count/number-quantity/number-unit-price/number-money/number-rate/inch")
     private String htmlType;
 
     /**

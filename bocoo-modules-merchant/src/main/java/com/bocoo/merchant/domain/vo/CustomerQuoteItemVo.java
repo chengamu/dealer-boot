@@ -24,6 +24,11 @@ public class CustomerQuoteItemVo implements Serializable {
     private Long saleProductId;
     private String saleProductCode;
     private String saleProductName;
+    private Long categoryId;
+    private String categoryCode;
+    private String categoryNameCn;
+    private String productTypeCode;
+    private String productTypeNameCn;
     private Long formulaId;
     private Long formulaVersionId;
     private String formulaVersionLabel;

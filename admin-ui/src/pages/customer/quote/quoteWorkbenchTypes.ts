@@ -5,4 +5,11 @@ export interface QuoteWorkbenchItem extends CustomerQuoteItem {
   clientId: string
 }
 
+export interface QuotePastedRow {
+  roomLocation?: string
+  orderWidthInch: number
+  orderHeightInch: number
+  quantity: number
+}
+
 export type QuoteSetupMap = Record<string, CustomerQuoteCatalogSetup | undefined>

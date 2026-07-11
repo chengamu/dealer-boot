@@ -1,8 +1,6 @@
 export type Translate = (key: string) => string
 export function documentStatusText(t: Translate, status?: string) {
   switch (status) {
-    case 'DRAFT': return t('dealer.sales.status.DRAFT')
-    case 'QUOTED': return t('dealer.sales.status.QUOTED')
     case 'SUBMITTED': return t('dealer.sales.status.SUBMITTED')
     case 'CANCELLED': return t('dealer.sales.status.CANCELLED')
     case 'COMPLETED': return t('dealer.sales.status.COMPLETED')

@@ -77,6 +77,7 @@ import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 import type { ProductFormulaOptionMaterialVO, ProductFormulaOptionVO, ProductFormulaSimulationVO, ProductFormulaVO } from '@/api/product-capability/types'
 import { FORMULA_VALIDATION_STATUS } from '@/constants/productStatus'
+import { formatRate } from '@/utils/businessNumber'
 
 const props = defineProps<{
   result: ProductFormulaSimulationVO
@@ -118,7 +119,8 @@ function linkedMaterialSummary(optionCode?: string) {
 }
 
 function percentFormat(value?: number) {
-  return value == null ? '-' : `${Number(value).toFixed(2)}%`
+  const formatted = formatRate(value)
+  return formatted === '-' ? formatted : `${formatted}%`
 }
 
 function splitCodes(value?: string) {

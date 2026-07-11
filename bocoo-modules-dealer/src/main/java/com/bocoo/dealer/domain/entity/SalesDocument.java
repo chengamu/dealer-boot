@@ -19,6 +19,7 @@ public class SalesDocument extends BaseEntity {
     private Long tenantId;
     private Long merchantId;
     private String merchantName;
+    private Long sourceQuoteId;
     private String quoteNo;
     private String orderNo;
     private Long customerId;
@@ -52,7 +53,6 @@ public class SalesDocument extends BaseEntity {
     private String paymentConfirmedBy;
     private String productionStatus;
     private String shipmentStatus;
-    private LocalDateTime quotedTime;
     private LocalDateTime submittedTime;
     private LocalDateTime paidTime;
     private LocalDateTime productionStartTime;

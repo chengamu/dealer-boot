@@ -3,6 +3,7 @@ import { ElMessage } from 'element-plus'
 import { PRODUCT_STATUS_DISABLED, PRODUCT_STATUS_ENABLED, formulaStatusTagType, formulaStatusText, formulaValidationStatusText, formulaValidationTagType } from '@/constants/productStatus'
 import { formatUsageNumber } from '../utils/formulaExpression'
 import { optionValueLiteral, optionVariableName } from '../components/formulaExpressionDisplay'
+import { formatInch, formatQuantity } from '@/utils/businessNumber'
 import {
   createDraftClientKey,
   materialOwnerClientKey,
@@ -341,14 +342,14 @@ export function useFormulaSetupOperations(ctx: SetupOperationContext) {
   function statusTagType(status?: string) { return formulaStatusTagType(status) }
   function validationTagType(status?: string) { return formulaValidationTagType(status) }
   function materialLabel(row: ProductMaterialVO | ProductFormulaMaterialVO) { return `${row.materialCode || ''} ${row.materialNameCn || ''}`.trim() }
-  function formatNumber(value?: number | string) { const numericValue = Number(value); return Number.isFinite(numericValue) ? numericValue.toFixed(2) : '-' }
+  function formatNumber(value?: number | string) { return formatInch(value) }
   function formatMinute(value?: string) { return value ? value.replace('T', ' ').slice(0, 16) : '-' }
   function removeRow<T>(rows: T[], index: number) { if (index >= 0) rows.splice(index, 1) }
   function clearVisibilityCondition(row: ProductFormulaOptionVO) { row.visibilityMode = 'ALWAYS'; (row as DraftOption).visibleConditionOptionClientKey = ''; row.visibleConditionOptionCode = ''; row.visibleConditionOptionNameCn = ''; (row as DraftOption).visibleConditionValueClientKey = ''; row.visibleConditionValueCode = ''; row.visibleConditionValueNameCn = '' }
   function usageRulesFor(row: ProductFormulaMaterialVO) { return ctx.setup.usageRules.filter((rule) => rule.materialCode === row.materialCode) }
   function hasAnyUsageFormula(row: ProductFormulaUsageRuleVO | ProductFormulaMaterialVO) { return Boolean(row.lengthFormula || row.widthFormula || row.heightFormula || row.weightFormula || row.usageFormula) }
   function appendUsageFormulaPart(parts: string[], label: string, value?: string) { if (value) parts.push(`${label} ${value}`) }
-  function summaryFormulaValue(value: unknown): string { const text = textOf(value).trim(); const numeric = Number(text); return text && Number.isFinite(numeric) && /^-?\d+(\.\d+)?$/.test(text) ? numeric.toFixed(2) : text }
+  function summaryFormulaValue(value: unknown): string { const text = textOf(value).trim(); const numeric = Number(text); return text && Number.isFinite(numeric) && /^-?\d+(\.\d+)?$/.test(text) ? formatQuantity(text) : text }
   function isDefaultQuantityFormula(value: string) { return Number(value) === 1 && /^1(\.0+)?$/.test(value) }
   function textOf(value: unknown): string { return value === undefined || value === null ? '' : String(value) }
   function expressionReferencesOption(expression: unknown, option: ProductFormulaOptionVO) {

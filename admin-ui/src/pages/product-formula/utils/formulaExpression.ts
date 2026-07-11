@@ -1,5 +1,6 @@
 import jsep from 'jsep'
 import { normalizeConditionExpression, normalizeFormulaExpression } from './formulaNormalize'
+import { formatQuantity } from '@/utils/businessNumber'
 
 export { formulaVariables, normalizeConditionExpression, normalizeFormulaExpression } from './formulaNormalize'
 export type { FormulaVariable } from './formulaNormalize'
@@ -94,8 +95,7 @@ export function defaultConditionKey() {
 }
 
 export function formatUsageNumber(value?: number | string | null) {
-  const numericValue = Number(value)
-  return Number.isFinite(numericValue) ? numericValue.toFixed(2) : '-'
+  return formatQuantity(value)
 }
 
 function validateFormulaNode(node: ExpressionNode) {

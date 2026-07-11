@@ -1,15 +1,15 @@
 import type { ComposerTranslation } from 'vue-i18n'
+import { formatMoney, formatRate } from '@/utils/businessNumber'
 
 export function formatDiscountRate(value?: number | string | null) {
   if (value === null || value === undefined || value === '') return '-'
   const numeric = Number(value)
-  return Number.isFinite(numeric) ? numeric.toFixed(2) : '-'
+  return Number.isFinite(numeric) ? `${formatRate(numeric * 100, 4)}%` : '-'
 }
 
 export function formatCreditLimit(value?: number | string | null) {
   if (value === null || value === undefined || value === '') return '-'
-  const numeric = Number(value)
-  return Number.isFinite(numeric) ? numeric.toFixed(2) : '-'
+  return formatMoney(value)
 }
 
 export function merchantStatusText(status: string | undefined, t: ComposerTranslation) {

@@ -23,7 +23,12 @@ public class CustomerQuote extends BaseEntity {
     private String customerName;
     private String companyName;
     private String customerEmail;
+    private String customerPhone;
     private String projectName;
+    private String customerPoNo;
+    private String recipientName;
+    private String recipientPhone;
+    private String shippingAddress;
     private String quoteLanguage;
     private LocalDate validUntil;
     private Long ownerUserId;
@@ -37,6 +42,11 @@ public class CustomerQuote extends BaseEntity {
     private Long confirmedById;
     private String confirmedBy;
     private LocalDateTime confirmedTime;
+    private Long salesDocumentId;
+    private String orderNo;
+    private Long convertedById;
+    private String convertedBy;
+    private LocalDateTime convertedTime;
     private String delFlag;
     private String remark;
 }

@@ -176,7 +176,8 @@
           <span v-else-if="field.type === 'boolean'">{{ booleanLabel(row[field.prop]) }}</span>
           <span v-else-if="field.type === 'date'">{{ formatUtc(row[field.prop] as string | undefined, 'YYYY-MM-DD') }}</span>
           <span v-else-if="field.type === 'datetime'">{{ formatUtc(row[field.prop] as string | undefined, 'YYYY-MM-DD HH:mm') }}</span>
-          <span v-else-if="field.type === 'number'">{{ formatNumberValue(field, row[field.prop]) }}</span>
+          <span v-else-if="field.formatter">{{ field.formatter(row[field.prop], row) }}</span>
+          <span v-else-if="field.type === 'number' || field.type === 'inch'">{{ formatNumberValue(field, row[field.prop]) }}</span>
           <el-link v-else-if="field.type === 'url' && row[field.prop]" type="primary" :href="String(row[field.prop])" target="_blank">
             {{ t('productCenter.common.open') }}
           </el-link>
@@ -249,12 +250,15 @@
         <template v-for="section in formSections" :key="section.key">
           <div v-if="section.labelKey" class="product-grid-page__section-title">{{ t(section.labelKey) }}</div>
           <el-form-item v-for="field in section.fields" :key="field.prop" :label="t(field.labelKey)" :prop="field.prop" :class="formItemClass(field)" :data-agent-field="field.prop">
-          <el-input
+          <BusinessNumberInput
             v-if="field.type === 'number'"
-            :model-value="form[field.prop] as string | number"
-            type="number"
-            :min="0"
-            :step="field.step || 1"
+            :model-value="form[field.prop] as string | number | null"
+            :mode="field.numberMode || 'COUNT'"
+            :max-fraction-digits="field.precision"
+            :unit-precision="field.unitPrecision"
+            :currency-digits="field.currencyDigits"
+            :min="field.min ?? 0"
+            :max="field.max"
             :disabled="drawerReadonly"
             :placeholder="t('productCenter.common.inputPlaceholder')"
             :aria-label="t(field.labelKey)"
@@ -262,6 +266,17 @@
             :data-agent-field="field.prop"
             data-agent-input-kind="number"
             class="product-grid-page__number"
+            @update:model-value="handleNumberInput(field, $event)"
+          />
+          <BusinessInchInput
+            v-else-if="field.type === 'inch'"
+            :model-value="form[field.prop] as string | number | null"
+            :denominator="field.denominator || 8"
+            :min="field.min ?? 0"
+            :max="field.max"
+            :disabled="drawerReadonly"
+            :integer-aria-label="t(field.labelKey)"
+            :fraction-aria-label="t(field.labelKey)"
             @update:model-value="handleNumberInput(field, $event)"
           />
           <el-switch
@@ -300,16 +315,17 @@
               :class="{ 'product-grid-page__material-attribute-row--number': row.valueType === 'NUMBER' }"
             >
               <span class="product-grid-page__material-attribute-label">{{ displayValue(row.attributeNameCn || row.attributeCode) }}</span>
-              <el-input-number
+              <BusinessNumberInput
                 v-if="row.valueType === 'NUMBER'"
                 v-model="row.valueNumber"
+                mode="QUANTITY"
+                :unit-precision="materialAttributeUnitPrecision(field, row.valueUnitCode)"
                 :disabled="drawerReadonly"
                 :min="0"
                 :aria-label="displayValue(row.attributeNameCn || row.attributeCode)"
                 :data-agent-label="displayValue(row.attributeNameCn || row.attributeCode)"
                 :data-agent-field="String(row.attributeCode || row.attributeNameCn || 'materialAttributeNumber')"
                 data-agent-input-kind="number"
-                controls-position="right"
                 @change="syncMaterialAttributes(field)"
               />
               <el-switch
@@ -459,6 +475,7 @@ import { useUnsavedChangesGuard } from '@/composables/useUnsavedChangesGuard'
 import type { ProductFieldConfig, ProductGridConfig } from './productGridTypes'
 import { PRODUCT_STATUS_DISABLED, PRODUCT_STATUS_ENABLED, normalizeProductStatus } from '@/constants/productStatus'
 import { compactParts } from '@/utils/productLabels'
+import { formatBusinessNumber, formatInch } from '@/utils/businessNumber'
 
 const props = defineProps<{
   config: ProductGridConfig
@@ -663,7 +680,7 @@ function detailFieldValue(field: ProductFieldConfig) {
   if (field.type === 'status') {
     return normalizeStatus(value) === PRODUCT_STATUS_ENABLED ? t('productCenter.status.enabled') : t('productCenter.status.disabled')
   }
-  if (field.type === 'number') return formatNumberValue(field, value)
+  if (field.type === 'number' || field.type === 'inch') return formatNumberValue(field, value)
   if (field.type === 'date' || field.type === 'datetime') return value ? formatUtc(String(value), field.type === 'date' ? 'YYYY-MM-DD' : 'YYYY-MM-DD HH:mm') : '-'
   return displayValue(value)
 }
@@ -720,15 +737,23 @@ function agentStatusLabel(row: ProductRecord, field: ProductFieldConfig) {
 }
 
 function formatNumberValue(field: ProductFieldConfig, value: unknown) {
-  if (value === null || value === undefined || value === '') return '-'
-  const next = Number(value)
-  if (!Number.isFinite(next)) return String(value)
-  return typeof field.precision === 'number' ? next.toFixed(field.precision) : String(value)
+  if (field.type === 'inch') return formatInch(value as string | number | null, field.denominator || 8)
+  return formatBusinessNumber(value as string | number | null, field.numberMode || 'COUNT', {
+    maxFractionDigits: field.precision,
+    unitPrecision: field.unitPrecision,
+    currencyDigits: field.currencyDigits
+  })
+}
+
+function materialAttributeUnitPrecision(field: ProductFieldConfig, unitCode: unknown) {
+  const option = fieldOptions({ ...field, prop: '__unitOptions' }).find((item) => item.value === unitCode)
+  const precision = Number(option?.record?.precisionScale)
+  return Number.isInteger(precision) ? precision : 6
 }
 
 function columnAlign(field: ProductFieldConfig) {
   if (field.align) return field.align
-  if (field.type === 'number') return 'right'
+  if (field.type === 'number' || field.type === 'inch') return 'right'
   if (/status$/i.test(field.prop)) return 'center'
   if (field.type === 'date' || field.type === 'datetime' || field.type === 'status' || field.type === 'boolean' || field.type === 'url') {
     return 'center'
@@ -762,7 +787,7 @@ function normalizeNumberValue(value: unknown) {
 function normalizeFormRecord(record?: ProductRecord) {
   const next: ProductRecord = { ...(record || {}) }
   allFormFields.value.forEach((field) => {
-    if (field.type === 'number') next[field.prop] = normalizeNumberValue(next[field.prop])
+    if (field.type === 'number' || field.type === 'inch') next[field.prop] = normalizeNumberValue(next[field.prop])
     if (field.type === 'boolean') next[field.prop] = next[field.prop] === '1' || next[field.prop] === 'true' || next[field.prop] === true || next[field.prop] === 1
     if (field.multiple && field.valueMode === 'csv' && typeof next[field.prop] === 'string') {
       next[field.prop] = String(next[field.prop]).split(',').map((item) => item.trim()).filter(Boolean)
@@ -773,7 +798,7 @@ function normalizeFormRecord(record?: ProductRecord) {
 
 function defaultColumnMinWidth(field: ProductFieldConfig) {
   if (field.type === 'status' || field.type === 'boolean') return 104
-  if (field.type === 'number') return 120
+  if (field.type === 'number' || field.type === 'inch') return 140
   if (field.prop.toLowerCase().includes('code')) return 156
   if (field.prop.toLowerCase().includes('name')) return 180
   return 140
@@ -782,7 +807,7 @@ function defaultColumnMinWidth(field: ProductFieldConfig) {
 function formItemClass(field: ProductFieldConfig) {
   return {
     'product-grid-page__form-item--full': field.formSpan === 2 || field.type === 'textarea' || field.type === 'url' || field.type === 'material-attributes',
-    'product-grid-page__form-item--compact': field.type === 'number' || field.type === 'boolean'
+    'product-grid-page__form-item--compact': field.type === 'number' || field.type === 'inch' || field.type === 'boolean'
   }
 }
 
@@ -996,7 +1021,7 @@ function rowOperationActions(row: ProductRecord) {
 function reset() {
   const next: ProductRecord = { status: PRODUCT_STATUS_ENABLED, delFlag: '0', ...(props.config.defaultRecord || {}) }
   allFormFields.value.forEach((field) => {
-    if (field.type === 'number') next[field.prop] = 0
+    if (field.type === 'number' || field.type === 'inch') next[field.prop] = 0
     if (field.type === 'boolean') next[field.prop] = false
     if (field.multiple) next[field.prop] = []
   })

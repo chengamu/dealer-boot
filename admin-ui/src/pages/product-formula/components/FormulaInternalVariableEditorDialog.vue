@@ -53,7 +53,7 @@
         </el-table-column>
         <el-table-column :label="t('productCenter.formulaSetup.valueSummary')" min-width="210">
           <template #default="{ row }">
-            <el-input-number v-if="row.valueType !== 'FORMULA'" v-model="row.fixedValue" :precision="2" controls-position="right" />
+            <BusinessNumberInput v-if="row.valueType !== 'FORMULA'" v-model="row.fixedValue" mode="QUANTITY" :unit-precision="6" :allow-negative="true" />
             <div v-else class="variable-editor__formula-cell">
               <el-input v-model="row.formulaText" :placeholder="t('productCenter.formulaSetup.usageFormulaPlaceholder')" />
               <el-button plain @click="openFormulaEditor(row)">{{ t('productCenter.formulaSetup.formulaSelectorShort') }}</el-button>

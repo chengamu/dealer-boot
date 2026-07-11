@@ -2,7 +2,7 @@
 
 CREATE TABLE IF NOT EXISTS dealer_sales_document (
     sales_document_id bigint PRIMARY KEY,
-    tenant_id bigint NOT NULL, merchant_id bigint, merchant_name varchar(200),
+    tenant_id bigint NOT NULL, merchant_id bigint, merchant_name varchar(200), source_quote_id bigint NOT NULL,
     quote_no varchar(64) NOT NULL, order_no varchar(64),
     customer_id bigint NOT NULL, customer_name varchar(200) NOT NULL, company_name varchar(200),
     customer_email varchar(200), customer_phone varchar(64), owner_user_id bigint, owner_name varchar(100),
@@ -13,11 +13,11 @@ CREATE TABLE IF NOT EXISTS dealer_sales_document (
     discount_amount numeric(18,2) NOT NULL DEFAULT 0, product_amount numeric(18,2) NOT NULL DEFAULT 0,
     shipping_amount numeric(18,2) NOT NULL DEFAULT 0, tax_amount numeric(18,2) NOT NULL DEFAULT 0,
     total_amount numeric(18,2) NOT NULL DEFAULT 0,
-    document_status varchar(32) NOT NULL DEFAULT 'DRAFT', payment_status varchar(32) NOT NULL DEFAULT 'UNPAID',
+    document_status varchar(32) NOT NULL DEFAULT 'SUBMITTED', payment_status varchar(32) NOT NULL DEFAULT 'UNPAID',
     payment_method varchar(32), paid_amount numeric(18,2), payment_reference varchar(100),
     payment_proof_media_id bigint, payment_confirmed_by_id bigint, payment_confirmed_by varchar(100),
     production_status varchar(32) NOT NULL DEFAULT 'PENDING', shipment_status varchar(32) NOT NULL DEFAULT 'UNSHIPPED',
-    quoted_time timestamptz, submitted_time timestamptz, paid_time timestamptz, production_start_time timestamptz,
+    submitted_time timestamptz NOT NULL, paid_time timestamptz, production_start_time timestamptz,
     production_complete_time timestamptz, shipped_time timestamptz, delivered_time timestamptz,
     carrier_name varchar(100), tracking_no varchar(100),
     del_flag char(1) NOT NULL DEFAULT '0', remark varchar(1000),
@@ -26,12 +26,13 @@ CREATE TABLE IF NOT EXISTS dealer_sales_document (
 );
 
 CREATE INDEX IF NOT EXISTS idx_dealer_sales_quote ON dealer_sales_document (tenant_id, quote_no) WHERE del_flag = '0';
+CREATE INDEX IF NOT EXISTS idx_dealer_sales_source_quote ON dealer_sales_document (source_quote_id) WHERE del_flag = '0';
 CREATE INDEX IF NOT EXISTS idx_dealer_sales_order ON dealer_sales_document (tenant_id, order_no) WHERE del_flag = '0';
 CREATE INDEX IF NOT EXISTS idx_dealer_sales_customer ON dealer_sales_document (tenant_id, customer_id, document_status) WHERE del_flag = '0';
 CREATE INDEX IF NOT EXISTS idx_dealer_sales_progress ON dealer_sales_document (document_status, payment_status, production_status, shipment_status) WHERE del_flag = '0';
 
 CREATE TABLE IF NOT EXISTS dealer_sales_document_item (
-    sales_item_id bigint PRIMARY KEY, sales_document_id bigint NOT NULL, tenant_id bigint NOT NULL,
+    sales_item_id bigint PRIMARY KEY, sales_document_id bigint NOT NULL, source_quote_item_id bigint NOT NULL, tenant_id bigint NOT NULL,
     line_no integer NOT NULL, item_code varchar(64), room_location varchar(200),
     sale_product_id bigint NOT NULL, sale_product_code varchar(100), sale_product_name varchar(200),
     category_id bigint, category_code varchar(100), category_name_cn varchar(200),
@@ -51,8 +52,8 @@ CREATE TABLE IF NOT EXISTS dealer_sales_document_item (
     update_by varchar(64), update_time timestamptz
 );
 
-ALTER TABLE dealer_sales_document_item ADD COLUMN IF NOT EXISTS shipping_template_id bigint;
 CREATE INDEX IF NOT EXISTS idx_dealer_sales_item_document ON dealer_sales_document_item (tenant_id, sales_document_id, line_no) WHERE del_flag = '0';
+CREATE INDEX IF NOT EXISTS idx_dealer_sales_item_source_quote ON dealer_sales_document_item (source_quote_item_id) WHERE del_flag = '0';
 CREATE INDEX IF NOT EXISTS idx_dealer_sales_item_product ON dealer_sales_document_item (sale_product_id, formula_version_id) WHERE del_flag = '0';
 CREATE INDEX IF NOT EXISTS idx_dealer_sales_item_shipping_template ON dealer_sales_document_item (shipping_template_id) WHERE del_flag = '0';
 
@@ -69,14 +70,9 @@ CREATE INDEX IF NOT EXISTS idx_dealer_sales_event_document ON dealer_sales_docum
 -- 平台销售订单菜单和权限。
 INSERT INTO sys_menu (menu_id, tenant_id, menu_name, i18n_key, parent_id, order_num, path, component, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, remark)
 VALUES
-    (26000, 1, '销售订单', 'dealer.sales.menu', 0, 40, 'salesOrders', NULL, '1', '0', 'M', '1', '1', NULL, 'shopping', 'system', now(), '正式销售订单'),
-    (26001, 1, '销售单列表', 'dealer.sales.list', 26000, 1, 'salesDocuments', 'dealer-sales/list', '1', '0', 'C', '1', '1', 'dealer:sales:list', 'list', 'system', now(), ''),
+    (26000, 1, '销售管理', 'dealer.sales.menu', 0, 40, 'salesOrders', NULL, '1', '0', 'M', '1', '1', NULL, 'shopping', 'system', now(), '订单测算、客户报价和正式销售订单履约'),
+    (26001, 1, '销售订单', 'dealer.sales.list', 26000, 2, 'salesDocuments', 'dealer-sales/list', '1', '0', 'C', '1', '1', 'dealer:sales:list', 'list', 'system', now(), ''),
     (26002, 1, '销售单查询', 'dealer.sales.permission.query', 26001, 1, '#', '', '1', '0', 'F', '1', '1', 'dealer:sales:query', '#', 'system', now(), ''),
-    (26003, 1, '销售单新增', 'dealer.sales.permission.add', 26001, 2, '#', '', '1', '0', 'F', '1', '1', 'dealer:sales:add', '#', 'system', now(), ''),
-    (26004, 1, '销售单修改', 'dealer.sales.permission.edit', 26001, 3, '#', '', '1', '0', 'F', '1', '1', 'dealer:sales:edit', '#', 'system', now(), ''),
-    (26005, 1, '销售单删除', 'dealer.sales.permission.remove', 26001, 4, '#', '', '1', '0', 'F', '1', '1', 'dealer:sales:remove', '#', 'system', now(), ''),
-    (26006, 1, '销售单报价', 'dealer.sales.permission.quote', 26001, 5, '#', '', '1', '0', 'F', '1', '1', 'dealer:sales:quote', '#', 'system', now(), ''),
-    (26007, 1, '销售单提交', 'dealer.sales.permission.submit', 26001, 6, '#', '', '1', '0', 'F', '1', '1', 'dealer:sales:submit', '#', 'system', now(), ''),
     (26008, 1, '订单取消', 'dealer.sales.permission.cancel', 26001, 7, '#', '', '1', '0', 'F', '1', '1', 'dealer:sales:cancel', '#', 'system', now(), ''),
     (26009, 1, '付款确认', 'dealer.sales.permission.payment', 26001, 8, '#', '', '1', '0', 'F', '1', '1', 'dealer:sales:payment', '#', 'system', now(), ''),
     (26010, 1, '生产处理', 'dealer.sales.permission.production', 26001, 9, '#', '', '1', '0', 'F', '1', '1', 'dealer:sales:production', '#', 'system', now(), ''),
@@ -85,11 +81,12 @@ VALUES
     (26013, 1, '单据输出', 'dealer.sales.permission.document', 26001, 12, '#', '', '1', '0', 'F', '1', '1', 'dealer:sales:document', '#', 'system', now(), ''),
     (26014, 1, '邮件发送', 'dealer.sales.permission.email', 26001, 13, '#', '', '1', '0', 'F', '1', '1', 'dealer:sales:email', '#', 'system', now(), '')
 ON CONFLICT (menu_id) DO UPDATE SET menu_name = EXCLUDED.menu_name, i18n_key = EXCLUDED.i18n_key,
-    parent_id = EXCLUDED.parent_id, path = EXCLUDED.path, component = EXCLUDED.component,
-    perms = EXCLUDED.perms, status = EXCLUDED.status, update_by = 'system', update_time = now();
+    parent_id = EXCLUDED.parent_id, order_num = EXCLUDED.order_num, path = EXCLUDED.path,
+    component = EXCLUDED.component, menu_type = EXCLUDED.menu_type, perms = EXCLUDED.perms,
+    icon = EXCLUDED.icon, status = EXCLUDED.status, update_by = 'system', update_time = now();
 
 INSERT INTO sys_role_menu (role_id, menu_id, tenant_id)
-SELECT 1, menu_id, 1 FROM sys_menu WHERE menu_id BETWEEN 26000 AND 26014
+SELECT 1, menu_id, 1 FROM sys_menu WHERE menu_id IN (26000, 26001, 26002, 26008, 26009, 26010, 26011, 26012, 26013, 26014)
 ON CONFLICT DO NOTHING;
 
 -- 为现有商家租户创建销售入口；后续新租户初始化复用相同权限集合。
@@ -100,14 +97,9 @@ SELECT t.tenant_id * 1000 + x.offset_id, t.tenant_id, x.menu_name, x.i18n_key,
        x.order_num, x.path, x.component, '1', '0', x.menu_type, '1', '1', x.perms, x.icon, 'system', now(), '正式销售订单'
 FROM sys_tenant t
 CROSS JOIN (VALUES
-    (200, '销售订单', 'dealer.sales.menu', 40, 'salesOrders', NULL, 'M', NULL, 'shopping'),
-    (201, '销售单列表', 'dealer.sales.list', 1, 'salesDocuments', 'dealer-sales/list', 'C', 'dealer:sales:list', 'list'),
+    (200, '销售管理', 'dealer.sales.menu', 40, 'salesOrders', NULL, 'M', NULL, 'shopping'),
+    (201, '销售订单', 'dealer.sales.list', 2, 'salesDocuments', 'dealer-sales/list', 'C', 'dealer:sales:list', 'list'),
     (202, '销售单查询', 'dealer.sales.permission.query', 1, '#', '', 'F', 'dealer:sales:query', '#'),
-    (203, '销售单新增', 'dealer.sales.permission.add', 2, '#', '', 'F', 'dealer:sales:add', '#'),
-    (204, '销售单修改', 'dealer.sales.permission.edit', 3, '#', '', 'F', 'dealer:sales:edit', '#'),
-    (205, '销售单删除', 'dealer.sales.permission.remove', 4, '#', '', 'F', 'dealer:sales:remove', '#'),
-    (206, '销售单报价', 'dealer.sales.permission.quote', 5, '#', '', 'F', 'dealer:sales:quote', '#'),
-    (207, '销售单提交', 'dealer.sales.permission.submit', 6, '#', '', 'F', 'dealer:sales:submit', '#'),
     (208, '订单取消', 'dealer.sales.permission.cancel', 7, '#', '', 'F', 'dealer:sales:cancel', '#'),
     (212, '确认签收', 'dealer.sales.permission.deliver', 11, '#', '', 'F', 'dealer:sales:deliver', '#'),
     (213, '单据输出', 'dealer.sales.permission.document', 12, '#', '', 'F', 'dealer:sales:document', '#'),
@@ -115,8 +107,9 @@ CROSS JOIN (VALUES
 ) AS x(offset_id, menu_name, i18n_key, order_num, path, component, menu_type, perms, icon)
 WHERE t.tenant_type = 'MERCHANT'
 ON CONFLICT (menu_id) DO UPDATE SET menu_name = EXCLUDED.menu_name, i18n_key = EXCLUDED.i18n_key,
-    parent_id = EXCLUDED.parent_id, component = EXCLUDED.component, perms = EXCLUDED.perms,
-    status = EXCLUDED.status, update_by = 'system', update_time = now();
+    parent_id = EXCLUDED.parent_id, order_num = EXCLUDED.order_num, path = EXCLUDED.path,
+    component = EXCLUDED.component, menu_type = EXCLUDED.menu_type, perms = EXCLUDED.perms,
+    icon = EXCLUDED.icon, status = EXCLUDED.status, update_by = 'system', update_time = now();
 
 WITH RECURSIVE sales_menus AS (
     SELECT r.role_id, r.tenant_id, m.menu_id, m.parent_id

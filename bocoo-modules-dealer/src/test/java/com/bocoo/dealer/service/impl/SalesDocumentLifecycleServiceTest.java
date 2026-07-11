@@ -27,7 +27,6 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class SalesDocumentLifecycleServiceTest {
     @Mock private SalesDocumentMapper mapper;
-    @Mock private SalesDocumentItemWriter writer;
     @Mock private SalesDocumentEventRecorder events;
     private SalesDocumentLifecycleServiceImpl service;
 
@@ -36,15 +35,7 @@ class SalesDocumentLifecycleServiceTest {
         TableInfoHelper.initTableInfo(new MapperBuilderAssistant(new MybatisConfiguration(), ""), SalesDocument.class);
         TestSaTokenContext.install();
         TestSaTokenContext.setLoginUser(TenantType.MERCHANT.getCode(), 300001L, 1L, "merchant");
-        service = new SalesDocumentLifecycleServiceImpl(mapper, writer, events);
-    }
-
-    @Test
-    void repeatedSubmitReturnsExistingOrderNumber() {
-        SalesDocument row = row(); row.setDocumentStatus("SUBMITTED"); row.setOrderNo("SO-100");
-        when(mapper.selectOne(any(), eq(false))).thenReturn(row);
-        assertThat(service.submit(1L)).isEqualTo("SO-100");
-        verifyNoInteractions(writer);
+        service = new SalesDocumentLifecycleServiceImpl(mapper, events);
     }
 
     @Test
@@ -77,7 +68,7 @@ class SalesDocumentLifecycleServiceTest {
 
     @Test
     void lifecycleActionsUseOneDocumentLock() {
-        Set<String> actions = Set.of("quote", "reopen", "submit", "cancel", "confirmPayment",
+        Set<String> actions = Set.of("cancel", "confirmPayment",
             "startProduction", "completeProduction", "ship", "deliver");
         for (var method : SalesDocumentLifecycleServiceImpl.class.getDeclaredMethods()) {
             if (!actions.contains(method.getName())) continue;

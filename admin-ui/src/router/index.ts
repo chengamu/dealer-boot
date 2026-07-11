@@ -88,13 +88,7 @@ const hiddenLayoutRoutes: RouteRecordRaw[] = [
     path: '/customer/quotes/workbench',
     name: 'CustomerQuoteWorkbench',
     component: () => import('@/pages/customer/CustomerQuoteWorkbenchPage.vue'),
-    meta: { title: 'customer.quote.workbenchTitle', activeMenu: '/customerManagement/quotes', hidden: true }
-  },
-  {
-    path: '/sales-orders/documents/editor',
-    name: 'SalesDocumentEditor',
-    component: () => import('@/pages/dealer-sales/SalesDocumentEditorPage.vue'),
-    meta: { title: 'dealer.sales.edit', activeMenu: '/salesOrders/salesDocuments', hidden: true }
+    meta: { title: 'customer.quote.workbenchTitle', activeMenu: '/salesOrders/orderEstimates', hidden: true }
   },
   {
     path: '/sales-orders/documents/:id',
@@ -233,42 +227,6 @@ const legacyFallbackRoutes: RouteRecordRaw[] = [
     name: 'ToolBuild',
     component: () => import('@/pages/tool/FormBuildPage.vue'),
     meta: { title: 'toolBuild.title' }
-  },
-  {
-    path: '/dealer/dashboard',
-    name: 'DealerDashboard',
-    component: () => import('@/pages/dealer-portal/DealerPortalPage.vue'),
-    meta: { title: 'dealerPortal.dashboard', icon: 'dashboard', dealerPage: 'dashboard' }
-  },
-  {
-    path: '/dealer/quotes/create',
-    name: 'DealerCreateQuote',
-    component: () => import('@/pages/dealer-portal/DealerPortalPage.vue'),
-    meta: { title: 'dealerPortal.createQuote', icon: 'form', dealerPage: 'createQuote' }
-  },
-  {
-    path: '/dealer/checkout',
-    name: 'DealerCheckout',
-    component: () => import('@/pages/dealer-portal/DealerPortalPage.vue'),
-    meta: { title: 'dealerPortal.checkout', icon: 'shopping', dealerPage: 'checkout' }
-  },
-  {
-    path: '/dealer/dealers',
-    name: 'DealerManagement',
-    component: () => import('@/pages/dealer-portal/DealerPortalPage.vue'),
-    meta: { title: 'dealerPortal.dealerManagement', icon: 'peoples', dealerPage: 'dealerManagement' }
-  },
-  {
-    path: '/dealer/orders/detail',
-    name: 'DealerOrderDetail',
-    component: () => import('@/pages/dealer-portal/DealerPortalPage.vue'),
-    meta: { title: 'dealerPortal.orderDetail', icon: 'list', dealerPage: 'orderDetail' }
-  },
-  {
-    path: '/dealer/pricing',
-    name: 'DealerPricing',
-    component: () => import('@/pages/dealer-portal/DealerPortalPage.vue'),
-    meta: { title: 'dealerPortal.pricing', icon: 'money', dealerPage: 'pricing' }
   },
   {
     path: '/monitor/admin',

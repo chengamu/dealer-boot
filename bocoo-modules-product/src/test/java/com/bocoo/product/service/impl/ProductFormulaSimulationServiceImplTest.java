@@ -16,6 +16,7 @@ import com.bocoo.product.domain.vo.ProductFormulaUsageRuleVo;
 import com.bocoo.product.domain.vo.ProductMaterialAttributeVo;
 import com.bocoo.product.mapper.ProductFormulaMapper;
 import com.bocoo.product.mapper.ProductMaterialMapper;
+import com.bocoo.product.mapper.ProductUnitMapper;
 import com.bocoo.product.service.ProductFormulaSetupService;
 import com.bocoo.product.service.ProductFormulaVariableService;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,6 +38,7 @@ class ProductFormulaSimulationServiceImplTest {
 
     private ProductFormulaMapper formulaMapper;
     private ProductMaterialMapper productMaterialMapper;
+    private ProductUnitMapper productUnitMapper;
     private ProductFormulaSetupService setupService;
     private ProductFormulaVariableService variableService;
     private ProductFormulaSimulationServiceImpl service;
@@ -45,13 +47,16 @@ class ProductFormulaSimulationServiceImplTest {
     void setUp() {
         formulaMapper = mock(ProductFormulaMapper.class);
         productMaterialMapper = mock(ProductMaterialMapper.class);
+        productUnitMapper = mock(ProductUnitMapper.class);
         setupService = mock(ProductFormulaSetupService.class);
         variableService = mock(ProductFormulaVariableService.class);
         service = new ProductFormulaSimulationServiceImpl(
             formulaMapper,
             setupService,
-            new ProductFormulaSimulationEngine(productMaterialMapper, new ProductFormulaSimulationUsageCalculator(), variableService)
+            new ProductFormulaSimulationEngine(productMaterialMapper, productUnitMapper,
+                new ProductFormulaSimulationUsageCalculator(), variableService)
         );
+        when(productUnitMapper.selectList(any())).thenReturn(List.of());
         when(variableService.evaluateVariables(any(), any(), any())).thenAnswer(invocation -> invocation.getArgument(2));
         when(formulaMapper.selectById(3001L)).thenReturn(formula());
         when(setupService.validationMessageKey(3001L)).thenReturn(null);

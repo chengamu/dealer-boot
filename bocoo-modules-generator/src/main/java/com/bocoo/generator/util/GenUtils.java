@@ -55,20 +55,21 @@ public class GenUtils {
             column.setJavaType(GenConstants.TYPE_DATE);
             column.setHtmlType(GenConstants.HTML_DATETIME);
         } else if (arraysContains(GenConstants.COLUMNTYPE_NUMBER, dataType)) {
-            column.setHtmlType(GenConstants.HTML_INPUT);
-
             // 如果是浮点型 统一用BigDecimal
             String[] str = StringUtils.split(StringUtils.substringBetween(column.getColumnType(), "(", ")"), StringUtils.SEPARATOR);
             if (str != null && str.length == 2 && Integer.parseInt(str[1]) > 0) {
                 column.setJavaType(GenConstants.TYPE_BIGDECIMAL);
+                column.setHtmlType(GenConstants.HTML_NUMBER_QUANTITY);
             }
             // 如果是整形
             else if (str != null && str.length == 1 && Integer.parseInt(str[0]) <= 10) {
                 column.setJavaType(GenConstants.TYPE_INTEGER);
+                column.setHtmlType(GenConstants.HTML_NUMBER_COUNT);
             }
             // 长整形
             else {
                 column.setJavaType(GenConstants.TYPE_LONG);
+                column.setHtmlType(GenConstants.HTML_NUMBER_COUNT);
             }
         }
 

@@ -69,6 +69,27 @@ public class CustomerQuoteDraftServiceImpl extends MerchantServiceSupport implem
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Long copy(Long id) {
+        CustomerQuote source = load(id);
+        CustomerQuoteBo bo = new CustomerQuoteBo();
+        bo.setCustomerId(source.getCustomerId());
+        bo.setProjectName(source.getProjectName());
+        bo.setCustomerPoNo(source.getCustomerPoNo());
+        bo.setRecipientName(source.getRecipientName());
+        bo.setRecipientPhone(source.getRecipientPhone());
+        bo.setShippingAddress(source.getShippingAddress());
+        bo.setQuoteLanguage(source.getQuoteLanguage());
+        bo.setValidUntil(source.getValidUntil());
+        bo.setOwnerUserId(source.getOwnerUserId());
+        bo.setRemark(source.getRemark());
+        var rows = itemWriter.currentRows(id, source.getTenantId());
+        rows.forEach(row -> row.setQuoteItemId(null));
+        bo.setItems(rows);
+        return insert(bo);
+    }
+
+    @Override
     public CustomerQuoteItemVo calculateItem(CustomerQuoteItemBo bo, String quoteLanguage) {
         return calculator.toVo(calculator.calculate(bo).item());
     }
@@ -88,14 +109,17 @@ public class CustomerQuoteDraftServiceImpl extends MerchantServiceSupport implem
     }
 
     private CustomerQuote loadDraft(Long id) {
-        CustomerQuote quote = quoteMapper.selectOne(this.<CustomerQuote>activeQuery()
-            .eq("tenant_id", currentTenantId()).eq("quote_id", id), false);
-        if (quote == null) {
-            throw ServiceException.ofMessageKey("customer.quote.notFound");
-        }
+        CustomerQuote quote = load(id);
         if (!"DRAFT".equals(quote.getStatus())) {
             throw ServiceException.ofMessageKey("customer.quote.draftOnly");
         }
+        return quote;
+    }
+
+    private CustomerQuote load(Long id) {
+        CustomerQuote quote = quoteMapper.selectOne(this.<CustomerQuote>activeQuery()
+            .eq("tenant_id", currentTenantId()).eq("quote_id", id), false);
+        if (quote == null) throw ServiceException.ofMessageKey("customer.quote.notFound");
         return quote;
     }
 }

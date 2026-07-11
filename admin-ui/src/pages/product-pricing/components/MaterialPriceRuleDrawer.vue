@@ -70,12 +70,12 @@
         </el-table-column>
         <el-table-column :label="t('productCenter.pricing.unitPrice')" width="124" align="right" class-name="fabric-rule-table__price-column">
           <template #default="{ row }">
-            <el-input-number
+            <BusinessNumberInput
               v-model="row.unitPrice"
               :disabled="!editable"
               :min="0"
-              :precision="2"
-              :controls="false"
+              mode="UNIT_PRICE"
+              :max-fraction-digits="4"
               @change="syncDefaultPriceFormula(row)"
             />
           </template>

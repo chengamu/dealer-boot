@@ -109,6 +109,17 @@ class CustomerQuoteLifecycleServiceTest {
         verify(quoteMapper).update(any(), any());
     }
 
+    @Test
+    void convertedQuoteCannotBeVoided() {
+        CustomerQuote quote = quote("CONFIRMED", "EN_US");
+        quote.setSalesDocumentId(99L);
+        when(quoteMapper.selectOne(any(), eq(false))).thenReturn(quote);
+        CustomerQuoteLifecycleServiceImpl service = new CustomerQuoteLifecycleServiceImpl(quoteMapper, itemWriter, calculator);
+
+        assertThatThrownBy(() -> service.voidQuote(1L)).isInstanceOf(ServiceException.class);
+        verify(quoteMapper, never()).update(any(), any());
+    }
+
     private CustomerQuote quote(String status, String language) {
         CustomerQuote quote = new CustomerQuote();
         quote.setQuoteId(1L);

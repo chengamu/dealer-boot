@@ -115,6 +115,8 @@
   "product.saleProduct.statusInvalid": "可售产品状态不正确。",
   "product.unit.baseUnitNotFound": "基准单位不存在。",
   "product.unit.baseUnitTypeMismatch": "基准单位必须和当前单位属于同一单位类型。",
+  "product.unit.precisionInvalid": "单位精度必须为 0 到 6 位，计件单位必须为 0 位。",
+  "product.unit.roundingModeInvalid": "单位舍入方式无效。",
   "product.unit.codeExists": "单位编码已存在。",
   "product.unit.hasReferences": "该单位已被产品基础资料使用。",
   "productCenter.asset.code": "资料编码",
@@ -831,5 +833,11 @@
   "productCenter.workbench.unassigned": "未分配",
   "productCenter.workbench.updatedTime": "更新时间",
   "productCenter.workbench.viewMore": "更多",
-  "productCenter.workbench.warningCount": "预警"
+  "productCenter.workbench.warningCount": "预警",
+  "productCenter.unit.roundingModeHALFUP": "四舍五入",
+  "productCenter.unit.roundingModeHALFEVEN": "银行家舍入",
+  "productCenter.unit.roundingModeCEILING": "向正无穷舍入",
+  "productCenter.unit.roundingModeFLOOR": "向负无穷舍入",
+  "productCenter.unit.roundingModeUP": "远离零舍入",
+  "productCenter.unit.roundingModeDOWN": "向零舍入"
 }

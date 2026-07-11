@@ -88,6 +88,31 @@ class ProductUnitServiceTest {
     }
 
     @Test
+    void countUnitRejectsFractionPrecision() {
+        ProductUnitBo bo = new ProductUnitBo();
+        bo.setUnitCode("PCS");
+        bo.setUnitNameCn("个");
+        bo.setUnitType("COUNT");
+        bo.setPrecisionScale(2);
+
+        assertThatThrownBy(() -> productUnitService.insertByBo(bo))
+            .isInstanceOf(ServiceException.class);
+    }
+
+    @Test
+    void unitRejectsUnknownRoundingMode() {
+        ProductUnitBo bo = new ProductUnitBo();
+        bo.setUnitCode("M");
+        bo.setUnitNameCn("米");
+        bo.setUnitType("LENGTH");
+        bo.setPrecisionScale(3);
+        bo.setRoundingMode("ROUND");
+
+        assertThatThrownBy(() -> productUnitService.insertByBo(bo))
+            .isInstanceOf(ServiceException.class);
+    }
+
+    @Test
     void deleteUnitRejectsEnabledStatus() {
         ProductUnit unit = new ProductUnit();
         unit.setUnitId(3001L);

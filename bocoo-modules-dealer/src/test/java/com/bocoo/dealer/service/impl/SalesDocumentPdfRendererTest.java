@@ -15,9 +15,8 @@ class SalesDocumentPdfRendererTest {
     private final SalesDocumentPdfRenderer renderer = new SalesDocumentPdfRenderer();
 
     @Test
-    void quotePdfRequiresQuotedDocument() {
+    void quotePdfTypeIsNotSupported() {
         SalesDocumentVo row = sample();
-        row.setDocumentStatus("DRAFT");
         assertThatThrownBy(() -> renderer.render(row, "QUOTE")).isInstanceOf(ServiceException.class);
     }
 
@@ -29,9 +28,8 @@ class SalesDocumentPdfRendererTest {
     }
 
     @Test
-    void rendersQuoteOrderAndProductionDocuments() {
+    void rendersOrderAndProductionDocuments() {
         SalesDocumentVo row = sample();
-        assertPdf(renderer.render(row, "QUOTE"));
         assertPdf(renderer.render(row, "ORDER"));
         assertPdf(renderer.render(row, "PRODUCTION"));
         assertPdf(renderer.renderProduction(row, List.of(new ProductionMaterialRow(

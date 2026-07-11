@@ -247,7 +247,7 @@ public class ProductFormulaVariableServiceImpl extends ProductServiceSupport imp
         if (VALUE_FORMULA.equals(rule.getValueType())) {
             return ProductFormulaExpressionValidator.evaluateFormula(rule.getFormulaExpression(), context);
         }
-        return rule.getFixedValue() == null ? 0D : rule.getFixedValue().doubleValue();
+        return rule.getFixedValue() == null ? java.math.BigDecimal.ZERO : rule.getFixedValue();
     }
 
     private void assertRemovedVariablesNotReferenced(Long formulaId, List<ProductFormulaVariable> variables) {

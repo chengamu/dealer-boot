@@ -2,6 +2,7 @@ package com.bocoo.product.service.impl;
 
 import com.bocoo.common.core.utils.StringUtils;
 import com.bocoo.product.domain.entity.ProductMaterial;
+import com.bocoo.product.domain.entity.ProductUnit;
 import com.bocoo.product.domain.vo.ProductFormulaMaterialVo;
 import com.bocoo.product.domain.vo.ProductFormulaSimulationItemVo;
 import com.bocoo.product.domain.vo.ProductFormulaUsageRuleVo;
@@ -18,7 +19,8 @@ import java.util.Optional;
 @Component
 class ProductFormulaSimulationUsageCalculator {
     ProductFormulaSimulationItemVo buildItem(ProductFormulaMaterialVo material, ProductMaterial source,
-                                             List<ProductFormulaUsageRuleVo> usageRules, Map<String, Object> context) {
+                                             List<ProductFormulaUsageRuleVo> usageRules, Map<String, ProductUnit> unitMap,
+                                             Map<String, Object> context) {
         ProductFormulaSimulationItemVo item = new ProductFormulaSimulationItemVo();
         item.setFormulaMaterialId(material.getFormulaMaterialId());
         item.setMaterialId(material.getMaterialId());
@@ -27,12 +29,13 @@ class ProductFormulaSimulationUsageCalculator {
         item.setMaterialTypeNameCn(material.getMaterialTypeNameCn());
         item.setAttributeGroupNameCn(material.getAttributeGroupNameCn());
         item.setSpecModelText(material.getSpecModelText());
-        item.setUnitCode(material.getUnitCode());
         item.setLossRate(material.getLossRate());
         item.setProductionRemark(material.getProductionRemark());
         Map<String, Object> materialContext = materialContext(context, material);
         ProductFormulaUsageRuleVo matchedRule = matchUsageRule(usageRules, materialContext);
-        item.setUsageQty(resolveUsageQty(material, matchedRule, materialContext));
+        String calculationUnitCode = calculationUnitCode(material, matchedRule, source);
+        item.setUnitCode(calculationUnitCode);
+        item.setUsageQty(resolveUsageQty(material, matchedRule, unitMap.get(calculationUnitCode), materialContext));
         item.setUsageSummary(resolveUsageSummary(item.getUsageQty(), matchedRule));
         if (source != null) {
             item.setUnitPrice(source.getUnitPrice());
@@ -97,7 +100,7 @@ class ProductFormulaSimulationUsageCalculator {
 
     private Object attributeValue(com.bocoo.product.domain.vo.ProductMaterialAttributeVo attribute) {
         if (attribute.getValueNumber() != null) {
-            return attribute.getValueNumber().doubleValue();
+            return attribute.getValueNumber();
         }
         if (attribute.getValueBool() != null) {
             return attribute.getValueBool();
@@ -109,25 +112,28 @@ class ProductFormulaSimulationUsageCalculator {
         return value == null ? "" : value.replaceAll("[^A-Za-z0-9_]", "_");
     }
 
-    private BigDecimal resolveUsageQty(ProductFormulaMaterialVo material, ProductFormulaUsageRuleVo rule, Map<String, Object> context) {
+    private BigDecimal resolveUsageQty(ProductFormulaMaterialVo material, ProductFormulaUsageRuleVo rule, ProductUnit unit,
+                                       Map<String, Object> context) {
+        int scale = unit == null || unit.getPrecisionScale() == null ? 6 : unit.getPrecisionScale();
+        RoundingMode roundingMode = roundingMode(rule == null ? null : rule.getRoundingMode(), material.getRoundingMode(), unit);
         if (rule == null) {
             return applyLimits(material.getFixedUsageQty() == null ? BigDecimal.ONE : material.getFixedUsageQty(),
-                material.getMinUsageQty(), material.getMaxUsageQty());
+                material.getMinUsageQty(), material.getMaxUsageQty(), scale, roundingMode);
         }
         BigDecimal usageQty = "FIXED".equals(rule.getUsageMode())
             ? Optional.ofNullable(rule.getFixedUsageQty()).orElse(BigDecimal.ONE)
             : formulaUsageQty(rule, context);
-        return applyLimits(usageQty, rule.getMinUsageQty(), rule.getMaxUsageQty());
+        return applyLimits(usageQty, rule.getMinUsageQty(), rule.getMaxUsageQty(), scale, roundingMode);
     }
     private BigDecimal formulaUsageQty(ProductFormulaUsageRuleVo rule, Map<String, Object> context) {
         if (StringUtils.isNotBlank(rule.getUsageFormula())) {
-            return BigDecimal.valueOf(ProductFormulaExpressionValidator.evaluateFormula(rule.getUsageFormula(), context));
+            return ProductFormulaExpressionValidator.evaluateFormula(rule.getUsageFormula(), context);
         }
         return multiplyPresent(evaluateFormula(rule.getLengthFormula(), context), evaluateFormula(rule.getWidthFormula(), context),
             evaluateFormula(rule.getHeightFormula(), context), evaluateFormula(rule.getWeightFormula(), context));
     }
     private BigDecimal evaluateFormula(String expression, Map<String, Object> context) {
-        return StringUtils.isBlank(expression) ? null : BigDecimal.valueOf(ProductFormulaExpressionValidator.evaluateFormula(expression, context));
+        return StringUtils.isBlank(expression) ? null : ProductFormulaExpressionValidator.evaluateFormula(expression, context);
     }
     private BigDecimal multiplyPresent(BigDecimal... values) {
         BigDecimal result = null;
@@ -141,7 +147,8 @@ class ProductFormulaSimulationUsageCalculator {
         }
         return result;
     }
-    private BigDecimal applyLimits(BigDecimal usageQty, BigDecimal minUsageQty, BigDecimal maxUsageQty) {
+    private BigDecimal applyLimits(BigDecimal usageQty, BigDecimal minUsageQty, BigDecimal maxUsageQty,
+                                   int scale, RoundingMode roundingMode) {
         BigDecimal result = usageQty == null ? BigDecimal.ZERO : usageQty;
         if (minUsageQty != null && result.compareTo(minUsageQty) < 0) {
             result = minUsageQty;
@@ -149,7 +156,25 @@ class ProductFormulaSimulationUsageCalculator {
         if (maxUsageQty != null && result.compareTo(maxUsageQty) > 0) {
             result = maxUsageQty;
         }
-        return result.setScale(2, RoundingMode.HALF_UP);
+        return result.setScale(scale, roundingMode);
+    }
+
+    private String calculationUnitCode(ProductFormulaMaterialVo material, ProductFormulaUsageRuleVo rule, ProductMaterial source) {
+        if (rule != null && StringUtils.isNotBlank(rule.getCalculationUnitCode())) return rule.getCalculationUnitCode();
+        if (StringUtils.isNotBlank(material.getCalculationUnitCode())) return material.getCalculationUnitCode();
+        if (source != null && StringUtils.isNotBlank(source.getUnitCode())) return source.getUnitCode();
+        return material.getUnitCode();
+    }
+
+    private RoundingMode roundingMode(String ruleMode, String materialMode, ProductUnit unit) {
+        String value = StringUtils.blankToDefault(ruleMode,
+            StringUtils.blankToDefault(materialMode, unit == null ? null : unit.getRoundingMode()));
+        if (StringUtils.isBlank(value)) return RoundingMode.HALF_UP;
+        try {
+            return RoundingMode.valueOf(value);
+        } catch (IllegalArgumentException ex) {
+            throw new IllegalArgumentException("invalid rounding mode", ex);
+        }
     }
 
     private String stringValue(Object value) {

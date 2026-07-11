@@ -13,6 +13,7 @@ import java.util.Map;
 public class SalesDocumentItemVo implements Serializable {
     private Long salesItemId;
     private Long salesDocumentId;
+    private Long sourceQuoteItemId;
     private Integer lineNo;
     private String itemCode;
     private String roomLocation;

@@ -2,7 +2,7 @@
   <div class="fixed-usage-card">
     <label>
       <span>{{ t('productCenter.formulaSetup.fixedUsageQty') }}</span>
-      <el-input-number v-model="usageRow.fixedUsageQty" :min="0" :precision="2" controls-position="right" @change="$emit('change')" />
+      <BusinessNumberInput v-model="usageRow.fixedUsageQty" mode="QUANTITY" :min="0" :unit-precision="6" @change="$emit('change')" />
     </label>
   </div>
 </template>
@@ -43,7 +43,7 @@ const t = (key: string) => getMessage(key, localeStore.language)
   font-weight: 600;
 }
 
-.fixed-usage-card :deep(.el-input-number) {
+.fixed-usage-card :deep(.business-number-input) {
   width: 100%;
 }
 </style>

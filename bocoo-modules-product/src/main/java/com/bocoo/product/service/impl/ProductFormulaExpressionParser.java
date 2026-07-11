@@ -1,5 +1,6 @@
 package com.bocoo.product.service.impl;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -13,7 +14,8 @@ final class ProductFormulaExpressionParser {
     private final boolean sampleContext;
     private int index;
 
-    ProductFormulaExpressionParser(String expression, Set<String> variables, boolean conditionMode, Map<String, Object> context, boolean sampleContext) {
+    ProductFormulaExpressionParser(String expression, Set<String> variables, boolean conditionMode,
+                                   Map<String, Object> context, boolean sampleContext) {
         this.expression = expression;
         this.variables = variables;
         this.conditionMode = conditionMode;
@@ -34,9 +36,9 @@ final class ProductFormulaExpressionParser {
         Object value = parseTerm();
         while (true) {
             if (match("+")) {
-                value = toNumber(value) + toNumber(parseTerm());
+                value = toDecimal(value).add(toDecimal(parseTerm()));
             } else if (match("-")) {
-                value = toNumber(value) - toNumber(parseTerm());
+                value = toDecimal(value).subtract(toDecimal(parseTerm()));
             } else {
                 return value;
             }
@@ -62,32 +64,31 @@ final class ProductFormulaExpressionParser {
     private Object parseComparison() {
         Object left = parseExpression();
         skipSpaces();
-        String operator = null;
-        for (String item : new String[]{">=", "<=", "==", "!=", ">", "<"}) {
-            if (peek(item)) {
-                operator = item;
-                index += item.length();
-                break;
+        String operator = comparisonOperator();
+        return operator == null ? left : compare(left, parseExpression(), operator);
+    }
+
+    private String comparisonOperator() {
+        for (String operator : new String[]{">=", "<=", "==", "!=", ">", "<"}) {
+            if (peek(operator)) {
+                index += operator.length();
+                return operator;
             }
         }
-        if (operator == null) {
-            return left;
-        }
-        Object right = parseExpression();
-        return compare(left, right, operator);
+        return null;
     }
 
     private Object parseTerm() {
         Object value = parseFactor();
         while (true) {
             if (match("*")) {
-                value = toNumber(value) * toNumber(parseFactor());
+                value = toDecimal(value).multiply(toDecimal(parseFactor()));
             } else if (match("/")) {
-                double divisor = toNumber(parseFactor());
-                if (divisor == 0D) {
+                BigDecimal divisor = toDecimal(parseFactor());
+                if (divisor.signum() == 0) {
                     throw new IllegalArgumentException("division by zero");
                 }
-                value = toNumber(value) / divisor;
+                value = ProductFormulaDecimalMath.divide(toDecimal(value), divisor);
             } else {
                 return value;
             }
@@ -96,29 +97,17 @@ final class ProductFormulaExpressionParser {
 
     private Object parseFactor() {
         skipSpaces();
-        if (match("+")) {
-            return toNumber(parseFactor());
-        }
-        if (match("-")) {
-            return -toNumber(parseFactor());
-        }
+        if (match("+")) return toDecimal(parseFactor());
+        if (match("-")) return toDecimal(parseFactor()).negate();
         if (match("(")) {
             Object value = conditionMode ? parseOr() : parseExpression();
-            if (!match(")")) {
-                throw new IllegalArgumentException("missing )");
-            }
+            if (!match(")")) throw new IllegalArgumentException("missing )");
             return value;
         }
         char ch = current();
-        if (ch == '\'' || ch == '"') {
-            return parseString(ch);
-        }
-        if (Character.isDigit(ch) || ch == '.') {
-            return parseNumber();
-        }
-        if (Character.isLetter(ch) || ch == '_') {
-            return parseIdentifierValue();
-        }
+        if (ch == '\'' || ch == '"') return parseString(ch);
+        if (Character.isDigit(ch) || ch == '.') return parseNumber();
+        if (Character.isLetter(ch) || ch == '_') return parseIdentifierValue();
         throw new IllegalArgumentException("invalid token");
     }
 
@@ -126,16 +115,12 @@ final class ProductFormulaExpressionParser {
         int start = index;
         while (index < expression.length()) {
             char ch = expression.charAt(index);
-            if (!Character.isLetterOrDigit(ch) && ch != '_') {
-                break;
-            }
+            if (!Character.isLetterOrDigit(ch) && ch != '_') break;
             index++;
         }
         String identifier = expression.substring(start, index);
         skipSpaces();
-        if (peek("(")) {
-            return parseFunction(identifier);
-        }
+        if (peek("(")) return parseFunction(identifier);
         if (peek(".") || peek("[") || peek("?") || peek(":")) {
             throw new IllegalArgumentException("unsupported expression");
         }
@@ -145,58 +130,24 @@ final class ProductFormulaExpressionParser {
         }
         Object value = context.get(identifier);
         if (value == null && ProductFormulaExpressionValidator.isFormulaVariable(identifier) && sampleContext) {
-            return 1D;
+            return BigDecimal.ONE;
         }
-        if (value == null && identifier.startsWith("option_")) {
-            return "OPTION_VALUE";
-        }
-        if (value == null && identifier.startsWith("material_") && sampleContext) {
-            return sampleMaterialValue(identifier);
-        }
+        if (value == null && identifier.startsWith("option_")) return "OPTION_VALUE";
+        if (value == null && identifier.startsWith("material_") && sampleContext) return sampleMaterialValue(identifier);
         return value;
     }
 
     private Object parseFunction(String identifier) {
-        if (!match("(")) {
-            throw new IllegalArgumentException("missing (");
-        }
-        List<Double> args = new ArrayList<>();
+        if (!match("(")) throw new IllegalArgumentException("missing (");
+        List<BigDecimal> args = new ArrayList<>();
         if (!peek(")")) {
             do {
-                args.add(toNumber(parseExpression()));
+                args.add(toDecimal(parseExpression()));
             } while (match(","));
         }
-        if (!match(")")) {
-            throw new IllegalArgumentException("missing )");
-        }
-        if (args.isEmpty()) {
-            throw new IllegalArgumentException("invalid function arguments");
-        }
-        double value = args.get(0);
-        double scale = args.size() > 1 ? args.get(1) : 0D;
-        return switch (identifier) {
-            case "max" -> args.stream().mapToDouble(Double::doubleValue).max().orElseThrow();
-            case "min" -> args.stream().mapToDouble(Double::doubleValue).min().orElseThrow();
-            case "round" -> round(value, scale);
-            case "ceil" -> ceil(value, scale);
-            case "floor" -> floor(value, scale);
-            default -> throw new IllegalArgumentException("unsupported function");
-        };
-    }
-
-    private double round(double value, double scale) {
-        double factor = Math.pow(10D, Math.max(0D, scale));
-        return Math.round(value * factor) / factor;
-    }
-
-    private double ceil(double value, double scale) {
-        double factor = Math.pow(10D, Math.max(0D, scale));
-        return Math.ceil(value * factor) / factor;
-    }
-
-    private double floor(double value, double scale) {
-        double factor = Math.pow(10D, Math.max(0D, scale));
-        return Math.floor(value * factor) / factor;
+        if (!match(")")) throw new IllegalArgumentException("missing )");
+        if (args.isEmpty()) throw new IllegalArgumentException("invalid function arguments");
+        return ProductFormulaDecimalMath.applyFunction(identifier, args);
     }
 
     private String parseString(char quote) {
@@ -205,23 +156,19 @@ final class ProductFormulaExpressionParser {
         while (index < expression.length() && expression.charAt(index) != quote) {
             builder.append(expression.charAt(index++));
         }
-        if (index >= expression.length()) {
-            throw new IllegalArgumentException("unterminated string");
-        }
+        if (index >= expression.length()) throw new IllegalArgumentException("unterminated string");
         index++;
         return builder.toString();
     }
 
-    private Double parseNumber() {
+    private BigDecimal parseNumber() {
         int start = index;
         while (index < expression.length()) {
             char ch = expression.charAt(index);
-            if (!Character.isDigit(ch) && ch != '.') {
-                break;
-            }
+            if (!Character.isDigit(ch) && ch != '.') break;
             index++;
         }
-        return Double.parseDouble(expression.substring(start, index));
+        return new BigDecimal(expression.substring(start, index));
     }
 
     private boolean compare(Object left, Object right, String operator) {
@@ -229,18 +176,20 @@ final class ProductFormulaExpressionParser {
             boolean matches = expressionEquals(left, right);
             return "!=".equals(operator) ? !matches : matches;
         }
-        double leftNumber = toNumber(left);
-        double rightNumber = toNumber(right);
+        int comparison = toDecimal(left).compareTo(toDecimal(right));
         return switch (operator) {
-            case ">" -> leftNumber > rightNumber;
-            case ">=" -> leftNumber >= rightNumber;
-            case "<" -> leftNumber < rightNumber;
-            case "<=" -> leftNumber <= rightNumber;
+            case ">" -> comparison > 0;
+            case ">=" -> comparison >= 0;
+            case "<" -> comparison < 0;
+            case "<=" -> comparison <= 0;
             default -> throw new IllegalArgumentException("invalid comparison");
         };
     }
 
     private boolean expressionEquals(Object left, Object right) {
+        if (left instanceof Number && right instanceof Number) {
+            return toDecimal(left).compareTo(toDecimal(right)) == 0;
+        }
         String leftText = left == null ? "" : String.valueOf(left);
         String rightText = right == null ? "" : String.valueOf(right);
         return leftText.equals(rightText)
@@ -250,9 +199,7 @@ final class ProductFormulaExpressionParser {
 
     private boolean match(String token) {
         skipSpaces();
-        if (!peek(token)) {
-            return false;
-        }
+        if (!peek(token)) return false;
         index += token.length();
         return true;
     }
@@ -267,38 +214,25 @@ final class ProductFormulaExpressionParser {
     }
 
     private void skipSpaces() {
-        while (index < expression.length() && Character.isWhitespace(expression.charAt(index))) {
-            index++;
-        }
+        while (index < expression.length() && Character.isWhitespace(expression.charAt(index))) index++;
     }
 
-    private double toNumber(Object value) {
-        if (value instanceof Number number) {
-            return number.doubleValue();
-        }
+    private BigDecimal toDecimal(Object value) {
+        if (value instanceof BigDecimal decimal) return decimal;
+        if (value instanceof Number number) return new BigDecimal(number.toString());
         throw new IllegalArgumentException("number expected");
     }
 
     private boolean toBoolean(Object value) {
-        if (value instanceof Boolean bool) {
-            return bool;
-        }
+        if (value instanceof Boolean bool) return bool;
         throw new IllegalArgumentException("boolean expected");
     }
 
     private Object sampleMaterialValue(String identifier) {
-        if (identifier.endsWith("_materialType")) {
-            return "MOTOR";
-        }
-        if (identifier.endsWith("_materialCode")) {
-            return "XLF241801";
-        }
-        if (identifier.endsWith("_materialName")) {
-            return "XLF241801 Cream";
-        }
-        if (identifier.endsWith("_attributeGroup")) {
-            return "FABRIC";
-        }
-        return 1D;
+        if (identifier.endsWith("_materialType")) return "MOTOR";
+        if (identifier.endsWith("_materialCode")) return "XLF241801";
+        if (identifier.endsWith("_materialName")) return "XLF241801 Cream";
+        if (identifier.endsWith("_attributeGroup")) return "FABRIC";
+        return BigDecimal.ONE;
     }
 }

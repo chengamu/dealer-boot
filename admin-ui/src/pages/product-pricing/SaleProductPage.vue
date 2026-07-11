@@ -12,6 +12,7 @@ import { useLocaleStore } from '@/stores/locale'
 import ProductEntityGridPage from '@/pages/product-center/components/ProductEntityGridPage.vue'
 import type { ProductGridConfig } from '@/pages/product-center/components/productGridTypes'
 import type { ProductRecord } from '@/api/product-capability/types'
+import { formatInchRange } from '@/utils/businessNumber'
 import { productFormulaApi } from '@/api/product-formula/formula'
 import { saleProductApi } from '@/api/product-pricing/pricing'
 import { FORMULA_STATUS, PRODUCT_STATUS_DISABLED } from '@/constants/productStatus'
@@ -23,6 +24,11 @@ import {
 const router = useRouter()
 const localeStore = useLocaleStore()
 const t = (key: string) => getMessage(key, localeStore.language)
+
+function sizeSummary(_value: unknown, row: ProductRecord) {
+  return formatInchRange(row.minWidthInch as number | string, row.maxWidthInch as number | string,
+    row.minHeightInch as number | string, row.maxHeightInch as number | string)
+}
 
 const statusOptions = computed(() => enabledStatusOptions(t))
 const priceOptions = computed(() => priceStatusOptions(t))
@@ -108,11 +114,11 @@ const saleProductConfig = computed<ProductGridConfig>(() => ({
     { prop: 'productTypeNameCn', labelKey: 'productCenter.formula.productType', form: false, minWidth: 130 },
     { prop: 'formulaName', labelKey: 'productCenter.saleProduct.formula', form: false, minWidth: 180 },
     { prop: 'formulaVersionLabel', labelKey: 'productCenter.saleProduct.formulaVersion', form: false, minWidth: 120 },
-    { prop: 'minWidthInch', labelKey: 'productCenter.formula.minWidthInch', type: 'number', form: false, minWidth: 150, precision: 2 },
-    { prop: 'minHeightInch', labelKey: 'productCenter.formula.minHeightInch', type: 'number', form: false, minWidth: 150, precision: 2 },
-    { prop: 'maxWidthInch', labelKey: 'productCenter.formula.maxWidthInch', type: 'number', form: false, minWidth: 150, precision: 2 },
-    { prop: 'maxHeightInch', labelKey: 'productCenter.formula.maxHeightInch', type: 'number', form: false, minWidth: 150, precision: 2 },
-    { prop: 'sizeSummary', labelKey: 'productCenter.formula.sizeSummary', form: false, minWidth: 150 },
+    { prop: 'minWidthInch', labelKey: 'productCenter.formula.minWidthInch', type: 'inch', form: false, minWidth: 150 },
+    { prop: 'minHeightInch', labelKey: 'productCenter.formula.minHeightInch', type: 'inch', form: false, minWidth: 150 },
+    { prop: 'maxWidthInch', labelKey: 'productCenter.formula.maxWidthInch', type: 'inch', form: false, minWidth: 150 },
+    { prop: 'maxHeightInch', labelKey: 'productCenter.formula.maxHeightInch', type: 'inch', form: false, minWidth: 150 },
+    { prop: 'sizeSummary', labelKey: 'productCenter.formula.sizeSummary', form: false, minWidth: 210, formatter: sizeSummary },
     { prop: 'priceStatus', labelKey: 'productCenter.saleProduct.priceStatus', type: 'select', options: priceOptions.value, search: true, form: false, minWidth: 130 },
     { prop: 'status', labelKey: 'productCenter.common.status', type: 'status', options: statusOptions.value, search: true, form: false, minWidth: 120 },
     { prop: 'updateTime', labelKey: 'productCenter.formula.updateTime', type: 'datetime', form: false, minWidth: 160, sortable: true },

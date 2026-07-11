@@ -12,6 +12,8 @@ public interface CustomerQuoteDraftService {
 
     Boolean delete(Long[] ids);
 
+    Long copy(Long id);
+
     CustomerQuoteItemVo calculateItem(CustomerQuoteItemBo bo, String quoteLanguage);
 
     CustomerQuoteVo calculateAll(Long id);

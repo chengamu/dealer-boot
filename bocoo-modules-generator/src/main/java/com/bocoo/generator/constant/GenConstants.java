@@ -106,6 +106,13 @@ public interface GenConstants {
      */
     String HTML_INPUT = "input";
 
+    String HTML_NUMBER_COUNT = "number-count";
+    String HTML_NUMBER_QUANTITY = "number-quantity";
+    String HTML_NUMBER_UNIT_PRICE = "number-unit-price";
+    String HTML_NUMBER_MONEY = "number-money";
+    String HTML_NUMBER_RATE = "number-rate";
+    String HTML_INCH = "inch";
+
     /**
      * 文本域
      */

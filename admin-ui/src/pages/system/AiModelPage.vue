@@ -86,19 +86,19 @@
         </el-form-item>
         <el-form-item :label="t('ai.settings.contextWindow')" prop="contextWindow">
           <div class="model-number-field">
-            <el-input-number v-model="contextWindowMillion" :min="0" :precision="4" :step="0.1" controls-position="right" />
+            <BusinessNumberInput v-model="contextWindowMillion" mode="QUANTITY" :min="0" :unit-precision="6" />
             <span class="model-number-field__unit">{{ t('ai.settings.contextWindowUnit') }}</span>
           </div>
         </el-form-item>
         <el-form-item :label="t('ai.settings.inputPrice')" prop="inputPrice">
           <div class="model-number-field">
-            <el-input-number v-model="modelForm.inputPrice" :min="0" :precision="4" controls-position="right" />
+            <BusinessNumberInput v-model="modelForm.inputPrice" mode="UNIT_PRICE" :min="0" :max-fraction-digits="4" />
             <span class="model-number-field__unit">{{ t('ai.settings.priceUnit') }}</span>
           </div>
         </el-form-item>
         <el-form-item :label="t('ai.settings.outputPrice')" prop="outputPrice">
           <div class="model-number-field">
-            <el-input-number v-model="modelForm.outputPrice" :min="0" :precision="4" controls-position="right" />
+            <BusinessNumberInput v-model="modelForm.outputPrice" mode="UNIT_PRICE" :min="0" :max-fraction-digits="4" />
             <span class="model-number-field__unit">{{ t('ai.settings.priceUnit') }}</span>
           </div>
         </el-form-item>
@@ -140,6 +140,7 @@ import {
   type AiProviderModelQuery
 } from '@/api/ai-admin'
 import { formatUtc } from '@/utils/datetime'
+import { formatQuantity } from '@/utils/businessNumber'
 import { useDict } from '@/utils/dict'
 import { useAiI18n } from './useAiI18n'
 
@@ -195,7 +196,7 @@ function channelName(row: AiProviderModel) {
 
 function tokensToMillion(tokens?: number) {
   if (tokens === null || typeof tokens === 'undefined') return undefined
-  return Number((tokens / 1000000).toFixed(4))
+  return tokens / 1000000
 }
 
 function millionToTokens(value?: number) {
@@ -205,7 +206,7 @@ function millionToTokens(value?: number) {
 
 function formatContextWindow(tokens?: number) {
   const value = tokensToMillion(tokens)
-  return typeof value === 'undefined' ? '-' : `${value}M`
+  return typeof value === 'undefined' ? '-' : `${formatQuantity(value)}M`
 }
 
 async function getProviderOptions() {

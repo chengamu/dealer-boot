@@ -41,8 +41,19 @@
       </el-table-column>
       <el-table-column :label="t('customer.quote.validUntil')" prop="validUntil" width="120" align="center" />
       <el-table-column :label="t('customer.quote.quantity')" prop="itemCount" width="90" align="center" />
+      <el-table-column :label="t('customer.quote.amount.product')" width="125" align="right">
+        <template #default="{ row }">{{ quoteMoney(row.productAmount, row.currencyCode) }}</template>
+      </el-table-column>
+      <el-table-column :label="t('customer.quote.amount.shipping')" width="115" align="right">
+        <template #default="{ row }">{{ quoteMoney(row.shippingAmount, row.currencyCode) }}</template>
+      </el-table-column>
       <el-table-column :label="t('customer.quote.amount.total')" width="130" align="right">
         <template #default="{ row }">{{ quoteMoney(row.totalAmount, row.currencyCode) }}</template>
+      </el-table-column>
+      <el-table-column :label="t('customer.quote.conversion.title')" min-width="150" align="center">
+        <template #default="{ row }">
+          <el-tag :type="row.salesDocumentId ? 'success' : 'info'">{{ row.salesDocumentId ? `${t('customer.quote.conversion.converted')} · ${row.orderNo}` : t('customer.quote.conversion.pending') }}</el-tag>
+        </template>
       </el-table-column>
       <el-table-column :label="t('customer.quote.owner')" prop="ownerName" min-width="120" />
       <el-table-column :label="t('common.updateTime')" width="150" align="center">
@@ -50,11 +61,13 @@
       </el-table-column>
       <el-table-column :label="t('common.operate')" width="190" fixed="right" align="center">
         <template #default="{ row }">
-          <AdminTableActions :actions="buildQuoteRowActions(row, t, openWorkbench, handleExport, handleDelete)" />
+          <AdminTableActions :actions="buildQuoteRowActions(row, t, quoteActions)" />
         </template>
       </el-table-column>
     </el-table>
     <pagination v-show="total > 0" v-model:page="query.pageNum" v-model:limit="query.pageSize" :total="total" class="merchant-table-page__pagination" @pagination="getList" />
+    <QuoteEmailDialog ref="emailRef" />
+    <QuoteConvertDialog ref="convertRef" @converted="handleConverted" />
   </div>
 </template>
 
@@ -68,6 +81,9 @@ import { listCustomerOptions, type CustomerProfile } from '@/api/customer/profil
 import { formatUtc } from '@/utils/datetime'
 import { download } from '@/utils/request'
 import { buildQuoteRowActions, quoteMoney, quoteStatusText, quoteStatusType } from './quote/quoteListPresentation'
+import QuoteEmailDialog from './quote/QuoteEmailDialog.vue'
+import QuoteConvertDialog from './quote/QuoteConvertDialog.vue'
+import { openQuotePdf } from './quote/quoteArtifacts'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -78,6 +94,8 @@ const loading = ref(false)
 const showSearch = ref(true)
 const total = ref(0)
 const queryRef = ref<FormInstance>()
+const emailRef = ref<InstanceType<typeof QuoteEmailDialog>>()
+const convertRef = ref<InstanceType<typeof QuoteConvertDialog>>()
 const query = reactive<CustomerQuoteQuery>({ pageNum: 1, pageSize: 10 })
 const statuses = computed(() => [
   { value: 'DRAFT', label: t('customer.quote.status.draft') },
@@ -109,6 +127,29 @@ async function handleDelete(row?: CustomerQuote) {
 function handleExport(row: CustomerQuote) {
   if (!row.quoteId) return
   download(`customer/quotes/${row.quoteId}/export`, {}, `quote_${row.quoteNo || Date.now()}.xlsx`)
+}
+async function handleCopy(row: CustomerQuote) {
+  if (!row.quoteId) return
+  const response = await customerQuoteApi.copy(row.quoteId)
+  await router.push({ name: 'CustomerQuoteWorkbench', query: { quoteId: response.data } })
+}
+async function handleVoid(row: CustomerQuote) {
+  if (!row.quoteId) return
+  await ElMessageBox.confirm(t('customer.quote.voidHint'), t('common.prompt'), { type: 'warning' })
+  await customerQuoteApi.void(row.quoteId)
+  ElMessage.success(t('common.operationSuccess'))
+  await getList()
+}
+function viewOrder(row: CustomerQuote) {
+  if (row.salesDocumentId) void router.push({ name: 'SalesDocumentDetail', params: { id: row.salesDocumentId } })
+}
+function handleConverted(result: { salesDocumentId: string }) {
+  void router.push({ name: 'SalesDocumentDetail', params: { id: result.salesDocumentId } })
+}
+const quoteActions = {
+  open: openWorkbench, copy: handleCopy, export: handleExport, pdf: openQuotePdf,
+  email: (row: CustomerQuote) => emailRef.value?.open(row),
+  convert: (row: CustomerQuote) => convertRef.value?.open(row), viewOrder, void: handleVoid, remove: handleDelete
 }
 Promise.all([getList(), listCustomerOptions({ status: 'ENABLED', pageNum: 1, pageSize: 500 }).then((res) => { customers.value = res.data || [] })])
 </script>

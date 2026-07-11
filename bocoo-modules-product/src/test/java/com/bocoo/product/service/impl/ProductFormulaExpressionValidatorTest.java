@@ -2,6 +2,7 @@ package com.bocoo.product.service.impl;
 
 import org.junit.jupiter.api.Test;
 
+import java.math.BigDecimal;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -27,8 +28,8 @@ class ProductFormulaExpressionValidatorTest {
         assertThat(ProductFormulaExpressionValidator.isFormulaValid("四舍五入(订单面积(m²) / 100, 2)")).isTrue();
         assertThat(ProductFormulaExpressionValidator.isFormulaValid("向上取整(订单宽（cm） / 10.5，2)")).isTrue();
 
-        Double result = ProductFormulaExpressionValidator.evaluateFormula("向下取整(订单高(cm) / 10, 2)", sampleContext());
-        assertThat(result).isEqualTo(5.08D);
+        BigDecimal result = ProductFormulaExpressionValidator.evaluateFormula("向下取整(订单高(cm) / 10, 2)", sampleContext());
+        assertThat(result).isEqualByComparingTo("5.08");
     }
 
     @Test
@@ -82,6 +83,39 @@ class ProductFormulaExpressionValidatorTest {
 
         assertThat(ProductFormulaExpressionValidator.evaluateCondition("面料 = \"面料\"", context)).isTrue();
         assertThat(ProductFormulaExpressionValidator.evaluateCondition("配置项值 = \"或者\"", context)).isTrue();
+    }
+
+    @Test
+    void decimalCalculationDoesNotUseBinaryFloatingPoint() {
+        BigDecimal sum = ProductFormulaExpressionValidator.evaluateFormula("0.1 + 0.2", sampleContext());
+        BigDecimal rounded = ProductFormulaExpressionValidator.evaluateFormula("round(2.345, 2)", sampleContext());
+        BigDecimal ceiling = ProductFormulaExpressionValidator.evaluateFormula("ceil(-1.231, 2) + 2", sampleContext());
+        BigDecimal floor = ProductFormulaExpressionValidator.evaluateFormula("floor(-1.231, 2) + 2", sampleContext());
+        BigDecimal maximum = ProductFormulaExpressionValidator.evaluateFormula("max(1.2, 1.56)", sampleContext());
+
+        assertThat(sum).isEqualByComparingTo("0.3");
+        assertThat(rounded).isEqualByComparingTo("2.35");
+        assertThat(ceiling).isEqualByComparingTo("0.77");
+        assertThat(floor).isEqualByComparingTo("0.76");
+        assertThat(maximum).isEqualByComparingTo("1.56");
+        assertThat(ProductFormulaExpressionValidator.evaluateCondition("0.1 + 0.2 == 0.3", sampleContext())).isTrue();
+    }
+
+    @Test
+    void materialUnitPriceKeepsFourDecimalsBeforeAmountRounding() {
+        BigDecimal result = ProductPriceExpressionValidator.evaluatePrice("unitPrice * usageQty", Map.of(
+            "unitPrice", new BigDecimal("0.0156"),
+            "usageQty", new BigDecimal("1000")
+        ));
+
+        assertThat(result).isEqualByComparingTo("15.6000");
+    }
+
+    @Test
+    void inchFormatterUsesEighthFractions() {
+        assertThat(ProductInchFormatter.format(new BigDecimal("72.1250"))).isEqualTo("72 1/8");
+        assertThat(ProductInchFormatter.format(new BigDecimal("10.2500"))).isEqualTo("10 1/4");
+        assertThat(ProductInchFormatter.format(new BigDecimal("20.0000"))).isEqualTo("20");
     }
 
     private Map<String, Object> sampleContext() {

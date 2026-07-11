@@ -186,10 +186,7 @@ public class ProductFormulaDraftNormalizer extends ProductServiceSupport {
     }
 
     private String buildSizeSummary(BigDecimal minWidth, BigDecimal maxWidth, BigDecimal minHeight, BigDecimal maxHeight) {
-        return strip(minWidth) + "≤W≤" + strip(maxWidth) + "in, " + strip(minHeight) + "≤H≤" + strip(maxHeight) + "in";
-    }
-
-    private String strip(BigDecimal value) {
-        return value == null ? "-" : value.stripTrailingZeros().toPlainString();
+        return ProductInchFormatter.format(minWidth) + "≤W≤" + ProductInchFormatter.format(maxWidth)
+            + "in, " + ProductInchFormatter.format(minHeight) + "≤H≤" + ProductInchFormatter.format(maxHeight) + "in";
     }
 }

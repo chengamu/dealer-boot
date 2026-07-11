@@ -26,6 +26,11 @@ class CustomerQuoteItemFactory {
         item.setSaleProductId(product.getSaleProductId());
         item.setSaleProductCode(product.getSaleProductCode());
         item.setSaleProductName(product.getSaleProductName());
+        item.setCategoryId(product.getCategoryId());
+        item.setCategoryCode(product.getCategoryCode());
+        item.setCategoryNameCn(product.getCategoryNameCn());
+        item.setProductTypeCode(product.getProductTypeCode());
+        item.setProductTypeNameCn(product.getProductTypeNameCn());
         item.setFormulaId(product.getFormulaId());
         item.setFormulaVersionId(price.getFormulaVersionId());
         item.setFormulaVersionLabel(product.getFormulaVersionLabel());
@@ -40,6 +45,7 @@ class CustomerQuoteItemFactory {
         item.setShippingAmount(money(shipping.unitAmount().multiply(BigDecimal.valueOf(bo.getQuantity()))));
         item.setDiscountAmount(money(null));
         item.setLineAmount(money(item.getProductAmount().add(item.getShippingAmount())));
+        item.setBomSnapshotJson(jsonSupport.write(price.getItems()));
         item.setPricingSnapshotJson(jsonSupport.pricingSnapshot(price, shipping, options.englishComplete()));
         return item;
     }
@@ -91,6 +97,11 @@ class CustomerQuoteItemFactory {
             }
             item.setSaleProductCode(product.getSaleProductCode());
             item.setSaleProductName(product.getSaleProductName());
+            item.setCategoryId(product.getCategoryId());
+            item.setCategoryCode(product.getCategoryCode());
+            item.setCategoryNameCn(product.getCategoryNameCn());
+            item.setProductTypeCode(product.getProductTypeCode());
+            item.setProductTypeNameCn(product.getProductTypeNameCn());
             item.setFormulaId(product.getFormulaId());
             item.setFormulaVersionId(product.getFormulaVersionId());
             item.setFormulaVersionLabel(product.getFormulaVersionLabel());

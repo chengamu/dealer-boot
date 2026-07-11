@@ -20,9 +20,22 @@ export function useQuoteLines(rows: Ref<QuoteWorkbenchItem[]>) {
     return row
   }
 
+  function duplicateLines(source: QuoteWorkbenchItem[]) {
+    return source.map(duplicateLine)
+  }
+
   function removeLine(row: QuoteWorkbenchItem) {
     rows.value = rows.value.filter((item) => item.clientId !== row.clientId)
   }
 
-  return { addLine, duplicateLine, removeLine }
+  function removeLines(selected: QuoteWorkbenchItem[]) {
+    const ids = new Set(selected.map((item) => item.clientId))
+    rows.value = rows.value.filter((item) => !ids.has(item.clientId))
+  }
+
+  function addLines(values: Array<Pick<QuoteWorkbenchItem, 'roomLocation' | 'orderWidthInch' | 'orderHeightInch' | 'quantity'>>) {
+    return values.map((value) => Object.assign(addLine(), value))
+  }
+
+  return { addLine, duplicateLine, duplicateLines, removeLine, removeLines, addLines }
 }

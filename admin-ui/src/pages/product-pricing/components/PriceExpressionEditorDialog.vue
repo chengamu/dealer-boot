@@ -85,6 +85,7 @@ import PriceExpressionConditionBuilder from './PriceExpressionConditionBuilder.v
 import { priceConditionVariables, priceFormulaVariables, priceOperators, validatePriceCondition, validatePriceFormula } from '../utils/pricingExpression'
 import type { PriceExpressionVariable } from '../utils/pricingExpression'
 import type { ProductFormulaOptionVO, ProductFormulaOptionValueVO } from '@/api/product-capability/types'
+import { formatMoney } from '@/utils/businessNumber'
 
 type Target = 'formula' | 'condition'
 
@@ -142,8 +143,7 @@ function variableLabel(item: PriceExpressionVariable) {
 }
 
 function formatNumber(value: unknown) {
-  const number = Number(value)
-  return Number.isFinite(number) ? number.toFixed(2) : '-'
+  return formatMoney(value as number | string | null)
 }
 </script>
 

@@ -59,11 +59,19 @@ const valueTypeOptions = computed(() => [
 
 function unitOption(unit: ProductUnitVO) {
   const code = String(unit.unitCode || '')
-  return { value: code, label: String(unit.unitNameCn || code) }
+  return { value: code, label: String(unit.unitNameCn || code), record: unit as ProductRecord }
 }
 
 const unitOptions = computed(() => unitList.value.map(unitOption))
 const unitTypeOptions = computed(() => productDictOptions.value.product_unit_type || [])
+const roundingModeOptions = computed(() => [
+  { value: 'HALF_UP', label: t('productCenter.unit.roundingModeHALFUP') },
+  { value: 'HALF_EVEN', label: t('productCenter.unit.roundingModeHALFEVEN') },
+  { value: 'CEILING', label: t('productCenter.unit.roundingModeCEILING') },
+  { value: 'FLOOR', label: t('productCenter.unit.roundingModeFLOOR') },
+  { value: 'UP', label: t('productCenter.unit.roundingModeUP') },
+  { value: 'DOWN', label: t('productCenter.unit.roundingModeDOWN') }
+])
 const materialStatusOptions = computed(() => [
   { label: t('productCenter.material.auditStatusDraft'), value: PRODUCT_STATUS_DISABLED },
   { label: t('productCenter.material.auditStatusAudited'), value: PRODUCT_STATUS_ENABLED }
@@ -218,11 +226,11 @@ const configs = computed<ProductGridConfig[]>(() => [
       { prop: 'spec', labelKey: 'productCenter.material.spec', required: true, sortable: true, align: 'left', minWidth: 260, multiline: true, sectionKey: 'spec' },
       { prop: 'specModelText', labelKey: 'productCenter.material.specModelText', form: false, table: false },
       { prop: 'colorName', labelKey: 'productCenter.material.colorName', table: false, sectionKey: 'spec' },
-      { prop: 'weightValue', labelKey: 'productCenter.material.weightValue', type: 'number', table: false, sectionKey: 'spec' },
+      { prop: 'weightValue', labelKey: 'productCenter.material.weightValue', type: 'number', numberMode: 'QUANTITY', precision: 6, table: false, sectionKey: 'spec' },
       { prop: 'unitCode', labelKey: 'productCenter.common.unitCode', type: 'select', options: unitOptions.value, required: true, sortable: true, minWidth: 120, sectionKey: 'unitPrice', sectionLabelKey: 'productCenter.formSection.unitPrice' },
       { prop: 'secondaryUnitCode', labelKey: 'productCenter.material.secondaryUnitCode', type: 'select', options: unitOptions.value, minWidth: 120, sectionKey: 'unitPrice' },
-      { prop: 'unitPrice', labelKey: 'productCenter.material.unitPrice', type: 'number', minWidth: 120, sectionKey: 'unitPrice' },
-      { prop: 'salesPrice', labelKey: 'productCenter.material.salesPrice', type: 'number', minWidth: 120, sectionKey: 'unitPrice' },
+      { prop: 'unitPrice', labelKey: 'productCenter.material.unitPrice', type: 'number', numberMode: 'UNIT_PRICE', precision: 4, minWidth: 120, sectionKey: 'unitPrice' },
+      { prop: 'salesPrice', labelKey: 'productCenter.material.salesPrice', type: 'number', numberMode: 'UNIT_PRICE', precision: 4, minWidth: 120, sectionKey: 'unitPrice' },
       { prop: 'attributeList', labelKey: 'productCenter.material.typeAttributes', type: 'material-attributes', optionLoader: loadBaseAttributeOptions, table: false, formSpan: 2, sectionKey: 'attributes', sectionLabelKey: 'productCenter.formSection.typeAttributes' },
       { prop: 'status', labelKey: 'productCenter.material.auditStatus', type: 'select', options: materialStatusOptions.value, search: true, form: false, minWidth: 120 },
       { prop: 'sortOrder', labelKey: 'productCenter.common.sortOrder', type: 'number', sortable: true, table: false, sectionKey: 'manage', sectionLabelKey: 'productCenter.formSection.manage' },
@@ -267,7 +275,7 @@ const configs = computed<ProductGridConfig[]>(() => [
       { prop: 'attributeCode', labelKey: 'productCenter.materialAttribute.attributeCode', search: true, required: true, sortable: true },
       { prop: 'attributeNameCn', labelKey: 'productCenter.materialAttribute.attributeNameCn', sortable: true },
       { prop: 'valueText', labelKey: 'productCenter.materialAttribute.valueText' },
-      { prop: 'valueNumber', labelKey: 'productCenter.materialAttribute.valueNumber', type: 'number' },
+      { prop: 'valueNumber', labelKey: 'productCenter.materialAttribute.valueNumber', type: 'number', numberMode: 'QUANTITY', precision: 6 },
       { prop: 'valueBool', labelKey: 'productCenter.materialAttribute.valueBool', type: 'boolean' },
       { prop: 'valueUnitCode', labelKey: 'productCenter.materialAttribute.valueUnitCode', type: 'select', options: unitOptions.value },
       { prop: 'sortOrder', labelKey: 'productCenter.common.sortOrder', type: 'number', sortable: true },
@@ -370,6 +378,10 @@ const configs = computed<ProductGridConfig[]>(() => [
       { prop: 'unitNameCn', labelKey: 'productCenter.unit.name', search: true, required: true, sortable: true, align: 'left' },
       { prop: 'unitNameEn', labelKey: 'productCenter.unit.nameEn', align: 'left' },
       { prop: 'unitType', labelKey: 'productCenter.unit.type', type: 'select', options: unitTypeOptions.value, search: true, align: 'left' },
+      { prop: 'precisionScale', labelKey: 'productCenter.unit.precisionScale', type: 'number', min: 0, max: 6, required: true },
+      { prop: 'roundingMode', labelKey: 'productCenter.unit.roundingMode', type: 'select', options: roundingModeOptions.value, required: true },
+      { prop: 'baseUnitCode', labelKey: 'productCenter.unit.baseUnitCode', type: 'select', options: unitOptions.value },
+      { prop: 'conversionRate', labelKey: 'productCenter.unit.conversionRate', type: 'number', numberMode: 'QUANTITY', precision: 6, min: 0 },
       { prop: 'status', labelKey: 'productCenter.common.status', type: 'status', search: true },
       { prop: 'sortOrder', labelKey: 'productCenter.common.sortOrder', type: 'number', sortable: true },
       { prop: 'remark', labelKey: 'productCenter.common.remark', type: 'textarea', table: false, formSpan: 2 }

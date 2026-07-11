@@ -49,6 +49,7 @@ import { getCache, type CacheMonitor } from '@/api/monitor/cache'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 import { runUiAction } from '@/utils/action'
+import { formatQuantity } from '@/utils/businessNumber'
 
 use([TooltipComponent, PieChart, GaugeChart, CanvasRenderer])
 
@@ -77,7 +78,7 @@ const infoItems = computed(() => {
     { label: t('cache.clientCount'), value: displayValue(info.connected_clients) },
     { label: t('cache.uptimeDays'), value: displayValue(info.uptime_in_days) },
     { label: t('cache.usedMemory'), value: displayValue(info.used_memory_human) },
-    { label: t('cache.usedCpu'), value: Number(info.used_cpu_user_children || 0).toFixed(2) },
+    { label: t('cache.usedCpu'), value: formatQuantity(info.used_cpu_user_children as number | string | undefined) },
     { label: t('cache.maxMemory'), value: displayValue(info.maxmemory_human) },
     { label: t('cache.aofEnabled'), value: String(info.aof_enabled) === '0' ? t('common.no') : t('common.yes') },
     { label: t('cache.rdbStatus'), value: displayValue(info.rdb_last_bgsave_status) },

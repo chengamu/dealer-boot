@@ -66,6 +66,7 @@ import { useLocaleStore } from '@/stores/locale'
 import type { MaterialPriceRule, PriceMaterialVO } from '@/api/product-pricing/types'
 import { displayMaterialPriceFormula, displayPriceExpression } from '../utils/pricingDisplay'
 import type { ProductFormulaOptionVO, ProductFormulaOptionValueVO } from '@/api/product-capability/types'
+import { formatUnitPrice } from '@/utils/businessNumber'
 
 defineEmits<{
   generate: [overwrite: boolean]
@@ -103,16 +104,12 @@ function summaryRows(row: PriceMaterialVO) {
   return rowRules.map((rule, index) => ({
     key: String(rule.materialRuleId || `${rule.conditionKey || 'rule'}-${index}`),
     label: rule.defaultRuleFlag ? t('productCenter.pricing.defaultRule') : displayPriceExpression(rule.conditionText || rule.conditionExpression, t, props.options, props.optionValues),
-    unitPriceText: `${t('productCenter.pricing.unitPrice')} ${formatMoney(rule.unitPrice)}`,
+    unitPriceText: `${t('productCenter.pricing.unitPrice')} ${formatUnitPrice(rule.unitPrice)}`,
     formulaText: displayPriceExpression(displayMaterialPriceFormula(rule.priceFormula, rule.unitPrice), t, props.options, props.optionValues),
     defaultRule: Boolean(rule.defaultRuleFlag)
   }))
 }
 
-function formatMoney(value?: number) {
-  const numeric = Number(value)
-  return Number.isFinite(numeric) ? numeric.toFixed(2) : '-'
-}
 </script>
 
 <style scoped>

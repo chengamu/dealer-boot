@@ -67,6 +67,7 @@ import { useFormulaSimulationSelection } from './composables/useFormulaSimulatio
 import { useFormulaSimulationRestrictions } from './composables/useFormulaSimulationRestrictions'
 import type { ProductFormulaOptionVO, ProductFormulaOptionValueVO, ProductFormulaSetupVO, ProductFormulaSimulationBO, ProductFormulaSimulationVO, ProductFormulaVO, ProductUnitVO } from '@/api/product-capability/types'
 import { FORMULA_VALIDATION_STATUS, PRODUCT_STATUS_ENABLED, formulaValidationStatusText } from '@/constants/productStatus'
+import { formatMoney, formatQuantity } from '@/utils/businessNumber'
 
 const router = useRouter()
 const localeStore = useLocaleStore()
@@ -130,11 +131,11 @@ function messageText(message?: string) {
 }
 
 function quantityText(value?: number) {
-  return value == null ? '-' : Number(value).toFixed(2)
+  return formatQuantity(value)
 }
 
 function moneyText(value?: number) {
-  return value == null ? '-' : Number(value).toFixed(2)
+  return formatMoney(value)
 }
 
 function unitLabel(unitCode?: string) {

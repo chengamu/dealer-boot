@@ -1,5 +1,6 @@
 import { PRODUCT_STATUS_DISABLED, PRODUCT_STATUS_ENABLED } from '@/constants/productStatus'
 import type { ProductFormulaOptionVO, ProductFormulaOptionValueVO } from '@/api/product-capability/types'
+import { formatUnitPrice } from '@/utils/businessNumber'
 
 export const PRICE_STATUS = {
   NOT_READY: 'NOT_READY',
@@ -45,8 +46,7 @@ export function enabledStatusTagType(status?: string) {
 }
 
 export function money(value?: number | string) {
-  const numeric = Number(value)
-  return Number.isFinite(numeric) ? numeric.toFixed(2) : '0.00'
+  return formatUnitPrice(value, '0.00')
 }
 
 export const DEFAULT_MATERIAL_PRICE_FORMULA = 'unitPrice * usageQty'

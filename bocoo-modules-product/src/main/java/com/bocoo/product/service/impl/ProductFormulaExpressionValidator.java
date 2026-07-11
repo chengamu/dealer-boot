@@ -2,6 +2,7 @@ package com.bocoo.product.service.impl;
 
 import com.bocoo.common.core.utils.StringUtils;
 
+import java.math.BigDecimal;
 import java.util.Map;
 import java.util.Set;
 
@@ -13,11 +14,11 @@ final class ProductFormulaExpressionValidator {
     private static final Set<String> FORMULA_VARIABLES = Set.of("orderWidthIn", "orderHeightIn", "orderWidthCm", "orderHeightCm", "orderAreaM2");
     private static final Set<String> CONDITION_VARIABLES = Set.of("orderWidthIn", "orderHeightIn", "orderWidthCm", "orderHeightCm", "orderAreaM2", "store", "fabric", "productType", "optionValue");
     private static final Map<String, Object> SAMPLE = Map.of(
-        "orderWidthIn", 12D,
-        "orderHeightIn", 20D,
-        "orderWidthCm", 30.48D,
-        "orderHeightCm", 50.8D,
-        "orderAreaM2", 0.1548D,
+        "orderWidthIn", new BigDecimal("12"),
+        "orderHeightIn", new BigDecimal("20"),
+        "orderWidthCm", new BigDecimal("30.48"),
+        "orderHeightCm", new BigDecimal("50.8"),
+        "orderAreaM2", new BigDecimal("0.1548"),
         "store", "SHOP_A",
         "fabric", "XLF241801",
         "productType", "CUSTOM_CURTAIN",
@@ -36,7 +37,7 @@ final class ProductFormulaExpressionValidator {
             ProductFormulaExpressionParser parser = new ProductFormulaExpressionParser(normalized, FORMULA_VARIABLES, false, SAMPLE, true);
             Object result = parser.parseExpression();
             parser.expectEnd();
-            return result instanceof Number number && Double.isFinite(number.doubleValue()) && number.doubleValue() >= 0D;
+            return result instanceof BigDecimal decimal && decimal.signum() >= 0;
         } catch (RuntimeException ex) {
             return false;
         }
@@ -60,7 +61,7 @@ final class ProductFormulaExpressionValidator {
         }
     }
 
-    static Double evaluateFormula(String expression, Map<String, Object> context) {
+    static BigDecimal evaluateFormula(String expression, Map<String, Object> context) {
         String normalized = ProductFormulaExpressionNormalizer.normalizeFormulaExpression(expression);
         if (StringUtils.isBlank(normalized)) {
             return null;
@@ -68,10 +69,10 @@ final class ProductFormulaExpressionValidator {
         ProductFormulaExpressionParser parser = new ProductFormulaExpressionParser(normalized, FORMULA_VARIABLES, false, context, false);
         Object result = parser.parseExpression();
         parser.expectEnd();
-        if (!(result instanceof Number number) || !Double.isFinite(number.doubleValue()) || number.doubleValue() < 0D) {
+        if (!(result instanceof BigDecimal decimal) || decimal.signum() < 0) {
             throw new IllegalArgumentException("invalid formula result");
         }
-        return number.doubleValue();
+        return decimal;
     }
 
     static boolean evaluateCondition(String expression, Map<String, Object> context) {

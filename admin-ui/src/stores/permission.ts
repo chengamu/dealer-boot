@@ -70,12 +70,6 @@ const migratedViewModules: Record<string, () => Promise<unknown>> = {
   'product-pricing/shipping-templates': () => import('@/pages/product-pricing/ShippingTemplatePage.vue'),
   'product-pricing/price-settings': () => import('@/pages/product-pricing/PriceSettingPage.vue'),
   'dealer-sales/list': () => import('@/pages/dealer-sales/SalesDocumentListPage.vue'),
-  'dealer/dashboard': () => import('@/pages/dealer-portal/DealerPortalPage.vue'),
-  'dealer/quotes/create': () => import('@/pages/dealer-portal/DealerPortalPage.vue'),
-  'dealer/checkout': () => import('@/pages/dealer-portal/DealerPortalPage.vue'),
-  'dealer/dealers': () => import('@/pages/dealer-portal/DealerPortalPage.vue'),
-  'dealer/orders/detail': () => import('@/pages/dealer-portal/DealerPortalPage.vue'),
-  'dealer/pricing': () => import('@/pages/dealer-portal/DealerPortalPage.vue'),
   'tool/gen/index': () => import('@/pages/tool/gen/GenPage.vue'),
   'tool/gen/editTable': () => import('@/pages/tool/gen/GenEditPage.vue'),
   'tool/build/index': () => import('@/pages/tool/FormBuildPage.vue')

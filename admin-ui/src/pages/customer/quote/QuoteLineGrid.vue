@@ -3,7 +3,9 @@
     <header class="quote-line-grid__toolbar">
       <div v-if="!readonly">
         <el-button type="primary" plain icon="Plus" @click="emit('add')">{{ t('customer.quote.addLine') }}</el-button>
-        <el-button icon="CopyDocument" :disabled="!currentRow" @click="currentRow && emit('duplicate', currentRow)">{{ t('customer.quote.action.copyLine') }}</el-button>
+        <el-button icon="CopyDocument" :disabled="!selectedRows.length" @click="emit('duplicate-many', selectedRows)">{{ t('customer.quote.action.copySelected') }}</el-button>
+        <el-button icon="DocumentCopy" @click="pasteRef?.open()">{{ t('customer.quote.action.batchPaste') }}</el-button>
+        <el-button type="danger" plain icon="Delete" :disabled="!selectedRows.length" @click="emit('remove-many', selectedRows)">{{ t('customer.quote.action.deleteSelected') }}</el-button>
       </div>
       <span>{{ rows.length }} {{ t('customer.quote.quantity') }}</span>
     </header>
@@ -18,9 +20,11 @@
       :cell-config="{ height: 44 }"
       :expand-config="{ accordion: true }"
       :max-height="560"
-      @current-change="currentRow = $event.row"
+      @checkbox-change="syncSelection"
+      @checkbox-all="syncSelection"
       @toggle-row-expand="handleExpand"
     >
+      <vxe-column v-if="!readonly" type="checkbox" width="44" fixed="left" />
       <vxe-column type="expand" width="44" fixed="left">
         <template #content="{ row }">
           <QuoteLineEditor
@@ -76,6 +80,7 @@
         </template>
       </vxe-column>
     </vxe-table>
+    <QuoteBatchPasteDialog ref="pasteRef" @confirm="emit('paste', $event)" />
   </section>
 </template>
 
@@ -86,7 +91,8 @@ import type { QuoteCalculationStatus, QuoteLanguage } from '@/api/customer/quote
 import type { SaleProductVO } from '@/api/product-pricing/types'
 import type { VxeTableInstance } from 'vxe-table'
 import QuoteLineEditor from './QuoteLineEditor.vue'
-import type { QuoteSetupMap, QuoteWorkbenchItem } from './quoteWorkbenchTypes'
+import QuoteBatchPasteDialog from './QuoteBatchPasteDialog.vue'
+import type { QuotePastedRow, QuoteSetupMap, QuoteWorkbenchItem } from './quoteWorkbenchTypes'
 
 const props = defineProps<{
   rows: QuoteWorkbenchItem[]
@@ -100,15 +106,18 @@ const props = defineProps<{
 }>()
 const emit = defineEmits<{
   add: []; duplicate: [row: QuoteWorkbenchItem]; remove: [row: QuoteWorkbenchItem]
+  'duplicate-many': [rows: QuoteWorkbenchItem[]]; 'remove-many': [rows: QuoteWorkbenchItem[]]; paste: [rows: QuotePastedRow[]]
   loadProduct: [row: QuoteWorkbenchItem]; calculate: [row: QuoteWorkbenchItem]; dirty: [row: QuoteWorkbenchItem]
 }>()
 const { t } = useI18n()
 const tableRef = ref<VxeTableInstance<QuoteWorkbenchItem>>()
-const currentRow = ref<QuoteWorkbenchItem>()
+const pasteRef = ref<InstanceType<typeof QuoteBatchPasteDialog>>()
+const selectedRows = ref<QuoteWorkbenchItem[]>([])
 
 function changeProduct(row: QuoteWorkbenchItem) { row.selectedOptionValues = {}; markDirty(row); emit('loadProduct', row) }
 function markDirty(row: QuoteWorkbenchItem) { row.calculationStatus = 'PENDING'; row.calculationMessage = ''; emit('dirty', row) }
 function handleExpand({ row, expanded }: { row: QuoteWorkbenchItem; expanded: boolean }) { if (expanded) emit('loadProduct', row) }
+function syncSelection() { selectedRows.value = tableRef.value?.getCheckboxRecords() || [] }
 function summary(row: QuoteWorkbenchItem) { return props.language === 'EN_US' ? row.selectedOptionsSummaryEn : row.selectedOptionsSummaryCn }
 function money(value?: number) { return value == null ? '-' : new Intl.NumberFormat('en-US', { style: 'currency', currency: props.currencyCode || 'USD' }).format(value) }
 function calculationText(status?: QuoteCalculationStatus) {

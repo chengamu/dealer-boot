@@ -1,6 +1,7 @@
 import type { ProductFormulaMaterialVO, ProductFormulaUsageRuleVO } from '@/api/product-capability/types'
 import { PRODUCT_STATUS_DISABLED } from '@/constants/productStatus'
 import { formatUsageNumber } from './formulaExpression'
+import { formatMoney, formatQuantity, formatRate } from '@/utils/businessNumber'
 
 export interface FormulaReviewPriceSnapshotRow {
   materialCode?: string
@@ -20,17 +21,17 @@ export function formulaReviewGroupRank(code?: string) {
 }
 
 export function formatFormulaReviewMoney(value?: number) {
-  return value == null ? '-' : Number(value).toFixed(2)
+  return formatMoney(value)
 }
 
 export function formatFormulaReviewNumber(value?: number) {
-  return value == null ? '-' : Number(value).toFixed(2)
+  return formatQuantity(value)
 }
 
 export function formatFormulaReviewPercent(value?: number) {
   if (value == null) return '-'
   const numberValue = Math.abs(value) <= 1 ? value * 100 : value
-  return `${numberValue.toFixed(2)}%`
+  return `${formatRate(numberValue)}%`
 }
 
 export function formulaReviewUsageSummaryLines(row: ProductFormulaMaterialVO, usageRules: ProductFormulaUsageRuleVO[], t: (key: string) => string) {
@@ -103,7 +104,7 @@ function appendUsageFormulaPart(parts: string[], label: string, value?: string) 
 function summaryFormulaValue(value: unknown) {
   const text = textOf(value).trim()
   const numeric = Number(text)
-  return text && Number.isFinite(numeric) && /^-?\d+(\.\d+)?$/.test(text) ? numeric.toFixed(2) : text
+  return text && Number.isFinite(numeric) && /^-?\d+(\.\d+)?$/.test(text) ? formatQuantity(text) : text
 }
 
 function isDefaultQuantityFormula(value: string) {
