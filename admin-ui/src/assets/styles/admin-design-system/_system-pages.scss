@@ -1,0 +1,277 @@
+#app .app-wrapper {
+  .user-profile-page {
+    > .el-row {
+      align-items: stretch;
+    }
+
+    .el-card {
+      height: 100%;
+    }
+
+    .el-card__body {
+      padding: 20px;
+    }
+
+    .text-center {
+      margin: 4px 0 18px;
+    }
+
+    .el-tabs__content {
+      padding-top: 4px;
+    }
+  }
+
+  .user-auth-role-page {
+    .app-container > & {
+      min-height: 0;
+    }
+
+    > .el-form:not(.auth-page-actions) {
+      margin-bottom: 18px;
+      padding: 18px 20px 2px;
+      border: 1px solid var(--admin-border-soft);
+      border-radius: var(--admin-radius);
+      background: var(--admin-surface);
+      box-shadow: var(--admin-shadow);
+    }
+
+    .auth-page-actions {
+      margin-top: 18px;
+      padding: 16px 20px;
+      border: 1px solid var(--admin-border-soft);
+      border-radius: var(--admin-radius);
+      background: var(--admin-surface);
+      box-shadow: var(--admin-shadow);
+
+      > div {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+      }
+    }
+  }
+
+  .cache-monitor-page,
+  .cache-list-page {
+    .card-box {
+      margin-bottom: 16px;
+    }
+
+    .cache-card,
+    .el-card {
+      height: 100%;
+    }
+  }
+
+  .cache-list-page .el-card__body {
+    padding: 16px;
+  }
+
+  .cache-monitor-page {
+    .el-card__body {
+      padding: 18px;
+    }
+
+    .el-descriptions {
+      box-shadow: none;
+    }
+  }
+
+  .chart-panel {
+    min-height: 360px;
+    border: 1px solid var(--admin-border-soft);
+    border-radius: var(--admin-radius);
+    background:
+      linear-gradient(180deg, rgba(247, 250, 255, 0.9) 0%, rgba(255, 255, 255, 0.96) 100%),
+      #ffffff;
+  }
+
+  .external-frame {
+    border: 1px solid var(--admin-border-soft);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--admin-surface);
+    box-shadow: var(--admin-shadow);
+  }
+
+  .external-frame__iframe {
+    display: block;
+    background: var(--admin-surface);
+  }
+
+  .pagination-container {
+    display: flex;
+    justify-content: flex-end;
+    height: auto;
+    min-height: 34px;
+    margin-top: 6px;
+    margin-bottom: 0;
+    padding: 6px 0 0 !important;
+    background: transparent;
+
+    .el-pagination {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      position: static;
+      right: auto;
+      color: var(--admin-muted);
+
+      .el-pagination__total,
+      .el-pagination__jump {
+        color: var(--admin-muted);
+        font-size: var(--admin-font-size-table);
+        font-weight: 400;
+      }
+
+      .el-pagination__total {
+        margin-right: auto;
+      }
+
+      .el-select {
+        width: 104px;
+      }
+
+      .el-input__wrapper,
+      .el-select__wrapper {
+        min-height: 32px;
+        border-radius: var(--admin-control-radius);
+      }
+
+      .btn-prev,
+      .btn-next,
+      .el-pager li {
+        min-width: 30px;
+        height: 30px;
+        border-radius: var(--admin-control-radius);
+      }
+
+      &.is-background .btn-prev,
+      &.is-background .btn-next,
+      &.is-background .el-pager li {
+        background: var(--admin-surface);
+        border: 1px solid var(--admin-border-soft);
+      }
+
+      &.is-background .el-pager li.is-active {
+        border-color: var(--admin-primary);
+        background: var(--admin-primary);
+      }
+
+      &.is-background .btn-prev:disabled,
+      &.is-background .btn-next:disabled,
+      &.is-background .el-pager li.is-disabled {
+        border-color: transparent;
+        background: #f3f6fb;
+        color: #b8c2d3;
+      }
+    }
+  }
+
+  .app-container .el-table + .pagination-container {
+    margin-top: 0;
+    min-height: 34px;
+    padding: 2px 8px !important;
+    border: 1px solid var(--admin-border-soft);
+    border-top: 0;
+    border-radius: 0 0 var(--admin-radius) var(--admin-radius);
+    background: var(--admin-surface) !important;
+    box-shadow: var(--admin-shadow);
+
+    .el-pagination {
+      background: transparent;
+    }
+  }
+
+  .tree-border {
+    max-height: 260px;
+    overflow: auto;
+    padding: 8px;
+    border-color: var(--admin-border-soft);
+    border-radius: var(--admin-radius);
+    background: #f9fbff;
+  }
+
+  .el-dialog__body .el-form-item__content > .el-checkbox {
+    margin-right: 12px;
+  }
+
+  .el-dialog__body .el-checkbox + .el-checkbox {
+    margin-left: 14px;
+  }
+
+  .tree-border .el-tree-node__content,
+  .el-tree-select .el-tree-node__content {
+    min-height: 32px;
+    border-radius: 6px;
+    color: var(--admin-text);
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  .tree-border .el-tree-node__content:hover,
+  .tree-border .el-tree-node:focus > .el-tree-node__content,
+  .tree-border .el-tree-node.is-current > .el-tree-node__content,
+  .el-tree-select .el-tree-node__content:hover,
+  .el-tree-select .el-tree-node.is-current > .el-tree-node__content {
+    background: var(--admin-primary-soft);
+    color: var(--admin-primary);
+  }
+
+  .tree-border .el-tree-node__label,
+  .el-tree-select .el-tree-node__label {
+    font-size: var(--admin-font-size-table);
+  }
+
+  .tree-border .el-checkbox {
+    height: 28px;
+  }
+
+  .gen-edit-page {
+    .el-card__body {
+      padding: 18px;
+    }
+
+    .el-tabs__content {
+      padding-top: 4px;
+    }
+
+    .el-form {
+      padding: 16px 16px 0;
+      border: 1px solid var(--admin-border-soft);
+      border-radius: 8px;
+      background: #ffffff;
+    }
+
+    .el-table {
+      border-radius: 8px;
+    }
+
+    .el-table .el-input__wrapper,
+    .el-table .el-select__wrapper {
+      min-height: 30px;
+    }
+
+    .el-table .el-input__inner {
+      height: 28px;
+      line-height: 28px;
+    }
+  }
+
+  .gen-edit-page__actions {
+    margin-top: 14px;
+    padding: 14px 16px !important;
+    border: 1px solid var(--admin-border-soft);
+    border-radius: 8px;
+    background: #fbfdff !important;
+
+    > div {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .el-button + .el-button {
+      margin-left: 0;
+    }
+  }
+}

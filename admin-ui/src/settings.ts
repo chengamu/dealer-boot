@@ -1,5 +1,7 @@
 import { getAppTitle } from '@/utils/config'
 
+export type HeaderLayout = 'compact' | 'stacked'
+
 export interface AppSettings {
   title: string
   theme: string
@@ -7,6 +9,7 @@ export interface AppSettings {
   showSettings: boolean
   topNav: boolean
   tagsView: boolean
+  headerLayout: HeaderLayout
   fixedHeader: boolean
   sidebarLogo: boolean
   dynamicTitle: boolean
@@ -43,6 +46,11 @@ const settings: AppSettings = {
    * Whether to show tags view
    */
   tagsView: true,
+
+  /**
+   * Header layout: compact or stacked
+   */
+  headerLayout: 'compact',
 
   /**
    * Whether to fix the header

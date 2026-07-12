@@ -1,0 +1,153 @@
+body:not(.login-route-active) {
+  .editor {
+    .ql-toolbar.ql-snow {
+      border-color: var(--admin-border);
+      border-radius: 8px 8px 0 0;
+      background: #f7faff;
+    }
+
+    .ql-container.ql-snow {
+      border-color: var(--admin-border);
+      border-radius: 0 0 8px 8px;
+      background: #ffffff;
+      color: var(--admin-text);
+      font-size: 14px;
+    }
+
+    .ql-editor {
+      min-height: 192px;
+    }
+
+    .ql-snow .ql-picker,
+    .ql-snow .ql-stroke {
+      color: var(--admin-muted);
+      stroke: var(--admin-muted);
+    }
+
+    .ql-snow .ql-fill {
+      fill: var(--admin-muted);
+    }
+
+    .ql-snow button:hover .ql-stroke,
+    .ql-snow button.ql-active .ql-stroke,
+    .ql-snow .ql-picker-label:hover .ql-stroke,
+    .ql-snow .ql-picker-label.ql-active .ql-stroke {
+      stroke: var(--admin-primary);
+    }
+  }
+
+  .column-visibility-dialog {
+    width: min(560px, calc(100vw - 32px)) !important;
+
+    .el-dialog__body {
+      padding: 20px;
+      background: #ffffff;
+    }
+
+    .el-transfer {
+      display: flex;
+      align-items: stretch;
+      justify-content: center;
+      gap: 16px;
+    }
+
+    .el-transfer-panel {
+      width: 210px;
+      border-color: #edf2f7;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+    }
+
+    .el-transfer-panel__header {
+      height: 42px;
+      background: #f7faff;
+      border-bottom-color: #edf2f7;
+
+      .el-checkbox {
+        display: flex;
+        align-items: center;
+        height: 42px;
+        padding-left: 14px;
+      }
+
+      .el-checkbox__label {
+        color: #1a1a1a;
+        font-size: var(--admin-font-size-table);
+        font-weight: 600;
+      }
+
+      .el-transfer-panel__item-count {
+        color: #8a94a6;
+        font-size: var(--admin-font-size-small);
+      }
+    }
+
+    .el-transfer-panel__body {
+      height: 260px;
+    }
+
+    .el-transfer-panel__list {
+      padding: 8px 0;
+    }
+
+    .el-transfer-panel__item {
+      display: flex;
+      align-items: center;
+      height: 34px;
+      padding-left: 14px;
+
+      &:hover {
+        background: #f7faff;
+      }
+
+      .el-checkbox__label {
+        color: #333333;
+        font-size: var(--admin-font-size-table);
+      }
+    }
+
+    .el-transfer__buttons {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 10px;
+      padding: 0;
+    }
+
+    .el-transfer__button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      min-height: 32px;
+      margin: 0 !important;
+      padding: 0;
+      border-radius: 8px;
+      background: var(--admin-primary-soft);
+      border-color: #b8d2ff;
+      color: var(--admin-primary);
+
+      &:hover,
+      &:focus {
+        background: var(--admin-primary);
+        border-color: var(--admin-primary);
+        color: #ffffff;
+      }
+
+      &.is-disabled,
+      &.is-disabled:hover,
+      &.is-disabled:focus {
+        background: #f7faff;
+        border-color: #dbe7f6;
+        color: #9aa8bc;
+      }
+    }
+
+    .el-transfer-panel__empty {
+      color: #8a94a6;
+      font-size: var(--admin-font-size-small);
+    }
+  }
+}

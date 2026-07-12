@@ -2,10 +2,12 @@
   <div :class="classObj" class="app-wrapper" :style="{ '--current-color': theme }">
     <div v-if="showDrawerOverlay" class="drawer-bg" @click="handleClickOutside"/>
     <sidebar v-if="!sidebar.hide" class="sidebar-container" />
-    <div :class="{ hasTagsView: needTagsView, sidebarHide: sidebar.hide }" class="main-container">
+    <div :class="{ hasTagsView: stackedTagsView, compactHeader, sidebarHide: sidebar.hide }" class="main-container">
       <div :class="{ 'fixed-header': fixedHeader }">
-        <navbar @setLayout="setLayout" />
-        <tags-view v-if="needTagsView" />
+        <navbar :compact="compactHeader" @setLayout="setLayout">
+          <tags-view v-if="compactHeader" compact />
+        </navbar>
+        <tags-view v-if="stackedTagsView" />
       </div>
       <app-main />
       <settings ref="settingRef" />
@@ -29,11 +31,13 @@ const sidebar = computed(() => useAppStore().sidebar);
 const device = computed(() => useAppStore().device);
 const needTagsView = computed(() => settingsStore.tagsView);
 const fixedHeader = computed(() => settingsStore.fixedHeader);
+const compactHeader = computed(() => needTagsView.value && !settingsStore.topNav && settingsStore.headerLayout === 'compact')
+const stackedTagsView = computed(() => needTagsView.value && !compactHeader.value)
 
 const classObj = computed(() => ({
   hideSidebar: !sidebar.value.opened,
   openSidebar: sidebar.value.opened,
-  withTagsView: needTagsView.value,
+  withTagsView: stackedTagsView.value,
   withoutAnimation: sidebar.value.withoutAnimation,
   mobile: device.value === 'mobile'
 }))

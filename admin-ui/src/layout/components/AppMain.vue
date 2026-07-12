@@ -31,6 +31,16 @@ const tagsViewStore = useTagsViewStore()
   padding-top: 46px;
 }
 
+:global(.compactHeader) {
+  .app-main {
+    min-height: calc(100vh - 48px);
+  }
+
+  .fixed-header + .app-main {
+    padding-top: 48px;
+  }
+}
+
 .hasTagsView {
   .app-main {
     /* 76 = navbar + tags-view = 46 + 30 */

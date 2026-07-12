@@ -1,8 +1,9 @@
 import { defineStore } from 'pinia'
 import defaultSettings from '@/settings'
+import type { HeaderLayout } from '@/settings'
 
 type SettingValue = string | boolean
-type SettingKey = 'theme' | 'sideTheme' | 'showSettings' | 'topNav' | 'tagsView' | 'fixedHeader' | 'sidebarLogo' | 'dynamicTitle'
+type SettingKey = 'theme' | 'sideTheme' | 'showSettings' | 'topNav' | 'tagsView' | 'headerLayout' | 'fixedHeader' | 'sidebarLogo' | 'dynamicTitle'
 
 interface DefaultSettings {
   title: string
@@ -11,6 +12,7 @@ interface DefaultSettings {
   showSettings: boolean
   topNav: boolean
   tagsView: boolean
+  headerLayout: HeaderLayout
   fixedHeader: boolean
   sidebarLogo: boolean
   dynamicTitle: boolean
@@ -21,6 +23,7 @@ interface StorageSettings {
   sideTheme?: string
   topNav?: boolean
   tagsView?: boolean
+  headerLayout?: HeaderLayout
   fixedHeader?: boolean
   sidebarLogo?: boolean
   dynamicTitle?: boolean
@@ -48,6 +51,7 @@ export const useSettingsStore = defineStore('settings', {
     showSettings: defaults.showSettings,
     topNav: storageSetting.topNav === undefined ? defaults.topNav : storageSetting.topNav,
     tagsView: defaults.tagsView,
+    headerLayout: storageSetting.headerLayout || defaults.headerLayout,
     fixedHeader: storageSetting.fixedHeader === undefined ? defaults.fixedHeader : storageSetting.fixedHeader,
     sidebarLogo: storageSetting.sidebarLogo === undefined ? defaults.sidebarLogo : storageSetting.sidebarLogo,
     dynamicTitle: storageSetting.dynamicTitle === undefined ? defaults.dynamicTitle : storageSetting.dynamicTitle

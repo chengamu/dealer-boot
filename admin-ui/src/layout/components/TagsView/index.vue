@@ -1,5 +1,5 @@
 <template>
-  <div id="tags-view-container" class="tags-view-container">
+  <div id="tags-view-container" class="tags-view-container" :class="{ 'is-compact': compact }">
     <scroll-pane ref="scrollPaneRef" class="tags-view-wrapper" @scroll="handleScroll">
       <router-link
         v-for="tag in visitedViews"
@@ -72,6 +72,8 @@ type TagsViewProxy = {
     closeAllPage: () => Promise<{ visitedViews: TagView[] }>
   }
 }
+
+defineProps<{ compact?: boolean }>()
 
 const visible = ref(false);
 const top = ref(0);
@@ -276,126 +278,4 @@ function handleScroll() {
 }
 </script>
 
-<style lang='scss' scoped>
-.tags-view-container {
-  height: 38px;
-  width: 100%;
-  padding: 0 18px;
-  background: #fff;
-  border-bottom: 1px solid #e9edf5;
-  .tags-view-wrapper {
-    .tags-view-item {
-      display: inline-flex;
-      flex: 0 0 auto;
-      align-items: center;
-      position: relative;
-      cursor: pointer;
-      max-width: 168px;
-      height: 100%;
-      line-height: 1;
-      border: 0;
-      border-radius: 0;
-      color: #475467;
-      background: transparent;
-      padding: 0 10px;
-      font-size: 14px;
-      font-weight: 500;
-      gap: 0;
-      margin: 0 6px;
-      white-space: nowrap;
-      transition: color 0.18s ease;
-      &:hover {
-        color: #1677ff;
-        background: transparent;
-      }
-      &.active {
-        color: #1677ff;
-        font-weight: 600;
-        background: transparent;
-        .tags-view-title::after {
-          content: "";
-          position: absolute;
-          right: 0;
-          bottom: 0;
-          left: 0;
-          height: 2px;
-          border-radius: 2px 2px 0 0;
-          background: #1677ff;
-        }
-      }
-      .tags-view-title {
-        display: inline-flex;
-        align-items: center;
-        position: relative;
-        height: 100%;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      .tags-view-close {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        position: absolute;
-        top: 50%;
-        right: -7px;
-        width: 14px;
-        height: 14px;
-        transform: translateY(-50%);
-        border-radius: 4px;
-        background: #fff;
-        opacity: 0;
-        transition: opacity 0.18s ease, color 0.18s ease, background-color 0.18s ease;
-      }
-      &:hover .tags-view-close {
-        opacity: 0.68;
-      }
-      .tags-view-close:hover {
-        opacity: 1;
-        background: #fff1f2;
-      }
-    }
-  }
-  .contextmenu {
-    margin: 0;
-    background: #fff;
-    z-index: 3000;
-    position: absolute;
-    list-style-type: none;
-    padding: 5px 0;
-    border-radius: 4px;
-    font-size: 12px;
-    font-weight: 400;
-    color: #333;
-    box-shadow: 2px 2px 3px 0 rgba(0, 0, 0, 0.3);
-    li {
-      margin: 0;
-      padding: 7px 16px;
-      cursor: pointer;
-      &:hover {
-        background: #eee;
-      }
-    }
-  }
-}
-</style>
-
-<style lang="scss">
-//reset element css of el-icon-close
-.tags-view-wrapper {
-  .tags-view-item {
-    .el-icon-close {
-      width: 14px;
-      height: 14px;
-      color: #c4ccd8;
-      vertical-align: middle;
-      border-radius: 50%;
-      text-align: center;
-      transition: color 0.18s ease;
-      &:hover {
-        color: #f56c6c;
-        background: transparent;
-      }
-    }
-  }
-}
-</style>
+<style lang="scss" scoped src="./TagsView.scss"></style>

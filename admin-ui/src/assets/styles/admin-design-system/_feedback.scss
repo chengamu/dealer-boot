@@ -1,0 +1,84 @@
+.el-message,
+.el-notification {
+  --admin-toast-color: #1677ff;
+  min-width: 320px;
+  max-width: 460px;
+  border: 1px solid #eef2f7;
+  border-left: 6px solid var(--admin-toast-color);
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 18px 44px rgba(15, 23, 42, 0.14);
+}
+
+.el-message {
+  left: auto !important;
+  right: 24px;
+  transform: none !important;
+  gap: 12px;
+  padding: 14px 18px;
+}
+
+.el-notification {
+  padding: 18px 18px 18px 20px;
+}
+
+.el-message--success,
+.el-notification--success {
+  --admin-toast-color: #22c55e;
+}
+
+.el-message--warning,
+.el-notification--warning {
+  --admin-toast-color: #f5b400;
+}
+
+.el-message--error,
+.el-notification--error {
+  --admin-toast-color: #ff4d4f;
+}
+
+.el-message--info,
+.el-notification--info {
+  --admin-toast-color: #1677ff;
+}
+
+.el-message .el-message__icon,
+.el-message .el-message__content,
+.el-message .el-message__closeBtn,
+.el-notification .el-notification__icon,
+.el-notification .el-notification__title,
+.el-notification .el-notification__content,
+.el-notification .el-notification__closeBtn {
+  color: inherit;
+}
+
+.el-message .el-message__icon,
+.el-notification .el-notification__icon {
+  color: var(--admin-toast-color);
+}
+
+.el-message .el-message__content,
+.el-notification .el-notification__title {
+  color: #111827;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.el-notification .el-notification__content {
+  color: #4b5565;
+  font-size: 14px;
+}
+
+.el-message .el-message__closeBtn,
+.el-notification .el-notification__closeBtn {
+  color: #98a2b3;
+}
+
+@media (max-width: 768px) {
+  .el-message {
+    right: 12px;
+    min-width: 0;
+    max-width: calc(100vw - 24px);
+  }
+}

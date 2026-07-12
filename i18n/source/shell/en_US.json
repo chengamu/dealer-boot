@@ -1,5 +1,5 @@
 {
-  "app.title": "Base Admin Platform",
+  "app.title": "skyspf",
   "language.enUS": "English",
   "language.zhCN": "Chinese",
   "pageAgent.disabled": "Page Agent is not enabled in frontend config.",
@@ -16,6 +16,9 @@
   "shell.exitFullscreen": "Exit fullscreen",
   "shell.expandMenu": "Expand menu",
   "shell.fixedHeader": "Fixed Header",
+  "shell.headerLayout": "Header layout",
+  "shell.headerLayoutCompact": "Compact",
+  "shell.headerLayoutStacked": "Classic",
   "shell.language": "Language",
   "shell.layoutSettings": "Layout Settings",
   "shell.layoutSize": "Layout size",

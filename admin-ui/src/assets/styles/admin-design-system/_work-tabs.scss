@@ -1,0 +1,111 @@
+#app .app-wrapper {
+  .tags-view-container {
+    height: var(--admin-tags-height);
+    display: flex;
+    align-items: center;
+    padding: 0 18px;
+    background: #ffffff !important;
+    border-bottom: 1px solid var(--admin-border) !important;
+
+    .tags-view-wrapper .tags-view-item {
+      display: inline-flex;
+      flex: 0 0 auto;
+      align-items: center;
+      position: relative;
+      max-width: 168px;
+      height: 100%;
+      line-height: 1;
+      margin: 0 6px;
+      padding: 0 10px;
+      border: 0 !important;
+      border-radius: 0;
+      color: #475467;
+      background: transparent !important;
+      font-size: 14px;
+      font-weight: 500;
+      gap: 0;
+      white-space: nowrap;
+      transition: color 0.18s ease;
+
+      &:hover {
+        background: transparent !important;
+        color: var(--admin-primary);
+      }
+
+      &.active {
+        background: transparent !important;
+        color: var(--admin-primary) !important;
+        font-weight: 600;
+
+        .tags-view-title::after {
+          position: absolute;
+          right: 0;
+          bottom: 0;
+          left: 0;
+          display: block !important;
+          height: 2px;
+          border-radius: 2px 2px 0 0;
+          background: var(--admin-primary);
+          content: "";
+        }
+      }
+
+      .tags-view-title {
+        display: inline-flex;
+        align-items: center;
+        position: relative;
+        height: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .tags-view-close {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        position: absolute;
+        top: 50%;
+        right: -7px;
+        width: 14px;
+        height: 14px;
+        transform: translateY(-50%);
+        border-radius: 4px;
+        background: #fff;
+        opacity: 0;
+        transition: opacity 0.18s ease, color 0.18s ease, background-color 0.18s ease;
+      }
+
+      &:hover .tags-view-close {
+        opacity: 0.68;
+      }
+
+      .tags-view-close:hover {
+        opacity: 1;
+        background: #fff1f2;
+      }
+
+      .el-icon-close {
+        margin-left: 0;
+        color: #c4ccd8;
+        width: 14px;
+        height: 14px;
+
+        &:hover {
+          color: var(--admin-danger);
+          background: transparent;
+        }
+      }
+    }
+
+    .contextmenu {
+      border: 1px solid var(--admin-border-soft);
+      border-radius: var(--admin-radius);
+      box-shadow: var(--admin-shadow);
+
+      li:hover {
+        background: var(--admin-primary-soft);
+        color: var(--admin-primary);
+      }
+    }
+  }
+}

@@ -1,0 +1,194 @@
+#app .app-wrapper {
+  .el-table {
+    --el-table-current-row-bg-color: #e6f0ff;
+
+    overflow: hidden;
+    border: 1px solid var(--admin-border-soft);
+    border-radius: var(--admin-panel-radius);
+    background: var(--admin-surface);
+    color: var(--admin-text);
+    font-size: var(--admin-font-size-table);
+    box-shadow: var(--admin-panel-shadow);
+
+    .cell {
+      line-height: 1.45;
+    }
+
+    .el-button.is-link {
+      --el-button-text-color: #7b8798;
+      --el-button-hover-link-text-color: var(--admin-primary);
+      --el-button-hover-bg-color: transparent;
+      --el-button-disabled-bg-color: transparent;
+      --el-button-disabled-border-color: transparent;
+      width: auto;
+      min-width: 0;
+      height: 24px;
+      min-height: 24px;
+      padding: 0 2px;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+      color: #7b8798;
+
+      .el-icon {
+        margin-right: 4px;
+        font-size: 15px;
+      }
+
+      &:hover,
+      &:focus {
+        background: transparent;
+        box-shadow: none;
+        color: var(--admin-primary);
+      }
+
+      &.el-button--danger {
+        --el-button-text-color: var(--admin-danger);
+        --el-button-hover-link-text-color: var(--admin-danger);
+        color: var(--admin-danger);
+      }
+    }
+
+    .fixed-width .cell {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      white-space: nowrap;
+    }
+
+    .cell:has(> .admin-table-actions) {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      white-space: nowrap;
+    }
+
+    .fixed-width .el-button.is-link {
+      flex: 0 0 auto;
+    }
+
+    .fixed-width .el-button.is-link:not(:has(span)) {
+      width: 28px;
+      min-width: 28px;
+      flex-basis: 28px;
+      padding: 0;
+    }
+
+    .el-table__fixed-right {
+      background: var(--admin-surface);
+      box-shadow: -8px 0 18px rgba(15, 23, 42, 0.04);
+    }
+  }
+
+  .el-table__inner-wrapper::before,
+  .el-table__border-left-patch {
+    background: var(--admin-border-soft);
+  }
+
+  .el-table .el-table__header-wrapper th,
+  .el-table .el-table__fixed-header-wrapper th,
+  .el-table th.el-table__cell {
+    height: var(--admin-table-header-height) !important;
+    background: #f7f9fc !important;
+    color: var(--admin-title);
+    font-size: var(--admin-font-size-table);
+    font-weight: 600;
+
+    .cell {
+      padding: 0 12px;
+      word-break: keep-all;
+      overflow-wrap: normal;
+      text-align: center;
+    }
+  }
+
+  .el-table td.el-table__cell {
+    height: var(--admin-table-row-height);
+    border-bottom-color: var(--admin-border-soft);
+
+    .cell {
+      padding: 0 12px;
+      word-break: normal;
+    }
+  }
+
+  .el-table__body tr:hover > td.el-table__cell {
+    background: #fbfdff !important;
+  }
+
+  .el-table__body tr.current-row > td.el-table__cell,
+  .el-table__body tr:has(.el-checkbox__input.is-checked) > td.el-table__cell {
+    background: #e6f0ff !important;
+  }
+
+  .el-table__body tr.current-row:hover > td.el-table__cell,
+  .el-table__body tr:has(.el-checkbox__input.is-checked):hover > td.el-table__cell {
+    background: #dcebff !important;
+  }
+
+  .el-table__expand-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    margin-right: 4px;
+    border-radius: 6px;
+    color: var(--admin-muted-light);
+
+    &:hover {
+      background: var(--admin-primary-soft);
+      color: var(--admin-primary);
+    }
+  }
+
+  .el-table__indent {
+    display: inline-block;
+    width: 18px !important;
+  }
+
+  .el-table__placeholder {
+    width: 24px;
+  }
+
+  .el-table .el-table__row--level-0 > td:first-child .cell {
+    font-weight: 600;
+  }
+
+  .el-table .el-table__row--level-1 > td:first-child .cell,
+  .el-table .el-table__row--level-2 > td:first-child .cell {
+    color: var(--admin-text);
+    font-weight: 500;
+  }
+
+  .el-table .svg-icon {
+    color: var(--admin-muted);
+  }
+
+  .el-table tr:hover .svg-icon {
+    color: var(--admin-primary);
+  }
+
+  .el-table__empty-block {
+    min-height: 200px;
+  }
+
+  .el-table__empty-text {
+    color: var(--admin-muted-light);
+    font-size: var(--admin-font-size-small);
+  }
+
+  .el-empty {
+    padding: 24px 0;
+  }
+
+  .el-empty__description p {
+    color: var(--admin-muted-light);
+    font-size: var(--admin-font-size-small);
+  }
+}

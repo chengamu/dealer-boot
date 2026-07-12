@@ -1,18 +1,19 @@
 <template>
-  <div class="navbar">
+  <div class="navbar" :class="{ 'is-compact': compact }">
     <hamburger
       id="hamburger-container"
       :is-active="appStore.sidebar.opened"
       class="hamburger-container"
       @toggleClick="toggleSideBar"
     />
-    <breadcrumb id="breadcrumb-container" class="breadcrumb-container" v-if="!settingsStore.topNav" />
-    <top-nav id="topmenu-container" class="topmenu-container" v-if="settingsStore.topNav" />
+    <div v-if="compact" class="navbar-workspace"><slot /></div>
+    <breadcrumb v-else-if="!settingsStore.topNav" id="breadcrumb-container" class="breadcrumb-container" />
+    <top-nav v-else id="topmenu-container" class="topmenu-container" />
 
     <div class="right-menu">
-      <header-search class="right-menu-item hover-effect" />
+      <header-search v-if="!compact" class="right-menu-item hover-effect" />
 
-      <screenfull class="right-menu-item hover-effect" />
+      <screenfull class="right-menu-item hover-effect screenfull-entry" />
 
       <el-dropdown @command="handleLanguage" class="right-menu-item language-menu" trigger="click" popper-class="shell-language-dropdown">
         <button
@@ -110,6 +111,8 @@ const localeStore = useLocaleStore()
 const permissionStore = usePermissionStore()
 const t = (key: string) => getMessage(key, localeStore.language)
 
+defineProps<{ compact?: boolean }>()
+
 const languages = [
   { value: 'zh_CN', labelKey: 'language.zhCN', code: 'ZH', flag: '🇨🇳' },
   { value: 'en_US', labelKey: 'language.enUS', code: 'EN', flag: '🇺🇸' }
@@ -159,245 +162,4 @@ async function handleLanguage(language: 'zh_CN' | 'en_US') {
 }
 </script>
 
-<style lang="scss" scoped>
-.navbar {
-  height: 46px;
-  overflow: hidden;
-  position: relative;
-  background: #F8F9FD;
-
-  .hamburger-container {
-    line-height: 46px;
-    height: 100%;
-    float: left;
-    cursor: pointer;
-    transition: background 0.3s;
-    -webkit-tap-highlight-color: transparent;
-
-    &:hover {
-      background: rgba(0, 0, 0, 0.025);
-    }
-  }
-
-  .breadcrumb-container {
-    float: left;
-  }
-
-  .topmenu-container {
-    position: absolute;
-    left: 50px;
-  }
-
-  .right-menu {
-    float: right;
-    height: 100%;
-    line-height: 46px;
-    display: flex;
-
-    &:focus {
-      outline: none;
-    }
-
-    .right-menu-item {
-      display: inline-block;
-      padding: 0 8px;
-      height: 100%;
-      font-size: 18px;
-      color: #5a5e66;
-      vertical-align: text-bottom;
-
-      &.hover-effect {
-        cursor: pointer;
-        transition: background 0.3s;
-
-        &:hover {
-          background: rgba(0, 0, 0, 0.025);
-        }
-      }
-    }
-
-    .language-menu {
-      display: inline-flex;
-      align-items: center;
-      padding: 0 4px;
-      font-size: 14px;
-
-      .language-wrapper {
-        display: flex;
-        align-items: center;
-        gap: 7px;
-        height: 30px;
-        padding: 0 10px;
-        border: 1px solid #e6ebf2;
-        border-radius: 10px;
-        background: #f5f7fb;
-        color: #354052;
-        cursor: pointer;
-        transition: background 0.18s ease, box-shadow 0.18s ease;
-
-        &:hover {
-          background: #eef3fa;
-          box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
-        }
-      }
-
-      .language-flag {
-        font-size: 15px;
-        line-height: 1;
-      }
-
-      .language-code {
-        font-weight: 700;
-        letter-spacing: 0;
-      }
-
-      .language-arrow {
-        color: #94a3b8;
-        font-size: 12px;
-      }
-    }
-
-    .message-wrapper {
-      display: inline-flex;
-      align-items: center;
-      padding: 0 6px;
-    }
-
-    .navbar-icon-button {
-      border: 0;
-      background: transparent;
-      line-height: 46px;
-    }
-
-    .avatar-container {
-      margin-right: 18px;
-
-      .avatar-wrapper {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        height: 38px;
-        margin-top: 4px;
-        padding: 3px 8px 3px 3px;
-        border: 0;
-        border-radius: 16px;
-        background: transparent;
-        position: relative;
-        cursor: pointer;
-        transition: background 0.18s ease;
-
-        &:hover {
-          background: #f5f7fb;
-        }
-
-        .user-avatar {
-          width: 32px;
-          height: 32px;
-          border-radius: 10px;
-          box-shadow: 0 0 0 1px #dbe5f2;
-        }
-
-        .user-summary {
-          display: grid;
-          gap: 1px;
-          min-width: 78px;
-          color: #172033;
-          text-align: left;
-          line-height: 1.15;
-
-          strong {
-            max-width: 96px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            font-size: 14px;
-            font-weight: 700;
-          }
-
-          small {
-            color: #667085;
-            font-size: 12px;
-          }
-        }
-
-        .user-arrow {
-          color: #94a3b8;
-          font-size: 14px;
-        }
-      }
-    }
-  }
-}
-
-:global(.shell-language-dropdown.el-popper),
-:global(.shell-user-dropdown.el-popper) {
-  border: 1px solid #dbe5f2;
-  border-radius: 14px !important;
-  box-shadow: 0 18px 44px rgba(15, 23, 42, 0.14);
-  overflow: hidden;
-}
-
-:global(.shell-language-dropdown .el-dropdown-menu) {
-  min-width: 176px;
-  padding: 8px;
-}
-
-:global(.shell-language-dropdown .el-dropdown-menu__item) {
-  display: grid;
-  grid-template-columns: 24px minmax(0, 1fr) 20px;
-  gap: 10px;
-  height: 42px;
-  border-radius: 10px;
-  color: #354052;
-  font-size: 15px;
-}
-
-:global(.shell-language-dropdown .el-dropdown-menu__item.is-active) {
-  background: #ecfdf7;
-  color: #0f9f8f;
-}
-
-:global(.language-option-check) {
-  color: #0f9f8f;
-  font-size: 18px;
-  font-weight: 600;
-}
-
-:global(.shell-user-dropdown .el-dropdown-menu) {
-  min-width: 218px;
-  padding: 0;
-}
-
-:global(.shell-user-dropdown .user-dropdown-head) {
-  display: grid;
-  gap: 4px;
-  padding: 16px 18px 14px;
-  border-bottom: 1px solid #edf2f8;
-}
-
-:global(.shell-user-dropdown .user-dropdown-head strong) {
-  color: #172033;
-  font-size: 15px;
-}
-
-:global(.shell-user-dropdown .user-dropdown-head small) {
-  color: #667085;
-  font-size: 13px;
-}
-
-:global(.shell-user-dropdown .el-dropdown-menu__item) {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  height: 44px;
-  padding: 0 18px;
-  color: #344054;
-  font-size: 14px;
-}
-
-:global(.shell-user-dropdown .el-dropdown-menu__item--divided) {
-  margin: 6px 0 0;
-  border-top: 1px solid #edf2f8;
-  color: #ef4444;
-}
-</style>
+<style lang="scss" scoped src="./Navbar.scss"></style>

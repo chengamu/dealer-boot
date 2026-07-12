@@ -1,0 +1,109 @@
+body:not(.login-route-active) {
+  .user-edit-dialog {
+    width: min(720px, calc(100vw - 32px)) !important;
+
+    .el-dialog__body {
+      padding: 0;
+      background: #f9fafb;
+    }
+
+    .user-dialog {
+      display: grid;
+      gap: 14px;
+      padding: 18px 20px 20px;
+    }
+
+    .user-dialog__intro {
+      padding: 14px 16px;
+      border: 1px solid #b8d2ff;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #eaf2ff 0%, #ffffff 82%);
+
+      span {
+        display: inline-flex;
+        align-items: center;
+        height: 24px;
+        padding: 0 10px;
+        border-radius: 999px;
+        background: #1677ff;
+        color: #ffffff;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      p {
+        margin: 8px 0 0;
+        color: #333333;
+        font-size: 14px;
+      }
+    }
+
+    .user-dialog__section {
+      padding: 16px 16px 0;
+      border: 1px solid #edf2f7;
+      border-radius: 8px;
+      background: #ffffff;
+    }
+
+    .user-dialog__section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+
+      strong {
+        position: relative;
+        padding-left: 10px;
+        color: #1a1a1a;
+        font-size: 15px;
+        font-weight: 600;
+
+        &::before {
+          position: absolute;
+          top: 4px;
+          bottom: 4px;
+          left: 0;
+          width: 3px;
+          border-radius: 999px;
+          background: #1677ff;
+          content: "";
+        }
+      }
+
+      em {
+        color: #8a94a6;
+        font-size: 12px;
+        font-style: normal;
+      }
+    }
+
+    .el-select,
+    .el-tree-select {
+      width: 100%;
+    }
+
+    .el-form-item {
+      margin-bottom: 16px;
+    }
+
+    .el-radio-group {
+      min-height: 32px;
+      align-items: center;
+    }
+
+    .el-textarea__inner {
+      min-height: 72px !important;
+    }
+
+    .user-dialog__footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+
+      .el-button + .el-button {
+        margin-left: 0;
+      }
+    }
+  }
+}

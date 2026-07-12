@@ -1,0 +1,74 @@
+#app .app-wrapper.mobile {
+  .app-main {
+    padding: 8px 8px 10px;
+  }
+
+  .user-page__layout {
+    display: block;
+  }
+
+  .user-page__dept {
+    margin-bottom: 10px;
+  }
+
+  .user-page__dept-tree {
+    min-height: 220px;
+  }
+
+  .app-container > .el-form.el-form--inline,
+  .app-container .el-col > .el-form.el-form--inline {
+    padding: 8px 10px;
+
+    .el-form-item:last-child {
+      margin-left: 0;
+    }
+  }
+}
+
+.el-menu--vertical {
+  .el-menu--popup {
+    padding: 5px;
+    border: 1px solid #eef0f5;
+    border-radius: 8px;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+  }
+
+  .el-menu-item,
+  .el-sub-menu__title {
+    height: 36px;
+    line-height: 36px;
+    margin: 1px 0;
+    border-radius: 6px;
+    color: #667085 !important;
+    font-size: 13px;
+
+    .svg-icon {
+      width: 14px;
+      height: 14px;
+      margin-right: 8px;
+      color: #8a94a6;
+      font-size: 14px;
+    }
+  }
+
+  .el-menu-item:hover,
+  .el-sub-menu__title:hover {
+    background: #f5f8ff !important;
+    color: #1677ff !important;
+
+    .svg-icon {
+      color: #1677ff;
+    }
+  }
+
+  .el-menu-item.is-active,
+  .el-sub-menu.is-active > .el-sub-menu__title {
+    background: #eef5ff !important;
+    color: #1677ff !important;
+    font-weight: 600;
+
+    .svg-icon {
+      color: #1677ff;
+    }
+  }
+}

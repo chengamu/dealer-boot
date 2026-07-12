@@ -1,5 +1,5 @@
 {
-  "app.title": "基础管理底座",
+  "app.title": "skyspf",
   "language.enUS": "英文",
   "language.zhCN": "中文",
   "pageAgent.disabled": "前端未启用 Page Agent。",
@@ -16,6 +16,9 @@
   "shell.exitFullscreen": "退出全屏",
   "shell.expandMenu": "展开菜单",
   "shell.fixedHeader": "固定 Header",
+  "shell.headerLayout": "顶部布局",
+  "shell.headerLayoutCompact": "紧凑",
+  "shell.headerLayoutStacked": "经典",
   "shell.language": "语言",
   "shell.layoutSettings": "系统布局配置",
   "shell.layoutSize": "布局大小",

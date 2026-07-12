@@ -1,0 +1,170 @@
+#app .app-wrapper {
+  .app-container.user-page .user-page__layout .user-page__content > .el-form.el-form--inline {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+    gap: 8px 16px;
+    align-items: center;
+    margin-bottom: 4px;
+    padding: 7px 10px;
+    border-radius: var(--admin-radius);
+    box-shadow: var(--admin-shadow);
+
+    .el-form-item {
+      display: grid;
+      grid-template-columns: 82px minmax(0, 1fr);
+      align-items: center;
+      width: auto !important;
+      margin: 0;
+    }
+
+    .el-form-item__label {
+      justify-content: flex-start;
+      padding-right: 6px;
+      font-size: var(--admin-font-size-base);
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .el-form-item__content {
+      min-width: 0;
+    }
+
+    .el-input,
+    .el-select,
+    .el-date-editor {
+      width: 100% !important;
+    }
+
+    .el-input__wrapper,
+    .el-select__wrapper,
+    .el-date-editor.el-input__wrapper,
+    .el-date-editor .el-input__wrapper {
+      min-height: var(--admin-control-height);
+      border-radius: var(--admin-control-radius);
+    }
+
+    .el-input__inner,
+    .el-range-input {
+      height: 30px;
+      line-height: 30px;
+    }
+
+    .el-range-editor {
+      height: var(--admin-control-height);
+      line-height: var(--admin-control-height);
+    }
+
+    .el-range-separator {
+      height: 30px;
+      line-height: 30px;
+    }
+
+    .el-form-item:last-child {
+      display: block;
+      grid-column: -2 / -1;
+      justify-self: end;
+      margin-left: 0;
+
+      .el-form-item__content {
+        display: flex;
+        gap: 8px;
+        grid-column: auto;
+        justify-content: flex-end;
+      }
+
+      .el-button + .el-button {
+        margin-left: 0;
+      }
+
+      .el-button {
+        height: 32px;
+        min-height: 32px;
+        padding: 7px 12px;
+        border-radius: var(--admin-control-radius);
+      }
+    }
+  }
+
+  .user-page__content .mb8 {
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+    gap: 8px;
+    min-height: 40px;
+    margin-right: 0 !important;
+    margin-bottom: 0;
+    margin-left: 0 !important;
+    padding: 5px 8px;
+    border: 1px solid var(--admin-border-soft);
+    border-bottom: 0;
+    border-radius: var(--admin-radius) var(--admin-radius) 0 0;
+    background: var(--admin-surface);
+    box-shadow: var(--admin-shadow);
+
+    .el-button {
+      height: 32px;
+      min-height: 32px;
+      padding: 7px 12px;
+      border-radius: var(--admin-control-radius);
+    }
+
+    .top-right-btn {
+      margin-left: auto;
+      flex: 0 0 auto;
+
+      .el-row {
+        display: flex;
+        flex-wrap: nowrap;
+        gap: 6px;
+      }
+
+      .el-button.is-circle {
+        width: 32px;
+        min-width: 32px;
+        height: 32px;
+        min-height: 32px;
+        flex-basis: 32px;
+        padding: 0;
+      }
+    }
+  }
+
+  .user-page__content .el-table {
+    border-radius: var(--admin-panel-radius);
+    box-shadow: var(--admin-shadow);
+
+    th.el-table__cell {
+      height: var(--admin-table-header-height) !important;
+      font-size: var(--admin-font-size-table);
+
+      .cell {
+        line-height: 1.35;
+      }
+    }
+
+    td.el-table__cell {
+      height: var(--admin-table-row-height);
+      font-size: var(--admin-font-size-table);
+    }
+
+    .fixed-width .el-button.is-link {
+      width: 28px;
+      min-width: 28px;
+      height: 28px;
+      border: 0;
+      background: transparent;
+    }
+  }
+
+  .user-page__content .mb8 + .el-table {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    box-shadow: var(--admin-shadow);
+  }
+
+  .user-page__content .pagination-container {
+    padding-top: 6px !important;
+  }
+}

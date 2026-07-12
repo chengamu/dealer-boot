@@ -49,6 +49,14 @@
       </span>
     </div>
 
+    <div class="drawer-item drawer-item--layout">
+      <span>{{ t('shell.headerLayout') }}</span>
+      <el-radio-group v-model="headerLayout" size="small">
+        <el-radio-button value="compact">{{ t('shell.headerLayoutCompact') }}</el-radio-button>
+        <el-radio-button value="stacked">{{ t('shell.headerLayoutStacked') }}</el-radio-button>
+      </el-radio-group>
+    </div>
+
     <div class="drawer-item">
       <span>{{ t('shell.fixedHeader') }}</span>
       <span class="comp-style">
@@ -125,6 +133,10 @@ const tagsView = computed({
     settingsStore.changeSetting({ key: 'tagsView', value: val })
   }
 })
+const headerLayout = computed({
+  get: () => storeSettings.value.headerLayout,
+  set: (value: 'compact' | 'stacked') => settingsStore.changeSetting({ key: 'headerLayout', value })
+})
 /**是否需要固定头部 */
 const fixedHeader = computed({
   get: () => storeSettings.value.fixedHeader,
@@ -164,6 +176,7 @@ function saveSetting() {
   const layoutSetting = {
     "topNav": storeSettings.value.topNav,
     "tagsView": storeSettings.value.tagsView,
+    "headerLayout": storeSettings.value.headerLayout,
     "fixedHeader": storeSettings.value.fixedHeader,
     "sidebarLogo": storeSettings.value.sidebarLogo,
     "dynamicTitle": storeSettings.value.dynamicTitle,
@@ -246,5 +259,10 @@ defineExpose({
     float: right;
     margin: -3px 8px 0px 0px;
   }
+}
+
+.drawer-item--layout {
+  display: grid;
+  gap: 8px;
 }
 </style>
