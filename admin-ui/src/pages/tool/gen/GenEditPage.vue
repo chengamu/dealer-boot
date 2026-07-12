@@ -151,7 +151,7 @@ async function submitForm() {
 
 function close() {
   tagsViewStore.delView(route as unknown as TagView)
-  router.push({ path: '/tool/gen', query: { t: Date.now(), pageNum: route.query.pageNum } })
+  router.push({ path: '/system/gen', query: { t: Date.now(), pageNum: route.query.pageNum } })
 }
 
 async function loadDetail() {

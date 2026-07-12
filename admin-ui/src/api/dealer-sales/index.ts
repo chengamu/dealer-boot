@@ -1,5 +1,5 @@
 import { request, requestPage } from '@/utils/request'
-import type { PageQuery } from '@/types/api'
+import type { DecimalValue, PageQuery } from '@/types/api'
 
 export type DocumentStatus = 'SUBMITTED' | 'CANCELLED' | 'COMPLETED'
 export type SalesSourceType = 'QUOTE' | 'QUICK_ORDER'
@@ -29,20 +29,20 @@ export interface SalesItem {
   saleProductCode?: string
   saleProductName?: string
   formulaVersionLabel?: string
-  orderWidthInch?: number
-  orderHeightInch?: number
+  orderWidthInch?: DecimalValue
+  orderHeightInch?: DecimalValue
   quantity?: number
   selectedOptionValues: Record<string, string>
   configurationSummary?: string
   calculationStatus?: 'PASS' | 'FAIL'
   calculationMessage?: string
-  listUnitAmount?: number
-  listAmount?: number
-  discountRate?: number
-  unitAmount?: number
-  productAmount?: number
-  shippingAmount?: number
-  lineAmount?: number
+  listUnitAmount?: DecimalValue
+  listAmount?: DecimalValue
+  discountRate?: DecimalValue
+  unitAmount?: DecimalValue
+  productAmount?: DecimalValue
+  shippingAmount?: DecimalValue
+  lineAmount?: DecimalValue
   sortOrder?: number
   remark?: string
 }
@@ -72,13 +72,13 @@ export interface SalesDocument {
   recipientPhone?: string
   shippingAddress?: string
   currencyCode?: string
-  listAmount?: number
-  discountRate?: number
-  discountAmount?: number
-  productAmount?: number
-  shippingAmount?: number
-  taxAmount?: number
-  totalAmount?: number
+  listAmount?: DecimalValue
+  discountRate?: DecimalValue
+  discountAmount?: DecimalValue
+  productAmount?: DecimalValue
+  shippingAmount?: DecimalValue
+  taxAmount?: DecimalValue
+  totalAmount?: DecimalValue
   documentStatus?: DocumentStatus
   paymentStatus?: SalesPaymentStatus
   productionStatus?: SalesProductionStatus

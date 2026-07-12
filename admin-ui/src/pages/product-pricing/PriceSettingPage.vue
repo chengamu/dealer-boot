@@ -202,7 +202,7 @@ function toIdString(value: unknown) {
 .price-setting-page {
   display: grid;
   gap: 12px;
-  background: #f3f6fb;
+  background: var(--admin-bg);
 }
 
 </style>

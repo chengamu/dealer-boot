@@ -1,4 +1,4 @@
-import type { PageQuery } from '@/types/api'
+import type { DecimalValue, PageQuery } from '@/types/api'
 
 export type ProductionStatus = 'PENDING' | 'IN_PRODUCTION' | 'COMPLETED'
 export type ShipmentStatus = 'UNSHIPPED' | 'PARTIALLY_SHIPPED' | 'SHIPPED' | 'DELIVERED'
@@ -20,8 +20,8 @@ export interface FulfillmentItem {
   saleProductCode?: string
   saleProductName?: string
   formulaVersionLabel?: string
-  orderWidthInch?: number
-  orderHeightInch?: number
+  orderWidthInch?: DecimalValue
+  orderHeightInch?: DecimalValue
   quantity?: number
   configurationSummary?: string
   bomSnapshotJson?: string
@@ -63,11 +63,11 @@ export interface Shipment {
   status?: PackageStatus
   trackingStatus?: string
   itemQuantity?: number
-  weight?: number
+  weight?: DecimalValue
   weightUnit?: string
-  length?: number
-  width?: number
-  height?: number
+  length?: DecimalValue
+  width?: DecimalValue
+  height?: DecimalValue
   dimensionUnit?: string
   shippedTime?: string
   receiptStatus?: ReceiptStatus
@@ -162,11 +162,11 @@ export interface ShipmentPayload {
   carrierCode?: string
   carrierName?: string
   trackingNo?: string
-  weight?: number
+  weight?: DecimalValue
   weightUnit?: string
-  length?: number
-  width?: number
-  height?: number
+  length?: DecimalValue
+  width?: DecimalValue
+  height?: DecimalValue
   dimensionUnit?: string
   remark?: string
   items: Array<{ salesItemId: string; quantity: number; remark?: string }>

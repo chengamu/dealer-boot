@@ -7,8 +7,8 @@ export interface QuoteWorkbenchItem extends CustomerQuoteItem {
 
 export interface QuotePastedRow {
   roomLocation?: string
-  orderWidthInch: number
-  orderHeightInch: number
+  orderWidthInch: string
+  orderHeightInch: string
   quantity: number
 }
 

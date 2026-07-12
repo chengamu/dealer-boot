@@ -31,7 +31,7 @@
           v-model="query.versionLabel"
           :placeholder="t('productCenter.common.inputPlaceholder')"
           clearable
-          style="width: 160px"
+          style="width: 110px"
           @keyup.enter="handleQuery"
         />
       </el-form-item>
@@ -40,7 +40,7 @@
           v-model="query.submitBy"
           :placeholder="t('productCenter.common.inputPlaceholder')"
           clearable
-          style="width: 160px"
+          style="width: 110px"
           @keyup.enter="handleQuery"
         />
       </el-form-item>
@@ -50,7 +50,7 @@
           :placeholder="t('productCenter.common.selectPlaceholder')"
           clearable
           filterable
-          style="width: 160px"
+          style="width: 120px"
         >
           <el-option v-for="option in validationStatusOptions" :key="option.value" :label="option.label" :value="option.value" />
         </el-select>

@@ -9,9 +9,12 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-const props = defineProps<{ count: number; productAmount?: number; shippingAmount?: number; totalAmount?: number; currencyCode?: string }>()
+import type { DecimalValue } from '@/types/api'
+import { formatCurrency } from '@/utils/businessNumber'
+
+const props = defineProps<{ count: number; productAmount?: DecimalValue; shippingAmount?: DecimalValue; totalAmount?: DecimalValue; currencyCode?: string }>()
 const { t } = useI18n()
-function money(value?: number) { return new Intl.NumberFormat('en-US', { style: 'currency', currency: props.currencyCode || 'USD' }).format(value || 0) }
+function money(value?: DecimalValue) { return formatCurrency(value ?? '0', props.currencyCode || 'USD') }
 </script>
 
 <style scoped>

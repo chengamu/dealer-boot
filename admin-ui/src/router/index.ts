@@ -52,7 +52,7 @@ const hiddenLayoutRoutes: RouteRecordRaw[] = [
     path: '/tool/gen-edit/index/:tableId(\\d+)',
     name: 'GenEdit',
     component: () => import('@/pages/tool/gen/GenEditPage.vue'),
-    meta: { title: 'gen.genInfo', activeMenu: '/tool/gen', hidden: true }
+    meta: { title: 'gen.genInfo', activeMenu: '/system/gen', hidden: true }
   },
   {
     path: '/product-formula/formulas/materials',
@@ -196,6 +196,12 @@ const legacyFallbackRoutes: RouteRecordRaw[] = [
     name: 'MonitorCache',
     component: () => import('@/pages/monitor/CacheMonitorPage.vue'),
     meta: { title: 'cache.monitorTitle' }
+  },
+  {
+    path: '/monitor/server',
+    name: 'MonitorServer',
+    component: () => import('@/pages/monitor/ServerResourcePage.vue'),
+    meta: { title: 'serverResource.title' }
   },
   {
     path: '/monitor/cache/list',

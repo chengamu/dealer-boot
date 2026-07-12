@@ -69,6 +69,7 @@ import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { salesApi, type DocumentStatus, type SalesDocument, type SalesQuery } from '@/api/dealer-sales'
 import { formatUtc, withUtcDateRange } from '@/utils/datetime'
+import { formatCurrency } from '@/utils/businessNumber'
 import { documentStatusText, paymentStatusText, productionStatusText, shipmentStatusText, sourceTypeText } from './salesPresentation'
 
 const { t } = useI18n()
@@ -100,8 +101,8 @@ function openDetail(row: SalesDocument) {
   void router.push({ name: 'SalesDocumentDetail', params: { id: row.salesDocumentId } })
 }
 
-function money(value?: number, currency = 'USD') {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: currency || 'USD' }).format(value || 0)
+function money(value?: string | null, currency = 'USD') {
+  return formatCurrency(value, currency || 'USD', 2, formatCurrency('0', currency || 'USD'))
 }
 
 function statusType(status?: DocumentStatus) {

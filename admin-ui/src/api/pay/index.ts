@@ -1,5 +1,6 @@
 import { requestData, requestPage } from '@/utils/request'
 import type { BankCollectionAccount, BankSubmitRequest, CreditAccount, CreditTransaction, EnabledPayChannel, PayAttempt, PayOrder, PayOrderDetail, PayOrderQuery, PayPalCheckout, Receivable, SalesPayment, SupplementRequest } from './types'
+import type { DecimalValue } from '@/types/api'
 
 const adminRoot = '/pay/admin'
 const salesRoot = '/dealer/sales-documents'
@@ -33,7 +34,7 @@ export const payApi = {
   }),
   repair: (payOrderId: string | number) => requestData<void>({ url: `${adminRoot}/order/${payOrderId}/repair`, method: 'post' }),
   reconcilePayPal: (payOrderId: string | number) => requestData<PayPalCheckout>({ url: `${adminRoot}/order/${payOrderId}/paypal/reconcile`, method: 'post' }),
-  adjustCredit: (accountId: string | number, amount: number, reason: string) => requestData({
+  adjustCredit: (accountId: string | number, amount: DecimalValue, reason: string) => requestData({
     url: `${adminRoot}/credit/${accountId}/adjust`, method: 'post', data: { amount, reason }
   }),
   freezeCredit: (accountId: string | number, frozen: boolean, reason: string) => requestData({

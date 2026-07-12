@@ -6,6 +6,7 @@ import com.bocoo.common.core.exception.ServiceException;
 import com.bocoo.common.core.utils.MapstructUtils;
 import com.bocoo.common.core.utils.StringUtils;
 import com.bocoo.common.core.utils.TimeUtils;
+import com.bocoo.common.core.utils.DecimalContractUtils;
 import com.bocoo.common.mybatis.core.page.PageQuery;
 import com.bocoo.common.mybatis.core.page.TableDataInfo;
 import com.bocoo.common.satoken.utils.LoginHelper;
@@ -205,6 +206,7 @@ public class ProductMaterialServiceImpl extends ProductServiceSupport implements
         }
         trimMaterialFields(bo);
         validateRequiredFields(bo);
+        validateDecimalFields(bo);
         if (StringUtils.isBlank(bo.getStatus())) {
             bo.setStatus(STATUS_DISABLED);
         }
@@ -213,6 +215,14 @@ public class ProductMaterialServiceImpl extends ProductServiceSupport implements
         }
         normalizeMaterialType(bo);
         normalizeManufacturer(bo);
+    }
+
+    private void validateDecimalFields(ProductMaterialBo bo) {
+        if (!DecimalContractUtils.isNonNegativeWithScale(bo.getWeightValue(), 6)
+            || !DecimalContractUtils.isNonNegativeWithScale(bo.getUnitPrice(), 4)
+            || !DecimalContractUtils.isNonNegativeWithScale(bo.getSalesPrice(), 4)) {
+            throw ServiceException.ofMessageKey("product.numeric.inputInvalid");
+        }
     }
 
     private void normalizeMaterialType(ProductMaterialBo bo) {

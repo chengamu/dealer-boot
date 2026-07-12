@@ -5,8 +5,8 @@ export interface MerchantLevel {
   levelId?: number
   levelCode?: string
   levelName?: string
-  defaultDiscountRate?: number
-  defaultCreditLimit?: number
+  defaultDiscountRate?: DecimalValue
+  defaultCreditLimit?: DecimalValue
   defaultFlag?: boolean
   sortOrder?: number
   status?: string
@@ -48,3 +48,4 @@ export function deleteMerchantLevel(ids: number | string | Array<number | string
 export function changeMerchantLevelStatus(id: number | string, status: string) {
   return request({ url: `/merchant/levels/change-status/${id}/${status}`, method: 'put' })
 }
+import type { DecimalValue } from '@/types/api'

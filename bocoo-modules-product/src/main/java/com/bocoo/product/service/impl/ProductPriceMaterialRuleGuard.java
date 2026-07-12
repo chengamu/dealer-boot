@@ -2,6 +2,7 @@ package com.bocoo.product.service.impl;
 
 import com.bocoo.common.core.exception.ServiceException;
 import com.bocoo.common.core.utils.StringUtils;
+import com.bocoo.common.core.utils.DecimalContractUtils;
 import com.bocoo.product.domain.bo.ProductPriceMaterialRuleBo;
 import com.bocoo.product.domain.entity.ProductPriceMaterial;
 import org.springframework.stereotype.Component;
@@ -30,6 +31,9 @@ public class ProductPriceMaterialRuleGuard {
             }
             if (ProductPriceExpressionValidator.usesUnitPrice(rule.getPriceFormula()) && isNotPositive(rule.getUnitPrice())) {
                 throw ServiceException.ofMessageKey("product.priceSetting.materialPriceRequired");
+            }
+            if (!DecimalContractUtils.isNonNegativeWithScale(rule.getUnitPrice(), 4)) {
+                throw ServiceException.ofMessageKey("product.numeric.inputInvalid");
             }
             if (!ProductPriceExpressionValidator.isPriceFormulaValid(rule.getPriceFormula())) {
                 throw ServiceException.ofMessageKey("product.priceSetting.priceFormulaInvalid");

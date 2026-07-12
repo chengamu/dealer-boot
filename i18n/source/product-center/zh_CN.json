@@ -1,4 +1,5 @@
 {
+  "product.numeric.inputInvalid": "数值精度、范围或符号不符合业务规则。",
   "product.base.delete.enabledDenied": "启用或已审核状态的数据不能直接删除。请先停用或取消审核后再删除。",
   "product.base.delete.hasReferences": "该数据已被引用，不能删除。",
   "product.base.edit.enabledDenied": "启用状态的数据不能普通修改。请先停用后修改，或在有权限时使用超级修改。",

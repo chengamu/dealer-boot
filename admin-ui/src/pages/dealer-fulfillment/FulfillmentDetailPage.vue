@@ -65,7 +65,7 @@ void load()
 </script>
 
 <style scoped>
-.fulfillment-detail { display: flex; min-height: calc(100vh - 92px); flex-direction: column; gap: 8px; padding: 10px; background: #f3f6fa; }
+.fulfillment-detail { display: flex; min-height: calc(100vh - 92px); flex-direction: column; gap: 8px; padding: 10px; background: var(--admin-bg); }
 .fulfillment-detail__topbar, .fulfillment-detail__heading, .fulfillment-detail__actions { display: flex; align-items: center; gap: 8px; }
 .fulfillment-detail__topbar { min-height: 48px; justify-content: space-between; }
 .fulfillment-detail__heading h2 { margin: 0; color: #1d2129; font-size: 20px; }

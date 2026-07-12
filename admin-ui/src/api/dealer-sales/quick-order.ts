@@ -1,6 +1,6 @@
 import type { CustomerQuoteCatalogSetup } from '@/api/customer/quote'
 import type { SaleProductQuery, SaleProductVO } from '@/api/product-pricing/types'
-import type { PageQuery } from '@/types/api'
+import type { DecimalValue, PageQuery } from '@/types/api'
 import { request, requestPage } from '@/utils/request'
 
 export type QuickOrderStatus = 'DRAFT' | 'ORDERED'
@@ -22,23 +22,23 @@ export interface QuickOrderItem {
   categoryNameCn?: string
   productTypeCode?: string
   productTypeNameCn?: string
-  orderWidthInch?: number
-  orderHeightInch?: number
+  orderWidthInch?: DecimalValue
+  orderHeightInch?: DecimalValue
   quantity?: number
   selectedOptionValues: Record<string, string>
   selectedOptionsSummaryCn?: string
   selectedOptionsSummaryEn?: string
   calculationStatus?: QuickOrderCalculationStatus
   calculationMessage?: string
-  listUnitAmount?: number
-  listAmount?: number
-  discountRate?: number
-  discountAmount?: number
-  unitAmount?: number
-  productAmount?: number
-  unitShippingAmount?: number
-  shippingAmount?: number
-  lineAmount?: number
+  listUnitAmount?: DecimalValue
+  listAmount?: DecimalValue
+  discountRate?: DecimalValue
+  discountAmount?: DecimalValue
+  unitAmount?: DecimalValue
+  productAmount?: DecimalValue
+  unitShippingAmount?: DecimalValue
+  shippingAmount?: DecimalValue
+  lineAmount?: DecimalValue
   sortOrder?: number
   remark?: string
 }
@@ -54,9 +54,9 @@ export interface QuickOrder {
   recipientPhone?: string
   shippingAddress?: string
   currencyCode?: string
-  productAmount?: number
-  shippingAmount?: number
-  totalAmount?: number
+  productAmount?: DecimalValue
+  shippingAmount?: DecimalValue
+  totalAmount?: DecimalValue
   status?: QuickOrderStatus
   salesDocumentId?: string
   orderNo?: string
@@ -73,11 +73,11 @@ export interface QuickOrder {
 export interface QuickOrderSubmitResult {
   salesDocumentId: string
   orderNo: string
-  totalAmount: number
+  totalAmount: string
 }
 
 export interface QuickOrderSubmitRequest {
-  expectedTotalAmount: number
+  expectedTotalAmount: string
 }
 
 export interface QuickOrderQuery extends PageQuery {

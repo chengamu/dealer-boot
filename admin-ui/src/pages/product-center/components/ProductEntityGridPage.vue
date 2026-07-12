@@ -259,6 +259,8 @@
             :currency-digits="field.currencyDigits"
             :min="field.min ?? 0"
             :max="field.max"
+            :allow-negative="field.allowNegative"
+            :allow-zero="field.allowZero"
             :disabled="drawerReadonly"
             :placeholder="t('productCenter.common.inputPlaceholder')"
             :aria-label="t(field.labelKey)"
@@ -475,7 +477,14 @@ import { useUnsavedChangesGuard } from '@/composables/useUnsavedChangesGuard'
 import type { ProductFieldConfig, ProductGridConfig } from './productGridTypes'
 import { PRODUCT_STATUS_DISABLED, PRODUCT_STATUS_ENABLED, normalizeProductStatus } from '@/constants/productStatus'
 import { compactParts } from '@/utils/productLabels'
-import { formatBusinessNumber, formatInch } from '@/utils/businessNumber'
+import {
+  canonicalDecimal,
+  formatBusinessNumber,
+  formatInch,
+  isExactInch,
+  resolveNumericContract,
+  validateNumeric
+} from '@/utils/businessNumber'
 
 const props = defineProps<{
   config: ProductGridConfig
@@ -610,9 +619,28 @@ const currentRecordId = computed(() => {
 const rules = computed<FormRules>(() => {
   const result: FormRules = {}
   formFields.value.forEach((field) => {
+    const fieldRules: NonNullable<FormRules[string]> = []
     if (field.required) {
-      result[field.prop] = [{ required: true, message: t('productCenter.common.required', { name: t(field.labelKey) }), trigger: 'blur' }]
+      fieldRules.push({ required: true, message: t('productCenter.common.required', { name: t(field.labelKey) }), trigger: 'blur' })
     }
+    if (field.type === 'number') fieldRules.push({ validator: (_rule: unknown, value: unknown, callback: (error?: Error) => void) => {
+      const contract = resolveNumericContract(field.numberMode || 'COUNT', {
+        maxFractionDigits: field.precision,
+        unitPrecision: field.unitPrecision,
+        currencyDigits: field.currencyDigits,
+        min: field.min,
+        max: field.max,
+        allowNegative: field.allowNegative,
+        allowZero: field.allowZero
+      })
+      callback(validateNumeric(value as string | number | null, contract).valid
+        ? undefined : new Error(t('product.numeric.inputInvalid')))
+    }, trigger: ['blur', 'change'] })
+    if (field.type === 'inch') fieldRules.push({ validator: (_rule: unknown, value: unknown, callback: (error?: Error) => void) => {
+      callback(isExactInch(value as string | number | null, field.denominator || 8)
+        ? undefined : new Error(t('product.numeric.inputInvalid')))
+    }, trigger: ['blur', 'change'] })
+    if (fieldRules.length) result[field.prop] = fieldRules
   })
   return result
 })
@@ -780,8 +808,7 @@ function displayChangeValue(value: unknown) {
 
 function normalizeNumberValue(value: unknown) {
   if (value === null || value === undefined || value === '') return value
-  const next = Number(value)
-  return Number.isFinite(next) ? next : value
+  return canonicalDecimal(value as string | number) ?? value
 }
 
 function normalizeFormRecord(record?: ProductRecord) {
@@ -1021,7 +1048,9 @@ function rowOperationActions(row: ProductRecord) {
 function reset() {
   const next: ProductRecord = { status: PRODUCT_STATUS_ENABLED, delFlag: '0', ...(props.config.defaultRecord || {}) }
   allFormFields.value.forEach((field) => {
-    if (field.type === 'number' || field.type === 'inch') next[field.prop] = 0
+    if ((field.type === 'number' || field.type === 'inch') && field.defaultValue !== undefined) {
+      next[field.prop] = field.defaultValue
+    }
     if (field.type === 'boolean') next[field.prop] = false
     if (field.multiple) next[field.prop] = []
   })
@@ -1882,6 +1911,17 @@ defineExpose({
 
   :deep(.el-form-item) {
     margin-bottom: 14px;
+  }
+
+  :deep(.el-form-item.is-error .el-form-item__content) {
+    flex-wrap: wrap;
+  }
+
+  :deep(.el-form-item.is-error .el-form-item__error) {
+    position: static;
+    flex: 0 0 100%;
+    padding-top: 2px;
+    line-height: 16px;
   }
 }
 

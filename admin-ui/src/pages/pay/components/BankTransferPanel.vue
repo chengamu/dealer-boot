@@ -31,8 +31,10 @@ import { useI18n } from 'vue-i18n'
 import { payApi, type BankCollectionAccount } from '@/api/pay'
 import { money } from '../payPresentation'
 import ProofMediaUpload from './ProofMediaUpload.vue'
+import type { DecimalValue } from '@/types/api'
+import { decimalToMinorUnits } from '@/utils/businessNumber'
 
-const props = defineProps<{ salesDocumentId: string; payOrderId?: string; amount: number; currency: string }>()
+const props = defineProps<{ salesDocumentId: string; payOrderId?: string; amount: DecimalValue; currency: string }>()
 const emit = defineEmits<{ refresh: [poll?: boolean] }>()
 const { t } = useI18n()
 const formRef = ref<FormInstance>()
@@ -49,9 +51,11 @@ async function submit() {
   if (!selectedAccount.value || !(await formRef.value?.validate().catch(() => false))) return
   submitting.value = true
   try {
+    const declaredPrice = decimalToMinorUnits(props.amount, 2)
+    if (declaredPrice === null) return
     await payApi.submitBank(props.salesDocumentId, {
       payerName: form.payerName, bankReference: form.bankReference, transferredTime: form.transferredTime,
-      declaredPrice: Math.round(props.amount * 100), currency: props.currency, proofMediaId: form.proofMediaId, remark: form.remark
+      declaredPrice, currency: props.currency, proofMediaId: form.proofMediaId, remark: form.remark
     })
     ElMessage.success(t('pay.bank.submitted'))
     emit('refresh', true)

@@ -21,8 +21,8 @@ export interface MerchantProfile {
   levelId?: number
   levelCode?: string
   levelName?: string
-  discountRate?: number
-  creditLimit?: number
+  discountRate?: DecimalValue
+  creditLimit?: DecimalValue
   status?: string
   auditStatus?: string
   auditBy?: string
@@ -80,3 +80,4 @@ export function updateCurrentMerchantProfile(data: MerchantProfile) {
     data
   })
 }
+import type { DecimalValue } from '@/types/api'

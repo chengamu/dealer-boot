@@ -1,6 +1,7 @@
 package com.bocoo.merchant.service.impl;
 
 import com.bocoo.common.core.exception.ServiceException;
+import com.bocoo.common.core.utils.DecimalContractUtils;
 import com.bocoo.merchant.domain.bo.CustomerQuoteItemBo;
 import com.bocoo.merchant.domain.entity.CustomerQuoteItem;
 import com.bocoo.merchant.domain.vo.CustomerQuoteItemVo;
@@ -64,6 +65,8 @@ class CustomerQuoteCalculator {
     private void validateInputs(CustomerQuoteItemBo bo) {
         if (bo.getSaleProductId() == null || bo.getOrderWidthInch() == null || bo.getOrderHeightInch() == null
             || bo.getOrderWidthInch().signum() <= 0 || bo.getOrderHeightInch().signum() <= 0
+            || !DecimalContractUtils.isExactFractionStep(bo.getOrderWidthInch(), 8)
+            || !DecimalContractUtils.isExactFractionStep(bo.getOrderHeightInch(), 8)
             || bo.getQuantity() == null || bo.getQuantity() < 1) {
             throw ServiceException.ofMessageKey("customer.quote.item.incomplete");
         }

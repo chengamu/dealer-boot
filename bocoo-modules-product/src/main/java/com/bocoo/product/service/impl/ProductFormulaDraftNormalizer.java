@@ -3,6 +3,7 @@ package com.bocoo.product.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.bocoo.common.core.exception.ServiceException;
 import com.bocoo.common.core.utils.StringUtils;
+import com.bocoo.common.core.utils.DecimalContractUtils;
 import com.bocoo.product.domain.bo.ProductFormulaBo;
 import com.bocoo.product.domain.entity.ProductCategory;
 import com.bocoo.product.domain.entity.ProductDictItem;
@@ -46,7 +47,6 @@ public class ProductFormulaDraftNormalizer extends ProductServiceSupport {
         bo.setStatus(trimToNull(bo.getStatus()));
         bo.setRejectReason(trimToNull(bo.getRejectReason()));
         bo.setRemark(trimToNull(bo.getRemark()));
-        normalizeSizeRange(bo);
         validateRequiredFields(bo);
         validateSizeRange(bo);
         normalizeCategory(bo);
@@ -106,26 +106,28 @@ public class ProductFormulaDraftNormalizer extends ProductServiceSupport {
         if (StringUtils.isBlank(bo.getProductTypeCode())) {
             throw ServiceException.ofMessageKey("product.formula.productTypeRequired");
         }
-        if (bo.getMaxWidthInch() == null || bo.getMaxHeightInch() == null) {
+        if (bo.getMinWidthInch() == null || bo.getMinHeightInch() == null
+            || bo.getMaxWidthInch() == null || bo.getMaxHeightInch() == null) {
             throw ServiceException.ofMessageKey("product.formula.sizeRequired");
         }
     }
 
-    private void normalizeSizeRange(ProductFormulaBo bo) {
-        if (bo.getMinWidthInch() == null) {
-            bo.setMinWidthInch(BigDecimal.ZERO);
-        }
-        if (bo.getMinHeightInch() == null) {
-            bo.setMinHeightInch(BigDecimal.ZERO);
-        }
-    }
-
     private void validateSizeRange(ProductFormulaBo bo) {
+        validateInch(bo.getMinWidthInch());
+        validateInch(bo.getMinHeightInch());
+        validateInch(bo.getMaxWidthInch());
+        validateInch(bo.getMaxHeightInch());
         if (bo.getMinWidthInch().compareTo(bo.getMaxWidthInch()) > 0) {
             throw ServiceException.ofMessageKey("product.formula.minWidthGreaterThanMax");
         }
         if (bo.getMinHeightInch().compareTo(bo.getMaxHeightInch()) > 0) {
             throw ServiceException.ofMessageKey("product.formula.minHeightGreaterThanMax");
+        }
+    }
+
+    private void validateInch(BigDecimal value) {
+        if (value.signum() < 0 || !DecimalContractUtils.isExactFractionStep(value, 8)) {
+            throw ServiceException.ofMessageKey("product.formula.sizeStepInvalid");
         }
     }
 

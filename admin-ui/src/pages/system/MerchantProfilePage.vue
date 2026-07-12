@@ -76,7 +76,7 @@
             <el-option v-for="item in levelOptions" :key="item.levelId" :label="item.levelName" :value="item.levelId" />
           </el-select>
         </el-form-item>
-        <el-form-item :label="t('merchantLevel.discount')"><BusinessNumberInput v-model="editForm.discountRate" mode="RATE" :max-fraction-digits="4" :min="0" :max="1" /></el-form-item>
+        <el-form-item :label="t('merchantLevel.discount')"><BusinessNumberInput v-model="editForm.discountRate" mode="RATIO" :max-fraction-digits="4" :min="0" :max="1" /></el-form-item>
         <el-form-item :label="t('merchantLevel.credit')"><BusinessNumberInput v-model="editForm.creditLimit" mode="MONEY" :currency-digits="2" :min="0" /></el-form-item>
         <el-form-item :label="t('apply.firstName')"><el-input v-model="editForm.contactFirstName" /></el-form-item>
         <el-form-item :label="t('apply.lastName')"><el-input v-model="editForm.contactLastName" /></el-form-item>

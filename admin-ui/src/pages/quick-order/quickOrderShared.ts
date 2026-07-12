@@ -1,6 +1,6 @@
 import type { QuoteLanguage } from '@/api/customer/quote'
 import type { QuickOrder, QuickOrderItem } from '@/api/dealer-sales/quick-order'
-import { formatInch } from '@/utils/businessNumber'
+import { canonicalDecimal, formatInch, sumDecimals } from '@/utils/businessNumber'
 
 export interface QuickOrderWorkbenchItem extends QuickOrderItem {
   clientId: string
@@ -15,9 +15,9 @@ export function emptyQuickOrder(): QuickOrder {
     shippingAddress: '',
     customerPoNo: '',
     currencyCode: 'USD',
-    productAmount: 0,
-    shippingAmount: 0,
-    totalAmount: 0,
+    productAmount: '0',
+    shippingAmount: '0',
+    totalAmount: '0',
     items: []
   }
 }
@@ -39,9 +39,9 @@ export function normalizeQuickOrder(order: QuickOrder): QuickOrder {
     ...order,
     customerId: stringify(order.customerId),
     salesDocumentId: stringify(order.salesDocumentId),
-    totalAmount: toNumber(order.totalAmount),
-    productAmount: toNumber(order.productAmount),
-    shippingAmount: toNumber(order.shippingAmount)
+    totalAmount: toDecimal(order.totalAmount),
+    productAmount: toDecimal(order.productAmount),
+    shippingAmount: toDecimal(order.shippingAmount)
   }
 }
 
@@ -55,18 +55,18 @@ export function normalizeQuickOrderItem(item: QuickOrderItem): QuickOrderWorkben
     saleProductId: stringify(item.saleProductId),
     formulaId: stringify(item.formulaId),
     formulaVersionId: stringify(item.formulaVersionId),
-    orderWidthInch: toNumber(item.orderWidthInch),
-    orderHeightInch: toNumber(item.orderHeightInch),
-    quantity: Math.max(1, toNumber(item.quantity) || 1),
-    listUnitAmount: toNumber(item.listUnitAmount),
-    listAmount: toNumber(item.listAmount),
-    discountRate: toNumber(item.discountRate),
-    discountAmount: toNumber(item.discountAmount),
-    unitAmount: toNumber(item.unitAmount),
-    productAmount: toNumber(item.productAmount),
-    unitShippingAmount: toNumber(item.unitShippingAmount),
-    shippingAmount: toNumber(item.shippingAmount),
-    lineAmount: toNumber(item.lineAmount),
+    orderWidthInch: toDecimal(item.orderWidthInch),
+    orderHeightInch: toDecimal(item.orderHeightInch),
+    quantity: Math.max(1, Number(item.quantity) || 1),
+    listUnitAmount: toDecimal(item.listUnitAmount),
+    listAmount: toDecimal(item.listAmount),
+    discountRate: toDecimal(item.discountRate),
+    discountAmount: toDecimal(item.discountAmount),
+    unitAmount: toDecimal(item.unitAmount),
+    productAmount: toDecimal(item.productAmount),
+    unitShippingAmount: toDecimal(item.unitShippingAmount),
+    shippingAmount: toDecimal(item.shippingAmount),
+    lineAmount: toDecimal(item.lineAmount),
     selectedOptionValues: { ...(item.selectedOptionValues || {}) }
   }
 }
@@ -83,11 +83,11 @@ export function toQuickOrderPayload(order: QuickOrder, rows: QuickOrderWorkbench
 }
 
 export function syncQuickOrderTotals(order: QuickOrder, rows: QuickOrderWorkbenchItem[]) {
-  const productAmount = rows.reduce((sum, row) => sum + (toNumber(row.productAmount) || 0), 0)
-  const shippingAmount = rows.reduce((sum, row) => sum + (toNumber(row.shippingAmount) || 0), 0)
-  const totalAmount = productAmount + shippingAmount
+  const productAmount = sumDecimals(rows.map((row) => row.productAmount))
+  const shippingAmount = sumDecimals(rows.map((row) => row.shippingAmount))
+  const totalAmount = sumDecimals([productAmount, shippingAmount])
   const itemCount = rows.length
-  const totalQuantity = rows.reduce((sum, row) => sum + Math.max(0, toNumber(row.quantity) || 0), 0)
+  const totalQuantity = rows.reduce((sum, row) => sum + Math.max(0, Number(row.quantity) || 0), 0)
   Object.assign(order, { productAmount, shippingAmount, totalAmount, itemCount, totalQuantity })
 }
 
@@ -107,8 +107,6 @@ function stringify(value?: string | number | null) {
   return value === null || value === undefined || value === '' ? '' : String(value)
 }
 
-function toNumber(value?: string | number | null) {
-  if (value === null || value === undefined || value === '') return undefined
-  const next = Number(value)
-  return Number.isFinite(next) ? next : undefined
+function toDecimal(value?: string | number | null) {
+  return canonicalDecimal(value) ?? undefined
 }

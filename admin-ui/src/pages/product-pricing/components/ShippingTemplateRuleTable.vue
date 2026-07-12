@@ -72,7 +72,7 @@ const importOpen = ref(false)
 function addRule() {
   emit('update:modelValue', [
     ...props.modelValue,
-    { feeCode: 'MANUAL', feeName: t('productCenter.shippingTemplate.manual'), minAreaSqft: 0, feeAmount: 0, sortOrder: props.modelValue.length }
+    { feeCode: 'MANUAL', feeName: t('productCenter.shippingTemplate.manual'), minAreaSqft: '0', feeAmount: '0', sortOrder: props.modelValue.length }
   ])
 }
 

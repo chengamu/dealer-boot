@@ -1,13 +1,15 @@
 import type { PayOrderStatus } from '@/api/pay'
+import type { DecimalValue } from '@/types/api'
+import { formatCurrency, minorUnitsToDecimal } from '@/utils/businessNumber'
 
 type Translate = (key: string, params?: Record<string, unknown>) => string
 
-export function minorMoney(value?: number, currency = 'USD') {
-  return new Intl.NumberFormat(undefined, { style: 'currency', currency, minimumFractionDigits: 2, maximumFractionDigits: 2 }).format((value || 0) / 100)
+export function minorMoney(value?: string | number, currency = 'USD') {
+  return formatCurrency(minorUnitsToDecimal(value ?? '0', 2) ?? '0', currency)
 }
 
-export function money(value?: number, currency = 'USD') {
-  return new Intl.NumberFormat(undefined, { style: 'currency', currency, minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value || 0)
+export function money(value?: DecimalValue | number, currency = 'USD') {
+  return formatCurrency(value ?? '0', currency)
 }
 
 export function statusText(t: Translate, status?: PayOrderStatus) {

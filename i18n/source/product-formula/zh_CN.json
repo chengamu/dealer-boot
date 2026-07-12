@@ -69,6 +69,7 @@
   "product.formula.simulationSizeRequired": "请先填写订单宽和订单高。",
   "product.formula.simulationValidationRequired": "配方模拟必须先校验通过，才能提交审核。",
   "product.formula.sizeRequired": "配方尺寸不能为空。",
+  "product.formula.sizeStepInvalid": "配方尺寸必须使用有效的 1/8 英寸步长。",
   "product.formula.statusInvalid": "配方状态无效。",
   "product.formula.stopDenied": "只有生效配方可以停用。",
   "product.formula.startRevisionDenied": "只有生效且存在当前版本的配方才能开始修订。",

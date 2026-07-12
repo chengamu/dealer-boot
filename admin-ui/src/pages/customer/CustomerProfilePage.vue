@@ -104,6 +104,7 @@ import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'elem
 import { useI18n } from 'vue-i18n'
 import { addCustomer, changeCustomerStatus, deleteCustomer, getCustomer, listCustomerOwnerOptions, listCustomers, updateCustomer, type CustomerOwnerOption, type CustomerProfile, type CustomerProfileQuery } from '@/api/customer/profile'
 import { formatUtc } from '@/utils/datetime'
+import { formatCurrency } from '@/utils/businessNumber'
 import { salesApi, type SalesDocument } from '@/api/dealer-sales'
 import { documentStatusText } from '@/pages/dealer-sales/salesPresentation'
 import { useRouter } from 'vue-router'
@@ -199,8 +200,8 @@ function openSalesDocument(row: SalesDocument) {
   if (!row.salesDocumentId) return
   void router.push({ name: 'SalesDocumentDetail', params: { id: row.salesDocumentId } })
 }
-function money(value?: number, currency = 'USD') {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(value || 0)
+function money(value?: string | null, currency = 'USD') {
+  return formatCurrency(value, currency, 2, formatCurrency('0', currency))
 }
 loadOwners()
 getList()

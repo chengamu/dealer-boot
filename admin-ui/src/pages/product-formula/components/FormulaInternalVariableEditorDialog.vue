@@ -173,7 +173,7 @@ function ruleActions(index: number): AdminTableAction[] {
 }
 
 function emptyRule(defaultRuleFlag: boolean): DraftRule {
-  return { __key: `${Date.now()}-${Math.random()}`, valueType: 'FIXED', fixedValue: 0, defaultRuleFlag, sortOrder: draftRules.value.length * 10 + 10 }
+  return { __key: `${Date.now()}-${Math.random()}`, valueType: 'FIXED', fixedValue: '0', defaultRuleFlag, sortOrder: draftRules.value.length * 10 + 10 }
 }
 
 function handleDefaultChange(row: DraftRule) {

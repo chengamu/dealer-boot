@@ -99,7 +99,7 @@ void load()
 </script>
 
 <style scoped>
-.sales-dashboard-page { display: grid; gap: 10px; padding: 10px; background: #f3f6fa; color: #1d2129; }
+.sales-dashboard-page { display: grid; gap: 10px; padding: 10px; background: var(--admin-bg); color: #1d2129; }
 .sales-dashboard-page__header { display: flex; align-items: center; justify-content: space-between; min-height: 48px; padding: 0 2px; }
 .sales-dashboard-page__header h1 { margin: 0; font-size: 18px; letter-spacing: 0; }
 .sales-dashboard-page__header p, .sales-dashboard-page__as-of { margin: 4px 0 0; color: #667085; font-size: 12px; }

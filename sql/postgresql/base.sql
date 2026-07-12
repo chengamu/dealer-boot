@@ -1244,9 +1244,10 @@ VALUES
     (200, 1, 'Monitor', 'sys.menu.monitor', 0, 120, 'monitor', NULL, '1', '0', 'M', '1', '1', NULL, 'monitor', 'system', now(), 'System monitor'),
     (201, 1, 'Online Users', 'sys.menu.monitor.online', 200, 1, 'online', 'monitor/online/index', '1', '0', 'C', '1', '1', 'monitor:online:list', 'online', 'system', now(), 'Online users'),
     (202, 1, 'Cache Monitor', 'sys.menu.monitor.cache', 200, 2, 'cache', 'monitor/cache/index', '1', '0', 'C', '1', '1', 'monitor:cache:list', 'redis', 'system', now(), 'Cache monitor'),
-    (203, 1, 'Cache List', 'sys.menu.monitor.cacheList', 200, 3, 'cacheList', 'monitor/cache/list', '1', '0', 'C', '1', '1', 'monitor:cache:list', 'redis-list', 'system', now(), 'Cache list'),
+    (205, 1, 'Server Resources', 'sys.menu.monitor.server', 200, 3, 'server', 'monitor/server/index', '1', '0', 'C', '1', '1', 'monitor:server:list', 'server', 'system', now(), 'Server resource snapshot'),
+    (203, 1, 'Cache List', 'sys.menu.monitor.cacheList', 200, 4, 'cacheList', 'monitor/cache/list', '1', '0', 'C', '1', '1', 'monitor:cache:list', 'redis-list', 'system', now(), 'Cache list'),
     (204, 1, 'Clear Cache', 'sys.menu.monitor.cacheList.clear', 203, 1, '#', '', '1', '0', 'F', '1', '1', 'monitor:cache:remove', '#', 'system', now(), 'Clear cache'),
-    (300, 1, 'Code Generator', 'sys.menu.tool.gen', 0, 130, '/gen', 'tool/gen/index', '1', '0', 'C', '1', '1', 'tool:gen:list', 'code', 'system', now(), 'Code generator'),
+    (300, 1, 'Code Generator', 'sys.menu.tool.gen', 1, 99, 'gen', 'tool/gen/index', '1', '0', 'C', '1', '1', 'tool:gen:list', 'code', 'system', now(), 'Code generator'),
     (400, 1, 'Logs', 'sys.menu.log', 0, 140, 'log', NULL, '1', '0', 'M', '1', '1', NULL, 'log', 'system', now(), 'Log management'),
     (401, 1, 'Operation Logs', 'sys.menu.log.operlog', 400, 1, 'operlog', 'monitor/operlog/index', '1', '0', 'C', '1', '1', 'monitor:operlog:list', 'form', 'system', now(), 'Operation logs'),
     (402, 1, 'Login Logs', 'sys.menu.log.logininfor', 400, 2, 'logininfor', 'monitor/logininfor/index', '1', '0', 'C', '1', '1', 'monitor:logininfor:list', 'logininfor', 'system', now(), 'Login logs')
@@ -1267,7 +1268,7 @@ SET menu_name = EXCLUDED.menu_name,
     tenant_id = EXCLUDED.tenant_id,
     update_by = 'system',
     update_time = now();
-UPDATE sys_menu SET tenant_id = 1 WHERE menu_id IN (120, 121, 200, 201, 202, 203, 204, 300, 400, 401, 402);
+UPDATE sys_menu SET tenant_id = 1 WHERE menu_id IN (120, 121, 200, 201, 202, 203, 204, 205, 300, 400, 401, 402);
 
 INSERT INTO sys_role_menu (role_id, menu_id, tenant_id)
 SELECT 1, menu_id, 1 FROM sys_menu

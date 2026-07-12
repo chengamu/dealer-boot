@@ -4,6 +4,9 @@ export interface ApiResult<T = unknown> {
   data: T
 }
 
+/** JSON decimal values are strings so JavaScript never rewrites business precision. */
+export type DecimalValue = string | null
+
 export interface PageResult<T = unknown> {
   code?: number
   msg?: string

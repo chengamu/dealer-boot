@@ -76,8 +76,8 @@ function blankForm(): ShippingTemplateVO {
 
 function defaultRules() {
   return [
-    { feeCode: 'MANUAL', feeName: t('productCenter.shippingTemplate.manual'), minAreaSqft: 0, feeAmount: 0, sortOrder: 0 },
-    { feeCode: 'MOTORIZED', feeName: t('productCenter.shippingTemplate.motorized'), minAreaSqft: 0, feeAmount: 0, sortOrder: 1 }
+    { feeCode: 'MANUAL', feeName: t('productCenter.shippingTemplate.manual'), minAreaSqft: '0', feeAmount: '0', sortOrder: 0 },
+    { feeCode: 'MOTORIZED', feeName: t('productCenter.shippingTemplate.motorized'), minAreaSqft: '0', feeAmount: '0', sortOrder: 1 }
   ]
 }
 

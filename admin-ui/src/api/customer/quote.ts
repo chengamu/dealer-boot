@@ -1,5 +1,5 @@
 import { request, requestPage } from '@/utils/request'
-import type { PageQuery } from '@/types/api'
+import type { DecimalValue, PageQuery } from '@/types/api'
 import type { SaleProductQuery, SaleProductVO } from '@/api/product-pricing/types'
 import type { ProductFormulaOptionVO, ProductFormulaOptionValueVO } from '@/api/product-capability/types'
 
@@ -23,20 +23,20 @@ export interface CustomerQuoteItem {
   categoryNameCn?: string
   productTypeCode?: string
   productTypeNameCn?: string
-  orderWidthInch?: number
-  orderHeightInch?: number
+  orderWidthInch?: DecimalValue
+  orderHeightInch?: DecimalValue
   quantity?: number
   selectedOptionValues: Record<string, string>
   selectedOptionsSummaryCn?: string
   selectedOptionsSummaryEn?: string
   calculationStatus?: QuoteCalculationStatus
   calculationMessage?: string
-  unitAmount?: number
-  productAmount?: number
-  unitShippingAmount?: number
+  unitAmount?: DecimalValue
+  productAmount?: DecimalValue
+  unitShippingAmount?: DecimalValue
   shippingTemplateId?: string
-  shippingAmount?: number
-  lineAmount?: number
+  shippingAmount?: DecimalValue
+  lineAmount?: DecimalValue
   sortOrder?: number
   remark?: string
 }
@@ -60,9 +60,9 @@ export interface CustomerQuote {
   ownerName?: string
   currencyCode?: string
   status?: QuoteStatus
-  productAmount?: number
-  shippingAmount?: number
-  totalAmount?: number
+  productAmount?: DecimalValue
+  shippingAmount?: DecimalValue
+  totalAmount?: DecimalValue
   confirmedBy?: string
   confirmedTime?: string
   salesDocumentId?: string
@@ -84,12 +84,12 @@ export interface QuoteOrderLinePreview {
   roomLocation?: string
   saleProductName?: string
   quantity?: number
-  listAmount?: number
-  discountRate?: number
-  discountAmount?: number
-  productAmount?: number
-  shippingAmount?: number
-  lineAmount?: number
+  listAmount?: DecimalValue
+  discountRate?: DecimalValue
+  discountAmount?: DecimalValue
+  productAmount?: DecimalValue
+  shippingAmount?: DecimalValue
+  lineAmount?: DecimalValue
 }
 
 export interface QuoteOrderPreview {
@@ -100,12 +100,12 @@ export interface QuoteOrderPreview {
   merchantLevelCode?: string
   merchantLevelName?: string
   currencyCode?: string
-  customerQuoteAmount?: number
-  listAmount?: number
-  discountAmount?: number
-  productAmount?: number
-  shippingAmount?: number
-  totalAmount?: number
+  customerQuoteAmount?: DecimalValue
+  listAmount?: DecimalValue
+  discountAmount?: DecimalValue
+  productAmount?: DecimalValue
+  shippingAmount?: DecimalValue
+  totalAmount?: DecimalValue
   items?: QuoteOrderLinePreview[]
 }
 
@@ -115,13 +115,13 @@ export interface QuoteConvertOrderRequest {
   shippingAddress: string
   customerPoNo?: string
   remark?: string
-  expectedTotalAmount: number
+  expectedTotalAmount: string
 }
 
 export interface QuoteOrderResult {
   salesDocumentId: string
   orderNo: string
-  totalAmount: number
+  totalAmount: string
 }
 
 export interface QuoteEmailRequest {

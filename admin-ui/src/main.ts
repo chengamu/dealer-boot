@@ -33,6 +33,8 @@ import AdminTableActions from '@/components/AdminTableActions/index.vue'
 import BusinessInchInput from '@/components/BusinessInchInput/index.vue'
 import BusinessNumberInput from '@/components/BusinessNumberInput/index.vue'
 import BusinessNumberText from '@/components/BusinessNumberText/index.vue'
+import BusinessVxeInchCell from '@/components/BusinessVxeInchCell/index.vue'
+import BusinessVxeNumberCell from '@/components/BusinessVxeNumberCell/index.vue'
 import DictTag from '@/components/DictTag/index.vue'
 import Editor from '@/components/Editor/index.vue'
 import FileUpload from '@/components/FileUpload/index.vue'
@@ -68,6 +70,8 @@ async function bootstrap() {
   app.component('BusinessInchInput', BusinessInchInput)
   app.component('BusinessNumberInput', BusinessNumberInput)
   app.component('BusinessNumberText', BusinessNumberText)
+  app.component('BusinessVxeInchCell', BusinessVxeInchCell)
+  app.component('BusinessVxeNumberCell', BusinessVxeNumberCell)
   app.component('DictTag', DictTag)
   app.component('Editor', Editor)
   app.component('FileUpload', FileUpload)

@@ -57,7 +57,7 @@ defineProps<{
   draftVersionLabel: string
   saving: boolean
   validating: boolean
-  formatNumber: (value?: number | string) => string
+  formatNumber: (value?: number | string | null) => string
   formatMinute: (value?: string) => string
   statusText: (status?: string) => string
   validationText: (status?: string) => string

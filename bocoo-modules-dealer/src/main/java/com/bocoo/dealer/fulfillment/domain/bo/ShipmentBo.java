@@ -2,6 +2,8 @@ package com.bocoo.dealer.fulfillment.domain.bo;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Digits;
+import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
@@ -18,11 +20,19 @@ public class ShipmentBo {
     private String carrierName;
     @Size(max = 128)
     private String trackingNo;
+    @Digits(integer = 12, fraction = 6)
+    @PositiveOrZero
     private BigDecimal weight;
     @Size(max = 32)
     private String weightUnit;
+    @Digits(integer = 12, fraction = 6)
+    @PositiveOrZero
     private BigDecimal length;
+    @Digits(integer = 12, fraction = 6)
+    @PositiveOrZero
     private BigDecimal width;
+    @Digits(integer = 12, fraction = 6)
+    @PositiveOrZero
     private BigDecimal height;
     @Size(max = 32)
     private String dimensionUnit;

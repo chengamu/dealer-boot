@@ -7,7 +7,7 @@
       </div>
       <div class="quick-order-page__actions">
         <el-button v-hasPermi="[savePerm]" :loading="saving" :disabled="readonly" @click="saveDraft">{{ t('dealer.quickOrder.saveDraft') }}</el-button>
-        <el-button v-hasPermi="['dealer:quick-order:submit']" type="primary" :disabled="readonly || !rows.length" @click="openReview">
+        <el-button v-hasPermi="['dealer:quick-order:submit']" type="primary" :disabled="readonly || !rows.length || !currentInputValid" @click="openReview">
           {{ t('dealer.quickOrder.review') }}
         </el-button>
       </div>
@@ -29,6 +29,7 @@
       @calculate="calculateCurrentItem"
       @save-line="saveCurrentLine"
       @reset-line="resetCurrentLine"
+      @validity-change="currentInputValid = $event"
     />
     <QuickOrderCartBar
       :rows="rows"
@@ -89,6 +90,7 @@ const loadingSetup = ref(false)
 const calculating = ref(false)
 const cartExpanded = ref(true)
 const editingClientId = ref('')
+const currentInputValid = ref(true)
 const language = computed(() => localeQuoteLanguage(locale.value))
 const readonly = computed(() => order.status === 'ORDERED' || !auth.hasPermi(savePerm.value))
 const savePerm = computed(() => order.quickOrderId ? 'dealer:quick-order:edit' : 'dealer:quick-order:add')
@@ -165,6 +167,7 @@ async function changeCurrentProduct() {
 }
 
 async function calculateCurrentItem() {
+  if (!ensureCurrentInputValid()) return
   if (!order.quickOrderId) await saveDraft()
   if (!order.quickOrderId) return
   calculating.value = true
@@ -179,6 +182,7 @@ async function calculateCurrentItem() {
 }
 
 function saveCurrentLine() {
+  if (!ensureCurrentInputValid()) return
   if (currentItem.calculationStatus !== 'PASS') return
   const next = normalizeQuickOrderItem(currentItem)
   if (editingClientId.value) {
@@ -214,17 +218,24 @@ async function clearRows() {
 }
 
 async function openReview() {
+  if (!ensureCurrentInputValid()) return
   await saveDraft()
   if (!order.quickOrderId) return
   const path = resolveRoutePath(permissionStore.routers, quickOrderRouteComponents.review)
   await router.push({ path, query: { quickOrderId: order.quickOrderId } })
 }
 
+function ensureCurrentInputValid() {
+  if (currentInputValid.value) return true
+  ElMessage.warning(t('product.numeric.inputInvalid'))
+  return false
+}
+
 void loadPage()
 </script>
 
 <style scoped>
-.quick-order-page { display: flex; min-height: calc(100vh - 92px); flex-direction: column; gap: 12px; padding: 12px; background: #f3f6fa; }
+.quick-order-page { display: flex; min-height: calc(100vh - 92px); flex-direction: column; gap: 12px; padding: 12px; background: var(--admin-bg); }
 .quick-order-page__topbar,
 .quick-order-page__title,
 .quick-order-page__actions { display: flex; align-items: center; gap: 10px; }

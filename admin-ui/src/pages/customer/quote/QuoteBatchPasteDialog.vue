@@ -14,6 +14,7 @@
 import { computed, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
+import { canonicalDecimal, compareDecimals, isExactInch } from '@/utils/businessNumber'
 
 import type { QuotePastedRow } from './quoteWorkbenchTypes'
 
@@ -23,8 +24,15 @@ const visible = ref(false)
 const content = ref('')
 const parsed = computed(() => content.value.split(/\r?\n/).map((line) => line.trim()).filter(Boolean).map((line) => {
   const [roomLocation, width, height, quantity] = line.split('\t').map((value) => value.trim())
-  return { roomLocation, orderWidthInch: Number(width), orderHeightInch: Number(height), quantity: Number(quantity) }
-}).filter((row) => row.orderWidthInch > 0 && row.orderHeightInch > 0 && Number.isInteger(row.quantity) && row.quantity > 0))
+  return {
+    roomLocation,
+    orderWidthInch: canonicalDecimal(width) || '',
+    orderHeightInch: canonicalDecimal(height) || '',
+    quantity: Number(quantity)
+  }
+}).filter((row) => isExactInch(row.orderWidthInch) && isExactInch(row.orderHeightInch)
+  && compareDecimals(row.orderWidthInch, '0') === 1 && compareDecimals(row.orderHeightInch, '0') === 1
+  && Number.isInteger(row.quantity) && row.quantity > 0))
 
 function open() { content.value = ''; visible.value = true }
 function confirm() {

@@ -15,6 +15,7 @@ export function useQuoteWorkbenchActions(ctx: {
   quote: CustomerQuote
   rows: Ref<QuoteWorkbenchItem[]>
   validateHeader: () => Promise<boolean | undefined>
+  validateLines: () => boolean
   reload: (id: string) => Promise<void>
   t: (key: string) => string
 }) {
@@ -22,6 +23,7 @@ export function useQuoteWorkbenchActions(ctx: {
   const calculatingId = ref('')
 
   async function save() {
+    if (!ensureLinesValid()) return undefined
     if (!await ctx.validateHeader()) return undefined
     saving.value = true
     try {
@@ -39,6 +41,7 @@ export function useQuoteWorkbenchActions(ctx: {
   }
 
   async function calculateItem(row: QuoteWorkbenchItem) {
+    if (!ensureLinesValid()) return
     calculatingId.value = row.clientId
     try {
       const response = await customerQuoteApi.calculateItem(row, ctx.quote.quoteLanguage)
@@ -71,6 +74,12 @@ export function useQuoteWorkbenchActions(ctx: {
     await customerQuoteApi.void(ctx.quote.quoteId)
     await ctx.reload(ctx.quote.quoteId)
     ElMessage.success(ctx.t('common.operationSuccess'))
+  }
+
+  function ensureLinesValid() {
+    const valid = ctx.validateLines()
+    if (!valid) ElMessage.warning(ctx.t('product.numeric.inputInvalid'))
+    return valid
   }
 
   return { saving, calculatingId, save, calculateItem, calculateAll, confirm, voidQuote }

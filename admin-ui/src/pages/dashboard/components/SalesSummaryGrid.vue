@@ -17,6 +17,7 @@ import { computed, type Component } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ArrowRight, Box, Document, Money, ShoppingCart, Van } from '@element-plus/icons-vue'
 import type { SalesDashboard } from '@/api/sales-dashboard'
+import { formatCurrency } from '@/utils/businessNumber'
 
 const props = defineProps<{ dashboard: SalesDashboard }>()
 const emit = defineEmits<{ select: [target: string] }>()
@@ -77,8 +78,8 @@ function summaryLabel(key: string) {
   return t('dashboard.sales.summary.shipped')
 }
 
-function money(value = 0, currency = 'USD') {
-  return new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(value)
+function money(value?: string | null, currency = 'USD') {
+  return formatCurrency(value, currency, 2, formatCurrency('0', currency))
 }
 </script>
 

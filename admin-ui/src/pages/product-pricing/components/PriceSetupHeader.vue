@@ -66,7 +66,7 @@ function productLabel(item: SaleProductVO) {
   return `${item.saleProductCode || '-'} ${item.saleProductName || ''}`
 }
 
-function formatNumber(value?: number | string) {
+function formatNumber(value?: number | string | null) {
   return formatInch(value)
 }
 

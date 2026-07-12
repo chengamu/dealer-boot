@@ -6,7 +6,7 @@
   --admin-success: #00c18d;
   --admin-warning: #ff9900;
   --admin-danger: #ff4d4f;
-  --admin-bg: #f3f6fa;
+  --admin-bg: #ffffff;
   --admin-surface: #ffffff;
   --admin-border: #e9edf5;
   --admin-border-soft: #eef0f5;
@@ -93,6 +93,7 @@
 
     .hamburger-container {
       display: inline-flex;
+      flex: 0 0 auto;
       align-items: center;
       justify-content: center;
       width: 40px;
@@ -484,52 +485,58 @@
     height: var(--admin-tags-height);
     display: flex;
     align-items: center;
-    padding: 0 14px;
+    padding: 0 18px;
     background: #ffffff !important;
-    border-bottom: 1px solid #f3f5f8 !important;
+    border-bottom: 1px solid var(--admin-border) !important;
 
     .tags-view-wrapper .tags-view-item {
       display: inline-flex;
+      flex: 0 0 auto;
       align-items: center;
       position: relative;
-      max-width: 156px;
-      height: 30px;
-      line-height: 30px;
-      margin: 2px 3px;
+      max-width: 168px;
+      height: 100%;
+      line-height: 1;
+      margin: 0 6px;
       padding: 0 10px;
       border: 0 !important;
-      border-radius: 6px;
-      color: #667085;
+      border-radius: 0;
+      color: #475467;
       background: transparent !important;
-      font-size: var(--admin-font-size-small);
-      gap: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      gap: 0;
       white-space: nowrap;
-      transition: color 0.18s ease, background-color 0.18s ease;
+      transition: color 0.18s ease;
 
       &:hover {
-        background: #f3f6fb !important;
+        background: transparent !important;
         color: var(--admin-primary);
       }
 
       &.active {
         background: transparent !important;
         color: var(--admin-primary) !important;
-        font-weight: 700;
+        font-weight: 600;
 
-        &::after {
+        .tags-view-title::after {
           position: absolute;
-          right: 10px;
+          right: 0;
           bottom: 0;
-          left: 10px;
+          left: 0;
           display: block !important;
           height: 2px;
-          border-radius: 2px;
+          border-radius: 2px 2px 0 0;
           background: var(--admin-primary);
           content: "";
         }
       }
 
       .tags-view-title {
+        display: inline-flex;
+        align-items: center;
+        position: relative;
+        height: 100%;
         overflow: hidden;
         text-overflow: ellipsis;
       }
@@ -538,25 +545,29 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        flex: 0 0 auto;
+        position: absolute;
+        top: 50%;
+        right: -7px;
+        width: 14px;
+        height: 14px;
+        transform: translateY(-50%);
+        border-radius: 4px;
+        background: #fff;
         opacity: 0;
-        transition: opacity 0.18s ease, color 0.18s ease;
-      }
-
-      &.active .tags-view-close {
-        opacity: 0.42;
+        transition: opacity 0.18s ease, color 0.18s ease, background-color 0.18s ease;
       }
 
       &:hover .tags-view-close {
-        opacity: 0.72;
+        opacity: 0.68;
       }
 
       .tags-view-close:hover {
         opacity: 1;
+        background: #fff1f2;
       }
 
       .el-icon-close {
-        margin-left: 6px;
+        margin-left: 0;
         color: #c4ccd8;
         width: 14px;
         height: 14px;

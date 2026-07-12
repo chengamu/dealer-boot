@@ -38,6 +38,8 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import type { QuoteLanguage } from '@/api/customer/quote'
+import type { DecimalValue } from '@/types/api'
+import { formatCurrency } from '@/utils/businessNumber'
 import { quickOrderSize, quickOrderSummary, type QuickOrderWorkbenchItem } from '../quickOrderShared'
 
 const props = defineProps<{
@@ -45,9 +47,9 @@ const props = defineProps<{
   expanded: boolean
   language: QuoteLanguage
   currencyCode?: string
-  productAmount?: number
-  shippingAmount?: number
-  totalAmount?: number
+  productAmount?: DecimalValue
+  shippingAmount?: DecimalValue
+  totalAmount?: DecimalValue
 }>()
 
 const emit = defineEmits<{
@@ -60,9 +62,7 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 
-function money(value?: number) {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: props.currencyCode || 'USD' }).format(value || 0)
-}
+function money(value?: DecimalValue) { return formatCurrency(value ?? '0', props.currencyCode || 'USD') }
 </script>
 
 <style scoped>

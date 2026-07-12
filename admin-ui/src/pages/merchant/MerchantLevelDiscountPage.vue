@@ -81,7 +81,7 @@
             <el-option v-for="item in productTypeOptions" :key="item.value" :label="item.label" :value="item.value" />
           </el-select>
         </el-form-item>
-        <el-form-item :label="t('merchantDiscount.rate')" prop="discountRate"><BusinessNumberInput v-model="form.discountRate" mode="RATE" :max-fraction-digits="4" :min="0" :max="1" /></el-form-item>
+        <el-form-item :label="t('merchantDiscount.rate')" prop="discountRate"><BusinessNumberInput v-model="form.discountRate" mode="RATIO" :max-fraction-digits="4" :min="0" :max="1" /></el-form-item>
         <el-form-item :label="t('common.sort')"><el-input-number v-model="form.sortOrder" :min="0" controls-position="right" /></el-form-item>
         <el-form-item :label="t('common.remark')"><el-input v-model="form.remark" type="textarea" :rows="3" /></el-form-item>
       </el-form>
@@ -167,7 +167,7 @@ function isSelectable(row: MerchantLevelDiscount) {
   return row.status !== 'ENABLED'
 }
 function openAdd() {
-  form.value = { discountRate: 1, sortOrder: 0, status: 'DISABLED' }
+  form.value = { discountRate: '1', sortOrder: 0, status: 'DISABLED' }
   open.value = true
 }
 async function openEdit(row?: MerchantLevelDiscount) {

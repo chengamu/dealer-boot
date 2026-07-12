@@ -45,20 +45,20 @@ export function enabledStatusTagType(status?: string) {
   return status === PRODUCT_STATUS_ENABLED ? 'success' : 'info'
 }
 
-export function money(value?: number | string) {
+export function money(value?: number | string | null) {
   return formatUnitPrice(value, '0.00')
 }
 
 export const DEFAULT_MATERIAL_PRICE_FORMULA = 'unitPrice * usageQty'
 export const DEFAULT_FABRIC_AREA_FORMULA = 'MAX(drop * 2.54 * width * 2.54 / 10000, 1)'
 
-export function materialPriceFormulaForUnitPrice(unitPrice?: number | string, attributeGroupCode?: string) {
+export function materialPriceFormulaForUnitPrice(unitPrice?: number | string | null, attributeGroupCode?: string) {
   return attributeGroupCode === 'FABRIC'
     ? `${money(unitPrice)} * ${DEFAULT_FABRIC_AREA_FORMULA}`
     : `${money(unitPrice)} * usageQty`
 }
 
-export function displayMaterialPriceFormula(formula?: string, unitPrice?: number | string) {
+export function displayMaterialPriceFormula(formula?: string, unitPrice?: number | string | null) {
   return String(formula || DEFAULT_MATERIAL_PRICE_FORMULA).replace(/\bunitPrice\b/g, money(unitPrice))
 }
 

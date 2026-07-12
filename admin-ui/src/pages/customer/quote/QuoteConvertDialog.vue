@@ -75,6 +75,8 @@ import { reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import { customerQuoteApi, type CustomerQuote, type QuoteConvertOrderRequest, type QuoteOrderPreview, type QuoteOrderResult } from '@/api/customer/quote'
+import type { DecimalValue } from '@/types/api'
+import { formatCurrency } from '@/utils/businessNumber'
 
 const emit = defineEmits<{ converted: [result: QuoteOrderResult] }>()
 const { t } = useI18n()
@@ -90,7 +92,7 @@ const form = reactive<QuoteConvertOrderRequest>({
   shippingAddress: '',
   customerPoNo: '',
   remark: '',
-  expectedTotalAmount: 0
+  expectedTotalAmount: ''
 })
 const rules: FormRules = {
   recipientName: [{ required: true, message: t('customer.quote.order.recipient.required'), trigger: 'blur' }],
@@ -110,11 +112,11 @@ async function open(quote: CustomerQuote) {
     shippingAddress: quote.shippingAddress || '',
     customerPoNo: quote.customerPoNo || '',
     remark: '',
-    expectedTotalAmount: 0
+    expectedTotalAmount: ''
   })
   try {
     Object.assign(preview, (await customerQuoteApi.orderPreview(quote.quoteId)).data || {})
-    form.expectedTotalAmount = preview.totalAmount || 0
+    form.expectedTotalAmount = preview.totalAmount || ''
   } finally {
     loading.value = false
   }
@@ -137,12 +139,10 @@ async function submit() {
 function resetState() {
   quoteId.value = undefined
   Object.assign(preview, {})
-  Object.assign(form, { recipientName: '', recipientPhone: '', shippingAddress: '', customerPoNo: '', remark: '', expectedTotalAmount: 0 })
+  Object.assign(form, { recipientName: '', recipientPhone: '', shippingAddress: '', customerPoNo: '', remark: '', expectedTotalAmount: '' })
 }
 
-function money(value?: number) {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: preview.currencyCode || 'USD' }).format(value || 0)
-}
+function money(value?: DecimalValue) { return formatCurrency(value ?? '0', preview.currencyCode || 'USD') }
 
 defineExpose({ open })
 </script>

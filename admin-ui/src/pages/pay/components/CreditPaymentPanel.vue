@@ -6,7 +6,7 @@
       <el-descriptions-item :label="t('pay.credit.used')">{{ money(account?.usedCredit, currency) }}</el-descriptions-item>
       <el-descriptions-item :label="t('pay.credit.available')">{{ money(available, currency) }}</el-descriptions-item>
       <el-descriptions-item :label="t('pay.credit.current')">{{ money(amount, currency) }}</el-descriptions-item>
-      <el-descriptions-item :label="t('pay.credit.after')"><strong>{{ money(available - amount, currency) }}</strong></el-descriptions-item>
+      <el-descriptions-item :label="t('pay.credit.after')"><strong>{{ money(afterPayment, currency) }}</strong></el-descriptions-item>
     </el-descriptions>
     <el-checkbox v-model="confirmed" :disabled="Boolean(disabledReason)">{{ t('pay.credit.receivableConfirm') }}</el-checkbox>
     <el-button v-hasPermi="['pay:credit:use']" type="primary" :disabled="!confirmed || Boolean(disabledReason)" :loading="loading" @click="submit">{{ t('pay.credit.submit') }}</el-button>
@@ -19,17 +19,20 @@ import { ElMessageBox } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import { payApi, type CreditAccount } from '@/api/pay'
 import { money } from '../payPresentation'
+import type { DecimalValue } from '@/types/api'
+import { compareDecimals, subtractDecimals } from '@/utils/businessNumber'
 
-const props = defineProps<{ salesDocumentId: string; amount: number; currency: string; account?: CreditAccount }>()
+const props = defineProps<{ salesDocumentId: string; amount: DecimalValue; currency: string; account?: CreditAccount }>()
 const emit = defineEmits<{ refresh: [poll?: boolean] }>()
 const { t } = useI18n()
 const loading = ref(false)
 const confirmed = ref(false)
-const available = computed(() => (props.account?.creditLimit || 0) - (props.account?.usedCredit || 0))
+const available = computed(() => subtractDecimals(props.account?.creditLimit, props.account?.usedCredit))
+const afterPayment = computed(() => subtractDecimals(available.value, props.amount))
 const disabledReason = computed(() => {
   if (!props.account) return t('pay.credit.unavailable')
   if (props.account.status !== 'NORMAL') return t('pay.credit.frozen')
-  if (available.value < props.amount) return t('pay.credit.insufficient')
+  if ((compareDecimals(available.value, props.amount) ?? -1) < 0) return t('pay.credit.insufficient')
   return ''
 })
 

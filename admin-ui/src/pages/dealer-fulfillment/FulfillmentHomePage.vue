@@ -52,7 +52,7 @@ function closeDetail() {
 </script>
 
 <style scoped>
-.fulfillment-home { display: flex; flex-direction: column; gap: 8px; background: #f3f6fa; }
+.fulfillment-home { display: flex; flex-direction: column; gap: 8px; background: var(--admin-bg); }
 .fulfillment-home__header { display: flex; min-height: 52px; align-items: center; justify-content: space-between; padding: 8px 12px; border: 1px solid #e9edf5; background: #fff; }
 .fulfillment-home__header h2 { margin: 0; color: #1d2129; font-size: 18px; }
 .fulfillment-home__header p { margin: 3px 0 0; color: #667085; font-size: 12px; }

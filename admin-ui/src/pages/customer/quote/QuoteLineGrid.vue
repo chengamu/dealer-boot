@@ -50,14 +50,14 @@
           </el-select>
         </template>
       </vxe-column>
-      <vxe-column field="orderWidthInch" :title="t('customer.quote.width')" width="125" align="right">
-        <template #default="{ row }"><el-input-number v-model="row.orderWidthInch" :disabled="readonly" :min="0.01" :precision="2" :controls="false" @change="markDirty(row)" /></template>
+      <vxe-column field="orderWidthInch" :title="t('customer.quote.width')" width="190" align="right">
+        <template #default="{ row }"><BusinessVxeInchCell v-model="row.orderWidthInch" :readonly="readonly" min="0.125" @change="markDirty(row)" @validity-change="updateValidity(row, 'width', $event)" /></template>
       </vxe-column>
-      <vxe-column field="orderHeightInch" :title="t('customer.quote.height')" width="125" align="right">
-        <template #default="{ row }"><el-input-number v-model="row.orderHeightInch" :disabled="readonly" :min="0.01" :precision="2" :controls="false" @change="markDirty(row)" /></template>
+      <vxe-column field="orderHeightInch" :title="t('customer.quote.height')" width="190" align="right">
+        <template #default="{ row }"><BusinessVxeInchCell v-model="row.orderHeightInch" :readonly="readonly" min="0.125" @change="markDirty(row)" @validity-change="updateValidity(row, 'height', $event)" /></template>
       </vxe-column>
       <vxe-column field="quantity" :title="t('customer.quote.quantity')" width="82" align="center">
-        <template #default="{ row }"><el-input-number v-model="row.quantity" :disabled="readonly" :min="1" :precision="0" :controls="false" @change="markDirty(row)" /></template>
+        <template #default="{ row }"><BusinessVxeNumberCell v-model="row.quantity" mode="COUNT" integer-value :readonly="readonly" :min="1" :allow-zero="false" @change="markDirty(row)" @validity-change="updateValidity(row, 'quantity', $event)" /></template>
       </vxe-column>
       <vxe-column :title="t('customer.quote.configuration')" min-width="220" show-overflow>
         <template #default="{ row }">{{ summary(row) || '-' }}</template>
@@ -85,9 +85,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import type { DecimalValue } from '@/types/api'
 import type { QuoteCalculationStatus, QuoteLanguage } from '@/api/customer/quote'
+import { formatCurrency } from '@/utils/businessNumber'
 import type { SaleProductVO } from '@/api/product-pricing/types'
 import type { VxeTableInstance } from 'vxe-table'
 import QuoteLineEditor from './QuoteLineEditor.vue'
@@ -108,24 +110,44 @@ const emit = defineEmits<{
   add: []; duplicate: [row: QuoteWorkbenchItem]; remove: [row: QuoteWorkbenchItem]
   'duplicate-many': [rows: QuoteWorkbenchItem[]]; 'remove-many': [rows: QuoteWorkbenchItem[]]; paste: [rows: QuotePastedRow[]]
   loadProduct: [row: QuoteWorkbenchItem]; calculate: [row: QuoteWorkbenchItem]; dirty: [row: QuoteWorkbenchItem]
+  'validity-change': [valid: boolean]
 }>()
 const { t } = useI18n()
 const tableRef = ref<VxeTableInstance<QuoteWorkbenchItem>>()
 const pasteRef = ref<InstanceType<typeof QuoteBatchPasteDialog>>()
 const selectedRows = ref<QuoteWorkbenchItem[]>([])
+const invalidCells = ref(new Set<string>())
+
+watch(() => props.rows.map((row) => row.clientId), (clientIds) => {
+  const activeIds = new Set(clientIds)
+  const next = new Set([...invalidCells.value].filter((key) => activeIds.has(key.split(':')[0])))
+  updateInvalidCells(next)
+})
 
 function changeProduct(row: QuoteWorkbenchItem) { row.selectedOptionValues = {}; markDirty(row); emit('loadProduct', row) }
 function markDirty(row: QuoteWorkbenchItem) { row.calculationStatus = 'PENDING'; row.calculationMessage = ''; emit('dirty', row) }
+function updateValidity(row: QuoteWorkbenchItem, field: string, valid: boolean) {
+  const next = new Set(invalidCells.value)
+  const key = `${row.clientId}:${field}`
+  if (valid) next.delete(key)
+  else { next.add(key); markDirty(row) }
+  updateInvalidCells(next)
+}
+function updateInvalidCells(next: Set<string>) {
+  invalidCells.value = next
+  emit('validity-change', next.size === 0)
+}
 function handleExpand({ row, expanded }: { row: QuoteWorkbenchItem; expanded: boolean }) { if (expanded) emit('loadProduct', row) }
 function syncSelection() { selectedRows.value = tableRef.value?.getCheckboxRecords() || [] }
 function summary(row: QuoteWorkbenchItem) { return props.language === 'EN_US' ? row.selectedOptionsSummaryEn : row.selectedOptionsSummaryCn }
-function money(value?: number) { return value == null ? '-' : new Intl.NumberFormat('en-US', { style: 'currency', currency: props.currencyCode || 'USD' }).format(value) }
+function money(value?: DecimalValue) { return formatCurrency(value, props.currencyCode || 'USD') }
 function calculationText(status?: QuoteCalculationStatus) {
   return status === 'PASS' ? t('customer.quote.calculation.pass') : status === 'FAIL' ? t('customer.quote.calculation.fail') : t('customer.quote.calculation.pending')
 }
 function calculationType(status?: QuoteCalculationStatus) { return status === 'PASS' ? 'success' : status === 'FAIL' ? 'danger' : 'warning' }
 function expand(row: QuoteWorkbenchItem) { void tableRef.value?.setRowExpand(row, true) }
-defineExpose({ expand })
+function validate() { return invalidCells.value.size === 0 }
+defineExpose({ expand, validate })
 </script>
 
 <style scoped>

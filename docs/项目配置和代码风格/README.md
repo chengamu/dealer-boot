@@ -14,6 +14,7 @@
 | 菜单、按钮、权限、动态路由 | [permission-menu-standards.md](./permission-menu-standards.md) |
 | 文案、错误消息、时间字段 | [i18n-utc-standards.md](./i18n-utc-standards.md) |
 | 数量、尺寸、单价、金额、比例和舍入 | [numeric-precision-standards.md](./numeric-precision-standards.md) |
+| 数值组件、API、计算、快照和输出验收矩阵 | [numeric-precision-test-matrix.md](./numeric-precision-test-matrix.md) |
 | 同源代理部署 | [deployment-nginx-same-origin.md](./deployment-nginx-same-origin.md) |
 | AI Runtime 架构 | [ai-runtime-architecture.md](./ai-runtime-architecture.md) |
 | 文档放置、删除、整理 | [documentation-governance.md](./documentation-governance.md) |

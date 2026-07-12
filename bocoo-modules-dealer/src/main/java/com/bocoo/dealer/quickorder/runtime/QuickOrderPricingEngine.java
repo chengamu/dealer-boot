@@ -1,6 +1,7 @@
 package com.bocoo.dealer.quickorder.runtime;
 
 import com.bocoo.common.core.exception.ServiceException;
+import com.bocoo.common.core.utils.DecimalContractUtils;
 import com.bocoo.dealer.quickorder.domain.bo.QuickOrderItemBo;
 import com.bocoo.dealer.quickorder.domain.entity.QuickOrderItem;
 import com.bocoo.merchant.service.CustomerQuoteCatalogService;
@@ -110,7 +111,10 @@ public class QuickOrderPricingEngine {
     private void validate(QuickOrderItemBo bo) {
         if (bo == null || bo.getSaleProductId() == null || bo.getOrderWidthInch() == null
             || bo.getOrderHeightInch() == null || bo.getOrderWidthInch().signum() <= 0
-            || bo.getOrderHeightInch().signum() <= 0 || bo.getQuantity() == null || bo.getQuantity() < 1) {
+            || bo.getOrderHeightInch().signum() <= 0
+            || !DecimalContractUtils.isExactFractionStep(bo.getOrderWidthInch(), 8)
+            || !DecimalContractUtils.isExactFractionStep(bo.getOrderHeightInch(), 8)
+            || bo.getQuantity() == null || bo.getQuantity() < 1) {
             throw ServiceException.ofMessageKey("dealer.quickOrder.item.incomplete");
         }
     }

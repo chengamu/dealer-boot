@@ -155,6 +155,7 @@
   "sys.menu.monitor.cacheList": "缓存列表",
   "sys.menu.monitor.cacheList.clear": "清理缓存",
   "sys.menu.monitor.online": "在线用户",
+  "sys.menu.monitor.server": "服务器资源",
   "sys.menu.system": "系统管理",
   "sys.menu.system.config": "参数配置",
   "sys.menu.system.dept": "部门管理",

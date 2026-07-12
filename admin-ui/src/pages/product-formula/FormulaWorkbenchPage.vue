@@ -177,6 +177,6 @@ onMounted(refreshAll)
 .formula-workbench-page {
   display: grid;
   gap: 12px;
-  background: #f5f7fb;
+  background: var(--admin-bg);
 }
 </style>

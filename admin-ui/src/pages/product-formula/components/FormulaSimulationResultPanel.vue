@@ -78,6 +78,7 @@ import { useLocaleStore } from '@/stores/locale'
 import type { ProductFormulaOptionMaterialVO, ProductFormulaOptionVO, ProductFormulaSimulationVO, ProductFormulaVO } from '@/api/product-capability/types'
 import { FORMULA_VALIDATION_STATUS } from '@/constants/productStatus'
 import { formatRate } from '@/utils/businessNumber'
+import type { DecimalValue } from '@/types/api'
 
 const props = defineProps<{
   result: ProductFormulaSimulationVO
@@ -88,8 +89,8 @@ const props = defineProps<{
   optionMaterials: ProductFormulaOptionMaterialVO[]
   unitLabel: (unitCode?: string) => string
   valueLabel: (optionCode?: string, valueCode?: string) => string
-  quantityFormat: (value?: number) => string
-  moneyFormat: (value?: number) => string
+  quantityFormat: (value?: DecimalValue) => string
+  moneyFormat: (value?: DecimalValue) => string
   validationText: (status?: string) => string
   messageText: (message?: string) => string
 }>()
@@ -118,7 +119,7 @@ function linkedMaterialSummary(optionCode?: string) {
     + (materials.length > 3 ? ` +${materials.length - 3}` : '')
 }
 
-function percentFormat(value?: number) {
+function percentFormat(value?: string | number | null) {
   const formatted = formatRate(value)
   return formatted === '-' ? formatted : `${formatted}%`
 }

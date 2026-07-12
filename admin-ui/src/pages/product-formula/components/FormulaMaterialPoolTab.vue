@@ -67,7 +67,7 @@
       </el-table-column>
       <el-table-column :label="t('productCenter.formulaSetup.lossRate')" width="112" align="right">
         <template #default="{ row }">
-          <BusinessNumberInput v-model="row.lossRate" mode="RATE" :min="0" :max-fraction-digits="6" />
+          <BusinessNumberInput v-model="row.lossRate" mode="PERCENT" :min="0" :max-fraction-digits="6" />
         </template>
       </el-table-column>
       <el-table-column :label="t('productCenter.formulaSetup.usageSummary')" min-width="280">

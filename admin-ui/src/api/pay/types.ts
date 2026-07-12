@@ -1,4 +1,4 @@
-import type { PageQuery } from '@/types/api'
+import type { DecimalValue, PageQuery } from '@/types/api'
 
 export type PayOrderStatus = 0 | 5 | 10 | 20
 export type PayMethod = 'paypal' | 'bank_transfer' | 'credit_limit' | string
@@ -17,7 +17,7 @@ export interface PayOrder {
   customerId?: string
   customerName?: string
   subject?: string
-  price?: number
+  price?: string
   currency?: string
   status?: PayOrderStatus
   extensionId?: string
@@ -38,7 +38,7 @@ export interface PayAttempt {
   bankPayerName?: string
   bankReferenceNo?: string
   bankTransferTime?: string
-  bankDeclaredPrice?: number
+  bankDeclaredPrice?: string
   bankCurrency?: string
   bankProofMediaId?: string
   bankSubmittedTime?: string
@@ -55,9 +55,9 @@ export interface CreditAccount {
   creditAccountId?: string
   merchantId?: string
   merchantName?: string
-  creditLimit?: number
-  usedCredit?: number
-  availableCredit?: number
+  creditLimit?: DecimalValue
+  usedCredit?: DecimalValue
+  availableCredit?: DecimalValue
   currency?: string
   status?: string
   frozenReason?: string
@@ -71,11 +71,11 @@ export interface CreditTransaction {
   transactionType?: string
   businessType?: string
   businessNo?: string
-  amount?: number
-  beforeCreditLimit?: number
-  afterCreditLimit?: number
-  beforeUsedCredit?: number
-  afterUsedCredit?: number
+  amount?: DecimalValue
+  beforeCreditLimit?: DecimalValue
+  afterCreditLimit?: DecimalValue
+  beforeUsedCredit?: DecimalValue
+  afterUsedCredit?: DecimalValue
   currency?: string
   operatorName?: string
   occurredTime?: string
@@ -98,7 +98,7 @@ export interface EnabledPayChannel {
   channelId?: string
   appId?: string
   channelCode?: string
-  feeRate?: number
+  feeRate?: DecimalValue
   remark?: string
 }
 
@@ -107,9 +107,9 @@ export interface Receivable {
   merchantName?: string
   salesOrderNo?: string
   payOrderNo?: string
-  receivableAmount?: number
-  repaidAmount?: number
-  outstandingAmount?: number
+  receivableAmount?: DecimalValue
+  repaidAmount?: DecimalValue
+  outstandingAmount?: DecimalValue
   currency?: string
   status?: string
   formedTime?: string
@@ -139,7 +139,7 @@ export interface PayOrderDetail {
   merchantName?: string
   customerName?: string
   subject?: string
-  price?: number
+  price?: string
   currency?: string
   channelCode?: string
   status?: PayOrderStatus
@@ -156,7 +156,7 @@ export interface SalesPayment {
   tenantId: string
   customerName?: string
   projectName?: string
-  totalAmount: number
+  totalAmount: DecimalValue
   currency: string
   documentStatus: string
   paymentStatus: string
@@ -185,7 +185,7 @@ export interface BankSubmitRequest {
   payerName: string
   bankReference: string
   transferredTime: string
-  declaredPrice: number
+  declaredPrice: string
   currency: string
   proofMediaId: string
   remark?: string
@@ -193,7 +193,7 @@ export interface BankSubmitRequest {
 
 export interface SupplementRequest {
   method: string
-  price: number
+  price: string
   currency: string
   reference: string
   paidTime: string

@@ -191,7 +191,7 @@ function formatMinute(value?: string) {
 
 <style scoped>
 .shipping-template-page {
-  background: #f3f6fa;
+  background: var(--admin-bg);
 }
 
 .shipping-template-page__search {

@@ -1,5 +1,5 @@
 import type { ProductPageQuery, ProductRecord, ReferenceCheckResult } from '@/api/product-capability/types'
-import type { BusinessNumberMode } from '@/utils/businessNumber'
+import type { BusinessNumberMode, BusinessNumberValue } from '@/utils/businessNumber'
 
 export type ProductGridRowTone = 'danger' | 'warning' | 'success' | 'muted'
 
@@ -27,8 +27,11 @@ export interface ProductFieldConfig {
   numberMode?: BusinessNumberMode
   unitPrecision?: number
   currencyDigits?: number
-  min?: number
-  max?: number
+  min?: number | string
+  max?: number | string
+  allowNegative?: boolean
+  allowZero?: boolean
+  defaultValue?: BusinessNumberValue
   denominator?: number
   step?: number
   search?: boolean

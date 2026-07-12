@@ -47,6 +47,8 @@ import { usePermissionStore } from '@/stores/permission'
 import QuickOrderLineTable from './components/QuickOrderLineTable.vue'
 import { localeQuoteLanguage, normalizeQuickOrder, normalizeQuickOrderItem, syncQuickOrderTotals, toQuickOrderPayload, type QuickOrderWorkbenchItem } from './quickOrderShared'
 import { quickOrderRouteComponents, resolveRoutePath } from './quickOrderRoutes'
+import type { DecimalValue } from '@/types/api'
+import { formatCurrency } from '@/utils/businessNumber'
 
 const { t, locale } = useI18n()
 const route = useRoute()
@@ -98,7 +100,7 @@ async function submitOrder() {
     Object.assign(order, normalizeQuickOrder(calculated.data || order))
     rows.value = (calculated.data?.items || []).map(normalizeQuickOrderItem)
     syncQuickOrderTotals(order, rows.value)
-    const result = await quickOrderApi.submit(quickOrderId.value, { expectedTotalAmount: order.totalAmount || 0 })
+    const result = await quickOrderApi.submit(quickOrderId.value, { expectedTotalAmount: order.totalAmount || '0' })
     ElMessage.success(t('common.operationSuccess'))
     await router.push({ name: 'SalesDocumentDetail', params: { id: result.data.salesDocumentId } })
   } finally {
@@ -106,15 +108,13 @@ async function submitOrder() {
   }
 }
 
-function money(value?: number) {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: order.currencyCode || 'USD' }).format(value || 0)
-}
+function money(value?: DecimalValue) { return formatCurrency(value ?? '0', order.currencyCode || 'USD') }
 
 void loadDraft()
 </script>
 
 <style scoped>
-.quick-order-review { display: flex; min-height: calc(100vh - 92px); flex-direction: column; gap: 12px; padding: 12px; background: #f3f6fa; }
+.quick-order-review { display: flex; min-height: calc(100vh - 92px); flex-direction: column; gap: 12px; padding: 12px; background: var(--admin-bg); }
 .quick-order-review__topbar,
 .quick-order-review__actions,
 .quick-order-review__totals { display: flex; align-items: center; gap: 12px; }

@@ -209,7 +209,7 @@ const {
 
 <style scoped>
 .formula-setup-page {
-  background: #f5f7fb;
+  background: var(--admin-bg);
 }
 
 .formula-setup-page__empty {

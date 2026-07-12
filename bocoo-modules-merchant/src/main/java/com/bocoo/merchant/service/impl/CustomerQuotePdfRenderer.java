@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.math.BigDecimal;
+import com.bocoo.common.core.utils.BusinessNumberFormatter;
 
 @Component
 class CustomerQuotePdfRenderer {
@@ -50,8 +51,8 @@ class CustomerQuotePdfRenderer {
 
     private void addItem(PdfPTable table, CustomerQuoteItemVo item, boolean cn) {
         cell(table, String.valueOf(item.getLineNo())); cell(table, item.getRoomLocation());
-        cell(table, item.getSaleProductName()); cell(table, number(item.getOrderWidthInch()));
-        cell(table, number(item.getOrderHeightInch())); cell(table, String.valueOf(item.getQuantity()));
+        cell(table, item.getSaleProductName()); cell(table, BusinessNumberFormatter.inch(item.getOrderWidthInch(), 8));
+        cell(table, BusinessNumberFormatter.inch(item.getOrderHeightInch(), 8)); cell(table, String.valueOf(item.getQuantity()));
         cell(table, cn ? item.getSelectedOptionsSummaryCn() : item.getSelectedOptionsSummaryEn());
         cell(table, money(item.getUnitAmount())); cell(table, money(item.getLineAmount()));
     }
@@ -67,7 +68,7 @@ class CustomerQuotePdfRenderer {
 
     private Font font(float size, int style) { return new Font(PDF_FONT, size, style); }
     private String text(String value) { return value == null || value.isBlank() ? "-" : value; }
-    private String money(BigDecimal value) { return "$" + (value == null ? "0.00" : value.setScale(2)); }
+    private String money(BigDecimal value) { return "$" + BusinessNumberFormatter.money(value, 2); }
     private String number(BigDecimal value) { return value == null ? "-" : value.stripTrailingZeros().toPlainString(); }
     private static BaseFont fontBase() {
         String configured = System.getenv("PDF_FONT_PATH");

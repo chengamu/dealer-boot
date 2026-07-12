@@ -32,7 +32,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import type { SalesItem } from '@/api/dealer-sales'
-import { formatInch } from '@/utils/businessNumber'
+import { formatCurrency, formatInch } from '@/utils/businessNumber'
 
 const props = defineProps<{ items: SalesItem[]; currencyCode?: string }>()
 const { t } = useI18n()
@@ -45,8 +45,8 @@ function size(row: SalesItem) {
   return `${formatInch(row.orderWidthInch)} × ${formatInch(row.orderHeightInch)}`
 }
 
-function money(value?: number) {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: props.currencyCode || 'USD' }).format(value || 0)
+function money(value?: string | null) {
+  return formatCurrency(value, props.currencyCode || 'USD')
 }
 </script>
 

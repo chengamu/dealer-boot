@@ -1,4 +1,4 @@
-import type { PageQuery } from '@/types/api'
+import type { DecimalValue, PageQuery } from '@/types/api'
 import type { ProductFormulaMaterialVO, ProductFormulaOptionMaterialVO, ProductFormulaOptionVO, ProductFormulaOptionValueVO } from '@/api/product-capability/types'
 
 export interface SaleProductVO {
@@ -17,10 +17,10 @@ export interface SaleProductVO {
   formulaVersionId?: string
   formulaVersionNo?: number
   formulaVersionLabel?: string
-  minWidthInch?: number
-  minHeightInch?: number
-  maxWidthInch?: number
-  maxHeightInch?: number
+  minWidthInch?: DecimalValue
+  minHeightInch?: DecimalValue
+  maxWidthInch?: DecimalValue
+  maxHeightInch?: DecimalValue
   sizeSummary?: string
   priceStatus?: string
   status?: string
@@ -76,7 +76,7 @@ export interface MaterialPriceRule {
   conditionText?: string
   conditionKey?: string
   priceMode?: string
-  unitPrice?: number
+  unitPrice?: DecimalValue
   priceFormula?: string
   defaultRuleFlag?: boolean
   status?: string
@@ -149,11 +149,11 @@ export interface ProductPriceQuoteItem {
   materialNameCn?: string
   attributeGroupNameCn?: string
   unitCode?: string
-  usageQty?: number
-  unitPrice?: number
+  usageQty?: DecimalValue
+  unitPrice?: DecimalValue
   matchedConditionText?: string
   priceFormula?: string
-  amount?: number
+  amount?: DecimalValue
 }
 
 export interface ProductPriceQuote {
@@ -161,8 +161,8 @@ export interface ProductPriceQuote {
   formulaVersionId?: string
   currencyCode?: string
   orderQuantity?: number
-  singleAmount?: number
-  totalAmount?: number
+  singleAmount?: DecimalValue
+  totalAmount?: DecimalValue
   items?: ProductPriceQuoteItem[]
 }
 
@@ -172,9 +172,9 @@ export interface ShippingTemplateRuleVO {
   shippingTemplateId?: string | number
   feeCode?: string
   feeName?: string
-  minAreaSqft?: number
-  maxAreaSqft?: number
-  feeAmount?: number
+  minAreaSqft?: DecimalValue
+  maxAreaSqft?: DecimalValue
+  feeAmount?: DecimalValue
   sortOrder?: number
   delFlag?: string
   remark?: string

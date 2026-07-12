@@ -17,6 +17,8 @@
             #if($column.htmlType == "number-unit-price")#set($numberMode="UNIT_PRICE")#end
             #if($column.htmlType == "number-money")#set($numberMode="MONEY")#end
             #if($column.htmlType == "number-rate")#set($numberMode="RATE")#end
+            #if($column.htmlType == "number-ratio")#set($numberMode="RATIO")#end
+            #if($column.htmlType == "number-percent")#set($numberMode="PERCENT")#end
             #if($column.htmlType == "inch")
               <el-form-item :label="fieldLabel('${column.javaField}')" prop="${column.javaField}">
                 <BusinessInchInput v-model="queryParams.${column.javaField}" />
@@ -123,6 +125,8 @@
         #if($column.htmlType == "number-unit-price")#set($numberMode="UNIT_PRICE")#end
         #if($column.htmlType == "number-money")#set($numberMode="MONEY")#end
         #if($column.htmlType == "number-rate")#set($numberMode="RATE")#end
+        #if($column.htmlType == "number-ratio")#set($numberMode="RATIO")#end
+        #if($column.htmlType == "number-percent")#set($numberMode="PERCENT")#end
         #if($column.pk)
           <el-table-column :label="fieldLabel('${column.javaField}')" align="center" prop="${javaField}" v-if="${column.list}"/>
         #elseif($column.list && $column.htmlType == "inch")
@@ -193,6 +197,8 @@
             #if($column.htmlType == "number-unit-price")#set($numberMode="UNIT_PRICE")#end
             #if($column.htmlType == "number-money")#set($numberMode="MONEY")#end
             #if($column.htmlType == "number-rate")#set($numberMode="RATE")#end
+            #if($column.htmlType == "number-ratio")#set($numberMode="RATIO")#end
+            #if($column.htmlType == "number-percent")#set($numberMode="PERCENT")#end
             #if($column.htmlType == "inch")
               <el-form-item :label="fieldLabel('${column.javaField}')" prop="${field}">
                 <BusinessInchInput v-model="form.${field}" />
@@ -316,6 +322,8 @@
               #if($column.htmlType == "number-unit-price")#set($numberMode="UNIT_PRICE")#end
               #if($column.htmlType == "number-money")#set($numberMode="MONEY")#end
               #if($column.htmlType == "number-rate")#set($numberMode="RATE")#end
+              #if($column.htmlType == "number-ratio")#set($numberMode="RATIO")#end
+              #if($column.htmlType == "number-percent")#set($numberMode="PERCENT")#end
               #if($column.pk || $javaField == ${subTableFkclassName})
               #elseif($column.list && $column.htmlType == "inch")
                 <el-table-column :label="fieldLabel('$javaField')" prop="${javaField}" width="220">

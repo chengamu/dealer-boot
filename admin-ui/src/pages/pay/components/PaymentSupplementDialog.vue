@@ -4,7 +4,7 @@
       <el-form-item :label="t('pay.methodLabel')" prop="method">
         <el-select v-model="form.method"><el-option :label="t('pay.method.bank')" value="BANK_TRANSFER" /><el-option :label="t('pay.method.cash')" value="CASH" /></el-select>
       </el-form-item>
-      <el-form-item :label="t('pay.amount')" prop="amount"><el-input-number v-model="form.amount" :precision="2" :min="0.01" controls-position="right" /></el-form-item>
+      <el-form-item :label="t('pay.amount')" prop="amount"><BusinessNumberInput v-model="form.amount" mode="MONEY" :currency-digits="2" :min="0.01" :allow-zero="false" /></el-form-item>
       <el-form-item :label="t('pay.currency')" prop="currency"><el-input v-model="form.currency" maxlength="3" /></el-form-item>
       <el-form-item :label="t('pay.reference')" prop="reference"><el-input v-model="form.reference" /></el-form-item>
       <el-form-item :label="t('pay.paidTime')" prop="paidTime"><el-date-picker v-model="form.paidTime" type="datetime" value-format="YYYY-MM-DDTHH:mm:ss" /></el-form-item>
@@ -28,6 +28,7 @@ import AdminDialog from '@/components/AdminDialog/index.vue'
 import AdminDialogFooter from '@/components/AdminDialogFooter/index.vue'
 import { payApi, type PayOrder } from '@/api/pay'
 import ProofMediaUpload from './ProofMediaUpload.vue'
+import { decimalToMinorUnits, minorUnitsToDecimal } from '@/utils/businessNumber'
 
 const emit = defineEmits<{ saved: [] }>()
 const { t } = useI18n()
@@ -35,13 +36,13 @@ const visible = ref(false)
 const submitting = ref(false)
 const formRef = ref<FormInstance>()
 const order = ref<PayOrder>()
-const form = reactive({ method: 'BANK_TRANSFER', amount: 0, currency: 'USD', reference: '', paidTime: '', proofMediaId: '', reason: '' })
+const form = reactive({ method: 'BANK_TRANSFER', amount: '', currency: 'USD', reference: '', paidTime: '', proofMediaId: '', reason: '' })
 const required = { required: true, message: t('common.required'), trigger: 'blur' }
 const rules: FormRules = { method: [required], amount: [required], currency: [required], reference: [required], paidTime: [required], proofMediaId: [required], reason: [required] }
 
 function open(row: PayOrder) {
   order.value = row
-  Object.assign(form, { method: 'BANK_TRANSFER', amount: (row.price || 0) / 100, currency: row.currency || 'USD', reference: '', paidTime: '', proofMediaId: '', reason: '' })
+  Object.assign(form, { method: 'BANK_TRANSFER', amount: minorUnitsToDecimal(row.price || '0', 2) || '', currency: row.currency || 'USD', reference: '', paidTime: '', proofMediaId: '', reason: '' })
   visible.value = true
 }
 
@@ -49,7 +50,9 @@ async function submit() {
   if (!order.value?.id || !(await formRef.value?.validate().catch(() => false))) return
   submitting.value = true
   try {
-    await payApi.supplement(order.value.id, { method: form.method, price: Math.round(form.amount * 100), currency: form.currency, reference: form.reference, paidTime: form.paidTime, proofMediaId: form.proofMediaId, reason: form.reason })
+    const price = decimalToMinorUnits(form.amount, 2)
+    if (price === null) return
+    await payApi.supplement(order.value.id, { method: form.method, price, currency: form.currency, reference: form.reference, paidTime: form.paidTime, proofMediaId: form.proofMediaId, reason: form.reason })
     ElMessage.success(t('pay.supplement.success'))
     visible.value = false
     emit('saved')

@@ -78,7 +78,7 @@ export function useFormulaUsageRules(
   function ensureFixedRule() {
     if (!props.usageRow?.materialCode) return
     removeRulesForCurrent()
-    const fixedUsageQty = props.usageRow.fixedUsageQty ?? 1
+    const fixedUsageQty = props.usageRow.fixedUsageQty ?? '1'
     props.usageRow.usageMode = 'FIXED'
     props.usageRow.fixedUsageQty = fixedUsageQty
     props.usageRules.push({
@@ -111,7 +111,7 @@ export function useFormulaUsageRules(
       ensureFixedRule()
       return
     }
-    const fixedUsageQty = props.usageRow.fixedUsageQty ?? 0
+    const fixedUsageQty = props.usageRow.fixedUsageQty ?? '0'
     rule.usageMode = 'FIXED'
     rule.fixedUsageQty = fixedUsageQty
     rule.usageFormula = String(fixedUsageQty)
@@ -253,7 +253,7 @@ export function useFormulaUsageRules(
     const result = validateFormulaExpression(expressionText)
     row[field.valueKey] = result.expression as never
     if (row.usageMode === 'FIXED' && result.valid && typeof result.sampleValue === 'number') {
-      row.fixedUsageQty = result.sampleValue
+      row.fixedUsageQty = String(result.sampleValue)
     }
   }
 

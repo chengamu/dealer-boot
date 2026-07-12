@@ -40,8 +40,8 @@ CREATE TABLE IF NOT EXISTS pc_formula (
     category_name_cn varchar(200) NOT NULL,
     product_type_code varchar(80) NOT NULL,
     product_type_name_cn varchar(200) NOT NULL,
-    min_width_inch numeric(18,4) NOT NULL DEFAULT 0,
-    min_height_inch numeric(18,4) NOT NULL DEFAULT 0,
+    min_width_inch numeric(18,4) NOT NULL,
+    min_height_inch numeric(18,4) NOT NULL,
     max_width_inch numeric(18,4) NOT NULL,
     max_height_inch numeric(18,4) NOT NULL,
     size_summary varchar(200),
@@ -86,8 +86,8 @@ ALTER TABLE IF EXISTS pc_formula
     ADD COLUMN IF NOT EXISTS category_name_cn varchar(200),
     ADD COLUMN IF NOT EXISTS product_type_code varchar(80),
     ADD COLUMN IF NOT EXISTS product_type_name_cn varchar(200),
-    ADD COLUMN IF NOT EXISTS min_width_inch numeric(18,4) NOT NULL DEFAULT 0,
-    ADD COLUMN IF NOT EXISTS min_height_inch numeric(18,4) NOT NULL DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS min_width_inch numeric(18,4),
+    ADD COLUMN IF NOT EXISTS min_height_inch numeric(18,4),
     ADD COLUMN IF NOT EXISTS max_width_inch numeric(18,4),
     ADD COLUMN IF NOT EXISTS max_height_inch numeric(18,4),
     ADD COLUMN IF NOT EXISTS size_summary varchar(200),
@@ -116,6 +116,10 @@ ALTER TABLE IF EXISTS pc_formula
     ADD COLUMN IF NOT EXISTS sort_order int NOT NULL DEFAULT 0,
     ADD COLUMN IF NOT EXISTS del_flag varchar(1) NOT NULL DEFAULT '0',
     ADD COLUMN IF NOT EXISTS remark varchar(500);
+
+ALTER TABLE IF EXISTS pc_formula
+    ALTER COLUMN min_width_inch DROP DEFAULT,
+    ALTER COLUMN min_height_inch DROP DEFAULT;
 
 COMMENT ON TABLE pc_formula IS '产品配方主表';
 COMMENT ON COLUMN pc_formula.formula_id IS '配方ID';
@@ -754,8 +758,8 @@ CREATE TABLE IF NOT EXISTS pc_sale_product (
     formula_version_id bigint NOT NULL,
     formula_version_no int NOT NULL,
     formula_version_label varchar(40) NOT NULL,
-    min_width_inch numeric(18,4) NOT NULL DEFAULT 0,
-    min_height_inch numeric(18,4) NOT NULL DEFAULT 0,
+    min_width_inch numeric(18,4) NOT NULL,
+    min_height_inch numeric(18,4) NOT NULL,
     max_width_inch numeric(18,4) NOT NULL,
     max_height_inch numeric(18,4) NOT NULL,
     size_summary varchar(200),
@@ -786,8 +790,8 @@ ALTER TABLE IF EXISTS pc_sale_product
     ADD COLUMN IF NOT EXISTS formula_version_id bigint,
     ADD COLUMN IF NOT EXISTS formula_version_no int,
     ADD COLUMN IF NOT EXISTS formula_version_label varchar(40),
-    ADD COLUMN IF NOT EXISTS min_width_inch numeric(18,4) NOT NULL DEFAULT 0,
-    ADD COLUMN IF NOT EXISTS min_height_inch numeric(18,4) NOT NULL DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS min_width_inch numeric(18,4),
+    ADD COLUMN IF NOT EXISTS min_height_inch numeric(18,4),
     ADD COLUMN IF NOT EXISTS max_width_inch numeric(18,4),
     ADD COLUMN IF NOT EXISTS max_height_inch numeric(18,4),
     ADD COLUMN IF NOT EXISTS size_summary varchar(200),
@@ -796,6 +800,10 @@ ALTER TABLE IF EXISTS pc_sale_product
     ADD COLUMN IF NOT EXISTS sort_order int NOT NULL DEFAULT 0,
     ADD COLUMN IF NOT EXISTS del_flag varchar(1) NOT NULL DEFAULT '0',
     ADD COLUMN IF NOT EXISTS remark varchar(500);
+
+ALTER TABLE IF EXISTS pc_sale_product
+    ALTER COLUMN min_width_inch DROP DEFAULT,
+    ALTER COLUMN min_height_inch DROP DEFAULT;
 
 COMMENT ON TABLE pc_sale_product IS '可售产品表，绑定已生效配方版本，不是订单SKU';
 COMMENT ON COLUMN pc_sale_product.sale_product_code IS '可售产品编号，程序校验唯一';

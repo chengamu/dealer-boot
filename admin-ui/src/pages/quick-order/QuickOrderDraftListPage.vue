@@ -69,6 +69,7 @@ import auth from '@/plugins/auth'
 import { quickOrderApi, type QuickOrder, type QuickOrderQuery } from '@/api/dealer-sales/quick-order'
 import { usePermissionStore } from '@/stores/permission'
 import { formatUtc, withUtcDateRange } from '@/utils/datetime'
+import { formatCurrency } from '@/utils/businessNumber'
 import { quickOrderRouteComponents, resolveRoutePath } from './quickOrderRoutes'
 
 const { t } = useI18n()
@@ -120,8 +121,8 @@ function viewOrder(row: QuickOrder) {
   void router.push({ name: 'SalesDocumentDetail', params: { id: row.salesDocumentId } })
 }
 
-function money(value?: number) {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value || 0)
+function money(value?: string | null) {
+  return formatCurrency(value, 'USD', 2, formatCurrency('0', 'USD'))
 }
 
 function rowActions(row: QuickOrder): AdminTableAction[] {

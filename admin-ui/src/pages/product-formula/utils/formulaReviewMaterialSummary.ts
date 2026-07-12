@@ -1,12 +1,12 @@
 import type { ProductFormulaMaterialVO, ProductFormulaUsageRuleVO } from '@/api/product-capability/types'
 import { PRODUCT_STATUS_DISABLED } from '@/constants/productStatus'
 import { formatUsageNumber } from './formulaExpression'
-import { formatMoney, formatQuantity, formatRate } from '@/utils/businessNumber'
+import { canonicalDecimal, formatQuantity, formatRate, formatUnitPrice } from '@/utils/businessNumber'
 
 export interface FormulaReviewPriceSnapshotRow {
   materialCode?: string
-  unitPrice?: number
-  salesPrice?: number
+  unitPrice?: string | number | null
+  salesPrice?: string | number | null
 }
 
 export const FORMULA_REVIEW_GROUP_ORDER = ['FABRIC', 'ALUMINUM', 'SYSTEM', 'ACCESSORY', 'PART_PACK', 'PACKAGING']
@@ -20,18 +20,17 @@ export function formulaReviewGroupRank(code?: string) {
   return index >= 0 ? index : FORMULA_REVIEW_GROUP_ORDER.length + 1
 }
 
-export function formatFormulaReviewMoney(value?: number) {
-  return formatMoney(value)
+export function formatFormulaReviewMoney(value?: string | number | null) {
+  return formatUnitPrice(value)
 }
 
-export function formatFormulaReviewNumber(value?: number) {
+export function formatFormulaReviewNumber(value?: string | number | null) {
   return formatQuantity(value)
 }
 
-export function formatFormulaReviewPercent(value?: number) {
+export function formatFormulaReviewPercent(value?: string | number | null) {
   if (value == null) return '-'
-  const numberValue = Math.abs(value) <= 1 ? value * 100 : value
-  return `${formatRate(numberValue)}%`
+  return `${formatRate(value)}%`
 }
 
 export function formulaReviewUsageSummaryLines(row: ProductFormulaMaterialVO, usageRules: ProductFormulaUsageRuleVO[], t: (key: string) => string) {
@@ -103,12 +102,11 @@ function appendUsageFormulaPart(parts: string[], label: string, value?: string) 
 
 function summaryFormulaValue(value: unknown) {
   const text = textOf(value).trim()
-  const numeric = Number(text)
-  return text && Number.isFinite(numeric) && /^-?\d+(\.\d+)?$/.test(text) ? formatQuantity(text) : text
+  return canonicalDecimal(text) !== null ? formatQuantity(text) : text
 }
 
 function isDefaultQuantityFormula(value: string) {
-  return Number(value) === 1 && /^1(\.0+)?$/.test(value)
+  return canonicalDecimal(value) === '1'
 }
 
 function compareFormulaUsageRuleSort(left: ProductFormulaUsageRuleVO, right: ProductFormulaUsageRuleVO) {

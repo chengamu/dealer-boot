@@ -5,7 +5,7 @@
         v-for="tag in visitedViews"
         :key="tag.path"
         :data-path="tag.path"
-        :class="isActive(tag) ? 'active' : ''"
+        :class="{ active: isActive(tag), 'is-closable': !isAffix(tag) }"
         :to="tagToRoute(tag)"
         class="tags-view-item"
         :style="activeStyle(tag)"
@@ -280,48 +280,54 @@ function handleScroll() {
 .tags-view-container {
   height: 38px;
   width: 100%;
-  padding: 0 16px;
+  padding: 0 18px;
   background: #fff;
-  border-bottom: 1px solid #f3f5f8;
+  border-bottom: 1px solid #e9edf5;
   .tags-view-wrapper {
     .tags-view-item {
       display: inline-flex;
+      flex: 0 0 auto;
       align-items: center;
       position: relative;
       cursor: pointer;
-      max-width: 156px;
-      height: 32px;
-      line-height: 32px;
+      max-width: 168px;
+      height: 100%;
+      line-height: 1;
       border: 0;
-      border-radius: 6px;
-      color: #667085;
+      border-radius: 0;
+      color: #475467;
       background: transparent;
-      padding: 0 12px;
-      font-size: 13px;
-      gap: 6px;
-      margin: 3px;
+      padding: 0 10px;
+      font-size: 14px;
+      font-weight: 500;
+      gap: 0;
+      margin: 0 6px;
       white-space: nowrap;
-      transition: color 0.18s ease, background-color 0.18s ease;
+      transition: color 0.18s ease;
       &:hover {
         color: #1677ff;
-        background: #f3f6fb;
+        background: transparent;
       }
       &.active {
         color: #1677ff;
-        font-weight: 700;
+        font-weight: 600;
         background: transparent;
-        &::after {
+        .tags-view-title::after {
           content: "";
           position: absolute;
-          right: 12px;
+          right: 0;
           bottom: 0;
-          left: 12px;
+          left: 0;
           height: 2px;
-          border-radius: 2px;
+          border-radius: 2px 2px 0 0;
           background: #1677ff;
         }
       }
       .tags-view-title {
+        display: inline-flex;
+        align-items: center;
+        position: relative;
+        height: 100%;
         overflow: hidden;
         text-overflow: ellipsis;
       }
@@ -329,18 +335,23 @@ function handleScroll() {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        flex: 0 0 auto;
+        position: absolute;
+        top: 50%;
+        right: -7px;
+        width: 14px;
+        height: 14px;
+        transform: translateY(-50%);
+        border-radius: 4px;
+        background: #fff;
         opacity: 0;
-        transition: opacity 0.18s ease, color 0.18s ease;
-      }
-      &.active .tags-view-close {
-        opacity: 0.42;
+        transition: opacity 0.18s ease, color 0.18s ease, background-color 0.18s ease;
       }
       &:hover .tags-view-close {
-        opacity: 0.72;
+        opacity: 0.68;
       }
       .tags-view-close:hover {
         opacity: 1;
+        background: #fff1f2;
       }
     }
   }

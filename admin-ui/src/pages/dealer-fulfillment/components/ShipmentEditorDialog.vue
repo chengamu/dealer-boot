@@ -6,8 +6,8 @@
         <el-form-item :label="t('dealer.fulfillment.carrier')" prop="carrierName"><el-input v-model="form.carrierName" maxlength="100" /></el-form-item>
         <el-form-item :label="t('dealer.fulfillment.carrierCode')"><el-input v-model="form.carrierCode" maxlength="64" /></el-form-item>
         <el-form-item :label="t('dealer.fulfillment.trackingNo')" prop="trackingNo"><el-input v-model="form.trackingNo" maxlength="128" /></el-form-item>
-        <el-form-item :label="t('dealer.fulfillment.weight')"><el-input-number v-model="form.weight" :min="0" :precision="3" /><el-input v-model="form.weightUnit" class="shipment-form__unit" /></el-form-item>
-        <el-form-item :label="t('dealer.fulfillment.dimensions')"><div class="shipment-form__dimensions"><el-input-number v-model="form.length" :min="0" /><span>x</span><el-input-number v-model="form.width" :min="0" /><span>x</span><el-input-number v-model="form.height" :min="0" /><el-input v-model="form.dimensionUnit" /></div></el-form-item>
+        <el-form-item :label="t('dealer.fulfillment.weight')"><BusinessNumberInput v-model="form.weight" mode="QUANTITY" :unit-precision="6" :min="0" /><el-input v-model="form.weightUnit" class="shipment-form__unit" /></el-form-item>
+        <el-form-item :label="t('dealer.fulfillment.dimensions')"><div class="shipment-form__dimensions"><BusinessNumberInput v-model="form.length" mode="QUANTITY" :unit-precision="6" :min="0" /><span>x</span><BusinessNumberInput v-model="form.width" mode="QUANTITY" :unit-precision="6" :min="0" /><span>x</span><BusinessNumberInput v-model="form.height" mode="QUANTITY" :unit-precision="6" :min="0" /><el-input v-model="form.dimensionUnit" /></div></el-form-item>
       </div>
       <el-form-item :label="t('dealer.fulfillment.packageAllocation')" prop="items">
         <el-table :data="allocationRows" border>
@@ -16,7 +16,7 @@
           <el-table-column prop="quantity" :label="t('dealer.fulfillment.orderQuantity')" width="100" align="center" />
           <el-table-column :label="t('dealer.fulfillment.allocatedQuantity')" width="100" align="center"><template #default="{ row }">{{ allocatedOutside(row.salesItemId) }}</template></el-table-column>
           <el-table-column :label="t('dealer.fulfillment.remainingQuantity')" width="100" align="center"><template #default="{ row }">{{ remaining(row) }}</template></el-table-column>
-          <el-table-column :label="t('dealer.fulfillment.thisPackageQuantity')" width="150"><template #default="{ row }"><el-input-number v-model="quantities[row.salesItemId]" :min="0" :max="remaining(row)" controls-position="right" /></template></el-table-column>
+          <el-table-column :label="t('dealer.fulfillment.thisPackageQuantity')" width="150"><template #default="{ row }"><BusinessVxeNumberCell v-model="quantities[row.salesItemId]" mode="COUNT" integer-value :min="0" :max="remaining(row)" /></template></el-table-column>
         </el-table>
       </el-form-item>
       <el-form-item :label="t('dealer.fulfillment.remark')"><el-input v-model="form.remark" type="textarea" :rows="2" maxlength="1000" show-word-limit /></el-form-item>
@@ -79,5 +79,5 @@ async function submit() {
 .shipment-form__grid .el-form-item:last-child { grid-column: 1 / -1; }
 .shipment-form__unit { width: 70px; margin-left: 6px; }
 .shipment-form__dimensions { display: grid; width: 100%; align-items: center; grid-template-columns: 1fr auto 1fr auto 1fr 70px; gap: 4px; }
-.shipment-form__dimensions :deep(.el-input-number) { width: 100%; }
+.shipment-form__dimensions :deep(.business-number-input) { width: 100%; }
 </style>

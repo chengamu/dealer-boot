@@ -69,6 +69,7 @@
   "product.formula.simulationSizeRequired": "Enter order width and length first.",
   "product.formula.simulationValidationRequired": "Formula simulation must pass validation before review submission.",
   "product.formula.sizeRequired": "Formula size is required.",
+  "product.formula.sizeStepInvalid": "Formula dimensions must use a valid 1/8-inch increment.",
   "product.formula.statusInvalid": "Formula status is invalid.",
   "product.formula.stopDenied": "Only effective formulas can be stopped.",
   "product.formula.startRevisionDenied": "Only effective formulas with a current version can start revision.",

@@ -1,6 +1,7 @@
 package com.bocoo.merchant.domain.vo;
 
 import com.alibaba.excel.annotation.ExcelProperty;
+import com.alibaba.excel.annotation.format.NumberFormat;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -23,19 +24,19 @@ public class CustomerQuoteExportEnVo {
     @ExcelProperty("Product")
     private String saleProductName;
     @ExcelProperty("Width (in)")
-    private BigDecimal widthInch;
+    @NumberFormat("# ??/??") private BigDecimal widthInch;
     @ExcelProperty("Height (in)")
-    private BigDecimal heightInch;
+    @NumberFormat("# ??/??") private BigDecimal heightInch;
     @ExcelProperty("Qty")
     private Integer quantity;
     @ExcelProperty("Configuration")
     private String configuration;
     @ExcelProperty("Unit Price")
-    private BigDecimal unitAmount;
+    @NumberFormat("0.00") private BigDecimal unitAmount;
     @ExcelProperty("Shipping")
-    private BigDecimal shippingAmount;
+    @NumberFormat("0.00") private BigDecimal shippingAmount;
     @ExcelProperty("Line Total")
-    private BigDecimal lineAmount;
+    @NumberFormat("0.00") private BigDecimal lineAmount;
     @ExcelProperty("Quote Total")
-    private BigDecimal quoteTotal;
+    @NumberFormat("0.00") private BigDecimal quoteTotal;
 }

@@ -70,6 +70,7 @@
         <annotation.version>1.3.2</annotation.version>
         <jsr305.version>3.0.2</jsr305.version>
         <commons.io.version>2.22.0</commons.io.version>
+        <oshi.version>7.3.0</oshi.version>
         <!-- 中间件与服务配置 -->
         <satoken.version>1.37.0</satoken.version>
         <p6spy.version>3.9.1</p6spy.version>
@@ -189,6 +190,11 @@
                 <groupId>com.google.code.findbugs</groupId>
                 <artifactId>jsr305</artifactId>
                 <version>${jsr305.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.oshi</groupId>
+                <artifactId>oshi-core</artifactId>
+                <version>${oshi.version}</version>
             </dependency>
 
             <!-- 寮曞叆 Lombok 渚濊禆锛岀敤浜庣畝鍖?Java 浠ｇ爜锛屽噺灏?boilerplate 浠ｇ爜鐨勭紪鍐?-->

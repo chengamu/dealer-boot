@@ -75,6 +75,7 @@ import { payApi, type CreditAccount, type PayOrder, type PayOrderDetail } from '
 import { checkPermi } from '@/utils/permission'
 import { formatUtc } from '@/utils/datetime'
 import { bankStatusText, methodText, minorMoney, money, statusText, statusType } from '../payPresentation'
+import { canonicalDecimal } from '@/utils/businessNumber'
 
 const { t } = useI18n()
 const visible = ref(false)
@@ -104,7 +105,7 @@ async function adjustCredit() {
   if (!creditAccount.value?.creditAccountId) return
   const amount = await ElMessageBox.prompt(t('pay.credit.adjustAmount'), t('pay.credit.adjust'), { inputPattern: /^-?\d+(\.\d{1,2})?$/, inputErrorMessage: t('pay.credit.amountInvalid') })
   const reason = await ElMessageBox.prompt(t('pay.reason'), t('pay.credit.adjust'), { inputValidator: (value) => Boolean(value?.trim()) || t('common.required') })
-  await payApi.adjustCredit(creditAccount.value.creditAccountId, Number(amount.value), reason.value)
+  await payApi.adjustCredit(creditAccount.value.creditAccountId, canonicalDecimal(amount.value), reason.value)
   ElMessage.success(t('pay.credit.adjusted'))
   await reloadCredit()
 }

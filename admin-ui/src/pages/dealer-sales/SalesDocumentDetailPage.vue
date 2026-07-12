@@ -75,6 +75,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { salesApi, type SalesDocument } from '@/api/dealer-sales'
 import { usePermissionStore } from '@/stores/permission'
 import { formatUtc } from '@/utils/datetime'
+import { formatCurrency } from '@/utils/businessNumber'
 import { download } from '@/utils/request'
 import SalesDocumentEventList from './components/SalesDocumentEventList.vue'
 import SalesDocumentFactsCard from './components/SalesDocumentFactsCard.vue'
@@ -156,8 +157,8 @@ function viewSource() {
   if (document.sourceQuoteId) void router.push({ name: 'CustomerQuoteWorkbench', query: { quoteId: document.sourceQuoteId } })
 }
 
-function money(value?: number) {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: document.currencyCode || 'USD' }).format(value || 0)
+function money(value?: import('@/types/api').DecimalValue) {
+  return formatCurrency(value ?? '0', document.currencyCode || 'USD')
 }
 
 onBeforeUnmount(closePreview)
@@ -165,7 +166,7 @@ void loadDetail()
 </script>
 
 <style scoped>
-.sales-document-detail { display: flex; min-height: calc(100vh - 92px); flex-direction: column; gap: 12px; padding: 12px; background: #f3f6fa; }
+.sales-document-detail { display: flex; min-height: calc(100vh - 92px); flex-direction: column; gap: 12px; padding: 12px; background: var(--admin-bg); }
 .sales-document-detail__topbar,
 .sales-document-detail__title,
 .sales-document-detail__actions,

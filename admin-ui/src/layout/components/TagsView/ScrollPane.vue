@@ -100,6 +100,7 @@ defineExpose({
 
 <style lang='scss' scoped>
 .scroll-container {
+  height: 100%;
   white-space: nowrap;
   position: relative;
   overflow-x: auto;
@@ -113,7 +114,7 @@ defineExpose({
     display: none;
   }
   :deep(.el-scrollbar__wrap) {
-    height: 38px;
+    height: 100%;
     overflow-y: hidden;
     scrollbar-width: none;
     &::-webkit-scrollbar {
@@ -121,7 +122,10 @@ defineExpose({
     }
   }
   :deep(.el-scrollbar__view) {
-    height: 38px;
+    display: flex;
+    min-width: 100%;
+    height: 100%;
+    align-items: center;
   }
 }
 </style>

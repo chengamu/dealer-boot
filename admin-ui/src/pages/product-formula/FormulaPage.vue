@@ -83,8 +83,6 @@ const formulaConfig = computed<ProductGridConfig>(() => ({
   defaultRecord: {
     configuredFlag: false,
     materialLineCount: 0,
-    minWidthInch: 0,
-    minHeightInch: 0,
     latestValidationStatus: FORMULA_VALIDATION_STATUS.NOT_VALIDATED,
     status: FORMULA_STATUS.DRAFT
   },

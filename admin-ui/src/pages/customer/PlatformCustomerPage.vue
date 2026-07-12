@@ -7,14 +7,14 @@
         </el-select>
       </el-form-item>
       <el-form-item :label="t('customer.owner')" prop="ownerUserId">
-        <el-select v-model="queryParams.ownerUserId" clearable filterable :disabled="!selectedMerchantTenantId" style="width: 170px">
+        <el-select v-model="queryParams.ownerUserId" clearable filterable :disabled="!selectedMerchantTenantId" style="width: 120px">
           <el-option v-for="item in ownerOptions" :key="item.userId" :label="item.nickName || item.userName" :value="item.userId" />
         </el-select>
       </el-form-item>
       <el-form-item :label="t('customer.name')" prop="customerName"><el-input v-model="queryParams.customerName" clearable @keyup.enter="handleQuery" /></el-form-item>
       <el-form-item :label="t('customer.email')" prop="email"><el-input v-model="queryParams.email" clearable @keyup.enter="handleQuery" /></el-form-item>
       <el-form-item :label="t('common.status')" prop="status">
-        <el-select v-model="queryParams.status" clearable style="width: 140px">
+        <el-select v-model="queryParams.status" clearable style="width: 100px">
           <el-option :label="t('common.enabled')" value="ENABLED" />
           <el-option :label="t('common.disabled')" value="DISABLED" />
         </el-select>

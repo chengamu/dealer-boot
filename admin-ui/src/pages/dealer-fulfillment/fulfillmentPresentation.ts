@@ -42,8 +42,11 @@ export function sourceText(t: ComposerTranslation, source?: string) {
   return source ? t(sourceKeys[source] || 'dealer.fulfillment.sourceUnknown') : '-'
 }
 
-export function itemSize(width?: number, height?: number) {
-  return width && height ? `${width} x ${height} in` : '-'
+import { formatInch } from '@/utils/businessNumber'
+import type { DecimalValue } from '@/types/api'
+
+export function itemSize(width?: DecimalValue, height?: DecimalValue) {
+  return width && height ? `${formatInch(width)} × ${formatInch(height)}` : '-'
 }
 
 export function trackingDescription(event: { descriptionCn?: string; descriptionEn?: string; descriptionOriginal?: string }, locale: string) {

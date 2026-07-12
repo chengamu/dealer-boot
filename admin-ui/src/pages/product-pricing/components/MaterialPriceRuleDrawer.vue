@@ -166,8 +166,8 @@ function addRule(defaultRule = false) {
     conditionText: isDefault ? t('productCenter.pricing.defaultRule') : '',
     conditionKey: isDefault ? 'DEFAULT' : '',
     priceMode: 'FORMULA',
-    unitPrice: 0,
-    priceFormula: materialPriceFormulaForUnitPrice(0, props.material?.attributeGroupCode),
+    unitPrice: '0',
+    priceFormula: materialPriceFormulaForUnitPrice('0', props.material?.attributeGroupCode),
     defaultRuleFlag: isDefault,
     status: 'ENABLED',
     sortOrder: localRows.value.length

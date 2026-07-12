@@ -92,7 +92,14 @@ async function reload(id: string) {
   if (String(route.query.quoteId || '') !== id) await router.replace({ name: 'CustomerQuoteWorkbench', query: { quoteId: id } })
   await loadQuote(id)
 }
-const actions = useQuoteWorkbenchActions({ quote, rows, validateHeader: () => headerRef.value?.validate() || Promise.resolve(false), reload, t })
+const actions = useQuoteWorkbenchActions({
+  quote,
+  rows,
+  validateHeader: () => headerRef.value?.validate() || Promise.resolve(false),
+  validateLines: () => lineGridRef.value?.validate() ?? true,
+  reload,
+  t
+})
 const { saving, calculatingId, save, calculateItem, calculateAll, confirm, voidQuote } = actions
 
 async function addAndExpand() { const row = addLine(); await nextTick(); lineGridRef.value?.expand(row) }
@@ -119,7 +126,7 @@ Promise.all([loadDependencies(), loadQuote(String(route.query.quoteId || '') || 
 </script>
 
 <style scoped>
-.quote-workbench { display: flex; min-height: calc(100vh - 92px); flex-direction: column; gap: 12px; padding: 14px 18px 18px; background: #f3f6fa; }
+.quote-workbench { display: flex; min-height: calc(100vh - 92px); flex-direction: column; gap: 12px; padding: 14px 18px 18px; background: var(--admin-bg); }
 .quote-workbench__topbar { display: flex; min-height: 44px; align-items: center; justify-content: space-between; gap: 18px; }
 .quote-workbench__title, .quote-workbench__actions { display: flex; align-items: center; gap: 10px; }
 .quote-workbench__title h1 { margin: 0; color: #1d2939; font-size: 20px; font-weight: 650; letter-spacing: 0; }

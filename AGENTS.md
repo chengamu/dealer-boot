@@ -12,6 +12,9 @@
 - 先理解需求和现有实现，再修改。
 - Always plan before implementing。
 - 遵循 minimal diff；不做无关重构，不猜测不存在的 API 或框架能力。
+- 阅读代码结构、业务流程、调用链和影响面时，必须先使用 CodeGraph；符号定位使用 `codegraph_search`，整体理解使用 `codegraph_explore`，调用关系和重构影响使用 `codegraph_callers`、`codegraph_callees`、`codegraph_impact`。
+- CodeGraph 可能作为延迟加载 MCP 工具，不出现在顶层简化工具列表中；必须先检查完整工具清单并尝试调用，禁止仅凭顶层列表判断其未启用。
+- `rg` 仅用于精确文本、SQL、配置、生成文件和残留扫描，或补充 CodeGraph 未覆盖的具体细节；不得用反复 `rg` 和逐文件读取替代已有 CodeGraph 索引。
 - 临时计划和执行状态留在对话中；长期规则、业务契约、操作手册和体验问题才写入 `docs/`。
 - 文档治理规则见 `docs/项目配置和代码风格/documentation-governance.md`。
 

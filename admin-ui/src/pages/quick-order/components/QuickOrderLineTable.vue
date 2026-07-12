@@ -35,6 +35,7 @@
 import { useI18n } from 'vue-i18n'
 import type { QuoteLanguage } from '@/api/customer/quote'
 import { quickOrderSize, quickOrderSummary, type QuickOrderWorkbenchItem } from '../quickOrderShared'
+import { formatCurrency } from '@/utils/businessNumber'
 
 const props = defineProps<{
   rows: QuickOrderWorkbenchItem[]
@@ -48,8 +49,8 @@ function entries(values?: Record<string, string>) {
   return Object.entries(values || {}).map(([key, value]) => ({ key, value }))
 }
 
-function money(value?: number) {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: props.currencyCode || 'USD' }).format(value || 0)
+function money(value?: string | null) {
+  return formatCurrency(value, props.currencyCode || 'USD')
 }
 </script>
 

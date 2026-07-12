@@ -74,8 +74,8 @@ export function useFormulaSetupOperations(ctx: SetupOperationContext) {
       unitCode: material.unitCode,
       calculationUnitCode: material.unitCode,
       usageMode: 'FIXED',
-      fixedUsageQty: 1,
-      lossRate: 0,
+      fixedUsageQty: '1',
+      lossRate: '0',
       defaultFlag: false,
       requiredFlag: true,
       status: PRODUCT_STATUS_ENABLED,
@@ -342,7 +342,7 @@ export function useFormulaSetupOperations(ctx: SetupOperationContext) {
   function statusTagType(status?: string) { return formulaStatusTagType(status) }
   function validationTagType(status?: string) { return formulaValidationTagType(status) }
   function materialLabel(row: ProductMaterialVO | ProductFormulaMaterialVO) { return `${row.materialCode || ''} ${row.materialNameCn || ''}`.trim() }
-  function formatNumber(value?: number | string) { return formatInch(value) }
+  function formatNumber(value?: number | string | null) { return formatInch(value) }
   function formatMinute(value?: string) { return value ? value.replace('T', ' ').slice(0, 16) : '-' }
   function removeRow<T>(rows: T[], index: number) { if (index >= 0) rows.splice(index, 1) }
   function clearVisibilityCondition(row: ProductFormulaOptionVO) { row.visibilityMode = 'ALWAYS'; (row as DraftOption).visibleConditionOptionClientKey = ''; row.visibleConditionOptionCode = ''; row.visibleConditionOptionNameCn = ''; (row as DraftOption).visibleConditionValueClientKey = ''; row.visibleConditionValueCode = ''; row.visibleConditionValueNameCn = '' }

@@ -1,6 +1,7 @@
 package com.bocoo.product.service.impl;
 
 import com.bocoo.common.core.utils.StringUtils;
+import com.bocoo.common.core.utils.DecimalContractUtils;
 import com.bocoo.product.domain.entity.ProductFormulaMaterial;
 import com.bocoo.product.domain.entity.ProductFormulaOption;
 import com.bocoo.product.domain.entity.ProductFormulaOptionMaterial;
@@ -73,6 +74,12 @@ public class ProductFormulaUsageRuleValidator {
     }
 
     public String validateRuleContent(ProductFormulaUsageRule rule) {
+        if (!DecimalContractUtils.isNonNegativeWithScale(rule.getFixedUsageQty(), 6)
+            || !DecimalContractUtils.isNonNegativeWithScale(rule.getMinUsageQty(), 6)
+            || !DecimalContractUtils.isNonNegativeWithScale(rule.getMaxUsageQty(), 6)
+            || !DecimalContractUtils.isNonNegativeWithScale(rule.getLossRate(), 6)) {
+            return "product.numeric.inputInvalid";
+        }
         if (StringUtils.isBlank(rule.getUsageMode())) {
             return "product.formula.materialUsageModeRequired";
         }

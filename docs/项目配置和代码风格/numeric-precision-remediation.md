@@ -36,14 +36,14 @@
 - 新增 `formatQuantity`、`formatUnitPrice`、`formatMoney`、`formatInch`、`formatRate`。
 - 对现有 Element Plus 封装和 AutoNumeric 适配分别做最小验证，按原值保真、VXE 编辑兼容、中文输入、粘贴、键盘、可访问性和包体积选择实现。
 - 禁止为一个数字控件引入第二套 UI 组件库。
-- 支持 `COUNT`、`QUANTITY`、`UNIT_PRICE`、`MONEY`、`RATE` 业务模式。
+- 支持 `COUNT`、`QUANTITY`、`UNIT_PRICE`、`MONEY`、`RATIO`、`PERCENT` 业务模式；旧 `RATE` 只作兼容别名。
 - 支持最小/最大小数位、单位/币种精度、步长、范围、负数、清空、粘贴和键盘输入。
 - `COUNT` 使用 0 位；`QUANTITY/UNIT_PRICE/RATE` 展示保底 2 位，并只删除第 2 位之后的尾零；`MONEY` 固定币种精度。
 - 编辑态使用十进制文本保留原值，不强制补零；失焦态按业务格式展示；禁止格式化结果回写原值。
-- 兼容现有 `number/string/null`、表单校验和 API payload，不改变已有接口字段类型。
+- 可以读取遗留 `number/string/null`；业务小数输出和 API payload 必须统一为规范十进制 `string | null`。
 - `BusinessInchInput` 固定由整数输入框和分数下拉组成，默认 `1/8 in` 选项为 `0`、`1/8`、`1/4`、`3/8`、`1/2`、`5/8`、`3/4`、`7/8`。
 - 产品或配方配置其他步长时，由 `BusinessInchInput` 统一生成选项；页面禁止自行传入选项列表。
-- `BusinessInchInput` 必须完成十进制值与“整数 + 分数”的双向无损转换。
+- `BusinessInchInput` 必须完成十进制值与“整数 + 分数”的双向无损转换；不满足步长的值显示原始十进制和异常状态，禁止取最近分数。
 - Grid 只读单元格使用轻量 formatter，编辑单元格使用统一 editor。
 - 为 `1`、`0.5`、`0.325`、`1.2300`、`1.2304`、`0.0156`、`72.125`、负数和空值补测试。
 

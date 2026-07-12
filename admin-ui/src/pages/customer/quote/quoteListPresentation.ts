@@ -1,4 +1,5 @@
 import type { CustomerQuote, QuoteStatus } from '@/api/customer/quote'
+import { formatCurrency } from '@/utils/businessNumber'
 
 type Translate = (key: string) => string
 interface QuoteActions {
@@ -13,9 +14,8 @@ interface QuoteActions {
   remove: (row: CustomerQuote) => Promise<void>
 }
 
-export function quoteMoney(value?: number, currency = 'USD') {
-  return value == null ? '-'
-    : new Intl.NumberFormat('en-US', { style: 'currency', currency: currency || 'USD' }).format(value)
+export function quoteMoney(value?: string | null, currency = 'USD') {
+  return formatCurrency(value, currency || 'USD')
 }
 
 export function quoteStatusText(status: QuoteStatus | undefined, options: Array<{ value: string; label: string }>) {

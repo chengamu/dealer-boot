@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.math.BigDecimal;
+import com.bocoo.common.core.utils.BusinessNumberFormatter;
 import java.util.Locale;
 
 @Component
@@ -91,11 +92,13 @@ class SalesDocumentPdfRenderer {
         cell(table, String.valueOf(item.getLineNo())); cell(table, item.getRoomLocation());
         cell(table, item.getSaleProductName());
         if ("PRODUCTION".equals(type)) {
-            cell(table, item.getOrderWidthInch() + " x " + item.getOrderHeightInch() + " in");
+            cell(table, BusinessNumberFormatter.inch(item.getOrderWidthInch(), 8) + " × "
+                + BusinessNumberFormatter.inch(item.getOrderHeightInch(), 8));
             cell(table, String.valueOf(item.getQuantity())); cell(table, item.getConfigurationSummary());
             cell(table, item.getFormulaVersionLabel()); cell(table, item.getRemark());
         } else {
-            cell(table, String.valueOf(item.getOrderWidthInch())); cell(table, String.valueOf(item.getOrderHeightInch()));
+            cell(table, BusinessNumberFormatter.inch(item.getOrderWidthInch(), 8));
+            cell(table, BusinessNumberFormatter.inch(item.getOrderHeightInch(), 8));
             cell(table, String.valueOf(item.getQuantity())); cell(table, item.getConfigurationSummary());
             cell(table, money(item.getUnitAmount())); cell(table, money(item.getLineAmount()));
         }
@@ -133,5 +136,5 @@ class SalesDocumentPdfRenderer {
     private String title(String type) { return "PRODUCTION".equals(type) ? "PRODUCTION SHEET" : "SALES ORDER"; }
     private String number(SalesDocumentVo row, String type) { return row.getOrderNo(); }
     private String text(String value) { return value == null || value.isBlank() ? "-" : value; }
-    private String money(BigDecimal value) { return "$" + (value == null ? "0.00" : value.setScale(2)); }
+    private String money(BigDecimal value) { return "$" + BusinessNumberFormatter.money(value, 2); }
 }

@@ -155,6 +155,7 @@
   "sys.menu.monitor.cacheList": "Cache List",
   "sys.menu.monitor.cacheList.clear": "Clear Cache",
   "sys.menu.monitor.online": "Online Users",
+  "sys.menu.monitor.server": "Server Resources",
   "sys.menu.system": "System",
   "sys.menu.system.config": "Config",
   "sys.menu.system.dept": "Dept",

@@ -58,6 +58,7 @@ import Pagination from '@/components/Pagination/index.vue'
 import { payApi, type CreditAccount, type CreditTransaction, type Receivable } from '@/api/pay'
 import { formatUtc } from '@/utils/datetime'
 import { money } from '../payPresentation'
+import { canonicalDecimal } from '@/utils/businessNumber'
 
 const { t } = useI18n()
 const tab = ref('accounts')
@@ -92,7 +93,7 @@ async function adjust(row: CreditAccount) {
   if (!row.creditAccountId) return
   const amount = await ElMessageBox.prompt(t('pay.credit.adjustAmount'), t('pay.credit.adjust'), { inputPattern: /^-?\d+(\.\d{1,2})?$/, inputErrorMessage: t('pay.credit.amountInvalid') })
   const reason = await ElMessageBox.prompt(t('pay.reason'), t('pay.credit.adjust'), { inputValidator: value => Boolean(value?.trim()) || t('common.required') })
-  await payApi.adjustCredit(row.creditAccountId, Number(amount.value), reason.value); ElMessage.success(t('pay.credit.adjusted')); await load()
+  await payApi.adjustCredit(row.creditAccountId, canonicalDecimal(amount.value), reason.value); ElMessage.success(t('pay.credit.adjusted')); await load()
 }
 async function freeze(row: CreditAccount) {
   if (!row.creditAccountId) return

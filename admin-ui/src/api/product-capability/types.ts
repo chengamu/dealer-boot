@@ -1,4 +1,4 @@
-import type { PageQuery } from '@/types/api'
+import type { DecimalValue, PageQuery } from '@/types/api'
 
 export interface ProductRecord {
   [key: string]: unknown
@@ -120,7 +120,7 @@ export interface ProductUnitVO extends ProductRecord {
   precisionScale?: number
   roundingMode?: string
   baseUnitCode?: string
-  conversionRate?: number
+  conversionRate?: DecimalValue
   sortOrder?: number
   status?: string
   remark?: string
@@ -228,10 +228,10 @@ export interface ProductFormulaVO extends ProductRecord {
   categoryNameCn?: string
   productTypeCode?: string
   productTypeNameCn?: string
-  minWidthInch?: number
-  minHeightInch?: number
-  maxWidthInch?: number
-  maxHeightInch?: number
+  minWidthInch?: DecimalValue
+  minHeightInch?: DecimalValue
+  maxWidthInch?: DecimalValue
+  maxHeightInch?: DecimalValue
   sizeSummary?: string
   materialLineCount?: number
   configuredFlag?: boolean
@@ -300,12 +300,12 @@ export interface ProductFormulaMaterialVO extends ProductRecord {
   weightFormula?: string
   weightFormulaText?: string
   usageFormula?: string
-  fixedUsageQty?: number
+  fixedUsageQty?: DecimalValue
   calculationUnitCode?: string
   roundingMode?: string
-  minUsageQty?: number
-  maxUsageQty?: number
-  lossRate?: number
+  minUsageQty?: DecimalValue
+  maxUsageQty?: DecimalValue
+  lossRate?: DecimalValue
   productionRemark?: string
   status?: string
   sortOrder?: number
@@ -394,7 +394,7 @@ export interface ProductFormulaRestrictionVO extends ProductRecord {
   conditionOperator?: string
   conditionValueRefKey?: string
   conditionValueCode?: string
-  conditionValueNumber?: number
+  conditionValueNumber?: DecimalValue
   conditionJson?: string
   conditionExpression?: string
   conditionText?: string
@@ -427,7 +427,7 @@ export interface ProductFormulaUsageRuleVO extends ProductRecord {
   conditionText?: string
   conditionKey?: string
   usageMode?: string
-  fixedUsageQty?: number
+  fixedUsageQty?: DecimalValue
   lengthFormula?: string
   lengthFormulaText?: string
   widthFormula?: string
@@ -440,9 +440,9 @@ export interface ProductFormulaUsageRuleVO extends ProductRecord {
   usageFormulaText?: string
   calculationUnitCode?: string
   roundingMode?: string
-  minUsageQty?: number
-  maxUsageQty?: number
-  lossRate?: number
+  minUsageQty?: DecimalValue
+  maxUsageQty?: DecimalValue
+  lossRate?: DecimalValue
   defaultRuleFlag?: boolean
   productionRemark?: string
   status?: string
@@ -470,7 +470,7 @@ export interface ProductFormulaVariableRuleVO extends ProductRecord {
   conditionExpression?: string
   conditionText?: string
   valueType?: string
-  fixedValue?: number
+  fixedValue?: DecimalValue
   formulaExpression?: string
   formulaText?: string
   defaultRuleFlag?: boolean
@@ -531,8 +531,8 @@ export interface ProductFormulaReviewRecordVO extends ProductRecord {
 }
 
 export interface ProductFormulaSimulationBO extends ProductRecord {
-  orderWidth?: number
-  orderHeight?: number
+  orderWidth?: DecimalValue
+  orderHeight?: DecimalValue
   orderQuantity?: number
   room?: string
   selectedOptionValues?: Record<string, string>
@@ -549,11 +549,11 @@ export interface ProductFormulaSimulationItemVO extends ProductRecord {
   attributeGroupNameCn?: string
   specModelText?: string
   unitCode?: string
-  usageQty?: number
-  lossRate?: number
-  unitPrice?: number
-  salesPrice?: number
-  amount?: number
+  usageQty?: DecimalValue
+  lossRate?: DecimalValue
+  unitPrice?: DecimalValue
+  salesPrice?: DecimalValue
+  amount?: DecimalValue
   usageSummary?: string
   productionRemark?: string
 }
@@ -563,14 +563,14 @@ export interface ProductFormulaSimulationVO extends ProductRecord {
   status?: string
   message?: string
   simulationTime?: string
-  orderWidth?: number
-  orderHeight?: number
+  orderWidth?: DecimalValue
+  orderHeight?: DecimalValue
   orderQuantity?: number
   room?: string
   selectedOptionValues?: Record<string, string>
   items?: ProductFormulaSimulationItemVO[]
-  singleAmount?: number
-  totalAmount?: number
+  singleAmount?: DecimalValue
+  totalAmount?: DecimalValue
 }
 
 export interface ProductMaterialAttributeVO extends ProductRecord {
@@ -582,7 +582,7 @@ export interface ProductMaterialAttributeVO extends ProductRecord {
   attributeNameCn?: string
   attributeNameEn?: string
   valueText?: string
-  valueNumber?: number
+  valueNumber?: DecimalValue
   valueBool?: string | boolean
   valueUnitCode?: string
   sortOrder?: number
@@ -619,9 +619,9 @@ export interface ProductMaterialVO extends ProductRecord {
   spec?: string
   specModelText?: string
   colorName?: string
-  weightValue?: number
-  unitPrice?: number
-  salesPrice?: number
+  weightValue?: DecimalValue
+  unitPrice?: DecimalValue
+  salesPrice?: DecimalValue
   auditBy?: string
   auditTime?: string
   sortOrder?: number

@@ -1,7 +1,7 @@
-export function toQuoteNumber(value: unknown) {
-  if (value == null || value === '') return undefined
-  const parsed = Number(value)
-  return Number.isFinite(parsed) ? parsed : undefined
+import { canonicalDecimal } from '@/utils/businessNumber'
+
+export function toQuoteDecimal(value: unknown) {
+  return canonicalDecimal(value as string | number | null) ?? undefined
 }
 
 export function toQuoteId(value: unknown) {

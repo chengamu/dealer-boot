@@ -49,6 +49,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import type { RecentOrder, RecentQuote, SalesDashboard } from '@/api/sales-dashboard'
+import { formatCurrency } from '@/utils/businessNumber'
 
 defineProps<{ dashboard: SalesDashboard }>()
 const emit = defineEmits<{
@@ -59,7 +60,7 @@ const emit = defineEmits<{
 const { t } = useI18n()
 
 function documentName(customer?: string, project?: string) { return [customer, project].filter(Boolean).join(' · ') || '-' }
-function money(value = 0, currency = 'USD') { return new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(value) }
+function money(value?: string | null, currency = 'USD') { return formatCurrency(value, currency) }
 function quoteTone(status: string) { return status === 'CONFIRMED' ? 'success' : status === 'VOID' ? 'info' : 'warning' }
 function quoteStatus(status: string) {
   if (status === 'CONFIRMED') return t('dashboard.sales.status.quoteConfirmed')

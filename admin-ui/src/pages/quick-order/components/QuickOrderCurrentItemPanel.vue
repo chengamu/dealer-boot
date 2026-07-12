@@ -17,13 +17,13 @@
       </el-form-item>
       <el-form-item :label="t('dealer.quickOrder.room')"><el-input v-model="item.roomLocation" :disabled="readonly" @change="emit('dirty')" /></el-form-item>
       <el-form-item :label="t('dealer.quickOrder.width')">
-        <BusinessInchInput v-model="item.orderWidthInch" :disabled="readonly" @change="emit('dirty')" />
+        <BusinessInchInput v-model="item.orderWidthInch" min="0.125" :disabled="readonly" @change="emit('dirty')" @validity-change="setValidity('width', $event)" />
       </el-form-item>
       <el-form-item :label="t('dealer.quickOrder.height')">
-        <BusinessInchInput v-model="item.orderHeightInch" :disabled="readonly" @change="emit('dirty')" />
+        <BusinessInchInput v-model="item.orderHeightInch" min="0.125" :disabled="readonly" @change="emit('dirty')" @validity-change="setValidity('height', $event)" />
       </el-form-item>
       <el-form-item :label="t('dealer.quickOrder.quantity')">
-        <el-input-number v-model="item.quantity" :min="1" :precision="0" :disabled="readonly" @change="emit('dirty')" />
+        <BusinessNumberInput v-model="item.quantity" mode="COUNT" :min="1" :allow-zero="false" :disabled="readonly" @change="emit('dirty')" @validity-change="setValidity('quantity', $event)" />
       </el-form-item>
     </div>
     <div class="quick-order-current-item__options" v-loading="loadingSetup">
@@ -37,10 +37,10 @@
         <span class="is-total">{{ t('dealer.quickOrder.lineAmount') }} <b>{{ money(item.lineAmount) }}</b></span>
       </div>
       <div class="quick-order-current-item__actions">
-        <el-button :disabled="readonly || !item.saleProductId" :loading="calculating" @click="emit('calculate')">
+        <el-button :disabled="readonly || !item.saleProductId || !inputValid" :loading="calculating" @click="emit('calculate')">
           {{ t('dealer.quickOrder.calculate') }}
         </el-button>
-        <el-button type="primary" :disabled="readonly || item.calculationStatus !== 'PASS'" @click="emit('save-line')">
+        <el-button type="primary" :disabled="readonly || !inputValid || item.calculationStatus !== 'PASS'" @click="emit('save-line')">
           {{ editing ? t('dealer.quickOrder.updateLine') : t('dealer.quickOrder.addLine') }}
         </el-button>
         <el-button :disabled="readonly" @click="emit('reset-line')">{{ t('common.reset') }}</el-button>
@@ -50,11 +50,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, reactive } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { CustomerQuoteCatalogSetup, QuoteLanguage } from '@/api/customer/quote'
 import type { SaleProductVO } from '@/api/product-pricing/types'
 import type { QuickOrderWorkbenchItem } from '../quickOrderShared'
+import type { DecimalValue } from '@/types/api'
+import { formatCurrency } from '@/utils/businessNumber'
 import QuickOrderOptionGroups from './QuickOrderOptionGroups.vue'
 
 const props = defineProps<{
@@ -75,9 +77,12 @@ const emit = defineEmits<{
   'save-line': []
   'reset-line': []
   'product-change': []
+  'validity-change': [valid: boolean]
 }>()
 
 const { t } = useI18n()
+const fieldValidity = reactive({ width: true, height: true, quantity: true })
+const inputValid = computed(() => Object.values(fieldValidity).every(Boolean))
 const title = computed(() => props.editing ? t('dealer.quickOrder.currentLine.edit') : t('dealer.quickOrder.currentLine.add'))
 const statusText = computed(() => {
   if (props.item.calculationStatus === 'PASS') return t('dealer.quickOrder.calculation.pass')
@@ -85,11 +90,14 @@ const statusText = computed(() => {
   return t('dealer.quickOrder.calculation.pending')
 })
 
-function money(value?: number) {
-  return value == null
-    ? '-'
-    : new Intl.NumberFormat('en-US', { style: 'currency', currency: props.currencyCode || 'USD' }).format(value)
+function money(value?: DecimalValue) { return formatCurrency(value, props.currencyCode || 'USD') }
+function setValidity(field: keyof typeof fieldValidity, valid: boolean) {
+  fieldValidity[field] = valid
+  if (!valid) emit('dirty')
+  emit('validity-change', inputValid.value)
 }
+
+defineExpose({ validate: () => inputValid.value })
 </script>
 
 <style scoped>

@@ -1,4 +1,5 @@
 import { request } from '@/utils/request'
+import type { DecimalValue } from '@/types/api'
 
 export type DashboardScopeType = 'SELF' | 'TENANT' | 'PLATFORM_ALL' | 'PLATFORM_AUTHORIZED' | 'PLATFORM_FINANCE' | 'FULFILLMENT'
 
@@ -30,9 +31,9 @@ export interface OrderSummary {
 
 export interface PaymentSummary {
   pendingCount: number
-  pendingAmount: number
+  pendingAmount: DecimalValue
   paidThisMonthCount: number
-  paidThisMonthAmount: number
+  paidThisMonthAmount: DecimalValue
   currencyCode: string
 }
 
@@ -51,7 +52,7 @@ export interface RecentQuote {
   projectName?: string
   status: 'DRAFT' | 'CONFIRMED' | 'VOID'
   validUntil?: string
-  totalAmount?: number
+  totalAmount?: DecimalValue
   currencyCode?: string
   salesDocumentId?: string
   updatedAt?: string
@@ -67,7 +68,7 @@ export interface RecentOrder {
   paymentStatus: 'UNPAID' | 'PAID'
   productionStatus: 'PENDING' | 'IN_PRODUCTION' | 'COMPLETED'
   shipmentStatus: 'UNSHIPPED' | 'PARTIALLY_SHIPPED' | 'SHIPPED' | 'DELIVERED'
-  totalAmount?: number
+  totalAmount?: DecimalValue
   currencyCode?: string
   submittedAt?: string
 }

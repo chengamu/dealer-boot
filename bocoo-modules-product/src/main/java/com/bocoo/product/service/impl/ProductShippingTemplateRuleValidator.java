@@ -2,6 +2,7 @@ package com.bocoo.product.service.impl;
 
 import com.bocoo.common.core.exception.ServiceException;
 import com.bocoo.product.domain.bo.ProductShippingTemplateRuleBo;
+import com.bocoo.common.core.utils.DecimalContractUtils;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -34,6 +35,11 @@ public class ProductShippingTemplateRuleValidator {
             || rule.getFeeAmount().compareTo(BigDecimal.ZERO) < 0)) {
             throw ServiceException.ofMessageKey("product.shippingTemplate.feeAmountRequired");
         }
+        if (rows.stream().anyMatch(rule -> !validDecimal(rule.getMinAreaSqft())
+            || !validDecimal(rule.getMaxAreaSqft())
+            || !validDecimal(rule.getFeeAmount()))) {
+            throw ServiceException.ofMessageKey("product.numeric.inputInvalid");
+        }
     }
 
     private void validateRanges(List<ProductShippingTemplateRuleBo> rules) {
@@ -64,5 +70,9 @@ public class ProductShippingTemplateRuleValidator {
         if (previousMax != null) {
             throw ServiceException.ofMessageKey("product.shippingTemplate.areaRangeCoverage");
         }
+    }
+
+    private boolean validDecimal(BigDecimal value) {
+        return DecimalContractUtils.isNonNegativeWithScale(value, 4);
     }
 }

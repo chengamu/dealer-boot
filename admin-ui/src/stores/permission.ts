@@ -11,6 +11,7 @@ const migratedViewModules: Record<string, () => Promise<unknown>> = {
   'monitor/logininfor/index': () => import('@/pages/monitor/LoginInfoPage.vue'),
   'monitor/operlog/index': () => import('@/pages/monitor/OperationLogPage.vue'),
   'monitor/cache/index': () => import('@/pages/monitor/CacheMonitorPage.vue'),
+  'monitor/server/index': () => import('@/pages/monitor/ServerResourcePage.vue'),
   'monitor/cache/list': () => import('@/pages/monitor/CacheListPage.vue'),
   'monitor/admin/index': () => import('@/pages/monitor/AdminMonitorPage.vue'),
   'monitor/xxljob/index': () => import('@/pages/monitor/XxlJobPage.vue'),

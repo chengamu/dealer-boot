@@ -11,7 +11,7 @@ export interface MerchantLevelDiscount {
   categoryNameCn?: string
   productTypeCode?: string
   productTypeNameCn?: string
-  discountRate?: number
+  discountRate?: DecimalValue
   sortOrder?: number
   status?: string
   remark?: string
@@ -50,3 +50,4 @@ export function deleteMerchantLevelDiscount(ids: number | string | Array<number 
 export function changeMerchantLevelDiscountStatus(id: number | string, status: string) {
   return request({ url: `/merchant/level-discounts/change-status/${id}/${status}`, method: 'put' })
 }
+import type { DecimalValue } from '@/types/api'

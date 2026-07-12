@@ -11,15 +11,23 @@
     @focus="handleFocus"
     @blur="handleBlur"
     @input="handleInput"
-    @change="$emit('change', modelValue)"
+    @change="handleChange"
   >
     <template v-if="unit" #append>{{ unit }}</template>
   </el-input>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
-import { decimalText, formatBusinessNumber, type BusinessNumberMode, type BusinessNumberValue } from '@/utils/businessNumber'
+import { computed, onMounted, ref, watch } from 'vue'
+import {
+  canonicalDecimal,
+  formatBusinessNumber,
+  resolveNumericContract,
+  validateNumeric,
+  type BusinessNumberMode,
+  type BusinessNumberValue
+} from '@/utils/businessNumber'
+import { useBusinessInputFormValidation } from '@/components/useBusinessInputFormValidation'
 
 const props = withDefaults(defineProps<{
   modelValue?: BusinessNumberValue
@@ -28,9 +36,10 @@ const props = withDefaults(defineProps<{
   maxFractionDigits?: number
   unitPrecision?: number
   currencyDigits?: number
-  min?: number
-  max?: number
+  min?: number | string
+  max?: number | string
   allowNegative?: boolean
+  allowZero?: boolean
   disabled?: boolean
   readonly?: boolean
   placeholder?: string
@@ -38,6 +47,7 @@ const props = withDefaults(defineProps<{
 }>(), {
   mode: 'QUANTITY',
   allowNegative: false,
+  allowZero: true,
   disabled: false,
   readonly: false,
   placeholder: '',
@@ -45,74 +55,90 @@ const props = withDefaults(defineProps<{
 })
 
 const emit = defineEmits<{
-  'update:modelValue': [value: number | string | null]
+  'update:modelValue': [value: string | null]
   change: [value: BusinessNumberValue]
   blur: []
+  validityChange: [valid: boolean]
 }>()
 
 const focused = ref(false)
-const invalid = ref(false)
 const draft = ref(editableText(props.modelValue))
-const maxDigits = computed(() => props.mode === 'COUNT'
-  ? 0
-  : props.maxFractionDigits ?? (props.mode === 'UNIT_PRICE' ? 4 : props.mode === 'MONEY' ? props.currencyDigits ?? 2 : props.unitPrecision ?? 6))
-const inputText = computed(() => focused.value
+const contract = computed(() => resolveNumericContract(props.mode, {
+  minFractionDigits: props.minFractionDigits,
+  maxFractionDigits: props.maxFractionDigits,
+  unitPrecision: props.unitPrecision,
+  currencyDigits: props.currencyDigits,
+  min: props.min,
+  max: props.max,
+  allowNegative: props.allowNegative,
+  allowZero: props.allowZero
+}))
+const invalid = ref(!validateDraft())
+const inputText = computed(() => focused.value || invalid.value
   ? draft.value
   : formatBusinessNumber(props.modelValue, props.mode, {
       minFractionDigits: props.minFractionDigits,
       maxFractionDigits: props.maxFractionDigits,
       unitPrecision: props.unitPrecision,
       currencyDigits: props.currencyDigits,
+      min: props.min,
+      max: props.max,
+      allowNegative: props.allowNegative,
+      allowZero: props.allowZero,
       emptyText: ''
     }))
 
-watch(() => props.modelValue, (value) => {
+watch([() => props.modelValue, contract], ([value]) => {
   if (!focused.value) draft.value = editableText(value)
+  setInvalid(!validateDraft())
 })
+
+useBusinessInputFormValidation(validateDraft)
+onMounted(() => emit('validityChange', validateDraft()))
 
 function handleFocus() {
   focused.value = true
-  draft.value = editableText(props.modelValue)
+  if (!invalid.value) draft.value = editableText(props.modelValue)
 }
 
 function handleInput(value: string) {
-  draft.value = sanitize(value)
-  const parsed = validValue(draft.value)
-  invalid.value = parsed === undefined
-  if (parsed !== undefined) emit('update:modelValue', parsed)
+  draft.value = value.replace(/,/g, '')
+  const result = validateNumeric(draft.value, contract.value)
+  setInvalid(!result.valid)
+  if (result.valid) emit('update:modelValue', result.value)
 }
 
 function handleBlur() {
-  const parsed = validValue(draft.value)
-  if (parsed === undefined) draft.value = editableText(props.modelValue)
-  else emit('update:modelValue', parsed)
-  invalid.value = false
+  const result = validateNumeric(draft.value, contract.value)
+  setInvalid(!result.valid)
+  if (result.valid) {
+    draft.value = result.value ?? ''
+    emit('update:modelValue', result.value)
+  }
   focused.value = false
   emit('blur')
 }
 
-function sanitize(value: string) {
-  let next = value.replace(/[^\d.-]/g, '').replace(/(?!^)-/g, '')
-  if (!props.allowNegative) next = next.replace(/-/g, '')
-  const dotIndex = next.indexOf('.')
-  if (dotIndex >= 0) next = `${next.slice(0, dotIndex + 1)}${next.slice(dotIndex + 1).replace(/\./g, '').slice(0, maxDigits.value)}`
-  return next
+function handleChange() {
+  const result = validateNumeric(draft.value, contract.value)
+  if (result.valid) emit('change', result.value)
 }
 
-function validValue(value: string): number | string | null | undefined {
-  if (value === '') return null
-  if (value === '-' || value === '.' || value === '-.') return undefined
-  const normalized = decimalText(value)
-  if (normalized === null) return undefined
-  const numeric = Number(normalized)
-  if (!Number.isFinite(numeric) || (props.min !== undefined && numeric < props.min) || (props.max !== undefined && numeric > props.max)) return undefined
-  if (props.mode === 'COUNT' && !Number.isInteger(numeric)) return undefined
-  return typeof props.modelValue === 'string' ? normalized : numeric
+function setInvalid(value: boolean) {
+  if (invalid.value === value) return
+  invalid.value = value
+  emit('validityChange', !value)
 }
 
 function editableText(value: BusinessNumberValue) {
-  return decimalText(value) ?? ''
+  return canonicalDecimal(value) ?? (value == null ? '' : String(value))
 }
+
+function validateDraft() {
+  return validateNumeric(draft.value, contract.value).valid
+}
+
+defineExpose({ validate: () => validateNumeric(draft.value, contract.value) })
 </script>
 
 <style scoped>

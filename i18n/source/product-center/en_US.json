@@ -1,4 +1,5 @@
 {
+  "product.numeric.inputInvalid": "The numeric precision, range, or sign does not match the business rule.",
   "product.base.delete.enabledDenied": "Enabled or audited records cannot be deleted directly. Disable or unaudit the record first.",
   "product.base.delete.hasReferences": "This record is referenced and cannot be deleted.",
   "product.base.edit.enabledDenied": "Enabled records cannot be edited normally. Disable the record first, or use Super Edit when permitted.",
