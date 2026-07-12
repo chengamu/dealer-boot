@@ -3,7 +3,7 @@
     <div v-if="showDrawerOverlay" class="drawer-bg" @click="handleClickOutside"/>
     <sidebar v-if="!sidebar.hide" class="sidebar-container" />
     <div :class="{ hasTagsView: stackedTagsView, compactHeader, sidebarHide: sidebar.hide }" class="main-container">
-      <div :class="{ 'fixed-header': fixedHeader }">
+      <div :class="{ 'fixed-header': fixedHeader || compactHeader }">
         <navbar :compact="compactHeader" @setLayout="setLayout">
           <tags-view v-if="compactHeader" compact />
         </navbar>
