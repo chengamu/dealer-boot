@@ -19,6 +19,7 @@ public class CustomerQuoteVo implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private Long quoteId;
+    private Long tenantId;
     private String quoteNo;
     private Long customerId;
     private String customerName;

@@ -19,19 +19,26 @@ class CustomerQuoteItemWriter extends MerchantServiceSupport {
 
     private final CustomerQuoteItemMapper itemMapper;
     private final CustomerQuoteCalculator calculator;
+    private final CustomerQuotePricingSessionFactory sessionFactory;
 
-    CustomerQuoteTotals replace(Long quoteId, Long tenantId, List<CustomerQuoteItemBo> rows) {
+    CustomerQuoteWriteResult replace(Long quoteId, Long tenantId, List<CustomerQuoteItemBo> rows) {
+        return replace(quoteId, tenantId, rows, sessionFactory.create(tenantId));
+    }
+
+    CustomerQuoteWriteResult replace(Long quoteId, Long tenantId, List<CustomerQuoteItemBo> rows,
+                                     CustomerQuotePricingSession session) {
         itemMapper.delete(this.<CustomerQuoteItem>activeQuery()
             .eq("tenant_id", tenantId).eq("quote_id", quoteId));
         BigDecimal productTotal = BigDecimal.ZERO;
         BigDecimal shippingTotal = BigDecimal.ZERO;
         String currencyCode = null;
         boolean allPassed = rows != null && !rows.isEmpty();
+        List<CustomerQuoteItem> items = new java.util.ArrayList<>();
         for (int index = 0; rows != null && index < rows.size(); index++) {
             CustomerQuoteItemBo bo = rows.get(index);
             CustomerQuoteItem item;
             try {
-                CustomerQuoteCalculatedItem calculated = calculator.calculate(bo);
+                CustomerQuoteCalculatedItem calculated = calculator.calculate(bo, session);
                 if (StringUtils.isNotBlank(currencyCode) && !currencyCode.equals(calculated.currencyCode())) {
                     throw ServiceException.ofMessageKey("customer.quote.currency.mixed");
                 }
@@ -41,18 +48,23 @@ class CustomerQuoteItemWriter extends MerchantServiceSupport {
                 shippingTotal = shippingTotal.add(item.getShippingAmount());
             } catch (RuntimeException e) {
                 allPassed = false;
-                item = calculator.failed(bo, e.getMessage());
+                item = calculator.failed(bo, e.getMessage(), session);
             }
             item.setQuoteItemId(null);
             item.setQuoteId(quoteId);
             item.setTenantId(tenantId);
             item.setLineNo(index + 1);
             item.setSortOrder(bo.getSortOrder() == null ? (index + 1) * 10 : bo.getSortOrder());
-            itemMapper.insert(item);
+            items.add(item);
+        }
+        if (!items.isEmpty() && !itemMapper.insertBatch(items)) {
+            throw new IllegalStateException("Customer quote items could not be saved");
         }
         BigDecimal product = money(productTotal);
         BigDecimal shipping = money(shippingTotal);
-        return new CustomerQuoteTotals(currencyCode, product, shipping, money(product.add(shipping)), allPassed);
+        CustomerQuoteTotals totals = new CustomerQuoteTotals(currencyCode, product, shipping,
+            money(product.add(shipping)), allPassed);
+        return new CustomerQuoteWriteResult(totals, List.copyOf(items));
     }
 
     List<CustomerQuoteItemBo> currentRows(Long quoteId, Long tenantId) {

@@ -10,6 +10,7 @@ import com.bocoo.merchant.domain.vo.CustomerQuoteExportEnVo;
 import com.bocoo.merchant.domain.vo.CustomerQuoteVo;
 import com.bocoo.merchant.service.CustomerQuoteLifecycleService;
 import com.bocoo.merchant.service.CustomerQuoteQueryService;
+import com.bocoo.common.satoken.utils.LoginHelper;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
@@ -28,7 +29,7 @@ public class CustomerQuoteLifecycleController extends BaseController {
     @Log(title = "确认客户报价", businessType = BusinessType.UPDATE)
     @PutMapping("/{id:\\d+}/confirm")
     public com.bocoo.common.core.domain.R<Void> confirm(@PathVariable Long id) {
-        return toAjax(lifecycleService.confirm(id));
+        return toAjax(lifecycleService.confirm(LoginHelper.getTenantId(), id));
     }
 
     @SaCheckPermission("customer:quote:edit")

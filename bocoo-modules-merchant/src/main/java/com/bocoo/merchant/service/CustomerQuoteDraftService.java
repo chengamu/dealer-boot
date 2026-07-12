@@ -6,9 +6,9 @@ import com.bocoo.merchant.domain.vo.CustomerQuoteItemVo;
 import com.bocoo.merchant.domain.vo.CustomerQuoteVo;
 
 public interface CustomerQuoteDraftService {
-    Long insert(CustomerQuoteBo bo);
+    CustomerQuoteVo insert(CustomerQuoteBo bo);
 
-    Boolean update(CustomerQuoteBo bo);
+    CustomerQuoteVo update(CustomerQuoteBo bo);
 
     Boolean delete(Long[] ids);
 
@@ -16,5 +16,4 @@ public interface CustomerQuoteDraftService {
 
     CustomerQuoteItemVo calculateItem(CustomerQuoteItemBo bo, String quoteLanguage);
 
-    CustomerQuoteVo calculateAll(Long id);
 }

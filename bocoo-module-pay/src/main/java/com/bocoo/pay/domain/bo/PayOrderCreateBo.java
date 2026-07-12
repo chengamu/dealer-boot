@@ -24,6 +24,13 @@ public class PayOrderCreateBo {
     @Schema(description = "业务订单号")
     private String merchantOrderId;
 
+    private Long salesDocumentId;
+    private String salesOrderNo;
+    private Long merchantId;
+    private String merchantName;
+    private Long customerId;
+    private String customerName;
+
     @Schema(description = "订单标题")
     private String subject;
 

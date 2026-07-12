@@ -22,7 +22,8 @@ class CustomerQuoteOrderFactory {
         row.setTenantId(quote.getTenantId());
         row.setMerchantId(calculation.profile() == null ? null : calculation.profile().getMerchantId());
         row.setMerchantName(calculation.profile() == null ? null : calculation.profile().getMerchantName());
-        row.setSourceQuoteId(quote.getQuoteId()); row.setQuoteNo(quote.getQuoteNo());
+        row.setSourceType("QUOTE"); row.setSourceQuoteId(quote.getQuoteId());
+        row.setSourceNo(quote.getQuoteNo()); row.setQuoteNo(quote.getQuoteNo());
         row.setOrderNo("SO-" + Seq.getId()); row.setCustomerId(quote.getCustomerId());
         row.setCustomerName(quote.getCustomerName()); row.setCompanyName(quote.getCompanyName());
         row.setCustomerEmail(quote.getCustomerEmail()); row.setCustomerPhone(quote.getCustomerPhone());
@@ -54,14 +55,19 @@ class CustomerQuoteOrderFactory {
         row.setQuantity(source.getQuantity()); row.setSelectedOptionsJson(source.getSelectedOptionsJson());
         row.setConfigurationSummary("EN_US".equals(quote.getQuoteLanguage())
             ? source.getSelectedOptionsSummaryEn() : source.getSelectedOptionsSummaryCn());
+        row.setConfigurationSummaryCn(source.getSelectedOptionsSummaryCn());
+        row.setConfigurationSummaryEn(source.getSelectedOptionsSummaryEn());
         row.setCalculationStatus("PASS"); row.setListUnitAmount(money(source.getUnitAmount()));
         row.setListAmount(money(source.getProductAmount())); row.setDiscountRate(rate);
         row.setProductAmount(money(source.getProductAmount().multiply(rate)));
+        row.setDiscountAmount(money(row.getListAmount().subtract(row.getProductAmount())));
         row.setUnitAmount(money(row.getProductAmount().divide(BigDecimal.valueOf(source.getQuantity()), 2, RoundingMode.HALF_UP)));
-        row.setShippingTemplateId(source.getShippingTemplateId()); row.setShippingAmount(money(source.getShippingAmount()));
+        row.setShippingTemplateId(source.getShippingTemplateId());
+        row.setUnitShippingAmount(money(source.getUnitShippingAmount()));
+        row.setShippingAmount(money(source.getShippingAmount()));
         row.setLineAmount(money(row.getProductAmount().add(row.getShippingAmount())));
         row.setBomSnapshotJson(source.getBomSnapshotJson()); row.setPricingSnapshotJson(source.getPricingSnapshotJson());
-        row.setShippingSnapshotJson(source.getPricingSnapshotJson()); row.setSortOrder(source.getSortOrder());
+        row.setShippingSnapshotJson(source.getShippingSnapshotJson()); row.setSortOrder(source.getSortOrder());
         row.setDelFlag("0"); row.setRemark(source.getRemark());
         return row;
     }

@@ -9,6 +9,7 @@ import com.bocoo.dealer.domain.vo.CustomerQuoteOrderPreviewVo;
 import com.bocoo.dealer.domain.vo.CustomerQuoteOrderResultVo;
 import com.bocoo.dealer.mapper.SalesDocumentItemMapper;
 import com.bocoo.dealer.mapper.SalesDocumentMapper;
+import com.bocoo.dealer.payment.SalesPaymentOrderLinker;
 import com.bocoo.dealer.service.CustomerQuoteOrderService;
 import com.bocoo.merchant.service.CustomerQuoteConversionSnapshot;
 import com.bocoo.merchant.service.CustomerQuoteConversionSupport;
@@ -27,6 +28,7 @@ public class CustomerQuoteOrderServiceImpl extends DealerServiceSupport implemen
     private final SalesDocumentMapper documentMapper;
     private final SalesDocumentItemMapper itemMapper;
     private final SalesDocumentEventRecorder events;
+    private final SalesPaymentOrderLinker paymentOrderLinker;
 
     @Override
     public CustomerQuoteOrderPreviewVo preview(Long quoteId) {
@@ -59,6 +61,7 @@ public class CustomerQuoteOrderServiceImpl extends DealerServiceSupport implemen
             item.setTenantId(document.getTenantId());
             itemMapper.insert(item);
         }
+        paymentOrderLinker.initialize(document);
         events.record(document.getSalesDocumentId(), document.getTenantId(), "ORDER_CREATED_FROM_QUOTE",
             "CONFIRMED", "SUBMITTED", snapshot.quote().getQuoteNo());
         if (!quoteSupport.markConverted(quoteId, document.getSalesDocumentId(), document.getOrderNo())) {

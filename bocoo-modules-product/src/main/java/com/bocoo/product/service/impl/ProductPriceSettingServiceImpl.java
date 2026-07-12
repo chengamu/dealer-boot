@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.bocoo.common.core.exception.ServiceException;
 import com.bocoo.common.core.utils.StringUtils;
 import com.bocoo.common.core.utils.TimeUtils;
+import com.bocoo.common.core.utils.MapstructUtils;
 import com.bocoo.product.domain.bo.ProductPriceMaterialBatchRuleBo;
 import com.bocoo.product.domain.bo.ProductPriceMaterialRuleBo;
 import com.bocoo.product.domain.bo.ProductPriceQuoteBo;
@@ -15,7 +16,10 @@ import com.bocoo.product.domain.entity.ProductPriceSetting;
 import com.bocoo.product.domain.entity.ProductSaleProduct;
 import com.bocoo.product.domain.vo.ProductPriceQuoteVo;
 import com.bocoo.product.domain.vo.ProductPriceSetupVo;
+import com.bocoo.product.domain.vo.ProductPriceSettingVo;
 import com.bocoo.product.domain.vo.ProductPriceValidationIssueVo;
+import com.bocoo.product.domain.vo.ProductFormulaSetupVo;
+import com.bocoo.product.domain.vo.ProductSaleProductVo;
 import com.bocoo.product.mapper.ProductFormulaVersionMapper;
 import com.bocoo.product.mapper.ProductPriceMaterialMapper;
 import com.bocoo.product.mapper.ProductPriceMaterialRuleMapper;
@@ -24,6 +28,7 @@ import com.bocoo.product.mapper.ProductSaleProductMapper;
 import com.bocoo.product.service.ProductChangeLogService;
 import com.bocoo.product.service.ProductEntityDefaults;
 import com.bocoo.product.service.ProductPriceSettingService;
+import com.bocoo.product.service.ProductPriceRuntimeContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -75,6 +80,22 @@ public class ProductPriceSettingServiceImpl extends ProductServiceSupport implem
         vo.setFormulaOptionMaterials(snapshotReader.formulaOptionMaterials(version));
         vo.setIssues(validator.validate(version, materials, rules));
         return vo;
+    }
+
+    @Override
+    public ProductPriceRuntimeContext prepareRuntime(Long saleProductId) {
+        ProductSaleProduct saleProduct = requireSaleProduct(saleProductId);
+        if (!ProductSaleProductServiceImpl.PRICE_READY.equals(saleProduct.getPriceStatus())) {
+            throw ServiceException.ofMessageKey("product.priceSetting.validationRequired");
+        }
+        ProductPriceSetting setting = requireSetting(saleProduct);
+        ProductFormulaVersion version = requireVersion(saleProduct);
+        List<ProductPriceMaterial> materials = queryMaterials(setting);
+        List<ProductPriceMaterialRule> rules = queryRules(setting);
+        ProductFormulaSetupVo formulaSetup = snapshotReader.formulaSetup(version);
+        ProductPriceSetupVo setup = runtimeSetup(saleProduct, setting, formulaSetup, materials, rules);
+        return new ProductPriceRuntimeContextImpl(saleProduct, setting, version, formulaSetup,
+            List.copyOf(materials), List.copyOf(rules), setup, pricingEngine);
     }
 
     @Override
@@ -228,6 +249,21 @@ public class ProductPriceSettingServiceImpl extends ProductServiceSupport implem
     private List<ProductPriceMaterialRule> queryRules(ProductPriceSetting setting) {
         return ruleMapper.selectList(activeQuery(ProductPriceMaterialRule.class)
             .eq("price_setting_id", setting.getPriceSettingId()).orderByAsc("sort_order", "material_rule_id"));
+    }
+
+    private ProductPriceSetupVo runtimeSetup(ProductSaleProduct product, ProductPriceSetting setting,
+                                             ProductFormulaSetupVo formulaSetup,
+                                             List<ProductPriceMaterial> materials,
+                                             List<ProductPriceMaterialRule> rules) {
+        ProductPriceSetupVo vo = new ProductPriceSetupVo();
+        vo.setSaleProduct(MapstructUtils.convert(product, ProductSaleProductVo.class));
+        vo.setSetting(MapstructUtils.convert(setting, ProductPriceSettingVo.class));
+        vo.setPriceMaterials(voAssembler.toMaterialVos(materials, rules));
+        vo.setFormulaMaterials(formulaSetup.getMaterials());
+        vo.setFormulaOptions(formulaSetup.getOptions());
+        vo.setFormulaOptionValues(formulaSetup.getOptionValues());
+        vo.setFormulaOptionMaterials(formulaSetup.getOptionMaterials());
+        return vo;
     }
 
     private List<ProductPriceMaterialRule> rulesForMaterial(Long priceMaterialId) {

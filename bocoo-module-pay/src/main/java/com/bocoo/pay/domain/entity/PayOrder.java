@@ -46,6 +46,13 @@ public class PayOrder extends BaseEntity {
     @Schema(description = "业务订单号")
     private String merchantOrderId;
 
+    private Long salesDocumentId;
+    private String salesOrderNo;
+    private Long merchantId;
+    private String merchantName;
+    private Long customerId;
+    private String customerName;
+
     @Schema(description = "用户ID")
     private Long userId;
 

@@ -10,6 +10,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import com.bocoo.merchant.domain.entity.CustomerQuoteItem;
 
 @Component
 @RequiredArgsConstructor
@@ -21,14 +25,23 @@ class SalesDiscountResolver {
         return profileService.selectByTenantId(tenantId);
     }
 
-    BigDecimal resolve(MerchantProfileVo profile, Long categoryId, String productTypeCode) {
-        if (profile == null) return BigDecimal.ONE;
-        MerchantLevelDiscount rule = TenantContextHolder.callWithTenant(1L, () ->
-            discountMapper.selectOne(new QueryWrapper<MerchantLevelDiscount>()
-                .eq("del_flag", "0").eq("status", "ENABLED")
-                .eq("level_id", profile.getLevelId()).eq("category_id", categoryId)
-                .eq("product_type_code", productTypeCode).last("limit 1"), false));
-        BigDecimal rate = rule == null ? profile.getDiscountRate() : rule.getDiscountRate();
-        return rate == null ? BigDecimal.ONE : rate;
+    Map<Long, BigDecimal> resolveAll(MerchantProfileVo profile, List<CustomerQuoteItem> items) {
+        BigDecimal fallback = profile == null || profile.getDiscountRate() == null
+            ? BigDecimal.ONE : profile.getDiscountRate();
+        List<MerchantLevelDiscount> rules = profile == null || profile.getLevelId() == null ? List.of()
+            : TenantContextHolder.callWithTenant(1L, () -> discountMapper.selectList(
+                new QueryWrapper<MerchantLevelDiscount>().eq("del_flag", "0").eq("status", "ENABLED")
+                    .eq("level_id", profile.getLevelId())));
+        Map<String, BigDecimal> byProduct = new LinkedHashMap<>();
+        rules.forEach(rule -> byProduct.put(key(rule.getCategoryId(), rule.getProductTypeCode()),
+            rule.getDiscountRate() == null ? fallback : rule.getDiscountRate()));
+        Map<Long, BigDecimal> result = new LinkedHashMap<>();
+        items.forEach(item -> result.put(item.getQuoteItemId(),
+            byProduct.getOrDefault(key(item.getCategoryId(), item.getProductTypeCode()), fallback)));
+        return result;
+    }
+
+    private String key(Long categoryId, String productTypeCode) {
+        return categoryId + "|" + (productTypeCode == null ? "" : productTypeCode);
     }
 }

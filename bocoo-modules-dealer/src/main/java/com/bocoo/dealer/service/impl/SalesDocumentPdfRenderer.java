@@ -11,6 +11,7 @@ import com.lowagie.text.pdf.BaseFont;
 import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.math.BigDecimal;
 import java.util.Locale;
 
@@ -111,8 +112,22 @@ class SalesDocumentPdfRenderer {
 
     private Font font(float size, int style) { return new Font(PDF_FONT, size, style); }
     private static BaseFont createBaseFont() {
+        String configured = System.getenv("PDF_FONT_PATH");
+        String[] candidates = {configured, "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
+            "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.otf",
+            "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc,0"};
+        for (String candidate : candidates) {
+            if (candidate == null || !fontExists(candidate)) continue;
+            try { return BaseFont.createFont(candidate, BaseFont.IDENTITY_H, BaseFont.EMBEDDED); }
+            catch (Exception ignored) { }
+        }
         try { return BaseFont.createFont("STSong-Light", "UniGB-UCS2-H", BaseFont.NOT_EMBEDDED); }
         catch (Exception e) { throw new IllegalStateException("Unable to initialize PDF font", e); }
+    }
+
+    private static boolean fontExists(String path) {
+        int index = path.lastIndexOf(',');
+        return new File(index > 0 ? path.substring(0, index) : path).isFile();
     }
 
     private String title(String type) { return "PRODUCTION".equals(type) ? "PRODUCTION SHEET" : "SALES ORDER"; }

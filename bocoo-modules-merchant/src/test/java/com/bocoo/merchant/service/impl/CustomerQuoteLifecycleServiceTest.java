@@ -5,6 +5,7 @@ import com.bocoo.common.core.enums.TenantType;
 import com.bocoo.merchant.domain.bo.CustomerQuoteItemBo;
 import com.bocoo.merchant.domain.entity.CustomerQuote;
 import com.bocoo.merchant.mapper.CustomerQuoteMapper;
+import com.bocoo.merchant.service.CustomerQuoteCatalogService;
 import com.bocoo.merchant.service.TestSaTokenContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,11 +34,17 @@ class CustomerQuoteLifecycleServiceTest {
     private CustomerQuoteItemWriter itemWriter;
     @Mock
     private CustomerQuoteCalculator calculator;
+    @Mock
+    private CustomerQuotePricingSessionFactory sessionFactory;
+    @Mock
+    private CustomerQuoteCatalogService catalogService;
+    private CustomerQuotePricingSession session;
 
     @BeforeEach
     void setUp() {
         TestSaTokenContext.install();
         TestSaTokenContext.setLoginUser(TenantType.MERCHANT.getCode(), 200L, 7L, "sales");
+        session = new CustomerQuotePricingSession(200L, catalogService);
     }
 
     @Test
@@ -46,18 +53,18 @@ class CustomerQuoteLifecycleServiceTest {
         CustomerQuoteItemBo row = row();
         when(quoteMapper.selectOne(any(), eq(false))).thenReturn(quote);
         when(itemWriter.currentRows(1L, 200L)).thenReturn(List.of(row));
-        when(itemWriter.replace(1L, 200L, List.of(row))).thenReturn(
-            new CustomerQuoteTotals("USD", amount("200"), amount("30"), amount("230"), true));
+        when(sessionFactory.create(200L)).thenReturn(session);
+        when(itemWriter.replace(1L, 200L, List.of(row), session)).thenReturn(result(true));
         when(quoteMapper.updateById(any())).thenReturn(1);
         when(quoteMapper.update(any(), any())).thenReturn(1);
 
-        CustomerQuoteLifecycleServiceImpl service = new CustomerQuoteLifecycleServiceImpl(quoteMapper, itemWriter, calculator);
-        assertThat(service.confirm(1L)).isTrue();
+        CustomerQuoteLifecycleServiceImpl service = service();
+        assertThat(service.confirm(200L, 1L)).isTrue();
 
         assertThat(quote.getStatus()).isEqualTo("CONFIRMED");
         assertThat(quote.getTotalAmount()).isEqualByComparingTo("230.00");
         assertThat(quote.getConfirmedBy()).isEqualTo("sales");
-        verify(itemWriter).replace(1L, 200L, List.of(row));
+        verify(itemWriter).replace(1L, 200L, List.of(row), session);
     }
 
     @Test
@@ -66,14 +73,14 @@ class CustomerQuoteLifecycleServiceTest {
         CustomerQuoteItemBo row = row();
         when(quoteMapper.selectOne(any(), eq(false))).thenReturn(quote);
         when(itemWriter.currentRows(1L, 200L)).thenReturn(List.of(row));
-        when(itemWriter.replace(1L, 200L, List.of(row))).thenReturn(
-            new CustomerQuoteTotals("USD", amount("200"), amount("30"), amount("230"), true));
+        when(sessionFactory.create(200L)).thenReturn(session);
+        when(itemWriter.replace(1L, 200L, List.of(row), session)).thenReturn(result(true));
         when(quoteMapper.updateById(any())).thenReturn(1);
-        when(calculator.optionSnapshot(10L, row.getSelectedOptionValues())).thenReturn(
+        when(calculator.optionSnapshot(10L, row.getSelectedOptionValues(), session)).thenReturn(
             new CustomerQuoteOptionSnapshot(row.getSelectedOptionValues(), "系统：电机", "SYSTEM=MOTOR", false, true));
 
-        CustomerQuoteLifecycleServiceImpl service = new CustomerQuoteLifecycleServiceImpl(quoteMapper, itemWriter, calculator);
-        assertThatThrownBy(() -> service.confirm(1L)).isInstanceOf(ServiceException.class);
+        CustomerQuoteLifecycleServiceImpl service = service();
+        assertThatThrownBy(() -> service.confirm(200L, 1L)).isInstanceOf(ServiceException.class);
 
         assertThat(quote.getStatus()).isEqualTo("DRAFT");
         verify(quoteMapper, never()).update(any(), any());
@@ -85,15 +92,26 @@ class CustomerQuoteLifecycleServiceTest {
         CustomerQuoteItemBo row = row();
         when(quoteMapper.selectOne(any(), eq(false))).thenReturn(quote);
         when(itemWriter.currentRows(1L, 200L)).thenReturn(List.of(row));
-        when(itemWriter.replace(1L, 200L, List.of(row))).thenReturn(
-            new CustomerQuoteTotals("USD", amount("200"), amount("30"), amount("230"), true));
+        when(sessionFactory.create(200L)).thenReturn(session);
+        when(itemWriter.replace(1L, 200L, List.of(row), session)).thenReturn(result(true));
         when(quoteMapper.updateById(any())).thenReturn(1);
         when(quoteMapper.update(any(), any())).thenReturn(0);
 
-        CustomerQuoteLifecycleServiceImpl service = new CustomerQuoteLifecycleServiceImpl(quoteMapper, itemWriter, calculator);
+        CustomerQuoteLifecycleServiceImpl service = service();
 
-        assertThatThrownBy(() -> service.confirm(1L)).isInstanceOf(ServiceException.class);
+        assertThatThrownBy(() -> service.confirm(200L, 1L)).isInstanceOf(ServiceException.class);
         assertThat(quote.getStatus()).isEqualTo("DRAFT");
+    }
+
+    @Test
+    void repeatedConfirmIsIdempotent() {
+        CustomerQuote quote = quote("CONFIRMED", "ZH_CN");
+        when(quoteMapper.selectOne(any(), eq(false))).thenReturn(quote);
+
+        assertThat(service().confirm(200L, 1L)).isTrue();
+
+        verify(itemWriter, never()).currentRows(any(), any());
+        verify(quoteMapper, never()).update(any(), any());
     }
 
     @Test
@@ -102,7 +120,7 @@ class CustomerQuoteLifecycleServiceTest {
         when(quoteMapper.selectOne(any(), eq(false))).thenReturn(quote);
         when(quoteMapper.update(any(), any())).thenReturn(1);
 
-        CustomerQuoteLifecycleServiceImpl service = new CustomerQuoteLifecycleServiceImpl(quoteMapper, itemWriter, calculator);
+        CustomerQuoteLifecycleServiceImpl service = service();
 
         assertThat(service.voidQuote(1L)).isTrue();
         assertThat(quote.getStatus()).isEqualTo("VOID");
@@ -114,7 +132,7 @@ class CustomerQuoteLifecycleServiceTest {
         CustomerQuote quote = quote("CONFIRMED", "EN_US");
         quote.setSalesDocumentId(99L);
         when(quoteMapper.selectOne(any(), eq(false))).thenReturn(quote);
-        CustomerQuoteLifecycleServiceImpl service = new CustomerQuoteLifecycleServiceImpl(quoteMapper, itemWriter, calculator);
+        CustomerQuoteLifecycleServiceImpl service = service();
 
         assertThatThrownBy(() -> service.voidQuote(1L)).isInstanceOf(ServiceException.class);
         verify(quoteMapper, never()).update(any(), any());
@@ -139,6 +157,15 @@ class CustomerQuoteLifecycleServiceTest {
 
     private BigDecimal amount(String value) {
         return new BigDecimal(value).setScale(2);
+    }
+
+    private CustomerQuoteWriteResult result(boolean allPassed) {
+        return new CustomerQuoteWriteResult(
+            new CustomerQuoteTotals("USD", amount("200"), amount("30"), amount("230"), allPassed), List.of());
+    }
+
+    private CustomerQuoteLifecycleServiceImpl service() {
+        return new CustomerQuoteLifecycleServiceImpl(quoteMapper, itemWriter, calculator, sessionFactory);
     }
 
 }

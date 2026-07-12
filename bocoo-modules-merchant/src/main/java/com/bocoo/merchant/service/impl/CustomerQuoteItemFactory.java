@@ -4,7 +4,6 @@ import com.bocoo.common.core.utils.MapstructUtils;
 import com.bocoo.merchant.domain.bo.CustomerQuoteItemBo;
 import com.bocoo.merchant.domain.entity.CustomerQuoteItem;
 import com.bocoo.merchant.domain.vo.CustomerQuoteItemVo;
-import com.bocoo.merchant.service.CustomerQuoteCatalogService;
 import com.bocoo.product.domain.vo.ProductPriceQuoteVo;
 import com.bocoo.product.domain.vo.ProductSaleProductVo;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +16,6 @@ import java.math.RoundingMode;
 @RequiredArgsConstructor
 class CustomerQuoteItemFactory {
 
-    private final CustomerQuoteCatalogService catalogService;
     private final CustomerQuoteJsonSupport jsonSupport;
 
     CustomerQuoteItem success(CustomerQuoteItemBo bo, ProductSaleProductVo product, ProductPriceQuoteVo price,
@@ -47,14 +45,15 @@ class CustomerQuoteItemFactory {
         item.setLineAmount(money(item.getProductAmount().add(item.getShippingAmount())));
         item.setBomSnapshotJson(jsonSupport.write(price.getItems()));
         item.setPricingSnapshotJson(jsonSupport.pricingSnapshot(price, shipping, options.englishComplete()));
+        item.setShippingSnapshotJson(jsonSupport.shippingSnapshot(shipping, item.getShippingAmount(), price.getCurrencyCode()));
         return item;
     }
 
-    CustomerQuoteItem failed(CustomerQuoteItemBo bo, String message) {
+    CustomerQuoteItem failed(CustomerQuoteItemBo bo, String message, CustomerQuotePricingSession session) {
         CustomerQuoteItem item = baseItem(bo);
         item.setSaleProductId(bo.getSaleProductId());
         if (bo.getSaleProductId() != null) {
-            fillProductSnapshot(item, bo.getSaleProductId());
+            fillProductSnapshot(item, bo.getSaleProductId(), session);
         }
         item.setSelectedOptionsJson(jsonSupport.write(bo.getSelectedOptionValues()));
         item.setCalculationStatus(bo.getSaleProductId() == null ? "PENDING" : "FAIL");
@@ -89,9 +88,9 @@ class CustomerQuoteItemFactory {
         return item;
     }
 
-    private void fillProductSnapshot(CustomerQuoteItem item, Long saleProductId) {
+    private void fillProductSnapshot(CustomerQuoteItem item, Long saleProductId, CustomerQuotePricingSession session) {
         try {
-            ProductSaleProductVo product = catalogService.querySetup(saleProductId).getSaleProduct();
+            ProductSaleProductVo product = session.pricing(saleProductId).setup().getSaleProduct();
             if (product == null) {
                 return;
             }

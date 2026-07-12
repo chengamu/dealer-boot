@@ -22,6 +22,9 @@ public enum PayChannelCode {
     WX_WAP("wx_wap"),
     WX_BAR("wx_bar"),
     PAYPAL("paypal"),
+    BANK_TRANSFER("bank_transfer"),
+    CREDIT_LIMIT("credit_limit"),
+    MANUAL("manual"),
     STRIPE("stripe"),
     MOCK("mock"),
     WALLET("wallet");

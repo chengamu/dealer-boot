@@ -11,6 +11,7 @@ import com.lowagie.text.pdf.PdfWriter;
 import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.math.BigDecimal;
 
 @Component
@@ -69,7 +70,21 @@ class CustomerQuotePdfRenderer {
     private String money(BigDecimal value) { return "$" + (value == null ? "0.00" : value.setScale(2)); }
     private String number(BigDecimal value) { return value == null ? "-" : value.stripTrailingZeros().toPlainString(); }
     private static BaseFont fontBase() {
+        String configured = System.getenv("PDF_FONT_PATH");
+        String[] candidates = {configured, "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
+            "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.otf",
+            "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc,0"};
+        for (String candidate : candidates) {
+            if (candidate == null || !fontExists(candidate)) continue;
+            try { return BaseFont.createFont(candidate, BaseFont.IDENTITY_H, BaseFont.EMBEDDED); }
+            catch (Exception ignored) { }
+        }
         try { return BaseFont.createFont("STSong-Light", "UniGB-UCS2-H", BaseFont.NOT_EMBEDDED); }
         catch (Exception e) { throw new IllegalStateException(e); }
+    }
+
+    private static boolean fontExists(String path) {
+        int index = path.lastIndexOf(',');
+        return new File(index > 0 ? path.substring(0, index) : path).isFile();
     }
 }

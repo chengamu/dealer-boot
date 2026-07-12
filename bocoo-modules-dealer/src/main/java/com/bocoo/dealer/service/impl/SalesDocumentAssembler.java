@@ -1,5 +1,6 @@
 package com.bocoo.dealer.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.bocoo.common.core.utils.MapstructUtils;
 import com.bocoo.dealer.domain.entity.SalesDocumentItem;
 import com.bocoo.dealer.domain.vo.SalesDocumentItemVo;
@@ -25,7 +26,7 @@ class SalesDocumentAssembler extends DealerServiceSupport {
             .orderByAsc("line_no", "sort_order")));
         vo.setItems(items.stream().map(this::itemVo).toList());
         vo.setItemCount(items.size());
-        vo.setEvents(ignoreTenant(() -> eventMapper.selectVoList(this.<com.bocoo.dealer.domain.entity.SalesDocumentEvent>active()
+        vo.setEvents(ignoreTenant(() -> eventMapper.selectVoList(new QueryWrapper<com.bocoo.dealer.domain.entity.SalesDocumentEvent>()
             .eq("sales_document_id", vo.getSalesDocumentId()).eq("tenant_id", vo.getTenantId())
             .orderByDesc("occurred_time", "sales_event_id"))));
     }

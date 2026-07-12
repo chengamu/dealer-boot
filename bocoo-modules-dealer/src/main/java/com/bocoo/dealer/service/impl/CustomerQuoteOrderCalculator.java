@@ -28,11 +28,12 @@ class CustomerQuoteOrderCalculator {
             throw ServiceException.ofMessageKey("customer.quote.order.snapshotInvalid");
         }
         MerchantProfileVo profile = discounts.profile(quote.getTenantId());
+        var resolvedRates = discounts.resolveAll(profile, snapshot.items());
         CustomerQuoteOrderPreviewVo preview = basePreview(quote, profile);
         LinkedHashMap<Long, BigDecimal> rates = new LinkedHashMap<>();
         BigDecimal list = BigDecimal.ZERO, product = BigDecimal.ZERO, shipping = BigDecimal.ZERO;
         for (CustomerQuoteItem item : snapshot.items()) {
-            BigDecimal rate = discounts.resolve(profile, item.getCategoryId(), item.getProductTypeCode());
+            BigDecimal rate = resolvedRates.getOrDefault(item.getQuoteItemId(), BigDecimal.ONE);
             BigDecimal listAmount = money(item.getProductAmount());
             BigDecimal productAmount = money(listAmount.multiply(rate));
             BigDecimal shippingAmount = money(item.getShippingAmount());
@@ -74,7 +75,7 @@ class CustomerQuoteOrderCalculator {
             || item.getQuoteItemId() == null || item.getQuantity() == null || item.getQuantity() <= 0
             || item.getProductAmount() == null || item.getShippingAmount() == null
             || item.getShippingTemplateId() == null || item.getPricingSnapshotJson() == null
-            || item.getBomSnapshotJson() == null;
+            || item.getShippingSnapshotJson() == null || item.getBomSnapshotJson() == null;
     }
 
     private BigDecimal money(BigDecimal value) {

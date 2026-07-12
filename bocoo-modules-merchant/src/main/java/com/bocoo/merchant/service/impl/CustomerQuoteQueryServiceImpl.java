@@ -6,9 +6,9 @@ import com.bocoo.common.mybatis.core.page.PageQuery;
 import com.bocoo.common.mybatis.core.page.TableDataInfo;
 import com.bocoo.merchant.domain.bo.CustomerQuoteBo;
 import com.bocoo.merchant.domain.entity.CustomerQuote;
-import com.bocoo.merchant.domain.entity.CustomerQuoteItem;
 import com.bocoo.merchant.domain.vo.CustomerQuoteExportCnVo;
 import com.bocoo.merchant.domain.vo.CustomerQuoteExportEnVo;
+import com.bocoo.merchant.domain.vo.CustomerQuoteItemCountVo;
 import com.bocoo.merchant.domain.vo.CustomerQuoteVo;
 import com.bocoo.merchant.mapper.CustomerQuoteItemMapper;
 import com.bocoo.merchant.mapper.CustomerQuoteMapper;
@@ -17,6 +17,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -30,16 +32,20 @@ public class CustomerQuoteQueryServiceImpl extends MerchantServiceSupport implem
     @Override
     public TableDataInfo<CustomerQuoteVo> queryPageList(CustomerQuoteBo bo, PageQuery pageQuery) {
         QueryWrapper<CustomerQuote> query = activeQuery();
-        query.eq("tenant_id", currentTenantId());
+        CustomerQuoteReadScope scope = CustomerQuoteReadScope.current();
+        applyScope(query, scope);
         if (bo != null) {
             like(query, "quote_no", bo.getQuoteNo());
             like(query, "project_name", bo.getProjectName());
             eq(query, "customer_id", bo.getCustomerId());
             eq(query, "status", bo.getStatus());
         }
-        TableDataInfo<CustomerQuoteVo> result = page(quoteMapper, pageQuery, query,
+        java.util.function.Supplier<TableDataInfo<CustomerQuoteVo>> queryPage = () -> page(quoteMapper, pageQuery, query,
             q -> q.orderByDesc("update_time", "create_time"));
-        result.getRows().forEach(row -> row.setItemCount(itemMapper.selectCount(activeItems(row.getQuoteId())).intValue()));
+        TableDataInfo<CustomerQuoteVo> result = scope.crossTenant() ? platformIgnoreTenant(queryPage) : queryPage.get();
+        Map<QuoteKey, Integer> counts = itemCounts(result.getRows(), scope);
+        result.getRows().forEach(row -> row.setItemCount(counts.getOrDefault(
+            new QuoteKey(row.getTenantId(), row.getQuoteId()), 0)));
         return result;
     }
 
@@ -67,8 +73,22 @@ public class CustomerQuoteQueryServiceImpl extends MerchantServiceSupport implem
         return quote;
     }
 
-    private QueryWrapper<CustomerQuoteItem> activeItems(Long quoteId) {
-        return this.<CustomerQuoteItem>activeQuery()
-            .eq("tenant_id", currentTenantId()).eq("quote_id", quoteId);
+    private Map<QuoteKey, Integer> itemCounts(List<CustomerQuoteVo> rows, CustomerQuoteReadScope scope) {
+        if (rows.isEmpty()) return Map.of();
+        List<Long> tenantIds = rows.stream().map(CustomerQuoteVo::getTenantId).distinct().toList();
+        List<Long> quoteIds = rows.stream().map(CustomerQuoteVo::getQuoteId).toList();
+        java.util.function.Supplier<List<CustomerQuoteItemCountVo>> query =
+            () -> itemMapper.selectItemCounts(tenantIds, quoteIds);
+        List<CustomerQuoteItemCountVo> counts = scope.crossTenant() ? platformIgnoreTenant(query) : query.get();
+        return counts.stream().collect(Collectors.toMap(
+            item -> new QuoteKey(item.getTenantId(), item.getQuoteId()), CustomerQuoteItemCountVo::getItemCount));
+    }
+
+    private void applyScope(QueryWrapper<?> query, CustomerQuoteReadScope scope) {
+        query.eq(scope.tenantId() != null, "tenant_id", scope.tenantId());
+        query.eq(scope.ownerUserId() != null, "owner_user_id", scope.ownerUserId());
+    }
+
+    private record QuoteKey(Long tenantId, Long quoteId) {
     }
 }

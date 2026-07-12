@@ -11,6 +11,7 @@ import com.bocoo.product.domain.vo.ProductPriceSetupVo;
 import com.bocoo.product.domain.vo.ProductSaleProductVo;
 import com.bocoo.product.domain.vo.ProductShippingTemplateVo;
 import com.bocoo.product.service.ProductPriceSettingService;
+import com.bocoo.product.service.ProductPriceRuntimeContext;
 import com.bocoo.product.service.ProductSaleProductService;
 import com.bocoo.product.service.ProductShippingTemplateService;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +37,12 @@ public class CustomerQuoteCatalogServiceImpl implements CustomerQuoteCatalogServ
     @Override
     public ProductPriceSetupVo querySetup(Long saleProductId) {
         return TenantContextHolder.callWithTenant(PLATFORM_TENANT_ID, () -> priceSettingService.querySetup(saleProductId));
+    }
+
+    @Override
+    public ProductPriceRuntimeContext prepareRuntime(Long saleProductId) {
+        return TenantContextHolder.callWithTenant(PLATFORM_TENANT_ID,
+            () -> priceSettingService.prepareRuntime(saleProductId));
     }
 
     @Override

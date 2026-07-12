@@ -2,6 +2,7 @@ package com.bocoo.pay.domain.vo;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import com.bocoo.pay.domain.entity.PayOrder;
 
 import java.time.LocalDateTime;
 
@@ -41,4 +42,19 @@ public class PayOrderStatusVo {
 
     @Schema(description = "成功时间，UTC")
     private LocalDateTime successTime;
+
+    public static PayOrderStatusVo from(PayOrder order) {
+        PayOrderStatusVo vo = new PayOrderStatusVo();
+        vo.setOrderId(order.getId());
+        vo.setOrderNo(order.getNo());
+        vo.setMerchantOrderId(order.getMerchantOrderId());
+        vo.setPayerTenantId(order.getPayerTenantId());
+        vo.setPayeeTenantId(order.getPayeeTenantId());
+        vo.setChannelCode(order.getChannelCode());
+        vo.setPrice(order.getPrice());
+        vo.setCurrency(order.getCurrency());
+        vo.setStatus(order.getStatus());
+        vo.setSuccessTime(order.getSuccessTime());
+        return vo;
+    }
 }

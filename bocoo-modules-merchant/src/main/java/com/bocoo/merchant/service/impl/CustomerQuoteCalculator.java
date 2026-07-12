@@ -9,6 +9,7 @@ import com.bocoo.product.domain.bo.ProductPriceQuoteBo;
 import com.bocoo.product.domain.vo.ProductPriceQuoteVo;
 import com.bocoo.product.domain.vo.ProductPriceSetupVo;
 import com.bocoo.product.domain.vo.ProductSaleProductVo;
+import com.bocoo.product.service.ProductPriceRuntimeContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -18,22 +19,22 @@ import java.util.Map;
 @RequiredArgsConstructor
 class CustomerQuoteCalculator {
 
-    private final CustomerQuoteCatalogService catalogService;
     private final CustomerQuoteOptionSnapshotBuilder optionSnapshotBuilder;
     private final CustomerQuoteShippingCalculator shippingCalculator;
     private final CustomerQuoteItemFactory itemFactory;
 
-    CustomerQuoteCalculatedItem calculate(CustomerQuoteItemBo bo) {
+    CustomerQuoteCalculatedItem calculate(CustomerQuoteItemBo bo, CustomerQuotePricingSession session) {
         validateInputs(bo);
-        ProductPriceSetupVo setup = catalogService.querySetup(bo.getSaleProductId());
+        ProductPriceRuntimeContext runtime = session.pricing(bo.getSaleProductId());
+        ProductPriceSetupVo setup = runtime.setup();
         ProductSaleProductVo product = setup.getSaleProduct();
         if (product == null || !"ENABLED".equalsIgnoreCase(product.getStatus())) {
             throw ServiceException.ofMessageKey("customer.quote.product.unavailable");
         }
         ProductPriceQuoteBo request = priceRequest(bo);
-        ProductPriceQuoteVo price = catalogService.quote(bo.getSaleProductId(), request);
+        ProductPriceQuoteVo price = runtime.quote(request);
         CustomerQuoteOptionSnapshot options = optionSnapshotBuilder.build(setup, bo.getSelectedOptionValues());
-        CustomerQuoteShippingResult shipping = shippingCalculator.calculate(price.getCurrencyCode(),
+        CustomerQuoteShippingResult shipping = shippingCalculator.calculate(session, price.getCurrencyCode(),
             bo.getOrderWidthInch(), bo.getOrderHeightInch(), options.motorized());
         return new CustomerQuoteCalculatedItem(itemFactory.success(bo, product, price, options, shipping), price.getCurrencyCode());
     }
@@ -42,12 +43,13 @@ class CustomerQuoteCalculator {
         return itemFactory.toVo(item);
     }
 
-    CustomerQuoteItem failed(CustomerQuoteItemBo bo, String message) {
-        return itemFactory.failed(bo, message);
+    CustomerQuoteItem failed(CustomerQuoteItemBo bo, String message, CustomerQuotePricingSession session) {
+        return itemFactory.failed(bo, message, session);
     }
 
-    CustomerQuoteOptionSnapshot optionSnapshot(Long saleProductId, Map<String, String> selections) {
-        return optionSnapshotBuilder.build(catalogService.querySetup(saleProductId), selections);
+    CustomerQuoteOptionSnapshot optionSnapshot(Long saleProductId, Map<String, String> selections,
+                                                CustomerQuotePricingSession session) {
+        return optionSnapshotBuilder.build(session.pricing(saleProductId).setup(), selections);
     }
 
     private ProductPriceQuoteBo priceRequest(CustomerQuoteItemBo bo) {

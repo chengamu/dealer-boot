@@ -23,12 +23,17 @@ public class CustomerQuoteLifecycleServiceImpl extends MerchantServiceSupport im
     private final CustomerQuoteMapper quoteMapper;
     private final CustomerQuoteItemWriter itemWriter;
     private final CustomerQuoteCalculator calculator;
+    private final CustomerQuotePricingSessionFactory sessionFactory;
 
     @Override
-    @Lock4j(name = "customer-quote-confirm", keys = {"#id"})
-    @Transactional(rollbackFor = Exception.class, noRollbackFor = ServiceException.class)
-    public Boolean confirm(Long id) {
+    @Lock4j(name = "customer-quote-confirm", keys = {"#tenantId", "#id"})
+    @Transactional(rollbackFor = Exception.class)
+    public Boolean confirm(Long tenantId, Long id) {
+        if (!currentTenantId().equals(tenantId)) {
+            throw ServiceException.ofMessageKey("customer.quote.notFound");
+        }
         CustomerQuote quote = load(id);
+        if ("CONFIRMED".equals(quote.getStatus())) return Boolean.TRUE;
         if (!"DRAFT".equals(quote.getStatus())) {
             throw ServiceException.ofMessageKey("customer.quote.confirm.draftOnly");
         }
@@ -36,7 +41,8 @@ public class CustomerQuoteLifecycleServiceImpl extends MerchantServiceSupport im
         if (rows.isEmpty()) {
             throw ServiceException.ofMessageKey("customer.quote.item.required");
         }
-        CustomerQuoteTotals totals = itemWriter.replace(id, quote.getTenantId(), rows);
+        CustomerQuotePricingSession session = sessionFactory.create(quote.getTenantId());
+        CustomerQuoteTotals totals = itemWriter.replace(id, quote.getTenantId(), rows, session).totals();
         quote.setCurrencyCode(totals.currencyCode());
         quote.setProductAmount(totals.productAmount());
         quote.setShippingAmount(totals.shippingAmount());
@@ -45,7 +51,8 @@ public class CustomerQuoteLifecycleServiceImpl extends MerchantServiceSupport im
         if (!totals.allPassed()) {
             throw ServiceException.ofMessageKey("customer.quote.calculation.required");
         }
-        if ("EN_US".equals(quote.getQuoteLanguage()) && rows.stream().anyMatch(this::englishIncomplete)) {
+        if ("EN_US".equals(quote.getQuoteLanguage())
+            && rows.stream().anyMatch(row -> englishIncomplete(row, session))) {
             throw ServiceException.ofMessageKey("customer.quote.english.incomplete");
         }
         Long userId = LoginHelper.getUserId();
@@ -93,8 +100,8 @@ public class CustomerQuoteLifecycleServiceImpl extends MerchantServiceSupport im
         return Boolean.TRUE;
     }
 
-    private boolean englishIncomplete(CustomerQuoteItemBo row) {
-        return !calculator.optionSnapshot(row.getSaleProductId(), row.getSelectedOptionValues()).englishComplete();
+    private boolean englishIncomplete(CustomerQuoteItemBo row, CustomerQuotePricingSession session) {
+        return !calculator.optionSnapshot(row.getSaleProductId(), row.getSelectedOptionValues(), session).englishComplete();
     }
 
     private CustomerQuote load(Long id) {

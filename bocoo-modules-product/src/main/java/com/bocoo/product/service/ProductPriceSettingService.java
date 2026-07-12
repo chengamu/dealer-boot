@@ -12,6 +12,8 @@ import java.util.List;
 public interface ProductPriceSettingService {
     ProductPriceSetupVo querySetup(Long saleProductId);
 
+    ProductPriceRuntimeContext prepareRuntime(Long saleProductId);
+
     Boolean generateMaterialPrices(Long saleProductId, Boolean overwrite);
 
     Boolean saveMaterialRules(Long saleProductId, Long priceMaterialId, List<ProductPriceMaterialRuleBo> rules);

@@ -22,23 +22,29 @@ class CustomerQuoteLoader extends MerchantServiceSupport {
     private final CustomerQuoteCalculator calculator;
 
     CustomerQuoteVo load(Long id) {
-        CustomerQuoteVo quote = quoteMapper.selectVoOne(this.<CustomerQuote>activeQuery()
-            .eq("tenant_id", currentTenantId()).eq("quote_id", id), false);
+        CustomerQuoteReadScope scope = CustomerQuoteReadScope.current();
+        QueryWrapper<CustomerQuote> query = this.<CustomerQuote>activeQuery().eq("quote_id", id);
+        query.eq(scope.tenantId() != null, "tenant_id", scope.tenantId());
+        query.eq(scope.ownerUserId() != null, "owner_user_id", scope.ownerUserId());
+        java.util.function.Supplier<CustomerQuoteVo> loader = () -> quoteMapper.selectVoOne(query, false);
+        CustomerQuoteVo quote = scope.crossTenant() ? platformIgnoreTenant(loader) : loader.get();
         if (quote == null) {
             throw ServiceException.ofMessageKey("customer.quote.notFound");
         }
-        quote.setItems(loadItems(id));
+        quote.setItems(loadItems(quote.getTenantId(), id, scope.crossTenant()));
         quote.setItemCount(quote.getItems().size());
         return quote;
     }
 
-    private List<CustomerQuoteItemVo> loadItems(Long quoteId) {
-        return itemMapper.selectList(activeItems(quoteId).orderByAsc("line_no", "sort_order"))
+    private List<CustomerQuoteItemVo> loadItems(Long tenantId, Long quoteId, boolean crossTenant) {
+        java.util.function.Supplier<List<CustomerQuoteItemVo>> loader = () -> itemMapper
+            .selectList(activeItems(tenantId, quoteId).orderByAsc("line_no", "sort_order"))
             .stream().map(calculator::toVo).toList();
+        return crossTenant ? platformIgnoreTenant(loader) : loader.get();
     }
 
-    private QueryWrapper<CustomerQuoteItem> activeItems(Long quoteId) {
+    private QueryWrapper<CustomerQuoteItem> activeItems(Long tenantId, Long quoteId) {
         return this.<CustomerQuoteItem>activeQuery()
-            .eq("tenant_id", currentTenantId()).eq("quote_id", quoteId);
+            .eq("tenant_id", tenantId).eq("quote_id", quoteId);
     }
 }

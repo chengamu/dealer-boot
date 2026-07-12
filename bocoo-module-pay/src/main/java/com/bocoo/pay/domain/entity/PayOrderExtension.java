@@ -7,6 +7,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.time.LocalDateTime;
+
 /**
  * Payment order submit extension.
  */
@@ -41,6 +43,51 @@ public class PayOrderExtension extends BaseEntity {
     @Schema(description = "支付渠道编码")
     private String channelCode;
 
+    @Schema(description = "渠道订单号")
+    private String channelOrderNo;
+
+    @Schema(description = "渠道捕获号")
+    private String channelCaptureNo;
+
+    @Schema(description = "渠道幂等请求ID")
+    private String requestId;
+
+    @Schema(description = "付款人名称")
+    private String bankTransferStatus;
+
+    @Schema(description = "银行参考号")
+    private String bankPayerName;
+
+    @Schema(description = "申报金额，最小货币单位")
+    private String bankReferenceNo;
+
+    @Schema(description = "申报币种")
+    private LocalDateTime bankTransferTime;
+
+    @Schema(description = "汇款时间，UTC")
+    private Long bankDeclaredPrice;
+
+    @Schema(description = "付款凭证媒体ID")
+    private String bankCurrency;
+
+    @Schema(description = "商家备注")
+    private Long bankProofMediaId;
+
+    @Schema(description = "审核人ID")
+    private LocalDateTime bankSubmittedTime;
+
+    @Schema(description = "审核人名称")
+    private Long bankReviewedById;
+
+    @Schema(description = "审核时间，UTC")
+    private String bankReviewedBy;
+
+    @Schema(description = "审核或补录原因")
+    private LocalDateTime bankReviewedTime;
+
+    @Schema(description = "银行转账驳回原因")
+    private String bankRejectReason;
+
     @Schema(description = "用户IP")
     private String userIp;
 
@@ -55,6 +102,9 @@ public class PayOrderExtension extends BaseEntity {
 
     @Schema(description = "渠道错误信息")
     private String channelErrorMsg;
+
+    @Schema(description = "处理完成时间，UTC")
+    private LocalDateTime successTime;
 
     @Schema(description = "渠道回调原始数据")
     private String channelNotifyData;

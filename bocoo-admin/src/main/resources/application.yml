@@ -23,6 +23,7 @@ bocoo:
       - /merchant/applications/email-code
       - /legal/documents/
       - /system/standard/
+      - /pay/notify/paypal
     ignore-tables:
       - sys_tenant
       - sys_tenant_apply

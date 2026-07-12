@@ -47,6 +47,7 @@ public class CustomerQuoteItem extends BaseEntity {
     private BigDecimal lineAmount;
     private String bomSnapshotJson;
     private String pricingSnapshotJson;
+    private String shippingSnapshotJson;
     private Integer sortOrder;
     private String delFlag;
     private String remark;

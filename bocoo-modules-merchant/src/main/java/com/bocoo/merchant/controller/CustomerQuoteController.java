@@ -40,15 +40,15 @@ public class CustomerQuoteController extends BaseController {
     @SaCheckPermission("customer:quote:add")
     @Log(title = "客户报价", businessType = BusinessType.INSERT)
     @PostMapping
-    public R<Long> add(@Validated @RequestBody CustomerQuoteBo bo) {
+    public R<CustomerQuoteVo> add(@Validated @RequestBody CustomerQuoteBo bo) {
         return R.ok(draftService.insert(bo));
     }
 
     @SaCheckPermission("customer:quote:edit")
     @Log(title = "客户报价", businessType = BusinessType.UPDATE)
     @PutMapping
-    public R<Void> edit(@Validated @RequestBody CustomerQuoteBo bo) {
-        return toAjax(draftService.update(bo));
+    public R<CustomerQuoteVo> edit(@Validated @RequestBody CustomerQuoteBo bo) {
+        return R.ok(draftService.update(bo));
     }
 
     @SaCheckPermission("customer:quote:add")

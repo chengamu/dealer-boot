@@ -11,6 +11,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -25,7 +26,7 @@ class CustomerQuoteOrderCalculatorTest {
         CustomerQuote quote = quote();
         CustomerQuoteItem item = item();
         when(discounts.profile(200L)).thenReturn(null);
-        when(discounts.resolve(null, 10L, "CUSTOM_CURTAIN")).thenReturn(new BigDecimal("0.80"));
+        when(discounts.resolveAll(null, List.of(item))).thenReturn(Map.of(11L, new BigDecimal("0.80")));
 
         var result = new CustomerQuoteOrderCalculator(discounts)
             .calculate(new CustomerQuoteConversionSnapshot(quote, List.of(item))).preview();
@@ -60,7 +61,7 @@ class CustomerQuoteOrderCalculatorTest {
         row.setProductTypeCode("CUSTOM_CURTAIN"); row.setFormulaVersionId(20L);
         row.setCalculationStatus("PASS"); row.setQuantity(2); row.setProductAmount(new BigDecimal("200"));
         row.setShippingTemplateId(30L); row.setShippingAmount(new BigDecimal("30"));
-        row.setPricingSnapshotJson("{}"); row.setBomSnapshotJson("[]");
+        row.setPricingSnapshotJson("{}"); row.setShippingSnapshotJson("{}"); row.setBomSnapshotJson("[]");
         return row;
     }
 }

@@ -29,7 +29,7 @@ public class SalesDocumentArtifactServiceImpl implements SalesDocumentArtifactSe
     @Override
     public byte[] pdf(Long id, String type) {
         SalesDocumentVo row = queryService.queryById(id);
-        requireProductionAccess(type);
+        requireProductionAccess(type, row);
         byte[] bytes = "PRODUCTION".equalsIgnoreCase(type) ? productionPdf(row) : renderer.render(row, type);
         events.record(id, row.getTenantId(), "PDF_GENERATED", null, type, null);
         return bytes;
@@ -39,7 +39,7 @@ public class SalesDocumentArtifactServiceImpl implements SalesDocumentArtifactSe
     public String sendEmail(Long id, SalesDocumentEmailBo bo) {
         SalesDocumentVo row = queryService.queryById(id);
         String type = StringUtils.blankToDefault(bo.getDocumentType(), "ORDER").toUpperCase(Locale.ROOT);
-        requireProductionAccess(type);
+        requireProductionAccess(type, row);
         byte[] bytes = "PRODUCTION".equals(type) ? productionPdf(row) : renderer.render(row, type);
         java.io.File file = null;
         try {
@@ -59,9 +59,13 @@ public class SalesDocumentArtifactServiceImpl implements SalesDocumentArtifactSe
         }
     }
 
-    private void requireProductionAccess(String type) {
+    private void requireProductionAccess(String type, SalesDocumentVo row) {
         if ("PRODUCTION".equalsIgnoreCase(type) && !LoginHelper.isPlatformTenant()) {
             throw com.bocoo.common.core.exception.ServiceException.ofMessageKey("dealer.sales.platformOnly");
+        }
+        if ("PRODUCTION".equalsIgnoreCase(type)
+            && (!"PAID".equals(row.getPaymentStatus()) || "CANCELLED".equals(row.getDocumentStatus()))) {
+            throw com.bocoo.common.core.exception.ServiceException.ofMessageKey("dealer.fulfillment.production.notReady");
         }
     }
 

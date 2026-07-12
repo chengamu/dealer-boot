@@ -14,6 +14,7 @@ public class SalesDocumentItemVo implements Serializable {
     private Long salesItemId;
     private Long salesDocumentId;
     private Long sourceQuoteItemId;
+    private Long sourceQuickOrderItemId;
     private Integer lineNo;
     private String itemCode;
     private String roomLocation;
@@ -30,13 +31,17 @@ public class SalesDocumentItemVo implements Serializable {
     private Integer quantity;
     private Map<String, String> selectedOptionValues;
     private String configurationSummary;
+    private String configurationSummaryCn;
+    private String configurationSummaryEn;
     private String calculationStatus;
     private String calculationMessage;
     private BigDecimal listUnitAmount;
     private BigDecimal listAmount;
     private BigDecimal discountRate;
+    private BigDecimal discountAmount;
     private BigDecimal unitAmount;
     private BigDecimal productAmount;
+    private BigDecimal unitShippingAmount;
     private BigDecimal shippingAmount;
     private BigDecimal lineAmount;
     private Integer sortOrder;

@@ -74,6 +74,12 @@ CREATE TABLE IF NOT EXISTS merchant_profile (
     address_line1 varchar(255),
     address_line2 varchar(255),
     postal_code varchar(20),
+    level_id bigint,
+    level_code varchar(50),
+    level_name varchar(100),
+    discount_rate numeric(10,4),
+    credit_limit numeric(18,2),
+    credit_term_days integer CHECK (credit_term_days IS NULL OR credit_term_days > 0),
     status char(1) NOT NULL DEFAULT '1',
     audit_status varchar(20) NOT NULL DEFAULT 'APPROVED',
     audit_by varchar(64),
@@ -86,15 +92,13 @@ CREATE TABLE IF NOT EXISTS merchant_profile (
     update_by varchar(64),
     update_time timestamptz
 );
+ALTER TABLE merchant_profile ADD COLUMN IF NOT EXISTS credit_term_days integer;
+ALTER TABLE merchant_profile DROP CONSTRAINT IF EXISTS merchant_profile_credit_term_days_check;
+ALTER TABLE merchant_profile ADD CONSTRAINT merchant_profile_credit_term_days_check
+    CHECK (credit_term_days IS NULL OR credit_term_days > 0);
 CREATE UNIQUE INDEX IF NOT EXISTS uk_merchant_profile_tenant ON merchant_profile (tenant_id);
 CREATE INDEX IF NOT EXISTS idx_merchant_profile_primary_email ON merchant_profile (primary_email);
 CREATE INDEX IF NOT EXISTS idx_merchant_profile_status ON merchant_profile (status, audit_status);
-ALTER TABLE merchant_profile
-    ADD COLUMN IF NOT EXISTS level_id bigint,
-    ADD COLUMN IF NOT EXISTS level_code varchar(50),
-    ADD COLUMN IF NOT EXISTS level_name varchar(100),
-    ADD COLUMN IF NOT EXISTS discount_rate numeric(10,4),
-    ADD COLUMN IF NOT EXISTS credit_limit numeric(18,2);
 CREATE INDEX IF NOT EXISTS idx_merchant_profile_level ON merchant_profile (level_id, status);
 
 CREATE TABLE IF NOT EXISTS merchant_level (
@@ -251,6 +255,7 @@ CREATE TABLE IF NOT EXISTS customer_quote_item (
     line_amount numeric(18,2) NOT NULL DEFAULT 0,
     bom_snapshot_json text,
     pricing_snapshot_json text,
+    shipping_snapshot_json text,
     sort_order integer NOT NULL DEFAULT 0,
     del_flag char(1) NOT NULL DEFAULT '0',
     create_by_id bigint,
@@ -319,7 +324,6 @@ CREATE TABLE IF NOT EXISTS sys_user (
     oss_id3 varchar(64),
     oss_id4 varchar(64)
 );
-ALTER TABLE sys_user ADD COLUMN IF NOT EXISTS force_password_change char(1) DEFAULT '0';
 
 CREATE UNIQUE INDEX IF NOT EXISTS uk_sys_user_tenant_username ON sys_user (tenant_id, user_name);
 CREATE UNIQUE INDEX IF NOT EXISTS uk_sys_user_email ON sys_user (email) WHERE email IS NOT NULL;
@@ -1346,16 +1350,7 @@ VALUES
     (20204, 1, '客户资料修改', 'sys.menu.customer.profile.edit', 20201, 3, '#', '', '1', '0', 'F', '1', '1', 'customer:profile:edit', '#', 'system', now(), ''),
     (20205, 1, '客户资料删除', 'sys.menu.customer.profile.remove', 20201, 4, '#', '', '1', '0', 'F', '1', '1', 'customer:profile:remove', '#', 'system', now(), ''),
     (20220, 1, '全部客户', 'sys.menu.customer.all', 20200, 2, 'allCustomers', 'customer/all', '1', '0', 'C', '1', '1', 'platform:customer:list', 'peoples', 'system', now(), '平台全部客户管理'),
-    (20221, 1, '全部客户查询', 'sys.menu.customer.all.query', 20220, 1, '#', '', '1', '0', 'F', '1', '1', 'platform:customer:query', '#', 'system', now(), ''),
-    (20230, 1, '订单测算', 'customer.quote.menu', 26000, 1, 'orderEstimates', 'customer/quotes', '1', '0', 'C', '1', '1', 'customer:quote:list', 'calculator', 'system', now(), '工程订单测算工作台'),
-    (20231, 1, '测算查询', 'customer.quote.permission.query', 20230, 1, '#', '', '1', '0', 'F', '1', '1', 'customer:quote:query', '#', 'system', now(), ''),
-    (20232, 1, '测算新增', 'customer.quote.permission.add', 20230, 2, '#', '', '1', '0', 'F', '1', '1', 'customer:quote:add', '#', 'system', now(), ''),
-    (20233, 1, '测算修改', 'customer.quote.permission.edit', 20230, 3, '#', '', '1', '0', 'F', '1', '1', 'customer:quote:edit', '#', 'system', now(), ''),
-    (20234, 1, '测算删除', 'customer.quote.permission.remove', 20230, 4, '#', '', '1', '0', 'F', '1', '1', 'customer:quote:remove', '#', 'system', now(), ''),
-    (20235, 1, '报价导出', 'customer.quote.permission.export', 20230, 5, '#', '', '1', '0', 'F', '1', '1', 'customer:quote:export', '#', 'system', now(), ''),
-    (20236, 1, '报价单据', 'customer.quote.permission.document', 20230, 6, '#', '', '1', '0', 'F', '1', '1', 'customer:quote:document', '#', 'system', now(), ''),
-    (20237, 1, '报价邮件', 'customer.quote.permission.email', 20230, 7, '#', '', '1', '0', 'F', '1', '1', 'customer:quote:email', '#', 'system', now(), ''),
-    (20238, 1, '转销售订单', 'customer.quote.permission.convert', 20230, 8, '#', '', '1', '0', 'F', '1', '1', 'customer:quote:convert', '#', 'system', now(), '')
+    (20221, 1, '全部客户查询', 'sys.menu.customer.all.query', 20220, 1, '#', '', '1', '0', 'F', '1', '1', 'platform:customer:query', '#', 'system', now(), '')
 ON CONFLICT (menu_id) DO UPDATE
 SET menu_name = EXCLUDED.menu_name,
     i18n_key = EXCLUDED.i18n_key,
@@ -1378,8 +1373,7 @@ INSERT INTO sys_role_menu (role_id, menu_id, tenant_id)
 SELECT 1, menu_id, 1 FROM sys_menu
 WHERE tenant_id = 1
   AND menu_id IN (20100, 20101, 20102, 20103, 20104, 20105, 20120, 20121, 20122, 20123, 20124, 20125,
-                  20200, 20201, 20202, 20203, 20204, 20205, 20220, 20221,
-                  20230, 20231, 20232, 20233, 20234, 20235, 20236, 20237, 20238)
+                  20200, 20201, 20202, 20203, 20204, 20205, 20220, 20221)
 ON CONFLICT DO NOTHING;
 
 WITH RECURSIVE merchant_customer_menus AS (
@@ -1388,9 +1382,7 @@ WITH RECURSIVE merchant_customer_menus AS (
     JOIN sys_menu m ON m.tenant_id = r.tenant_id
     WHERE r.role_key IN ('merchant_admin', 'merchant_store', 'merchant_employee')
       AND r.del_flag = '0'
-      AND m.perms IN ('customer:profile:list', 'customer:profile:query', 'customer:profile:add', 'customer:profile:edit', 'customer:profile:remove',
-                      'customer:quote:list', 'customer:quote:query', 'customer:quote:add', 'customer:quote:edit', 'customer:quote:remove',
-                      'customer:quote:export', 'customer:quote:document', 'customer:quote:email', 'customer:quote:convert')
+      AND m.perms IN ('customer:profile:list', 'customer:profile:query', 'customer:profile:add', 'customer:profile:edit', 'customer:profile:remove')
     UNION
     SELECT c.role_id, c.tenant_id, p.menu_id, p.parent_id
     FROM merchant_customer_menus c
@@ -1465,16 +1457,7 @@ VALUES
     (300121, 300001, 'Customer Query', 'menu.customer.profile.query', 300120, 1, '#', '', '1', '0', 'F', '1', '1', 'customer:profile:query', '#', 'system', now(), ''),
     (300122, 300001, 'Customer Add', 'menu.customer.profile.add', 300120, 2, '#', '', '1', '0', 'F', '1', '1', 'customer:profile:add', '#', 'system', now(), ''),
     (300123, 300001, 'Customer Edit', 'menu.customer.profile.edit', 300120, 3, '#', '', '1', '0', 'F', '1', '1', 'customer:profile:edit', '#', 'system', now(), ''),
-    (300124, 300001, 'Customer Delete', 'menu.customer.profile.remove', 300120, 4, '#', '', '1', '0', 'F', '1', '1', 'customer:profile:remove', '#', 'system', now(), ''),
-    (300130, 300001, 'Order Estimates', 'customer.quote.menu', 300001200, 1, 'orderEstimates', 'customer/quotes', '1', '0', 'C', '1', '1', 'customer:quote:list', 'calculator', 'system', now(), 'Project order estimates'),
-    (300131, 300001, 'Quote Query', 'customer.quote.permission.query', 300130, 1, '#', '', '1', '0', 'F', '1', '1', 'customer:quote:query', '#', 'system', now(), ''),
-    (300132, 300001, 'Quote Add', 'customer.quote.permission.add', 300130, 2, '#', '', '1', '0', 'F', '1', '1', 'customer:quote:add', '#', 'system', now(), ''),
-    (300133, 300001, 'Quote Edit', 'customer.quote.permission.edit', 300130, 3, '#', '', '1', '0', 'F', '1', '1', 'customer:quote:edit', '#', 'system', now(), ''),
-    (300134, 300001, 'Quote Delete', 'customer.quote.permission.remove', 300130, 4, '#', '', '1', '0', 'F', '1', '1', 'customer:quote:remove', '#', 'system', now(), ''),
-    (300135, 300001, 'Quote Export', 'customer.quote.permission.export', 300130, 5, '#', '', '1', '0', 'F', '1', '1', 'customer:quote:export', '#', 'system', now(), ''),
-    (300136, 300001, 'Quote Document', 'customer.quote.permission.document', 300130, 6, '#', '', '1', '0', 'F', '1', '1', 'customer:quote:document', '#', 'system', now(), ''),
-    (300137, 300001, 'Quote Email', 'customer.quote.permission.email', 300130, 7, '#', '', '1', '0', 'F', '1', '1', 'customer:quote:email', '#', 'system', now(), ''),
-    (300138, 300001, 'Convert Order', 'customer.quote.permission.convert', 300130, 8, '#', '', '1', '0', 'F', '1', '1', 'customer:quote:convert', '#', 'system', now(), '')
+    (300124, 300001, 'Customer Delete', 'menu.customer.profile.remove', 300120, 4, '#', '', '1', '0', 'F', '1', '1', 'customer:profile:remove', '#', 'system', now(), '')
 ON CONFLICT (menu_id) DO UPDATE
 SET menu_name = EXCLUDED.menu_name,
     i18n_key = EXCLUDED.i18n_key,
@@ -1497,7 +1480,7 @@ INSERT INTO sys_role_menu (role_id, menu_id, tenant_id)
 SELECT 300001, menu_id, 300001
 FROM sys_menu
 WHERE tenant_id = 300001
-  AND menu_id BETWEEN 300100 AND 300138
+  AND menu_id BETWEEN 300100 AND 300124
 ON CONFLICT DO NOTHING;
 
 INSERT INTO sys_user (user_id, tenant_id, dept_id, user_name, nick_name, user_type, email, phonenumber, sex, password, force_password_change, status, del_flag, create_by, create_time, remark)
@@ -1523,11 +1506,11 @@ ON CONFLICT DO NOTHING;
 INSERT INTO merchant_profile (merchant_id, tenant_id, merchant_name, company_name, contact_first_name, contact_last_name, contact_name,
                               primary_email, office_phone, mobile_phone, country, state, city, address_line1, postal_code,
                               status, audit_status, audit_by, audit_by_id, audit_time, level_id, level_code, level_name,
-                              discount_rate, credit_limit, create_by, create_time, remark)
+                              discount_rate, credit_limit, credit_term_days, create_by, create_time, remark)
 VALUES (300001, 300001, 'Demo Merchant', 'Demo Merchant LLC', 'Taylor', 'Smith', 'Taylor Smith',
         'demo.merchant@example.com', '+1 415 555 0101', '+1 415 555 0102', 'US', 'CA', 'San Francisco',
         '100 Market Street', '94105', '1', 'APPROVED', 'system', 1, now(), 210002, 'VIP', 'VIP',
-        0.9500, 5000.00, 'system', now(), 'Local development merchant profile')
+        0.9500, 5000.00, 30, 'system', now(), 'Local development merchant profile')
 ON CONFLICT (merchant_id) DO UPDATE
 SET merchant_name = EXCLUDED.merchant_name,
     company_name = EXCLUDED.company_name,
@@ -1549,6 +1532,7 @@ SET merchant_name = EXCLUDED.merchant_name,
     level_name = EXCLUDED.level_name,
     discount_rate = EXCLUDED.discount_rate,
     credit_limit = EXCLUDED.credit_limit,
+    credit_term_days = EXCLUDED.credit_term_days,
     update_by = 'system',
     update_time = now(),
     remark = EXCLUDED.remark;

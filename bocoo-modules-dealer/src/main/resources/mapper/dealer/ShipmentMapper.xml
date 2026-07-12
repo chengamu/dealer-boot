@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bocoo.dealer.fulfillment.mapper.ShipmentMapper">
+    <select id="selectPackageMetrics" resultType="com.bocoo.dealer.fulfillment.domain.vo.ShipmentPackageMetricsVo">
+        SELECT tenant_id,
+               sales_document_id,
+               COUNT(*)::int AS package_count,
+               SUM(CASE WHEN receipt_status = 'CONFIRMED' THEN 1 ELSE 0 END)::int AS received_package_count
+        FROM dealer_shipment
+        WHERE del_flag = '0'
+          AND status NOT IN ('DRAFT', 'CANCELLED')
+          AND tenant_id IN
+          <foreach collection="tenantIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+          AND sales_document_id IN
+          <foreach collection="documentIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+        GROUP BY tenant_id, sales_document_id
+    </select>
+</mapper>

@@ -3,7 +3,13 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import type { CustomerQuote } from '@/api/customer/quote'
 import { customerQuoteApi } from '@/api/customer/quote'
 import type { QuoteWorkbenchItem } from './quoteWorkbenchTypes'
-import { applyCalculatedItem, calculateQuoteTotals, quotePayload } from './quoteWorkbenchValues'
+import {
+  applyCalculatedItem,
+  calculateQuoteTotals,
+  normalizeLoadedItem,
+  normalizeLoadedQuote,
+  quotePayload,
+} from './quoteWorkbenchValues'
 
 export function useQuoteWorkbenchActions(ctx: {
   quote: CustomerQuote
@@ -20,11 +26,15 @@ export function useQuoteWorkbenchActions(ctx: {
     saving.value = true
     try {
       const payload = quotePayload(ctx.quote, ctx.rows.value)
-      if (ctx.quote.quoteId) await customerQuoteApi.update(payload)
-      else ctx.quote.quoteId = String((await customerQuoteApi.add(payload)).data || '')
-      if (ctx.quote.quoteId) await ctx.reload(ctx.quote.quoteId)
+      const response = ctx.quote.quoteId
+        ? await customerQuoteApi.update(payload)
+        : await customerQuoteApi.add(payload)
+      if (!response.data) return undefined
+      const saved = normalizeLoadedQuote(response.data)
+      Object.assign(ctx.quote, saved)
+      ctx.rows.value = (saved.items || []).map(normalizeLoadedItem)
       ElMessage.success(ctx.t('common.operationSuccess'))
-      return ctx.quote.quoteId
+      return saved
     } finally { saving.value = false }
   }
 
@@ -39,11 +49,10 @@ export function useQuoteWorkbenchActions(ctx: {
   }
 
   async function calculateAll() {
-    const id = await save()
-    if (!id) return false
-    const response = await customerQuoteApi.calculateAll(id)
-    await ctx.reload(id)
-    const passed = (response.data?.items || []).every((row) => row.calculationStatus === 'PASS')
+    const saved = await save()
+    if (!saved) return false
+    const passed = (saved.items || []).length > 0
+      && (saved.items || []).every((row) => row.calculationStatus === 'PASS')
     ElMessage[passed ? 'success' : 'warning'](ctx.t(passed ? 'customer.quote.calculation.pass' : 'customer.quote.calculation.required'))
     return passed
   }

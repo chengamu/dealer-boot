@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.math.BigDecimal;
 
 @Component
 @RequiredArgsConstructor
@@ -37,8 +38,15 @@ class CustomerQuoteJsonSupport {
     String pricingSnapshot(Object price, Object shipping, boolean englishComplete) {
         Map<String, Object> snapshot = new LinkedHashMap<>();
         snapshot.put("price", price);
-        snapshot.put("shipping", shipping);
         snapshot.put("englishComplete", englishComplete);
+        return write(snapshot);
+    }
+
+    String shippingSnapshot(Object shipping, BigDecimal totalAmount, String currencyCode) {
+        Map<String, Object> snapshot = new LinkedHashMap<>();
+        snapshot.put("shipping", shipping);
+        snapshot.put("totalAmount", totalAmount);
+        snapshot.put("currencyCode", currencyCode);
         return write(snapshot);
     }
 }

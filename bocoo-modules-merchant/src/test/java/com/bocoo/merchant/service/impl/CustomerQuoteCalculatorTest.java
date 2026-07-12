@@ -7,6 +7,7 @@ import com.bocoo.product.domain.bo.ProductPriceQuoteBo;
 import com.bocoo.product.domain.vo.ProductPriceQuoteVo;
 import com.bocoo.product.domain.vo.ProductPriceSetupVo;
 import com.bocoo.product.domain.vo.ProductSaleProductVo;
+import com.bocoo.product.service.ProductPriceRuntimeContext;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,14 +33,18 @@ class CustomerQuoteCalculatorTest {
     private CustomerQuoteOptionSnapshotBuilder optionBuilder;
     @Mock
     private CustomerQuoteShippingCalculator shippingCalculator;
+    @Mock
+    private ProductPriceRuntimeContext runtime;
 
     private CustomerQuoteCalculator calculator;
+    private CustomerQuotePricingSession session;
 
     @BeforeEach
     void setUp() {
         CustomerQuoteJsonSupport jsonSupport = new CustomerQuoteJsonSupport(new ObjectMapper());
-        CustomerQuoteItemFactory itemFactory = new CustomerQuoteItemFactory(catalogService, jsonSupport);
-        calculator = new CustomerQuoteCalculator(catalogService, optionBuilder, shippingCalculator, itemFactory);
+        CustomerQuoteItemFactory itemFactory = new CustomerQuoteItemFactory(jsonSupport);
+        calculator = new CustomerQuoteCalculator(optionBuilder, shippingCalculator, itemFactory);
+        session = new CustomerQuotePricingSession(200L, catalogService);
     }
 
     @Test
@@ -54,17 +59,19 @@ class CustomerQuoteCalculatorTest {
         product.setFormulaVersionLabel("V1");
         product.setStatus("ENABLED");
         setup.setSaleProduct(product);
-        when(catalogService.querySetup(10L)).thenReturn(setup);
+        when(catalogService.prepareRuntime(10L)).thenReturn(runtime);
+        when(runtime.setup()).thenReturn(setup);
 
         ProductPriceQuoteVo price = new ProductPriceQuoteVo();
         price.setFormulaVersionId(30L);
         price.setCurrencyCode("USD");
         price.setSingleAmount(new BigDecimal("100"));
         price.setTotalAmount(new BigDecimal("200"));
-        when(catalogService.quote(eq(10L), any(ProductPriceQuoteBo.class))).thenReturn(price);
+        when(runtime.quote(any(ProductPriceQuoteBo.class))).thenReturn(price);
         when(optionBuilder.build(eq(setup), any())).thenReturn(
             new CustomerQuoteOptionSnapshot(Map.of("SYSTEM", "MOTOR"), "系统：电机", "System: Motor", true, true));
-        when(shippingCalculator.calculate("USD", new BigDecimal("48"), new BigDecimal("60"), true))
+        when(shippingCalculator.calculate(eq(session), eq("USD"), eq(new BigDecimal("48")),
+            eq(new BigDecimal("60")), eq(true)))
             .thenReturn(new CustomerQuoteShippingResult(1L, "SHIP-1", 2L, "MOTORIZED", new BigDecimal("15")));
 
         CustomerQuoteItemBo bo = new CustomerQuoteItemBo();
@@ -74,7 +81,7 @@ class CustomerQuoteCalculatorTest {
         bo.setQuantity(2);
         bo.setSelectedOptionValues(Map.of("SYSTEM", "MOTOR"));
 
-        CustomerQuoteItem result = calculator.calculate(bo).item();
+        CustomerQuoteItem result = calculator.calculate(bo, session).item();
 
         assertThat(result.getUnitAmount()).isEqualByComparingTo("100.00");
         assertThat(result.getProductAmount()).isEqualByComparingTo("200.00");
@@ -89,9 +96,9 @@ class CustomerQuoteCalculatorTest {
         CustomerQuoteItemBo bo = new CustomerQuoteItemBo();
         bo.setSaleProductId(99L);
         bo.setQuantity(3);
-        doThrow(new IllegalStateException("missing setup")).when(catalogService).querySetup(99L);
+        doThrow(new IllegalStateException("missing setup")).when(catalogService).prepareRuntime(99L);
 
-        CustomerQuoteItem result = calculator.failed(bo, "calculation failed");
+        CustomerQuoteItem result = calculator.failed(bo, "calculation failed", session);
 
         assertThat(result.getSaleProductId()).isEqualTo(99L);
         assertThat(result.getQuantity()).isEqualTo(3);

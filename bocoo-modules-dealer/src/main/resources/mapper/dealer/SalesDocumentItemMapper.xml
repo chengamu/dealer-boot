@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bocoo.dealer.mapper.SalesDocumentItemMapper">
+    <select id="selectItemCounts" resultType="com.bocoo.dealer.domain.vo.SalesDocumentItemMetricsVo">
+        SELECT tenant_id, sales_document_id, COUNT(*)::int AS item_count
+        FROM dealer_sales_document_item
+        WHERE del_flag = '0'
+          AND tenant_id IN
+          <foreach collection="tenantIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+          AND sales_document_id IN
+          <foreach collection="documentIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+        GROUP BY tenant_id, sales_document_id
+    </select>
+
+    <select id="selectPageMetrics" resultType="com.bocoo.dealer.domain.vo.SalesDocumentItemMetricsVo">
+        SELECT item.tenant_id,
+               item.sales_document_id,
+               COUNT(*)::int AS item_count,
+               COALESCE(SUM(item.quantity), 0)::int AS total_quantity,
+               COALESCE(SUM(COALESCE(sent.dispatched_quantity, 0)), 0)::int AS dispatched_quantity,
+               BOOL_AND(COALESCE(sent.dispatched_quantity, 0) = COALESCE(item.quantity, 0)) AS all_dispatched
+        FROM dealer_sales_document_item item
+        LEFT JOIN (
+            SELECT shipment_item.tenant_id,
+                   shipment_item.sales_document_id,
+                   shipment_item.sales_item_id,
+                   SUM(shipment_item.quantity)::int AS dispatched_quantity
+            FROM dealer_shipment_item shipment_item
+            INNER JOIN dealer_shipment shipment
+                    ON shipment.shipment_id = shipment_item.shipment_id
+                   AND shipment.tenant_id = shipment_item.tenant_id
+                   AND shipment.del_flag = '0'
+                   AND shipment.status NOT IN ('DRAFT', 'CANCELLED')
+            WHERE shipment_item.tenant_id IN
+              <foreach collection="tenantIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+              AND shipment_item.sales_document_id IN
+              <foreach collection="documentIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+            GROUP BY shipment_item.tenant_id, shipment_item.sales_document_id, shipment_item.sales_item_id
+        ) sent ON sent.tenant_id = item.tenant_id
+              AND sent.sales_document_id = item.sales_document_id
+              AND sent.sales_item_id = item.sales_item_id
+        WHERE item.del_flag = '0'
+          AND item.tenant_id IN
+          <foreach collection="tenantIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+          AND item.sales_document_id IN
+          <foreach collection="documentIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+        GROUP BY item.tenant_id, item.sales_document_id
+    </select>
+</mapper>

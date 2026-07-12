@@ -49,6 +49,12 @@ CREATE TABLE IF NOT EXISTS pay_order (
     channel_code varchar(64),
     no varchar(64) NOT NULL,
     merchant_order_id varchar(128) NOT NULL,
+    sales_document_id bigint,
+    sales_order_no varchar(64),
+    merchant_id bigint,
+    merchant_name varchar(200),
+    customer_id bigint,
+    customer_name varchar(200),
     user_id bigint,
     user_type varchar(32),
     subject varchar(128) NOT NULL,
@@ -72,11 +78,19 @@ CREATE TABLE IF NOT EXISTS pay_order (
     update_by varchar(64),
     update_time timestamptz
 );
+ALTER TABLE pay_order ADD COLUMN IF NOT EXISTS sales_document_id bigint;
+ALTER TABLE pay_order ADD COLUMN IF NOT EXISTS sales_order_no varchar(64);
+ALTER TABLE pay_order ADD COLUMN IF NOT EXISTS merchant_id bigint;
+ALTER TABLE pay_order ADD COLUMN IF NOT EXISTS merchant_name varchar(200);
+ALTER TABLE pay_order ADD COLUMN IF NOT EXISTS customer_id bigint;
+ALTER TABLE pay_order ADD COLUMN IF NOT EXISTS customer_name varchar(200);
 CREATE UNIQUE INDEX IF NOT EXISTS uk_pay_order_no ON pay_order (no);
 CREATE UNIQUE INDEX IF NOT EXISTS uk_pay_order_app_merchant ON pay_order (app_id, merchant_order_id);
 CREATE INDEX IF NOT EXISTS idx_pay_order_payer_status_time ON pay_order (payer_tenant_id, status, create_time DESC);
 CREATE INDEX IF NOT EXISTS idx_pay_order_payee_status_time ON pay_order (payee_tenant_id, status, create_time DESC);
 CREATE INDEX IF NOT EXISTS idx_pay_order_channel_order_no ON pay_order (channel_order_no) WHERE channel_order_no IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_pay_order_sales_document ON pay_order (sales_document_id) WHERE sales_document_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_pay_order_sales_order_no ON pay_order (payer_tenant_id, sales_order_no) WHERE sales_order_no IS NOT NULL;
 
 CREATE TABLE IF NOT EXISTS pay_order_extension (
     id bigint PRIMARY KEY,
@@ -90,8 +104,24 @@ CREATE TABLE IF NOT EXISTS pay_order_extension (
     user_ip varchar(64),
     status integer NOT NULL,
     channel_extras jsonb NOT NULL DEFAULT '{}'::jsonb,
+    request_id varchar(128),
+    channel_order_no varchar(128),
+    channel_capture_no varchar(128),
+    bank_transfer_status varchar(32),
+    bank_payer_name varchar(200),
+    bank_reference_no varchar(128),
+    bank_transfer_time timestamptz,
+    bank_declared_price bigint CHECK (bank_declared_price IS NULL OR bank_declared_price >= 0),
+    bank_currency varchar(3),
+    bank_proof_media_id bigint,
+    bank_submitted_time timestamptz,
+    bank_reviewed_by_id bigint,
+    bank_reviewed_by varchar(100),
+    bank_reviewed_time timestamptz,
+    bank_reject_reason varchar(1000),
     channel_error_code varchar(128),
     channel_error_msg varchar(512),
+    success_time timestamptz,
     channel_notify_data text,
     create_by_id bigint,
     create_by varchar(64),
@@ -99,8 +129,147 @@ CREATE TABLE IF NOT EXISTS pay_order_extension (
     update_by varchar(64),
     update_time timestamptz
 );
+ALTER TABLE pay_order_extension ADD COLUMN IF NOT EXISTS request_id varchar(128);
+ALTER TABLE pay_order_extension ADD COLUMN IF NOT EXISTS channel_order_no varchar(128);
+ALTER TABLE pay_order_extension ADD COLUMN IF NOT EXISTS channel_capture_no varchar(128);
+ALTER TABLE pay_order_extension ADD COLUMN IF NOT EXISTS bank_transfer_status varchar(32);
+ALTER TABLE pay_order_extension ADD COLUMN IF NOT EXISTS bank_payer_name varchar(200);
+ALTER TABLE pay_order_extension ADD COLUMN IF NOT EXISTS bank_reference_no varchar(128);
+ALTER TABLE pay_order_extension ADD COLUMN IF NOT EXISTS bank_transfer_time timestamptz;
+ALTER TABLE pay_order_extension ADD COLUMN IF NOT EXISTS bank_declared_price bigint;
+ALTER TABLE pay_order_extension ADD COLUMN IF NOT EXISTS bank_currency varchar(3);
+ALTER TABLE pay_order_extension ADD COLUMN IF NOT EXISTS bank_proof_media_id bigint;
+ALTER TABLE pay_order_extension ADD COLUMN IF NOT EXISTS bank_submitted_time timestamptz;
+ALTER TABLE pay_order_extension ADD COLUMN IF NOT EXISTS bank_reviewed_by_id bigint;
+ALTER TABLE pay_order_extension ADD COLUMN IF NOT EXISTS bank_reviewed_by varchar(100);
+ALTER TABLE pay_order_extension ADD COLUMN IF NOT EXISTS bank_reviewed_time timestamptz;
+ALTER TABLE pay_order_extension ADD COLUMN IF NOT EXISTS bank_reject_reason varchar(1000);
+ALTER TABLE pay_order_extension ADD COLUMN IF NOT EXISTS success_time timestamptz;
 CREATE UNIQUE INDEX IF NOT EXISTS uk_pay_order_extension_no ON pay_order_extension (no);
 CREATE INDEX IF NOT EXISTS idx_pay_order_extension_order ON pay_order_extension (order_id, status, create_time DESC);
+CREATE INDEX IF NOT EXISTS idx_pay_order_extension_channel_order ON pay_order_extension (channel_code, channel_order_no) WHERE channel_order_no IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_pay_order_extension_bank_review ON pay_order_extension (bank_transfer_status, bank_submitted_time) WHERE bank_transfer_status = 'PENDING_REVIEW';
+
+CREATE TABLE IF NOT EXISTS pay_webhook_event (
+    id bigint PRIMARY KEY,
+    tenant_id bigint NOT NULL CHECK (tenant_id <> 0),
+    app_id bigint NOT NULL,
+    channel_id bigint,
+    channel_code varchar(64) NOT NULL,
+    channel_event_id varchar(128) NOT NULL,
+    event_type varchar(128) NOT NULL,
+    channel_order_no varchar(128),
+    channel_capture_no varchar(128),
+    order_id bigint,
+    extension_id bigint,
+    price bigint CHECK (price IS NULL OR price >= 0),
+    currency varchar(3),
+    signature_status varchar(20) NOT NULL DEFAULT 'PENDING' CHECK (signature_status IN ('PENDING', 'VERIFIED', 'FAILED')),
+    process_status varchar(20) NOT NULL DEFAULT 'PENDING' CHECK (process_status IN ('PENDING', 'PROCESSING', 'SUCCESS', 'FAILED', 'IGNORED')),
+    received_time timestamptz NOT NULL DEFAULT now(),
+    processed_time timestamptz,
+    next_retry_time timestamptz,
+    retry_count integer NOT NULL DEFAULT 0 CHECK (retry_count >= 0),
+    raw_data_ref varchar(500),
+    event_summary text,
+    error_code varchar(128),
+    error_message varchar(1000),
+    create_by_id bigint,
+    create_by varchar(64),
+    create_time timestamptz NOT NULL DEFAULT now(),
+    update_by varchar(64),
+    update_time timestamptz
+);
+CREATE UNIQUE INDEX IF NOT EXISTS uk_pay_webhook_channel_event ON pay_webhook_event (channel_code, channel_event_id);
+CREATE INDEX IF NOT EXISTS idx_pay_webhook_order ON pay_webhook_event (order_id, received_time DESC) WHERE order_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_pay_webhook_retry ON pay_webhook_event (process_status, next_retry_time) WHERE process_status IN ('PENDING', 'FAILED');
+
+CREATE TABLE IF NOT EXISTS merchant_credit_account (
+    credit_account_id bigint PRIMARY KEY,
+    tenant_id bigint NOT NULL CHECK (tenant_id <> 0),
+    merchant_id bigint NOT NULL,
+    merchant_name varchar(200),
+    currency varchar(3) NOT NULL DEFAULT 'USD',
+    credit_limit numeric(18,2) NOT NULL DEFAULT 0 CHECK (credit_limit >= 0),
+    used_credit numeric(18,2) NOT NULL DEFAULT 0 CHECK (used_credit >= 0),
+    status varchar(20) NOT NULL DEFAULT 'NORMAL' CHECK (status IN ('NORMAL', 'FROZEN', 'DISABLED')),
+    version integer NOT NULL DEFAULT 0 CHECK (version >= 0),
+    frozen_by_id bigint,
+    frozen_by varchar(100),
+    frozen_time timestamptz,
+    frozen_reason varchar(1000),
+    create_by_id bigint,
+    create_by varchar(64),
+    create_time timestamptz NOT NULL DEFAULT now(),
+    update_by varchar(64),
+    update_time timestamptz,
+    remark varchar(1000),
+    CHECK (used_credit <= credit_limit)
+);
+CREATE UNIQUE INDEX IF NOT EXISTS uk_merchant_credit_account_tenant ON merchant_credit_account (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_merchant_credit_account_merchant ON merchant_credit_account (merchant_id, status);
+
+CREATE TABLE IF NOT EXISTS merchant_credit_transaction (
+    credit_transaction_id bigint PRIMARY KEY,
+    tenant_id bigint NOT NULL CHECK (tenant_id <> 0),
+    credit_account_id bigint NOT NULL,
+    transaction_no varchar(64) NOT NULL,
+    transaction_type varchar(20) NOT NULL CHECK (transaction_type IN ('OCCUPY', 'REPAY', 'RELEASE', 'ADJUST', 'FREEZE', 'UNFREEZE')),
+    business_type varchar(32) NOT NULL,
+    business_id bigint,
+    business_no varchar(128),
+    amount numeric(18,2) NOT NULL CHECK (amount >= 0),
+    before_credit_limit numeric(18,2) NOT NULL,
+    after_credit_limit numeric(18,2) NOT NULL,
+    before_used_credit numeric(18,2) NOT NULL,
+    after_used_credit numeric(18,2) NOT NULL,
+    currency varchar(3) NOT NULL DEFAULT 'USD',
+    operator_id bigint,
+    operator_name varchar(100),
+    occurred_time timestamptz NOT NULL,
+    create_by_id bigint,
+    create_by varchar(64),
+    create_time timestamptz NOT NULL DEFAULT now(),
+    update_by varchar(64),
+    update_time timestamptz,
+    remark varchar(1000)
+);
+ALTER TABLE merchant_credit_transaction ADD COLUMN IF NOT EXISTS update_by varchar(64);
+ALTER TABLE merchant_credit_transaction ADD COLUMN IF NOT EXISTS update_time timestamptz;
+CREATE UNIQUE INDEX IF NOT EXISTS uk_merchant_credit_transaction_no ON merchant_credit_transaction (transaction_no);
+CREATE INDEX IF NOT EXISTS idx_merchant_credit_transaction_account ON merchant_credit_transaction (tenant_id, credit_account_id, occurred_time DESC);
+CREATE INDEX IF NOT EXISTS idx_merchant_credit_transaction_business ON merchant_credit_transaction (business_type, business_id);
+
+CREATE TABLE IF NOT EXISTS merchant_receivable (
+    receivable_id bigint PRIMARY KEY,
+    tenant_id bigint NOT NULL CHECK (tenant_id <> 0),
+    merchant_id bigint NOT NULL,
+    merchant_name varchar(200),
+    receivable_no varchar(64) NOT NULL,
+    sales_document_id bigint NOT NULL,
+    sales_order_no varchar(64) NOT NULL,
+    pay_order_id bigint NOT NULL,
+    pay_order_no varchar(64) NOT NULL,
+    credit_account_id bigint NOT NULL,
+    receivable_amount numeric(18,2) NOT NULL CHECK (receivable_amount > 0),
+    repaid_amount numeric(18,2) NOT NULL DEFAULT 0 CHECK (repaid_amount >= 0),
+    outstanding_amount numeric(18,2) NOT NULL CHECK (outstanding_amount >= 0),
+    currency varchar(3) NOT NULL DEFAULT 'USD',
+    formed_time timestamptz NOT NULL,
+    due_date date NOT NULL,
+    status varchar(20) NOT NULL DEFAULT 'UNPAID' CHECK (status IN ('UNPAID', 'PARTIALLY_PAID', 'SETTLED', 'OVERDUE', 'CLOSED')),
+    settled_time timestamptz,
+    create_by_id bigint,
+    create_by varchar(64),
+    create_time timestamptz NOT NULL DEFAULT now(),
+    update_by varchar(64),
+    update_time timestamptz,
+    remark varchar(1000),
+    CHECK (repaid_amount + outstanding_amount = receivable_amount)
+);
+CREATE UNIQUE INDEX IF NOT EXISTS uk_merchant_receivable_no ON merchant_receivable (receivable_no);
+CREATE INDEX IF NOT EXISTS idx_merchant_receivable_sales ON merchant_receivable (sales_document_id, pay_order_id);
+CREATE INDEX IF NOT EXISTS idx_merchant_receivable_tenant_status ON merchant_receivable (tenant_id, status, due_date);
 
 CREATE TABLE IF NOT EXISTS pay_refund (
     id bigint PRIMARY KEY,
@@ -325,6 +494,8 @@ COMMENT ON COLUMN pay_order.channel_id IS '支付渠道ID';
 COMMENT ON COLUMN pay_order.channel_code IS '支付渠道代码';
 COMMENT ON COLUMN pay_order.no IS '支付订单号';
 COMMENT ON COLUMN pay_order.merchant_order_id IS '商户订单号';
+COMMENT ON COLUMN pay_order.sales_document_id IS '结构化关联销售订单ID';
+COMMENT ON COLUMN pay_order.sales_order_no IS '销售订单号';
 COMMENT ON COLUMN pay_order.user_id IS '付款用户ID';
 COMMENT ON COLUMN pay_order.user_type IS '付款用户类型';
 COMMENT ON COLUMN pay_order.subject IS '订单标题';
@@ -552,9 +723,12 @@ VALUES
     (260530001013, 13, 'Stripe', 'stripe', 'pay_channel_code', 'default', 'N', '1', 'admin', now(), NULL),
     (260530001014, 14, 'Mock', 'mock', 'pay_channel_code', 'default', 'N', '1', 'admin', now(), NULL),
     (260530001015, 15, '钱包', 'wallet', 'pay_channel_code', 'default', 'N', '1', 'admin', now(), NULL),
+    (260530001016, 16, '银行转账', 'bank_transfer', 'pay_channel_code', 'default', 'N', '1', 'admin', now(), NULL),
+    (260530001017, 17, '信用额度', 'credit_limit', 'pay_channel_code', 'default', 'N', '1', 'admin', now(), NULL),
     (260530002001, 1, '待支付', '0', 'pay_order_status', 'warning', 'N', '1', 'admin', now(), NULL),
-    (260530002002, 2, '支付成功', '10', 'pay_order_status', 'success', 'N', '1', 'admin', now(), NULL),
-    (260530002003, 3, '支付关闭', '20', 'pay_order_status', 'info', 'N', '1', 'admin', now(), NULL),
+    (260530002004, 2, '处理中', '5', 'pay_order_status', 'primary', 'N', '1', 'admin', now(), NULL),
+    (260530002002, 3, '支付成功', '10', 'pay_order_status', 'success', 'N', '1', 'admin', now(), NULL),
+    (260530002003, 4, '支付关闭', '20', 'pay_order_status', 'info', 'N', '1', 'admin', now(), NULL),
     (260530003001, 1, '等待通知', '0', 'pay_notify_status', 'warning', 'N', '1', 'admin', now(), NULL),
     (260530003002, 2, '通知成功', '10', 'pay_notify_status', 'success', 'N', '1', 'admin', now(), NULL),
     (260530003003, 3, '通知失败', '20', 'pay_notify_status', 'danger', 'N', '1', 'admin', now(), NULL),
@@ -576,5 +750,6 @@ ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO pay_channel (id, tenant_id, code, status, fee_rate, app_id, config, remark, create_by, create_time)
 VALUES
-    (260530100002, 1, 'mock', '1', 0, 260530100001, '{}'::jsonb, '本地 Mock smoke 默认渠道，不代表真实支付联调通过', 'admin', now())
+    (260530100002, 1, 'mock', '1', 0, 260530100001, '{}'::jsonb, '本地 Mock smoke 默认渠道，不代表真实支付联调通过', 'admin', now()),
+    (260530100003, 1, 'credit_limit', '1', 0, 260530100001, '{}'::jsonb, '商家授信支付；额度与账期来自已审核商家档案', 'admin', now())
 ON CONFLICT (id) DO NOTHING;

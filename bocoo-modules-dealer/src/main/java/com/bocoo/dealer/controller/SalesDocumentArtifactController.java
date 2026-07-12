@@ -1,6 +1,7 @@
 package com.bocoo.dealer.controller;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
+import cn.dev33.satoken.annotation.SaMode;
 import com.bocoo.common.core.domain.R;
 import com.bocoo.common.excel.utils.ExcelUtil;
 import com.bocoo.dealer.domain.bo.SalesDocumentEmailBo;
@@ -21,7 +22,7 @@ import java.nio.charset.StandardCharsets;
 public class SalesDocumentArtifactController {
     private final SalesDocumentArtifactService service;
 
-    @SaCheckPermission("dealer:sales:document")
+    @SaCheckPermission(value = {"dealer:sales:document", "dealer:fulfillment:production:document"}, mode = SaMode.OR)
     @GetMapping("/{id:\\d+}/pdf")
     public void pdf(@PathVariable Long id, @RequestParam(defaultValue = "ORDER") String type,
                     HttpServletResponse response) throws IOException {

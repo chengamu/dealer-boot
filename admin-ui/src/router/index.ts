@@ -88,13 +88,13 @@ const hiddenLayoutRoutes: RouteRecordRaw[] = [
     path: '/customer/quotes/workbench',
     name: 'CustomerQuoteWorkbench',
     component: () => import('@/pages/customer/CustomerQuoteWorkbenchPage.vue'),
-    meta: { title: 'customer.quote.workbenchTitle', activeMenu: '/salesOrders/orderEstimates', hidden: true }
+    meta: { title: 'customer.quote.workbenchTitle', activeMenu: '/sales/estimates', hidden: true }
   },
   {
     path: '/sales-orders/documents/:id',
     name: 'SalesDocumentDetail',
     component: () => import('@/pages/dealer-sales/SalesDocumentDetailPage.vue'),
-    meta: { title: 'dealer.sales.detail', activeMenu: '/salesOrders/salesDocuments', hidden: true }
+    meta: { title: 'dealer.sales.detail', activeMenu: '/sales/salesDocuments', hidden: true }
   }
 ]
 

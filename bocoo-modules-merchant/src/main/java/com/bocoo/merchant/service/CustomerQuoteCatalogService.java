@@ -7,6 +7,7 @@ import com.bocoo.product.domain.vo.ProductPriceQuoteVo;
 import com.bocoo.product.domain.vo.ProductPriceSetupVo;
 import com.bocoo.product.domain.vo.ProductSaleProductVo;
 import com.bocoo.product.domain.vo.ProductShippingTemplateVo;
+import com.bocoo.product.service.ProductPriceRuntimeContext;
 
 import java.util.List;
 import com.bocoo.merchant.domain.vo.CustomerQuoteCatalogSetupVo;
@@ -16,6 +17,8 @@ public interface CustomerQuoteCatalogService {
     List<ProductSaleProductVo> queryProducts(ProductSaleProductBo bo);
 
     ProductPriceSetupVo querySetup(Long saleProductId);
+
+    ProductPriceRuntimeContext prepareRuntime(Long saleProductId);
 
     CustomerQuoteCatalogSetupVo queryCatalogSetup(Long saleProductId);
 

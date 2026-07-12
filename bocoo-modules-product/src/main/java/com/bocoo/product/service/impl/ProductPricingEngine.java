@@ -43,7 +43,17 @@ public class ProductPricingEngine extends ProductServiceSupport {
 
     public ProductPriceQuoteVo quote(ProductSaleProduct saleProduct, ProductPriceSetting setting,
                                      ProductFormulaVersion version, ProductPriceQuoteBo request) {
-        ProductFormulaSetupVo setup = snapshotReader.formulaSetup(version);
+        return quote(saleProduct, setting, version, snapshotReader.formulaSetup(version),
+            materialMapper.selectList(activeQuery(ProductPriceMaterial.class)
+                .eq("price_setting_id", setting.getPriceSettingId())),
+            ruleMapper.selectList(activeQuery(ProductPriceMaterialRule.class)
+                .eq("price_setting_id", setting.getPriceSettingId()).orderByAsc("sort_order", "material_rule_id")), request);
+    }
+
+    ProductPriceQuoteVo quote(ProductSaleProduct saleProduct, ProductPriceSetting setting,
+                              ProductFormulaVersion version, ProductFormulaSetupVo setup,
+                              List<ProductPriceMaterial> priceMaterials,
+                              List<ProductPriceMaterialRule> priceRules, ProductPriceQuoteBo request) {
         ProductPriceQuoteBo input = request == null ? new ProductPriceQuoteBo() : request;
         validateInput(input);
         Map<String, String> selections = normalizeSelections(setup, input.getSelectedOptionValues());
@@ -51,17 +61,14 @@ public class ProductPricingEngine extends ProductServiceSupport {
         if (!"PASS".equals(simulation.getStatus())) {
             throw ServiceException.ofMessageKey(StringUtils.blankToDefault(simulation.getMessage(), "product.priceSetting.quoteInvalid"));
         }
-        List<ProductPriceMaterial> priceMaterials = materialMapper.selectList(activeQuery(ProductPriceMaterial.class)
-            .eq("price_setting_id", setting.getPriceSettingId()));
         Map<Long, ProductPriceMaterial> priceByMaterialId = priceMaterials.stream()
             .filter(row -> row.getMaterialId() != null)
             .collect(Collectors.toMap(ProductPriceMaterial::getMaterialId, Function.identity(), (left, right) -> left));
         Map<String, ProductPriceMaterial> priceByCode = priceMaterials.stream()
             .filter(row -> StringUtils.isNotBlank(row.getMaterialCode()))
             .collect(Collectors.toMap(ProductPriceMaterial::getMaterialCode, Function.identity(), (left, right) -> left));
-        Map<Long, List<ProductPriceMaterialRule>> rulesByMaterial = ruleMapper.selectList(activeQuery(ProductPriceMaterialRule.class)
-                .eq("price_setting_id", setting.getPriceSettingId()).orderByAsc("sort_order", "material_rule_id"))
-            .stream().collect(Collectors.groupingBy(ProductPriceMaterialRule::getPriceMaterialId));
+        Map<Long, List<ProductPriceMaterialRule>> rulesByMaterial = priceRules.stream()
+            .collect(Collectors.groupingBy(ProductPriceMaterialRule::getPriceMaterialId));
         Map<String, Object> baseContext = priceContext(saleProduct, setup, input, selections);
         List<ProductPriceQuoteItemVo> items = simulation.getItems().stream()
             .map(item -> quoteItem(item, priceByMaterialId, priceByCode, rulesByMaterial, baseContext)).toList();

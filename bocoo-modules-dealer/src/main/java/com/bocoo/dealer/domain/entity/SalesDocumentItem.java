@@ -16,6 +16,7 @@ public class SalesDocumentItem extends BaseEntity {
     private Long salesItemId;
     private Long salesDocumentId;
     private Long sourceQuoteItemId;
+    private Long sourceQuickOrderItemId;
     private Long tenantId;
     private Integer lineNo;
     private String itemCode;
@@ -36,14 +37,18 @@ public class SalesDocumentItem extends BaseEntity {
     private Integer quantity;
     private String selectedOptionsJson;
     private String configurationSummary;
+    private String configurationSummaryCn;
+    private String configurationSummaryEn;
     private String calculationStatus;
     private String calculationMessage;
     private BigDecimal listUnitAmount;
     private BigDecimal listAmount;
     private BigDecimal discountRate;
+    private BigDecimal discountAmount;
     private BigDecimal unitAmount;
     private BigDecimal productAmount;
     private Long shippingTemplateId;
+    private BigDecimal unitShippingAmount;
     private BigDecimal shippingAmount;
     private BigDecimal lineAmount;
     private String bomSnapshotJson;

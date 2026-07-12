@@ -8,15 +8,19 @@ import com.bocoo.common.satoken.utils.LoginHelper;
 import com.bocoo.dealer.domain.bo.SalesDocumentBo;
 import com.bocoo.dealer.domain.entity.SalesDocument;
 import com.bocoo.dealer.domain.vo.SalesDocumentEventVo;
+import com.bocoo.dealer.domain.vo.SalesDocumentItemMetricsVo;
 import com.bocoo.dealer.domain.vo.SalesDocumentVo;
 import com.bocoo.dealer.mapper.SalesDocumentEventMapper;
 import com.bocoo.dealer.mapper.SalesDocumentItemMapper;
 import com.bocoo.dealer.mapper.SalesDocumentMapper;
+import com.bocoo.dealer.scope.SalesAccessScope;
 import com.bocoo.dealer.service.SalesDocumentQueryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -29,8 +33,10 @@ public class SalesDocumentQueryServiceImpl extends DealerServiceSupport implemen
     @Override
     public TableDataInfo<SalesDocumentVo> queryPage(SalesDocumentBo bo, PageQuery pageQuery) {
         QueryWrapper<SalesDocument> q = active();
-        if (!LoginHelper.isPlatformTenant()) q.eq("tenant_id", tenantId());
+        applyAccessScope(q);
         if (bo != null) {
+            q.eq(bo.getSourceType() != null, "source_type", bo.getSourceType());
+            q.like(bo.getSourceNo() != null, "source_no", bo.getSourceNo());
             q.like(bo.getQuoteNo() != null, "quote_no", bo.getQuoteNo());
             q.like(bo.getOrderNo() != null, "order_no", bo.getOrderNo());
             q.eq(bo.getCustomerId() != null, "customer_id", bo.getCustomerId());
@@ -40,11 +46,13 @@ public class SalesDocumentQueryServiceImpl extends DealerServiceSupport implemen
             q.eq(bo.getPaymentStatus() != null, "payment_status", bo.getPaymentStatus());
             q.eq(bo.getProductionStatus() != null, "production_status", bo.getProductionStatus());
             q.eq(bo.getShipmentStatus() != null, "shipment_status", bo.getShipmentStatus());
+            q.eq(bo.getOwnerUserId() != null, "owner_user_id", bo.getOwnerUserId());
         }
         TableDataInfo<SalesDocumentVo> result = ignoreTenant(() -> page(mapper, pageQuery, q,
             row -> row.orderByDesc("update_time", "create_time")));
-        result.getRows().forEach(row -> row.setItemCount(ignoreTenant(() -> itemMapper.selectCount(this.<com.bocoo.dealer.domain.entity.SalesDocumentItem>active()
-            .eq("tenant_id", row.getTenantId()).eq("sales_document_id", row.getSalesDocumentId()))).intValue()));
+        Map<DocumentKey, Integer> counts = itemCounts(result.getRows());
+        result.getRows().forEach(row -> row.setItemCount(counts.getOrDefault(
+            new DocumentKey(row.getTenantId(), row.getSalesDocumentId()), 0)));
         return result;
     }
 
@@ -66,13 +74,33 @@ public class SalesDocumentQueryServiceImpl extends DealerServiceSupport implemen
     @Override
     public List<SalesDocumentVo> customerHistory(Long customerId) {
         QueryWrapper<SalesDocument> q = this.<SalesDocument>active().eq("customer_id", customerId);
-        if (!LoginHelper.isPlatformTenant()) q.eq("tenant_id", tenantId());
+        applyAccessScope(q);
         return ignoreTenant(() -> mapper.selectVoList(q.orderByDesc("update_time")));
     }
 
     private QueryWrapper<SalesDocument> accessQuery(Long id) {
         QueryWrapper<SalesDocument> q = this.<SalesDocument>active().eq("sales_document_id", id);
-        if (!LoginHelper.isPlatformTenant()) q.eq("tenant_id", tenantId());
+        applyAccessScope(q);
         return q;
+    }
+
+    private void applyAccessScope(QueryWrapper<SalesDocument> query) {
+        SalesAccessScope scope = SalesAccessScope.resolve(LoginHelper.isPlatformTenant(), LoginHelper.isAdmin(),
+            LoginHelper.getLoginUser() == null ? null : LoginHelper.getLoginUser().getRolePermission());
+        if (!scope.crossTenant()) query.eq("tenant_id", tenantId());
+        if (scope.ownerOnly()) query.eq("owner_user_id", LoginHelper.getUserId());
+    }
+
+    private Map<DocumentKey, Integer> itemCounts(List<SalesDocumentVo> rows) {
+        if (rows.isEmpty()) return Map.of();
+        List<Long> tenantIds = rows.stream().map(SalesDocumentVo::getTenantId).distinct().toList();
+        List<Long> documentIds = rows.stream().map(SalesDocumentVo::getSalesDocumentId).toList();
+        List<SalesDocumentItemMetricsVo> metrics = ignoreTenant(() -> itemMapper.selectItemCounts(tenantIds, documentIds));
+        return metrics.stream().collect(Collectors.toMap(
+            item -> new DocumentKey(item.getTenantId(), item.getSalesDocumentId()),
+            SalesDocumentItemMetricsVo::getItemCount));
+    }
+
+    private record DocumentKey(Long tenantId, Long documentId) {
     }
 }

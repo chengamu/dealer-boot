@@ -25,9 +25,12 @@ import com.bocoo.pay.mapper.PayOrderMapper;
 import com.bocoo.pay.service.PayChannelService;
 import com.bocoo.pay.service.PayOrderService;
 import com.bocoo.pay.service.PayWalletService;
+import com.bocoo.pay.service.PaymentSuccessService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 /**
  * Payment order service implementation.
@@ -38,17 +41,16 @@ public class PayOrderServiceImpl implements PayOrderService {
 
     private static final String DEFAULT_CURRENCY = "CNY";
 
-    private final PayAppMapper payAppMapper;
     private final PayOrderMapper payOrderMapper;
     private final PayOrderExtensionMapper payOrderExtensionMapper;
-    private final PayChannelService payChannelService;
-    private final PayWalletService payWalletService;
+    private final PaymentSuccessService paymentSuccessService;
+    private final PayOrderSupport support;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public PayOrder createOrder(PayOrderCreateBo bo) {
-        validateCreateOrder(bo);
-        PayApp app = getEnabledApp(bo.getPayeeTenantId(), bo.getAppKey());
+        support.validate(bo);
+        PayApp app = support.enabledApp(bo.getPayeeTenantId(), bo.getAppKey());
         PayOrder existed = payOrderMapper.selectOne(new LambdaQueryWrapper<PayOrder>()
             .eq(PayOrder::getAppId, app.getId())
             .eq(PayOrder::getMerchantOrderId, bo.getMerchantOrderId()), false);
@@ -61,8 +63,14 @@ public class PayOrderServiceImpl implements PayOrderService {
         order.setPayerTenantId(bo.getPayerTenantId());
         order.setPayeeTenantId(bo.getPayeeTenantId());
         order.setAppId(app.getId());
-        order.setNo(buildNo("PO"));
+        order.setNo(support.no("PO"));
         order.setMerchantOrderId(bo.getMerchantOrderId());
+        order.setSalesDocumentId(bo.getSalesDocumentId());
+        order.setSalesOrderNo(bo.getSalesOrderNo());
+        order.setMerchantId(bo.getMerchantId());
+        order.setMerchantName(bo.getMerchantName());
+        order.setCustomerId(bo.getCustomerId());
+        order.setCustomerName(bo.getCustomerName());
         order.setSubject(bo.getSubject());
         order.setBody(bo.getBody());
         order.setNotifyUrl(bo.getNotifyUrl());
@@ -89,7 +97,7 @@ public class PayOrderServiceImpl implements PayOrderService {
         if (!PayOrderStatus.isWaiting(order.getStatus())) {
             throw new ServiceException("Payment order is not waiting for payment");
         }
-        PayChannel channel = payChannelService.getEnabledChannel(order.getPayeeTenantId(), order.getAppId(), bo.getChannelCode());
+        PayChannel channel = support.enabledChannel(order, bo.getChannelCode());
         if (!PayChannelCode.MOCK.getCode().equals(channel.getCode())
             && !PayChannelCode.WALLET.getCode().equals(channel.getCode())) {
             throw new ServiceException("Real payment channel is TODO until merchant config and webhook are ready");
@@ -99,7 +107,7 @@ public class PayOrderServiceImpl implements PayOrderService {
         extension.setTenantId(order.getTenantId());
         extension.setPayerTenantId(order.getPayerTenantId());
         extension.setPayeeTenantId(order.getPayeeTenantId());
-        extension.setNo(buildNo("PE"));
+        extension.setNo(support.no("PE"));
         extension.setOrderId(order.getId());
         extension.setChannelId(channel.getId());
         extension.setChannelCode(channel.getCode());
@@ -116,7 +124,7 @@ public class PayOrderServiceImpl implements PayOrderService {
         if (PayChannelCode.MOCK.getCode().equals(channel.getCode())) {
             notifyOrderSuccess(channel.getCode(), extension.getNo(), "{\"channel\":\"mock\"}");
         } else if (PayChannelCode.WALLET.getCode().equals(channel.getCode())) {
-            submitWalletPayment(order, extension);
+            support.submitWallet(order, extension);
         }
 
         PaySubmitVo result = new PaySubmitVo();
@@ -135,6 +143,20 @@ public class PayOrderServiceImpl implements PayOrderService {
     }
 
     @Override
+    public PayOrder getOrderByMerchantOrderId(Long payerTenantId, String merchantOrderId) {
+        return payOrderMapper.selectOne(new LambdaQueryWrapper<PayOrder>()
+            .eq(PayOrder::getPayerTenantId, payerTenantId)
+            .eq(PayOrder::getMerchantOrderId, merchantOrderId), false);
+    }
+
+    @Override
+    public List<PayOrderExtension> getAttempts(Long payOrderId) {
+        return payOrderExtensionMapper.selectList(new LambdaQueryWrapper<PayOrderExtension>()
+            .eq(PayOrderExtension::getOrderId, payOrderId)
+            .orderByDesc(PayOrderExtension::getId));
+    }
+
+    @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean notifyOrderSuccess(String channelCode, String channelOrderNo, String rawNotifyData) {
         PayOrderExtension extension = payOrderExtensionMapper.selectOne(new LambdaQueryWrapper<PayOrderExtension>()
@@ -144,72 +166,10 @@ public class PayOrderServiceImpl implements PayOrderService {
             throw new ServiceException("Payment extension does not exist");
         }
 
-        int extensionRows = payOrderExtensionMapper.update(null, new LambdaUpdateWrapper<PayOrderExtension>()
-            .set(PayOrderExtension::getStatus, PayOrderStatus.SUCCESS.getStatus())
-            .set(PayOrderExtension::getChannelNotifyData, rawNotifyData)
-            .eq(PayOrderExtension::getId, extension.getId())
-            .eq(PayOrderExtension::getStatus, PayOrderStatus.WAITING.getStatus()));
-
-        int orderRows = payOrderMapper.update(null, new LambdaUpdateWrapper<PayOrder>()
-            .set(PayOrder::getStatus, PayOrderStatus.SUCCESS.getStatus())
-            .set(PayOrder::getSuccessTime, TimeUtils.utcNow())
-            .set(PayOrder::getChannelOrderNo, channelOrderNo)
-            .eq(PayOrder::getId, extension.getOrderId())
-            .eq(PayOrder::getStatus, PayOrderStatus.WAITING.getStatus()));
-        return extensionRows > 0 || orderRows > 0;
+        PayOrder order = payOrderMapper.selectById(extension.getOrderId());
+        if (order == null) throw new ServiceException("Payment order does not exist");
+        return paymentSuccessService.confirm(extension.getId(), channelOrderNo, order.getPrice(),
+            order.getCurrency(), TimeUtils.utcNow(), rawNotifyData);
     }
 
-    private PayApp getEnabledApp(Long payeeTenantId, String appKey) {
-        Long tenantId = payeeTenantId == null ? TenantConstants.PLATFORM_TENANT_ID : payeeTenantId;
-        PayApp app = payAppMapper.selectOne(new LambdaQueryWrapper<PayApp>()
-            .eq(PayApp::getTenantId, tenantId)
-            .eq(PayApp::getAppKey, appKey)
-            .eq(PayApp::getStatus, "1"), false);
-        if (app == null) {
-            throw new ServiceException("Payment app is not configured or disabled");
-        }
-        return app;
-    }
-
-    private void submitWalletPayment(PayOrder order, PayOrderExtension extension) {
-        if (order.getUserId() == null || StringUtils.isBlank(order.getUserType())) {
-            throw new ServiceException("Wallet payment user is required");
-        }
-        PayWallet wallet = payWalletService.getOrCreateWallet(order.getPayerTenantId(), order.getUserId(), order.getUserType());
-        PayWalletChangeBo changeBo = new PayWalletChangeBo();
-        changeBo.setWalletId(wallet.getId());
-        changeBo.setPrice(-order.getPrice());
-        changeBo.setTitle(order.getSubject());
-        changeBo.setBizType(PayWalletBizType.PAYMENT.getType());
-        changeBo.setBizId(order.getNo());
-        changeBo.setRemark(order.getMerchantOrderId());
-        payWalletService.changeBalance(changeBo);
-        notifyOrderSuccess(PayChannelCode.WALLET.getCode(), extension.getNo(), "{\"channel\":\"wallet\"}");
-    }
-
-    private void validateCreateOrder(PayOrderCreateBo bo) {
-        if (bo.getPayerTenantId() == null || bo.getPayerTenantId() <= 0) {
-            throw new ServiceException("Payer tenant is required");
-        }
-        if (StringUtils.isBlank(bo.getAppKey())) {
-            throw new ServiceException("Payment app key is required");
-        }
-        if (StringUtils.isBlank(bo.getMerchantOrderId())) {
-            throw new ServiceException("Merchant order id is required");
-        }
-        if (StringUtils.isBlank(bo.getSubject())) {
-            throw new ServiceException("Payment subject is required");
-        }
-        if (bo.getPrice() == null || bo.getPrice() < 0) {
-            throw new ServiceException("Payment price is invalid");
-        }
-        if (bo.getPayeeTenantId() == null) {
-            bo.setPayeeTenantId(TenantConstants.PLATFORM_TENANT_ID);
-        }
-    }
-
-    private String buildNo(String prefix) {
-        return prefix + TimeUtils.utcNow().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS"))
-            + IdWorker.getId();
-    }
 }

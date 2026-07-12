@@ -101,6 +101,28 @@ class ProductPriceSettingServiceTest extends ProductPriceSettingServiceTestSuppo
     }
 
     @Test
+    void prepareRuntimeOnlyReadsValidatedConfiguration() {
+        ProductSaleProduct product = saleProduct("ENABLED");
+        product.setPriceStatus("READY");
+        ProductPriceSetting setting = setting();
+        when(saleProductMapper.selectById(9001L)).thenReturn(product);
+        when(settingMapper.selectOne(any())).thenReturn(setting);
+        when(versionMapper.selectById(7001L)).thenReturn(effectiveVersion());
+        when(materialMapper.selectList(any())).thenReturn(List.of(priceMaterial()));
+        when(materialRuleMapper.selectList(any())).thenReturn(List.of(materialRule()));
+
+        ProductPriceRuntimeContext runtime = priceSettingService.prepareRuntime(9001L);
+
+        assertThat(runtime.saleProductId()).isEqualTo(9001L);
+        assertThat(runtime.formulaVersionId()).isEqualTo(7001L);
+        assertThat(runtime.currencyCode()).isEqualTo("USD");
+        verify(settingMapper, never()).insert(any());
+        verify(settingMapper, never()).updateById(any());
+        verify(materialMapper, never()).insert(any());
+        verify(materialRuleMapper, never()).insert(any());
+    }
+
+    @Test
     void validatePriceMarksSaleProductReadyWhenRulesPass() {
         ProductSaleProduct product = saleProduct("DISABLED");
         ProductPriceSetting setting = setting();

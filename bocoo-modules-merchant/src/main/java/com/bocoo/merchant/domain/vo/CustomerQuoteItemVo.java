@@ -46,6 +46,7 @@ public class CustomerQuoteItemVo implements Serializable {
     private Long shippingTemplateId;
     private BigDecimal shippingAmount;
     private BigDecimal lineAmount;
+    private String shippingSnapshotJson;
     private Integer sortOrder;
     private String remark;
     private LocalDateTime updateTime;

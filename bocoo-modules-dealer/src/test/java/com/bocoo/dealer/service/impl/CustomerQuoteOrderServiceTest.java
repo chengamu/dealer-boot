@@ -10,6 +10,7 @@ import com.bocoo.dealer.domain.entity.SalesDocumentItem;
 import com.bocoo.dealer.domain.vo.CustomerQuoteOrderPreviewVo;
 import com.bocoo.dealer.mapper.SalesDocumentItemMapper;
 import com.bocoo.dealer.mapper.SalesDocumentMapper;
+import com.bocoo.dealer.payment.SalesPaymentOrderLinker;
 import com.bocoo.dealer.service.TestSaTokenContext;
 import com.bocoo.merchant.domain.entity.CustomerQuote;
 import com.bocoo.merchant.domain.entity.CustomerQuoteItem;
@@ -39,6 +40,7 @@ class CustomerQuoteOrderServiceTest {
     @Mock private SalesDocumentMapper documentMapper;
     @Mock private SalesDocumentItemMapper itemMapper;
     @Mock private SalesDocumentEventRecorder events;
+    @Mock private SalesPaymentOrderLinker paymentOrderLinker;
     private CustomerQuoteOrderServiceImpl service;
 
     @BeforeEach
@@ -47,7 +49,7 @@ class CustomerQuoteOrderServiceTest {
         TestSaTokenContext.install();
         TestSaTokenContext.setLoginUser(TenantType.MERCHANT.getCode(), 300001L, 1L, "merchant");
         service = new CustomerQuoteOrderServiceImpl(quoteSupport, calculator, new CustomerQuoteOrderFactory(),
-            documentMapper, itemMapper, events);
+            documentMapper, itemMapper, events, paymentOrderLinker);
     }
 
     @Test
@@ -88,12 +90,16 @@ class CustomerQuoteOrderServiceTest {
         ArgumentCaptor<SalesDocumentItem> line = ArgumentCaptor.forClass(SalesDocumentItem.class);
         verify(documentMapper).insert(document.capture()); verify(itemMapper).insert(line.capture());
         assertThat(document.getValue().getSourceQuoteId()).isEqualTo(1L);
+        assertThat(document.getValue().getSourceType()).isEqualTo("QUOTE");
+        assertThat(document.getValue().getSourceNo()).isEqualTo("QT-1");
         assertThat(document.getValue().getDocumentStatus()).isEqualTo("SUBMITTED");
         assertThat(line.getValue().getSourceQuoteItemId()).isEqualTo(11L);
         assertThat(line.getValue().getBomSnapshotJson()).isEqualTo("[{\"materialCode\":\"M1\"}]");
+        assertThat(line.getValue().getShippingSnapshotJson()).isEqualTo("{\"templateId\":5}");
         assertThat(line.getValue().getProductAmount()).isEqualByComparingTo("160.00");
         assertThat(line.getValue().getShippingAmount()).isEqualByComparingTo("30.00");
         assertThat(result.getSalesDocumentId()).isEqualTo(88L);
+        verify(paymentOrderLinker).initialize(document.getValue());
         verify(events).record(eq(88L), eq(300001L), eq("ORDER_CREATED_FROM_QUOTE"),
             eq("CONFIRMED"), eq("SUBMITTED"), eq("QT-1"));
     }
@@ -118,7 +124,8 @@ class CustomerQuoteOrderServiceTest {
         row.setFormulaVersionId(4L); row.setQuantity(2); row.setUnitAmount(new BigDecimal("100"));
         row.setProductAmount(new BigDecimal("200")); row.setShippingTemplateId(5L);
         row.setShippingAmount(new BigDecimal("30")); row.setBomSnapshotJson("[{\"materialCode\":\"M1\"}]");
-        row.setPricingSnapshotJson("{\"priceSettingId\":6}"); return row;
+        row.setPricingSnapshotJson("{\"priceSettingId\":6}");
+        row.setShippingSnapshotJson("{\"templateId\":5}"); return row;
     }
 
     private CustomerQuoteConvertOrderBo request() {
