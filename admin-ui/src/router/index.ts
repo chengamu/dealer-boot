@@ -70,6 +70,15 @@ function resolveHomePath() {
   return resolveHomeRouteTarget().path || HOME_FALLBACK_PATH
 }
 
+function hasMenuRouteAccess(path: string, routes: RouteRecordRaw[]) {
+  const resolved = router.resolve(path)
+  return routes.some((route) => {
+    if (route.path === path) return true
+    const authorized = router.resolve(route.path)
+    return resolved.name != null && authorized.name === resolved.name
+  })
+}
+
 router.beforeEach(async (to) => {
   NProgress.start()
   const userStore = useUserStore()
@@ -105,6 +114,9 @@ router.beforeEach(async (to) => {
     if (to.path === HOME_FALLBACK_PATH) {
       const homePath = resolveHomePath()
       if (homePath !== HOME_FALLBACK_PATH) return { path: homePath, replace: true }
+    }
+    if (to.matched.some((route) => route.meta.requiresMenuAuthorization) && !hasMenuRouteAccess(to.path, permissionStore.routeRecords)) {
+      return { path: resolveHomePath(), replace: true }
     }
   } catch (error) {
     await userStore.logout()

@@ -2,7 +2,7 @@
   "dashboard.base": "Home",
   "dashboard.home": "Home",
   "sales.menu": "Sales",
-  "sales.dashboard.menu": "Sales Dashboard",
+  "sales.dashboard.menu": "Sales Home",
   "customer.quote.estimate.menu": "Project Estimate",
   "customer.quote.management.menu": "Quote Management",
   "dealer.quickOrder.menu": "Quick Order",

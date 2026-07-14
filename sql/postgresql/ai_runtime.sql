@@ -287,21 +287,45 @@ WHERE tenant_id = 1 AND menu_id BETWEEN 25000 AND 25021
 ON CONFLICT DO NOTHING;
 
 INSERT INTO sys_role (role_id, tenant_id, role_name, role_key, role_sort, data_scope, menu_check_strictly, dept_check_strictly, status, del_flag, create_by, create_time, remark)
-VALUES
-    (250901, 1, '平台运维', 'platform_operations', 80, '1', true, true, '1', '0', 'system', now(), '平台配置与运维'),
-    (250902, 1, '平台审计', 'platform_auditor', 81, '1', true, true, '1', '0', 'system', now(), '平台审计查询')
+VALUES (250901, 1, '平台运维', 'platform_operations', 80, '1', true, true, '1', '0', 'system', now(), '平台配置、运维与审计')
 ON CONFLICT (role_id) DO UPDATE
 SET role_name = EXCLUDED.role_name, role_key = EXCLUDED.role_key, role_sort = EXCLUDED.role_sort,
     data_scope = EXCLUDED.data_scope, status = EXCLUDED.status, del_flag = EXCLUDED.del_flag,
     update_by = 'system', update_time = now(), remark = EXCLUDED.remark;
+
+DELETE FROM sys_user_role ur
+USING sys_role r
+WHERE ur.role_id = r.role_id
+  AND r.tenant_id = 1
+  AND r.role_key = 'platform_auditor';
+
+DELETE FROM sys_role_menu rm
+USING sys_role r
+WHERE rm.role_id = r.role_id
+  AND r.tenant_id = 1
+  AND r.role_key = 'platform_auditor';
+
+DELETE FROM sys_role_dept rd
+USING sys_role r
+WHERE rd.role_id = r.role_id
+  AND r.tenant_id = 1
+  AND r.role_key = 'platform_auditor';
+
+DELETE FROM sys_role
+WHERE tenant_id = 1
+  AND role_key = 'platform_auditor';
 
 INSERT INTO sys_role_menu (role_id, menu_id, tenant_id)
 SELECT r.role_id, m.menu_id, 1
 FROM sys_role r
 JOIN sys_menu m ON m.tenant_id = r.tenant_id
 WHERE r.tenant_id = 1
-  AND ((r.role_key = 'platform_operations'
-        AND (m.menu_id IN (1, 200, 400, 25000) OR m.parent_id IN (1, 200, 400, 25000)))
-       OR (r.role_key = 'platform_auditor'
-           AND (m.menu_id IN (400, 25000, 25009) OR m.parent_id IN (400, 25009))))
+  AND r.role_key = 'platform_operations'
+  AND (m.menu_id IN (1, 200, 204, 206, 400, 403, 404, 405, 25000)
+       OR m.parent_id IN (1, 200, 400, 25000))
 ON CONFLICT DO NOTHING;
+
+UPDATE sys_role
+SET default_menu_id = 205, update_by = 'system', update_time = now()
+WHERE tenant_id = 1
+  AND role_key = 'platform_operations';

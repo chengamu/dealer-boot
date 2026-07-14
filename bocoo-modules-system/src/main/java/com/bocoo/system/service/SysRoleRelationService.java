@@ -6,6 +6,8 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.bocoo.common.core.constant.CacheConstants;
+import com.bocoo.common.core.constant.TenantConstants;
+import com.bocoo.common.core.context.TenantContextHolder;
 import com.bocoo.common.core.domain.bo.LoginUser;
 import com.bocoo.common.core.utils.StreamUtils;
 import com.bocoo.common.core.utils.StringUtils;
@@ -33,29 +35,37 @@ public class SysRoleRelationService {
     private final SysRoleMenuMapper roleMenuMapper;
     private final SysRoleDeptMapper roleDeptMapper;
     private final SysUserRoleMapper userRoleMapper;
+    private final PlatformPermissionMetadataGuard permissionMetadataGuard;
 
     public int insertMenus(Long roleId, Long[] menuIds) {
+        permissionMetadataGuard.requirePlatformTenant();
         List<SysRoleMenu> rows = StreamUtils.toList(
             menuIds == null ? List.<Long>of() : Arrays.asList(menuIds), menuId -> {
                 SysRoleMenu row = new SysRoleMenu();
                 row.setRoleId(roleId);
                 row.setMenuId(menuId);
+                row.setTenantId(TenantConstants.PLATFORM_TENANT_ID);
                 return row;
             });
         return rows.isEmpty() ? 1 : (roleMenuMapper.insertBatch(rows) ? rows.size() : 0);
     }
 
     public int replaceMenus(Long roleId, Long[] menuIds) {
-        roleMenuMapper.delete(new LambdaQueryWrapper<SysRoleMenu>().eq(SysRoleMenu::getRoleId, roleId));
+        permissionMetadataGuard.requirePlatformTenant();
+        roleMenuMapper.delete(new LambdaQueryWrapper<SysRoleMenu>()
+            .eq(SysRoleMenu::getTenantId, TenantConstants.PLATFORM_TENANT_ID)
+            .eq(SysRoleMenu::getRoleId, roleId));
         return insertMenus(roleId, menuIds);
     }
 
     public int replaceDepartments(SysRole role) {
+        permissionMetadataGuard.requirePlatformTenant();
         roleDeptMapper.delete(new LambdaQueryWrapper<SysRoleDept>().eq(SysRoleDept::getRoleId, role.getRoleId()));
         return insertDepartments(role);
     }
 
     public int insertDepartments(SysRole role) {
+        permissionMetadataGuard.requirePlatformTenant();
         Long[] deptIds = role.getDeptIds();
         List<SysRoleDept> rows = StreamUtils.toList(
             deptIds == null ? List.<Long>of() : Arrays.asList(deptIds), deptId -> {
@@ -68,16 +78,23 @@ public class SysRoleRelationService {
     }
 
     public void deleteRelations(Long roleId) {
-        roleMenuMapper.delete(new LambdaQueryWrapper<SysRoleMenu>().eq(SysRoleMenu::getRoleId, roleId));
+        permissionMetadataGuard.requirePlatformTenant();
+        roleMenuMapper.delete(new LambdaQueryWrapper<SysRoleMenu>()
+            .eq(SysRoleMenu::getTenantId, TenantConstants.PLATFORM_TENANT_ID)
+            .eq(SysRoleMenu::getRoleId, roleId));
         roleDeptMapper.delete(new LambdaQueryWrapper<SysRoleDept>().eq(SysRoleDept::getRoleId, roleId));
     }
 
     public void deleteRelations(Collection<Long> roleIds) {
-        roleMenuMapper.delete(new LambdaQueryWrapper<SysRoleMenu>().in(SysRoleMenu::getRoleId, roleIds));
+        permissionMetadataGuard.requirePlatformTenant();
+        roleMenuMapper.delete(new LambdaQueryWrapper<SysRoleMenu>()
+            .eq(SysRoleMenu::getTenantId, TenantConstants.PLATFORM_TENANT_ID)
+            .in(SysRoleMenu::getRoleId, roleIds));
         roleDeptMapper.delete(new LambdaQueryWrapper<SysRoleDept>().in(SysRoleDept::getRoleId, roleIds));
     }
 
     public int deleteAuthUser(SysUserRole userRole) {
+        permissionMetadataGuard.requirePlatformTenant();
         int rows = userRoleMapper.delete(new LambdaQueryWrapper<SysUserRole>()
             .eq(SysUserRole::getRoleId, userRole.getRoleId())
             .eq(SysUserRole::getUserId, userRole.getUserId()));
@@ -86,6 +103,7 @@ public class SysRoleRelationService {
     }
 
     public int deleteAuthUsers(Long roleId, Long[] userIds) {
+        permissionMetadataGuard.requirePlatformTenant();
         int rows = userRoleMapper.delete(new LambdaQueryWrapper<SysUserRole>()
             .eq(SysUserRole::getRoleId, roleId).in(SysUserRole::getUserId, Arrays.asList(userIds)));
         if (rows > 0) cleanOnlineUserByRole(roleId);
@@ -93,6 +111,7 @@ public class SysRoleRelationService {
     }
 
     public int insertAuthUsers(Long roleId, Long[] userIds) {
+        permissionMetadataGuard.requirePlatformTenant();
         List<SysUserRole> rows = StreamUtils.toList(Arrays.asList(userIds), userId -> {
             SysUserRole row = new SysUserRole();
             row.setUserId(userId);
@@ -105,8 +124,10 @@ public class SysRoleRelationService {
     }
 
     public void cleanOnlineUserByRole(Long roleId) {
-        if (userRoleMapper.selectCount(new LambdaQueryWrapper<SysUserRole>()
-            .eq(SysUserRole::getRoleId, roleId)) == 0) return;
+        permissionMetadataGuard.requirePlatformTenant();
+        long assignedUsers = TenantContextHolder.callWithIgnore(() -> userRoleMapper.selectCount(
+            new LambdaQueryWrapper<SysUserRole>().eq(SysUserRole::getRoleId, roleId)));
+        if (assignedUsers == 0) return;
         List<String> keys = StpUtil.searchTokenValue("", 0, CacheConstants.ONLINE_TOKEN_SCAN_LIMIT, false);
         if (CollUtil.isEmpty(keys)) return;
         keys.parallelStream().forEach(key -> logoutRoleUser(key, roleId));

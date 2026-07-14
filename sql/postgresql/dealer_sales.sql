@@ -447,45 +447,12 @@ DELETE FROM sys_menu
 WHERE menu_id BETWEEN 26101 AND 26215
    OR menu_id IN (26023, 26024, 26025);
 
-DELETE FROM sys_role_menu WHERE menu_id BETWEEN 300100 AND 300124;
-DELETE FROM sys_menu WHERE menu_id BETWEEN 300100 AND 300124;
-
--- 商家租户旧七入口使用 200 段；每次执行先清理，再按最终六工作区重建。
+-- 角色和菜单由平台统一维护，商家租户不保留菜单副本。
 DELETE FROM sys_role_menu rm
-USING sys_menu m, sys_tenant t
+USING sys_menu m
 WHERE rm.menu_id = m.menu_id
-  AND m.tenant_id = t.tenant_id
-  AND t.tenant_type = 'MERCHANT'
-  AND m.menu_id IN (
-      t.tenant_id * 1000 + 200, t.tenant_id * 1000 + 201, t.tenant_id * 1000 + 202,
-      t.tenant_id * 1000 + 208, t.tenant_id * 1000 + 213, t.tenant_id * 1000 + 214,
-      t.tenant_id * 1000 + 220, t.tenant_id * 1000 + 221, t.tenant_id * 1000 + 222,
-      t.tenant_id * 1000 + 223, t.tenant_id * 1000 + 224,
-      t.tenant_id * 1000 + 230, t.tenant_id * 1000 + 231, t.tenant_id * 1000 + 232,
-      t.tenant_id * 1000 + 233, t.tenant_id * 1000 + 234, t.tenant_id * 1000 + 235,
-      t.tenant_id * 1000 + 236, t.tenant_id * 1000 + 237, t.tenant_id * 1000 + 238,
-      t.tenant_id * 1000 + 241, t.tenant_id * 1000 + 242, t.tenant_id * 1000 + 243,
-      t.tenant_id * 1000 + 244, t.tenant_id * 1000 + 245, t.tenant_id * 1000 + 251,
-      t.tenant_id * 1000 + 252, t.tenant_id * 1000 + 253, t.tenant_id * 1000 + 254,
-      t.tenant_id * 1000 + 255, t.tenant_id * 1000 + 261, t.tenant_id * 1000 + 262,
-      t.tenant_id * 1000 + 263);
-DELETE FROM sys_menu m
-USING sys_tenant t
-WHERE m.tenant_id = t.tenant_id
-  AND t.tenant_type = 'MERCHANT'
-  AND m.menu_id IN (
-      t.tenant_id * 1000 + 200, t.tenant_id * 1000 + 201, t.tenant_id * 1000 + 202,
-      t.tenant_id * 1000 + 208, t.tenant_id * 1000 + 213, t.tenant_id * 1000 + 214,
-      t.tenant_id * 1000 + 220, t.tenant_id * 1000 + 221, t.tenant_id * 1000 + 222,
-      t.tenant_id * 1000 + 223, t.tenant_id * 1000 + 224,
-      t.tenant_id * 1000 + 230, t.tenant_id * 1000 + 231, t.tenant_id * 1000 + 232,
-      t.tenant_id * 1000 + 233, t.tenant_id * 1000 + 234, t.tenant_id * 1000 + 235,
-      t.tenant_id * 1000 + 236, t.tenant_id * 1000 + 237, t.tenant_id * 1000 + 238,
-      t.tenant_id * 1000 + 241, t.tenant_id * 1000 + 242, t.tenant_id * 1000 + 243,
-      t.tenant_id * 1000 + 244, t.tenant_id * 1000 + 245, t.tenant_id * 1000 + 251,
-      t.tenant_id * 1000 + 252, t.tenant_id * 1000 + 253, t.tenant_id * 1000 + 254,
-      t.tenant_id * 1000 + 255, t.tenant_id * 1000 + 261, t.tenant_id * 1000 + 262,
-      t.tenant_id * 1000 + 263);
+  AND m.tenant_id <> 1;
+DELETE FROM sys_menu WHERE tenant_id <> 1;
 
 INSERT INTO sys_menu (menu_id, tenant_id, menu_name, i18n_key, parent_id, order_num, path, component,
                       is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, remark)
@@ -511,7 +478,7 @@ VALUES
     (26602, 1, '包裹管理', 'factory.shipping.packages', 26600, 2, 'packages', 'dealer-fulfillment/factory-packages', '1', '0', 'C', '1', '1', 'dealer:fulfillment:factory:shipment:list', 'order', 'system', now(), '阶段 12 薄壳'),
     (26603, 1, '物流跟踪', 'factory.shipping.tracking', 26600, 3, 'tracking', 'dealer-fulfillment/factory-tracking', '1', '0', 'C', '1', '1', 'dealer:fulfillment:factory:tracking:list', 'tracking', 'system', now(), '阶段 12 薄壳'),
     (26700, 1, '销售运营', 'platform.sales.menu', 0, 420, 'salesOperations', NULL, '1', '0', 'M', '1', '1', NULL, 'report', 'system', now(), '平台销售运营'),
-    (26701, 1, '销售首页', 'platform.sales.dashboard', 26700, 1, 'dashboard', 'platform-sales/dashboard', '1', '0', 'C', '1', '1', 'platform:sales:dashboard:view', 'dashboard', 'system', now(), '阶段 12 薄壳'),
+    (26701, 1, '运营总览', 'platform.sales.dashboard', 26700, 1, 'dashboard', 'platform-sales/dashboard', '1', '0', 'C', '1', '1', 'platform:sales:dashboard:view', 'dashboard', 'system', now(), '阶段 12 薄壳'),
     (26702, 1, '报价查询', 'platform.sales.quotes', 26700, 2, 'quotes', 'platform-sales/quotes', '1', '0', 'C', '1', '1', 'platform:sales:quote:list', 'quote', 'system', now(), '阶段 12 薄壳'),
     (26703, 1, '下单查询', 'platform.sales.quickOrders', 26700, 3, 'quickOrders', 'platform-sales/quick-orders', '1', '0', 'C', '1', '1', 'platform:sales:quick-order:list', 'cart', 'system', now(), '阶段 12 薄壳'),
     (26704, 1, '订单查询', 'platform.sales.orders', 26700, 4, 'orders', 'platform-sales/orders', '1', '0', 'C', '1', '1', 'platform:sales:order:list', 'order', 'system', now(), '阶段 12 薄壳'),
@@ -520,24 +487,6 @@ VALUES
     (26802, 1, '发货管理', 'platform.fulfillment.shipping', 26800, 2, 'shipping', 'dealer-fulfillment/platform-shipping', '1', '0', 'C', '1', '1', 'dealer:fulfillment:admin:list', 'delivery', 'system', now(), '阶段 12 薄壳'),
     (26803, 1, '包裹查询', 'platform.fulfillment.packages', 26800, 3, 'packages', 'dealer-fulfillment/platform-packages', '1', '0', 'C', '1', '1', 'dealer:fulfillment:admin:list', 'order', 'system', now(), '阶段 12 薄壳'),
     (26804, 1, '物流跟踪', 'platform.fulfillment.trackingMenu', 26800, 4, 'tracking', 'dealer-fulfillment/platform-tracking', '1', '0', 'C', '1', '1', 'dealer:fulfillment:admin:list', 'tracking', 'system', now(), '阶段 12 薄壳')
-ON CONFLICT (menu_id) DO UPDATE
-SET tenant_id = EXCLUDED.tenant_id, menu_name = EXCLUDED.menu_name, i18n_key = EXCLUDED.i18n_key,
-    parent_id = EXCLUDED.parent_id, order_num = EXCLUDED.order_num, path = EXCLUDED.path,
-    component = EXCLUDED.component, menu_type = EXCLUDED.menu_type, visible = EXCLUDED.visible,
-    status = EXCLUDED.status, perms = EXCLUDED.perms, icon = EXCLUDED.icon,
-    update_by = 'system', update_time = now(), remark = EXCLUDED.remark;
-
-INSERT INTO sys_menu (menu_id, tenant_id, menu_name, i18n_key, parent_id, order_num, path, component,
-                      is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, remark)
-SELECT t.tenant_id * 1000 + x.offset_id, t.tenant_id, x.menu_name, x.i18n_key,
-       t.tenant_id * 1000 + 300, x.order_num, x.path, x.component,
-       '1', '0', 'C', '0', '1', x.perms, '#', 'system', now(), '快速下单隐藏页面'
-FROM sys_tenant t
-CROSS JOIN (VALUES
-    (350, '下单配置', 'dealer.quickOrder.workbenchTitle', 41, 'quickOrders/workbench', 'dealer-quick-order/workbench', 'dealer:quick-order:add'),
-    (360, '订单复核', 'dealer.quickOrder.reviewTitle', 42, 'quickOrders/review', 'dealer-quick-order/review', 'dealer:quick-order:edit')
-) AS x(offset_id, menu_name, i18n_key, order_num, path, component, perms)
-WHERE t.tenant_type = 'MERCHANT'
 ON CONFLICT (menu_id) DO UPDATE
 SET tenant_id = EXCLUDED.tenant_id, menu_name = EXCLUDED.menu_name, i18n_key = EXCLUDED.i18n_key,
     parent_id = EXCLUDED.parent_id, order_num = EXCLUDED.order_num, path = EXCLUDED.path,
@@ -604,183 +553,95 @@ SET tenant_id = EXCLUDED.tenant_id, menu_name = EXCLUDED.menu_name, i18n_key = E
     parent_id = EXCLUDED.parent_id, order_num = EXCLUDED.order_num, perms = EXCLUDED.perms,
     status = EXCLUDED.status, update_by = 'system', update_time = now();
 
--- 商家租户仅建立商家业务菜单；同租户每个语义只有一个实例。
-INSERT INTO sys_menu (menu_id, tenant_id, menu_name, i18n_key, parent_id, order_num, path, component,
-                      is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, remark)
-SELECT t.tenant_id * 1000 + x.offset_id, t.tenant_id, x.menu_name, x.i18n_key,
-       CASE WHEN x.parent_offset = 0 THEN 0 ELSE t.tenant_id * 1000 + x.parent_offset END,
-       x.order_num, x.path, x.component, '1', '0', x.menu_type, '1', '1', x.perms, x.icon,
-       'system', now(), '商家业务菜单'
-FROM sys_tenant t
-CROSS JOIN (VALUES
-    (100, 0, '商家中心', 'menu.merchant', 10, 'merchant', NULL, 'M', NULL, 'shop'),
-    (110, 100, '商家资料', 'menu.merchant.profile', 1, 'profile', 'merchant/profile', 'C', 'merchant:profile:query', 'store'),
-    (120, 100, '商家用户', 'menu.merchant.users', 2, 'users', 'merchant/user', 'C', 'merchant:user:list', 'user'),
-    (200, 0, '客户管理', 'sys.menu.customerManagement', 20, 'customers', NULL, 'M', NULL, 'customer'),
-    (210, 200, '客户资料', 'sys.menu.customer.profile', 1, 'profiles', 'customer/profile', 'C', 'customer:profile:list', 'customer'),
-    (300, 0, '销售业务', 'sales.menu', 30, 'sales', NULL, 'M', NULL, 'sales'),
-    (310, 300, '销售首页', 'sales.dashboard.menu', 1, 'dashboard', 'sales/dashboard', 'C', 'sales:dashboard:view', 'dashboard'),
-    (320, 300, '工程测算', 'customer.quote.estimate.menu', 2, 'estimates', 'customer/quote-workbench', 'C', 'customer:quote:list', 'calculator'),
-    (330, 300, '报价管理', 'customer.quote.management.menu', 3, 'quotes', 'customer/quotes', 'C', 'customer:quote:list', 'quote'),
-    (340, 300, '快速下单', 'dealer.quickOrder.menu', 4, 'quickOrders', 'dealer-quick-order/list', 'C', 'dealer:quick-order:list', 'cart'),
-    (400, 0, '订单管理', 'dealer.order.menu', 40, 'orders', NULL, 'M', NULL, 'order'),
-    (410, 400, '销售订单', 'dealer.sales.list', 1, 'salesDocuments', 'dealer-sales/list', 'C', 'dealer:sales:list', 'order'),
-    (600, 0, '订单跟踪', 'dealer.tracking.menu', 60, 'tracking', NULL, 'M', NULL, 'delivery'),
-    (610, 600, '生产进度', 'dealer.tracking.productionMenu', 1, 'production', 'dealer-fulfillment/business-production', 'C', 'dealer:fulfillment:progress:list', 'build'),
-    (620, 600, '发货包裹', 'dealer.tracking.shipments', 2, 'shipments', 'dealer-fulfillment/business-shipments', 'C', 'dealer:fulfillment:progress:list', 'delivery'),
-    (630, 600, '物流跟踪', 'dealer.tracking.logisticsMenu', 3, 'logistics', 'dealer-fulfillment/business-tracking', 'C', 'dealer:fulfillment:progress:list', 'tracking')
-) AS x(offset_id, parent_offset, menu_name, i18n_key, order_num, path, component, menu_type, perms, icon)
-WHERE t.tenant_type = 'MERCHANT'
-ON CONFLICT (menu_id) DO UPDATE
-SET tenant_id = EXCLUDED.tenant_id, menu_name = EXCLUDED.menu_name, i18n_key = EXCLUDED.i18n_key,
-    parent_id = EXCLUDED.parent_id, order_num = EXCLUDED.order_num, path = EXCLUDED.path,
-    component = EXCLUDED.component, menu_type = EXCLUDED.menu_type, visible = EXCLUDED.visible,
-    status = EXCLUDED.status, perms = EXCLUDED.perms, icon = EXCLUDED.icon,
-    update_by = 'system', update_time = now(), remark = EXCLUDED.remark;
-
-INSERT INTO sys_menu (menu_id, tenant_id, menu_name, i18n_key, parent_id, order_num, path, component,
-                      is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, remark)
-SELECT t.tenant_id * 1000 + x.offset_id, t.tenant_id, x.menu_name, x.i18n_key,
-       t.tenant_id * 1000 + x.parent_offset, x.order_num, '#', '', '1', '0', 'F', '1', '1',
-       x.perms, '#', 'system', now(), ''
-FROM sys_tenant t
-CROSS JOIN (VALUES
-    (111, 110, 1, '资料查询', 'menu.merchant.profile.query', 'merchant:profile:query'),
-    (112, 110, 2, '资料修改', 'menu.merchant.profile.edit', 'merchant:profile:edit'),
-    (121, 120, 1, '用户查询', 'menu.merchant.users.query', 'merchant:user:query'),
-    (122, 120, 2, '用户新增', 'menu.merchant.users.add', 'merchant:user:add'),
-    (123, 120, 3, '用户修改', 'menu.merchant.users.edit', 'merchant:user:edit'),
-    (124, 120, 4, '用户删除', 'menu.merchant.users.remove', 'merchant:user:remove'),
-    (125, 120, 5, '重置密码', 'menu.merchant.users.resetPwd', 'merchant:user:resetPwd'),
-    (211, 210, 1, '客户查询', 'sys.menu.customer.profile.query', 'customer:profile:query'),
-    (212, 210, 2, '客户新增', 'sys.menu.customer.profile.add', 'customer:profile:add'),
-    (213, 210, 3, '客户修改', 'sys.menu.customer.profile.edit', 'customer:profile:edit'),
-    (214, 210, 4, '客户删除', 'sys.menu.customer.profile.remove', 'customer:profile:remove'),
-    (321, 320, 1, '报价查询', 'customer.quote.permission.query', 'customer:quote:query'),
-    (322, 320, 2, '报价新增', 'customer.quote.permission.add', 'customer:quote:add'),
-    (323, 320, 3, '报价修改', 'customer.quote.permission.edit', 'customer:quote:edit'),
-    (324, 320, 4, '报价删除', 'customer.quote.permission.remove', 'customer:quote:remove'),
-    (325, 320, 5, '报价导出', 'customer.quote.permission.export', 'customer:quote:export'),
-    (326, 320, 6, '报价单据', 'customer.quote.permission.document', 'customer:quote:document'),
-    (327, 320, 7, '报价邮件', 'customer.quote.permission.email', 'customer:quote:email'),
-    (328, 320, 8, '转销售单', 'customer.quote.permission.convert', 'customer:quote:convert'),
-    (341, 340, 1, '下单查询', 'dealer.quickOrder.query', 'dealer:quick-order:query'),
-    (342, 340, 2, '下单新增', 'dealer.quickOrder.add', 'dealer:quick-order:add'),
-    (343, 340, 3, '下单修改', 'dealer.quickOrder.edit', 'dealer:quick-order:edit'),
-    (344, 340, 4, '下单删除', 'dealer.quickOrder.remove', 'dealer:quick-order:remove'),
-    (345, 340, 5, '下单提交', 'dealer.quickOrder.submit', 'dealer:quick-order:submit'),
-    (411, 410, 1, '订单查询', 'dealer.sales.permission.query', 'dealer:sales:query'),
-    (412, 410, 2, '订单取消', 'dealer.sales.permission.cancel', 'dealer:sales:cancel'),
-    (413, 410, 3, '单据输出', 'dealer.sales.permission.document', 'dealer:sales:document'),
-    (414, 410, 4, '邮件发送', 'dealer.sales.permission.email', 'dealer:sales:email'),
-    (611, 610, 1, '进度查询', 'dealer.tracking.production.query', 'dealer:fulfillment:progress:query'),
-    (621, 620, 1, '包裹查询', 'dealer.tracking.shipment.query', 'dealer:fulfillment:progress:query'),
-    (631, 630, 1, '物流查询', 'dealer.tracking.logistics.query', 'dealer:fulfillment:progress:tracking'),
-    (632, 630, 2, '确认收货', 'dealer.tracking.receipt', 'dealer:fulfillment:progress:receipt:confirm')
-) AS x(offset_id, parent_offset, order_num, menu_name, i18n_key, perms)
-WHERE t.tenant_type = 'MERCHANT'
-ON CONFLICT (menu_id) DO UPDATE
-SET tenant_id = EXCLUDED.tenant_id, menu_name = EXCLUDED.menu_name, i18n_key = EXCLUDED.i18n_key,
-    parent_id = EXCLUDED.parent_id, order_num = EXCLUDED.order_num, perms = EXCLUDED.perms,
-    status = EXCLUDED.status, update_by = 'system', update_time = now();
-
 INSERT INTO sys_role (role_id, tenant_id, role_name, role_key, role_sort, data_scope, menu_check_strictly, dept_check_strictly, status, del_flag, create_by, create_time, remark)
 VALUES
-    (260901, 1, '平台销售负责人', 'platform_sales_manager', 20, '4', true, true, '1', '0', 'system', now(), '平台内部销售部门及下级'),
+    (260901, 1, '业务主管', 'platform_sales_manager', 20, '1', true, true, '1', '0', 'system', now(), '平台商家与销售业务管理'),
     (260902, 1, '平台销售', 'platform_sales', 21, '5', true, true, '1', '0', 'system', now(), '平台内部销售本人范围'),
-    (260904, 1, '工厂生产', 'factory_production', 40, '1', true, true, '1', '0', 'system', now(), '工厂生产作业'),
-    (260905, 1, '工厂发货', 'factory_shipping', 41, '1', true, true, '1', '0', 'system', now(), '工厂发货作业'),
-    (260906, 1, '商家运营', 'platform_merchant_operations', 31, '1', true, true, '1', '0', 'system', now(), '平台商家管理'),
-    (260907, 1, '销售运营', 'platform_sales_operations', 32, '1', true, true, '1', '0', 'system', now(), '平台跨租户销售查询'),
-    (260908, 1, '平台履约', 'platform_fulfillment', 42, '1', true, true, '1', '0', 'system', now(), '平台履约管理')
+    (260904, 1, '工厂生产', 'factory_production', 40, '1', true, true, '1', '0', 'system', now(), '平台财务、履约与工厂生产作业')
 ON CONFLICT (role_id) DO UPDATE
 SET role_name = EXCLUDED.role_name, role_key = EXCLUDED.role_key, role_sort = EXCLUDED.role_sort,
     data_scope = EXCLUDED.data_scope, status = EXCLUDED.status, del_flag = EXCLUDED.del_flag,
     update_by = 'system', update_time = now(), remark = EXCLUDED.remark;
 
-UPDATE sys_role
-SET role_name = CASE role_key WHEN 'merchant_admin' THEN '店主' ELSE '营业员' END,
-    role_sort = CASE role_key WHEN 'merchant_admin' THEN 1 ELSE 2 END,
-    data_scope = CASE role_key WHEN 'merchant_admin' THEN '4' ELSE '5' END,
-    status = '1', del_flag = '0', update_by = 'system', update_time = now()
-WHERE tenant_id <> 1
-  AND role_key IN ('merchant_admin', 'merchant_employee');
-
-UPDATE sys_role
-SET status = '0', del_flag = '1', default_menu_id = NULL, update_by = 'system', update_time = now()
-WHERE role_key IN ('merchant_store', 'merchant_sales', 'merchant_finance', 'merchant_fulfillment');
-
-INSERT INTO sys_user_role (user_id, role_id, tenant_id)
-SELECT DISTINCT ur.user_id, employee.role_id, ur.tenant_id
-FROM sys_user_role ur
-JOIN sys_role legacy ON legacy.role_id = ur.role_id AND legacy.tenant_id = ur.tenant_id
-JOIN sys_role employee ON employee.tenant_id = ur.tenant_id AND employee.role_key = 'merchant_employee'
-WHERE legacy.role_key IN ('merchant_store', 'merchant_sales', 'merchant_finance', 'merchant_fulfillment')
-  AND employee.status = '1'
-  AND employee.del_flag = '0'
-ON CONFLICT DO NOTHING;
-
 DELETE FROM sys_user_role ur
 USING sys_role r
 WHERE ur.role_id = r.role_id
-  AND r.role_key IN ('merchant_store', 'merchant_sales', 'merchant_finance', 'merchant_fulfillment');
+  AND r.tenant_id = 1
+  AND r.role_key IN ('platform_merchant_operations', 'platform_sales_operations',
+                     'platform_fulfillment', 'factory_shipping');
 
 DELETE FROM sys_role_menu rm
 USING sys_role r
 WHERE rm.role_id = r.role_id
-  AND r.role_key IN ('merchant_store', 'merchant_sales', 'merchant_finance', 'merchant_fulfillment');
+  AND r.tenant_id = 1
+  AND r.role_key IN ('platform_merchant_operations', 'platform_sales_operations',
+                     'platform_fulfillment', 'factory_shipping');
 
 DELETE FROM sys_role_dept rd
 USING sys_role r
 WHERE rd.role_id = r.role_id
-  AND r.role_key IN ('merchant_store', 'merchant_sales', 'merchant_finance', 'merchant_fulfillment');
+  AND r.tenant_id = 1
+  AND r.role_key IN ('platform_merchant_operations', 'platform_sales_operations',
+                     'platform_fulfillment', 'factory_shipping');
+
+DELETE FROM sys_role
+WHERE tenant_id = 1
+  AND role_key IN ('platform_merchant_operations', 'platform_sales_operations',
+                   'platform_fulfillment', 'factory_shipping');
+
+DELETE FROM sys_user_role ur
+USING sys_role r
+WHERE ur.role_id = r.role_id
+  AND (r.tenant_id <> 1
+       OR r.role_key IN ('merchant_store', 'merchant_sales', 'merchant_finance', 'merchant_fulfillment'));
 
 DELETE FROM sys_role_menu rm
 USING sys_role r
 WHERE rm.role_id = r.role_id
-  AND r.role_key IN ('platform_sales_manager', 'platform_sales', 'platform_merchant_operations',
-                     'platform_sales_operations', 'platform_fulfillment', 'factory_production',
-                     'factory_shipping', 'merchant_admin', 'merchant_employee');
+  AND (r.tenant_id <> 1
+       OR r.role_key IN ('merchant_store', 'merchant_sales', 'merchant_finance', 'merchant_fulfillment'));
+
+DELETE FROM sys_role_dept rd
+USING sys_role r
+WHERE rd.role_id = r.role_id
+  AND (r.tenant_id <> 1
+       OR r.role_key IN ('merchant_store', 'merchant_sales', 'merchant_finance', 'merchant_fulfillment'));
+
+DELETE FROM sys_role
+WHERE tenant_id <> 1
+   OR role_key IN ('merchant_store', 'merchant_sales', 'merchant_finance', 'merchant_fulfillment');
+
+DELETE FROM sys_role_menu rm
+USING sys_role r
+WHERE rm.role_id = r.role_id
+  AND r.tenant_id = 1
+  AND r.role_key IN ('merchant_admin', 'merchant_employee');
 
 INSERT INTO sys_role_menu (role_id, menu_id, tenant_id)
 SELECT r.role_id, m.menu_id, r.tenant_id
 FROM sys_role r
-JOIN sys_menu m ON m.tenant_id = r.tenant_id
+JOIN sys_menu m ON m.tenant_id = 1
 WHERE (r.role_key IN ('platform_sales_manager', 'platform_sales')
        AND (m.menu_id IN (20200, 26000, 26300) OR m.parent_id IN (20200, 20201, 26000, 20230, 26021, 26022, 26300, 26001)))
-   OR (r.role_key = 'platform_merchant_operations'
-       AND (m.menu_id = 19500 OR m.parent_id = 19500 OR m.parent_id IN (107, 108, 20009, 20100, 20120)))
-   OR (r.role_key = 'platform_sales_operations'
-       AND (m.menu_id IN (20240, 26700) OR m.parent_id IN (20240, 20220, 26700, 26702, 26703, 26704)))
-   OR (r.role_key = 'platform_fulfillment'
-       AND (m.menu_id = 26800 OR m.parent_id IN (26800, 26801, 26802, 26803, 26804)))
+   OR (r.role_key = 'platform_sales_manager'
+       AND (m.menu_id IN (19500, 26700)
+            OR m.parent_id IN (19500, 107, 108, 20009, 20100, 20120,
+                               26700, 26702, 26703, 26704)))
    OR (r.role_key = 'factory_production'
-       AND (m.menu_id = 26500 OR m.parent_id IN (26500, 26501, 26502)))
-   OR (r.role_key = 'factory_shipping'
-       AND (m.menu_id = 26600 OR m.parent_id IN (26600, 26601, 26602, 26603)))
-   OR (r.role_key = 'merchant_employee' AND r.tenant_id <> 1
-       AND (m.menu_id IN (r.tenant_id * 1000 + 100, r.tenant_id * 1000 + 101,
-                          r.tenant_id * 1000 + 102, r.tenant_id * 1000 + 120,
-                          r.tenant_id * 1000 + 121, r.tenant_id * 1000 + 122,
-                          r.tenant_id * 1000 + 123, r.tenant_id * 1000 + 124,
-                          r.tenant_id * 1000 + 200, r.tenant_id * 1000 + 300,
-                          r.tenant_id * 1000 + 400, r.tenant_id * 1000 + 600)
-            OR m.parent_id IN (r.tenant_id * 1000 + 200, r.tenant_id * 1000 + 210,
-                               r.tenant_id * 1000 + 300, r.tenant_id * 1000 + 320,
-                               r.tenant_id * 1000 + 330, r.tenant_id * 1000 + 340,
-                               r.tenant_id * 1000 + 400, r.tenant_id * 1000 + 410,
-                               r.tenant_id * 1000 + 600, r.tenant_id * 1000 + 610,
-                               r.tenant_id * 1000 + 620, r.tenant_id * 1000 + 630)))
-ON CONFLICT DO NOTHING;
-
-INSERT INTO sys_role_menu (role_id, menu_id, tenant_id)
-SELECT r.role_id, m.menu_id, r.tenant_id
-FROM sys_role r
-JOIN sys_menu m ON m.tenant_id = r.tenant_id
-WHERE r.role_key = 'merchant_admin'
-  AND r.tenant_id <> 1
-  AND m.menu_id / 1000 = r.tenant_id
-  AND m.menu_id % 1000 BETWEEN 100 AND 699
+       AND (m.menu_id IN (26500, 26600, 26800)
+            OR m.parent_id IN (26500, 26501, 26502, 26600, 26601, 26602, 26603,
+                               26800, 26801, 26802, 26803, 26804)))
+   OR (r.role_key IN ('merchant_admin', 'merchant_employee')
+       AND r.tenant_id = 1
+       AND (m.menu_id IN (20200, 26000, 26300, 26400)
+            OR m.parent_id IN (20200, 20201, 26000, 20230, 26021, 26022,
+                               26300, 26001, 26400, 26401, 26402, 26403)))
+   OR (r.role_key = 'merchant_admin'
+       AND r.tenant_id = 1
+       AND m.menu_id BETWEEN 28000 AND 28015)
+   OR (r.role_key = 'merchant_employee'
+       AND r.tenant_id = 1
+       AND m.menu_id IN (28000, 28001, 28002))
 ON CONFLICT DO NOTHING;
 
 INSERT INTO sys_role_menu (role_id, menu_id, tenant_id)
@@ -801,8 +662,5 @@ WHERE m.tenant_id = r.tenant_id
   AND (
     (r.role_key IN ('platform_sales_manager', 'platform_sales', 'merchant_admin', 'merchant_employee')
       AND m.component = 'sales/dashboard')
-    OR (r.role_key = 'platform_sales_operations' AND m.component = 'platform-sales/dashboard')
-    OR (r.role_key = 'platform_fulfillment' AND m.component = 'dealer-fulfillment/platform-production')
     OR (r.role_key = 'factory_production' AND m.component = 'dealer-fulfillment/factory-production')
-    OR (r.role_key = 'factory_shipping' AND m.component = 'dealer-fulfillment/factory-shipping')
   );

@@ -17,7 +17,7 @@ crypto:
   aes-key: DevCryptoKey2026
 
 captcha:
-  enable: true
+  enable: false
 
 bocoo:
   ai:

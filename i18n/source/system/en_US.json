@@ -146,6 +146,7 @@
   "sys.menu.customer.profile.query": "Customer Query",
   "sys.menu.customer.profile.remove": "Customer Delete",
   "sys.menu.customerManagement": "Customer Management",
+  "sys.menu.customerSupervision": "Customer Oversight",
   "sys.menu.log": "Logs",
   "sys.menu.log.logininfor": "Login Logs",
   "sys.menu.log.operlog": "Operation Logs",
@@ -206,6 +207,7 @@
   "sys.menu.system.salesStore.status": "Sales Store Status",
   "sys.menu.system.user": "User",
   "sys.menu.tool.gen": "Code Generator",
+  "sys.permission.metadata.platform.only": "Only the platform tenant can manage menus and roles",
   "sys.role.admin.key.update.denied": "The built-in administrator role key cannot be changed",
   "sys.role.admin.key.use.denied": "The built-in administrator role key cannot be used",
   "sys.role.admin.operation.denied": "Super administrator roles cannot be modified",
@@ -480,6 +482,5 @@
   "user.userNameRequired": "User name is required",
   "user.userTitle": "User Management",
   "user.zoomInAvatar": "Zoom in avatar",
-  "user.zoomOutAvatar": "Zoom out avatar",
-  "sys.menu.customerSupervision": "Customer Oversight"
+  "user.zoomOutAvatar": "Zoom out avatar"
 }

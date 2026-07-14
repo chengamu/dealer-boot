@@ -1,4 +1,12 @@
-import type { BankTransferStatus, BusinessOrigin, PayOrderStatus, ReceivableStatus, ReconciliationSeverity, ReconciliationStatus } from '@/api/pay'
+import type {
+  BankTransferStatus,
+  BusinessOrigin,
+  CreditAccountStatus,
+  PayOrderStatus,
+  ReceivableStatus,
+  ReconciliationSeverity,
+  ReconciliationStatus
+} from '@/api/pay'
 import type { DecimalValue } from '@/types/api'
 import { formatCurrency, minorUnitsToDecimal } from '@/utils/businessNumber'
 
@@ -31,6 +39,28 @@ export function businessOriginText(t: Translate, origin?: BusinessOrigin) {
   if (origin === 'INTERNAL') return t('pay.businessOrigin.INTERNAL')
   if (origin === 'MERCHANT') return t('pay.businessOrigin.MERCHANT')
   return origin || '-'
+}
+
+export function creditAccountStatusText(t: Translate, status?: CreditAccountStatus) {
+  if (!status) return '-'
+  const keys: Record<string, string> = {
+    ACTIVE: 'pay.credit.status.ACTIVE',
+    FROZEN: 'pay.credit.status.FROZEN'
+  }
+  return keys[status] ? t(keys[status]) : status
+}
+
+export function creditTransactionTypeText(t: Translate, type?: string) {
+  if (!type) return '-'
+  const keys: Record<string, string> = {
+    OCCUPY: 'pay.credit.transactionType.OCCUPY',
+    REPAY: 'pay.credit.transactionType.REPAY',
+    RELEASE: 'pay.credit.transactionType.RELEASE',
+    ADJUST: 'pay.credit.transactionType.ADJUST',
+    FREEZE: 'pay.credit.transactionType.FREEZE',
+    UNFREEZE: 'pay.credit.transactionType.UNFREEZE'
+  }
+  return keys[type] ? t(keys[type]) : type
 }
 
 export function receivableStatusText(t: Translate, status?: ReceivableStatus) {

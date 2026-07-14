@@ -47,4 +47,21 @@ class CustomerQuoteCatalogServiceTest {
         assertThat(service.queryProducts(new ProductSaleProductBo())).containsExactly(product);
         assertThat(TenantContextHolder.getTenantId()).isEqualTo(200L);
     }
+
+    @Test
+    void salesCatalogForcesEnabledAndReadyProducts() {
+        when(saleProductService.queryList(any())).thenAnswer(invocation -> {
+            ProductSaleProductBo query = invocation.getArgument(0);
+            assertThat(query.getStatus()).isEqualTo("ENABLED");
+            assertThat(query.getPriceStatus()).isEqualTo("READY");
+            return List.of();
+        });
+        CustomerQuoteCatalogServiceImpl service = new CustomerQuoteCatalogServiceImpl(
+            saleProductService, priceSettingService, shippingTemplateService);
+
+        ProductSaleProductBo query = new ProductSaleProductBo();
+        query.setStatus("DISABLED");
+        query.setPriceStatus("NOT_READY");
+        service.queryProducts(query);
+    }
 }

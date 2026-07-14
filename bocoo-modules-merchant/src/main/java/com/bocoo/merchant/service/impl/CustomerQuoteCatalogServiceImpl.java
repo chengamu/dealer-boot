@@ -24,6 +24,8 @@ import java.util.List;
 public class CustomerQuoteCatalogServiceImpl implements CustomerQuoteCatalogService {
 
     private static final Long PLATFORM_TENANT_ID = 1L;
+    private static final String PRODUCT_STATUS_ENABLED = "ENABLED";
+    private static final String PRICE_STATUS_READY = "READY";
 
     private final ProductSaleProductService saleProductService;
     private final ProductPriceSettingService priceSettingService;
@@ -31,6 +33,8 @@ public class CustomerQuoteCatalogServiceImpl implements CustomerQuoteCatalogServ
 
     @Override
     public List<ProductSaleProductVo> queryProducts(ProductSaleProductBo bo) {
+        bo.setStatus(PRODUCT_STATUS_ENABLED);
+        bo.setPriceStatus(PRICE_STATUS_READY);
         return TenantContextHolder.callWithTenant(PLATFORM_TENANT_ID, () -> saleProductService.queryList(bo));
     }
 

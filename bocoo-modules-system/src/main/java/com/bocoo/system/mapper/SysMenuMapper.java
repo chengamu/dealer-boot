@@ -3,8 +3,9 @@ package com.bocoo.system.mapper;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Constants;
-import com.bocoo.common.mybatis.core.mapper.BaseMapperPlus;
+import com.bocoo.common.core.constant.TenantConstants;
 import com.bocoo.common.core.constant.UserConstants;
+import com.bocoo.common.mybatis.core.mapper.BaseMapperPlus;
 import com.bocoo.system.domain.entity.SysMenu;
 import com.bocoo.system.domain.vo.SysMenuVo;
 import org.apache.ibatis.annotations.Param;
@@ -56,6 +57,7 @@ public interface SysMenuMapper extends BaseMapperPlus<SysMenu, SysMenuVo> {
      */
     default List<SysMenu> selectMenuTreeAll() {
         LambdaQueryWrapper<SysMenu> lqw = new LambdaQueryWrapper<SysMenu>()
+            .eq(SysMenu::getTenantId, TenantConstants.PLATFORM_TENANT_ID)
             .in(SysMenu::getMenuType, UserConstants.TYPE_DIR, UserConstants.TYPE_MENU)
             .eq(SysMenu::getStatus, UserConstants.MENU_NORMAL)
             .orderByAsc(SysMenu::getParentId)

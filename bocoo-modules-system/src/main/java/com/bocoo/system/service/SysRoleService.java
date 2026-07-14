@@ -2,6 +2,7 @@ package com.bocoo.system.service;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.bocoo.common.core.constant.TenantConstants;
 import com.bocoo.common.core.constant.UserConstants;
 import com.bocoo.common.core.exception.ServiceException;
 import com.bocoo.common.core.utils.MapstructUtils;
@@ -31,6 +32,7 @@ public class SysRoleService {
     private final SysRoleQueryService queryService;
     private final SysRoleRelationService relationService;
     private final RoleDefaultMenuService defaultMenuService;
+    private final PlatformPermissionMetadataGuard permissionMetadataGuard;
 
     public TableDataInfo<SysRoleVo> selectPageRoleList(SysRoleBo role, PageQuery pageQuery) {
         return queryService.selectPageRoleList(role, pageQuery);
@@ -77,13 +79,16 @@ public class SysRoleService {
     }
 
     public long countUserRoleByRoleId(Long roleId) {
+        permissionMetadataGuard.requirePlatformTenant();
         return queryService.countUserRoleByRoleId(roleId);
     }
 
     @Transactional(rollbackFor = Exception.class)
     public int insertRole(SysRoleBo bo) {
+        permissionMetadataGuard.requirePlatformTenant();
         defaultMenuService.validateForSave(bo.getDefaultMenuId(), bo.getMenuIds());
         SysRole role = MapstructUtils.convert(bo, SysRole.class);
+        role.setTenantId(TenantConstants.PLATFORM_TENANT_ID);
         roleMapper.insert(role);
         if (role == null) return 0;
         bo.setRoleId(role.getRoleId());
@@ -92,45 +97,56 @@ public class SysRoleService {
 
     @Transactional(rollbackFor = Exception.class)
     public int updateRole(SysRoleBo bo) {
+        permissionMetadataGuard.requirePlatformTenant();
         defaultMenuService.validateForSave(bo.getDefaultMenuId(), bo.getMenuIds());
         SysRole role = MapstructUtils.convert(bo, SysRole.class);
+        role.setTenantId(TenantConstants.PLATFORM_TENANT_ID);
         int rows = roleMapper.updateById(role);
         if (rows <= 0 || role == null) return rows;
         return relationService.replaceMenus(role.getRoleId(), bo.getMenuIds());
     }
 
     public int updateRoleStatus(Long roleId, String status) {
+        permissionMetadataGuard.requirePlatformTenant();
         if (UserConstants.ROLE_DISABLE.equals(status) && countUserRoleByRoleId(roleId) > 0) {
             throw ServiceException.ofMessageKey("sys.role.assigned.disable.denied");
         }
         return roleMapper.update(null, new LambdaUpdateWrapper<SysRole>()
-            .set(SysRole::getStatus, status).eq(SysRole::getRoleId, roleId));
+            .set(SysRole::getStatus, status)
+            .eq(SysRole::getTenantId, TenantConstants.PLATFORM_TENANT_ID)
+            .eq(SysRole::getRoleId, roleId));
     }
 
     @Transactional(rollbackFor = Exception.class)
     public int authDataScope(SysRoleBo bo) {
+        permissionMetadataGuard.requirePlatformTenant();
         SysRole role = MapstructUtils.convert(bo, SysRole.class);
+        role.setTenantId(TenantConstants.PLATFORM_TENANT_ID);
         int rows = roleMapper.updateById(role);
         if (rows <= 0 || role == null) return rows;
         return relationService.replaceDepartments(role);
     }
 
     public int insertRoleMenu(SysRoleBo role) {
+        permissionMetadataGuard.requirePlatformTenant();
         return relationService.insertMenus(role.getRoleId(), role.getMenuIds());
     }
 
     public int insertRoleDept(SysRole role) {
+        permissionMetadataGuard.requirePlatformTenant();
         return relationService.insertDepartments(role);
     }
 
     @Transactional(rollbackFor = Exception.class)
     public int deleteRoleById(Long roleId) {
+        permissionMetadataGuard.requirePlatformTenant();
         relationService.deleteRelations(roleId);
         return roleMapper.deleteById(roleId);
     }
 
     @Transactional(rollbackFor = Exception.class)
     public int deleteRoleByIds(Long[] roleIds) {
+        permissionMetadataGuard.requirePlatformTenant();
         for (Long roleId : roleIds) {
             SysRole role = roleMapper.selectById(roleId);
             checkRoleAllowed(BeanUtil.toBean(role, SysRoleBo.class));
@@ -145,18 +161,22 @@ public class SysRoleService {
     }
 
     public int deleteAuthUser(SysUserRole userRole) {
+        permissionMetadataGuard.requirePlatformTenant();
         return relationService.deleteAuthUser(userRole);
     }
 
     public int deleteAuthUsers(Long roleId, Long[] userIds) {
+        permissionMetadataGuard.requirePlatformTenant();
         return relationService.deleteAuthUsers(roleId, userIds);
     }
 
     public int insertAuthUsers(Long roleId, Long[] userIds) {
+        permissionMetadataGuard.requirePlatformTenant();
         return relationService.insertAuthUsers(roleId, userIds);
     }
 
     public void cleanOnlineUserByRole(Long roleId) {
+        permissionMetadataGuard.requirePlatformTenant();
         relationService.cleanOnlineUserByRole(roleId);
     }
 

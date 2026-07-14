@@ -429,69 +429,54 @@ SET tenant_id = EXCLUDED.tenant_id, menu_name = EXCLUDED.menu_name, i18n_key = E
     parent_id = EXCLUDED.parent_id, order_num = EXCLUDED.order_num, perms = EXCLUDED.perms,
     status = EXCLUDED.status, update_by = 'system', update_time = now();
 
-INSERT INTO sys_menu (menu_id, tenant_id, menu_name, i18n_key, parent_id, order_num, path, component,
-                      is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, remark)
-SELECT t.tenant_id * 1000 + x.offset_id, t.tenant_id, x.menu_name, x.i18n_key,
-       CASE WHEN x.parent_offset = 0 THEN 0 ELSE t.tenant_id * 1000 + x.parent_offset END,
-       x.order_num, x.path, x.component, '1', '0', x.menu_type, '1', '1', x.perms, x.icon,
-       'system', now(), '商家财务菜单'
-FROM sys_tenant t
-CROSS JOIN (VALUES
-    (500, 0, '财务中心', 'finance.business.menu', 50, 'finance', NULL, 'M', NULL, 'finance'),
-    (510, 500, '付款记录', 'finance.business.payments', 1, 'payments', 'pay/business-payments', 'C', 'pay:order:list', 'money'),
-    (520, 500, '信用账户', 'finance.business.creditAccounts', 2, 'creditAccounts', 'pay/business-credit-accounts', 'C', 'pay:credit:query', 'finance'),
-    (530, 500, '应付账单', 'finance.business.receivables', 3, 'receivables', 'pay/business-receivables', 'C', 'pay:receivable:list', 'invoice')
-) AS x(offset_id, parent_offset, menu_name, i18n_key, order_num, path, component, menu_type, perms, icon)
-WHERE t.tenant_type = 'MERCHANT'
-ON CONFLICT (menu_id) DO UPDATE
-SET tenant_id = EXCLUDED.tenant_id, menu_name = EXCLUDED.menu_name, i18n_key = EXCLUDED.i18n_key,
-    parent_id = EXCLUDED.parent_id, order_num = EXCLUDED.order_num, path = EXCLUDED.path,
-    component = EXCLUDED.component, menu_type = EXCLUDED.menu_type, visible = EXCLUDED.visible,
-    status = EXCLUDED.status, perms = EXCLUDED.perms, icon = EXCLUDED.icon,
-    update_by = 'system', update_time = now(), remark = EXCLUDED.remark;
-
-INSERT INTO sys_menu (menu_id, tenant_id, menu_name, i18n_key, parent_id, order_num, path, component,
-                      is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, remark)
-SELECT t.tenant_id * 1000 + x.offset_id, t.tenant_id, x.menu_name, x.i18n_key,
-       t.tenant_id * 1000 + x.parent_offset, x.order_num, '#', '', '1', '0', 'F', '1', '1',
-       x.perms, '#', 'system', now(), ''
-FROM sys_tenant t
-CROSS JOIN (VALUES
-    (511, 510, 1, '付款查询', 'finance.business.payment.query', 'pay:order:query'),
-    (512, 510, 2, 'PayPal支付', 'finance.business.payment.paypal', 'pay:order:submit'),
-    (513, 510, 3, '银行转账', 'finance.business.payment.bank', 'pay:bank:submit'),
-    (514, 510, 4, '信用支付', 'finance.business.payment.credit', 'pay:credit:use'),
-    (521, 520, 1, '信用查询', 'finance.business.credit.query', 'pay:credit:query'),
-    (531, 530, 1, '账单查询', 'finance.business.receivable.query', 'pay:receivable:query')
-) AS x(offset_id, parent_offset, order_num, menu_name, i18n_key, perms)
-WHERE t.tenant_type = 'MERCHANT'
-ON CONFLICT (menu_id) DO UPDATE
-SET tenant_id = EXCLUDED.tenant_id, menu_name = EXCLUDED.menu_name, i18n_key = EXCLUDED.i18n_key,
-    parent_id = EXCLUDED.parent_id, order_num = EXCLUDED.order_num, perms = EXCLUDED.perms,
-    status = EXCLUDED.status, update_by = 'system', update_time = now();
-
-INSERT INTO sys_role (role_id, tenant_id, role_name, role_key, role_sort, data_scope, menu_check_strictly, dept_check_strictly, status, del_flag, create_by, create_time, remark)
-VALUES (260903, 1, '平台财务', 'platform_finance', 33, '1', true, true, '1', '0', 'system', now(), '平台财务管理')
-ON CONFLICT (role_id) DO UPDATE
-SET role_name = EXCLUDED.role_name, role_key = EXCLUDED.role_key, role_sort = EXCLUDED.role_sort,
-    data_scope = EXCLUDED.data_scope, status = EXCLUDED.status, del_flag = EXCLUDED.del_flag,
-    update_by = 'system', update_time = now(), remark = EXCLUDED.remark;
+DELETE FROM sys_user_role ur
+USING sys_role r
+WHERE ur.role_id = r.role_id
+  AND r.tenant_id = 1
+  AND r.role_key = 'platform_finance';
 
 DELETE FROM sys_role_menu rm
 USING sys_role r
 WHERE rm.role_id = r.role_id
+  AND r.tenant_id = 1
   AND r.role_key = 'platform_finance';
 
+DELETE FROM sys_role_dept rd
+USING sys_role r
+WHERE rd.role_id = r.role_id
+  AND r.tenant_id = 1
+  AND r.role_key = 'platform_finance';
+
+DELETE FROM sys_role
+WHERE tenant_id = 1
+  AND role_key = 'platform_finance';
+
+DELETE FROM sys_role_menu rm
+USING sys_role r, sys_menu m
+WHERE rm.role_id = r.role_id
+  AND rm.menu_id = m.menu_id
+  AND r.tenant_id = 1
+  AND r.role_key IN ('merchant_admin', 'merchant_employee')
+  AND (m.menu_id = 27000 OR m.parent_id IN (27000, 27001, 27002, 27003));
+
 INSERT INTO sys_role_menu (role_id, menu_id, tenant_id)
-SELECT r.role_id, m.menu_id, r.tenant_id
+SELECT r.role_id, m.menu_id, 1
 FROM sys_role r
-JOIN sys_menu m ON m.tenant_id = r.tenant_id
-WHERE (r.role_key = 'platform_finance'
-       AND (m.menu_id = 27100 OR m.parent_id IN (27100, 27101, 27102, 27103, 27104, 27105)))
-   OR (r.role_key IN ('merchant_admin', 'merchant_employee') AND r.tenant_id <> 1
-       AND (m.menu_id = r.tenant_id * 1000 + 500
-            OR m.parent_id IN (r.tenant_id * 1000 + 500, r.tenant_id * 1000 + 510,
-                               r.tenant_id * 1000 + 520, r.tenant_id * 1000 + 530)))
+JOIN sys_menu m ON m.tenant_id = 1
+WHERE r.tenant_id = 1
+  AND ((r.role_key = 'merchant_admin'
+        AND (m.menu_id = 27000 OR m.parent_id IN (27000, 27001, 27002, 27003)))
+       OR (r.role_key = 'merchant_employee'
+           AND m.menu_id IN (27000, 27001, 27011, 27012, 27013, 27014)))
+ON CONFLICT DO NOTHING;
+
+INSERT INTO sys_role_menu (role_id, menu_id, tenant_id)
+SELECT r.role_id, m.menu_id, 1
+FROM sys_role r
+JOIN sys_menu m ON m.tenant_id = 1
+WHERE r.tenant_id = 1
+  AND r.role_key = 'factory_production'
+  AND (m.menu_id = 27100 OR m.parent_id IN (27100, 27101, 27102, 27103, 27104, 27105))
 ON CONFLICT DO NOTHING;
 
 INSERT INTO sys_role_menu (role_id, menu_id, tenant_id)
@@ -500,16 +485,6 @@ FROM sys_menu
 WHERE tenant_id = 1
   AND (menu_id IN (27000, 27100) OR parent_id BETWEEN 27000 AND 27199)
 ON CONFLICT DO NOTHING;
-
-UPDATE sys_role r
-SET default_menu_id = m.menu_id, update_by = 'system', update_time = now()
-FROM sys_menu m
-WHERE m.tenant_id = r.tenant_id
-  AND m.menu_type = 'C'
-  AND m.status = '1'
-  AND m.visible = '1'
-  AND r.role_key = 'platform_finance'
-  AND m.component = 'pay/platform-payments';
 
 CREATE TABLE IF NOT EXISTS pay_refund (
     id bigint PRIMARY KEY,

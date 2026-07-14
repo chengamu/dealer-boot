@@ -33,15 +33,41 @@ class OssCredentialsProviderFactoryTest {
     }
 
     @Test
-    void localStsRequiresSecurityToken() {
+    void localStsDefersEnvironmentValidationUntilCredentialsAreRequested() {
         OssProperties properties = properties("local_sts");
-        Map<String, String> environment = Map.of(
-            "ALIBABA_CLOUD_ACCESS_KEY_ID", "temporary-id",
-            "ALIBABA_CLOUD_ACCESS_KEY_SECRET", "temporary-secret"
-        );
+        Map<String, String> environment = Map.of();
 
-        assertThatThrownBy(() -> OssCredentialsProviderFactory.create(properties, environment::get))
-            .isInstanceOf(OssException.class);
+        var provider = OssCredentialsProviderFactory.create(properties, environment::get);
+
+        assertThatThrownBy(provider::getCredentials)
+            .isInstanceOf(OssException.class)
+            .hasMessage("缺少环境变量: ALIBABA_CLOUD_ACCESS_KEY_ID");
+    }
+
+    @Test
+    void ecsRamRoleDefersEnvironmentValidationUntilCredentialsAreRequested() {
+        OssProperties properties = properties("ecs_ram_role");
+
+        var provider = OssCredentialsProviderFactory.create(properties, ignored -> null);
+
+        assertThatThrownBy(provider::getCredentials)
+            .isInstanceOf(OssException.class)
+            .hasMessage("缺少环境变量: ALIBABA_CLOUD_ECS_METADATA");
+    }
+
+    @Test
+    void localStsClientCanBuildPublicUrlWithoutCredentials() {
+        OssProperties properties = properties("local_sts");
+        properties.setEndpoint("https://s3.oss-cn-hongkong.aliyuncs.com");
+        properties.setRegion("cn-hongkong");
+        properties.setBucketName("bucket");
+        properties.setDomain("assets.example.com");
+        properties.setIsHttps("Y");
+        properties.setAccessPolicy("1");
+
+        OssClient client = new OssClient("aliyun-oss", properties);
+
+        assertThat(client.getUrl()).isEqualTo("https://assets.example.com");
     }
 
     @Test

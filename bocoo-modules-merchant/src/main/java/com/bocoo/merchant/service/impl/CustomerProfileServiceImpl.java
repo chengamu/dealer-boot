@@ -83,10 +83,11 @@ public class CustomerProfileServiceImpl extends MerchantServiceSupport implement
     @Override
     public CustomerProfileVo queryById(Long id) {
         Long tenantId = currentTenantId();
-        return customerMapper.selectVoOne(this.<CustomerProfile>activeQuery()
+        CustomerProfile customer = customerMapper.selectOne(this.<CustomerProfile>activeQuery()
             .eq("customer_id", id)
             .eq("tenant_id", tenantId)
-            .eq("business_origin", ownershipResolver.currentBusinessOrigin()), false);
+            .eq("business_origin", ownershipResolver.currentBusinessOrigin()));
+        return MapstructUtils.convert(customer, CustomerProfileVo.class);
     }
 
     @Override
@@ -109,7 +110,7 @@ public class CustomerProfileServiceImpl extends MerchantServiceSupport implement
         CustomerProfile current = customerMapper.selectOne(this.<CustomerProfile>activeQuery()
             .eq("customer_id", bo.getCustomerId())
             .eq("tenant_id", tenantId)
-            .eq("business_origin", ownershipResolver.currentBusinessOrigin()), false);
+            .eq("business_origin", ownershipResolver.currentBusinessOrigin()));
         if (current == null) {
             throw ServiceException.ofMessageKey("customer.profile.notFound");
         }
@@ -127,7 +128,7 @@ public class CustomerProfileServiceImpl extends MerchantServiceSupport implement
             CustomerProfile current = customerMapper.selectOne(this.<CustomerProfile>activeQuery()
                 .eq("customer_id", id)
                 .eq("tenant_id", tenantId)
-                .eq("business_origin", ownershipResolver.currentBusinessOrigin()), false);
+                .eq("business_origin", ownershipResolver.currentBusinessOrigin()));
             if (current == null) {
                 throw ServiceException.ofMessageKey("customer.profile.notFound");
             }
@@ -156,6 +157,13 @@ public class CustomerProfileServiceImpl extends MerchantServiceSupport implement
     public Boolean updateStatus(Long id, String status) {
         Long tenantId = currentTenantId();
         String normalizedStatus = normalizeStatus(status);
+        CustomerProfile current = customerMapper.selectOne(this.<CustomerProfile>activeQuery()
+            .eq("customer_id", id)
+            .eq("tenant_id", tenantId)
+            .eq("business_origin", ownershipResolver.currentBusinessOrigin()));
+        if (current == null) {
+            throw ServiceException.ofMessageKey("customer.profile.notFound");
+        }
         return customerMapper.update(null, new LambdaUpdateWrapper<CustomerProfile>()
             .eq(CustomerProfile::getCustomerId, id)
             .eq(CustomerProfile::getTenantId, tenantId)

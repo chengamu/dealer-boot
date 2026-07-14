@@ -60,5 +60,6 @@ pnpm-debug.log*
 .ai/tmp/
 .ai/artifacts/
 .codex-tmp/
+.playwright-cli/
 .codegraph/
 .cursor/

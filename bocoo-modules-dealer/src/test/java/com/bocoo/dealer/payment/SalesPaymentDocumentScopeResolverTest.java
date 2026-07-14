@@ -59,9 +59,9 @@ class SalesPaymentDocumentScopeResolverTest {
     }
 
     @Test
-    void platformFinanceCanQueryAcrossTenantsWithSubjectFilter() {
+    void factoryProductionCanQueryAcrossTenantsWithSubjectFilter() {
         TestSaTokenContext.setLoginUser(TenantType.PLATFORM.getCode(), 1L, 8L, 12L,
-            "finance", List.of(role("platform_finance")));
+            "factory", List.of(role("factory_production")));
         when(mapper.selectList(any())).thenAnswer(invocation -> {
             assertThat(TenantContextHolder.isIgnore()).isTrue();
             return List.of(document(11L, 300002L));

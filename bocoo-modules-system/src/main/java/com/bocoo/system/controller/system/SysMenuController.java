@@ -12,6 +12,7 @@ import com.bocoo.common.satoken.utils.LoginHelper;
 import com.bocoo.common.web.core.BaseController;
 import com.bocoo.system.domain.bo.SysMenuBo;
 import com.bocoo.system.domain.vo.SysMenuVo;
+import com.bocoo.system.service.SysMenuCommandService;
 import com.bocoo.system.service.SysMenuService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -36,6 +37,7 @@ import java.util.Map;
 public class SysMenuController extends BaseController {
 
     private final SysMenuService menuService;
+    private final SysMenuCommandService menuCommandService;
 
     /**
      * 获取菜单列表
@@ -108,7 +110,7 @@ public class SysMenuController extends BaseController {
         } else if (UserConstants.YES_FRAME.equals(menu.getIsFrame()) && !StringUtils.ishttp(menu.getPath())) {
             return R.fail("新增菜单'" + menu.getMenuName() + "'失败，地址必须以http(s)://开头");
         }
-        return toAjax(menuService.insertMenu(menu));
+        return toAjax(menuCommandService.insertMenu(menu));
     }
 
     /**
@@ -128,7 +130,7 @@ public class SysMenuController extends BaseController {
         } else if (menu.getMenuId().equals(menu.getParentId())) {
             return R.fail("修改菜单'" + menu.getMenuName() + "'失败，上级菜单不能选择自己");
         }
-        return toAjax(menuService.updateMenu(menu));
+        return toAjax(menuCommandService.updateMenu(menu));
     }
 
     /**
@@ -149,6 +151,6 @@ public class SysMenuController extends BaseController {
         if (menuService.checkMenuExistRole(menuId)) {
             return R.warn(MessageUtils.message("menu.assigned.delete.denied"));
         }
-        return toAjax(menuService.deleteMenuById(menuId));
+        return toAjax(menuCommandService.deleteMenuById(menuId));
     }
 }

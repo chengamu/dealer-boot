@@ -10,7 +10,7 @@ import java.util.Set;
 
 @Component
 public class FulfillmentBusinessScopeResolver {
-    private static final Set<String> MERCHANT_TENANT_ROLES = Set.of("merchant_admin", "merchant_fulfillment");
+    private static final Set<String> MERCHANT_OWNER_ROLES = Set.of("merchant_admin");
 
     public FulfillmentBusinessScope resolve() {
         LoginUser user = LoginHelper.getLoginUser();
@@ -19,7 +19,7 @@ public class FulfillmentBusinessScopeResolver {
         }
         Set<String> roles = user.getRolePermission() == null ? Collections.emptySet() : user.getRolePermission();
         if (!LoginHelper.isPlatformTenant()) {
-            Long owner = LoginHelper.isAdmin() || containsAny(roles, MERCHANT_TENANT_ROLES)
+            Long owner = LoginHelper.isAdmin() || containsAny(roles, MERCHANT_OWNER_ROLES)
                 ? null : user.getUserId();
             return new FulfillmentBusinessScope(user.getTenantId(), "MERCHANT", null, owner);
         }

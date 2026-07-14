@@ -7,7 +7,9 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.bocoo.common.core.constant.TenantConstants;
 import com.bocoo.common.core.constant.UserConstants;
+import com.bocoo.common.core.context.TenantContextHolder;
 import com.bocoo.common.core.exception.ServiceException;
 import com.bocoo.common.core.utils.StreamUtils;
 import com.bocoo.common.core.utils.StringUtils;
@@ -79,12 +81,14 @@ public class SysRoleQueryService {
 
     public boolean checkRoleNameUnique(SysRoleBo role) {
         return !roleMapper.exists(new LambdaQueryWrapper<SysRole>()
+            .eq(SysRole::getTenantId, TenantConstants.PLATFORM_TENANT_ID)
             .eq(SysRole::getRoleName, role.getRoleName())
             .ne(role.getRoleId() != null, SysRole::getRoleId, role.getRoleId()));
     }
 
     public boolean checkRoleKeyUnique(SysRoleBo role) {
         return !roleMapper.exists(new LambdaQueryWrapper<SysRole>()
+            .eq(SysRole::getTenantId, TenantConstants.PLATFORM_TENANT_ID)
             .eq(SysRole::getRoleKey, role.getRoleKey())
             .ne(role.getRoleId() != null, SysRole::getRoleId, role.getRoleId()));
     }
@@ -97,7 +101,9 @@ public class SysRoleQueryService {
             throw ServiceException.ofMessageKey("sys.role.admin.key.use.denied");
         }
         if (role.getRoleId() == null) return;
-        SysRole current = roleMapper.selectById(role.getRoleId());
+        SysRole current = roleMapper.selectOne(new LambdaQueryWrapper<SysRole>()
+            .eq(SysRole::getRoleId, role.getRoleId())
+            .eq(SysRole::getTenantId, TenantConstants.PLATFORM_TENANT_ID), false);
         if (current == null || StringUtils.equals(current.getRoleKey(), role.getRoleKey())) return;
         if (StringUtils.equals(current.getRoleKey(), UserConstants.ADMIN_ROLE_KEY)) {
             throw ServiceException.ofMessageKey("sys.role.admin.key.update.denied");
@@ -117,13 +123,14 @@ public class SysRoleQueryService {
     }
 
     public long countUserRoleByRoleId(Long roleId) {
-        return userRoleMapper.selectCount(new LambdaQueryWrapper<SysUserRole>()
-            .eq(SysUserRole::getRoleId, roleId));
+        return TenantContextHolder.callWithIgnore(() -> userRoleMapper.selectCount(
+            new LambdaQueryWrapper<SysUserRole>().eq(SysUserRole::getRoleId, roleId)));
     }
 
     public List<SysRoleVo> selectRolesAuthByUserId(Long userId) {
         List<SysRoleVo> userRoles = roleMapper.selectRolesByUserId(userId);
-        List<SysRoleVo> roles = roleMapper.selectVoList();
+        List<SysRoleVo> roles = roleMapper.selectVoList(new LambdaQueryWrapper<SysRole>()
+            .eq(SysRole::getTenantId, TenantConstants.PLATFORM_TENANT_ID));
         Set<Long> userRoleIds = StreamUtils.toSet(userRoles, SysRoleVo::getRoleId);
         for (SysRoleVo role : roles) role.setFlag(userRoleIds.contains(role.getRoleId()));
         defaultMenuService.enrichRoles(roles);
@@ -133,7 +140,8 @@ public class SysRoleQueryService {
     private Wrapper<SysRole> buildQueryWrapper(SysRoleBo role) {
         Map<String, Object> params = role.getParams();
         QueryWrapper<SysRole> wrapper = Wrappers.query();
-        return wrapper.eq("r.del_flag", UserConstants.NOT_DELETED)
+        return wrapper.eq("r.tenant_id", TenantConstants.PLATFORM_TENANT_ID)
+            .eq("r.del_flag", UserConstants.NOT_DELETED)
             .eq(ObjectUtil.isNotNull(role.getRoleId()), "r.role_id", role.getRoleId())
             .like(StringUtils.isNotBlank(role.getRoleName()), "r.role_name", role.getRoleName())
             .eq(StringUtils.isNotBlank(role.getStatus()), "r.status", role.getStatus())

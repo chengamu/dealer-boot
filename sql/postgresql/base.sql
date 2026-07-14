@@ -1194,9 +1194,63 @@ ON CONFLICT (user_id) DO NOTHING;
 UPDATE sys_user SET tenant_id = 1 WHERE user_id = 1;
 
 INSERT INTO sys_role (role_id, tenant_id, role_name, role_key, role_sort, data_scope, menu_check_strictly, dept_check_strictly, status, del_flag, create_by, create_time, remark)
-VALUES (1, 1, 'Super Admin', 'admin', 1, '1', true, true, '1', '0', 'system', now(), 'Platform super admin')
+VALUES (1, 1, '管理员', 'admin', 1, '1', true, true, '1', '0', 'system', now(), '平台最高管理')
 ON CONFLICT (role_id) DO NOTHING;
 UPDATE sys_role SET tenant_id = 1 WHERE role_id = 1;
+
+INSERT INTO sys_role (role_id, tenant_id, role_name, role_key, role_sort, data_scope, menu_check_strictly, dept_check_strictly, status, del_flag, create_by, create_time, remark)
+VALUES
+    (2, 1, '店主', 'merchant_admin', 60, '4', true, true, '1', '0', 'system', now(), '平台固定维护的商户店主角色'),
+    (4, 1, '营业员', 'merchant_employee', 61, '5', true, true, '1', '0', 'system', now(), '平台固定维护的商户营业员角色')
+ON CONFLICT (role_id) DO UPDATE
+SET tenant_id = EXCLUDED.tenant_id,
+    role_name = EXCLUDED.role_name,
+    role_key = EXCLUDED.role_key,
+    role_sort = EXCLUDED.role_sort,
+    data_scope = EXCLUDED.data_scope,
+    status = EXCLUDED.status,
+    del_flag = EXCLUDED.del_flag,
+    update_by = 'system',
+    update_time = now(),
+    remark = EXCLUDED.remark;
+
+INSERT INTO sys_menu (menu_id, tenant_id, menu_name, i18n_key, parent_id, order_num, path, component,
+                      is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, remark)
+VALUES
+    (28000, 1, '商家中心', 'menu.merchant', 0, 10, 'merchant', NULL, '1', '0', 'M', '1', '1', NULL, 'shop', 'system', now(), '平台统一商户菜单'),
+    (28001, 1, '商家资料', 'menu.merchant.profile', 28000, 1, 'profile', 'merchant/profile', '1', '0', 'C', '1', '1', 'merchant:profile:query', 'store', 'system', now(), ''),
+    (28002, 1, '资料查询', 'menu.merchant.profile.query', 28001, 1, '#', '', '1', '0', 'F', '1', '1', 'merchant:profile:query', '#', 'system', now(), ''),
+    (28003, 1, '资料修改', 'menu.merchant.profile.edit', 28001, 2, '#', '', '1', '0', 'F', '1', '1', 'merchant:profile:edit', '#', 'system', now(), ''),
+    (28010, 1, '商家用户', 'menu.merchant.users', 28000, 2, 'users', 'merchant/user', '1', '0', 'C', '1', '1', 'merchant:user:list', 'user', 'system', now(), ''),
+    (28011, 1, '用户查询', 'menu.merchant.users.query', 28010, 1, '#', '', '1', '0', 'F', '1', '1', 'merchant:user:query', '#', 'system', now(), ''),
+    (28012, 1, '用户新增', 'menu.merchant.users.add', 28010, 2, '#', '', '1', '0', 'F', '1', '1', 'merchant:user:add', '#', 'system', now(), ''),
+    (28013, 1, '用户修改', 'menu.merchant.users.edit', 28010, 3, '#', '', '1', '0', 'F', '1', '1', 'merchant:user:edit', '#', 'system', now(), ''),
+    (28014, 1, '用户删除', 'menu.merchant.users.remove', 28010, 4, '#', '', '1', '0', 'F', '1', '1', 'merchant:user:remove', '#', 'system', now(), ''),
+    (28015, 1, '重置密码', 'menu.merchant.users.resetPwd', 28010, 5, '#', '', '1', '0', 'F', '1', '1', 'merchant:user:resetPwd', '#', 'system', now(), '')
+ON CONFLICT (menu_id) DO UPDATE
+SET tenant_id = EXCLUDED.tenant_id,
+    menu_name = EXCLUDED.menu_name,
+    i18n_key = EXCLUDED.i18n_key,
+    parent_id = EXCLUDED.parent_id,
+    order_num = EXCLUDED.order_num,
+    path = EXCLUDED.path,
+    component = EXCLUDED.component,
+    menu_type = EXCLUDED.menu_type,
+    visible = EXCLUDED.visible,
+    status = EXCLUDED.status,
+    perms = EXCLUDED.perms,
+    icon = EXCLUDED.icon,
+    update_by = 'system',
+    update_time = now(),
+    remark = EXCLUDED.remark;
+
+DELETE FROM sys_role_menu WHERE role_id IN (2, 4) AND menu_id BETWEEN 28000 AND 28015;
+INSERT INTO sys_role_menu (role_id, menu_id, tenant_id)
+SELECT 2, menu_id, 1 FROM sys_menu WHERE menu_id BETWEEN 28000 AND 28015
+ON CONFLICT DO NOTHING;
+INSERT INTO sys_role_menu (role_id, menu_id, tenant_id)
+SELECT 4, menu_id, 1 FROM sys_menu WHERE menu_id IN (28000, 28001, 28002)
+ON CONFLICT DO NOTHING;
 
 INSERT INTO sys_user_role (user_id, role_id, tenant_id)
 VALUES (1, 1, 1)
@@ -1299,10 +1353,14 @@ VALUES
     (205, 1, 'Server Resources', 'sys.menu.monitor.server', 200, 3, 'server', 'monitor/server/index', '1', '0', 'C', '1', '1', 'monitor:server:list', 'server', 'system', now(), 'Server resource snapshot'),
     (203, 1, 'Cache List', 'sys.menu.monitor.cacheList', 200, 4, 'cacheList', 'monitor/cache/list', '1', '0', 'C', '1', '1', 'monitor:cache:list', 'redis-list', 'system', now(), 'Cache list'),
     (204, 1, 'Clear Cache', 'sys.menu.monitor.cacheList.clear', 203, 1, '#', '', '1', '0', 'F', '1', '1', 'monitor:cache:remove', '#', 'system', now(), 'Clear cache'),
+    (206, 1, 'Force Logout', 'legacy.forceLogout', 201, 1, '#', '', '1', '0', 'F', '1', '1', 'monitor:online:forceLogout', '#', 'system', now(), 'Force online user logout'),
     (300, 1, 'Code Generator', 'sys.menu.tool.gen', 1, 99, 'gen', 'tool/gen/index', '1', '0', 'C', '1', '1', 'tool:gen:list', 'code', 'system', now(), 'Code generator'),
     (400, 1, '日志管理', 'sys.menu.log', 0, 930, 'log', NULL, '1', '0', 'M', '1', '1', NULL, 'log', 'system', now(), 'Log management'),
     (401, 1, 'Operation Logs', 'sys.menu.log.operlog', 400, 1, 'operlog', 'monitor/operlog/index', '1', '0', 'C', '1', '1', 'monitor:operlog:list', 'form', 'system', now(), 'Operation logs'),
-    (402, 1, 'Login Logs', 'sys.menu.log.logininfor', 400, 2, 'logininfor', 'monitor/logininfor/index', '1', '0', 'C', '1', '1', 'monitor:logininfor:list', 'logininfor', 'system', now(), 'Login logs')
+    (402, 1, 'Login Logs', 'sys.menu.log.logininfor', 400, 2, 'logininfor', 'monitor/logininfor/index', '1', '0', 'C', '1', '1', 'monitor:logininfor:list', 'logininfor', 'system', now(), 'Login logs'),
+    (403, 1, 'Export Operation Logs', 'common.export', 401, 1, '#', '', '1', '0', 'F', '1', '1', 'monitor:operlog:export', '#', 'system', now(), 'Export operation logs'),
+    (404, 1, 'Export Login Logs', 'common.export', 402, 1, '#', '', '1', '0', 'F', '1', '1', 'monitor:logininfor:export', '#', 'system', now(), 'Export login logs'),
+    (405, 1, 'Unlock Account', 'legacy.unlock', 402, 2, '#', '', '1', '0', 'F', '1', '1', 'monitor:logininfor:unlock', '#', 'system', now(), 'Unlock login account')
 ON CONFLICT (menu_id) DO UPDATE
 SET menu_name = EXCLUDED.menu_name,
     i18n_key = EXCLUDED.i18n_key,
@@ -1320,7 +1378,7 @@ SET menu_name = EXCLUDED.menu_name,
     tenant_id = EXCLUDED.tenant_id,
     update_by = 'system',
     update_time = now();
-UPDATE sys_menu SET tenant_id = 1 WHERE menu_id IN (120, 121, 200, 201, 202, 203, 204, 205, 300, 400, 401, 402);
+UPDATE sys_menu SET tenant_id = 1 WHERE menu_id IN (120, 121, 200, 201, 202, 203, 204, 205, 206, 300, 400, 401, 402, 403, 404, 405);
 
 -- 阶段 12：角色默认首页、门店管理和角色管理按钮。
 INSERT INTO sys_menu (menu_id, tenant_id, menu_name, i18n_key, parent_id, order_num, path, component, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, remark)
@@ -1441,8 +1499,7 @@ VALUES
     (20203, 1, '客户资料新增', 'sys.menu.customer.profile.add', 20201, 2, '#', '', '1', '0', 'F', '1', '1', 'customer:profile:add', '#', 'system', now(), ''),
     (20204, 1, '客户资料修改', 'sys.menu.customer.profile.edit', 20201, 3, '#', '', '1', '0', 'F', '1', '1', 'customer:profile:edit', '#', 'system', now(), ''),
     (20205, 1, '客户资料删除', 'sys.menu.customer.profile.remove', 20201, 4, '#', '', '1', '0', 'F', '1', '1', 'customer:profile:remove', '#', 'system', now(), ''),
-    (20240, 1, '客户监管', 'sys.menu.customerSupervision', 0, 410, 'customerSupervision', NULL, '1', '0', 'M', '1', '1', NULL, 'peoples', 'system', now(), '平台客户监管'),
-    (20220, 1, '全部客户', 'sys.menu.customer.all', 20240, 1, 'allCustomers', 'customer/all', '1', '0', 'C', '1', '1', 'platform:customer:list', 'peoples', 'system', now(), '平台全部客户管理'),
+    (20220, 1, '全部客户', 'sys.menu.customer.all', 19500, 6, 'allCustomers', 'customer/all', '1', '0', 'C', '1', '1', 'platform:customer:list', 'peoples', 'system', now(), '平台全部客户管理'),
     (20221, 1, '全部客户查询', 'sys.menu.customer.all.query', 20220, 1, '#', '', '1', '0', 'F', '1', '1', 'platform:customer:query', '#', 'system', now(), '')
 ON CONFLICT (menu_id) DO UPDATE
 SET menu_name = EXCLUDED.menu_name,
@@ -1466,7 +1523,7 @@ INSERT INTO sys_role_menu (role_id, menu_id, tenant_id)
 SELECT 1, menu_id, 1 FROM sys_menu
 WHERE tenant_id = 1
   AND menu_id IN (20100, 20101, 20102, 20103, 20104, 20105, 20120, 20121, 20122, 20123, 20124, 20125,
-                  20200, 20201, 20202, 20203, 20204, 20205, 20240, 20220, 20221)
+                  20200, 20201, 20202, 20203, 20204, 20205, 20220, 20221)
 ON CONFLICT DO NOTHING;
 
 WITH RECURSIVE merchant_customer_menus AS (
@@ -1515,71 +1572,6 @@ SET tenant_id = EXCLUDED.tenant_id,
     update_time = now(),
     remark = EXCLUDED.remark;
 
-INSERT INTO sys_role (role_id, tenant_id, role_name, role_key, role_sort, data_scope, menu_check_strictly, dept_check_strictly, status, del_flag, create_by, create_time, remark)
-VALUES
-    (300001, 300001, '店主', 'merchant_admin', 1, '4', true, true, '1', '0', 'system', now(), 'Demo merchant owner role'),
-    (300003, 300001, '营业员', 'merchant_employee', 2, '5', true, true, '1', '0', 'system', now(), 'Demo merchant employee role')
-ON CONFLICT (role_id) DO UPDATE
-SET tenant_id = EXCLUDED.tenant_id,
-    role_name = EXCLUDED.role_name,
-    role_key = EXCLUDED.role_key,
-    role_sort = EXCLUDED.role_sort,
-    data_scope = EXCLUDED.data_scope,
-    status = EXCLUDED.status,
-    del_flag = EXCLUDED.del_flag,
-    update_by = 'system',
-    update_time = now(),
-    remark = EXCLUDED.remark;
-
-INSERT INTO sys_menu (menu_id, tenant_id, menu_name, i18n_key, parent_id, order_num, path, component, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, remark)
-VALUES
-    (300100, 300001, 'Merchant', 'menu.merchant', 0, 10, 'merchant', NULL, '1', '0', 'M', '1', '1', NULL, 'shop', 'system', now(), 'Demo merchant center'),
-    (300101, 300001, 'Merchant Profile', 'menu.merchant.profile', 300100, 1, 'profile', 'merchant/profile', '1', '0', 'C', '1', '1', 'merchant:profile:query', 'store', 'system', now(), 'Current merchant profile'),
-    (300102, 300001, 'Merchant Profile Query', 'menu.merchant.profile.query', 300101, 1, '#', '', '1', '0', 'F', '1', '1', 'merchant:profile:query', '#', 'system', now(), ''),
-    (300103, 300001, 'Merchant Profile Edit', 'menu.merchant.profile.edit', 300101, 2, '#', '', '1', '0', 'F', '1', '1', 'merchant:profile:edit', '#', 'system', now(), ''),
-    (300110, 300001, 'Merchant Users', 'menu.merchant.users', 300100, 2, 'users', 'merchant/user', '1', '0', 'C', '1', '1', 'merchant:user:list', 'user', 'system', now(), 'Current merchant users'),
-    (300111, 300001, 'Merchant User Query', 'menu.merchant.users.query', 300110, 1, '#', '', '1', '0', 'F', '1', '1', 'merchant:user:query', '#', 'system', now(), ''),
-    (300112, 300001, 'Merchant User Add', 'menu.merchant.users.add', 300110, 2, '#', '', '1', '0', 'F', '1', '1', 'merchant:user:add', '#', 'system', now(), ''),
-    (300113, 300001, 'Merchant User Edit', 'menu.merchant.users.edit', 300110, 3, '#', '', '1', '0', 'F', '1', '1', 'merchant:user:edit', '#', 'system', now(), ''),
-    (300114, 300001, 'Merchant User Delete', 'menu.merchant.users.remove', 300110, 4, '#', '', '1', '0', 'F', '1', '1', 'merchant:user:remove', '#', 'system', now(), ''),
-    (300115, 300001, 'Merchant User Reset Password', 'menu.merchant.users.resetPwd', 300110, 5, '#', '', '1', '0', 'F', '1', '1', 'merchant:user:resetPwd', '#', 'system', now(), ''),
-    (300120, 300001, 'Customers', 'menu.customer.profile', 300100, 3, 'customers', 'customer/profile', '1', '0', 'C', '1', '1', 'customer:profile:list', 'customer', 'system', now(), 'Current tenant customers'),
-    (300121, 300001, 'Customer Query', 'menu.customer.profile.query', 300120, 1, '#', '', '1', '0', 'F', '1', '1', 'customer:profile:query', '#', 'system', now(), ''),
-    (300122, 300001, 'Customer Add', 'menu.customer.profile.add', 300120, 2, '#', '', '1', '0', 'F', '1', '1', 'customer:profile:add', '#', 'system', now(), ''),
-    (300123, 300001, 'Customer Edit', 'menu.customer.profile.edit', 300120, 3, '#', '', '1', '0', 'F', '1', '1', 'customer:profile:edit', '#', 'system', now(), ''),
-    (300124, 300001, 'Customer Delete', 'menu.customer.profile.remove', 300120, 4, '#', '', '1', '0', 'F', '1', '1', 'customer:profile:remove', '#', 'system', now(), '')
-ON CONFLICT (menu_id) DO UPDATE
-SET menu_name = EXCLUDED.menu_name,
-    i18n_key = EXCLUDED.i18n_key,
-    parent_id = EXCLUDED.parent_id,
-    order_num = EXCLUDED.order_num,
-    path = EXCLUDED.path,
-    component = EXCLUDED.component,
-    is_frame = EXCLUDED.is_frame,
-    is_cache = EXCLUDED.is_cache,
-    menu_type = EXCLUDED.menu_type,
-    visible = EXCLUDED.visible,
-    status = EXCLUDED.status,
-    perms = EXCLUDED.perms,
-    icon = EXCLUDED.icon,
-    tenant_id = EXCLUDED.tenant_id,
-    update_by = 'system',
-    update_time = now();
-
-INSERT INTO sys_role_menu (role_id, menu_id, tenant_id)
-SELECT 300001, menu_id, 300001
-FROM sys_menu
-WHERE tenant_id = 300001
-  AND menu_id BETWEEN 300100 AND 300124
-ON CONFLICT DO NOTHING;
-
-INSERT INTO sys_role_menu (role_id, menu_id, tenant_id)
-SELECT 300003, menu_id, 300001
-FROM sys_menu
-WHERE tenant_id = 300001
-  AND (menu_id IN (300100, 300101, 300102) OR menu_id BETWEEN 300120 AND 300124)
-ON CONFLICT DO NOTHING;
-
 INSERT INTO sys_user (user_id, tenant_id, dept_id, user_name, nick_name, user_type, email, phonenumber, sex, password, force_password_change, status, del_flag, create_by, create_time, remark)
 VALUES (300001, 300001, 300001, 'demo_merchant', 'Demo Merchant Admin', 'sys_user', 'demo.merchant@example.com', '18830000101', '0',
         '$2a$10$JKJTOxd4d2I4.ee73mbJEe8M4AIhABfTfwNHvAvjGg978hsiBxeV6', '0', '1', '0', 'system', now(), 'Local development merchant administrator')
@@ -1597,7 +1589,7 @@ SET tenant_id = EXCLUDED.tenant_id,
     remark = EXCLUDED.remark;
 
 INSERT INTO sys_user_role (user_id, role_id, tenant_id)
-VALUES (300001, 300001, 300001)
+VALUES (300001, 2, 300001)
 ON CONFLICT DO NOTHING;
 
 INSERT INTO merchant_profile (merchant_id, tenant_id, merchant_name, company_name, contact_first_name, contact_last_name, contact_name,

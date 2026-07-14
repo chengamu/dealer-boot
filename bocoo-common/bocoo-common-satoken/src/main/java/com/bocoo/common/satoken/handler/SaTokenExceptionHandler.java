@@ -8,6 +8,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import com.bocoo.common.core.domain.R;
 import com.bocoo.common.core.utils.MessageUtils;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
  * @author cmx
  */
 @Slf4j
+@Order(Ordered.HIGHEST_PRECEDENCE)
 @RestControllerAdvice
 public class SaTokenExceptionHandler {
 
@@ -49,23 +52,5 @@ public class SaTokenExceptionHandler {
         log.error("请求地址'{}',认证失败'{}',无法访问系统资源", requestURI, e.getMessage());
         return R.fail(HttpStatus.HTTP_UNAUTHORIZED, MessageUtils.message("auth.unauthorized"));
     }
-
-
-    /**
-     * 处理系统异常的全局异常处理器
-     *
-     * @param e 异常对象
-     * @param request HTTP请求对象
-     * @return 统一响应结果，包含系统异常信息
-     */
-    @ExceptionHandler(Exception.class)
-    public R<Void> handleOtherExceptions(Exception e, HttpServletRequest request) {
-        // 获取请求URI并记录系统异常日志
-        String uri = request.getRequestURI();
-        log.error("系统异常, URI={} - {}", uri, e.getMessage(), e);
-        // 返回系统异常响应
-        return R.fail(HttpStatus.HTTP_INTERNAL_ERROR, MessageUtils.message("system.error"));
-    }
-
 
 }

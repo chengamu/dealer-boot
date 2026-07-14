@@ -1,6 +1,8 @@
 <template>
   <PaymentCheckoutPage v-if="checkoutId && pageMode === 'business-orders'" :sales-document-id="checkoutId" @back="closeCheckout" />
   <BusinessPaymentGrid v-else-if="pageMode === 'business-orders'" @checkout="openCheckout" />
+  <BusinessCreditGrid v-else-if="pageMode === 'business-credit'" mode="credit" />
+  <BusinessCreditGrid v-else-if="pageMode === 'business-receivable'" mode="receivable" />
   <PlatformPaymentGrid v-else-if="pageMode === 'platform-payments'" />
   <PlatformBankTransferGrid v-else-if="pageMode === 'platform-bank'" />
   <PlatformCreditGrid v-else-if="pageMode === 'platform-credit'" mode="credit" />
@@ -18,6 +20,7 @@ import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import PaymentCheckoutPage from './PaymentCheckoutPage.vue'
+import BusinessCreditGrid from './components/BusinessCreditGrid.vue'
 import BusinessPaymentGrid from './components/BusinessPaymentGrid.vue'
 import PlatformBankTransferGrid from './components/PlatformBankTransferGrid.vue'
 import PlatformCreditGrid from './components/PlatformCreditGrid.vue'

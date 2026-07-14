@@ -10,6 +10,7 @@ import com.bocoo.common.oss.exception.OssException;
 import com.bocoo.common.oss.properties.OssProperties;
 
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * 根据 OSS 配置创建 AWS SDK 凭证 Provider。
@@ -32,8 +33,8 @@ public final class OssCredentialsProviderFactory {
         OssCredentialMode mode = parseMode(properties.getExt1());
         return switch (mode) {
             case ACCESS_KEY -> staticProvider(properties);
-            case LOCAL_STS -> aliyunProvider(localStsConfig(environment));
-            case ECS_RAM_ROLE -> aliyunProvider(ecsRamRoleConfig(environment));
+            case LOCAL_STS -> aliyunProvider(() -> localStsConfig(environment));
+            case ECS_RAM_ROLE -> aliyunProvider(() -> ecsRamRoleConfig(environment));
         };
     }
 
@@ -42,8 +43,8 @@ public final class OssCredentialsProviderFactory {
         return new AWSStaticCredentialsProvider(credentials);
     }
 
-    private static AWSCredentialsProvider aliyunProvider(Config config) {
-        return new AliyunAwsCredentialsProvider(new Client(config));
+    private static AWSCredentialsProvider aliyunProvider(Supplier<Config> configSupplier) {
+        return new AliyunAwsCredentialsProvider(() -> new Client(configSupplier.get()));
     }
 
     private static Config localStsConfig(Function<String, String> environment) {

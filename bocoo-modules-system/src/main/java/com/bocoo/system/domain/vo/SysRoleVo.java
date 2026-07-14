@@ -35,9 +35,6 @@ public class SysRoleVo implements Serializable {
     @ExcelProperty(value = "角色序号")
     private Long roleId;
 
-    @Schema(description = "Tenant ID")
-    private Long tenantId;
-
     /**
      * 角色名称
      */

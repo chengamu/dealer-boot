@@ -34,6 +34,9 @@ public class SysMenu extends BaseEntity {
     @TableId(value = "menu_id")
     private Long menuId;
 
+    @Schema(description = "Tenant ID")
+    private Long tenantId;
+
     /**
      * 菜单名称
      */

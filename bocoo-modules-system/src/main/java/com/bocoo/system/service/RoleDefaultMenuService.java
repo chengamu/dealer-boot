@@ -1,6 +1,7 @@
 package com.bocoo.system.service;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.bocoo.common.core.constant.TenantConstants;
 import com.bocoo.common.core.constant.UserConstants;
 import com.bocoo.common.core.exception.ServiceException;
 import com.bocoo.common.core.utils.StringUtils;
@@ -47,6 +48,7 @@ public class RoleDefaultMenuService {
     public UserDefaultRouteVo resolveForRole(SysRole role) {
         if (role == null || role.getDefaultMenuId() == null) return null;
         boolean authorized = roleMenuMapper.exists(Wrappers.<SysRoleMenu>lambdaQuery()
+            .eq(SysRoleMenu::getTenantId, TenantConstants.PLATFORM_TENANT_ID)
             .eq(SysRoleMenu::getRoleId, role.getRoleId())
             .eq(SysRoleMenu::getMenuId, role.getDefaultMenuId()));
         return authorized ? resolveMenuOrNull(role.getDefaultMenuId()) : null;
@@ -54,6 +56,7 @@ public class RoleDefaultMenuService {
 
     public UserDefaultRouteVo resolveAdminDefault() {
         List<SysMenu> menus = menuMapper.selectList(Wrappers.<SysMenu>lambdaQuery()
+            .eq(SysMenu::getTenantId, TenantConstants.PLATFORM_TENANT_ID)
             .eq(SysMenu::getMenuType, UserConstants.TYPE_MENU)
             .eq(SysMenu::getVisible, VISIBLE)
             .eq(SysMenu::getStatus, UserConstants.MENU_NORMAL)
@@ -69,7 +72,10 @@ public class RoleDefaultMenuService {
         if (roles == null || roles.isEmpty()) return;
         List<Long> ids = roles.stream().map(SysRoleVo::getRoleId).toList();
         Map<Long, SysRole> entities = new HashMap<>();
-        for (SysRole role : roleMapper.selectBatchIds(ids)) entities.put(role.getRoleId(), role);
+        List<SysRole> platformRoles = roleMapper.selectList(Wrappers.<SysRole>lambdaQuery()
+            .eq(SysRole::getTenantId, TenantConstants.PLATFORM_TENANT_ID)
+            .in(SysRole::getRoleId, ids));
+        for (SysRole role : platformRoles) entities.put(role.getRoleId(), role);
         for (SysRoleVo role : roles) {
             SysRole entity = entities.get(role.getRoleId());
             if (entity == null) continue;
@@ -89,7 +95,7 @@ public class RoleDefaultMenuService {
     }
 
     private UserDefaultRouteVo resolveMenu(Long menuId) {
-        SysMenu menu = menuMapper.selectById(menuId);
+        SysMenu menu = selectPlatformMenu(menuId);
         if (menu == null) throw ServiceException.ofMessageKey("sys.role.default.menu.not.found");
         if (!UserConstants.MENU_NORMAL.equals(menu.getStatus())) {
             throw ServiceException.ofMessageKey("sys.role.default.menu.disabled");
@@ -117,13 +123,19 @@ public class RoleDefaultMenuService {
             }
             chain.add(current);
             if (current.getParentId() == null || current.getParentId() == 0L) break;
-            current = menuMapper.selectById(current.getParentId());
+            current = selectPlatformMenu(current.getParentId());
             if (current == null || !UserConstants.MENU_NORMAL.equals(current.getStatus())) {
                 throw ServiceException.ofMessageKey("sys.role.default.menu.route.invalid");
             }
         }
         Collections.reverse(chain);
         return chain;
+    }
+
+    private SysMenu selectPlatformMenu(Long menuId) {
+        return menuMapper.selectOne(Wrappers.<SysMenu>lambdaQuery()
+            .eq(SysMenu::getMenuId, menuId)
+            .eq(SysMenu::getTenantId, TenantConstants.PLATFORM_TENANT_ID), false);
     }
 
     private String buildRoute(List<SysMenu> chain) {

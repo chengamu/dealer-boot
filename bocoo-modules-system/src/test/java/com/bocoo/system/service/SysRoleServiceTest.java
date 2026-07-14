@@ -23,6 +23,8 @@ class SysRoleServiceTest {
     private SysRoleRelationService relationService;
     @Mock
     private RoleDefaultMenuService defaultMenuService;
+    @Mock
+    private PlatformPermissionMetadataGuard permissionMetadataGuard;
 
     @Test
     void insertValidatesDefaultMenuBeforeWritingRole() {
@@ -33,7 +35,7 @@ class SysRoleServiceTest {
             .when(defaultMenuService).validateForSave(20L, bo.getMenuIds());
 
         SysRoleService service = new SysRoleService(
-            roleMapper, queryService, relationService, defaultMenuService);
+            roleMapper, queryService, relationService, defaultMenuService, permissionMetadataGuard);
 
         assertThatThrownBy(() -> service.insertRole(bo)).isInstanceOf(ServiceException.class);
         verifyNoInteractions(roleMapper, relationService);

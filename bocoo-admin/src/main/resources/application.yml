@@ -27,6 +27,9 @@ bocoo:
     ignore-tables:
       - sys_tenant
       - sys_tenant_apply
+      - sys_role
+      - sys_menu
+      - sys_role_menu
       - sys_legal_document
       - sys_config
       - sys_dict_type

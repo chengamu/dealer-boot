@@ -14,6 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -46,8 +47,7 @@ class RoleDefaultMenuServiceTest {
         SysMenu parent = menu(10L, 0L, "monitor", "System Monitor", "M");
         SysMenu leaf = menu(20L, 10L, "server", "Server Resource", "C");
         leaf.setComponent("monitor/server/index");
-        when(menuMapper.selectById(20L)).thenReturn(leaf);
-        when(menuMapper.selectById(10L)).thenReturn(parent);
+        when(menuMapper.selectOne(any(), eq(false))).thenReturn(leaf, parent, leaf, parent);
 
         RoleDefaultMenuService service = service();
         service.validateForSave(20L, new Long[]{10L, 20L});
@@ -62,7 +62,7 @@ class RoleDefaultMenuServiceTest {
         SysMenu leaf = menu(20L, 0L, "server", "Server Resource", "C");
         leaf.setComponent("monitor/server/index");
         leaf.setStatus("0");
-        when(menuMapper.selectById(20L)).thenReturn(leaf);
+        when(menuMapper.selectOne(any(), eq(false))).thenReturn(leaf);
 
         assertThatThrownBy(() -> service().validateForSave(20L, new Long[]{20L}))
             .isInstanceOf(com.bocoo.common.core.exception.ServiceException.class);
@@ -72,7 +72,7 @@ class RoleDefaultMenuServiceTest {
     void protocolRelativeRouteIsRejected() {
         SysMenu leaf = menu(20L, 0L, "//external.example", "External", "C");
         leaf.setComponent("external/index");
-        when(menuMapper.selectById(20L)).thenReturn(leaf);
+        when(menuMapper.selectOne(any(), eq(false))).thenReturn(leaf);
 
         assertThatThrownBy(() -> service().validateForSave(20L, new Long[]{20L}))
             .isInstanceOf(com.bocoo.common.core.exception.ServiceException.class);

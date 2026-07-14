@@ -53,4 +53,11 @@ class UserAvatarStorageServiceTest {
 
         verify(ossService).deleteByIds(List.of(1002L));
     }
+
+    @Test
+    void findByUserIdsIgnoresNullAvatarRows() {
+        when(userMapper.selectList(any())).thenReturn(java.util.Collections.singletonList(null));
+
+        assertThat(service.findByUserIds(List.of(1L))).isEmpty();
+    }
 }

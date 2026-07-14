@@ -2,6 +2,8 @@ import type { RouteLocationNormalizedLoaded } from 'vue-router'
 
 export type PayPageMode =
   | 'business-orders'
+  | 'business-credit'
+  | 'business-receivable'
   | 'platform-payments'
   | 'platform-bank'
   | 'platform-credit'
@@ -26,6 +28,9 @@ function includesAny(text: string, keywords: string[]) {
 
 export function resolvePayPageMode(route: RouteLocationNormalizedLoaded, permissions: string[]) {
   const hints = routeHints(route)
+  const business = includesAny(hints, ['finance.business', 'business', 'dealer', 'merchant'])
+  if (business && includesAny(hints, ['receivable'])) return 'business-receivable'
+  if (business && includesAny(hints, ['credit'])) return 'business-credit'
   if (includesAny(hints, ['reconciliation', 'reconcile'])) return 'platform-reconciliation'
   if (includesAny(hints, ['receivable'])) return 'platform-receivable'
   if (includesAny(hints, ['credit'])) return 'platform-credit'

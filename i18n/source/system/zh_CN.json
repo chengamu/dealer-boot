@@ -146,6 +146,7 @@
   "sys.menu.customer.profile.query": "客户查询",
   "sys.menu.customer.profile.remove": "客户删除",
   "sys.menu.customerManagement": "客户管理",
+  "sys.menu.customerSupervision": "客户监管",
   "sys.menu.log": "日志管理",
   "sys.menu.log.logininfor": "登录日志",
   "sys.menu.log.operlog": "操作日志",
@@ -206,6 +207,7 @@
   "sys.menu.system.salesStore.status": "门店状态",
   "sys.menu.system.user": "用户管理",
   "sys.menu.tool.gen": "代码生成",
+  "sys.permission.metadata.platform.only": "仅平台租户可以管理菜单和角色",
   "sys.role.admin.key.update.denied": "不允许修改系统内置管理员角色标识符",
   "sys.role.admin.key.use.denied": "不允许使用系统内置管理员角色标识符",
   "sys.role.admin.operation.denied": "不允许操作超级管理员角色",
@@ -480,6 +482,5 @@
   "user.userNameRequired": "用户名称不能为空",
   "user.userTitle": "用户管理",
   "user.zoomInAvatar": "放大头像",
-  "user.zoomOutAvatar": "缩小头像",
-  "sys.menu.customerSupervision": "客户监管"
+  "user.zoomOutAvatar": "缩小头像"
 }

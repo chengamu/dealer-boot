@@ -72,7 +72,7 @@ public class SysUserService implements UserService {
 
     public TableDataInfo<SysUserVo> selectPageUserList(SysUserBo user, PageQuery pageQuery) {
         Page<SysUserVo> page = callWithPlatformBypass(() ->
-            userMapper.selectPageUserList(pageQuery.build(), this.buildQueryWrapper(user)));
+            userMapper.selectPageUserList(pageQuery.build(), this.buildQueryWrapper(user, false, LoginHelper.getTenantId())));
         return TableDataInfo.build(page);
     }
 
@@ -99,15 +99,20 @@ public class SysUserService implements UserService {
     }
 
     private Wrapper<SysUser> buildQueryWrapper(SysUserBo user) {
-        return buildQueryWrapper(user, false);
+        return buildQueryWrapper(user, false, null);
     }
 
     private Wrapper<SysUser> buildQueryWrapper(SysUserBo user, boolean merchantTenantOnly) {
+        return buildQueryWrapper(user, merchantTenantOnly, null);
+    }
+
+    private Wrapper<SysUser> buildQueryWrapper(SysUserBo user, boolean merchantTenantOnly, Long tenantId) {
         Map<String, Object> params = user.getParams();
         QueryWrapper<SysUser> wrapper = Wrappers.query();
         wrapper.eq("u.del_flag", UserConstants.NOT_DELETED)
             .eq(ObjectUtil.isNotNull(user.getUserId()), "u.user_id", user.getUserId())
             .eq(ObjectUtil.isNotNull(user.getTenantId()), "u.tenant_id", user.getTenantId())
+            .eq(ObjectUtil.isNotNull(tenantId), "u.tenant_id", tenantId)
             .inSql(merchantTenantOnly, "u.tenant_id", "select tenant_id from sys_tenant where tenant_type = '" + TenantType.MERCHANT.getCode() + "'")
             .like(StringUtils.isNotBlank(user.getUserName()), "u.user_name", user.getUserName())
             .eq(StringUtils.isNotBlank(user.getStatus()), "u.status", user.getStatus())
@@ -299,6 +304,14 @@ public class SysUserService implements UserService {
      */
     public void checkUserDataScope(Long userId) {
         if (ObjectUtil.isNull(userId)) {
+            return;
+        }
+        if (LoginHelper.isPlatformTenant()) {
+            Long scopedTenantId = TenantContextHolder.getRequiredTenantId();
+            SysUser user = callWithPlatformBypass(() -> userMapper.selectById(userId));
+            if (ObjectUtil.isNull(user) || !ObjectUtil.equal(scopedTenantId, user.getTenantId())) {
+                throw ServiceException.ofMessageKey("sys.user.data.permission.denied");
+            }
             return;
         }
         if (LoginHelper.isAdmin()) {
@@ -558,6 +571,6 @@ public class SysUserService implements UserService {
     }
 
     public List<SysUserExportVo> selectUserExportList(SysUserBo user) {
-        return userMapper.selectUserExportList(this.buildQueryWrapper(user));
+        return userMapper.selectUserExportList(this.buildQueryWrapper(user, false, LoginHelper.getTenantId()));
     }
 }

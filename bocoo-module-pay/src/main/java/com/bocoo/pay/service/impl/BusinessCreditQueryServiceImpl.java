@@ -34,12 +34,13 @@ public class BusinessCreditQueryServiceImpl implements BusinessCreditQueryServic
 
     @Override
     public CreditAccountSummaryVo account() {
-        return CreditAccountSummaryVo.from(requiredAccount());
+        return CreditAccountSummaryVo.from(findAccount());
     }
 
     @Override
     public TableDataInfo<CreditTransactionVo> transactions(CreditTransactionQueryBo query, PageQuery pageQuery) {
-        MerchantCreditAccount account = requiredAccount();
+        MerchantCreditAccount account = findAccount();
+        if (account == null) return emptyPage();
         Page<MerchantCreditTransaction> page = transactionMapper.selectPage(pageQuery.build(),
             new LambdaQueryWrapper<MerchantCreditTransaction>()
                 .eq(MerchantCreditTransaction::getCreditAccountId, account.getCreditAccountId())
@@ -55,7 +56,8 @@ public class BusinessCreditQueryServiceImpl implements BusinessCreditQueryServic
 
     @Override
     public TableDataInfo<PayReceivableSummaryVo> receivables(ReceivableQueryBo query, PageQuery pageQuery) {
-        MerchantCreditAccount account = requiredAccount();
+        MerchantCreditAccount account = findAccount();
+        if (account == null) return emptyPage();
         Page<MerchantReceivable> page = receivableMapper.selectPage(pageQuery.build(), receivableQuery(account, query)
             .orderByAsc(MerchantReceivable::getDueDate).orderByAsc(MerchantReceivable::getReceivableId));
         List<PayReceivableSummaryVo> rows = page.getRecords().stream().map(PayReceivableSummaryVo::from).toList();
@@ -73,10 +75,18 @@ public class BusinessCreditQueryServiceImpl implements BusinessCreditQueryServic
     }
 
     private MerchantCreditAccount requiredAccount() {
-        CreditSubject subject = subjects.current(CURRENCY_USD);
-        MerchantCreditAccount account = accounts.find(subject);
+        MerchantCreditAccount account = findAccount();
         if (account == null) throw new ServiceException("Credit account does not exist");
         return account;
+    }
+
+    private MerchantCreditAccount findAccount() {
+        CreditSubject subject = subjects.current(CURRENCY_USD);
+        return accounts.find(subject);
+    }
+
+    private <T> TableDataInfo<T> emptyPage() {
+        return new TableDataInfo<>(List.of(), 0);
     }
 
     private LambdaQueryWrapper<MerchantReceivable> receivableQuery(MerchantCreditAccount account, ReceivableQueryBo query) {

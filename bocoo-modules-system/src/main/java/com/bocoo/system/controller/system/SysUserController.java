@@ -193,6 +193,7 @@ public class SysUserController extends BaseController {
     public R<Void> add(
             @Parameter(description = "用户信息", required = true)
             @Validated @RequestBody SysUserBo user) {
+        user.setTenantId(LoginHelper.getTenantId());
         deptService.checkDeptDataScope(user.getDeptId());
         if (!userService.checkUserNameUnique(user)) {
             return R.fail("新增用户'" + user.getUserName() + "'失败，登录账号已存在");
@@ -224,6 +225,7 @@ public class SysUserController extends BaseController {
             @Validated @RequestBody SysUserBo user) {
         userService.checkUserAllowed(user.getUserId());
         userService.checkUserDataScope(user.getUserId());
+        user.setTenantId(LoginHelper.getTenantId());
         deptService.checkDeptDataScope(user.getDeptId());
         if (!userService.checkUserNameUnique(user)) {
             return R.fail("修改用户'" + user.getUserName() + "'失败，登录账号已存在");
@@ -296,6 +298,7 @@ public class SysUserController extends BaseController {
     public R<Map<String, Object>> authRole(
             @Parameter(description = "用户ID", required = true)
             @PathVariable Long userId) {
+        userService.checkUserDataScope(userId);
         SysUserVo user = userService.selectUserById(userId);
         List<SysRoleVo> roles = roleService.selectRolesAuthByUserId(userId);
         return R.ok(Map.of(

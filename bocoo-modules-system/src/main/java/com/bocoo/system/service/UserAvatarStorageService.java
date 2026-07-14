@@ -38,6 +38,7 @@ public class UserAvatarStorageService {
         return userMapper.selectList(new LambdaQueryWrapper<SysUser>()
                 .select(SysUser::getAvatar)
                 .in(SysUser::getUserId, userIds)).stream()
+            .filter(user -> user != null)
             .flatMap(user -> parseOssIds(user.getAvatar()).stream())
             .distinct()
             .toList();

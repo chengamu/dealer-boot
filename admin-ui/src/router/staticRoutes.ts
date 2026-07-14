@@ -241,6 +241,11 @@ const legacyFallbackRoutes: RouteRecordRaw[] = [
   }
 ]
 
+const menuAuthorizedLegacyRoutes = legacyFallbackRoutes.map((route) => ({
+  ...route,
+  meta: { ...route.meta, requiresMenuAuthorization: true }
+}))
+
 export const routes: RouteRecordRaw[] = [
   { path: '/', redirect: '/index' },
   { path: '/login', component: LoginPage, meta: { public: true } },
@@ -258,7 +263,7 @@ export const routes: RouteRecordRaw[] = [
         component: () => import('@/pages/system/DefaultHomePage.vue'),
         meta: { title: 'dashboard.base', icon: 'dashboard', affix: true }
       },
-      ...legacyFallbackRoutes,
+      ...menuAuthorizedLegacyRoutes,
       ...hiddenLayoutRoutes
     ]
   }

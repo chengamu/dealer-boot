@@ -2078,7 +2078,7 @@ WHERE menu_id BETWEEN 24200 AND 24599
 ON CONFLICT (role_id, menu_id) DO NOTHING;
 
 INSERT INTO sys_role (role_id, tenant_id, role_name, role_key, role_sort, data_scope, menu_check_strictly, dept_check_strictly, status, del_flag, create_by, create_time, remark)
-VALUES (244901, 1, '平台产品经理', 'platform_product_manager', 30, '1', true, true, '1', '0', 'system', now(), '平台产品与配方经营')
+VALUES (244901, 1, '技术科', 'platform_product_manager', 30, '1', true, true, '1', '0', 'system', now(), '基础资料与配方管理')
 ON CONFLICT (role_id) DO UPDATE
 SET role_name = EXCLUDED.role_name, role_key = EXCLUDED.role_key, role_sort = EXCLUDED.role_sort,
     data_scope = EXCLUDED.data_scope, status = EXCLUDED.status, del_flag = EXCLUDED.del_flag,
@@ -2093,6 +2093,11 @@ WHERE r.tenant_id = 1
   AND (m.menu_id IN (24200, 24300, 24400) OR m.parent_id BETWEEN 24200 AND 24499
        OR m.menu_id BETWEEN 24200 AND 24499)
 ON CONFLICT DO NOTHING;
+
+UPDATE sys_role
+SET default_menu_id = 24305, update_by = 'system', update_time = now()
+WHERE tenant_id = 1
+  AND role_key = 'platform_product_manager';
 
 DELETE FROM sys_dict_data
 WHERE dict_type IN (

@@ -188,7 +188,7 @@
   "dealer.quickOrder.edit": "Edit Quick Orders",
   "dealer.quickOrder.query": "View Quick Orders",
   "dealer.quickOrder.remove": "Delete Quick Orders",
-  "platform.sales.dashboard": "Sales Dashboard",
+  "platform.sales.dashboard": "Operations Overview",
   "platform.sales.menu": "Sales Operations",
   "platform.sales.order.document": "Generate Order Documents",
   "platform.sales.order.export": "Export Sales Orders",

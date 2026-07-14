@@ -30,4 +30,7 @@ public class SysRoleMenu {
     @Schema(description = "菜单ID")
     private Long menuId;
 
+    @Schema(description = "Tenant ID")
+    private Long tenantId;
+
 }

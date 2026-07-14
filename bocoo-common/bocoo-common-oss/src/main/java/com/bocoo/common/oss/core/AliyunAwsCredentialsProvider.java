@@ -7,21 +7,28 @@ import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.BasicSessionCredentials;
 import com.bocoo.common.oss.exception.OssException;
 
+import java.util.function.Supplier;
+
 /**
  * 将阿里云临时凭证适配为 AWS SDK 1.x 凭证。
  */
 public final class AliyunAwsCredentialsProvider implements AWSCredentialsProvider {
 
-    private final Client credentialClient;
+    private final Supplier<Client> credentialClientSupplier;
+    private volatile Client credentialClient;
 
     public AliyunAwsCredentialsProvider(Client credentialClient) {
-        this.credentialClient = credentialClient;
+        this(() -> credentialClient);
+    }
+
+    AliyunAwsCredentialsProvider(Supplier<Client> credentialClientSupplier) {
+        this.credentialClientSupplier = credentialClientSupplier;
     }
 
     @Override
     public AWSCredentials getCredentials() {
         try {
-            CredentialModel credential = credentialClient.getCredential();
+            CredentialModel credential = credentialClient().getCredential();
             if (isBlank(credential.getAccessKeyId())
                 || isBlank(credential.getAccessKeySecret())
                 || isBlank(credential.getSecurityToken())) {
@@ -42,6 +49,20 @@ public final class AliyunAwsCredentialsProvider implements AWSCredentialsProvide
     @Override
     public void refresh() {
         // credentials-java 在 getCredential() 内部负责缓存和自动刷新。
+    }
+
+    private Client credentialClient() {
+        Client current = credentialClient;
+        if (current == null) {
+            synchronized (this) {
+                current = credentialClient;
+                if (current == null) {
+                    current = credentialClientSupplier.get();
+                    credentialClient = current;
+                }
+            }
+        }
+        return current;
     }
 
     private boolean isBlank(String value) {

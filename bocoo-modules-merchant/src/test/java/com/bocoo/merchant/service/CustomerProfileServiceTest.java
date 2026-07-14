@@ -96,7 +96,7 @@ class CustomerProfileServiceTest {
         customer.setTenantId(200L);
         customer.setStatus("ENABLED");
         customer.setDelFlag("0");
-        when(customerMapper.selectOne(any(), org.mockito.ArgumentMatchers.eq(false))).thenReturn(customer);
+        when(customerMapper.selectOne(any())).thenReturn(customer);
 
         assertThatThrownBy(() -> service.deleteWithValidByIds(new Long[]{1L})).isInstanceOf(ServiceException.class);
         verify(customerMapper, never()).deleteBatchIds(any());
@@ -104,7 +104,7 @@ class CustomerProfileServiceTest {
 
     @Test
     void deleteRejectsCustomerOutsideCurrentTenant() {
-        when(customerMapper.selectOne(any(), eq(false))).thenReturn(null);
+        when(customerMapper.selectOne(any())).thenReturn(null);
 
         assertThatThrownBy(() -> service.deleteWithValidByIds(new Long[]{1L})).isInstanceOf(ServiceException.class);
         verify(customerMapper, never()).delete(any());
@@ -117,7 +117,7 @@ class CustomerProfileServiceTest {
         customer.setTenantId(200L);
         customer.setStatus("DISABLED");
         customer.setDelFlag("0");
-        when(customerMapper.selectOne(any(), eq(false))).thenReturn(customer);
+        when(customerMapper.selectOne(any())).thenReturn(customer);
         when(customerMapper.delete(any())).thenReturn(1);
 
         service.deleteWithValidByIds(new Long[]{1L});
@@ -133,7 +133,7 @@ class CustomerProfileServiceTest {
         customer.setTenantId(200L);
         customer.setStatus("DISABLED");
         customer.setDelFlag("0");
-        when(customerMapper.selectOne(any(), eq(false))).thenReturn(customer);
+        when(customerMapper.selectOne(any())).thenReturn(customer);
         when(quoteMapper.selectCount(any())).thenReturn(1L);
 
         assertThatThrownBy(() -> service.deleteWithValidByIds(new Long[]{1L}))
@@ -176,7 +176,7 @@ class CustomerProfileServiceTest {
         current.setDeptId(100L);
         current.setOwnerUserId(null);
         current.setOwnerName(null);
-        when(customerMapper.selectOne(any(), eq(false))).thenReturn(current);
+        when(customerMapper.selectOne(any())).thenReturn(current);
         when(customerMapper.selectCount(any())).thenReturn(0L);
         when(customerMapper.updateById(any())).thenReturn(1);
 

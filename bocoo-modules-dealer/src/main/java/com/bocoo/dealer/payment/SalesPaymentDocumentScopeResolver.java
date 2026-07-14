@@ -26,7 +26,7 @@ import java.util.function.Supplier;
 @Component
 @RequiredArgsConstructor
 public class SalesPaymentDocumentScopeResolver implements PaymentDocumentScopeResolver {
-    private static final String PLATFORM_FINANCE_ROLE = "platform_finance";
+    private static final String FACTORY_PRODUCTION_ROLE = "factory_production";
     private static final String PLATFORM_FINANCE_PERMISSION = "platform:finance:";
     private static final String ALL_PERMISSION = "*:*:*";
 
@@ -109,9 +109,9 @@ public class SalesPaymentDocumentScopeResolver implements PaymentDocumentScopeRe
         LoginUser user = LoginHelper.getLoginUser();
         if (user == null || !LoginHelper.isPlatformTenant()) return false;
         if (LoginHelper.isAdmin(user.getUserId())) return true;
-        if (contains(user.getRolePermission(), PLATFORM_FINANCE_ROLE)) return true;
+        if (contains(user.getRolePermission(), FACTORY_PRODUCTION_ROLE)) return true;
         if (user.getRoles() != null && user.getRoles().stream().map(RoleVO::getRoleKey)
-            .anyMatch(PLATFORM_FINANCE_ROLE::equals)) return true;
+            .anyMatch(FACTORY_PRODUCTION_ROLE::equals)) return true;
         return user.getMenuPermission() != null && user.getMenuPermission().stream()
             .anyMatch(permission -> ALL_PERMISSION.equals(permission)
                 || permission.startsWith(PLATFORM_FINANCE_PERMISSION));
