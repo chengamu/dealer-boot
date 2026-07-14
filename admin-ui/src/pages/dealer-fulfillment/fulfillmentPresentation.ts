@@ -12,6 +12,7 @@ const statusKeys: Record<string, string> = {
   'shipment.SHIPPED': 'dealer.fulfillment.shipment.SHIPPED',
   'shipment.DELIVERED': 'dealer.fulfillment.shipment.DELIVERED',
   'package.DRAFT': 'dealer.fulfillment.package.DRAFT',
+  'package.DISPATCHED': 'dealer.fulfillment.package.SHIPPED',
   'package.SHIPPED': 'dealer.fulfillment.package.SHIPPED',
   'package.IN_TRANSIT': 'dealer.fulfillment.package.IN_TRANSIT',
   'package.DELIVERED': 'dealer.fulfillment.package.DELIVERED',
@@ -31,7 +32,7 @@ export function statusText(t: ComposerTranslation, group: string, status?: Statu
 }
 
 export function statusType(status?: Status) {
-  if (status === 'COMPLETED' || status === 'DELIVERED' || status === 'CONFIRMED' || status === 'SHIPPED') return 'success'
+  if (status === 'COMPLETED' || status === 'DELIVERED' || status === 'CONFIRMED' || status === 'SHIPPED' || status === 'DISPATCHED') return 'success'
   if (status === 'IN_PRODUCTION' || status === 'IN_TRANSIT' || status === 'PARTIALLY_SHIPPED') return 'primary'
   if (status === 'EXCEPTION') return 'danger'
   if (status === 'CANCELLED') return 'info'

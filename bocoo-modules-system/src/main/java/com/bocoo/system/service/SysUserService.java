@@ -64,6 +64,7 @@ public class SysUserService implements UserService {
     private final SysUserPostMapper userPostMapper;
     private final SysOssService ossService;
     private final SysConfigService configService;
+    private final UserAvatarStorageService avatarStorageService;
 
     private static final String USER_INIT_PASSWORD_CONFIG_KEY = "sys.user.initPassword";
     private static final int USER_INIT_PASSWORD_LENGTH = 12;
@@ -516,11 +517,14 @@ public class SysUserService implements UserService {
      */
     @Transactional(rollbackFor = Exception.class)
     public int deleteUserById(Long userId) {
+        List<Long> avatarOssIds = avatarStorageService.findByUserIds(List.of(userId));
         // 删除用户与角色关联
         userRoleMapper.delete(new LambdaQueryWrapper<SysUserRole>().eq(SysUserRole::getUserId, userId));
         // 删除用户与岗位表
         userPostMapper.delete(new LambdaQueryWrapper<SysUserPost>().eq(SysUserPost::getUserId, userId));
-        return userMapper.deleteById(userId);
+        int rows = userMapper.deleteById(userId);
+        if (rows > 0) avatarStorageService.cleanup(avatarOssIds);
+        return rows;
     }
 
     /**
@@ -536,11 +540,14 @@ public class SysUserService implements UserService {
             checkUserDataScope(userId);
         }
         List<Long> ids = Arrays.asList(userIds);
+        List<Long> avatarOssIds = avatarStorageService.findByUserIds(ids);
         // 删除用户与角色关联
         userRoleMapper.delete(new LambdaQueryWrapper<SysUserRole>().in(SysUserRole::getUserId, ids));
         // 删除用户与岗位表
         userPostMapper.delete(new LambdaQueryWrapper<SysUserPost>().in(SysUserPost::getUserId, ids));
-        return userMapper.deleteBatchIds(ids);
+        int rows = userMapper.deleteBatchIds(ids);
+        if (rows > 0) avatarStorageService.cleanup(avatarOssIds);
+        return rows;
     }
 
     @Cacheable(cacheNames = CacheNames.SYS_USER_NAME, key = "#userId")

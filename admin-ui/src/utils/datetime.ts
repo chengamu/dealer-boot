@@ -6,6 +6,7 @@ dayjs.extend(utc)
 dayjs.extend(timezone)
 
 const UTC_PATTERN = /(?:Z|[+-]\d{2}:?\d{2})$/
+const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/
 
 export function parseUtc(input?: string | number | Date | null) {
   if (!input) return null
@@ -31,6 +32,16 @@ export function toUtcPayload(input?: string | number | Date | null) {
   return parsed.isValid() ? parsed.utc().format('YYYY-MM-DDTHH:mm:ss[Z]') : undefined
 }
 
+function toUtcRangeBoundary(input: unknown, end: boolean) {
+  if (typeof input === 'string' && DATE_ONLY_PATTERN.test(input)) {
+    const parsed = dayjs(input)
+    if (!parsed.isValid()) return undefined
+    const boundary = end ? parsed.endOf('day') : parsed.startOf('day')
+    return boundary.utc().format('YYYY-MM-DDTHH:mm:ss.SSS[Z]')
+  }
+  return toUtcPayload(input as string | number | Date | null)
+}
+
 export function withUtcDateRange<T extends Record<string, unknown>>(
   query: T,
   dateRange?: unknown[],
@@ -40,8 +51,8 @@ export function withUtcDateRange<T extends Record<string, unknown>>(
   const params: Record<string, unknown> = { ...query }
   const range = Array.isArray(dateRange) ? dateRange : []
   if (range.length === 2) {
-    params[beginKey] = toUtcPayload(range[0] as string | number | Date | null)
-    params[endKey] = toUtcPayload(range[1] as string | number | Date | null)
+    params[beginKey] = toUtcRangeBoundary(range[0], false)
+    params[endKey] = toUtcRangeBoundary(range[1], true)
   }
   return params as T & Record<string, unknown>
 }
@@ -56,8 +67,8 @@ export function withUtcDateRangeParams<T extends Record<string, unknown>>(
   const params: T & { params: Record<string, unknown> } = { ...query, params: { ...(existingParams || {}) } }
   const range = Array.isArray(dateRange) ? dateRange : []
   if (range.length === 2) {
-    params.params[beginKey] = toUtcPayload(range[0] as string | number | Date | null)
-    params.params[endKey] = toUtcPayload(range[1] as string | number | Date | null)
+    params.params[beginKey] = toUtcRangeBoundary(range[0], false)
+    params.params[endKey] = toUtcRangeBoundary(range[1], true)
   }
   return params
 }

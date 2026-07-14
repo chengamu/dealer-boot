@@ -15,6 +15,9 @@ import java.util.List;
 public class SalesDocumentVo implements Serializable {
     private Long salesDocumentId;
     private Long tenantId;
+    private String businessOrigin;
+    private Long salesStoreId;
+    private Long deptId;
     private Long merchantId;
     private String merchantName;
     private String sourceType;

@@ -4,6 +4,19 @@ import { getToken, removeToken, setToken } from '@/utils/auth'
 import type { LoginUser } from '@/types/api'
 import defaultAvatar from '@/assets/logo/logo.png'
 
+type UserInfoPayload = {
+  user?: LoginUser
+  roles?: string[]
+  permissions?: string[]
+  tenantId?: number
+  tenantType?: string
+  merchantId?: number
+  defaultMenuId?: number
+  defaultRoute?: string
+  defaultRouteTitle?: string
+  forcePasswordChange?: boolean
+}
+
 export const useUserStore = defineStore('user', {
   state: () => ({
     token: getToken() || '',
@@ -11,6 +24,9 @@ export const useUserStore = defineStore('user', {
     id: '',
     name: '',
     avatar: defaultAvatar,
+    defaultMenuId: null as number | null,
+    defaultRoute: '',
+    defaultRouteTitle: '',
     roles: [] as string[],
     permissions: [] as string[]
   }),
@@ -52,8 +68,8 @@ export const useUserStore = defineStore('user', {
       }
     },
     async loadUser() {
-      const res = await getInfo()
-      const data = res.data && 'user' in res.data ? res.data : undefined
+      const res = await getInfo() as UserInfoPayload & { data?: LoginUser | UserInfoPayload }
+      const data = res.data && typeof res.data === 'object' && 'user' in res.data ? res.data as UserInfoPayload : undefined
       const user = (res.user || data?.user || (res.data && !('user' in res.data) ? res.data : {}) || {}) as LoginUser
       this.user = {
         ...user,
@@ -67,6 +83,9 @@ export const useUserStore = defineStore('user', {
       this.id = String(this.user?.userId || '')
       this.name = this.user?.userName || ''
       this.avatar = this.user?.avatar || defaultAvatar
+      this.defaultMenuId = res.defaultMenuId || data?.defaultMenuId || null
+      this.defaultRoute = res.defaultRoute || data?.defaultRoute || ''
+      this.defaultRouteTitle = res.defaultRouteTitle || data?.defaultRouteTitle || ''
       if (!this.roles.length) this.roles = ['ROLE_DEFAULT']
       return res
     },
@@ -82,6 +101,9 @@ export const useUserStore = defineStore('user', {
         this.id = ''
         this.name = ''
         this.avatar = defaultAvatar
+        this.defaultMenuId = null
+        this.defaultRoute = ''
+        this.defaultRouteTitle = ''
         this.roles = []
         this.permissions = []
         removeToken()

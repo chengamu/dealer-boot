@@ -47,7 +47,7 @@ class CustomerQuoteOrderServiceTest {
     void setUp() {
         TableInfoHelper.initTableInfo(new MapperBuilderAssistant(new MybatisConfiguration(), ""), SalesDocument.class);
         TestSaTokenContext.install();
-        TestSaTokenContext.setLoginUser(TenantType.MERCHANT.getCode(), 300001L, 1L, "merchant");
+        TestSaTokenContext.setLoginUser(TenantType.PLATFORM.getCode(), 1L, 1L, "internal");
         service = new CustomerQuoteOrderServiceImpl(quoteSupport, calculator, new CustomerQuoteOrderFactory(),
             documentMapper, itemMapper, events, paymentOrderLinker);
     }
@@ -90,6 +90,10 @@ class CustomerQuoteOrderServiceTest {
         ArgumentCaptor<SalesDocumentItem> line = ArgumentCaptor.forClass(SalesDocumentItem.class);
         verify(documentMapper).insert(document.capture()); verify(itemMapper).insert(line.capture());
         assertThat(document.getValue().getSourceQuoteId()).isEqualTo(1L);
+        assertThat(document.getValue().getBusinessOrigin()).isEqualTo("INTERNAL");
+        assertThat(document.getValue().getSalesStoreId()).isEqualTo(31L);
+        assertThat(document.getValue().getDeptId()).isEqualTo(12L);
+        assertThat(document.getValue().getOwnerUserId()).isEqualTo(8L);
         assertThat(document.getValue().getSourceType()).isEqualTo("QUOTE");
         assertThat(document.getValue().getSourceNo()).isEqualTo("QT-1");
         assertThat(document.getValue().getDocumentStatus()).isEqualTo("SUBMITTED");
@@ -100,7 +104,7 @@ class CustomerQuoteOrderServiceTest {
         assertThat(line.getValue().getShippingAmount()).isEqualByComparingTo("30.00");
         assertThat(result.getSalesDocumentId()).isEqualTo(88L);
         verify(paymentOrderLinker).initialize(document.getValue());
-        verify(events).record(eq(88L), eq(300001L), eq("ORDER_CREATED_FROM_QUOTE"),
+        verify(events).record(eq(88L), eq(1L), eq("ORDER_CREATED_FROM_QUOTE"),
             eq("CONFIRMED"), eq("SUBMITTED"), eq("QT-1"));
     }
 
@@ -112,7 +116,9 @@ class CustomerQuoteOrderServiceTest {
     }
 
     private CustomerQuote quote() {
-        CustomerQuote row = new CustomerQuote(); row.setQuoteId(1L); row.setTenantId(300001L);
+        CustomerQuote row = new CustomerQuote(); row.setQuoteId(1L); row.setTenantId(1L);
+        row.setBusinessOrigin("INTERNAL"); row.setSalesStoreId(31L); row.setDeptId(12L);
+        row.setOwnerUserId(8L);
         row.setQuoteNo("QT-1"); row.setStatus("CONFIRMED"); row.setQuoteLanguage("EN_US");
         row.setCustomerId(2L); row.setCustomerName("Customer"); row.setCurrencyCode("USD");
         return row;

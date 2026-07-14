@@ -2,8 +2,13 @@ package com.bocoo.system.service;
 
 import com.bocoo.common.core.enums.TenantApplyStatus;
 import com.bocoo.common.core.enums.TenantType;
+import com.bocoo.system.domain.bo.SysUserBo;
 import com.bocoo.system.domain.bo.SysTenantApplyBo;
+import com.bocoo.system.domain.entity.SysDept;
+import com.bocoo.system.domain.entity.SysRole;
+import com.bocoo.system.domain.entity.SysTenant;
 import com.bocoo.system.domain.entity.SysTenantApply;
+import com.bocoo.system.domain.entity.SysUserRole;
 import com.bocoo.system.mapper.SysTenantApplyMapper;
 import com.bocoo.system.mapper.SysTenantMapper;
 import com.bocoo.system.mapper.SysUserMapper;
@@ -18,6 +23,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -92,5 +99,45 @@ class SysTenantApplyServiceTest {
         assertThat(updated.getAuditBy()).isEqualTo("auditor");
         assertThat(updated.getAuditById()).isEqualTo(9001L);
         assertThat(updated.getAuditTime()).isNotNull();
+    }
+
+    @Test
+    void approveCreatesOwnerInMerchantDefaultDepartment() {
+        SysTenantApply pending = new SysTenantApply();
+        pending.setApplyId(1002L);
+        pending.setMerchantName("Acme");
+        pending.setEmail("owner@example.com");
+        pending.setStatus(TenantApplyStatus.PENDING.getCode());
+        when(tenantApplyMapper.selectById(1002L)).thenReturn(pending);
+        when(tenantMapper.insert(any(SysTenant.class))).thenAnswer(invocation -> {
+            invocation.<SysTenant>getArgument(0).setTenantId(300001L);
+            return 1;
+        });
+        when(userService.resolveInitialPassword(anyString())).thenReturn("TempPass9!");
+        when(userService.registerUser(any(SysUserBo.class))).thenAnswer(invocation -> {
+            invocation.<SysUserBo>getArgument(0).setUserId(7001L);
+            return true;
+        });
+
+        SysDept defaultDept = new SysDept();
+        defaultDept.setDeptId(11L);
+        SysRole ownerRole = new SysRole();
+        ownerRole.setRoleId(21L);
+        SysRole employeeRole = new SysRole();
+        employeeRole.setRoleId(22L);
+        when(merchantDefaultsService.ensureDefaults()).thenReturn(
+            new MerchantAccountDefaultsService.MerchantDefaults(defaultDept, ownerRole, employeeRole));
+        TestSaTokenContext.setLoginUser(TenantType.PLATFORM.getCode(), 1L, 9001L, "auditor");
+
+        tenantApplyService.approve(1002L);
+
+        ArgumentCaptor<SysUserBo> user = ArgumentCaptor.forClass(SysUserBo.class);
+        verify(userService).registerUser(user.capture());
+        assertThat(user.getValue().getTenantId()).isEqualTo(300001L);
+        assertThat(user.getValue().getDeptId()).isEqualTo(11L);
+        ArgumentCaptor<SysUserRole> userRole = ArgumentCaptor.forClass(SysUserRole.class);
+        verify(userRoleMapper).insert(userRole.capture());
+        assertThat(userRole.getValue().getUserId()).isEqualTo(7001L);
+        assertThat(userRole.getValue().getRoleId()).isEqualTo(21L);
     }
 }

@@ -1,15 +1,10 @@
 import { request } from '@/utils/request'
 import type { DecimalValue } from '@/types/api'
 
-export type DashboardScopeType = 'SELF' | 'TENANT' | 'PLATFORM_ALL' | 'PLATFORM_AUTHORIZED' | 'PLATFORM_FINANCE' | 'FULFILLMENT'
-
 export interface DashboardCapabilities {
   quote: boolean
-  quoteDetail: boolean
   order: boolean
-  orderDetail: boolean
   payment: boolean
-  fulfillment: boolean
   production: boolean
   shipment: boolean
   createQuote: boolean
@@ -17,32 +12,40 @@ export interface DashboardCapabilities {
   quickOrder: boolean
 }
 
-export interface QuoteSummary {
-  activeCount: number
-  draftCount: number
-  confirmedUnconvertedCount: number
+export interface DashboardTargetFilters {
+  id?: string
+  status?: string
+  paymentStatus?: string
+  productionStatuses: string[]
+  shipmentStatuses: string[]
+  unconverted?: boolean
+  dateFrom?: string
+  dateTo?: string
+  tenantId?: string
+  businessOrigin?: string
+  salesStoreId?: string
 }
 
-export interface OrderSummary {
-  activeCount: number
-  periodSubmittedCount: number
-  pendingPaymentCount: number
+export interface DashboardTarget {
+  module: 'QUOTE' | 'ORDER' | 'PAYMENT' | 'PRODUCTION' | 'SHIPMENT'
+  filters: DashboardTargetFilters
 }
 
-export interface PaymentSummary {
-  pendingCount: number
-  pendingAmount: DecimalValue
-  paidThisMonthCount: number
-  paidThisMonthAmount: DecimalValue
-  currencyCode: string
-}
-
-export interface FulfillmentSummary {
+export interface DashboardSummary {
+  activeQuoteCount: number
+  expiringQuoteCount: number
+  activeProductionCount: number
   pendingProductionCount: number
   inProductionCount: number
-  pendingShipmentCount: number
-  shippedCount: number
-  completedCount: number
+  paidOrderCount: number
+  paidAmount: DecimalValue
+  pendingPaymentOrderCount: number
+  pendingPaymentAmount: DecimalValue
+  currencyCode: string
+  activeQuoteTarget: DashboardTarget
+  productionTarget: DashboardTarget
+  paidTarget: DashboardTarget
+  pendingPaymentTarget: DashboardTarget
 }
 
 export interface RecentQuote {
@@ -56,6 +59,10 @@ export interface RecentQuote {
   currencyCode?: string
   salesDocumentId?: string
   updatedAt?: string
+  businessOrigin?: string
+  tenantId?: string
+  salesStoreId?: string
+  target: DashboardTarget
 }
 
 export interface RecentOrder {
@@ -71,34 +78,55 @@ export interface RecentOrder {
   totalAmount?: DecimalValue
   currencyCode?: string
   submittedAt?: string
+  businessOrigin?: string
+  tenantId?: string
+  salesStoreId?: string
+  target: DashboardTarget
 }
 
-export interface DashboardTodo {
+export interface DashboardAttentionItem {
   type: 'QUOTE' | 'ORDER'
   sourceId: string
   sourceNo: string
   customerName?: string
   projectName?: string
-  reasonCode: 'QUOTE_UNCONVERTED' | 'QUOTE_EXPIRING' | 'PAYMENT_MISSING' | 'PAYMENT_PENDING' | 'PRODUCTION_PENDING' | 'SHIPMENT_PENDING'
   occurredAt?: string
 }
 
-export interface SalesDashboard {
-  scopeType: DashboardScopeType
-  scopeLabel: string
-  dataAsOf: string
-  fromDate: string
-  toDate: string
-  capabilities: DashboardCapabilities
-  quoteSummary?: QuoteSummary
-  orderSummary?: OrderSummary
-  paymentSummary?: PaymentSummary
-  fulfillmentSummary?: FulfillmentSummary
-  recentQuotes: RecentQuote[]
-  recentOrders: RecentOrder[]
-  todos: DashboardTodo[]
+export interface DashboardAttentionGroup {
+  reasonCode: 'QUOTE_UNCONVERTED' | 'QUOTE_EXPIRING' | 'PAYMENT_PENDING' | 'PRODUCTION_PENDING' | 'SHIPMENT_PENDING'
+  totalCount: number
+  target: DashboardTarget
+  items: DashboardAttentionItem[]
 }
 
-export const salesDashboardApi = {
+export interface SalesDashboard {
+  viewType: string
+  scopeLabel: string
+  salesStoreId?: string
+  salesStoreName?: string
+  periodStart: string
+  periodEnd: string
+  dataAsOf: string
+  capabilities: DashboardCapabilities
+  summary: DashboardSummary
+  recentQuotes: RecentQuote[]
+  recentOrders: RecentOrder[]
+  attentionGroups: DashboardAttentionGroup[]
+}
+
+export type SalesDashboardAudience = 'business' | 'platformSales'
+
+export const businessSalesDashboardApi = {
   get: () => request<SalesDashboard>({ url: '/sales/dashboard', method: 'get' })
 }
+
+export const platformSalesDashboardApi = {
+  get: () => request<SalesDashboard>({ url: '/platform-sales/dashboard', method: 'get' })
+}
+
+export function getSalesDashboard(audience: SalesDashboardAudience = 'business') {
+  return audience === 'platformSales' ? platformSalesDashboardApi.get() : businessSalesDashboardApi.get()
+}
+
+export const salesDashboardApi = businessSalesDashboardApi

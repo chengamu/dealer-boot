@@ -65,7 +65,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NotLoginException.class)
     public R<Void> handleNotLoginException(NotLoginException e, HttpServletRequest request) {
         String requestURI = request.getRequestURI();
-        log.error("请求地址'{}',认证失败'{}',无法访问系统资源", requestURI, e.getMessage());
+        log.error("请求地址'{}',认证失败,无法访问系统资源", requestURI);
         return R.fail(HttpStatus.HTTP_UNAUTHORIZED, MessageUtils.message("auth.unauthorized"));
     }
 

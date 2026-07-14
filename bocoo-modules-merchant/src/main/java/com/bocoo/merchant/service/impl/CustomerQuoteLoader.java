@@ -20,27 +20,37 @@ class CustomerQuoteLoader extends MerchantServiceSupport {
     private final CustomerQuoteMapper quoteMapper;
     private final CustomerQuoteItemMapper itemMapper;
     private final CustomerQuoteCalculator calculator;
+    private final SalesOwnershipResolver ownershipResolver;
 
-    CustomerQuoteVo load(Long id) {
-        CustomerQuoteReadScope scope = CustomerQuoteReadScope.current();
-        QueryWrapper<CustomerQuote> query = this.<CustomerQuote>activeQuery().eq("quote_id", id);
-        query.eq(scope.tenantId() != null, "tenant_id", scope.tenantId());
-        query.eq(scope.ownerUserId() != null, "owner_user_id", scope.ownerUserId());
-        java.util.function.Supplier<CustomerQuoteVo> loader = () -> quoteMapper.selectVoOne(query, false);
-        CustomerQuoteVo quote = scope.crossTenant() ? platformIgnoreTenant(loader) : loader.get();
+    CustomerQuoteVo loadBusiness(Long id) {
+        CustomerQuoteVo quote = quoteMapper.selectVoOne(this.<CustomerQuote>activeQuery()
+            .eq("quote_id", id)
+            .eq("tenant_id", currentTenantId())
+            .eq("business_origin", ownershipResolver.currentBusinessOrigin()), false);
         if (quote == null) {
             throw ServiceException.ofMessageKey("customer.quote.notFound");
         }
-        quote.setItems(loadItems(quote.getTenantId(), id, scope.crossTenant()));
+        quote.setItems(loadItems(quote.getTenantId(), id, false));
         quote.setItemCount(quote.getItems().size());
         return quote;
     }
 
-    private List<CustomerQuoteItemVo> loadItems(Long tenantId, Long quoteId, boolean crossTenant) {
+    CustomerQuoteVo loadPlatform(Long id) {
+        CustomerQuoteVo quote = platformIgnoreTenant(() -> quoteMapper.selectVoOne(
+            this.<CustomerQuote>activeQuery().eq("quote_id", id), false));
+        if (quote == null) {
+            throw ServiceException.ofMessageKey("customer.quote.notFound");
+        }
+        quote.setItems(loadItems(quote.getTenantId(), id, true));
+        quote.setItemCount(quote.getItems().size());
+        return quote;
+    }
+
+    private List<CustomerQuoteItemVo> loadItems(Long tenantId, Long quoteId, boolean platformQuery) {
         java.util.function.Supplier<List<CustomerQuoteItemVo>> loader = () -> itemMapper
             .selectList(activeItems(tenantId, quoteId).orderByAsc("line_no", "sort_order"))
             .stream().map(calculator::toVo).toList();
-        return crossTenant ? platformIgnoreTenant(loader) : loader.get();
+        return platformQuery ? platformIgnoreTenant(loader) : loader.get();
     }
 
     private QueryWrapper<CustomerQuoteItem> activeItems(Long tenantId, Long quoteId) {

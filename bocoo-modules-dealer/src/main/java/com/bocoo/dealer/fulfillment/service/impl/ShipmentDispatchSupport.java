@@ -30,8 +30,8 @@ public class ShipmentDispatchSupport {
     private final FulfillmentEventRecorder events;
 
     public Boolean dispatch(Long shipmentId) {
-        Shipment shipment = access.shipment(shipmentId);
-        SalesDocument document = access.document(shipment.getSalesDocumentId());
+        Shipment shipment = access.shipment(shipmentId, FulfillmentAudience.FACTORY);
+        SalesDocument document = access.document(shipment.getSalesDocumentId(), FulfillmentAudience.FACTORY);
         requireDispatchable(shipment, document);
         validator.validate(document, shipmentId, shipmentItems(shipment));
         checkTrackingNumber(shipment);

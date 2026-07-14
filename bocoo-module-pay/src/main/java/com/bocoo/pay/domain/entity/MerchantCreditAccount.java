@@ -15,7 +15,9 @@ import java.time.LocalDateTime;
 public class MerchantCreditAccount extends BaseEntity {
     @TableId(value = "credit_account_id")
     private Long creditAccountId;
+    private String businessOrigin;
     private Long tenantId;
+    private Long salesStoreId;
     private Long merchantId;
     private String merchantName;
     private BigDecimal creditLimit;

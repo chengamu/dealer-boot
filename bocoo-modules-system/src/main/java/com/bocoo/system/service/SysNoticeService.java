@@ -38,6 +38,7 @@ public class SysNoticeService {
     private final SysNoticeMapper noticeMapper;
     private final SysNoticeReadMapper noticeReadMapper;
     private final SysUserMapper userMapper;
+    private final NoticeOssImageService noticeOssImageService;
 
     public TableDataInfo<SysNoticeVo> selectPageNoticeList(SysNoticeBo notice, PageQuery pageQuery) {
         LambdaQueryWrapper<SysNotice> lqw = buildQueryWrapper(notice);
@@ -209,8 +210,13 @@ public class SysNoticeService {
      * @return 结果
      */
     public int updateNotice(SysNoticeBo bo) {
+        SysNotice current = noticeMapper.selectById(bo.getNoticeId());
         SysNotice notice = MapstructUtils.convert(bo, SysNotice.class);
-        return noticeMapper.updateById(notice);
+        int rows = noticeMapper.updateById(notice);
+        if (rows > 0 && current != null) {
+            noticeOssImageService.cleanupRemoved(current.getNoticeContent(), notice.getNoticeContent());
+        }
+        return rows;
     }
 
     /**
@@ -220,7 +226,10 @@ public class SysNoticeService {
      * @return 结果
      */
     public int deleteNoticeById(Long noticeId) {
-        return noticeMapper.deleteById(noticeId);
+        SysNotice notice = noticeMapper.selectById(noticeId);
+        int rows = noticeMapper.deleteById(noticeId);
+        if (rows > 0 && notice != null) noticeOssImageService.cleanup(notice.getNoticeContent());
+        return rows;
     }
 
     /**
@@ -230,6 +239,9 @@ public class SysNoticeService {
      * @return 结果
      */
     public int deleteNoticeByIds(Long[] noticeIds) {
-        return noticeMapper.deleteBatchIds(Arrays.asList(noticeIds));
+        List<SysNotice> notices = noticeMapper.selectBatchIds(Arrays.asList(noticeIds));
+        int rows = noticeMapper.deleteBatchIds(Arrays.asList(noticeIds));
+        if (rows > 0) notices.forEach(notice -> noticeOssImageService.cleanup(notice.getNoticeContent()));
+        return rows;
     }
 }

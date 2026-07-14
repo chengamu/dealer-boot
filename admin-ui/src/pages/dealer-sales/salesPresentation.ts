@@ -13,6 +13,10 @@ export function sourceTypeText(t: Translate, sourceType?: string) {
   return sourceType === 'QUICK_ORDER' ? t('dealer.sales.sourceType.QUICK_ORDER') : t('dealer.sales.sourceType.QUOTE')
 }
 
+export function businessOriginText(t: Translate, businessOrigin?: string) {
+  return businessOrigin === 'INTERNAL' ? t('dealer.sales.businessOrigin.INTERNAL') : t('dealer.sales.businessOrigin.MERCHANT')
+}
+
 export function paymentStatusText(t: Translate, status?: string) {
   return status === 'PAID' ? t('dealer.sales.payment.PAID') : t('dealer.sales.payment.UNPAID')
 }

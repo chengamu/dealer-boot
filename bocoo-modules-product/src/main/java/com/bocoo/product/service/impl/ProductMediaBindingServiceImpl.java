@@ -3,27 +3,39 @@ package com.bocoo.product.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.bocoo.common.core.exception.ServiceException;
+import com.bocoo.common.core.service.OssService;
 import com.bocoo.common.core.utils.MapstructUtils;
 import com.bocoo.common.core.utils.StringUtils;
 import com.bocoo.common.mybatis.core.page.PageQuery;
 import com.bocoo.common.mybatis.core.page.TableDataInfo;
 import com.bocoo.product.domain.bo.ProductMediaBindingBo;
+import com.bocoo.product.domain.entity.ProductMediaAsset;
 import com.bocoo.product.domain.entity.ProductMediaBinding;
 import com.bocoo.product.domain.vo.ProductMediaBindingVo;
 import com.bocoo.product.domain.vo.ReferenceCheckResultVo;
+import com.bocoo.product.mapper.ProductMediaAssetMapper;
 import com.bocoo.product.mapper.ProductMediaBindingMapper;
 import com.bocoo.product.service.ProductEntityDefaults;
 import com.bocoo.product.service.ProductMediaBindingService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ProductMediaBindingServiceImpl extends ProductServiceSupport implements ProductMediaBindingService {
 
     private final ProductMediaBindingMapper mediaBindingMapper;
+    private final ProductMediaAssetMapper mediaAssetMapper;
+    private final OssService ossService;
 
     @Override
     public TableDataInfo<ProductMediaBindingVo> queryPageList(ProductMediaBindingBo bo, PageQuery pageQuery) {
@@ -59,14 +71,17 @@ public class ProductMediaBindingServiceImpl extends ProductServiceSupport implem
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public Boolean deleteWithValidByIds(Long[] ids) {
-        for (Long id : ids) {
-            ProductMediaBinding current = mediaBindingMapper.selectById(id);
-            if (current != null) {
-                assertDisabledBeforeDelete(current.getStatus());
-            }
-        }
-        return remove(mediaBindingMapper, ids);
+        List<ProductMediaBinding> bindings = mediaBindingMapper.selectBatchIds(Arrays.asList(ids));
+        boolean removed = remove(mediaBindingMapper, ids);
+        if (!removed) return Boolean.FALSE;
+        Set<Long> assetIds = bindings.stream()
+            .map(ProductMediaBinding::getAssetId)
+            .filter(Objects::nonNull)
+            .collect(Collectors.toSet());
+        assetIds.forEach(this::cleanupUnusedAsset);
+        return Boolean.TRUE;
     }
 
     @Override
@@ -115,5 +130,17 @@ public class ProductMediaBindingServiceImpl extends ProductServiceSupport implem
             return;
         }
         q.eq(column, value);
+    }
+
+    private void cleanupUnusedAsset(Long assetId) {
+        long references = mediaBindingMapper.selectCount(activeQuery(ProductMediaBinding.class).eq("asset_id", assetId));
+        if (references > 0) return;
+        ProductMediaAsset asset = mediaAssetMapper.selectById(assetId);
+        if (asset == null || mediaAssetMapper.deleteById(assetId) <= 0 || asset.getOssId() == null) return;
+        try {
+            ossService.deleteByIds(List.of(asset.getOssId()));
+        } catch (RuntimeException exception) {
+            log.warn("Failed to cleanup material attachment OSS file: {}", asset.getOssId(), exception);
+        }
     }
 }

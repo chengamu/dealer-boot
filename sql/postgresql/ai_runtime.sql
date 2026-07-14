@@ -230,13 +230,13 @@ SET dict_sort = EXCLUDED.dict_sort,
 
 INSERT INTO sys_menu (menu_id, tenant_id, parent_id, menu_name, i18n_key, order_num, path, component, query_param, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, remark)
 VALUES
-    (25000, 1, 0, 'Smart Hub', 'ai.menu.root', 90, 'ai', 'Layout', NULL, '1', '0', 'M', '1', '1', NULL, 'ai', 'system', now(), '智能中枢'),
-    (25001, 1, 25000, 'Service Keys', 'ai.menu.credentials', 1, 'credentials', 'ai/credentials/index', NULL, '1', '0', 'C', '1', '1', 'ai:credential:list', 'lock', 'system', now(), '服务密钥'),
-    (25010, 1, 25000, 'Channel Config', 'ai.menu.providers', 2, 'providers', 'ai/providers/index', NULL, '1', '0', 'C', '1', '1', 'ai:provider:list', 'server', 'system', now(), '渠道配置'),
-    (25011, 1, 25000, 'Model Config', 'ai.menu.models', 3, 'models', 'ai/models/index', NULL, '1', '0', 'C', '1', '1', 'ai:model:list', 'component', 'system', now(), '模型配置'),
-    (25007, 1, 25000, 'Quota Manage', 'ai.menu.quotas', 4, 'quotas', 'ai/quotas/index', NULL, '1', '0', 'C', '1', '1', 'ai:quota:list', 'money', 'system', now(), '额度管理'),
-    (25008, 1, 25000, 'Usage View', 'ai.menu.usage', 5, 'usage', 'ai/usage/index', NULL, '1', '0', 'C', '1', '1', 'ai:usage:list', 'report', 'system', now(), '用量查看'),
-    (25009, 1, 25000, 'Audit View', 'ai.menu.audit', 6, 'audit', 'ai/audit/index', NULL, '1', '0', 'C', '1', '1', 'ai:audit:list', 'log', 'system', now(), '审计查看'),
+    (25000, 1, 0, '智能中枢', 'ai.menu.root', 900, 'ai', 'Layout', NULL, '1', '0', 'M', '1', '1', NULL, 'ai', 'system', now(), '智能中枢'),
+    (25001, 1, 25000, '密钥管理', 'ai.menu.credentials', 1, 'credentials', 'ai/credentials/index', NULL, '1', '0', 'C', '1', '1', 'ai:credential:list', 'lock', 'system', now(), '服务密钥'),
+    (25010, 1, 25000, '渠道配置', 'ai.menu.providers', 2, 'providers', 'ai/providers/index', NULL, '1', '0', 'C', '1', '1', 'ai:provider:list', 'server', 'system', now(), '渠道配置'),
+    (25011, 1, 25000, '模型配置', 'ai.menu.models', 3, 'models', 'ai/models/index', NULL, '1', '0', 'C', '1', '1', 'ai:model:list', 'component', 'system', now(), '模型配置'),
+    (25007, 1, 25000, '额度管理', 'ai.menu.quotas', 4, 'quotas', 'ai/quotas/index', NULL, '1', '0', 'C', '1', '1', 'ai:quota:list', 'money', 'system', now(), '额度管理'),
+    (25008, 1, 25000, '用量查询', 'ai.menu.usage', 5, 'usage', 'ai/usage/index', NULL, '1', '0', 'C', '1', '1', 'ai:usage:list', 'report', 'system', now(), '用量查看'),
+    (25009, 1, 25000, '审计查询', 'ai.menu.audit', 6, 'audit', 'ai/audit/index', NULL, '1', '0', 'C', '1', '1', 'ai:audit:list', 'log', 'system', now(), '审计查看'),
     (25002, 1, 25000, 'Smart Assistant Use', 'ai.menu.assistantUse', 1, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'ai:assistant:use', '#', 'system', now(), '使用智能助手'),
     (25003, 1, 25000, 'Smart Assistant Admin', 'ai.menu.assistantAdmin', 2, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'ai:assistant:admin', '#', 'system', now(), '智能助手管理'),
     (25004, 1, 25001, 'Generate Service Key', 'ai.menu.credentialGenerate', 1, '#', NULL, NULL, '1', '0', 'F', '1', '1', 'ai:credential:generate', '#', 'system', now(), '生成服务密钥'),
@@ -284,4 +284,24 @@ SET model_name = EXCLUDED.model_name,
 INSERT INTO sys_role_menu (role_id, menu_id, tenant_id)
 SELECT 1, menu_id, 1 FROM sys_menu
 WHERE tenant_id = 1 AND menu_id BETWEEN 25000 AND 25021
+ON CONFLICT DO NOTHING;
+
+INSERT INTO sys_role (role_id, tenant_id, role_name, role_key, role_sort, data_scope, menu_check_strictly, dept_check_strictly, status, del_flag, create_by, create_time, remark)
+VALUES
+    (250901, 1, '平台运维', 'platform_operations', 80, '1', true, true, '1', '0', 'system', now(), '平台配置与运维'),
+    (250902, 1, '平台审计', 'platform_auditor', 81, '1', true, true, '1', '0', 'system', now(), '平台审计查询')
+ON CONFLICT (role_id) DO UPDATE
+SET role_name = EXCLUDED.role_name, role_key = EXCLUDED.role_key, role_sort = EXCLUDED.role_sort,
+    data_scope = EXCLUDED.data_scope, status = EXCLUDED.status, del_flag = EXCLUDED.del_flag,
+    update_by = 'system', update_time = now(), remark = EXCLUDED.remark;
+
+INSERT INTO sys_role_menu (role_id, menu_id, tenant_id)
+SELECT r.role_id, m.menu_id, 1
+FROM sys_role r
+JOIN sys_menu m ON m.tenant_id = r.tenant_id
+WHERE r.tenant_id = 1
+  AND ((r.role_key = 'platform_operations'
+        AND (m.menu_id IN (1, 200, 400, 25000) OR m.parent_id IN (1, 200, 400, 25000)))
+       OR (r.role_key = 'platform_auditor'
+           AND (m.menu_id IN (400, 25000, 25009) OR m.parent_id IN (400, 25009))))
 ON CONFLICT DO NOTHING;

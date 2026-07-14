@@ -19,6 +19,8 @@
   "shell.headerLayout": "Header layout",
   "shell.headerLayoutCompact": "Compact",
   "shell.headerLayoutStacked": "Classic",
+  "shell.homeNeutralDescription": "This account does not have a default home page or any valid menu yet. Contact an administrator to grant page access.",
+  "shell.homeNeutralTitle": "No home page available",
   "shell.language": "Language",
   "shell.layoutSettings": "Layout Settings",
   "shell.layoutSize": "Layout size",

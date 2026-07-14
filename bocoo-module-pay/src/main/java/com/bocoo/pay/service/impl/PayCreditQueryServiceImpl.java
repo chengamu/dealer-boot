@@ -39,6 +39,10 @@ public class PayCreditQueryServiceImpl implements PayCreditQueryService {
         Page<MerchantCreditAccount> page = TenantContextHolder.callWithIgnore(() -> accountMapper.selectPage(pageQuery.build(),
             new LambdaQueryWrapper<MerchantCreditAccount>()
                 .eq(!operator.isPlatform(), MerchantCreditAccount::getTenantId, operator.tenantId())
+                .eq(StringUtils.isNotBlank(query.getBusinessOrigin()), MerchantCreditAccount::getBusinessOrigin,
+                    query.getBusinessOrigin())
+                .eq(query.getTenantId() != null, MerchantCreditAccount::getTenantId, query.getTenantId())
+                .eq(query.getSalesStoreId() != null, MerchantCreditAccount::getSalesStoreId, query.getSalesStoreId())
                 .eq(query.getMerchantId() != null, MerchantCreditAccount::getMerchantId, query.getMerchantId())
                 .like(StringUtils.isNotBlank(query.getMerchantName()), MerchantCreditAccount::getMerchantName, query.getMerchantName())
                 .eq(StringUtils.isNotBlank(query.getCurrency()), MerchantCreditAccount::getCurrency, query.getCurrency())
@@ -65,6 +69,11 @@ public class PayCreditQueryServiceImpl implements PayCreditQueryService {
         Page<MerchantReceivable> page = TenantContextHolder.callWithIgnore(() -> receivableMapper.selectPage(pageQuery.build(),
             new LambdaQueryWrapper<MerchantReceivable>()
                 .eq(!operator.isPlatform(), MerchantReceivable::getTenantId, operator.tenantId())
+                .eq(StringUtils.isNotBlank(query.getBusinessOrigin()), MerchantReceivable::getBusinessOrigin,
+                    query.getBusinessOrigin())
+                .eq(query.getTenantId() != null, MerchantReceivable::getTenantId, query.getTenantId())
+                .eq(query.getSalesStoreId() != null, MerchantReceivable::getSalesStoreId, query.getSalesStoreId())
+                .eq(query.getCreditAccountId() != null, MerchantReceivable::getCreditAccountId, query.getCreditAccountId())
                 .eq(query.getMerchantId() != null, MerchantReceivable::getMerchantId, query.getMerchantId())
                 .like(StringUtils.isNotBlank(query.getMerchantName()), MerchantReceivable::getMerchantName, query.getMerchantName())
                 .eq(StringUtils.isNotBlank(query.getSalesOrderNo()), MerchantReceivable::getSalesOrderNo, query.getSalesOrderNo())

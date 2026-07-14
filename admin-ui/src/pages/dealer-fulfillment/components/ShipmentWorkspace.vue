@@ -14,12 +14,12 @@
           <div class="shipment-title"><strong>{{ shipment.packageNo || shipment.shipmentNo || '-' }}</strong><el-tag :type="statusType(shipment.status)">{{ statusText(t, 'package', shipment.status) }}</el-tag><span>{{ shipment.carrierName || '-' }} · {{ shipment.trackingNo || '-' }}</span><span>{{ shipment.itemQuantity || packageQuantity(shipment) }} {{ t('dealer.fulfillment.pieces') }}</span></div>
         </template>
         <div class="shipment-actions">
-          <el-button v-if="shipment.status === 'DRAFT'" icon="Edit" @click="emit('edit', shipment)" v-hasPermi="['dealer:fulfillment:shipment:edit']">{{ t('common.edit') }}</el-button>
-          <el-button v-if="shipment.status === 'DRAFT'" type="danger" plain icon="Delete" @click="emit('remove', shipment)" v-hasPermi="['dealer:fulfillment:shipment:remove']">{{ t('common.delete') }}</el-button>
-          <el-button v-if="shipment.status === 'DRAFT'" type="primary" icon="Promotion" @click="emit('dispatch', shipment)" v-hasPermi="['dealer:fulfillment:shipment:dispatch']">{{ t('dealer.fulfillment.confirmDispatch') }}</el-button>
-          <el-button v-if="canSync(shipment)" icon="Refresh" @click="emit('sync', shipment)" v-hasPermi="['dealer:fulfillment:tracking:sync']">{{ t('dealer.fulfillment.syncTracking') }}</el-button>
-          <el-button v-if="canReceive(shipment)" type="primary" icon="CircleCheck" @click="emit('receipt', shipment)" v-hasPermi="['dealer:fulfillment:receipt:confirm']">{{ t('dealer.fulfillment.confirmReceipt') }}</el-button>
-          <el-button v-if="canReceive(shipment)" type="warning" plain icon="CircleCheck" @click="emit('override', shipment)" v-hasPermi="['dealer:fulfillment:receipt:override']">{{ t('dealer.fulfillment.overrideReceipt') }}</el-button>
+          <el-button v-if="canEdit(shipment)" icon="Edit" @click="emit('edit', shipment)" v-hasPermi="[permission.edit]">{{ t('common.edit') }}</el-button>
+          <el-button v-if="canEdit(shipment)" type="danger" plain icon="Delete" @click="emit('remove', shipment)" v-hasPermi="[permission.remove]">{{ t('common.delete') }}</el-button>
+          <el-button v-if="canDispatch(shipment)" type="primary" icon="Promotion" @click="emit('dispatch', shipment)" v-hasPermi="[permission.dispatch]">{{ t('dealer.fulfillment.confirmDispatch') }}</el-button>
+          <el-button v-if="canSync(shipment)" icon="Refresh" @click="emit('sync', shipment)" v-hasPermi="[permission.sync]">{{ t('dealer.fulfillment.syncTracking') }}</el-button>
+          <el-button v-if="canReceive(shipment)" type="primary" icon="CircleCheck" @click="emit('receipt', shipment)" v-hasPermi="[permission.receipt]">{{ t('dealer.fulfillment.confirmReceipt') }}</el-button>
+          <el-button v-if="canOverride(shipment)" type="warning" plain icon="CircleCheck" @click="emit('override', shipment)" v-hasPermi="[permission.override]">{{ t('dealer.fulfillment.overrideReceipt') }}</el-button>
         </div>
         <el-alert v-if="shipment.trackingErrorMessage" :title="shipment.trackingErrorMessage" type="error" :closable="false" show-icon />
         <el-table :data="shipment.items || []" border size="small">
@@ -37,18 +37,51 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import type { Shipment } from '@/api/dealer-fulfillment'
+import type { FulfillmentAudience, Shipment } from '@/api/dealer-fulfillment'
 import { statusText, statusType } from '../fulfillmentPresentation'
 import TrackingTimeline from './TrackingTimeline.vue'
 
-const props = defineProps<{ shipments: Shipment[]; totalQuantity: number; productionComplete: boolean }>()
+const props = defineProps<{ shipments: Shipment[]; totalQuantity: number; productionComplete: boolean; audience: FulfillmentAudience }>()
 const emit = defineEmits<{ edit: [shipment: Shipment]; remove: [shipment: Shipment]; dispatch: [shipment: Shipment]; sync: [shipment: Shipment]; receipt: [shipment: Shipment]; override: [shipment: Shipment] }>()
 const { t } = useI18n()
+const permission = computed(() => {
+  if (props.audience === 'business') {
+    return {
+      edit: 'dealer:fulfillment:progress:noop',
+      remove: 'dealer:fulfillment:progress:noop',
+      dispatch: 'dealer:fulfillment:progress:noop',
+      sync: 'dealer:fulfillment:progress:noop',
+      receipt: 'dealer:fulfillment:progress:receipt:confirm',
+      override: 'dealer:fulfillment:progress:noop'
+    }
+  }
+  if (props.audience === 'platform') {
+    return {
+      edit: 'dealer:fulfillment:admin:noop',
+      remove: 'dealer:fulfillment:admin:noop',
+      dispatch: 'dealer:fulfillment:admin:noop',
+      sync: 'dealer:fulfillment:admin:tracking:sync',
+      receipt: 'dealer:fulfillment:admin:noop',
+      override: 'dealer:fulfillment:admin:receipt:override'
+    }
+  }
+  return {
+    edit: 'dealer:fulfillment:factory:shipment:edit',
+    remove: 'dealer:fulfillment:factory:shipment:remove',
+    dispatch: 'dealer:fulfillment:factory:shipment:dispatch',
+    sync: 'dealer:fulfillment:factory:tracking:sync',
+    receipt: 'dealer:fulfillment:factory:noop',
+    override: 'dealer:fulfillment:factory:noop'
+  }
+})
 const activeShipments = computed(() => props.shipments.filter((item) => item.status !== 'CANCELLED'))
 const dispatchedQuantity = computed(() => activeShipments.value.filter((item) => item.status !== 'DRAFT').reduce((sum, item) => sum + packageQuantity(item), 0))
 const packageQuantity = (shipment: Shipment) => (shipment.items || []).reduce((sum, item) => sum + (item.quantity || 0), 0)
-const canSync = (shipment: Shipment) => !['DRAFT', 'CANCELLED'].includes(shipment.status || '')
-const canReceive = (shipment: Shipment) => canSync(shipment) && shipment.receiptStatus !== 'CONFIRMED'
+const canEdit = (shipment: Shipment) => props.audience === 'factory' && shipment.status === 'DRAFT'
+const canDispatch = (shipment: Shipment) => props.audience === 'factory' && shipment.status === 'DRAFT'
+const canSync = (shipment: Shipment) => props.audience !== 'business' && !['DRAFT', 'CANCELLED'].includes(shipment.status || '')
+const canReceive = (shipment: Shipment) => props.audience === 'business' && !['DRAFT', 'CANCELLED'].includes(shipment.status || '') && shipment.receiptStatus !== 'CONFIRMED'
+const canOverride = (shipment: Shipment) => props.audience === 'platform' && !['DRAFT', 'CANCELLED'].includes(shipment.status || '') && shipment.receiptStatus !== 'CONFIRMED'
 </script>
 
 <style scoped>

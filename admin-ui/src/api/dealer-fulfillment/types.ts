@@ -2,8 +2,11 @@ import type { DecimalValue, PageQuery } from '@/types/api'
 
 export type ProductionStatus = 'PENDING' | 'IN_PRODUCTION' | 'COMPLETED'
 export type ShipmentStatus = 'UNSHIPPED' | 'PARTIALLY_SHIPPED' | 'SHIPPED' | 'DELIVERED'
-export type PackageStatus = 'DRAFT' | 'SHIPPED' | 'IN_TRANSIT' | 'DELIVERED' | 'EXCEPTION' | 'CANCELLED'
+export type PackageStatus = 'DRAFT' | 'DISPATCHED' | 'SHIPPED' | 'IN_TRANSIT' | 'DELIVERED' | 'EXCEPTION' | 'CANCELLED'
 export type ReceiptStatus = 'PENDING' | 'CONFIRMED'
+export type FulfillmentAudience = 'business' | 'platform' | 'factory'
+export type FulfillmentGridKind = 'production' | 'shipment' | 'package' | 'tracking'
+export type BusinessOrigin = 'MERCHANT' | 'INTERNAL' | string
 
 export interface FulfillmentEvent {
   salesEventId?: string
@@ -38,6 +41,14 @@ export interface TrackingEvent {
   location?: string
   occurredTime?: string
   source?: string
+}
+
+export interface TrackingSummary {
+  shipmentId?: string
+  capability?: string
+  trackingStatus?: string
+  lastTrackingTime?: string
+  latestEvent?: TrackingEvent
 }
 
 export interface ShipmentItem {
@@ -82,6 +93,8 @@ export interface Shipment {
 
 export interface ProductionOrder {
   salesDocumentId: string
+  tenantId?: string
+  businessOrigin?: BusinessOrigin
   orderNo?: string
   sourceType?: string
   sourceNo?: string
@@ -120,6 +133,11 @@ export interface FulfillmentOrder extends ProductionOrder {
 }
 
 export interface ProductionQuery extends PageQuery {
+  beginTime?: string
+  endTime?: string
+  businessOrigin?: BusinessOrigin | ''
+  tenantId?: string
+  salesStoreId?: string
   orderNo?: string
   sourceNo?: string
   merchantName?: string
@@ -129,9 +147,15 @@ export interface ProductionQuery extends PageQuery {
 }
 
 export interface ShipmentQuery extends PageQuery {
+  beginTime?: string
+  endTime?: string
+  businessOrigin?: BusinessOrigin | ''
+  tenantId?: string
+  salesStoreId?: string
   orderNo?: string
   merchantName?: string
   customerName?: string
+  productionStatus?: ProductionStatus | ''
   shipmentStatus?: ShipmentStatus | ''
   carrierName?: string
   trackingNo?: string
@@ -150,6 +174,11 @@ export interface TrackingOrder extends ShipmentOrder {
 }
 
 export interface TrackingQuery extends PageQuery {
+  beginTime?: string
+  endTime?: string
+  businessOrigin?: BusinessOrigin | ''
+  tenantId?: string
+  salesStoreId?: string
   orderNo?: string
   customerName?: string
   projectName?: string

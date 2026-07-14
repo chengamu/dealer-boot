@@ -2,8 +2,12 @@ package com.bocoo.pay.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.toolkit.IdWorker;
 import com.bocoo.common.core.exception.ServiceException;
+import com.bocoo.common.core.utils.TimeUtils;
 import com.bocoo.pay.domain.bo.CreditOccupyBo;
+import com.bocoo.pay.domain.credit.CreditSubject;
+import com.bocoo.pay.domain.credit.CreditSubjectType;
 import com.bocoo.pay.domain.entity.MerchantCreditAccount;
 import com.bocoo.pay.mapper.MerchantCreditAccountMapper;
 import com.bocoo.pay.service.PayOperatorContext;
@@ -18,25 +22,43 @@ class CreditAccountRepository {
     private final MerchantCreditAccountMapper mapper;
     private final PayOperatorContext operator;
 
-    MerchantCreditAccount find(Long tenantId) {
-        return mapper.selectOne(new LambdaQueryWrapper<MerchantCreditAccount>()
-            .eq(MerchantCreditAccount::getTenantId, tenantId), false);
+    MerchantCreditAccount find(CreditSubject subject) {
+        LambdaQueryWrapper<MerchantCreditAccount> query = new LambdaQueryWrapper<MerchantCreditAccount>()
+            .eq(MerchantCreditAccount::getBusinessOrigin, subject.type().name())
+            .eq(MerchantCreditAccount::getCurrency, subject.currency());
+        if (subject.type() == CreditSubjectType.MERCHANT) {
+            query.eq(MerchantCreditAccount::getTenantId, subject.tenantId())
+                .isNull(MerchantCreditAccount::getSalesStoreId);
+        } else {
+            query.eq(MerchantCreditAccount::getSalesStoreId, subject.salesStoreId());
+        }
+        return mapper.selectOne(query, false);
     }
 
-    MerchantCreditAccount getOrCreate(Long tenantId, CreditOccupyBo bo, String currency) {
-        MerchantCreditAccount account = find(tenantId);
+    MerchantCreditAccount getOrCreate(CreditSubject subject, CreditOccupyBo bo) {
+        MerchantCreditAccount account = find(subject);
         if (account != null) return account;
         account = new MerchantCreditAccount();
-        account.setTenantId(tenantId);
-        account.setMerchantId(bo.getMerchantId());
-        account.setMerchantName(bo.getMerchantName());
+        account.setBusinessOrigin(subject.type().name());
+        account.setTenantId(subject.tenantId());
+        account.setSalesStoreId(subject.salesStoreId());
+        account.setMerchantId(subject.merchantId());
+        account.setMerchantName(subject.subjectName());
         account.setCreditLimit(bo.getConfiguredCreditLimit());
         account.setUsedCredit(BigDecimal.ZERO.setScale(2));
-        account.setCurrency(currency);
+        account.setCurrency(subject.currency());
         account.setStatus("NORMAL");
         account.setVersion(0);
-        mapper.insert(account);
-        return account;
+        account.setCreditAccountId(IdWorker.getId());
+        account.setCreateById(operator.userId());
+        account.setCreateBy(operator.username());
+        account.setCreateTime(TimeUtils.utcNow());
+        account.setUpdateBy(operator.username());
+        account.setUpdateTime(account.getCreateTime());
+        if (mapper.insertIgnoreConflict(account) == 1) return account;
+        MerchantCreditAccount existing = find(subject);
+        if (existing != null) return existing;
+        throw new ServiceException("Credit account conflict could not be resolved");
     }
 
     MerchantCreditAccount byId(Long accountId) {

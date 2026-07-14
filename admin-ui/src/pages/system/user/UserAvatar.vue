@@ -18,7 +18,8 @@
       @opened="modalOpened"
       @close="closeDialog"
     >
-      <el-row class="avatar-cropper-dialog__workspace">
+      <div class="el-upload__tip">{{ t('upload.pasteHint') }}</div>
+      <el-row class="avatar-cropper-dialog__workspace" tabindex="0" @paste="handleAvatarPaste" @dragover.prevent @drop="handleAvatarDrop">
         <el-col :xs="24" :md="12" :style="{ height: '350px' }">
           <vue-cropper
             v-if="visible"
@@ -41,7 +42,7 @@
       </el-row>
       <template #footer>
         <AdminDialogFooter class="avatar-cropper-dialog__actions">
-          <el-upload action="#" :http-request="requestUpload" :show-file-list="false" :before-upload="beforeUpload">
+          <el-upload action="#" accept=".jpg,.jpeg,.png" :http-request="requestUpload" :show-file-list="false" :before-upload="beforeUpload">
             <el-button>
               {{ t('common.selectPlaceholder') }}
               <el-icon class="el-icon--right"><Upload /></el-icon>
@@ -67,6 +68,7 @@ import { uploadAvatar } from '@/api/system/user'
 import { useUserStore } from '@/stores/user'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
+import { getClipboardFiles, getDroppedFiles, selectUploadFiles, validateUploadFile, type UploadValidationIssue } from '@/composables/uploadIntake'
 
 interface CropPreview {
   url?: string
@@ -84,6 +86,7 @@ const t = (key: string, params?: Record<string, string | number>) => {
 const open = ref(false)
 const visible = ref(false)
 const cropper = ref<any>()
+const avatarTypes = ['jpg', 'jpeg', 'png']
 const options = reactive({
   img: userStore.avatar,
   autoCrop: true,
@@ -118,16 +121,44 @@ function changeScale(num: number) {
 }
 
 function beforeUpload(file: File) {
-  if (!file.type.includes('image/')) {
-    ElMessage.error(t('user.avatarImageOnly'))
-    return false
-  }
+  const issue = validateUploadFile(file, { allowedExtensions: avatarTypes, maxSizeMb: 10 })
+  if (issue) return showValidationIssue(issue)
+  loadAvatarFile(file)
+  return false
+}
+
+function handleAvatarPaste(event: ClipboardEvent) {
+  handleAvatarFiles(getClipboardFiles(event), event)
+}
+
+function handleAvatarDrop(event: DragEvent) {
+  handleAvatarFiles(getDroppedFiles(event), event)
+}
+
+function handleAvatarFiles(files: File[], event: ClipboardEvent | DragEvent) {
+  if (!files.length) return
+  event.preventDefault()
+  const result = selectUploadFiles(files, { allowedExtensions: avatarTypes, maxSizeMb: 10, limit: 1 })
+  if (result.issue) showValidationIssue(result.issue)
+  if (result.files[0]) loadAvatarFile(result.files[0])
+}
+
+function loadAvatarFile(file: File) {
   const reader = new FileReader()
   reader.readAsDataURL(file)
   reader.onload = () => {
     options.img = String(reader.result || '')
     options.filename = file.name
   }
+}
+
+function showValidationIssue(issue: UploadValidationIssue) {
+  const message = issue === 'size'
+    ? t('upload.imageTooLarge', { size: 10 })
+    : issue === 'limit'
+      ? t('upload.limitExceeded', { limit: 1 })
+      : t('user.avatarImageOnly')
+  ElMessage.error(message)
   return false
 }
 

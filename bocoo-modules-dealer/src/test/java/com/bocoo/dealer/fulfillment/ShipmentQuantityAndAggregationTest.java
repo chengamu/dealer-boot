@@ -1,6 +1,7 @@
 package com.bocoo.dealer.fulfillment;
 
 import com.bocoo.common.core.exception.ServiceException;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.bocoo.dealer.domain.entity.SalesDocument;
 import com.bocoo.dealer.domain.entity.SalesDocumentItem;
 import com.bocoo.dealer.fulfillment.domain.bo.ShipmentItemBo;
@@ -17,6 +18,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.ArgumentCaptor;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
@@ -80,6 +82,26 @@ class ShipmentQuantityAndAggregationTest {
         ShipmentAggregate delivered = service.aggregate(document());
         assertThat(delivered.shipmentStatus()).isEqualTo("DELIVERED");
         assertThat(delivered.allReceived()).isTrue();
+    }
+
+    @Test
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    void editingPackageExcludesItsOwnAllocation() {
+        when(salesItemMapper.selectList(any())).thenReturn(List.of(orderItem(11L, 5)));
+        when(shipmentMapper.selectList(any())).thenReturn(List.of());
+        ShipmentItemBo request = new ShipmentItemBo();
+        request.setSalesItemId(11L);
+        request.setQuantity(5);
+        ShipmentAllocationValidator validator = new ShipmentAllocationValidator(
+            salesItemMapper, shipmentMapper, shipmentItemMapper, access);
+
+        validator.validate(document(), 21L, List.of(request));
+
+        ArgumentCaptor<QueryWrapper<com.bocoo.dealer.fulfillment.domain.entity.Shipment>> query =
+            ArgumentCaptor.forClass(QueryWrapper.class);
+        org.mockito.Mockito.verify(shipmentMapper).selectList(query.capture());
+        assertThat(query.getValue().getSqlSegment()).contains("shipment_id <>");
+        assertThat(query.getValue().getParamNameValuePairs().values()).contains(21L);
     }
 
     private SalesDocument document() {

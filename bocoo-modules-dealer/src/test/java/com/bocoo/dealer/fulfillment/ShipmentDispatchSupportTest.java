@@ -62,8 +62,8 @@ class ShipmentDispatchSupportTest {
         ShipmentItem item = new ShipmentItem();
         item.setSalesItemId(11L);
         item.setQuantity(2);
-        when(access.shipment(2L)).thenReturn(shipment);
-        when(access.document(1L)).thenReturn(document);
+        when(access.shipment(2L, FulfillmentAudience.FACTORY)).thenReturn(shipment);
+        when(access.document(1L, FulfillmentAudience.FACTORY)).thenReturn(document);
         when(itemMapper.selectList(any())).thenReturn(List.of(item));
         when(shipmentMapper.selectCount(any())).thenReturn(0L);
         when(shipmentMapper.update(isNull(), any())).thenReturn(1);

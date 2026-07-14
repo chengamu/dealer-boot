@@ -37,7 +37,6 @@
           <el-descriptions-item :label="t('pay.receivable.outstanding')">{{ money(detail.receivable.outstandingAmount, detail.receivable.currency) }}</el-descriptions-item>
           <el-descriptions-item :label="t('pay.receivable.dueDate')">{{ detail.receivable.dueDate || '-' }}</el-descriptions-item>
         </el-descriptions>
-        <el-button v-if="canRepay && detail.receivable.status !== 'SETTLED'" class="payment-detail__action" @click="repay">{{ t('pay.credit.repay') }}</el-button>
       </template>
 
       <template v-if="creditAccount">
@@ -48,12 +47,12 @@
           <el-descriptions-item :label="t('common.status')">{{ creditAccount.status || '-' }}</el-descriptions-item>
         </el-descriptions>
         <div class="payment-detail__actions">
-          <el-button v-if="canAdjust" @click="adjustCredit">{{ t('pay.credit.adjust') }}</el-button>
-          <el-button v-if="canFreeze" :type="creditAccount.status === 'FROZEN' ? 'primary' : 'warning'" plain @click="freezeCredit">{{ creditAccount.status === 'FROZEN' ? t('pay.credit.unfreeze') : t('pay.credit.freeze') }}</el-button>
+          <el-button v-if="canAdjust()" @click="adjustCredit">{{ t('pay.credit.adjust') }}</el-button>
+          <el-button v-if="canFreeze()" :type="creditAccount.status === 'FROZEN' ? 'primary' : 'warning'" plain @click="freezeCredit">{{ creditAccount.status === 'FROZEN' ? t('pay.credit.unfreeze') : t('pay.credit.freeze') }}</el-button>
         </div>
       </template>
 
-      <template v-if="showWebhooks && detail?.webhooks?.length">
+      <template v-if="showWebhooks() && detail?.webhooks?.length">
         <h3>{{ t('pay.detail.webhooks') }}</h3>
         <el-table :data="detail.webhooks" border size="small">
           <el-table-column prop="eventType" :label="t('pay.detail.eventType')" min-width="190" />
@@ -71,7 +70,7 @@ import { ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import AdminDrawer from '@/components/AdminDrawer/index.vue'
-import { payApi, type CreditAccount, type PayOrder, type PayOrderDetail } from '@/api/pay'
+import { businessPaymentApi, payApi, platformCreditApi, platformPaymentApi, platformReceivableApi, type CreditAccount, type PayOrder, type PayOrderDetail } from '@/api/pay'
 import { checkPermi } from '@/utils/permission'
 import { formatUtc } from '@/utils/datetime'
 import { bankStatusText, methodText, minorMoney, money, statusText, statusType } from '../payPresentation'
@@ -82,11 +81,12 @@ const visible = ref(false)
 const loading = ref(false)
 const order = ref<PayOrder>()
 const detail = ref<PayOrderDetail>()
-const showWebhooks = checkPermi(['pay:reconcile:query'])
-const canAdjust = checkPermi(['pay:credit:adjust'])
-const canFreeze = checkPermi(['pay:credit:freeze'])
-const canRepay = checkPermi(['pay:credit:repay'])
+const audience = ref<'business' | 'platform'>('platform')
 const creditAccount = ref<CreditAccount>()
+const showWebhooks = () => audience.value === 'platform' && checkPermi(['platform:finance:reconciliation:query'])
+const canAdjust = () => audience.value === 'platform' && checkPermi(['platform:finance:credit:adjust'])
+const canFreeze = () => audience.value === 'platform' && checkPermi(['platform:finance:credit:freeze'])
+const canRepay = () => false
 
 function time(value?: string) {
   return value ? formatUtc(value, 'YYYY-MM-DD HH:mm') : '-'
@@ -105,7 +105,7 @@ async function adjustCredit() {
   if (!creditAccount.value?.creditAccountId) return
   const amount = await ElMessageBox.prompt(t('pay.credit.adjustAmount'), t('pay.credit.adjust'), { inputPattern: /^-?\d+(\.\d{1,2})?$/, inputErrorMessage: t('pay.credit.amountInvalid') })
   const reason = await ElMessageBox.prompt(t('pay.reason'), t('pay.credit.adjust'), { inputValidator: (value) => Boolean(value?.trim()) || t('common.required') })
-  await payApi.adjustCredit(creditAccount.value.creditAccountId, canonicalDecimal(amount.value), reason.value)
+  await platformCreditApi.adjust(creditAccount.value.creditAccountId, canonicalDecimal(amount.value), reason.value)
   ElMessage.success(t('pay.credit.adjusted'))
   await reloadCredit()
 }
@@ -114,37 +114,47 @@ async function freezeCredit() {
   if (!creditAccount.value?.creditAccountId) return
   const frozen = creditAccount.value.status !== 'FROZEN'
   const reason = await ElMessageBox.prompt(t('pay.reason'), t(frozen ? 'pay.credit.freeze' : 'pay.credit.unfreeze'), { inputValidator: (value) => Boolean(value?.trim()) || t('common.required') })
-  await payApi.freezeCredit(creditAccount.value.creditAccountId, frozen, reason.value)
+  if (frozen) await platformCreditApi.freeze(creditAccount.value.creditAccountId, reason.value)
+  else await platformCreditApi.unfreeze(creditAccount.value.creditAccountId, reason.value)
   ElMessage.success(t(frozen ? 'pay.credit.frozenSuccess' : 'pay.credit.unfrozenSuccess'))
   await reloadCredit()
 }
 
-async function repay() {
-  if (!detail.value?.receivable?.receivableId) return
-  const reason = await ElMessageBox.prompt(t('pay.reason'), t('pay.credit.repay'), { inputValidator: (value) => Boolean(value?.trim()) || t('common.required') })
-  await payApi.repayReceivable(detail.value.receivable.receivableId, reason.value)
-  ElMessage.success(t('pay.credit.repaid'))
-  if (order.value?.id) detail.value = await payApi.orderDetail(order.value.id)
-  await reloadCredit()
-}
-
 async function reloadCredit() {
-  if (!order.value?.salesDocumentId) return
+  if (audience.value !== 'business' || !order.value?.salesDocumentId) return
   creditAccount.value = (await payApi.salesPayment(order.value.salesDocumentId)).creditAccount
 }
 
-async function open(row: PayOrder) {
+async function open(row: PayOrder, nextAudience: 'business' | 'platform' = 'platform') {
+  audience.value = nextAudience
   order.value = row
   detail.value = undefined
   creditAccount.value = undefined
   visible.value = true
-  if (!row.id) return
+  const payOrderId = row.payOrderId || row.id
+  if (!payOrderId) return
   loading.value = true
   try {
-    detail.value = await payApi.orderDetail(row.id)
-    order.value = { ...row, no: detail.value.payOrderNo, salesDocumentId: detail.value.salesDocumentId, salesOrderNo: detail.value.salesOrderNo,
-      merchantName: detail.value.merchantName, customerName: detail.value.customerName, price: detail.value.price, currency: detail.value.currency,
-      channelCode: detail.value.channelCode, status: detail.value.status, channelOrderNo: detail.value.channelOrderNo, successTime: detail.value.successTime }
+    detail.value = nextAudience === 'business'
+      ? await businessPaymentApi.detail(payOrderId)
+      : await platformPaymentApi.detail(payOrderId)
+    order.value = {
+      ...row,
+      id: String(payOrderId),
+      payOrderId: String(payOrderId),
+      no: detail.value.payOrderNo,
+      payOrderNo: detail.value.payOrderNo,
+      salesDocumentId: detail.value.salesDocumentId,
+      salesOrderNo: detail.value.salesOrderNo,
+      merchantName: detail.value.merchantName,
+      customerName: detail.value.customerName,
+      price: detail.value.price,
+      currency: detail.value.currency,
+      channelCode: detail.value.channelCode,
+      status: detail.value.status,
+      channelOrderNo: detail.value.channelOrderNo,
+      successTime: detail.value.successTime
+    }
     await reloadCredit()
   } finally {
     loading.value = false

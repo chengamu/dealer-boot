@@ -21,6 +21,7 @@ import com.bocoo.system.domain.vo.SysOssVo;
 import com.bocoo.system.domain.vo.SysUserVo;
 import com.bocoo.system.service.SysOssService;
 import com.bocoo.system.service.SysUserService;
+import com.bocoo.system.service.UserAvatarStorageService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -50,6 +51,7 @@ public class SysProfileController extends BaseController {
 
     private final SysUserService userService;
     private final SysOssService sysOssService;
+    private final UserAvatarStorageService avatarStorageService;
     private final BocooConfig bocooConfig;
 
 
@@ -138,8 +140,7 @@ public class SysProfileController extends BaseController {
                     Map.of("types", String.join(", ", MimeTypeUtils.IMAGE_EXTENSION))));
             }
             SysOssVo oss = sysOssService.upload(avatarfile);
-            String avatar = oss.getOssId().toString();
-            if (userService.updateUserAvatar(LoginHelper.getUsername(), avatar)) {
+            if (avatarStorageService.replace(LoginHelper.getUsername(), oss.getOssId())) {
                 return R.ok(MessageUtils.message("common.upload.success"), Map.of("imgUrl", oss.getUrl()));
             }
         }

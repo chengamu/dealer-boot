@@ -11,15 +11,22 @@
       </template>
     </el-table-column>
     <el-table-column prop="roomLocation" :label="t('dealer.sales.room')" min-width="120" />
-    <el-table-column prop="saleProductName" :label="t('dealer.sales.product')" min-width="180" />
+    <el-table-column :label="t('dealer.sales.product')" min-width="210">
+      <template #default="{ row }">
+        <div class="sales-document-items-table__product">
+          <strong>{{ row.saleProductName || '-' }}</strong>
+          <span>{{ row.configurationSummary || '-' }}</span>
+        </div>
+      </template>
+    </el-table-column>
     <el-table-column :label="t('dealer.sales.size')" width="150"><template #default="{ row }">{{ size(row) }}</template></el-table-column>
     <el-table-column prop="quantity" :label="t('dealer.sales.quantity')" width="90" align="center" />
     <el-table-column :label="t('dealer.sales.configuration')" min-width="220" show-overflow-tooltip>
       <template #default="{ row }">{{ row.configurationSummary || '-' }}</template>
     </el-table-column>
-    <el-table-column :label="t('dealer.sales.listAmount')" width="130" align="right">
-      <template #default="{ row }">{{ money(row.listAmount) }}</template>
-    </el-table-column>
+    <el-table-column :label="t('dealer.sales.unitAmount')" width="130" align="right">
+      <template #default="{ row }">{{ money(row.unitAmount || row.productAmount) }}</template>
+      </el-table-column>
     <el-table-column :label="t('dealer.sales.shippingAmount')" width="130" align="right">
       <template #default="{ row }">{{ money(row.shippingAmount) }}</template>
     </el-table-column>
@@ -55,4 +62,16 @@ function money(value?: string | null) {
 .sales-document-items-table__config-item { display: flex; flex-direction: column; gap: 4px; padding: 10px 12px; border: 1px solid #e7edf4; border-radius: 8px; background: #fafcff; }
 .sales-document-items-table__config-item span { color: #667085; font-size: 12px; }
 .sales-document-items-table__config-item b { color: #1d2939; }
+.sales-document-items-table__product {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+}
+.sales-document-items-table__product strong { color: #1d2939; }
+.sales-document-items-table__product span {
+  color: #667085;
+  font-size: 12px;
+  line-height: 18px;
+}
 </style>

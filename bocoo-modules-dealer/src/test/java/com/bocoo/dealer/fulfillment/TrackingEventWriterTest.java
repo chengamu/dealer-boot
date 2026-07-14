@@ -8,6 +8,7 @@ import com.bocoo.dealer.fulfillment.tracking.TrackingRecord;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -48,6 +49,14 @@ class TrackingEventWriterTest {
         LocalDateTime latest = writer.insertNew(shipment, List.of(existing, fresh));
 
         verify(mapper, times(1)).insert(any());
+        ArgumentCaptor<com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<
+            com.bocoo.dealer.fulfillment.domain.entity.TrackingEvent>> queries = ArgumentCaptor.forClass(
+            com.baomidou.mybatisplus.core.conditions.query.QueryWrapper.class);
+        verify(mapper, times(2)).selectCount(queries.capture());
+        assertThat(queries.getAllValues()).allSatisfy(query -> {
+            assertThat(query.getSqlSegment()).contains("shipment_id");
+            assertThat(query.getParamNameValuePairs().values()).contains(1L);
+        });
         assertThat(latest).isEqualTo(time.plusHours(1));
     }
 

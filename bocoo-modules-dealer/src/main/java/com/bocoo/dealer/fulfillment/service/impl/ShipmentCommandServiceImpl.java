@@ -31,8 +31,7 @@ public class ShipmentCommandServiceImpl implements ShipmentCommandService {
     @Lock4j(name = "sales-document-lifecycle", keys = {"#salesDocumentId"})
     @Transactional(rollbackFor = Exception.class)
     public ShipmentVo create(Long salesDocumentId, ShipmentBo bo) {
-        access.platformOnly();
-        SalesDocument document = access.document(salesDocumentId);
+        SalesDocument document = access.document(salesDocumentId, FulfillmentAudience.FACTORY);
         requireProductionComplete(document);
         var orderItems = validator.validate(document, null, bo.getItems());
         Shipment shipment = writer.createHeader(document, bo);
@@ -45,12 +44,11 @@ public class ShipmentCommandServiceImpl implements ShipmentCommandService {
     @Lock4j(name = "sales-document-lifecycle", keys = {"@fulfillmentAccessSupport.shipment(#shipmentId).salesDocumentId"})
     @Transactional(rollbackFor = Exception.class)
     public Boolean update(Long shipmentId, ShipmentBo bo) {
-        access.platformOnly();
-        Shipment shipment = access.shipment(shipmentId);
+        Shipment shipment = access.shipment(shipmentId, FulfillmentAudience.FACTORY);
         if (!"DRAFT".equals(shipment.getStatus())) {
             throw ServiceException.ofMessageKey("dealer.fulfillment.shipmentDraftOnly");
         }
-        SalesDocument document = access.document(shipment.getSalesDocumentId());
+        SalesDocument document = access.document(shipment.getSalesDocumentId(), FulfillmentAudience.FACTORY);
         var orderItems = validator.validate(document, shipmentId, bo.getItems());
         writer.updateHeader(shipment, bo);
         writer.replaceItems(shipment, bo, orderItems);
@@ -62,8 +60,7 @@ public class ShipmentCommandServiceImpl implements ShipmentCommandService {
     @Lock4j(name = "sales-document-lifecycle", keys = {"@fulfillmentAccessSupport.shipment(#shipmentId).salesDocumentId"})
     @Transactional(rollbackFor = Exception.class)
     public Boolean delete(Long shipmentId) {
-        access.platformOnly();
-        Shipment shipment = access.shipment(shipmentId);
+        Shipment shipment = access.shipment(shipmentId, FulfillmentAudience.FACTORY);
         if (!"DRAFT".equals(shipment.getStatus())) {
             throw ServiceException.ofMessageKey("dealer.fulfillment.shipmentDraftOnly");
         }
@@ -81,7 +78,6 @@ public class ShipmentCommandServiceImpl implements ShipmentCommandService {
     @Lock4j(name = "sales-document-lifecycle", keys = {"@fulfillmentAccessSupport.shipment(#shipmentId).salesDocumentId"})
     @Transactional(rollbackFor = Exception.class)
     public Boolean dispatch(Long shipmentId) {
-        access.platformOnly();
         return dispatchSupport.dispatch(shipmentId);
     }
 

@@ -3,6 +3,7 @@ package com.bocoo.pay.service;
 import com.bocoo.pay.domain.bo.CreditAdjustBo;
 import com.bocoo.pay.domain.bo.CreditFreezeBo;
 import com.bocoo.pay.domain.bo.CreditOccupyBo;
+import com.bocoo.pay.domain.bo.CreditRepayBo;
 import com.bocoo.pay.domain.entity.MerchantCreditAccount;
 import com.bocoo.pay.domain.entity.MerchantReceivable;
 
@@ -12,6 +13,8 @@ public interface MerchantCreditService {
     MerchantReceivable occupy(CreditOccupyBo bo);
 
     MerchantReceivable repay(Long receivableId, String reason);
+
+    MerchantReceivable repay(Long receivableId, CreditRepayBo bo);
 
     MerchantCreditAccount adjust(Long accountId, CreditAdjustBo bo);
 

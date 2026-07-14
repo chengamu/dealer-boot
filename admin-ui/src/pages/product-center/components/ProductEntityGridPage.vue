@@ -360,17 +360,32 @@
           <el-input v-else v-model="form[field.prop] as string" :disabled="drawerReadonly || isTreeParentLocked(field) || field.readonly?.(form)" :placeholder="t('productCenter.common.inputPlaceholder')" :aria-label="t(field.labelKey)" :data-agent-label="t(field.labelKey)" />
         </el-form-item>
         </template>
-        <div v-if="attachmentEnabled" v-loading="attachmentLoading" class="product-grid-page__attachments">
+        <div
+          v-if="attachmentEnabled"
+          v-loading="attachmentLoading"
+          class="product-grid-page__attachments"
+          :class="{ 'is-drop-active': attachmentDropActive }"
+          :tabindex="canUploadAttachment ? 0 : -1"
+          @pointerdown.capture="focusAttachmentArea"
+          @paste="handleAttachmentPaste"
+          @dragenter="handleAttachmentDragOver"
+          @dragover="handleAttachmentDragOver"
+          @dragleave="handleAttachmentDragLeave"
+          @drop="handleAttachmentDrop"
+        >
           <div class="product-grid-page__attachments-head">
             <span>{{ t('productCenter.common.attachments') }}</span>
-            <el-upload
-              v-if="!drawerReadonly && currentRecordId"
-              :show-file-list="false"
-              :http-request="uploadAttachment"
-              :before-upload="beforeAttachmentUpload"
-            >
-              <el-button type="primary" plain icon="Upload" data-agent-danger="upload" data-agent-risk="confirm-required" data-agent-confirm-required="true" data-agent-confirm-message="上传附件需要用户人工确认">{{ t('productCenter.common.uploadAttachment') }}</el-button>
-            </el-upload>
+            <div v-if="canUploadAttachment" class="product-grid-page__attachment-upload">
+              <el-upload
+                ref="attachmentUploadRef"
+                accept=".bmp,.gif,.jpg,.jpeg,.png"
+                :show-file-list="false"
+                :http-request="uploadAttachment"
+                :before-upload="beforeAttachmentUpload"
+              >
+                <el-button type="primary" plain icon="Upload" data-agent-danger="upload" data-agent-risk="confirm-required" data-agent-confirm-required="true" data-agent-confirm-message="上传附件需要用户人工确认">{{ t('productCenter.common.uploadAttachment') }}</el-button>
+              </el-upload>
+            </div>
           </div>
           <el-alert
             v-if="!currentRecordId"
@@ -404,7 +419,7 @@
               </template>
             </el-table-column>
           </el-table>
-          <el-empty v-else :description="t('productCenter.common.noAttachments')" />
+          <el-empty v-else :description="canUploadAttachment ? t('upload.pasteHint') : t('productCenter.common.noAttachments')" />
         </div>
       </el-form>
       <template #footer>
@@ -465,15 +480,17 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox, type FormInstance, type FormRules, type UploadRawFile, type UploadRequestOptions } from 'element-plus'
+import { ElMessage, ElMessageBox, type FormInstance, type FormRules, type UploadInstance, type UploadRawFile, type UploadRequestOptions } from 'element-plus'
 import { formatUtc } from '@/utils/datetime'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 import { productChangeLogApi } from '@/api/product-capability/material'
 import { productMediaAssetApi, productMediaBindingApi } from '@/api/product-capability/asset'
 import type { ProductChangeLogVO, ProductPageQuery, ProductRecord, ReferenceCheckResult } from '@/api/product-capability/types'
+import { delOwnedOss } from '@/api/system/oss'
 import { uploadOssFile } from '@/api/system/ossUpload'
 import { useUnsavedChangesGuard } from '@/composables/useUnsavedChangesGuard'
+import { enqueueUploadFiles, getClipboardFiles, getDroppedFiles, selectUploadFiles, validateUploadFile, type UploadValidationIssue } from '@/composables/uploadIntake'
 import type { ProductFieldConfig, ProductGridConfig } from './productGridTypes'
 import { PRODUCT_STATUS_DISABLED, PRODUCT_STATUS_ENABLED, normalizeProductStatus } from '@/constants/productStatus'
 import { compactParts } from '@/utils/productLabels'
@@ -517,6 +534,8 @@ const referenceResult = ref<ReferenceCheckResult>({})
 const changeLogRows = ref<ProductChangeLogVO[]>([])
 const attachmentRows = ref<ProductRecord[]>([])
 const attachmentLoading = ref(false)
+const attachmentUploadRef = ref<UploadInstance>()
+const attachmentDropActive = ref(false)
 const isExpandAll = ref(true)
 const tableRenderKey = ref(0)
 const lockedTreeParentId = ref<string | number | null>(null)
@@ -599,6 +618,7 @@ const drawerTitle = computed(() => {
   return form.value[props.config.idKey] ? t('productCenter.common.editTitle', { name: t(props.config.titleKey) }) : t('productCenter.common.addTitle', { name: t(props.config.titleKey) })
 })
 const attachmentEnabled = computed(() => Boolean(props.config.attachments))
+const canUploadAttachment = computed(() => !drawerReadonly.value && Boolean(currentRecordId.value))
 const isTreeGrid = computed(() => Boolean(props.config.tree))
 const isSingleRowActions = computed(() => isTreeGrid.value || Boolean(props.config.singleRowActions))
 const singleRowToolbarActions = computed(() => isSingleRowActions.value && !isTreeGrid.value ? props.config.rowActions || [] : [])
@@ -1533,20 +1553,71 @@ async function submitForm() {
 }
 
 function beforeAttachmentUpload(file: UploadRawFile) {
-  const maxSize = 20
-  if (file.size / 1024 / 1024 > maxSize) {
-    ElMessage.error(t('upload.fileTooLarge', { size: maxSize }))
-    return false
-  }
+  const issue = validateUploadFile(file, { allowedExtensions: ['bmp', 'gif', 'jpg', 'jpeg', 'png'], maxSizeMb: 10 })
+  if (issue) return showAttachmentValidation(issue)
   return true
+}
+
+function handleAttachmentPaste(event: ClipboardEvent) {
+  if (!canUploadAttachment.value) return
+  handleAttachmentFiles(getClipboardFiles(event), event)
+}
+
+function handleAttachmentDrop(event: DragEvent) {
+  attachmentDropActive.value = false
+  if (!canUploadAttachment.value) return
+  handleAttachmentFiles(getDroppedFiles(event), event)
+}
+
+function handleAttachmentDragOver(event: DragEvent) {
+  if (!canUploadAttachment.value || !Array.from(event.dataTransfer?.types || []).includes('Files')) return
+  event.preventDefault()
+  attachmentDropActive.value = true
+  if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy'
+}
+
+function handleAttachmentDragLeave(event: DragEvent) {
+  const area = event.currentTarget as HTMLElement
+  if (!area.contains(event.relatedTarget as Node | null)) attachmentDropActive.value = false
+}
+
+function focusAttachmentArea(event: PointerEvent) {
+  if (!canUploadAttachment.value) return
+  const area = event.currentTarget as HTMLElement
+  area.focus({ preventScroll: true })
+}
+
+function handleAttachmentFiles(files: File[], event: ClipboardEvent | DragEvent) {
+  if (!files.length) return
+  event.preventDefault()
+  const result = selectUploadFiles(files, {
+    allowedExtensions: ['bmp', 'gif', 'jpg', 'jpeg', 'png'],
+    maxSizeMb: 10,
+    limit: 1
+  })
+  if (result.issue) showAttachmentValidation(result.issue)
+  enqueueUploadFiles(attachmentUploadRef.value, result.files)
+}
+
+function showAttachmentValidation(issue: UploadValidationIssue) {
+  const message = issue === 'limit'
+    ? t('upload.limitExceeded', { limit: 1 })
+    : issue === 'size'
+      ? t('upload.imageTooLarge', { size: 10 })
+      : t('upload.invalidImageType', { types: 'bmp/gif/jpg/jpeg/png' })
+  ElMessage.error(message)
+  return false
 }
 
 async function uploadAttachment(options: UploadRequestOptions) {
   if (!props.config.attachments || !currentRecordId.value) return
   let createdAssetId: string | number | undefined
+  let uploadedOssId: string | number | undefined
+  let assetPersisted = false
   try {
     const uploadResponse = await uploadOssFile(options.file, options.filename)
     const uploadData = uploadResponse.data || {}
+    uploadedOssId = uploadData.ossId
     const assetCode = `ASSET_${props.config.attachments.targetType}_${currentRecordId.value}_${Date.now()}`
     await productMediaAssetApi.add({
       assetCode,
@@ -1562,6 +1633,7 @@ async function uploadAttachment(options: UploadRequestOptions) {
       status: PRODUCT_STATUS_ENABLED,
       delFlag: '0'
     })
+    assetPersisted = true
     const assetResponse = await productMediaAssetApi.options({ assetCode, status: PRODUCT_STATUS_ENABLED })
     const assetList = Array.isArray(assetResponse) ? assetResponse : assetResponse.data || []
     const asset = assetList.find((item) => item.assetCode === assetCode) || assetList[0]
@@ -1589,9 +1661,16 @@ async function uploadAttachment(options: UploadRequestOptions) {
   } catch (error) {
     if (createdAssetId) {
       try {
+        await productMediaAssetApi.changeStatus(createdAssetId, PRODUCT_STATUS_DISABLED)
         await productMediaAssetApi.remove(createdAssetId)
       } catch (rollbackError) {
         console.warn('Failed to rollback media asset after binding upload failure.', rollbackError)
+      }
+    } else if (uploadedOssId && !assetPersisted) {
+      try {
+        await delOwnedOss(uploadedOssId)
+      } catch (rollbackError) {
+        console.warn('Failed to rollback OSS file after media asset upload failure.', rollbackError)
       }
     }
     ElMessage.error(t('common.upload.failed'))
@@ -2012,7 +2091,15 @@ defineExpose({
 
 .product-grid-page__attachments {
   border-top: 1px solid var(--el-border-color-lighter);
+  border-radius: 10px;
   padding-top: 14px;
+  outline: none;
+  transition: background-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.product-grid-page__attachments.is-drop-active {
+  background: var(--el-color-primary-light-9);
+  box-shadow: inset 0 0 0 2px var(--el-color-primary);
 }
 
 .product-grid-page__attachments-head {

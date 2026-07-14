@@ -121,7 +121,7 @@
           </el-col>
           <el-col :span="24">
             <el-form-item :label="t('legacy.noticeContent')">
-              <Editor v-model="form.noticeContent" :min-height="280" />
+              <Editor ref="editorRef" v-model="form.noticeContent" :min-height="280" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -163,6 +163,7 @@ const ids = ref<Array<number | string>>([])
 const total = ref(0)
 const queryRef = ref<FormInstance>()
 const noticeRef = ref<FormInstance>()
+const editorRef = ref<InstanceType<typeof Editor>>()
 const form = ref<Notice>({})
 const queryParams = reactive<NoticeQuery>({
   pageNum: 1,
@@ -255,6 +256,7 @@ async function submitForm() {
       await addNotice(form.value)
       ElMessage.success(t('common.addSuccess'))
     }
+    editorRef.value?.commit()
     formCloseGuard.markPristine()
     open.value = false
     await getList()

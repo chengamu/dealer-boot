@@ -17,6 +17,7 @@ import com.bocoo.common.core.utils.StringUtils;
 import com.bocoo.common.redis.utils.CacheUtils;
 import com.bocoo.common.redis.utils.RedisUtils;
 import com.bocoo.common.oss.constant.OssConstant;
+import com.bocoo.common.oss.core.OssCredentialMode;
 import com.bocoo.system.domain.entity.SysOssConfig;
 import com.bocoo.system.domain.bo.SysOssConfigBo;
 import com.bocoo.system.domain.vo.SysOssConfigVo;
@@ -78,6 +79,7 @@ public class SysOssConfigService {
 
     public Boolean insertByBo(SysOssConfigBo bo) {
         SysOssConfig config = MapstructUtils.convert(bo, SysOssConfig.class);
+        OssConfigCredentialSupport.prepare(config);
         validEntityBeforeSave(config);
         boolean flag = ossConfigMapper.insert(config) > 0;
         if (flag) {
@@ -88,8 +90,11 @@ public class SysOssConfigService {
 
     public Boolean updateByBo(SysOssConfigBo bo) {
         SysOssConfig config = MapstructUtils.convert(bo, SysOssConfig.class);
+        OssCredentialMode credentialMode = OssConfigCredentialSupport.prepare(config);
         validEntityBeforeSave(config);
         LambdaUpdateWrapper<SysOssConfig> luw = new LambdaUpdateWrapper<>();
+        luw.set(credentialMode.usesSharedBucket(), SysOssConfig::getAccessKey, null);
+        luw.set(credentialMode.usesSharedBucket(), SysOssConfig::getSecretKey, null);
         luw.set(ObjectUtil.isNull(config.getPrefix()), SysOssConfig::getPrefix, "");
         luw.set(ObjectUtil.isNull(config.getRegion()), SysOssConfig::getRegion, "");
         luw.set(ObjectUtil.isNull(config.getExt1()), SysOssConfig::getExt1, "");

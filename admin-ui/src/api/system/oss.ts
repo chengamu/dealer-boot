@@ -46,3 +46,10 @@ export function delOss(ossId: number | string | Array<number | string>) {
     method: 'delete'
   })
 }
+
+export function delOwnedOss(ossId: number | string | Array<number | string>) {
+  return request({
+    url: `/system/oss/owned/${ossId}`,
+    method: 'delete'
+  })
+}

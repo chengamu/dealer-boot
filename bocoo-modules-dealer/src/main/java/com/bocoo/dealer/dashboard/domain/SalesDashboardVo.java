@@ -6,27 +6,23 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public record SalesDashboardVo(
-    String scopeType,
+    String viewType,
     String scopeLabel,
+    Long salesStoreId,
+    String salesStoreName,
+    LocalDate periodStart,
+    LocalDate periodEnd,
     LocalDateTime dataAsOf,
-    LocalDate fromDate,
-    LocalDate toDate,
     Capabilities capabilities,
-    QuoteSummary quoteSummary,
-    OrderSummary orderSummary,
-    PaymentSummary paymentSummary,
-    FulfillmentSummary fulfillmentSummary,
+    Summary summary,
     List<RecentQuote> recentQuotes,
     List<RecentOrder> recentOrders,
-    List<Todo> todos
+    List<AttentionGroup> attentionGroups
 ) {
     public record Capabilities(
         boolean quote,
-        boolean quoteDetail,
         boolean order,
-        boolean orderDetail,
         boolean payment,
-        boolean fulfillment,
         boolean production,
         boolean shipment,
         boolean createQuote,
@@ -35,27 +31,21 @@ public record SalesDashboardVo(
     ) {
     }
 
-    public record QuoteSummary(long activeCount, long draftCount, long confirmedUnconvertedCount) {
-    }
-
-    public record OrderSummary(long activeCount, long periodSubmittedCount, long pendingPaymentCount) {
-    }
-
-    public record PaymentSummary(
-        long pendingCount,
-        BigDecimal pendingAmount,
-        long paidThisMonthCount,
-        BigDecimal paidThisMonthAmount,
-        String currencyCode
-    ) {
-    }
-
-    public record FulfillmentSummary(
+    public record Summary(
+        long activeQuoteCount,
+        long expiringQuoteCount,
+        long activeProductionCount,
         long pendingProductionCount,
         long inProductionCount,
-        long pendingShipmentCount,
-        long shippedCount,
-        long completedCount
+        long paidOrderCount,
+        BigDecimal paidAmount,
+        long pendingPaymentOrderCount,
+        BigDecimal pendingPaymentAmount,
+        String currencyCode,
+        DashboardTarget activeQuoteTarget,
+        DashboardTarget productionTarget,
+        DashboardTarget paidTarget,
+        DashboardTarget pendingPaymentTarget
     ) {
     }
 
@@ -69,7 +59,11 @@ public record SalesDashboardVo(
         BigDecimal totalAmount,
         String currencyCode,
         Long salesDocumentId,
-        LocalDateTime updatedAt
+        LocalDateTime updatedAt,
+        String businessOrigin,
+        Long tenantId,
+        Long salesStoreId,
+        DashboardTarget target
     ) {
     }
 
@@ -85,18 +79,51 @@ public record SalesDashboardVo(
         String shipmentStatus,
         BigDecimal totalAmount,
         String currencyCode,
-        LocalDateTime submittedAt
+        LocalDateTime submittedAt,
+        String businessOrigin,
+        Long tenantId,
+        Long salesStoreId,
+        DashboardTarget target
     ) {
     }
 
-    public record Todo(
+    public record AttentionGroup(
+        String reasonCode,
+        long totalCount,
+        DashboardTarget target,
+        List<AttentionItem> items
+    ) {
+    }
+
+    public record AttentionItem(
         String type,
         Long sourceId,
         String sourceNo,
         String customerName,
         String projectName,
-        String reasonCode,
         LocalDateTime occurredAt
     ) {
+    }
+
+    public record DashboardTarget(String module, TargetFilters filters) {
+    }
+
+    public record TargetFilters(
+        Long id,
+        String status,
+        String paymentStatus,
+        List<String> productionStatuses,
+        List<String> shipmentStatuses,
+        Boolean unconverted,
+        LocalDate dateFrom,
+        LocalDate dateTo,
+        Long tenantId,
+        String businessOrigin,
+        Long salesStoreId
+    ) {
+        public static TargetFilters scope(Long tenantId, String businessOrigin, Long salesStoreId) {
+            return new TargetFilters(null, null, null, List.of(), List.of(), null, null, null,
+                tenantId, businessOrigin, salesStoreId);
+        }
     }
 }

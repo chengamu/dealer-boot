@@ -27,7 +27,7 @@ public class QuickOrderDraftServiceImpl implements QuickOrderDraftService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long insert(QuickOrderBo bo) {
-        QuickOrder row = headerFactory.create(bo, access.tenantId());
+        QuickOrder row = headerFactory.create(bo);
         mapper.insert(row);
         QuickOrderItemWriteResult result = itemWriter.replace(row.getQuickOrderId(), row.getTenantId(), bo.getItems());
         QuickOrderTotals.apply(row, result.items(), result.currencyCode()); mapper.updateById(row);
@@ -67,7 +67,7 @@ public class QuickOrderDraftServiceImpl implements QuickOrderDraftService {
     public Long copy(Long id) {
         QuickOrder source = access.load(id);
         QuickOrderBo bo = copyHeader(source);
-        QuickOrder target = headerFactory.create(bo, source.getTenantId());
+        QuickOrder target = headerFactory.copy(bo, source);
         mapper.insert(target);
         itemWriter.copyPending(target.getQuickOrderId(), target.getTenantId(), access.items(id, source.getTenantId()));
         QuickOrderTotals.apply(target, List.of(), source.getCurrencyCode()); mapper.updateById(target);

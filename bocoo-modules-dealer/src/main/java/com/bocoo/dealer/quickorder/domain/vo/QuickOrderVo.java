@@ -13,6 +13,10 @@ import java.util.List;
 @AutoMapper(target = QuickOrder.class)
 public class QuickOrderVo {
     private Long quickOrderId;
+    private Long tenantId;
+    private String businessOrigin;
+    private Long salesStoreId;
+    private Long deptId;
     private String quickOrderNo;
     private Long customerId;
     private String customerName;

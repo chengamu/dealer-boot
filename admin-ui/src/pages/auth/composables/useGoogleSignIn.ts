@@ -3,6 +3,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getGoogleClientId } from '@/utils/config'
+import { resolveHomeRouteTarget } from '@/stores/homeRoute'
 import { useUserStore } from '@/stores/user'
 import type { GoogleLoginResult } from '@/api/auth'
 
@@ -76,7 +77,7 @@ export function useGoogleSignIn() {
       const result = await userStore.loginWithGoogle(response.credential)
       if (result.login) {
         await userStore.loadUser()
-        const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/index'
+        const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : resolveHomeRouteTarget().path
         router.push(redirect)
         return
       }

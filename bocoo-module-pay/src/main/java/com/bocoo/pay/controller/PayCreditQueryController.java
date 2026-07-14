@@ -21,19 +21,19 @@ import org.springframework.web.bind.annotation.RestController;
 public class PayCreditQueryController {
     private final PayCreditQueryService service;
 
-    @SaCheckPermission("pay:credit:query")
+    @SaCheckPermission("platform:finance:credit:list")
     @GetMapping("/account/list")
     public TableDataInfo<CreditAccountSummaryVo> accounts(CreditAccountQueryBo query, PageQuery pageQuery) {
         return service.accounts(query, pageQuery);
     }
 
-    @SaCheckPermission("pay:credit:query")
+    @SaCheckPermission("platform:finance:credit:query")
     @GetMapping("/transaction/list")
     public TableDataInfo<CreditTransactionVo> transactions(CreditTransactionQueryBo query, PageQuery pageQuery) {
         return service.transactions(query, pageQuery);
     }
 
-    @SaCheckPermission("pay:credit:query")
+    @SaCheckPermission("platform:finance:receivable:list")
     @GetMapping("/receivable/list")
     public TableDataInfo<PayReceivableSummaryVo> receivables(ReceivableQueryBo query, PageQuery pageQuery) {
         return service.receivables(query, pageQuery);

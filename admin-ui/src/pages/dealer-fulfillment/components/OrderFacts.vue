@@ -2,7 +2,7 @@
   <section class="fulfillment-section">
     <h3>{{ t('dealer.fulfillment.orderFacts') }}</h3>
     <dl class="fulfillment-facts">
-      <div><dt>{{ t('dealer.fulfillment.source') }}</dt><dd>{{ sourceText(t, order.sourceType) }} · {{ order.sourceNo || '-' }}</dd></div>
+      <div><dt>{{ t('dealer.fulfillment.sourceLabel') }}</dt><dd>{{ sourceText(t, order.sourceType) }} · {{ order.sourceNo || '-' }}</dd></div>
       <div><dt>{{ t('dealer.fulfillment.merchant') }}</dt><dd>{{ order.merchantName || '-' }}</dd></div>
       <div><dt>{{ t('dealer.fulfillment.customer') }}</dt><dd>{{ order.customerName || '-' }}</dd></div>
       <div><dt>{{ t('dealer.fulfillment.project') }}</dt><dd>{{ order.projectName || '-' }}</dd></div>

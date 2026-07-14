@@ -7,6 +7,7 @@ import com.bocoo.dealer.domain.entity.SalesDocument;
 import com.bocoo.dealer.domain.entity.SalesDocumentItem;
 import com.bocoo.dealer.quickorder.domain.entity.QuickOrder;
 import com.bocoo.dealer.quickorder.domain.entity.QuickOrderItem;
+import com.bocoo.dealer.scope.SalesOwnership;
 import com.bocoo.system.domain.vo.MerchantProfileVo;
 import org.springframework.stereotype.Component;
 
@@ -17,14 +18,14 @@ import java.math.RoundingMode;
 class QuickOrderSalesDocumentFactory {
     SalesDocument header(QuickOrder source, MerchantProfileVo profile) {
         SalesDocument row = new SalesDocument();
-        row.setTenantId(source.getTenantId());
+        SalesOwnership.from(source).applyTo(row);
         row.setMerchantId(profile == null ? null : profile.getMerchantId());
         row.setMerchantName(profile == null ? null : profile.getMerchantName());
         row.setSourceType("QUICK_ORDER"); row.setSourceQuickOrderId(source.getQuickOrderId());
         row.setSourceNo(source.getQuickOrderNo()); row.setOrderNo("SO-" + Seq.getId());
         row.setCustomerId(source.getCustomerId()); row.setCustomerName(source.getCustomerName());
         row.setCompanyName(source.getCompanyName()); row.setCustomerEmail(source.getCustomerEmail());
-        row.setCustomerPhone(source.getCustomerPhone()); row.setOwnerUserId(source.getOwnerUserId());
+        row.setCustomerPhone(source.getCustomerPhone());
         row.setOwnerName(source.getOwnerName()); row.setCustomerPoNo(source.getCustomerPoNo());
         row.setRecipientName(source.getRecipientName()); row.setRecipientPhone(source.getRecipientPhone());
         row.setShippingAddress(source.getShippingAddress()); row.setCurrencyCode(source.getCurrencyCode());

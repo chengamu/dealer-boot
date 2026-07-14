@@ -2,16 +2,28 @@ import type { DecimalValue, PageQuery } from '@/types/api'
 
 export type PayOrderStatus = 0 | 5 | 10 | 20
 export type PayMethod = 'paypal' | 'bank_transfer' | 'credit_limit' | string
+export type BusinessOrigin = 'MERCHANT' | 'INTERNAL' | string
+export type BankTransferStatus = 'DRAFT' | 'PENDING_REVIEW' | 'REJECTED' | 'SUCCESS' | 'CLOSED' | string
+export type CreditAccountStatus = 'ACTIVE' | 'FROZEN' | string
+export type ReceivableStatus = 'OPEN' | 'PARTIAL' | 'SETTLED' | 'OVERDUE' | string
+export type ReconciliationSeverity = 'CRITICAL' | 'WARNING' | string
+export type ReconciliationStatus = 'OPEN' | 'RESOLVED' | 'IGNORED' | string
+export type { ReconciliationAction, ReconciliationCase, ReconciliationCaseDetail, ReconciliationQuery } from './reconciliation-types'
 
 export interface PayOrder {
   id?: string
+  payOrderId?: string
   payerTenantId?: string
   payeeTenantId?: string
   channelCode?: PayMethod
   no?: string
+  payOrderNo?: string
   merchantOrderId?: string
   salesDocumentId?: string
   salesOrderNo?: string
+  businessOrigin?: BusinessOrigin
+  subjectId?: string
+  subjectName?: string
   merchantId?: string
   merchantName?: string
   customerId?: string
@@ -53,13 +65,17 @@ export interface PayAttempt {
 
 export interface CreditAccount {
   creditAccountId?: string
+  businessOrigin?: BusinessOrigin
+  tenantId?: string
+  salesStoreId?: string
   merchantId?: string
   merchantName?: string
+  subjectName?: string
   creditLimit?: DecimalValue
   usedCredit?: DecimalValue
   availableCredit?: DecimalValue
   currency?: string
-  status?: string
+  status?: CreditAccountStatus
   frozenReason?: string
   updateTime?: string
 }
@@ -104,14 +120,22 @@ export interface EnabledPayChannel {
 
 export interface Receivable {
   receivableId?: string
+  receivableNo?: string
+  businessOrigin?: BusinessOrigin
+  tenantId?: string
+  salesStoreId?: string
+  merchantId?: string
   merchantName?: string
+  subjectName?: string
+  salesDocumentId?: string
+  payOrderId?: string
   salesOrderNo?: string
   payOrderNo?: string
   receivableAmount?: DecimalValue
   repaidAmount?: DecimalValue
   outstandingAmount?: DecimalValue
   currency?: string
-  status?: string
+  status?: ReceivableStatus
   formedTime?: string
   dueDate?: string
   settledTime?: string
@@ -166,10 +190,83 @@ export interface SalesPayment {
 }
 
 export interface PayOrderQuery extends PageQuery {
+  beginTime?: string
+  endTime?: string
+  businessOrigin?: BusinessOrigin | ''
+  subjectId?: string
+  keyword?: string
   no?: string
   merchantOrderId?: string
   channelCode?: string
   status?: PayOrderStatus | ''
+}
+
+export interface BankTransferRecord {
+  extensionId?: string
+  payOrderId?: string
+  payOrderNo?: string
+  salesDocumentId?: string
+  salesOrderNo?: string
+  businessOrigin?: BusinessOrigin
+  subjectName?: string
+  payerName?: string
+  referenceNo?: string
+  declaredPrice?: string
+  currency?: string
+  proofMediaId?: string
+  status?: BankTransferStatus
+  transferTime?: string
+  submittedTime?: string
+  reviewedTime?: string
+  rejectReason?: string
+}
+
+export interface BankTransferQuery extends PageQuery {
+  beginTime?: string
+  endTime?: string
+  businessOrigin?: BusinessOrigin | ''
+  subjectId?: string
+  keyword?: string
+  status?: BankTransferStatus | ''
+}
+
+export interface CreditAccountQuery extends PageQuery {
+  businessOrigin?: BusinessOrigin | ''
+  tenantId?: string
+  salesStoreId?: string
+  merchantId?: string
+  merchantName?: string
+  currency?: string
+  status?: CreditAccountStatus | ''
+}
+
+export interface CreditTransactionQuery extends PageQuery {
+  creditAccountId?: string
+  transactionNo?: string
+  transactionType?: string
+  businessNo?: string
+}
+
+export interface ReceivableQuery extends PageQuery {
+  businessOrigin?: BusinessOrigin | ''
+  tenantId?: string
+  salesStoreId?: string
+  creditAccountId?: string
+  merchantId?: string
+  merchantName?: string
+  salesOrderNo?: string
+  payOrderNo?: string
+  status?: ReceivableStatus | ''
+}
+
+export interface CreditRepayRequest {
+  amount: DecimalValue
+  paidTime: string
+  method: string
+  reference: string
+  proofMediaId?: string
+  reason: string
+  idempotencyKey: string
 }
 
 export interface PayPalCheckout {

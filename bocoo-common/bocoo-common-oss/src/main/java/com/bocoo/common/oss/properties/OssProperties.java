@@ -55,4 +55,9 @@ public class OssProperties {
      */
     private String accessPolicy;
 
+    /**
+     * 凭证模式扩展字段
+     */
+    private String ext1;
+
 }

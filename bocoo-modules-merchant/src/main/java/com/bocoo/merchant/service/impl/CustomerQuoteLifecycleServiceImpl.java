@@ -24,6 +24,7 @@ public class CustomerQuoteLifecycleServiceImpl extends MerchantServiceSupport im
     private final CustomerQuoteItemWriter itemWriter;
     private final CustomerQuoteCalculator calculator;
     private final CustomerQuotePricingSessionFactory sessionFactory;
+    private final SalesOwnershipResolver ownershipResolver;
 
     @Override
     @Lock4j(name = "customer-quote-confirm", keys = {"#tenantId", "#id"})
@@ -61,6 +62,7 @@ public class CustomerQuoteLifecycleServiceImpl extends MerchantServiceSupport im
         boolean updated = quoteMapper.update(null, new UpdateWrapper<CustomerQuote>()
             .eq("quote_id", id)
             .eq("tenant_id", quote.getTenantId())
+            .eq("business_origin", quote.getBusinessOrigin())
             .eq("status", "DRAFT")
             .set("status", "CONFIRMED")
             .set("confirmed_by_id", userId)
@@ -90,6 +92,7 @@ public class CustomerQuoteLifecycleServiceImpl extends MerchantServiceSupport im
         boolean updated = quoteMapper.update(null, new UpdateWrapper<CustomerQuote>()
             .eq("quote_id", id)
             .eq("tenant_id", quote.getTenantId())
+            .eq("business_origin", quote.getBusinessOrigin())
             .eq("status", "CONFIRMED")
             .isNull("sales_document_id")
             .set("status", "VOID")) > 0;
@@ -106,7 +109,9 @@ public class CustomerQuoteLifecycleServiceImpl extends MerchantServiceSupport im
 
     private CustomerQuote load(Long id) {
         CustomerQuote quote = quoteMapper.selectOne(this.<CustomerQuote>activeQuery()
-            .eq("tenant_id", currentTenantId()).eq("quote_id", id), false);
+            .eq("tenant_id", currentTenantId())
+            .eq("business_origin", ownershipResolver.currentBusinessOrigin())
+            .eq("quote_id", id), false);
         if (quote == null) {
             throw ServiceException.ofMessageKey("customer.quote.notFound");
         }

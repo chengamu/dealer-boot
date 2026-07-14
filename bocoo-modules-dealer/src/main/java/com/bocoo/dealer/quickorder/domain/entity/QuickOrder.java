@@ -16,6 +16,9 @@ public class QuickOrder extends BaseEntity {
     @TableId(value = "quick_order_id")
     private Long quickOrderId;
     private Long tenantId;
+    private String businessOrigin;
+    private Long salesStoreId;
+    private Long deptId;
     private String quickOrderNo;
     private Long customerId;
     private String customerName;

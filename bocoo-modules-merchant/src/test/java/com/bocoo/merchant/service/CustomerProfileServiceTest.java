@@ -8,13 +8,18 @@ import com.bocoo.merchant.domain.vo.CustomerOwnerOptionVo;
 import com.bocoo.merchant.mapper.CustomerProfileMapper;
 import com.bocoo.merchant.mapper.CustomerQuoteMapper;
 import com.bocoo.merchant.service.impl.CustomerProfileServiceImpl;
+import com.bocoo.merchant.service.impl.CustomerProfileNormalizer;
+import com.bocoo.merchant.service.impl.SalesOwnershipResolver;
 import com.bocoo.system.domain.entity.SysUser;
+import com.bocoo.system.domain.vo.SalesStoreVo;
 import com.bocoo.system.mapper.MerchantProfileMapper;
 import com.bocoo.system.mapper.SysUserMapper;
+import com.bocoo.system.service.SalesStoreService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.ArgumentCaptor;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
@@ -26,6 +31,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.lenient;
 
 @ExtendWith(MockitoExtension.class)
 class CustomerProfileServiceTest {
@@ -38,6 +44,8 @@ class CustomerProfileServiceTest {
     private SysUserMapper userMapper;
     @Mock
     private CustomerQuoteMapper quoteMapper;
+    @Mock
+    private SalesStoreService salesStoreService;
 
     private CustomerProfileServiceImpl service;
 
@@ -46,8 +54,15 @@ class CustomerProfileServiceTest {
         MerchantServiceTestSupport.prepare();
         TestSaTokenContext.install();
         TestSaTokenContext.setLoginUser(TenantType.MERCHANT.getCode(), 200L, 10L, "merchant");
-        service = new CustomerProfileServiceImpl(customerMapper, merchantProfileMapper, userMapper, quoteMapper,
-            org.mockito.Mockito.mock(org.springframework.beans.factory.ObjectProvider.class));
+        SysUser currentOwner = new SysUser();
+        currentOwner.setUserId(10L);
+        currentOwner.setNickName("Sales");
+        lenient().when(userMapper.selectOne(any(), eq(false))).thenReturn(currentOwner);
+        SalesOwnershipResolver ownershipResolver = new SalesOwnershipResolver(salesStoreService);
+        CustomerProfileNormalizer normalizer = new CustomerProfileNormalizer(
+            merchantProfileMapper, userMapper, ownershipResolver);
+        service = new CustomerProfileServiceImpl(customerMapper, userMapper, quoteMapper,
+            org.mockito.Mockito.mock(org.springframework.beans.factory.ObjectProvider.class), normalizer, ownershipResolver);
     }
 
     @Test
@@ -143,7 +158,61 @@ class CustomerProfileServiceTest {
 
         service.insertByBo(bo);
 
-        verify(customerMapper).insert(any());
+        ArgumentCaptor<CustomerProfile> captor = ArgumentCaptor.forClass(CustomerProfile.class);
+        verify(customerMapper).insert(captor.capture());
+        assertThat(captor.getValue().getTenantId()).isEqualTo(200L);
+        assertThat(captor.getValue().getBusinessOrigin()).isEqualTo("MERCHANT");
+        assertThat(captor.getValue().getSalesStoreId()).isNull();
+        assertThat(captor.getValue().getDeptId()).isEqualTo(100L);
+        assertThat(captor.getValue().getOwnerUserId()).isEqualTo(10L);
+    }
+
+    @Test
+    void updateAllowsExistingCustomerWithoutOwner() {
+        CustomerProfile current = new CustomerProfile();
+        current.setCustomerId(1L);
+        current.setTenantId(200L);
+        current.setBusinessOrigin("MERCHANT");
+        current.setDeptId(100L);
+        current.setOwnerUserId(null);
+        current.setOwnerName(null);
+        when(customerMapper.selectOne(any(), eq(false))).thenReturn(current);
+        when(customerMapper.selectCount(any())).thenReturn(0L);
+        when(customerMapper.updateById(any())).thenReturn(1);
+
+        CustomerProfileBo bo = new CustomerProfileBo();
+        bo.setCustomerId(1L);
+        bo.setCustomerName("Unassigned Customer");
+        bo.setEmail("unassigned@example.com");
+
+        assertThat(service.updateByBo(bo)).isTrue();
+
+        verify(userMapper, never()).selectOne(any(), eq(false));
+    }
+
+    @Test
+    void insertInternalCustomerUsesEnabledDepartmentStore() {
+        TestSaTokenContext.setLoginUser(TenantType.PLATFORM.getCode(), 1L, 1L, "internal", 21L);
+        SalesStoreVo store = new SalesStoreVo();
+        store.setSalesStoreId(501L);
+        when(salesStoreService.resolveEnabledByDeptId(21L)).thenReturn(store);
+        when(customerMapper.selectCount(any())).thenReturn(0L);
+        when(customerMapper.insert(any())).thenReturn(1);
+
+        CustomerProfileBo bo = new CustomerProfileBo();
+        bo.setCustomerName("Internal Customer");
+        bo.setEmail("internal@example.com");
+
+        service.insertByBo(bo);
+
+        ArgumentCaptor<CustomerProfile> captor = ArgumentCaptor.forClass(CustomerProfile.class);
+        verify(customerMapper).insert(captor.capture());
+        CustomerProfile saved = captor.getValue();
+        assertThat(saved.getTenantId()).isEqualTo(1L);
+        assertThat(saved.getBusinessOrigin()).isEqualTo("INTERNAL");
+        assertThat(saved.getSalesStoreId()).isEqualTo(501L);
+        assertThat(saved.getDeptId()).isEqualTo(21L);
+        assertThat(saved.getOwnerUserId()).isEqualTo(1L);
     }
 
     @Test

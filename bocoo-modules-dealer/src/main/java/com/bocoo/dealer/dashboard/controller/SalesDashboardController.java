@@ -18,6 +18,6 @@ public class SalesDashboardController {
     @SaCheckPermission("sales:dashboard:view")
     @GetMapping
     public R<SalesDashboardVo> get() {
-        return R.ok(service.getDashboard());
+        return R.ok(service.getBusinessDashboard());
     }
 }

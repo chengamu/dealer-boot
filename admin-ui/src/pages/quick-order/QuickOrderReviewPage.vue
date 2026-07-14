@@ -1,9 +1,11 @@
 <template>
   <div class="quick-order-review" v-loading="loading">
     <header class="quick-order-review__topbar">
-      <div>
+      <div class="quick-order-review__title">
         <h1>{{ order.quickOrderNo || t('dealer.quickOrder.reviewTitle') }}</h1>
-        <p>{{ t('dealer.quickOrder.reviewHint') }}</p>
+        <el-tag :type="order.status === 'ORDERED' ? 'success' : 'warning'">
+          {{ order.status === 'ORDERED' ? t('dealer.quickOrder.status.ORDERED') : t('dealer.quickOrder.status.DRAFT') }}
+        </el-tag>
       </div>
       <div class="quick-order-review__actions">
         <el-button @click="backToWorkbench">{{ t('dealer.quickOrder.backToWorkbench') }}</el-button>
@@ -15,14 +17,12 @@
     </header>
 
     <section class="quick-order-review__facts">
-      <el-descriptions :column="4" border>
-        <el-descriptions-item :label="t('dealer.quickOrder.customer')">{{ order.customerName || '-' }}</el-descriptions-item>
-        <el-descriptions-item :label="t('dealer.quickOrder.recipient')">{{ order.recipientName || '-' }}</el-descriptions-item>
-        <el-descriptions-item :label="t('dealer.quickOrder.phone')">{{ order.recipientPhone || '-' }}</el-descriptions-item>
-        <el-descriptions-item :label="t('dealer.quickOrder.customerPo')">{{ order.customerPoNo || '-' }}</el-descriptions-item>
-        <el-descriptions-item :label="t('dealer.quickOrder.address')" :span="2">{{ order.shippingAddress || '-' }}</el-descriptions-item>
-        <el-descriptions-item :label="t('dealer.quickOrder.remark')" :span="2">{{ order.remark || '-' }}</el-descriptions-item>
-      </el-descriptions>
+      <article><span>{{ t('dealer.quickOrder.customerLabel') }}</span><strong>{{ order.customerName || '-' }}</strong></article>
+      <article><span>{{ t('dealer.quickOrder.recipient') }}</span><strong>{{ order.recipientName || '-' }}</strong></article>
+      <article><span>{{ t('dealer.quickOrder.phone') }}</span><strong>{{ order.recipientPhone || '-' }}</strong></article>
+      <article><span>{{ t('dealer.quickOrder.customerPo') }}</span><strong>{{ order.customerPoNo || '-' }}</strong></article>
+      <article class="is-wide"><span>{{ t('dealer.quickOrder.address') }}</span><strong>{{ order.shippingAddress || '-' }}</strong></article>
+      <article class="is-wide"><span>{{ t('dealer.quickOrder.remark') }}</span><strong>{{ order.remark || '-' }}</strong></article>
     </section>
 
     <section class="quick-order-review__table">
@@ -116,16 +116,34 @@ void loadDraft()
 <style scoped>
 .quick-order-review { display: flex; min-height: calc(100vh - 92px); flex-direction: column; gap: 12px; padding: 12px; background: var(--admin-bg); }
 .quick-order-review__topbar,
+.quick-order-review__title,
 .quick-order-review__actions,
 .quick-order-review__totals { display: flex; align-items: center; gap: 12px; }
 .quick-order-review__topbar { justify-content: space-between; }
 .quick-order-review__topbar h1 { margin: 0; color: #1d2939; font-size: 24px; }
-.quick-order-review__topbar p { margin: 6px 0 0; color: #667085; }
 .quick-order-review__facts,
 .quick-order-review__table,
 .quick-order-review__totals { padding: 12px 14px; border: 1px solid #e3e9f2; border-radius: 8px; background: #fff; }
+.quick-order-review__facts {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px 16px;
+}
+.quick-order-review__facts article {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 6px;
+}
+.quick-order-review__facts article span { color: #667085; font-size: 12px; font-weight: 600; }
+.quick-order-review__facts article strong { color: #1d2939; line-height: 22px; }
+.quick-order-review__facts .is-wide { grid-column: span 2; }
 .quick-order-review__totals { justify-content: flex-end; }
 .quick-order-review__totals div { display: flex; min-width: 180px; align-items: center; justify-content: space-between; color: #667085; }
 .quick-order-review__totals b { color: #1d2939; font-size: 18px; }
 .quick-order-review__totals .is-total b { color: #1677ff; font-size: 22px; }
+@media (max-width: 1280px) {
+  .quick-order-review__facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .quick-order-review__facts .is-wide { grid-column: span 2; }
+}
 </style>

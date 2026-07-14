@@ -18,6 +18,9 @@ public class CustomerQuote extends BaseEntity {
     @TableId(value = "quote_id")
     private Long quoteId;
     private Long tenantId;
+    private String businessOrigin;
+    private Long salesStoreId;
+    private Long deptId;
     private String quoteNo;
     private Long customerId;
     private String customerName;

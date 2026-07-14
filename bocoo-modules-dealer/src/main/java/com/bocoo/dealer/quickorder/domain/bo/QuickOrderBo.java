@@ -14,6 +14,11 @@ import java.util.List;
 public class QuickOrderBo extends BaseBo {
     @NotNull(message = "{dealer.quickOrder.id.required}", groups = EditGroup.class)
     private Long quickOrderId;
+    private Long tenantId;
+    private String businessOrigin;
+    private Long salesStoreId;
+    private Long deptId;
+    private Long ownerUserId;
     private String quickOrderNo;
     private Long customerId;
     private String customerName;

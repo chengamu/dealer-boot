@@ -186,8 +186,10 @@ CREATE INDEX IF NOT EXISTS idx_pay_webhook_retry ON pay_webhook_event (process_s
 
 CREATE TABLE IF NOT EXISTS merchant_credit_account (
     credit_account_id bigint PRIMARY KEY,
+    business_origin varchar(20) NOT NULL CHECK (business_origin IN ('INTERNAL', 'MERCHANT')),
     tenant_id bigint NOT NULL CHECK (tenant_id <> 0),
-    merchant_id bigint NOT NULL,
+    sales_store_id bigint,
+    merchant_id bigint,
     merchant_name varchar(200),
     currency varchar(3) NOT NULL DEFAULT 'USD',
     credit_limit numeric(18,2) NOT NULL DEFAULT 0 CHECK (credit_limit >= 0),
@@ -206,7 +208,21 @@ CREATE TABLE IF NOT EXISTS merchant_credit_account (
     remark varchar(1000),
     CHECK (used_credit <= credit_limit)
 );
-CREATE UNIQUE INDEX IF NOT EXISTS uk_merchant_credit_account_tenant ON merchant_credit_account (tenant_id);
+DROP INDEX IF EXISTS uk_merchant_credit_account_tenant;
+ALTER TABLE merchant_credit_account ADD COLUMN IF NOT EXISTS business_origin varchar(20);
+ALTER TABLE merchant_credit_account ADD COLUMN IF NOT EXISTS sales_store_id bigint;
+ALTER TABLE merchant_credit_account ALTER COLUMN merchant_id DROP NOT NULL;
+UPDATE merchant_credit_account SET business_origin = CASE WHEN tenant_id = 1 THEN 'INTERNAL' ELSE 'MERCHANT' END
+WHERE business_origin IS NULL;
+ALTER TABLE merchant_credit_account ALTER COLUMN business_origin SET NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_merchant_credit_account_subject
+    ON merchant_credit_account (business_origin, tenant_id, sales_store_id, currency, status);
+CREATE UNIQUE INDEX IF NOT EXISTS uk_merchant_credit_account_merchant_subject
+    ON merchant_credit_account (tenant_id, currency)
+    WHERE business_origin = 'MERCHANT' AND sales_store_id IS NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS uk_merchant_credit_account_internal_subject
+    ON merchant_credit_account (sales_store_id, currency)
+    WHERE business_origin = 'INTERNAL' AND sales_store_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_merchant_credit_account_merchant ON merchant_credit_account (merchant_id, status);
 
 CREATE TABLE IF NOT EXISTS merchant_credit_transaction (
@@ -227,6 +243,11 @@ CREATE TABLE IF NOT EXISTS merchant_credit_transaction (
     operator_id bigint,
     operator_name varchar(100),
     occurred_time timestamptz NOT NULL,
+    payment_method varchar(32),
+    payment_reference varchar(128),
+    paid_time timestamptz,
+    proof_media_id bigint,
+    idempotency_key varchar(128),
     create_by_id bigint,
     create_by varchar(64),
     create_time timestamptz NOT NULL DEFAULT now(),
@@ -236,14 +257,24 @@ CREATE TABLE IF NOT EXISTS merchant_credit_transaction (
 );
 ALTER TABLE merchant_credit_transaction ADD COLUMN IF NOT EXISTS update_by varchar(64);
 ALTER TABLE merchant_credit_transaction ADD COLUMN IF NOT EXISTS update_time timestamptz;
+ALTER TABLE merchant_credit_transaction ADD COLUMN IF NOT EXISTS payment_method varchar(32);
+ALTER TABLE merchant_credit_transaction ADD COLUMN IF NOT EXISTS payment_reference varchar(128);
+ALTER TABLE merchant_credit_transaction ADD COLUMN IF NOT EXISTS paid_time timestamptz;
+ALTER TABLE merchant_credit_transaction ADD COLUMN IF NOT EXISTS proof_media_id bigint;
+ALTER TABLE merchant_credit_transaction ADD COLUMN IF NOT EXISTS idempotency_key varchar(128);
 CREATE UNIQUE INDEX IF NOT EXISTS uk_merchant_credit_transaction_no ON merchant_credit_transaction (transaction_no);
 CREATE INDEX IF NOT EXISTS idx_merchant_credit_transaction_account ON merchant_credit_transaction (tenant_id, credit_account_id, occurred_time DESC);
 CREATE INDEX IF NOT EXISTS idx_merchant_credit_transaction_business ON merchant_credit_transaction (business_type, business_id);
+CREATE INDEX IF NOT EXISTS idx_merchant_credit_transaction_idempotency
+    ON merchant_credit_transaction (business_type, business_id, idempotency_key)
+    WHERE idempotency_key IS NOT NULL;
 
 CREATE TABLE IF NOT EXISTS merchant_receivable (
     receivable_id bigint PRIMARY KEY,
+    business_origin varchar(20) NOT NULL CHECK (business_origin IN ('INTERNAL', 'MERCHANT')),
     tenant_id bigint NOT NULL CHECK (tenant_id <> 0),
-    merchant_id bigint NOT NULL,
+    sales_store_id bigint,
+    merchant_id bigint,
     merchant_name varchar(200),
     receivable_no varchar(64) NOT NULL,
     sales_document_id bigint NOT NULL,
@@ -267,9 +298,218 @@ CREATE TABLE IF NOT EXISTS merchant_receivable (
     remark varchar(1000),
     CHECK (repaid_amount + outstanding_amount = receivable_amount)
 );
+ALTER TABLE merchant_receivable ADD COLUMN IF NOT EXISTS business_origin varchar(20);
+ALTER TABLE merchant_receivable ADD COLUMN IF NOT EXISTS sales_store_id bigint;
+ALTER TABLE merchant_receivable ALTER COLUMN merchant_id DROP NOT NULL;
+UPDATE merchant_receivable SET business_origin = CASE WHEN tenant_id = 1 THEN 'INTERNAL' ELSE 'MERCHANT' END
+WHERE business_origin IS NULL;
+ALTER TABLE merchant_receivable ALTER COLUMN business_origin SET NOT NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS uk_merchant_receivable_no ON merchant_receivable (receivable_no);
 CREATE INDEX IF NOT EXISTS idx_merchant_receivable_sales ON merchant_receivable (sales_document_id, pay_order_id);
 CREATE INDEX IF NOT EXISTS idx_merchant_receivable_tenant_status ON merchant_receivable (tenant_id, status, due_date);
+CREATE INDEX IF NOT EXISTS idx_merchant_receivable_subject
+    ON merchant_receivable (business_origin, tenant_id, sales_store_id, status, due_date);
+
+CREATE TABLE IF NOT EXISTS pay_reconciliation_case (
+    case_id bigint PRIMARY KEY,
+    case_no varchar(64) NOT NULL,
+    business_origin varchar(20) NOT NULL CHECK (business_origin IN ('INTERNAL', 'MERCHANT')),
+    tenant_id bigint NOT NULL CHECK (tenant_id <> 0),
+    sales_store_id bigint,
+    pay_order_id bigint NOT NULL,
+    extension_id bigint,
+    webhook_event_id bigint,
+    sales_document_id bigint,
+    anomaly_type varchar(64) NOT NULL,
+    severity varchar(20) NOT NULL CHECK (severity IN ('WARNING', 'CRITICAL')),
+    status varchar(20) NOT NULL DEFAULT 'OPEN' CHECK (status IN ('OPEN', 'RESOLVED', 'IGNORED')),
+    detected_time timestamptz NOT NULL,
+    last_checked_time timestamptz,
+    diagnosis_code varchar(128),
+    diagnosis_message varchar(1000),
+    expected_snapshot_json text,
+    actual_snapshot_json text,
+    resolved_by_id bigint,
+    resolved_by varchar(100),
+    resolved_time timestamptz,
+    resolution_code varchar(128),
+    version integer NOT NULL DEFAULT 0 CHECK (version >= 0),
+    create_by_id bigint,
+    create_by varchar(64),
+    create_time timestamptz NOT NULL DEFAULT now(),
+    update_by varchar(64),
+    update_time timestamptz
+);
+CREATE INDEX IF NOT EXISTS idx_pay_reconciliation_case_status
+    ON pay_reconciliation_case (status, severity, detected_time DESC);
+CREATE INDEX IF NOT EXISTS idx_pay_reconciliation_case_order
+    ON pay_reconciliation_case (pay_order_id, anomaly_type, status);
+CREATE INDEX IF NOT EXISTS idx_pay_reconciliation_case_scope
+    ON pay_reconciliation_case (business_origin, tenant_id, sales_store_id, status);
+
+CREATE TABLE IF NOT EXISTS pay_reconciliation_action (
+    action_id bigint PRIMARY KEY,
+    case_id bigint NOT NULL,
+    action_type varchar(32) NOT NULL,
+    before_snapshot_json text,
+    after_snapshot_json text,
+    result varchar(32) NOT NULL,
+    result_code varchar(128),
+    result_message varchar(1000),
+    operator_id bigint,
+    operator_name varchar(100),
+    occurred_time timestamptz NOT NULL,
+    reason varchar(1000),
+    create_by_id bigint,
+    create_by varchar(64),
+    create_time timestamptz NOT NULL DEFAULT now(),
+    update_by varchar(64),
+    update_time timestamptz
+);
+CREATE INDEX IF NOT EXISTS idx_pay_reconciliation_action_case
+    ON pay_reconciliation_action (case_id, occurred_time DESC);
+
+-- =====================================================
+-- 阶段 12 最终菜单：业务财务中心与平台财务
+-- =====================================================
+DELETE FROM sys_role_menu WHERE menu_id IN (26023) OR menu_id BETWEEN 26101 AND 26115;
+DELETE FROM sys_menu WHERE menu_id BETWEEN 26101 AND 26115 OR menu_id = 26023;
+
+INSERT INTO sys_menu (menu_id, tenant_id, menu_name, i18n_key, parent_id, order_num, path, component,
+                      is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, remark)
+VALUES
+    (27000, 1, '财务中心', 'finance.business.menu', 0, 50, 'finance', NULL, '1', '0', 'M', '1', '1', NULL, 'finance', 'system', now(), '内部销售财务查询'),
+    (27001, 1, '付款记录', 'finance.business.payments', 27000, 1, 'payments', 'pay/business-payments', '1', '0', 'C', '1', '1', 'pay:order:list', 'money', 'system', now(), '阶段 12 薄壳'),
+    (27002, 1, '信用账户', 'finance.business.creditAccounts', 27000, 2, 'creditAccounts', 'pay/business-credit-accounts', '1', '0', 'C', '1', '1', 'pay:credit:query', 'finance', 'system', now(), '阶段 12 薄壳'),
+    (27003, 1, '应付账单', 'finance.business.receivables', 27000, 3, 'receivables', 'pay/business-receivables', '1', '0', 'C', '1', '1', 'pay:receivable:list', 'invoice', 'system', now(), '阶段 12 薄壳'),
+    (27100, 1, '平台财务', 'platform.finance.menu', 0, 300, 'platformFinance', NULL, '1', '0', 'M', '1', '1', NULL, 'finance', 'system', now(), '平台财务'),
+    (27101, 1, '支付单据', 'platform.finance.payments', 27100, 1, 'payments', 'pay/platform-payments', '1', '0', 'C', '1', '1', 'platform:finance:payment:list', 'money', 'system', now(), '阶段 12 薄壳'),
+    (27102, 1, '转账审核', 'platform.finance.bankTransfers', 27100, 2, 'bankTransfers', 'pay/platform-bank-transfers', '1', '0', 'C', '1', '1', 'platform:finance:bank:list', 'check', 'system', now(), '阶段 12 薄壳'),
+    (27103, 1, '信用账户', 'platform.finance.creditAccounts', 27100, 3, 'creditAccounts', 'pay/platform-credit-accounts', '1', '0', 'C', '1', '1', 'platform:finance:credit:list', 'finance', 'system', now(), '阶段 12 薄壳'),
+    (27104, 1, '信用应收', 'platform.finance.receivables', 27100, 4, 'receivables', 'pay/platform-receivables', '1', '0', 'C', '1', '1', 'platform:finance:receivable:list', 'invoice', 'system', now(), '阶段 12 薄壳'),
+    (27105, 1, '异常对账', 'platform.finance.reconciliationMenu', 27100, 5, 'reconciliation', 'pay/platform-reconciliation', '1', '0', 'C', '1', '1', 'platform:finance:reconciliation:list', 'report', 'system', now(), '阶段 12 薄壳')
+ON CONFLICT (menu_id) DO UPDATE
+SET tenant_id = EXCLUDED.tenant_id, menu_name = EXCLUDED.menu_name, i18n_key = EXCLUDED.i18n_key,
+    parent_id = EXCLUDED.parent_id, order_num = EXCLUDED.order_num, path = EXCLUDED.path,
+    component = EXCLUDED.component, menu_type = EXCLUDED.menu_type, visible = EXCLUDED.visible,
+    status = EXCLUDED.status, perms = EXCLUDED.perms, icon = EXCLUDED.icon,
+    update_by = 'system', update_time = now(), remark = EXCLUDED.remark;
+
+INSERT INTO sys_menu (menu_id, tenant_id, menu_name, i18n_key, parent_id, order_num, path, component,
+                      is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, remark)
+SELECT x.menu_id, 1, x.menu_name, x.i18n_key, x.parent_id, x.order_num, '#', '',
+       '1', '0', 'F', '1', '1', x.perms, '#', 'system', now(), ''
+FROM (VALUES
+    (27011, '付款查询', 'finance.business.payment.query', 27001, 1, 'pay:order:query'),
+    (27012, 'PayPal支付', 'finance.business.payment.paypal', 27001, 2, 'pay:order:submit'),
+    (27013, '银行转账', 'finance.business.payment.bank', 27001, 3, 'pay:bank:submit'),
+    (27014, '信用支付', 'finance.business.payment.credit', 27001, 4, 'pay:credit:use'),
+    (27021, '信用查询', 'finance.business.credit.query', 27002, 1, 'pay:credit:query'),
+    (27031, '账单查询', 'finance.business.receivable.query', 27003, 1, 'pay:receivable:query'),
+    (27111, '支付查询', 'platform.finance.payment.query', 27101, 1, 'platform:finance:payment:query'),
+    (27112, '付款补录', 'platform.finance.payment.supplement', 27101, 2, 'platform:finance:payment:supplement'),
+    (27121, '转账查询', 'platform.finance.bank.query', 27102, 1, 'platform:finance:bank:query'),
+    (27122, '转账审核', 'platform.finance.bank.review', 27102, 2, 'platform:finance:bank:review'),
+    (27131, '信用查询', 'platform.finance.credit.query', 27103, 1, 'platform:finance:credit:query'),
+    (27132, '额度调整', 'platform.finance.credit.adjust', 27103, 2, 'platform:finance:credit:adjust'),
+    (27133, '账户冻结', 'platform.finance.credit.freeze', 27103, 3, 'platform:finance:credit:freeze'),
+    (27134, '账户同步', 'platform.finance.credit.sync', 27103, 4, 'platform:finance:credit:sync'),
+    (27141, '应收查询', 'platform.finance.receivable.query', 27104, 1, 'platform:finance:receivable:query'),
+    (27142, '信用回款', 'platform.finance.receivable.repay', 27104, 2, 'platform:finance:receivable:repay'),
+    (27151, '对账查询', 'platform.finance.reconciliation.query', 27105, 1, 'platform:finance:reconciliation:query'),
+    (27152, '重新扫描', 'platform.finance.reconciliation.rescan', 27105, 2, 'platform:finance:reconciliation:rescan'),
+    (27153, '渠道事件', 'platform.finance.reconciliation.channel', 27105, 3, 'platform:finance:reconciliation:channel'),
+    (27154, '支付修复', 'platform.finance.reconciliation.repair', 27105, 4, 'platform:finance:reconciliation:repair'),
+    (27155, '忽略异常', 'platform.finance.reconciliation.ignore', 27105, 5, 'platform:finance:reconciliation:ignore'),
+    (27156, '商家选项', 'platform.finance.merchant.options', 27100, 90, 'system:merchant:profile:options'),
+    (27157, '门店选项', 'platform.finance.store.options', 27100, 91, 'system:sales-store:options')
+) AS x(menu_id, menu_name, i18n_key, parent_id, order_num, perms)
+ON CONFLICT (menu_id) DO UPDATE
+SET tenant_id = EXCLUDED.tenant_id, menu_name = EXCLUDED.menu_name, i18n_key = EXCLUDED.i18n_key,
+    parent_id = EXCLUDED.parent_id, order_num = EXCLUDED.order_num, perms = EXCLUDED.perms,
+    status = EXCLUDED.status, update_by = 'system', update_time = now();
+
+INSERT INTO sys_menu (menu_id, tenant_id, menu_name, i18n_key, parent_id, order_num, path, component,
+                      is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, remark)
+SELECT t.tenant_id * 1000 + x.offset_id, t.tenant_id, x.menu_name, x.i18n_key,
+       CASE WHEN x.parent_offset = 0 THEN 0 ELSE t.tenant_id * 1000 + x.parent_offset END,
+       x.order_num, x.path, x.component, '1', '0', x.menu_type, '1', '1', x.perms, x.icon,
+       'system', now(), '商家财务菜单'
+FROM sys_tenant t
+CROSS JOIN (VALUES
+    (500, 0, '财务中心', 'finance.business.menu', 50, 'finance', NULL, 'M', NULL, 'finance'),
+    (510, 500, '付款记录', 'finance.business.payments', 1, 'payments', 'pay/business-payments', 'C', 'pay:order:list', 'money'),
+    (520, 500, '信用账户', 'finance.business.creditAccounts', 2, 'creditAccounts', 'pay/business-credit-accounts', 'C', 'pay:credit:query', 'finance'),
+    (530, 500, '应付账单', 'finance.business.receivables', 3, 'receivables', 'pay/business-receivables', 'C', 'pay:receivable:list', 'invoice')
+) AS x(offset_id, parent_offset, menu_name, i18n_key, order_num, path, component, menu_type, perms, icon)
+WHERE t.tenant_type = 'MERCHANT'
+ON CONFLICT (menu_id) DO UPDATE
+SET tenant_id = EXCLUDED.tenant_id, menu_name = EXCLUDED.menu_name, i18n_key = EXCLUDED.i18n_key,
+    parent_id = EXCLUDED.parent_id, order_num = EXCLUDED.order_num, path = EXCLUDED.path,
+    component = EXCLUDED.component, menu_type = EXCLUDED.menu_type, visible = EXCLUDED.visible,
+    status = EXCLUDED.status, perms = EXCLUDED.perms, icon = EXCLUDED.icon,
+    update_by = 'system', update_time = now(), remark = EXCLUDED.remark;
+
+INSERT INTO sys_menu (menu_id, tenant_id, menu_name, i18n_key, parent_id, order_num, path, component,
+                      is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, remark)
+SELECT t.tenant_id * 1000 + x.offset_id, t.tenant_id, x.menu_name, x.i18n_key,
+       t.tenant_id * 1000 + x.parent_offset, x.order_num, '#', '', '1', '0', 'F', '1', '1',
+       x.perms, '#', 'system', now(), ''
+FROM sys_tenant t
+CROSS JOIN (VALUES
+    (511, 510, 1, '付款查询', 'finance.business.payment.query', 'pay:order:query'),
+    (512, 510, 2, 'PayPal支付', 'finance.business.payment.paypal', 'pay:order:submit'),
+    (513, 510, 3, '银行转账', 'finance.business.payment.bank', 'pay:bank:submit'),
+    (514, 510, 4, '信用支付', 'finance.business.payment.credit', 'pay:credit:use'),
+    (521, 520, 1, '信用查询', 'finance.business.credit.query', 'pay:credit:query'),
+    (531, 530, 1, '账单查询', 'finance.business.receivable.query', 'pay:receivable:query')
+) AS x(offset_id, parent_offset, order_num, menu_name, i18n_key, perms)
+WHERE t.tenant_type = 'MERCHANT'
+ON CONFLICT (menu_id) DO UPDATE
+SET tenant_id = EXCLUDED.tenant_id, menu_name = EXCLUDED.menu_name, i18n_key = EXCLUDED.i18n_key,
+    parent_id = EXCLUDED.parent_id, order_num = EXCLUDED.order_num, perms = EXCLUDED.perms,
+    status = EXCLUDED.status, update_by = 'system', update_time = now();
+
+INSERT INTO sys_role (role_id, tenant_id, role_name, role_key, role_sort, data_scope, menu_check_strictly, dept_check_strictly, status, del_flag, create_by, create_time, remark)
+VALUES (260903, 1, '平台财务', 'platform_finance', 33, '1', true, true, '1', '0', 'system', now(), '平台财务管理')
+ON CONFLICT (role_id) DO UPDATE
+SET role_name = EXCLUDED.role_name, role_key = EXCLUDED.role_key, role_sort = EXCLUDED.role_sort,
+    data_scope = EXCLUDED.data_scope, status = EXCLUDED.status, del_flag = EXCLUDED.del_flag,
+    update_by = 'system', update_time = now(), remark = EXCLUDED.remark;
+
+DELETE FROM sys_role_menu rm
+USING sys_role r
+WHERE rm.role_id = r.role_id
+  AND r.role_key = 'platform_finance';
+
+INSERT INTO sys_role_menu (role_id, menu_id, tenant_id)
+SELECT r.role_id, m.menu_id, r.tenant_id
+FROM sys_role r
+JOIN sys_menu m ON m.tenant_id = r.tenant_id
+WHERE (r.role_key = 'platform_finance'
+       AND (m.menu_id = 27100 OR m.parent_id IN (27100, 27101, 27102, 27103, 27104, 27105)))
+   OR (r.role_key IN ('merchant_admin', 'merchant_employee') AND r.tenant_id <> 1
+       AND (m.menu_id = r.tenant_id * 1000 + 500
+            OR m.parent_id IN (r.tenant_id * 1000 + 500, r.tenant_id * 1000 + 510,
+                               r.tenant_id * 1000 + 520, r.tenant_id * 1000 + 530)))
+ON CONFLICT DO NOTHING;
+
+INSERT INTO sys_role_menu (role_id, menu_id, tenant_id)
+SELECT 1, menu_id, 1
+FROM sys_menu
+WHERE tenant_id = 1
+  AND (menu_id IN (27000, 27100) OR parent_id BETWEEN 27000 AND 27199)
+ON CONFLICT DO NOTHING;
+
+UPDATE sys_role r
+SET default_menu_id = m.menu_id, update_by = 'system', update_time = now()
+FROM sys_menu m
+WHERE m.tenant_id = r.tenant_id
+  AND m.menu_type = 'C'
+  AND m.status = '1'
+  AND m.visible = '1'
+  AND r.role_key = 'platform_finance'
+  AND m.component = 'pay/platform-payments';
 
 CREATE TABLE IF NOT EXISTS pay_refund (
     id bigint PRIMARY KEY,

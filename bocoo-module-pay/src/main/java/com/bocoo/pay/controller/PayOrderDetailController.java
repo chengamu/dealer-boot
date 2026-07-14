@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class PayOrderDetailController {
     private final PayOrderDetailService service;
 
-    @SaCheckPermission("pay:order:query")
+    @SaCheckPermission("platform:finance:payment:query")
     @GetMapping("/{payOrderId}")
     public R<PayOrderDetailVo> get(@PathVariable Long payOrderId) {
         return R.ok(service.getDetail(payOrderId));

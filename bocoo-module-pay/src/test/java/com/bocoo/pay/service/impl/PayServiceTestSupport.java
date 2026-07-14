@@ -9,6 +9,8 @@ import com.bocoo.pay.domain.entity.PayChannel;
 import com.bocoo.pay.domain.entity.PayOrder;
 import com.bocoo.pay.domain.entity.PayOrderExtension;
 import com.bocoo.pay.domain.entity.PayWebhookEvent;
+import com.bocoo.pay.domain.entity.PayReconciliationCase;
+import com.bocoo.pay.domain.entity.PayReconciliationAction;
 import org.apache.ibatis.builder.MapperBuilderAssistant;
 
 abstract class PayServiceTestSupport {
@@ -21,5 +23,7 @@ abstract class PayServiceTestSupport {
         TableInfoHelper.initTableInfo(assistant, MerchantCreditTransaction.class);
         TableInfoHelper.initTableInfo(assistant, MerchantReceivable.class);
         TableInfoHelper.initTableInfo(assistant, PayChannel.class);
+        TableInfoHelper.initTableInfo(assistant, PayReconciliationCase.class);
+        TableInfoHelper.initTableInfo(assistant, PayReconciliationAction.class);
     }
 }

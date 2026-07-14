@@ -840,5 +840,6 @@
   "productCenter.unit.roundingModeCEILING": "向正无穷舍入",
   "productCenter.unit.roundingModeFLOOR": "向负无穷舍入",
   "productCenter.unit.roundingModeUP": "远离零舍入",
-  "productCenter.unit.roundingModeDOWN": "向零舍入"
+  "productCenter.unit.roundingModeDOWN": "向零舍入",
+  "productCenter.menu.productOperations": "产品经营"
 }

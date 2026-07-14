@@ -262,7 +262,14 @@ public class SysOssService implements OssService {
         oss.setOriginalName(originalfileName);
         oss.setService(configKey);
 
-        ossMapper.insert(oss);
+        try {
+            if (ossMapper.insert(oss) <= 0) {
+                throw ServiceException.ofMessageKey("oss.upload.failed");
+            }
+        } catch (RuntimeException exception) {
+            OssFactory.instance(configKey).delete(uploadResult.getFilename());
+            throw exception;
+        }
         SysOssVo sysOssVo = MapstructUtils.convert(oss, SysOssVo.class);
         return this.matchingUrl(sysOssVo);
     }
@@ -285,6 +292,21 @@ public class SysOssService implements OssService {
             storage.delete(sysOss.getFileName());
         }
         return ossMapper.deleteBatchIds(ids) > 0;
+    }
+
+    @Override
+    public Boolean deleteByIds(Collection<Long> ossIds) {
+        return deleteWithValidByIds(ossIds, false);
+    }
+
+    public Boolean deleteOwnedByIds(Collection<Long> ossIds, Long userId) {
+        List<SysOss> ownedFiles = ossMapper.selectBatchIds(ossIds);
+        boolean ownsAll = userId != null && ownedFiles.size() == ossIds.size()
+            && ownedFiles.stream().allMatch(file -> userId.equals(file.getCreateById()));
+        if (!ownsAll) {
+            throw ServiceException.ofMessageKey("sys.user.data.permission.denied");
+        }
+        return deleteByIds(ossIds);
     }
 
     /**

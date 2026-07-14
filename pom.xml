@@ -90,6 +90,7 @@
 
         <!-- 第三方服务配置 -->
         <aws-java-sdk-s3.version>1.12.540</aws-java-sdk-s3.version>
+        <aliyun-credentials.version>1.0.3</aliyun-credentials.version>
         <sms4j.version>2.2.0</sms4j.version>
         <alipay-sdk-java.version>4.40.771.ALL</alipay-sdk-java.version>
         <weixin-java-pay.version>4.8.2-20260501.180637</weixin-java-pay.version>
@@ -331,6 +332,12 @@
                 <groupId>com.amazonaws</groupId>
                 <artifactId>aws-java-sdk-s3</artifactId>
                 <version>${aws-java-sdk-s3.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.aliyun</groupId>
+                <artifactId>credentials-java</artifactId>
+                <version>${aliyun-credentials.version}</version>
             </dependency>
 
             <!-- sms4j Spring Boot鍚姩鍣ㄤ緷璧栭」锛岀敤浜庨泦鎴愮煭淇″彂閫佸姛鑳?-->

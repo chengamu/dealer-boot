@@ -96,6 +96,10 @@ class QuickOrderSubmissionServiceTest {
         ArgumentCaptor<SalesDocumentItem> line = ArgumentCaptor.forClass(SalesDocumentItem.class);
         verify(documentMapper).insert(header.capture()); verify(documentItemMapper).insert(line.capture());
         assertThat(header.getValue().getSourceType()).isEqualTo("QUICK_ORDER");
+        assertThat(header.getValue().getBusinessOrigin()).isEqualTo("MERCHANT");
+        assertThat(header.getValue().getSalesStoreId()).isNull();
+        assertThat(header.getValue().getDeptId()).isEqualTo(20L);
+        assertThat(header.getValue().getOwnerUserId()).isEqualTo(7L);
         assertThat(header.getValue().getSourceQuickOrderId()).isEqualTo(1L);
         assertThat(header.getValue().getSourceQuoteId()).isNull();
         assertThat(header.getValue().getDocumentStatus()).isEqualTo("SUBMITTED");
@@ -122,6 +126,7 @@ class QuickOrderSubmissionServiceTest {
 
     private QuickOrder source() {
         QuickOrder row = new QuickOrder(); row.setQuickOrderId(1L); row.setTenantId(300001L);
+        row.setBusinessOrigin("MERCHANT"); row.setDeptId(20L); row.setOwnerUserId(7L);
         row.setQuickOrderNo("QO-1"); row.setStatus("DRAFT"); row.setCustomerId(2L);
         row.setCustomerName("Customer"); row.setRecipientName("Buyer"); row.setRecipientPhone("555-0100");
         row.setShippingAddress("100 Main St"); row.setCurrencyCode("USD");

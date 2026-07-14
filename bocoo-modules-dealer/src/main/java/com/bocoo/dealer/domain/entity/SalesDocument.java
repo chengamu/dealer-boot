@@ -17,6 +17,9 @@ public class SalesDocument extends BaseEntity {
     @TableId(value = "sales_document_id")
     private Long salesDocumentId;
     private Long tenantId;
+    private String businessOrigin;
+    private Long salesStoreId;
+    private Long deptId;
     private Long merchantId;
     private String merchantName;
     private String sourceType;

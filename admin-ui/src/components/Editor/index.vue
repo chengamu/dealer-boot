@@ -7,18 +7,20 @@
         :on-error="handleUploadError"
         class="editor-img-uploader"
         name="file"
+        accept=".jpg,.jpeg,.png"
+        multiple
         :show-file-list="false"
         :http-request="uploadImage"
         ref="uploadRef"
         v-if="type == 'url'"
     >
     </el-upload>
-    <div class="editor">
+    <div class="editor" @paste.capture="handleEditorPaste" @drop.capture="handleEditorDrop" @dragover.capture="handleEditorDragOver">
       <quill-editor
           ref="quillEditorRef"
           v-model:content="content"
           contentType="html"
-          @textChange="emit('update:modelValue', content)"
+          @textChange="handleTextChange"
           :options="options"
           :style="styles"
       />
@@ -29,11 +31,16 @@
 <script setup lang="ts">
 import { QuillEditor, Quill } from '@vueup/vue-quill';
 import '@vueup/vue-quill/dist/vue-quill.snow.css';
-import type { CSSProperties } from 'vue';
-import type { UploadRawFile, UploadRequestOptions } from 'element-plus';
+import { onBeforeUnmount, type CSSProperties } from 'vue';
+import type { UploadInstance, UploadRawFile, UploadRequestOptions } from 'element-plus';
 import { getMessage } from '@/locales'
 import useLocaleStore from '@/stores/locale'
 import { OSS_UPLOAD_URL, uploadOssFile, type OssUploadResponse } from '@/api/system/ossUpload'
+import { enqueueUploadFiles, getClipboardFiles, getDroppedFiles, selectUploadFiles, validateUploadFile, type UploadValidationIssue } from '@/composables/uploadIntake'
+import { registerOssImageBlot } from './ossImageBlot'
+import { usePendingOssImages } from './pendingOssImages'
+
+registerOssImageBlot(Quill)
 
 type ModalProxy = {
   $modal: {
@@ -50,7 +57,7 @@ type QuillInstance = {
     }
   }
   getSelection?: () => { index: number } | null
-  insertEmbed: (index: number, type: string, value: string) => void
+  insertEmbed: (index: number, type: string, value: unknown) => void
   setSelection: (index: number) => void
 }
 
@@ -85,7 +92,7 @@ const props = defineProps({
   /* 上传文件大小限制(MB) */
   fileSize: {
     type: Number,
-    default: 5,
+    default: 10,
   },
   /* 类型（base64格式、url格式） */
   type: {
@@ -102,7 +109,10 @@ const emit = defineEmits<{
 }>();
 // 上传的图片服务器地址
 const uploadUrl = ref(OSS_UPLOAD_URL);
+const uploadRef = ref<UploadInstance>();
 const quillEditorRef = ref<QuillEditorExpose | null>(null);
+const editorImageTypes = ['jpg', 'jpeg', 'png'];
+const pendingImages = usePendingOssImages();
 
 const options = computed(() => ({
   theme: "snow",
@@ -187,124 +197,67 @@ function handleUploadSuccess(res: OssUploadResponse) {
     // 获取光标位置
     const length = quill.getSelection?.()?.index ?? quill.selection?.savedRange?.index ?? 0;
     // 插入图片，res为服务器返回的图片链接地址
-    quill.insertEmbed(length, "image", res.data.url);
+    pendingImages.track(res.data.ossId);
+    quill.insertEmbed(length, "image", { url: res.data.url, ossId: res.data.ossId });
     // 调整光标到最后
     quill.setSelection(length + 1);
     proxy.$modal.closeLoading();
   } else {
-    proxy.$modal.loading(res.msg || t('upload.imageUploadFailed'));
+    proxy.$modal.msgError(res.msg || t('upload.imageUploadFailed'));
     proxy.$modal.closeLoading();
   }
 }
 
+function handleTextChange() {
+  emit('update:modelValue', content.value);
+  queueMicrotask(() => { void pendingImages.cleanupMissing(content.value) });
+}
+
 // 图片上传前拦截
 function handleBeforeUpload(file: UploadRawFile) {
-  const type = ["image/jpeg", "image/jpg", "image/png", "image/svg"];
-  const isJPG = type.includes(file.type);
-  //检验文件格式
-  if (!isJPG) {
-    proxy.$modal.msgError(t('upload.invalidImageType').replace('{types}', 'JPG, JPEG, PNG, SVG'));
-    return false;
-  }
-  // 校检文件大小
-  if (props.fileSize) {
-    const isLt = file.size / 1024 / 1024 < props.fileSize;
-    if (!isLt) {
-      proxy.$modal.msgError(t('upload.imageTooLarge').replace('{size}', String(props.fileSize)));
-      return false;
-    }
-  }
+  const issue = validateUploadFile(file, { allowedExtensions: editorImageTypes, maxSizeMb: props.fileSize });
+  if (issue) return showValidationIssue(issue);
   proxy.$modal.loading(t('upload.uploadingImage'));
   return true;
+}
+
+function handleEditorPaste(event: ClipboardEvent) {
+  handleEditorFiles(getClipboardFiles(event), event);
+}
+
+function handleEditorDrop(event: DragEvent) {
+  handleEditorFiles(getDroppedFiles(event), event);
+}
+
+function handleEditorDragOver(event: DragEvent) {
+  if (Array.from(event.dataTransfer?.types || []).includes('Files')) event.preventDefault();
+}
+
+function handleEditorFiles(files: File[], event: ClipboardEvent | DragEvent) {
+  if (!files.length) return;
+  event.preventDefault();
+  event.stopPropagation();
+  const result = selectUploadFiles(files, { allowedExtensions: editorImageTypes, maxSizeMb: props.fileSize });
+  if (result.issue) showValidationIssue(result.issue);
+  enqueueUploadFiles(uploadRef.value, result.files);
+}
+
+function showValidationIssue(issue: UploadValidationIssue) {
+  proxy.$modal.msgError(issue === 'size'
+    ? t('upload.imageTooLarge').replace('{size}', String(props.fileSize))
+    : t('upload.invalidImageType').replace('{types}', 'JPG, JPEG, PNG'));
+  return false;
 }
 
 // 图片失败拦截
 function handleUploadError() {
   proxy.$modal.msgError(t('upload.imageUploadFailed'));
+  proxy.$modal.closeLoading();
 }
+
+onBeforeUnmount(() => { void pendingImages.cleanup() });
+defineExpose({ cleanup: pendingImages.cleanup, commit: pendingImages.commit });
 
 </script>
 
-<style>
-.editor-img-uploader {
-  display: none;
-}
-.editor, .ql-toolbar {
-  white-space: pre-wrap !important;
-  line-height: normal !important;
-}
-.quill-img {
-  display: none;
-}
-.ql-snow .ql-tooltip[data-mode="link"]::before {
-  content: var(--editor-link-prompt, "Enter link URL:");
-}
-.ql-snow .ql-tooltip.ql-editing a.ql-action::after {
-  border-right: 0px;
-  content: var(--editor-save, "Save");
-  padding-right: 0px;
-}
-
-.ql-snow .ql-tooltip[data-mode="video"]::before {
-  content: var(--editor-video-prompt, "Enter video URL:");
-}
-
-.ql-snow .ql-picker.ql-size .ql-picker-label::before,
-.ql-snow .ql-picker.ql-size .ql-picker-item::before {
-  content: "14px";
-}
-.ql-snow .ql-picker.ql-size .ql-picker-label[data-value="small"]::before,
-.ql-snow .ql-picker.ql-size .ql-picker-item[data-value="small"]::before {
-  content: "10px";
-}
-.ql-snow .ql-picker.ql-size .ql-picker-label[data-value="large"]::before,
-.ql-snow .ql-picker.ql-size .ql-picker-item[data-value="large"]::before {
-  content: "18px";
-}
-.ql-snow .ql-picker.ql-size .ql-picker-label[data-value="huge"]::before,
-.ql-snow .ql-picker.ql-size .ql-picker-item[data-value="huge"]::before {
-  content: "32px";
-}
-
-.ql-snow .ql-picker.ql-header .ql-picker-label::before,
-.ql-snow .ql-picker.ql-header .ql-picker-item::before {
-  content: var(--editor-text, "Text");
-}
-.ql-snow .ql-picker.ql-header .ql-picker-label[data-value="1"]::before,
-.ql-snow .ql-picker.ql-header .ql-picker-item[data-value="1"]::before {
-  content: var(--editor-heading-1, "Heading 1");
-}
-.ql-snow .ql-picker.ql-header .ql-picker-label[data-value="2"]::before,
-.ql-snow .ql-picker.ql-header .ql-picker-item[data-value="2"]::before {
-  content: var(--editor-heading-2, "Heading 2");
-}
-.ql-snow .ql-picker.ql-header .ql-picker-label[data-value="3"]::before,
-.ql-snow .ql-picker.ql-header .ql-picker-item[data-value="3"]::before {
-  content: var(--editor-heading-3, "Heading 3");
-}
-.ql-snow .ql-picker.ql-header .ql-picker-label[data-value="4"]::before,
-.ql-snow .ql-picker.ql-header .ql-picker-item[data-value="4"]::before {
-  content: var(--editor-heading-4, "Heading 4");
-}
-.ql-snow .ql-picker.ql-header .ql-picker-label[data-value="5"]::before,
-.ql-snow .ql-picker.ql-header .ql-picker-item[data-value="5"]::before {
-  content: var(--editor-heading-5, "Heading 5");
-}
-.ql-snow .ql-picker.ql-header .ql-picker-label[data-value="6"]::before,
-.ql-snow .ql-picker.ql-header .ql-picker-item[data-value="6"]::before {
-  content: var(--editor-heading-6, "Heading 6");
-}
-
-.ql-snow .ql-picker.ql-font .ql-picker-label::before,
-.ql-snow .ql-picker.ql-font .ql-picker-item::before {
-  content: var(--editor-standard-font, "Standard font");
-}
-.ql-snow .ql-picker.ql-font .ql-picker-label[data-value="serif"]::before,
-.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="serif"]::before {
-  content: var(--editor-serif-font, "Serif font");
-}
-.ql-snow .ql-picker.ql-font .ql-picker-label[data-value="monospace"]::before,
-.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="monospace"]::before {
-  content: var(--editor-monospace-font, "Monospace font");
-}
-</style>
+<style src="./editor.css"></style>

@@ -6,6 +6,7 @@ import type { ProductFormulaOptionVO, ProductFormulaOptionValueVO } from '@/api/
 export type QuoteLanguage = 'ZH_CN' | 'EN_US'
 export type QuoteStatus = 'DRAFT' | 'CONFIRMED' | 'VOID'
 export type QuoteCalculationStatus = 'PENDING' | 'PASS' | 'FAIL'
+export type QuoteBusinessOrigin = 'MERCHANT' | 'INTERNAL'
 
 export interface CustomerQuoteItem {
   quoteItemId?: string
@@ -43,6 +44,10 @@ export interface CustomerQuoteItem {
 
 export interface CustomerQuote {
   quoteId?: string
+  tenantId?: string
+  businessOrigin?: QuoteBusinessOrigin
+  salesStoreId?: string
+  deptId?: string
   quoteNo?: string
   customerId?: string
   customerName?: string
@@ -130,10 +135,16 @@ export interface QuoteEmailRequest {
 }
 
 export interface CustomerQuoteQuery extends PageQuery {
+  tenantId?: string
+  businessOrigin?: QuoteBusinessOrigin | ''
+  salesStoreId?: string
+  ownerUserId?: string
   quoteNo?: string
   customerId?: string
   projectName?: string
   status?: QuoteStatus | ''
+  beginCreateTime?: string
+  endCreateTime?: string
 }
 
 export interface CustomerQuoteCatalogSetup {
@@ -160,6 +171,21 @@ export const customerQuoteApi = {
   email: (id: string | number, data: QuoteEmailRequest) => request({ url: `/customer/quotes/${id}/email`, method: 'post', data }),
   pdf: (id: string | number) => request<Blob>({
     url: `/customer/quotes/${id}/pdf`, method: 'get', responseType: 'blob'
+  }) as unknown as Promise<Blob>
+}
+
+export const platformCustomerQuoteApi = {
+  list: (query?: CustomerQuoteQuery) => requestPage<CustomerQuote>({ url: '/platform-sales/quotes/list', method: 'get', params: query }),
+  get: (id: string | number) => request<CustomerQuote>({ url: `/platform-sales/quotes/${id}`, method: 'get' }),
+  export: (id: string | number) => request<Blob>({
+    url: `/platform-sales/quotes/${id}/export`,
+    method: 'post',
+    responseType: 'blob'
+  }) as unknown as Promise<Blob>,
+  pdf: (id: string | number) => request<Blob>({
+    url: `/platform-sales/quotes/${id}/pdf`,
+    method: 'get',
+    responseType: 'blob'
   }) as unknown as Promise<Blob>
 }
 

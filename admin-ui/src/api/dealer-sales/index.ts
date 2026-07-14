@@ -3,6 +3,7 @@ import type { DecimalValue, PageQuery } from '@/types/api'
 
 export type DocumentStatus = 'SUBMITTED' | 'CANCELLED' | 'COMPLETED'
 export type SalesSourceType = 'QUOTE' | 'QUICK_ORDER'
+export type SalesBusinessOrigin = 'MERCHANT' | 'INTERNAL'
 export type SalesPaymentStatus = 'UNPAID' | 'PAID'
 export type SalesProductionStatus = 'PENDING' | 'IN_PRODUCTION' | 'COMPLETED'
 export type SalesShipmentStatus = 'UNSHIPPED' | 'PARTIALLY_SHIPPED' | 'SHIPPED' | 'DELIVERED'
@@ -50,6 +51,9 @@ export interface SalesItem {
 export interface SalesDocument {
   salesDocumentId?: string
   tenantId?: string
+  businessOrigin?: SalesBusinessOrigin
+  salesStoreId?: string
+  deptId?: string
   merchantId?: string
   merchantName?: string
   sourceType?: SalesSourceType
@@ -100,6 +104,10 @@ export interface SalesDocument {
 }
 
 export interface SalesQuery extends PageQuery {
+  tenantId?: string
+  businessOrigin?: SalesBusinessOrigin | ''
+  salesStoreId?: string
+  ownerUserId?: string
   orderNo?: string
   sourceNo?: string
   sourceType?: SalesSourceType | ''
@@ -118,6 +126,15 @@ export interface SalesDocumentEmailRequest {
   message?: string
 }
 
+export interface SalesStoreOption {
+  salesStoreId?: number | string
+  tenantId?: number | string
+  storeCode?: string
+  storeName?: string
+  deptId?: number | string
+  deptName?: string
+}
+
 const root = '/dealer/sales-documents'
 export const salesApi = {
   list: (params?: SalesQuery) => requestPage<SalesDocument>({ url: `${root}/list`, method: 'get', params }),
@@ -131,4 +148,23 @@ export const salesApi = {
     params: { type },
     responseType: 'blob'
   }) as unknown as Promise<Blob>
+}
+
+export const platformSalesApi = {
+  list: (params?: SalesQuery) => requestPage<SalesDocument>({ url: '/platform-sales/orders/list', method: 'get', params }),
+  get: (id: string | number) => request<SalesDocument>({ url: `/platform-sales/orders/${id}`, method: 'get' }),
+  pdf: (id: string | number) => request<Blob>({
+    url: `/platform-sales/orders/${id}/pdf`,
+    method: 'get',
+    responseType: 'blob'
+  }) as unknown as Promise<Blob>,
+  export: (id: string | number) => request<Blob>({
+    url: `/platform-sales/orders/${id}/export`,
+    method: 'post',
+    responseType: 'blob'
+  }) as unknown as Promise<Blob>
+}
+
+export function listSalesStoreOptions() {
+  return request<SalesStoreOption[]>({ url: '/system/sales-store/options', method: 'get' })
 }

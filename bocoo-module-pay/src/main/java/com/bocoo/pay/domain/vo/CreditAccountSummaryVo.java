@@ -11,9 +11,12 @@ import java.time.LocalDateTime;
 @Builder
 public class CreditAccountSummaryVo {
     Long creditAccountId;
+    String businessOrigin;
     Long tenantId;
+    Long salesStoreId;
     Long merchantId;
     String merchantName;
+    String subjectName;
     BigDecimal creditLimit;
     BigDecimal usedCredit;
     BigDecimal availableCredit;
@@ -24,8 +27,9 @@ public class CreditAccountSummaryVo {
 
     public static CreditAccountSummaryVo from(MerchantCreditAccount row) {
         if (row == null) return null;
-        return builder().creditAccountId(row.getCreditAccountId()).tenantId(row.getTenantId())
-            .merchantId(row.getMerchantId()).merchantName(row.getMerchantName())
+        return builder().creditAccountId(row.getCreditAccountId()).businessOrigin(row.getBusinessOrigin())
+            .tenantId(row.getTenantId()).salesStoreId(row.getSalesStoreId())
+            .merchantId(row.getMerchantId()).merchantName(row.getMerchantName()).subjectName(row.getMerchantName())
             .creditLimit(row.getCreditLimit()).usedCredit(row.getUsedCredit())
             .availableCredit(row.getCreditLimit().subtract(row.getUsedCredit()))
             .currency(row.getCurrency()).status(row.getStatus()).frozenReason(row.getFrozenReason())

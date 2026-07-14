@@ -43,6 +43,19 @@ export interface MerchantProfileQuery extends PageQuery {
   status?: string
 }
 
+export interface MerchantProfileOption {
+  merchantId: number
+  tenantId: number
+  merchantName: string
+}
+
+export function listMerchantProfileOptions() {
+  return request<MerchantProfileOption[]>({
+    url: '/system/merchant/profile/options',
+    method: 'get'
+  })
+}
+
 export function listMerchantProfiles(query?: MerchantProfileQuery) {
   return requestPage<MerchantProfile>({
     url: '/system/merchant/profile/list',

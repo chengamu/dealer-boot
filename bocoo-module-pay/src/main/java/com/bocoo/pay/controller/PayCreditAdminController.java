@@ -25,21 +25,21 @@ import org.springframework.web.bind.annotation.RestController;
 public class PayCreditAdminController {
     private final MerchantCreditService service;
 
-    @SaCheckPermission("pay:credit:adjust")
+    @SaCheckPermission("platform:finance:credit:adjust")
     @PostMapping("/{accountId}/adjust")
     public R<CreditAccountSummaryVo> adjust(@PathVariable Long accountId,
                                              @Valid @RequestBody CreditAdjustBo bo) {
         return R.ok(CreditAccountSummaryVo.from(service.adjust(accountId, bo)));
     }
 
-    @SaCheckPermission("pay:credit:freeze")
+    @SaCheckPermission("platform:finance:credit:freeze")
     @PostMapping("/{accountId}/freeze")
     public R<CreditAccountSummaryVo> freeze(@PathVariable Long accountId,
                                              @Valid @RequestBody CreditFreezeBo bo) {
         return R.ok(CreditAccountSummaryVo.from(service.freeze(accountId, bo)));
     }
 
-    @SaCheckPermission("pay:credit:repay")
+    @SaCheckPermission("platform:finance:receivable:repay")
     @PostMapping("/receivable/{receivableId}/repay")
     public R<PayReceivableSummaryVo> repay(@PathVariable Long receivableId,
                                             @NotBlank @RequestParam String reason) {

@@ -18,11 +18,14 @@ import org.springframework.stereotype.Service;
 public class CustomerQuoteConversionSupportImpl extends MerchantServiceSupport implements CustomerQuoteConversionSupport {
     private final CustomerQuoteMapper quoteMapper;
     private final CustomerQuoteItemMapper itemMapper;
+    private final SalesOwnershipResolver ownershipResolver;
 
     @Override
     public CustomerQuoteConversionSnapshot load(Long quoteId) {
         CustomerQuote quote = quoteMapper.selectOne(this.<CustomerQuote>activeQuery()
-            .eq("tenant_id", currentTenantId()).eq("quote_id", quoteId), false);
+            .eq("tenant_id", currentTenantId())
+            .eq("business_origin", ownershipResolver.currentBusinessOrigin())
+            .eq("quote_id", quoteId), false);
         if (quote == null) throw ServiceException.ofMessageKey("customer.quote.notFound");
         var items = itemMapper.selectList(this.<CustomerQuoteItem>activeQuery()
             .eq("tenant_id", quote.getTenantId()).eq("quote_id", quoteId).orderByAsc("line_no", "sort_order"));
@@ -34,6 +37,7 @@ public class CustomerQuoteConversionSupportImpl extends MerchantServiceSupport i
         return quoteMapper.update(null, new UpdateWrapper<CustomerQuote>()
             .eq("quote_id", quoteId)
             .eq("tenant_id", currentTenantId())
+            .eq("business_origin", ownershipResolver.currentBusinessOrigin())
             .eq("status", "CONFIRMED")
             .isNull("sales_document_id")
             .set("sales_document_id", salesDocumentId)

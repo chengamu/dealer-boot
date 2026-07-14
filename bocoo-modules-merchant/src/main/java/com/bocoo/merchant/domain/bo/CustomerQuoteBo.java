@@ -14,6 +14,10 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 public class CustomerQuoteBo extends BaseBo {
     private Long quoteId;
+    private Long tenantId;
+    private String businessOrigin;
+    private Long salesStoreId;
+    private Long deptId;
     private String quoteNo;
     @NotNull(message = "{customer.quote.customer.required}")
     private Long customerId;

@@ -13,8 +13,12 @@ import java.time.LocalDateTime;
 public class PayReceivableSummaryVo {
     Long receivableId;
     String receivableNo;
+    String businessOrigin;
+    Long tenantId;
+    Long salesStoreId;
     Long merchantId;
     String merchantName;
+    String subjectName;
     Long salesDocumentId;
     Long payOrderId;
     String salesOrderNo;
@@ -31,7 +35,8 @@ public class PayReceivableSummaryVo {
     public static PayReceivableSummaryVo from(MerchantReceivable row) {
         if (row == null) return null;
         return builder().receivableId(row.getReceivableId()).receivableNo(row.getReceivableNo())
-            .merchantId(row.getMerchantId()).merchantName(row.getMerchantName())
+            .businessOrigin(row.getBusinessOrigin()).tenantId(row.getTenantId()).salesStoreId(row.getSalesStoreId())
+            .merchantId(row.getMerchantId()).merchantName(row.getMerchantName()).subjectName(row.getMerchantName())
             .salesDocumentId(row.getSalesDocumentId()).payOrderId(row.getPayOrderId())
             .salesOrderNo(row.getSalesOrderNo()).payOrderNo(row.getPayOrderNo())
             .receivableAmount(row.getReceivableAmount()).repaidAmount(row.getRepaidAmount())

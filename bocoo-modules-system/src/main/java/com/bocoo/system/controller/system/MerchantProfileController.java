@@ -9,12 +9,15 @@ import com.bocoo.common.mybatis.core.page.TableDataInfo;
 import com.bocoo.common.web.core.BaseController;
 import com.bocoo.system.domain.bo.MerchantProfileBo;
 import com.bocoo.system.domain.vo.MerchantProfileVo;
+import com.bocoo.system.domain.vo.MerchantProfileOptionVo;
 import com.bocoo.system.service.MerchantProfileService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @Validated
 @RequiredArgsConstructor
@@ -30,6 +33,13 @@ public class MerchantProfileController extends BaseController {
     @Operation(summary = "List merchant profiles")
     public TableDataInfo<MerchantProfileVo> list(MerchantProfileBo bo, PageQuery pageQuery) {
         return merchantProfileService.selectPage(bo, pageQuery);
+    }
+
+    @SaCheckPermission("system:merchant:profile:options")
+    @GetMapping("/options")
+    @Operation(summary = "List enabled merchant options")
+    public R<List<MerchantProfileOptionVo>> options() {
+        return R.ok(merchantProfileService.selectOptions());
     }
 
     @SaCheckPermission("merchant:profile:query")

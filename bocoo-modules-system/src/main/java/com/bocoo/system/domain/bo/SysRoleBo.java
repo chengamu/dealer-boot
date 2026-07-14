@@ -57,6 +57,9 @@ public class SysRoleBo extends BaseBo {
     @NotNull(message = "{validation.sort.required}")
     private Integer roleSort;
 
+    @Schema(description = "Default home menu ID")
+    private Long defaultMenuId;
+
     /**
      * 数据范围（1：全部数据权限 2：自定数据权限 3：本部门数据权限 4：本部门及以下数据权限）
      */

@@ -163,7 +163,7 @@ public class SysTenantApplyService {
             MerchantAccountDefaultsService.MerchantDefaults defaults = merchantDefaultsService.ensureDefaults();
             com.bocoo.system.domain.bo.SysUserBo user = new com.bocoo.system.domain.bo.SysUserBo();
             user.setTenantId(tenant.getTenantId());
-            user.setDeptId(defaults.dealerDept().getDeptId());
+            user.setDeptId(defaults.defaultDept().getDeptId());
             user.setUserName(finalApply.getEmail());
             user.setEmail(finalApply.getEmail());
             user.setNickName(finalApply.getMerchantName());
@@ -176,7 +176,7 @@ public class SysTenantApplyService {
             merchantProfileService.insertProfile(profile);
             SysUserRole userRole = new SysUserRole();
             userRole.setUserId(user.getUserId());
-            userRole.setRoleId(defaults.dealerRole().getRoleId());
+            userRole.setRoleId(defaults.ownerRole().getRoleId());
             userRoleMapper.insert(userRole);
         });
 

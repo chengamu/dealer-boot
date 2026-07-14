@@ -8,9 +8,9 @@ export const quickOrderRouteComponents = {
 } as const
 
 const routeFallbacks: Record<string, string> = {
-  [quickOrderRouteComponents.workbench]: '/sales/quickOrders',
+  [quickOrderRouteComponents.workbench]: '/sales/quickOrders/workbench',
   [quickOrderRouteComponents.list]: '/sales/quickOrders',
-  [quickOrderRouteComponents.review]: '/sales/quickOrders',
+  [quickOrderRouteComponents.review]: '/sales/quickOrders/review',
   [quickOrderRouteComponents.quote]: '/sales/quotes'
 }
 

@@ -4,6 +4,7 @@ import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.bocoo.common.core.constant.UserConstants;
 import com.bocoo.common.core.enums.UserStatus;
+import com.bocoo.common.mybatis.enums.DataScopeType;
 import com.bocoo.system.domain.entity.SysDept;
 import com.bocoo.system.domain.entity.SysMenu;
 import com.bocoo.system.domain.entity.SysRole;
@@ -23,10 +24,8 @@ import java.util.List;
 @Service
 public class MerchantAccountDefaultsService {
 
-    public static final String DEALER_DEPT_NAME = "Dealer";
-    public static final String STORE_DEPT_NAME = "Store";
-    public static final String DEALER_ROLE_KEY = "merchant_admin";
-    public static final String STORE_ROLE_KEY = "merchant_store";
+    public static final String DEFAULT_DEPT_NAME = "Dealer";
+    public static final String OWNER_ROLE_KEY = "merchant_admin";
     public static final String EMPLOYEE_ROLE_KEY = "merchant_employee";
 
     private final SysDeptMapper deptMapper;
@@ -36,38 +35,26 @@ public class MerchantAccountDefaultsService {
 
     @Transactional(rollbackFor = Exception.class)
     public MerchantDefaults ensureDefaults() {
-        SysDept dealerDept = ensureDept(DEALER_DEPT_NAME, 1);
-        SysDept storeDept = ensureDept(STORE_DEPT_NAME, 2);
-        SysRole dealerRole = ensureRole("Merchant Admin", DEALER_ROLE_KEY, 1);
-        SysRole storeRole = ensureRole("Merchant Store", STORE_ROLE_KEY, 2);
-        SysRole employeeRole = ensureRole("Merchant Employee", EMPLOYEE_ROLE_KEY, 3);
-        List<Long> dealerMenuIds = ensureMerchantMenus(true);
-        List<Long> storeMenuIds = ensureMerchantMenus(false);
+        SysDept defaultDept = ensureDept(DEFAULT_DEPT_NAME, 1);
+        SysRole ownerRole = ensureRole("店主", OWNER_ROLE_KEY, 1, DataScopeType.DEPT_AND_CHILD.getCode());
+        SysRole employeeRole = ensureRole("营业员", EMPLOYEE_ROLE_KEY, 2, DataScopeType.SELF.getCode());
+        List<Long> ownerMenuIds = ensureMerchantMenus(true);
         List<Long> employeeMenuIds = ensureMerchantMenus(false);
-        ensureRoleMenus(dealerRole.getRoleId(), dealerMenuIds);
-        ensureRoleMenus(storeRole.getRoleId(), storeMenuIds);
+        ensureRoleMenus(ownerRole.getRoleId(), ownerMenuIds);
         ensureRoleMenus(employeeRole.getRoleId(), employeeMenuIds);
-        return new MerchantDefaults(dealerDept, storeDept, dealerRole, storeRole, employeeRole);
+        return new MerchantDefaults(defaultDept, ownerRole, employeeRole);
     }
 
-    public SysDept ensureDealerDept() {
-        return ensureDept(DEALER_DEPT_NAME, 1);
+    public SysDept ensureDefaultDept() {
+        return ensureDept(DEFAULT_DEPT_NAME, 1);
     }
 
-    public SysDept ensureStoreDept() {
-        return ensureDept(STORE_DEPT_NAME, 2);
-    }
-
-    public SysRole ensureDealerRole() {
-        return ensureRole("Merchant Admin", DEALER_ROLE_KEY, 1);
-    }
-
-    public SysRole ensureStoreRole() {
-        return ensureRole("Merchant Store", STORE_ROLE_KEY, 2);
+    public SysRole ensureOwnerRole() {
+        return ensureRole("店主", OWNER_ROLE_KEY, 1, DataScopeType.DEPT_AND_CHILD.getCode());
     }
 
     public SysRole ensureEmployeeRole() {
-        return ensureRole("Merchant Employee", EMPLOYEE_ROLE_KEY, 3);
+        return ensureRole("营业员", EMPLOYEE_ROLE_KEY, 2, DataScopeType.SELF.getCode());
     }
 
     private SysDept ensureDept(String deptName, Integer orderNum) {
@@ -87,17 +74,23 @@ public class MerchantAccountDefaultsService {
         return dept;
     }
 
-    private SysRole ensureRole(String roleName, String roleKey, Integer roleSort) {
+    private SysRole ensureRole(String roleName, String roleKey, Integer roleSort, String dataScope) {
         SysRole role = roleMapper.selectOne(new LambdaQueryWrapper<SysRole>()
             .eq(SysRole::getRoleKey, roleKey), false);
         if (role != null) {
+            role.setRoleName(roleName);
+            role.setRoleSort(roleSort);
+            role.setDataScope(dataScope);
+            role.setStatus(UserStatus.OK.getCode());
+            role.setDelFlag(UserConstants.NOT_DELETED);
+            roleMapper.updateById(role);
             return role;
         }
         role = new SysRole();
         role.setRoleName(roleName);
         role.setRoleKey(roleKey);
         role.setRoleSort(roleSort);
-        role.setDataScope("1");
+        role.setDataScope(dataScope);
         role.setMenuCheckStrictly(true);
         role.setDeptCheckStrictly(true);
         role.setStatus(UserStatus.OK.getCode());
@@ -202,6 +195,6 @@ public class MerchantAccountDefaultsService {
         return menu;
     }
 
-    public record MerchantDefaults(SysDept dealerDept, SysDept storeDept, SysRole dealerRole, SysRole storeRole, SysRole employeeRole) {
+    public record MerchantDefaults(SysDept defaultDept, SysRole ownerRole, SysRole employeeRole) {
     }
 }

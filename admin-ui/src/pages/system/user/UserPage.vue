@@ -259,30 +259,34 @@
     </AdminDrawer>
 
     <AdminDialog v-model="upload.open" :title="upload.title" width="480px" class="admin-upload-dialog" append-to-body destroy-on-close @closed="resetUpload">
-      <el-upload
-        ref="uploadRef"
-        :limit="1"
-        accept=".xlsx, .xls"
-        :action="`${upload.url}?updateSupport=${upload.updateSupport}`"
-        :http-request="uploadUserImport"
-        :disabled="upload.isUploading"
-        :on-progress="handleFileUploadProgress"
-        :on-success="handleFileSuccess"
-        :auto-upload="false"
-        drag
-      >
-        <el-icon class="el-icon--upload"><upload-filled /></el-icon>
-        <div class="el-upload__text">{{ t('user.dragFileHere') }}<em>{{ t('user.clickUpload') }}</em></div>
-        <template #tip>
-          <div class="el-upload__tip text-center">
-            <div class="el-upload__tip">
-              <el-checkbox v-model="upload.updateSupport" :true-value="1" :false-value="0" />{{ t('user.updateExistingUser') }}
+      <UploadDropZone :label="t('upload.dropOrClick')" :hint="t('upload.pasteHint')" @files="handleUserImportFiles">
+        <el-upload
+          ref="uploadRef"
+          :limit="1"
+          accept=".xls,.xlsx"
+          :action="`${upload.url}?updateSupport=${upload.updateSupport}`"
+          :http-request="uploadUserImport"
+          :disabled="upload.isUploading"
+          :before-upload="beforeUserImport"
+          :on-change="handleUserImportChange"
+          :on-exceed="handleUserImportExceed"
+          :on-progress="handleFileUploadProgress"
+          :on-success="handleFileSuccess"
+          :auto-upload="false"
+        >
+          <el-button type="primary" plain icon="Upload">{{ t('upload.selectFile') }}</el-button>
+          <template #tip>
+            <div class="el-upload__tip text-center">
+              <div class="el-upload__tip">
+                <el-checkbox v-model="upload.updateSupport" :true-value="1" :false-value="0" />{{ t('user.updateExistingUser') }}
+              </div>
+              <span>{{ t('user.importFileTip') }}</span>
+              <el-link type="primary" :underline="false" style="font-size: 12px; vertical-align: baseline" @click="importTemplate">{{ t('user.downloadTemplate') }}</el-link>
+              <div>{{ t('upload.maxFileSizeHint', { size: 10 }) }}</div>
             </div>
-            <span>{{ t('user.importFileTip') }}</span>
-            <el-link type="primary" :underline="false" style="font-size: 12px; vertical-align: baseline" @click="importTemplate">{{ t('user.downloadTemplate') }}</el-link>
-          </div>
-        </template>
-      </el-upload>
+          </template>
+        </el-upload>
+      </UploadDropZone>
       <template #footer>
         <AdminDialogFooter>
           <el-button type="primary" :loading="upload.isUploading" @click="submitFileForm">{{ t('common.confirm') }}</el-button>
@@ -296,7 +300,7 @@
 <script setup lang="ts" name="UserPage">
 import { computed, h, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox, type FormInstance, type FormRules, type UploadInstance, type UploadProgressEvent, type UploadRawFile, type UploadRequestOptions } from 'element-plus'
+import { ElMessage, ElMessageBox, type FormInstance, type FormRules, type UploadFile, type UploadInstance, type UploadProgressEvent, type UploadRawFile, type UploadRequestOptions } from 'element-plus'
 import { Briefcase } from '@element-plus/icons-vue'
 import { addUser, changeUserStatus, delUser, deptTreeSelect, getInitPassword, getUser, listUser, resetUserPwd, updateUser, type SysUser, type TreeOption, type UserOptionPost, type UserOptionRole, type UserQuery } from '@/api/system/user'
 import { download, request } from '@/utils/request'
@@ -306,6 +310,8 @@ import { useLocaleStore } from '@/stores/locale'
 import { useDict } from '@/utils/dict'
 import { runUiAction } from '@/utils/action'
 import { useFormCloseGuard } from '@/composables/useFormCloseGuard'
+import UploadDropZone from '@/components/UploadDropZone/index.vue'
+import { enqueueUploadFiles, selectUploadFiles, validateUploadFile, type UploadValidationIssue } from '@/composables/uploadIntake'
 
 interface DictOption {
   label?: string
@@ -657,6 +663,41 @@ function importTemplate() {
 
 function handleFileUploadProgress(_event: UploadProgressEvent) {
   upload.isUploading = true
+}
+
+function beforeUserImport(file: UploadRawFile) {
+  const issue = validateUploadFile(file, { allowedExtensions: ['xls', 'xlsx'], maxSizeMb: 10 })
+  if (issue) return showUserImportValidation(issue)
+  return true
+}
+
+function handleUserImportChange(uploadFile: UploadFile) {
+  if (!uploadFile.raw) return
+  const issue = validateUploadFile(uploadFile.raw, { allowedExtensions: ['xls', 'xlsx'], maxSizeMb: 10 })
+  if (!issue) return
+  showUserImportValidation(issue)
+  uploadRef.value?.clearFiles()
+}
+
+function handleUserImportFiles(files: File[]) {
+  uploadRef.value?.clearFiles()
+  const result = selectUploadFiles(files, { allowedExtensions: ['xls', 'xlsx'], maxSizeMb: 10, limit: 1 })
+  if (result.issue) showUserImportValidation(result.issue)
+  enqueueUploadFiles(uploadRef.value, result.files, false)
+}
+
+function handleUserImportExceed() {
+  showUserImportValidation('limit')
+}
+
+function showUserImportValidation(issue: UploadValidationIssue) {
+  const message = issue === 'limit'
+    ? t('upload.limitExceeded', { limit: 1 })
+    : issue === 'size'
+      ? t('upload.fileTooLarge', { size: 10 })
+      : t('upload.invalidFileType', { types: 'xls/xlsx' })
+  ElMessage.error(message)
+  return false
 }
 
 async function uploadUserImport(options: UploadRequestOptions) {

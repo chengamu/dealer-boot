@@ -38,6 +38,11 @@
             <artifactId>aws-java-sdk-s3</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>com.aliyun</groupId>
+            <artifactId>credentials-java</artifactId>
+        </dependency>
+
     </dependencies>
 
 </project>

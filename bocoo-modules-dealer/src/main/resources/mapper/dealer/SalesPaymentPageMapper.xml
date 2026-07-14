@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bocoo.dealer.mapper.SalesPaymentPageMapper">
+
+    <select id="selectPaymentOrderIds" resultType="java.lang.Long">
+        SELECT po.id
+        FROM pay_order po
+        INNER JOIN dealer_sales_document sd ON sd.sales_document_id = po.sales_document_id
+        WHERE sd.del_flag = '0'
+        <if test="scopeTenantId != null">
+            AND sd.tenant_id = #{scopeTenantId}
+            AND sd.business_origin = #{scopeBusinessOrigin}
+        </if>
+        <if test="query.businessOrigin != null and query.businessOrigin != ''">
+            AND sd.business_origin = #{query.businessOrigin}
+        </if>
+        <if test="query.subjectId != null">
+            <choose>
+                <when test="query.businessOrigin == 'MERCHANT'">
+                    AND sd.tenant_id = #{query.subjectId}
+                </when>
+                <when test="query.businessOrigin == 'INTERNAL'">
+                    AND sd.sales_store_id = #{query.subjectId}
+                </when>
+                <otherwise>
+                    AND ((sd.business_origin = 'MERCHANT' AND sd.tenant_id = #{query.subjectId})
+                        OR (sd.business_origin = 'INTERNAL' AND sd.sales_store_id = #{query.subjectId}))
+                </otherwise>
+            </choose>
+        </if>
+        <if test="query.keyword != null and query.keyword != ''">
+            AND (sd.order_no LIKE CONCAT('%', #{query.keyword}, '%')
+                OR sd.source_no LIKE CONCAT('%', #{query.keyword}, '%')
+                OR sd.customer_name LIKE CONCAT('%', #{query.keyword}, '%')
+                OR sd.merchant_name LIKE CONCAT('%', #{query.keyword}, '%'))
+            AND (po.no = #{query.keyword} OR po.sales_order_no = #{query.keyword})
+        </if>
+        <if test="query.beginTime != null">
+            AND po.create_time &gt;= #{query.beginTime}
+        </if>
+        <if test="query.endTime != null">
+            AND po.create_time &lt;= #{query.endTime}
+        </if>
+        <if test="query.channelCode != null and query.channelCode != ''">
+            AND po.channel_code = #{query.channelCode}
+        </if>
+        <if test="query.status != null">
+            AND po.status = #{query.status}
+        </if>
+        ORDER BY po.create_time DESC, po.id DESC
+    </select>
+
+    <select id="selectBankTransferIds" resultType="java.lang.Long">
+        SELECT pe.id
+        FROM pay_order_extension pe
+        INNER JOIN pay_order po ON po.id = pe.order_id
+        INNER JOIN dealer_sales_document sd ON sd.sales_document_id = po.sales_document_id
+        WHERE sd.del_flag = '0'
+            AND pe.channel_code = 'bank_transfer'
+        <if test="scopeTenantId != null">
+            AND sd.tenant_id = #{scopeTenantId}
+            AND sd.business_origin = #{scopeBusinessOrigin}
+        </if>
+        <if test="query.businessOrigin != null and query.businessOrigin != ''">
+            AND sd.business_origin = #{query.businessOrigin}
+        </if>
+        <if test="query.subjectId != null">
+            <choose>
+                <when test="query.businessOrigin == 'MERCHANT'">
+                    AND sd.tenant_id = #{query.subjectId}
+                </when>
+                <when test="query.businessOrigin == 'INTERNAL'">
+                    AND sd.sales_store_id = #{query.subjectId}
+                </when>
+                <otherwise>
+                    AND ((sd.business_origin = 'MERCHANT' AND sd.tenant_id = #{query.subjectId})
+                        OR (sd.business_origin = 'INTERNAL' AND sd.sales_store_id = #{query.subjectId}))
+                </otherwise>
+            </choose>
+        </if>
+        <if test="query.keyword != null and query.keyword != ''">
+            AND (sd.order_no LIKE CONCAT('%', #{query.keyword}, '%')
+                OR sd.source_no LIKE CONCAT('%', #{query.keyword}, '%')
+                OR sd.customer_name LIKE CONCAT('%', #{query.keyword}, '%')
+                OR sd.merchant_name LIKE CONCAT('%', #{query.keyword}, '%'))
+            AND (pe.no = #{query.keyword}
+                OR pe.bank_reference_no = #{query.keyword}
+                OR po.no = #{query.keyword}
+                OR po.sales_order_no = #{query.keyword})
+        </if>
+        <if test="query.beginTime != null">
+            AND pe.bank_submitted_time &gt;= #{query.beginTime}
+        </if>
+        <if test="query.endTime != null">
+            AND pe.bank_submitted_time &lt;= #{query.endTime}
+        </if>
+        <if test="query.status != null and query.status != ''">
+            AND pe.bank_transfer_status = #{query.status}
+        </if>
+        <choose>
+            <when test="query.status == 'PENDING_REVIEW'">
+                ORDER BY pe.bank_submitted_time ASC, pe.id ASC
+            </when>
+            <otherwise>
+                ORDER BY pe.bank_reviewed_time DESC, pe.id DESC
+            </otherwise>
+        </choose>
+    </select>
+
+</mapper>

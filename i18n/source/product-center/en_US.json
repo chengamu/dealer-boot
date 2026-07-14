@@ -840,5 +840,6 @@
   "productCenter.unit.roundingModeCEILING": "Toward positive infinity",
   "productCenter.unit.roundingModeFLOOR": "Toward negative infinity",
   "productCenter.unit.roundingModeUP": "Away from zero",
-  "productCenter.unit.roundingModeDOWN": "Toward zero"
+  "productCenter.unit.roundingModeDOWN": "Toward zero",
+  "productCenter.menu.productOperations": "Product Operations"
 }

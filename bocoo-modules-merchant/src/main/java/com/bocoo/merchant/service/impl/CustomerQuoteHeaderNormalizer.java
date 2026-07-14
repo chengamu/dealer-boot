@@ -24,9 +24,10 @@ class CustomerQuoteHeaderNormalizer extends MerchantServiceSupport {
 
     private final CustomerProfileMapper customerMapper;
     private final SysUserMapper userMapper;
+    private final SalesOwnershipResolver ownershipResolver;
 
     CustomerQuote newQuote(CustomerQuoteBo bo) {
-        CustomerQuote quote = baseQuote(bo);
+        CustomerQuote quote = baseQuote(bo, ownershipResolver.currentForCreate());
         quote.setQuoteNo("QT-" + Seq.getId());
         quote.setStatus("DRAFT");
         quote.setProductAmount(moneyZero());
@@ -37,7 +38,9 @@ class CustomerQuoteHeaderNormalizer extends MerchantServiceSupport {
     }
 
     CustomerQuote updateQuote(CustomerQuote current, CustomerQuoteBo bo) {
-        CustomerQuote quote = baseQuote(bo);
+        SalesOwnership ownership = new SalesOwnership(current.getTenantId(), current.getBusinessOrigin(),
+            current.getSalesStoreId(), current.getDeptId(), current.getOwnerUserId());
+        CustomerQuote quote = baseQuote(bo, ownership);
         quote.setQuoteId(current.getQuoteId());
         quote.setQuoteNo(current.getQuoteNo());
         quote.setStatus(current.getStatus());
@@ -49,15 +52,21 @@ class CustomerQuoteHeaderNormalizer extends MerchantServiceSupport {
         return quote;
     }
 
-    private CustomerQuote baseQuote(CustomerQuoteBo bo) {
-        Long tenantId = currentTenantId();
+    private CustomerQuote baseQuote(CustomerQuoteBo bo, SalesOwnership ownership) {
+        Long tenantId = ownership.tenantId();
         CustomerProfile customer = customerMapper.selectOne(this.<CustomerProfile>activeQuery()
-            .eq("tenant_id", tenantId).eq("customer_id", bo.getCustomerId()).eq("status", STATUS_ENABLED), false);
+            .eq("tenant_id", tenantId)
+            .eq("business_origin", ownership.businessOrigin())
+            .eq("customer_id", bo.getCustomerId())
+            .eq("status", STATUS_ENABLED), false);
         if (customer == null) {
             throw ServiceException.ofMessageKey("customer.quote.customer.invalid");
         }
         CustomerQuote quote = new CustomerQuote();
         quote.setTenantId(tenantId);
+        quote.setBusinessOrigin(ownership.businessOrigin());
+        quote.setSalesStoreId(ownership.salesStoreId());
+        quote.setDeptId(ownership.deptId());
         quote.setCustomerId(customer.getCustomerId());
         quote.setCustomerName(customer.getCustomerName());
         quote.setCompanyName(customer.getCompanyName());
@@ -70,7 +79,7 @@ class CustomerQuoteHeaderNormalizer extends MerchantServiceSupport {
         quote.setShippingAddress(StringUtils.trim(bo.getShippingAddress()));
         quote.setQuoteLanguage(normalizeLanguage(bo.getQuoteLanguage()));
         quote.setValidUntil(bo.getValidUntil() == null ? LocalDate.now().plusDays(14) : bo.getValidUntil());
-        resolveOwner(quote, bo.getOwnerUserId(), tenantId);
+        resolveOwner(quote, bo.getOwnerUserId() == null ? ownership.ownerUserId() : bo.getOwnerUserId(), tenantId);
         quote.setDelFlag(DEL_FLAG_NORMAL);
         quote.setRemark(bo.getRemark());
         return quote;

@@ -27,6 +27,7 @@ public class CustomerQuoteDraftServiceImpl extends MerchantServiceSupport implem
     private final CustomerQuoteCalculator calculator;
     private final CustomerQuoteDraftAssembler draftAssembler;
     private final CustomerQuotePricingSessionFactory sessionFactory;
+    private final SalesOwnershipResolver ownershipResolver;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -60,7 +61,9 @@ public class CustomerQuoteDraftServiceImpl extends MerchantServiceSupport implem
                 .eq("tenant_id", tenantId).eq("quote_id", id));
         }
         return quoteMapper.delete(this.<CustomerQuote>activeQuery()
-            .eq("tenant_id", tenantId).in("quote_id", Arrays.asList(ids))) > 0;
+            .eq("tenant_id", tenantId)
+            .eq("business_origin", ownershipResolver.currentBusinessOrigin())
+            .in("quote_id", Arrays.asList(ids))) > 0;
     }
 
     @Override
@@ -76,7 +79,6 @@ public class CustomerQuoteDraftServiceImpl extends MerchantServiceSupport implem
         bo.setShippingAddress(source.getShippingAddress());
         bo.setQuoteLanguage(source.getQuoteLanguage());
         bo.setValidUntil(source.getValidUntil());
-        bo.setOwnerUserId(source.getOwnerUserId());
         bo.setRemark(source.getRemark());
         var rows = itemWriter.currentRows(id, source.getTenantId());
         rows.forEach(row -> row.setQuoteItemId(null));
@@ -107,7 +109,9 @@ public class CustomerQuoteDraftServiceImpl extends MerchantServiceSupport implem
 
     private CustomerQuote load(Long id) {
         CustomerQuote quote = quoteMapper.selectOne(this.<CustomerQuote>activeQuery()
-            .eq("tenant_id", currentTenantId()).eq("quote_id", id), false);
+            .eq("tenant_id", currentTenantId())
+            .eq("business_origin", ownershipResolver.currentBusinessOrigin())
+            .eq("quote_id", id), false);
         if (quote == null) throw ServiceException.ofMessageKey("customer.quote.notFound");
         return quote;
     }

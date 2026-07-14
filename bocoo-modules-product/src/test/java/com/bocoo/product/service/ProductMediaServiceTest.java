@@ -1,6 +1,7 @@
 package com.bocoo.product.service;
 
 import com.bocoo.common.core.exception.ServiceException;
+import com.bocoo.common.core.service.OssService;
 import com.bocoo.product.domain.bo.ProductMediaAssetBo;
 import com.bocoo.product.domain.bo.ProductMediaBindingBo;
 import com.bocoo.product.domain.entity.ProductMediaAsset;
@@ -16,6 +17,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -30,6 +33,8 @@ class ProductMediaServiceTest {
     private ProductMediaAssetMapper mediaAssetMapper;
     @Mock
     private ProductMediaBindingMapper mediaBindingMapper;
+    @Mock
+    private OssService ossService;
 
     private ProductMediaAssetServiceImpl mediaAssetService;
     private ProductMediaBindingServiceImpl mediaBindingService;
@@ -37,8 +42,8 @@ class ProductMediaServiceTest {
     @BeforeEach
     void setUp() {
         ProductServiceTestSupport.prepareMapperAndConverter();
-        mediaAssetService = new ProductMediaAssetServiceImpl(mediaAssetMapper, mediaBindingMapper);
-        mediaBindingService = new ProductMediaBindingServiceImpl(mediaBindingMapper);
+        mediaAssetService = new ProductMediaAssetServiceImpl(mediaAssetMapper, mediaBindingMapper, ossService);
+        mediaBindingService = new ProductMediaBindingServiceImpl(mediaBindingMapper, mediaAssetMapper, ossService);
     }
 
     @Test
@@ -99,10 +104,6 @@ class ProductMediaServiceTest {
 
     @Test
     void deleteMediaBindingRemovesRows() {
-        ProductMediaBinding binding = new ProductMediaBinding();
-        binding.setBindingId(2001L);
-        binding.setStatus("DISABLED");
-        when(mediaBindingMapper.selectById(2001L)).thenReturn(binding);
         when(mediaBindingMapper.deleteBatchIds(any())).thenReturn(1);
 
         assertThat(mediaBindingService.deleteWithValidByIds(new Long[]{2001L})).isTrue();
@@ -110,15 +111,29 @@ class ProductMediaServiceTest {
     }
 
     @Test
-    void deleteMediaBindingRejectsEnabledStatus() {
-        ProductMediaBinding binding = new ProductMediaBinding();
-        binding.setBindingId(2001L);
-        binding.setStatus("ENABLED");
-        when(mediaBindingMapper.selectById(2001L)).thenReturn(binding);
+    void deleteMediaBindingAllowsEnabledStatus() {
+        when(mediaBindingMapper.deleteBatchIds(any())).thenReturn(1);
 
-        assertThatThrownBy(() -> mediaBindingService.deleteWithValidByIds(new Long[]{2001L}))
-            .isInstanceOf(ServiceException.class);
-        verify(mediaBindingMapper, never()).deleteBatchIds(any());
+        assertThat(mediaBindingService.deleteWithValidByIds(new Long[]{2001L})).isTrue();
+        verify(mediaBindingMapper).deleteBatchIds(any());
+    }
+
+    @Test
+    void deleteLastMediaBindingCleansAssetAndOss() {
+        ProductMediaBinding binding = new ProductMediaBinding();
+        binding.setAssetId(1001L);
+        ProductMediaAsset asset = new ProductMediaAsset();
+        asset.setAssetId(1001L);
+        asset.setOssId(9001L);
+        when(mediaBindingMapper.selectBatchIds(any())).thenReturn(List.of(binding));
+        when(mediaBindingMapper.deleteBatchIds(any())).thenReturn(1);
+        when(mediaBindingMapper.selectCount(any())).thenReturn(0L);
+        when(mediaAssetMapper.selectById(1001L)).thenReturn(asset);
+        when(mediaAssetMapper.deleteById(1001L)).thenReturn(1);
+
+        assertThat(mediaBindingService.deleteWithValidByIds(new Long[]{2001L})).isTrue();
+
+        verify(ossService).deleteByIds(List.of(9001L));
     }
 
     private ProductMediaAssetBo validAssetBo() {

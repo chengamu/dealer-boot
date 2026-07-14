@@ -1,12 +1,14 @@
 package com.bocoo.dealer.dashboard.scope;
 
 public record SalesDashboardScope(
-    String type,
+    String viewType,
     String label,
     Long tenantId,
-    Long ownerUserId
+    String businessOrigin,
+    Long salesStoreId,
+    String salesStoreName
 ) {
-    public boolean isCrossTenant() {
-        return tenantId == null;
+    public boolean isPlatformView() {
+        return "PLATFORM".equals(viewType);
     }
 }

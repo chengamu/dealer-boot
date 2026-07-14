@@ -11,11 +11,18 @@
       </template>
     </el-table-column>
     <el-table-column prop="roomLocation" :label="t('dealer.quickOrder.room')" min-width="120" />
-    <el-table-column prop="saleProductName" :label="t('dealer.quickOrder.product')" min-width="180" />
+    <el-table-column :label="t('dealer.quickOrder.productLabel')" min-width="210">
+      <template #default="{ row }">
+        <div class="quick-order-line-table__product">
+          <strong>{{ row.saleProductName || '-' }}</strong>
+          <span>{{ quickOrderSummary(row, language) || '-' }}</span>
+        </div>
+      </template>
+    </el-table-column>
     <el-table-column :label="t('dealer.quickOrder.size')" min-width="150">
       <template #default="{ row }">{{ quickOrderSize(row) }}</template>
     </el-table-column>
-    <el-table-column prop="quantity" :label="t('dealer.quickOrder.quantity')" width="90" align="center" />
+    <el-table-column prop="quantity" :label="t('dealer.quickOrder.quantityLabel')" width="90" align="center" />
     <el-table-column :label="t('dealer.quickOrder.configuration')" min-width="220" show-overflow-tooltip>
       <template #default="{ row }">{{ quickOrderSummary(row, language) || '-' }}</template>
     </el-table-column>
@@ -59,4 +66,16 @@ function money(value?: string | null) {
 .quick-order-line-table__config-item { display: flex; flex-direction: column; gap: 4px; padding: 10px 12px; border: 1px solid #e7edf4; border-radius: 8px; background: #fafcff; }
 .quick-order-line-table__config-item span { color: #667085; font-size: 12px; }
 .quick-order-line-table__config-item b { color: #1d2939; }
+.quick-order-line-table__product {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+}
+.quick-order-line-table__product strong { color: #1d2939; }
+.quick-order-line-table__product span {
+  color: #667085;
+  font-size: 12px;
+  line-height: 18px;
+}
 </style>

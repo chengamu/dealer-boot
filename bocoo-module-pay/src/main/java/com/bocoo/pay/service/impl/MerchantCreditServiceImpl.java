@@ -10,7 +10,10 @@ import com.bocoo.common.core.utils.TimeUtils;
 import com.bocoo.pay.domain.bo.CreditAdjustBo;
 import com.bocoo.pay.domain.bo.CreditFreezeBo;
 import com.bocoo.pay.domain.bo.CreditOccupyBo;
+import com.bocoo.pay.domain.bo.CreditRepayBo;
+import com.bocoo.pay.domain.credit.CreditSubject;
 import com.bocoo.pay.domain.entity.MerchantCreditAccount;
+import com.bocoo.pay.domain.entity.MerchantCreditTransaction;
 import com.bocoo.pay.domain.entity.MerchantReceivable;
 import com.bocoo.pay.domain.entity.PayChannel;
 import com.bocoo.pay.domain.entity.PayOrder;
@@ -33,6 +36,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.format.DateTimeFormatter;
+import java.math.RoundingMode;
 
 @Service
 @RequiredArgsConstructor
@@ -45,15 +49,16 @@ public class MerchantCreditServiceImpl implements MerchantCreditService {
     private final PayChannelService channelService;
     private final PaymentSuccessService successService;
     private final PayOperatorContext operator;
+    private final CreditSubjectSupport subjects;
 
     @Override
     public MerchantCreditAccount getAccount(Long merchantTenantId) {
         if (!operator.isPlatform() && !operator.tenantId().equals(merchantTenantId)) {
             throw new ServiceException("Credit account does not belong to the current tenant");
         }
+        CreditSubject subject = CreditSubject.merchant(merchantTenantId, null, null, "USD");
         MerchantCreditAccount account = operator.isPlatform()
-            ? TenantContextHolder.callWithIgnore(() -> accounts.find(merchantTenantId))
-            : accounts.find(merchantTenantId);
+            ? TenantContextHolder.callWithIgnore(() -> accounts.find(subject)) : accounts.find(subject);
         if (account == null) throw new ServiceException("Merchant credit account does not exist");
         return account;
     }
@@ -69,12 +74,14 @@ public class MerchantCreditServiceImpl implements MerchantCreditService {
         MerchantReceivable existing = receivableMapper.selectOne(new LambdaQueryWrapper<MerchantReceivable>()
             .eq(MerchantReceivable::getPayOrderId, order.getId()), false);
         if (existing != null) return existing;
-        MerchantCreditAccount account = accounts.getOrCreate(order.getPayerTenantId(), bo, order.getCurrency());
+        CreditSubject subject = subjects.forDocument(bo.getSalesDocumentId(), order.getCurrency(), bo);
+        MerchantCreditAccount account = accounts.getOrCreate(subject, bo);
         if (!CreditAccountStatus.NORMAL.name().equals(account.getStatus()) || bo.getCreditTermDays() <= 0) {
             throw new ServiceException("Credit account or credit term is not available");
         }
         boolean overdue = receivableMapper.selectCount(new LambdaQueryWrapper<MerchantReceivable>()
-            .eq(MerchantReceivable::getTenantId, account.getTenantId())
+            .eq(MerchantReceivable::getBusinessOrigin, account.getBusinessOrigin())
+            .eq(MerchantReceivable::getCreditAccountId, account.getCreditAccountId())
             .eq(MerchantReceivable::getStatus, ReceivableStatus.OVERDUE.name())) > 0;
         if (!StringUtils.equalsIgnoreCase(account.getCurrency(), order.getCurrency()) || overdue) {
             throw new ServiceException("Credit currency does not match or an overdue receivable exists");
@@ -118,36 +125,80 @@ public class MerchantCreditServiceImpl implements MerchantCreditService {
     public MerchantReceivable repay(Long receivableId, String reason) {
         requirePlatform();
         if (StringUtils.isBlank(reason)) throw new ServiceException("Repayment reason is required");
-        return TenantContextHolder.callWithIgnore(() -> repayPlatform(receivableId, reason));
+        return TenantContextHolder.callWithIgnore(() -> {
+            MerchantReceivable row = receivableMapper.selectById(receivableId);
+            if (row == null) throw new ServiceException("Receivable does not exist");
+            CreditRepayBo bo = new CreditRepayBo();
+            bo.setAmount(row.getOutstandingAmount());
+            bo.setPaidTime(TimeUtils.utcNow());
+            bo.setMethod("LEGACY_MANUAL");
+            bo.setReference("LEGACY-" + receivableId);
+            bo.setReason(reason);
+            bo.setIdempotencyKey("legacy-repay-" + receivableId);
+            return repayPlatform(receivableId, bo);
+        });
     }
 
-    private MerchantReceivable repayPlatform(Long receivableId, String reason) {
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public MerchantReceivable repay(Long receivableId, CreditRepayBo bo) {
+        requirePlatform();
+        return TenantContextHolder.callWithIgnore(() -> repayPlatform(receivableId, bo));
+    }
+
+    private MerchantReceivable repayPlatform(Long receivableId, CreditRepayBo bo) {
+        BigDecimal amount = exactMoney(bo.getAmount());
+        MerchantCreditTransaction prior = ledger.findRepayment(receivableId, bo.getIdempotencyKey());
+        if (prior != null) {
+            if (prior.getAmount().compareTo(amount) != 0) throw new ServiceException("Idempotency key was used with another amount");
+            return receivableMapper.selectById(receivableId);
+        }
         MerchantReceivable row = receivableMapper.selectById(receivableId);
         if (row == null || (!ReceivableStatus.UNPAID.name().equals(row.getStatus())
+            && !ReceivableStatus.PARTIALLY_PAID.name().equals(row.getStatus())
             && !ReceivableStatus.OVERDUE.name().equals(row.getStatus()))) {
             throw new ServiceException("Receivable cannot be repaid");
         }
-        MerchantCreditAccount account = accounts.find(row.getTenantId());
+        if (amount.signum() <= 0 || amount.compareTo(row.getOutstandingAmount()) > 0) {
+            throw new ServiceException("Repayment amount exceeds outstanding amount");
+        }
+        MerchantCreditAccount account = accounts.byId(row.getCreditAccountId());
         if (account == null) throw new ServiceException("Merchant credit account does not exist");
-        BigDecimal released = row.getOutstandingAmount();
-        BigDecimal afterUsed = account.getUsedCredit().subtract(released);
+        BigDecimal afterOutstanding = row.getOutstandingAmount().subtract(amount);
+        BigDecimal afterRepaid = row.getRepaidAmount().add(amount);
+        BigDecimal afterUsed = account.getUsedCredit().subtract(amount);
         if (afterUsed.signum() < 0) throw new ServiceException("Credit account used amount is invalid");
+        boolean settled = afterOutstanding.signum() == 0;
+        String afterStatus = settled ? ReceivableStatus.SETTLED.name()
+            : ReceivableStatus.OVERDUE.name().equals(row.getStatus()) ? row.getStatus() : ReceivableStatus.PARTIALLY_PAID.name();
+        var now = TimeUtils.utcNow();
         int rows = receivableMapper.update(null, new LambdaUpdateWrapper<MerchantReceivable>()
-            .set(MerchantReceivable::getRepaidAmount, row.getReceivableAmount())
-            .set(MerchantReceivable::getOutstandingAmount, BigDecimal.ZERO.setScale(2))
-            .set(MerchantReceivable::getStatus, ReceivableStatus.SETTLED.name())
-            .set(MerchantReceivable::getSettledTime, TimeUtils.utcNow())
+            .set(MerchantReceivable::getRepaidAmount, afterRepaid)
+            .set(MerchantReceivable::getOutstandingAmount, afterOutstanding)
+            .set(MerchantReceivable::getStatus, afterStatus)
+            .set(MerchantReceivable::getSettledTime, settled ? now : null)
             .eq(MerchantReceivable::getReceivableId, row.getReceivableId())
-            .eq(MerchantReceivable::getStatus, row.getStatus()));
+            .eq(MerchantReceivable::getStatus, row.getStatus())
+            .eq(MerchantReceivable::getRepaidAmount, row.getRepaidAmount())
+            .eq(MerchantReceivable::getOutstandingAmount, row.getOutstandingAmount()));
         if (rows != 1) throw new ServiceException("Receivable was changed concurrently");
         accounts.changeUsed(account, afterUsed);
-        ledger.transaction(account, CreditTransactionType.REPAY, row.getReceivableId(), row.getReceivableNo(), released,
-            account.getCreditLimit(), account.getCreditLimit(), account.getUsedCredit(), afterUsed, reason);
-        row.setRepaidAmount(row.getReceivableAmount());
-        row.setOutstandingAmount(BigDecimal.ZERO.setScale(2));
-        row.setStatus(ReceivableStatus.SETTLED.name());
-        row.setSettledTime(TimeUtils.utcNow());
+        bo.setAmount(amount);
+        ledger.repayment(account, row, bo, account.getUsedCredit(), afterUsed);
+        row.setRepaidAmount(afterRepaid);
+        row.setOutstandingAmount(afterOutstanding);
+        row.setStatus(afterStatus);
+        row.setSettledTime(settled ? now : null);
         return row;
+    }
+
+    private BigDecimal exactMoney(BigDecimal amount) {
+        if (amount == null) throw new ServiceException("Repayment amount is required");
+        try {
+            return amount.setScale(2, RoundingMode.UNNECESSARY);
+        } catch (ArithmeticException ex) {
+            throw new ServiceException("Repayment amount must use currency precision");
+        }
     }
 
     @Override

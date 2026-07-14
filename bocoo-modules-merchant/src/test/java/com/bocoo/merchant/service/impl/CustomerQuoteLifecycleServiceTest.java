@@ -1,5 +1,6 @@
 package com.bocoo.merchant.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.bocoo.common.core.exception.ServiceException;
 import com.bocoo.common.core.enums.TenantType;
 import com.bocoo.merchant.domain.bo.CustomerQuoteItemBo;
@@ -11,6 +12,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.ArgumentCaptor;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
@@ -39,12 +41,15 @@ class CustomerQuoteLifecycleServiceTest {
     @Mock
     private CustomerQuoteCatalogService catalogService;
     private CustomerQuotePricingSession session;
+    @Mock
+    private SalesOwnershipResolver ownershipResolver;
 
     @BeforeEach
     void setUp() {
         TestSaTokenContext.install();
         TestSaTokenContext.setLoginUser(TenantType.MERCHANT.getCode(), 200L, 7L, "sales");
         session = new CustomerQuotePricingSession(200L, catalogService);
+        org.mockito.Mockito.lenient().when(ownershipResolver.currentBusinessOrigin()).thenReturn("MERCHANT");
     }
 
     @Test
@@ -65,6 +70,11 @@ class CustomerQuoteLifecycleServiceTest {
         assertThat(quote.getTotalAmount()).isEqualByComparingTo("230.00");
         assertThat(quote.getConfirmedBy()).isEqualTo("sales");
         verify(itemWriter).replace(1L, 200L, List.of(row), session);
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<QueryWrapper<CustomerQuote>> queryCaptor = ArgumentCaptor.forClass(QueryWrapper.class);
+        verify(quoteMapper).selectOne(queryCaptor.capture(), eq(false));
+        assertThat(queryCaptor.getValue().getSqlSegment()).contains("tenant_id", "business_origin");
+        assertThat(queryCaptor.getValue().getParamNameValuePairs().values()).contains(200L, "MERCHANT");
     }
 
     @Test
@@ -142,6 +152,9 @@ class CustomerQuoteLifecycleServiceTest {
         CustomerQuote quote = new CustomerQuote();
         quote.setQuoteId(1L);
         quote.setTenantId(200L);
+        quote.setBusinessOrigin("MERCHANT");
+        quote.setDeptId(100L);
+        quote.setOwnerUserId(7L);
         quote.setStatus(status);
         quote.setQuoteLanguage(language);
         quote.setDelFlag("0");
@@ -165,7 +178,8 @@ class CustomerQuoteLifecycleServiceTest {
     }
 
     private CustomerQuoteLifecycleServiceImpl service() {
-        return new CustomerQuoteLifecycleServiceImpl(quoteMapper, itemWriter, calculator, sessionFactory);
+        return new CustomerQuoteLifecycleServiceImpl(
+            quoteMapper, itemWriter, calculator, sessionFactory, ownershipResolver);
     }
 
 }

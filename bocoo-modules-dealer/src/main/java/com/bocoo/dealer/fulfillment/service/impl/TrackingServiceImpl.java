@@ -7,6 +7,7 @@ import com.bocoo.common.core.exception.ServiceException;
 import com.bocoo.dealer.fulfillment.domain.entity.Shipment;
 import com.bocoo.dealer.fulfillment.domain.entity.TrackingEvent;
 import com.bocoo.dealer.fulfillment.domain.vo.TrackingEventVo;
+import com.bocoo.dealer.fulfillment.domain.vo.TrackingSummaryVo;
 import com.bocoo.dealer.fulfillment.mapper.ShipmentMapper;
 import com.bocoo.dealer.fulfillment.mapper.TrackingEventMapper;
 import com.bocoo.dealer.fulfillment.service.TrackingService;
@@ -17,11 +18,14 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class TrackingServiceImpl implements TrackingService {
-    private final List<TrackingProvider> providers;
+    private final TrackingCapabilityResolver capabilityResolver;
     private final ShipmentMapper shipmentMapper;
     private final TrackingEventMapper eventMapper;
     private final TrackingEventWriter writer;
@@ -29,13 +33,12 @@ public class TrackingServiceImpl implements TrackingService {
 
     @Override
     @Lock4j(name = "shipment-tracking-sync", keys = {"#shipmentId"})
-    public List<TrackingEventVo> sync(Long shipmentId) {
-        access.platformOnly();
-        Shipment shipment = access.shipment(shipmentId);
+    public List<TrackingEventVo> sync(Long shipmentId, FulfillmentAudience audience) {
+        Shipment shipment = access.shipment(shipmentId, audience);
         if ("DRAFT".equals(shipment.getStatus()) || "CANCELLED".equals(shipment.getStatus())) {
             throw ServiceException.ofMessageKey("dealer.fulfillment.trackingUnavailable");
         }
-        TrackingProvider provider = provider(shipment.getCarrierCode());
+        TrackingProvider provider = capabilityResolver.autoProvider(shipment);
         try {
             TrackingSnapshot snapshot = provider.fetch(shipment);
             LocalDateTime latest = writer.insertNew(shipment, snapshot.events());
@@ -44,21 +47,39 @@ public class TrackingServiceImpl implements TrackingService {
             recordFailure(shipment, ex);
             throw ServiceException.ofMessageKey("dealer.fulfillment.trackingSyncFailed");
         }
-        return events(shipmentId);
+        return events(shipmentId, audience);
     }
 
     @Override
-    public List<TrackingEventVo> events(Long shipmentId) {
-        Shipment shipment = access.shipment(shipmentId);
+    public List<TrackingEventVo> events(Long shipmentId, FulfillmentAudience audience) {
+        Shipment shipment = access.shipment(shipmentId, audience);
         QueryWrapper<TrackingEvent> query = new QueryWrapper<TrackingEvent>()
             .eq("tenant_id", shipment.getTenantId()).eq("shipment_id", shipmentId)
             .orderByDesc("occurred_time", "tracking_event_id");
         return access.ignoreTenant(() -> eventMapper.selectVoList(query));
     }
 
-    private TrackingProvider provider(String carrierCode) {
-        return providers.stream().filter(item -> item.supports(carrierCode)).findFirst()
-            .orElseThrow(() -> ServiceException.ofMessageKey("dealer.fulfillment.trackingProviderMissing"));
+    @Override
+    public List<TrackingSummaryVo> summaries(List<Long> shipmentIds, FulfillmentAudience audience) {
+        List<Shipment> shipments = access.shipments(shipmentIds, audience);
+        if (shipments.isEmpty()) return List.of();
+        List<Long> ids = shipments.stream().map(Shipment::getShipmentId).toList();
+        List<TrackingEventVo> events = access.ignoreTenant(() -> eventMapper.selectVoList(
+            new QueryWrapper<TrackingEvent>().in("shipment_id", ids)
+                .orderByDesc("occurred_time", "tracking_event_id")));
+        Map<Long, TrackingEventVo> latest = events.stream().collect(Collectors.toMap(
+            TrackingEventVo::getShipmentId, Function.identity(), (first, ignored) -> first));
+        return shipments.stream().map(shipment -> summary(shipment, latest.get(shipment.getShipmentId()))).toList();
+    }
+
+    private TrackingSummaryVo summary(Shipment shipment, TrackingEventVo latest) {
+        TrackingSummaryVo result = new TrackingSummaryVo();
+        result.setShipmentId(shipment.getShipmentId());
+        result.setCapability(capabilityResolver.capability(shipment));
+        result.setTrackingStatus(shipment.getTrackingStatus());
+        result.setLastTrackingTime(shipment.getLastTrackingTime());
+        result.setLatestEvent(latest);
+        return result;
     }
 
     private void applySnapshot(Shipment shipment, TrackingSnapshot snapshot, LocalDateTime latest) {

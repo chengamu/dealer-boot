@@ -18,6 +18,7 @@ import com.bocoo.common.log.enums.BusinessType;
 import com.bocoo.common.core.exception.ServiceException;
 import com.bocoo.common.ratelimiter.annotation.RateLimiter;
 import com.bocoo.common.ratelimiter.enums.LimitType;
+import com.bocoo.common.satoken.utils.LoginHelper;
 import com.bocoo.system.domain.bo.SysOssBo;
 import com.bocoo.system.domain.vo.SysOssVo;
 import com.bocoo.system.service.SysOssService;
@@ -164,6 +165,18 @@ public class SysOssController extends BaseController {
             @NotEmpty(message = "{validation.id.required}")
             @PathVariable Long[] ossIds) {
         return toAjax(sysSssService.deleteWithValidByIds(List.of(ossIds), true));
+    }
+
+    /**
+     * 删除当前用户本次上传但尚未提交的OSS文件
+     */
+    @SaCheckPermission("system:oss:upload")
+    @DeleteMapping("/owned/{ossIds}")
+    @Operation(summary = "删除本人上传的OSS文件", description = "清理当前用户尚未提交的上传文件")
+    public R<Void> removeOwned(
+            @NotEmpty(message = "{validation.id.required}")
+            @PathVariable Long[] ossIds) {
+        return toAjax(sysSssService.deleteOwnedByIds(List.of(ossIds), LoginHelper.getUserId()));
     }
 
 }

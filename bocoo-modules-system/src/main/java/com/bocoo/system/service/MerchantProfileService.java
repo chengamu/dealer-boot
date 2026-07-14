@@ -14,11 +14,14 @@ import com.bocoo.common.satoken.utils.LoginHelper;
 import com.bocoo.system.domain.bo.MerchantProfileBo;
 import com.bocoo.system.domain.entity.MerchantProfile;
 import com.bocoo.system.domain.vo.MerchantProfileLevelSnapshot;
+import com.bocoo.system.domain.vo.MerchantProfileOptionVo;
 import com.bocoo.system.domain.vo.MerchantProfileVo;
 import com.bocoo.system.mapper.MerchantProfileMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @RequiredArgsConstructor
 @Service
@@ -33,6 +36,18 @@ public class MerchantProfileService {
         Page<MerchantProfileVo> page = TenantContextHolder.callWithIgnore(() ->
             merchantProfileMapper.selectVoPage(pageQueryParam, buildQueryWrapper(bo)));
         return TableDataInfo.build(page);
+    }
+
+    public List<MerchantProfileOptionVo> selectOptions() {
+        checkPlatformTenant();
+        return TenantContextHolder.callWithIgnore(() -> merchantProfileMapper.selectList(
+                new LambdaQueryWrapper<MerchantProfile>()
+                    .eq(MerchantProfile::getStatus, "ENABLED")
+                    .orderByAsc(MerchantProfile::getMerchantName))
+            .stream()
+            .map(row -> new MerchantProfileOptionVo(
+                row.getMerchantId(), row.getTenantId(), row.getMerchantName()))
+            .toList());
     }
 
     public MerchantProfileVo selectById(Long merchantId) {

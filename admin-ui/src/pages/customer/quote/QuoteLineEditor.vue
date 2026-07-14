@@ -13,7 +13,11 @@
       />
     </div>
     <el-empty v-else :description="t('customer.quote.option.empty')" :image-size="48" />
-    <div class="quote-line-editor__footer">
+    <div v-if="readonly && row.remark" class="quote-line-editor__remark">
+      <span>{{ t('customer.quote.remark') }}</span>
+      <p>{{ row.remark }}</p>
+    </div>
+    <div v-else-if="!readonly" class="quote-line-editor__footer">
       <el-input v-model="row.remark" :disabled="readonly" :placeholder="t('customer.quote.remark')" maxlength="200" show-word-limit />
       <el-button type="primary" plain :disabled="readonly || !row.saleProductId" :loading="calculating" @click="emit('calculate')">
         {{ t('customer.quote.action.calculateLine') }}
@@ -59,6 +63,18 @@ watch(() => props.row.selectedOptionValues, () => {
 <style scoped>
 .quote-line-editor { padding: 0 14px 14px; background: #fbfcfe; }
 .quote-line-editor__groups { overflow: hidden; border: 1px solid #e3e9f1; border-radius: 6px; background: #fff; }
+.quote-line-editor__remark {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 12px;
+  padding: 12px 14px;
+  border: 1px solid #e3e9f1;
+  border-radius: 8px;
+  background: #fff;
+}
+.quote-line-editor__remark span { color: #667085; font-size: 12px; font-weight: 600; }
+.quote-line-editor__remark p { margin: 0; color: #1d2939; line-height: 20px; }
 .quote-line-editor__footer { display: grid; grid-template-columns: minmax(320px, 1fr) auto; gap: 12px; align-items: center; margin-top: 12px; }
 .quote-line-editor :deep(.el-empty) { padding: 16px 0; }
 </style>

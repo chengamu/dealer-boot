@@ -6,10 +6,12 @@ import cn.dev33.satoken.context.model.SaRequest;
 import cn.dev33.satoken.context.model.SaResponse;
 import cn.dev33.satoken.context.model.SaStorage;
 import com.bocoo.common.core.domain.bo.LoginUser;
+import com.bocoo.common.core.domain.vo.RoleVO;
 import com.bocoo.common.satoken.utils.LoginHelper;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
 
 public final class TestSaTokenContext implements SaTokenContext {
     private static final TestSaTokenContext INSTANCE = new TestSaTokenContext();
@@ -24,11 +26,18 @@ public final class TestSaTokenContext implements SaTokenContext {
     }
 
     public static void setLoginUser(String tenantType, Long tenantId, Long userId, String username) {
+        setLoginUser(tenantType, tenantId, userId, null, username, List.of());
+    }
+
+    public static void setLoginUser(String tenantType, Long tenantId, Long userId, Long deptId,
+                                    String username, List<RoleVO> roles) {
         LoginUser loginUser = new LoginUser();
         loginUser.setTenantType(tenantType);
         loginUser.setTenantId(tenantId);
         loginUser.setUserId(userId);
+        loginUser.setDeptId(deptId);
         loginUser.setUsername(username);
+        loginUser.setRoles(roles);
         INSTANCE.storage.get().set(LoginHelper.LOGIN_USER_KEY, loginUser).set(LoginHelper.USER_KEY, userId);
     }
 

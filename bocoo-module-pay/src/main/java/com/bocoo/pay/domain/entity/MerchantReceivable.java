@@ -16,7 +16,9 @@ import java.time.LocalDateTime;
 public class MerchantReceivable extends BaseEntity {
     @TableId(value = "receivable_id")
     private Long receivableId;
+    private String businessOrigin;
     private Long tenantId;
+    private Long salesStoreId;
     private Long merchantId;
     private String merchantName;
     private Long salesDocumentId;

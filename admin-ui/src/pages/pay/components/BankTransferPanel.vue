@@ -17,7 +17,7 @@
     <el-form-item :label="t('pay.bank.transferredTime')" prop="transferredTime"><el-date-picker v-model="form.transferredTime" type="datetime" value-format="YYYY-MM-DDTHH:mm:ss" /></el-form-item>
     <el-form-item :label="t('pay.amount')"><el-input :model-value="money(amount, currency)" disabled /></el-form-item>
     <el-form-item :label="t('pay.bank.proof')" prop="proofMediaId">
-      <ProofMediaUpload v-model="form.proofMediaId" />
+      <ProofMediaUpload ref="proofUploadRef" v-model="form.proofMediaId" />
     </el-form-item>
     <el-form-item :label="t('pay.remark')"><el-input v-model="form.remark" type="textarea" :rows="2" maxlength="300" show-word-limit /></el-form-item>
     <el-button v-hasPermi="['pay:bank:submit']" type="primary" :loading="submitting" class="bank-form__submit" @click="submit">{{ t('pay.bank.submit') }}</el-button>
@@ -38,6 +38,7 @@ const props = defineProps<{ salesDocumentId: string; payOrderId?: string; amount
 const emit = defineEmits<{ refresh: [poll?: boolean] }>()
 const { t } = useI18n()
 const formRef = ref<FormInstance>()
+const proofUploadRef = ref<InstanceType<typeof ProofMediaUpload>>()
 const submitting = ref(false)
 const loadingAccounts = ref(false)
 const accounts = ref<BankCollectionAccount[]>([])
@@ -57,8 +58,12 @@ async function submit() {
       payerName: form.payerName, bankReference: form.bankReference, transferredTime: form.transferredTime,
       declaredPrice, currency: props.currency, proofMediaId: form.proofMediaId, remark: form.remark
     })
+    proofUploadRef.value?.commit()
     ElMessage.success(t('pay.bank.submitted'))
     emit('refresh', true)
+  } catch (error) {
+    await proofUploadRef.value?.cleanup()
+    throw error
   } finally { submitting.value = false }
 }
 

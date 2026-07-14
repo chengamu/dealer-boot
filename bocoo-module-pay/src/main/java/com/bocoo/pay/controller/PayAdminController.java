@@ -35,7 +35,7 @@ public class PayAdminController extends BaseController {
         return payAdminService.selectChannelPage(query, pageQuery);
     }
 
-    @SaCheckPermission("pay:order:list")
+    @SaCheckPermission("platform:finance:payment:list")
     @GetMapping("/order/list")
     @Operation(summary = "查询支付订单列表")
     public TableDataInfo<PayOrder> orderList(PayOrder query, PageQuery pageQuery) {

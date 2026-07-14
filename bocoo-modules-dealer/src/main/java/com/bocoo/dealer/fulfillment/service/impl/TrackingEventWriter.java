@@ -30,6 +30,7 @@ public class TrackingEventWriter {
 
     private boolean exists(Shipment shipment, TrackingRecord record) {
         QueryWrapper<TrackingEvent> query = new QueryWrapper<TrackingEvent>()
+            .eq("shipment_id", shipment.getShipmentId())
             .eq("carrier_code", shipment.getCarrierCode());
         if (record.providerEventId() != null) {
             query.eq("provider_event_id", record.providerEventId());

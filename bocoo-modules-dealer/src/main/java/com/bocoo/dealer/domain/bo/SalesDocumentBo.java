@@ -8,6 +8,10 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public class SalesDocumentBo extends BaseEntity {
     private Long salesDocumentId;
+    private Long tenantId;
+    private String businessOrigin;
+    private Long salesStoreId;
+    private Long deptId;
     private String sourceType;
     private String sourceNo;
     private String quoteNo;

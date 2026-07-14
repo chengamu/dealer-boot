@@ -19,7 +19,6 @@
       :row-config="{ isCurrent: true, keyField: 'clientId' }"
       :cell-config="{ height: 44 }"
       :expand-config="{ accordion: true }"
-      :max-height="560"
       @checkbox-change="syncSelection"
       @checkbox-all="syncSelection"
       @toggle-row-expand="handleExpand"
@@ -41,11 +40,18 @@
       </vxe-column>
       <vxe-column type="seq" :title="t('common.index')" width="58" align="center" fixed="left" />
       <vxe-column field="roomLocation" :title="t('customer.quote.room')" min-width="130">
-        <template #default="{ row }"><el-input v-model="row.roomLocation" :disabled="readonly" @change="markDirty(row)" /></template>
+        <template #default="{ row }">
+          <span v-if="readonly">{{ row.roomLocation || '-' }}</span>
+          <el-input v-else v-model="row.roomLocation" @change="markDirty(row)" />
+        </template>
       </vxe-column>
       <vxe-column field="saleProductId" :title="t('customer.quote.product')" min-width="190">
         <template #default="{ row }">
-          <el-select v-model="row.saleProductId" :disabled="readonly" filterable @change="changeProduct(row)">
+          <div v-if="readonly" class="quote-line-grid__product">
+            <strong>{{ row.saleProductName || '-' }}</strong>
+            <span>{{ row.formulaVersionLabel || '-' }}</span>
+          </div>
+          <el-select v-else v-model="row.saleProductId" filterable @change="changeProduct(row)">
             <el-option v-for="product in saleProducts" :key="product.saleProductId" :label="product.saleProductName" :value="String(product.saleProductId)" />
           </el-select>
         </template>
@@ -60,7 +66,12 @@
         <template #default="{ row }"><BusinessVxeNumberCell v-model="row.quantity" mode="COUNT" integer-value :readonly="readonly" :min="1" :allow-zero="false" @change="markDirty(row)" @validity-change="updateValidity(row, 'quantity', $event)" /></template>
       </vxe-column>
       <vxe-column :title="t('customer.quote.configuration')" min-width="220" show-overflow>
-        <template #default="{ row }">{{ summary(row) || '-' }}</template>
+        <template #default="{ row }">
+          <div class="quote-line-grid__summary">
+            <strong>{{ summary(row) || '-' }}</strong>
+            <span v-if="row.remark">{{ row.remark }}</span>
+          </div>
+        </template>
       </vxe-column>
       <vxe-column :title="t('common.status')" width="105" align="center">
         <template #default="{ row }"><el-tag :type="calculationType(row.calculationStatus)">{{ calculationText(row.calculationStatus) }}</el-tag></template>
@@ -154,6 +165,24 @@ defineExpose({ expand, validate })
 .quote-line-grid { overflow: hidden; border: 1px solid #dfe6ef; border-radius: 7px; background: #fff; }
 .quote-line-grid__toolbar { display: flex; min-height: 52px; align-items: center; justify-content: space-between; padding: 8px 12px; border-bottom: 1px solid #e5eaf1; }
 .quote-line-grid__toolbar span { color: #667085; font-size: 13px; }
+.quote-line-grid__product,
+.quote-line-grid__summary {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+}
+.quote-line-grid__product strong,
+.quote-line-grid__summary strong {
+  color: #1d2939;
+  font-weight: 600;
+}
+.quote-line-grid__product span,
+.quote-line-grid__summary span {
+  color: #667085;
+  font-size: 12px;
+  line-height: 18px;
+}
 .quote-line-grid :deep(.vxe-table--render-default .vxe-body--column) { color: #344054; }
 .quote-line-grid :deep(.el-select), .quote-line-grid :deep(.el-input-number) { width: 100%; }
 .quote-line-grid :deep(.el-input__wrapper), .quote-line-grid :deep(.el-select__wrapper) { min-height: 32px; box-shadow: none; }

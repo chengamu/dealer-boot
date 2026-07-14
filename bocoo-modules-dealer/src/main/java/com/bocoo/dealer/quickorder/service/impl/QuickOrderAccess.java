@@ -6,7 +6,8 @@ import com.bocoo.common.satoken.utils.LoginHelper;
 import com.bocoo.dealer.quickorder.domain.entity.QuickOrder;
 import com.bocoo.dealer.quickorder.domain.entity.QuickOrderItem;
 import com.bocoo.dealer.quickorder.mapper.QuickOrderItemMapper;
-import com.bocoo.dealer.quickorder.mapper.QuickOrderMapper;
+import com.bocoo.dealer.quickorder.mapper.QuickOrderQueryMapper;
+import com.bocoo.dealer.scope.SalesBusinessScope;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -15,7 +16,7 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 class QuickOrderAccess {
-    private final QuickOrderMapper mapper;
+    private final QuickOrderQueryMapper mapper;
     private final QuickOrderItemMapper itemMapper;
 
     Long tenantId() {
@@ -25,8 +26,10 @@ class QuickOrderAccess {
     }
 
     QuickOrder load(Long id) {
+        SalesBusinessScope scope = SalesBusinessScope.current();
         QuickOrder row = mapper.selectOne(new QueryWrapper<QuickOrder>().eq("del_flag", "0")
-            .eq("tenant_id", tenantId()).eq("quick_order_id", id), false);
+            .eq("tenant_id", scope.tenantId()).eq("business_origin", scope.businessOrigin())
+            .eq("quick_order_id", id), false);
         if (row == null) throw ServiceException.ofMessageKey("dealer.quickOrder.notFound");
         return row;
     }

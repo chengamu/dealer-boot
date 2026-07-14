@@ -14,6 +14,7 @@
 <script setup lang="ts">
 import type { RouteLocationMatched, RouteLocationRaw } from 'vue-router'
 import { getMessage } from '@/locales'
+import { resolveHomeRouteTarget } from '@/stores/homeRoute'
 import useLocaleStore from '@/stores/locale'
 
 type BreadcrumbRoute = Pick<RouteLocationMatched, 'path' | 'redirect' | 'name' | 'meta'>
@@ -26,8 +27,9 @@ const levelList = ref<BreadcrumbRoute[]>([])
 function getBreadcrumb() {
   let matched: BreadcrumbRoute[] = route.matched.filter((item) => item.meta && item.meta.title)
   const first = matched[0]
-  if (!isDashboard(first)) {
-    matched = [{ path: '/index', redirect: undefined, name: 'Index', meta: { title: 'dashboard.home' } } as BreadcrumbRoute].concat(matched)
+  if (!isHomeRoute(first)) {
+    const homeTarget = resolveHomeRouteTarget()
+    matched = [{ path: homeTarget.path, redirect: undefined, name: 'Index', meta: { title: homeTarget.title } } as BreadcrumbRoute].concat(matched)
   }
 
   levelList.value = matched.filter((item) => item.meta && item.meta.title && item.meta.breadcrumb !== false)
@@ -38,9 +40,10 @@ function routeTitle(title: unknown) {
   return title.includes('.') ? getMessage(title, localeStore.language) : title
 }
 
-function isDashboard(routeItem?: BreadcrumbRoute) {
-  const name = routeItem?.name
-  return !!name && String(name).trim() === 'Index'
+function isHomeRoute(routeItem?: BreadcrumbRoute) {
+  if (!routeItem) return false
+  const homeTarget = resolveHomeRouteTarget()
+  return routeItem.path === homeTarget.path || String(routeItem.name || '').trim() === 'Index'
 }
 
 function handleLink(item: BreadcrumbRoute) {

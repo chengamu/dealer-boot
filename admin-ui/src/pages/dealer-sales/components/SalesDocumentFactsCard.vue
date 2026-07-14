@@ -1,16 +1,41 @@
 <template>
   <section class="sales-document-facts-card">
-    <el-descriptions :column="3" border>
-      <el-descriptions-item :label="t('dealer.sales.customer')">{{ document.customerName || '-' }}</el-descriptions-item>
-      <el-descriptions-item :label="t('dealer.sales.merchant')">{{ document.merchantName || '-' }}</el-descriptions-item>
-      <el-descriptions-item :label="t('dealer.sales.source')">{{ sourceText }}</el-descriptions-item>
-      <el-descriptions-item :label="t('dealer.sales.project')">{{ document.projectName || '-' }}</el-descriptions-item>
-      <el-descriptions-item :label="t('dealer.sales.customerPo')">{{ document.customerPoNo || '-' }}</el-descriptions-item>
-      <el-descriptions-item :label="t('dealer.sales.owner')">{{ document.ownerName || '-' }}</el-descriptions-item>
-      <el-descriptions-item :label="t('dealer.sales.recipient')">{{ document.recipientName || '-' }}</el-descriptions-item>
-      <el-descriptions-item :label="t('dealer.sales.phone')">{{ document.recipientPhone || '-' }}</el-descriptions-item>
-      <el-descriptions-item :label="t('dealer.sales.address')" :span="3">{{ document.shippingAddress || '-' }}</el-descriptions-item>
-    </el-descriptions>
+    <article class="sales-document-facts-card__item">
+      <span>{{ t('dealer.sales.customer') }}</span>
+      <strong>{{ document.customerName || '-' }}</strong>
+    </article>
+    <article class="sales-document-facts-card__item">
+      <span>{{ t('dealer.sales.merchant') }}</span>
+      <strong>{{ document.merchantName || '-' }}</strong>
+    </article>
+    <article class="sales-document-facts-card__item">
+      <span>{{ t('dealer.sales.address') }}</span>
+      <strong>{{ document.shippingAddress || '-' }}</strong>
+    </article>
+    <article class="sales-document-facts-card__item">
+      <span>{{ t('dealer.sales.customerPo') }}</span>
+      <strong>{{ document.customerPoNo || '-' }}</strong>
+    </article>
+    <article class="sales-document-facts-card__item">
+      <span>{{ t('dealer.sales.project') }}</span>
+      <strong>{{ document.projectName || '-' }}</strong>
+    </article>
+    <article class="sales-document-facts-card__item">
+      <span>{{ t('dealer.sales.owner') }}</span>
+      <strong>{{ document.ownerName || '-' }}</strong>
+    </article>
+    <article class="sales-document-facts-card__item">
+      <span>{{ t('dealer.sales.recipient') }}</span>
+      <strong>{{ document.recipientName || '-' }}</strong>
+    </article>
+    <article class="sales-document-facts-card__item">
+      <span>{{ t('dealer.sales.phone') }}</span>
+      <strong>{{ document.recipientPhone || '-' }}</strong>
+    </article>
+    <article class="sales-document-facts-card__item">
+      <span>{{ t('dealer.sales.source') }}</span>
+      <strong>{{ sourceText }}</strong>
+    </article>
   </section>
 </template>
 
@@ -29,5 +54,24 @@ const sourceText = computed(() => {
 </script>
 
 <style scoped>
-.sales-document-facts-card { padding: 12px; border: 1px solid #e4eaf2; border-radius: 8px; background: #fff; }
+.sales-document-facts-card {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px 20px;
+  padding: 14px 16px;
+  border: 1px solid #e4eaf2;
+  border-radius: 8px;
+  background: #fff;
+}
+.sales-document-facts-card__item {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 6px;
+}
+.sales-document-facts-card__item span { color: #667085; font-size: 12px; font-weight: 600; }
+.sales-document-facts-card__item strong { color: #1d2939; line-height: 22px; }
+@media (max-width: 1200px) {
+  .sales-document-facts-card { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
 </style>

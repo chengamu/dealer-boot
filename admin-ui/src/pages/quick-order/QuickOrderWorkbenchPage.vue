@@ -8,43 +8,47 @@
       <div class="quick-order-page__actions">
         <el-button v-hasPermi="[savePerm]" :loading="saving" :disabled="readonly" @click="saveDraft">{{ t('dealer.quickOrder.saveDraft') }}</el-button>
         <el-button v-hasPermi="['dealer:quick-order:submit']" type="primary" :disabled="readonly || !rows.length || !currentInputValid" @click="openReview">
-          {{ t('dealer.quickOrder.review') }}
+          {{ t('dealer.quickOrder.reviewAction') }}
         </el-button>
       </div>
     </header>
 
     <QuickOrderHeaderCard :order="order" :customers="customers" :readonly="readonly" />
-    <QuickOrderCurrentItemPanel
-      :item="currentItem"
-      :sale-products="saleProducts"
-      :setup="currentSetup"
-      :language="language"
-      :currency-code="order.currencyCode"
-      :editing="Boolean(editingClientId)"
-      :loading-setup="loadingSetup"
-      :calculating="calculating"
-      :readonly="readonly"
-      @dirty="markCurrentDirty"
-      @product-change="changeCurrentProduct"
-      @calculate="calculateCurrentItem"
-      @save-line="saveCurrentLine"
-      @reset-line="resetCurrentLine"
-      @validity-change="currentInputValid = $event"
-    />
-    <QuickOrderCartBar
-      :rows="rows"
-      :expanded="cartExpanded"
-      :language="language"
-      :currency-code="order.currencyCode"
-      :product-amount="order.productAmount"
-      :shipping-amount="order.shippingAmount"
-      :total-amount="order.totalAmount"
-      @toggle="cartExpanded = !cartExpanded"
-      @review="openReview"
-      @edit="editRow"
-      @remove="removeRow"
-      @clear="clearRows"
-    />
+    <section class="quick-order-page__content">
+      <QuickOrderCurrentItemPanel
+        class="quick-order-page__main"
+        :item="currentItem"
+        :sale-products="saleProducts"
+        :setup="currentSetup"
+        :language="language"
+        :currency-code="order.currencyCode"
+        :editing="Boolean(editingClientId)"
+        :loading-setup="loadingSetup"
+        :calculating="calculating"
+        :readonly="readonly"
+        @dirty="markCurrentDirty"
+        @product-change="changeCurrentProduct"
+        @calculate="calculateCurrentItem"
+        @save-line="saveCurrentLine"
+        @reset-line="resetCurrentLine"
+        @validity-change="currentInputValid = $event"
+      />
+      <QuickOrderCartBar
+        class="quick-order-page__cart"
+        :rows="rows"
+        :expanded="cartExpanded"
+        :language="language"
+        :currency-code="order.currencyCode"
+        :product-amount="order.productAmount"
+        :shipping-amount="order.shippingAmount"
+        :total-amount="order.totalAmount"
+        @toggle="cartExpanded = !cartExpanded"
+        @review="openReview"
+        @edit="editRow"
+        @remove="removeRow"
+        @clear="clearRows"
+      />
+    </section>
   </div>
 </template>
 
@@ -236,10 +240,12 @@ void loadPage()
 
 <style scoped>
 .quick-order-page { display: flex; min-height: calc(100vh - 92px); flex-direction: column; gap: 12px; padding: 12px; background: var(--admin-bg); }
+.quick-order-page__content { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(360px, 0.95fr); gap: 12px; align-items: start; }
 .quick-order-page__topbar,
 .quick-order-page__title,
 .quick-order-page__actions { display: flex; align-items: center; gap: 10px; }
 .quick-order-page__topbar { justify-content: space-between; }
 .quick-order-page__title h1 { margin: 0; color: #1d2939; font-size: 24px; }
 .quick-order-page__actions { justify-content: flex-end; }
+@media (max-width: 1320px) { .quick-order-page__content { grid-template-columns: minmax(0, 1fr); } }
 </style>

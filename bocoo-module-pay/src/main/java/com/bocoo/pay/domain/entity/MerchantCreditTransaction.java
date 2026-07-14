@@ -31,5 +31,10 @@ public class MerchantCreditTransaction extends BaseEntity {
     private Long operatorId;
     private String operatorName;
     private LocalDateTime occurredTime;
+    private String paymentMethod;
+    private String paymentReference;
+    private LocalDateTime paidTime;
+    private Long proofMediaId;
+    private String idempotencyKey;
     private String remark;
 }

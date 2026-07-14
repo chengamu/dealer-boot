@@ -44,6 +44,7 @@
 <script setup lang="ts">
 import ScrollPane from './ScrollPane.vue'
 import { getNormalPath } from '@/utils/ruoyi'
+import { resolveHomeRouteTarget } from '@/stores/homeRoute'
 import useTagsViewStore, { type TagView } from '@/stores/tagsView'
 import usePermissionStore from '@/stores/permission'
 import { getMessage } from '@/locales'
@@ -88,6 +89,7 @@ const router = useRouter();
 
 const visitedViews = computed(() => useTagsViewStore().visitedViews);
 const routes = computed(() => usePermissionStore().routes);
+const homeTarget = computed(() => resolveHomeRouteTarget());
 const localeStore = useLocaleStore();
 const t = (key: string) => getMessage(key, localeStore.language);
 
@@ -127,11 +129,12 @@ function activeStyle(_tag?: TagView) {
   return {};
 }
 function isAffix(tag: TagView) {
-  return tag.meta && tag.meta.affix
+  return Boolean(tag.meta?.affix || tag.path === homeTarget.value.path)
 }
 function isFirstView() {
   try {
-    return selectedTag.value.fullPath === '/index' || selectedTag.value.fullPath === visitedViews.value[1]?.fullPath
+    const currentPath = selectedTag.value.fullPath || selectedTag.value.path
+    return currentPath === homeTarget.value.path || currentPath === (visitedViews.value[0]?.fullPath || visitedViews.value[0]?.path)
   } catch (err) {
     return false
   }
@@ -166,10 +169,16 @@ function filterAffixTags(routes: AffixRoute[], basePath = '') {
 }
 function initTags() {
   const res = filterAffixTags(routes.value as unknown as AffixRoute[]);
+  if (!res.some(tag => tag.path === homeTarget.value.path)) {
+    res.unshift({
+      fullPath: homeTarget.value.path,
+      path: homeTarget.value.path,
+      meta: { title: 'dashboard.home', affix: true }
+    })
+  }
   affixTags.value = res;
   for (const tag of res) {
-    // Must have tag name
-    if (tag.name) {
+    if (tag.name || tag.path === homeTarget.value.path) {
        useTagsViewStore().addVisitedView(tag)
     }
   }
@@ -243,13 +252,11 @@ function toLastView(visitedViews: TagView[], view?: TagView) {
   if (latestView) {
     router.push(latestView.fullPath || latestView.path)
   } else {
-    // now the default is to redirect to the home page if there is no tags-view,
-    // you can adjust it according to your needs.
-    if (view?.name === 'Dashboard') {
-      // to reload home page
-      router.replace({ path: '/redirect' + view.fullPath })
+    const currentPath = view?.fullPath || view?.path
+    if (currentPath && currentPath === homeTarget.value.path) {
+      router.replace({ path: '/redirect' + currentPath })
     } else {
-      router.push('/')
+      router.push(homeTarget.value.path)
     }
   }
 }

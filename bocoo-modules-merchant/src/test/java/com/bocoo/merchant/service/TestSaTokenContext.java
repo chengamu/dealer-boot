@@ -26,11 +26,16 @@ public final class TestSaTokenContext implements SaTokenContext {
     }
 
     public static void setLoginUser(String tenantType, Long tenantId, Long userId, String username) {
+        setLoginUser(tenantType, tenantId, userId, username, 100L);
+    }
+
+    public static void setLoginUser(String tenantType, Long tenantId, Long userId, String username, Long deptId) {
         LoginUser loginUser = new LoginUser();
         loginUser.setTenantType(tenantType);
         loginUser.setTenantId(tenantId);
         loginUser.setUserId(userId);
         loginUser.setUsername(username);
+        loginUser.setDeptId(deptId);
         INSTANCE.storage.get()
             .set(LoginHelper.LOGIN_USER_KEY, loginUser)
             .set(LoginHelper.USER_KEY, userId);

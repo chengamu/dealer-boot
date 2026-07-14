@@ -77,6 +77,9 @@ final class MerchantServiceTestSupport {
             CustomerProfile target = new CustomerProfile();
             target.setCustomerId(source.getCustomerId());
             target.setTenantId(source.getTenantId());
+            target.setBusinessOrigin(source.getBusinessOrigin());
+            target.setSalesStoreId(source.getSalesStoreId());
+            target.setDeptId(source.getDeptId());
             target.setMerchantId(source.getMerchantId());
             target.setMerchantName(source.getMerchantName());
             target.setCustomerName(source.getCustomerName());

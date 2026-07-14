@@ -28,30 +28,26 @@ public class ReceiptServiceImpl implements ReceiptService {
     @Lock4j(name = "sales-document-lifecycle", keys = {"@fulfillmentAccessSupport.shipment(#shipmentId).salesDocumentId"})
     @Transactional(rollbackFor = Exception.class)
     public Boolean confirm(Long shipmentId) {
-        if (LoginHelper.isPlatformTenant()) {
-            throw ServiceException.ofMessageKey("dealer.fulfillment.merchantReceiptOnly");
-        }
-        return receive(shipmentId, null, false);
+        return receive(shipmentId, null, false, FulfillmentAudience.BUSINESS);
     }
 
     @Override
     @Lock4j(name = "sales-document-lifecycle", keys = {"@fulfillmentAccessSupport.shipment(#shipmentId).salesDocumentId"})
     @Transactional(rollbackFor = Exception.class)
     public Boolean override(Long shipmentId, String reason) {
-        access.platformOnly();
         if (StringUtils.isBlank(reason)) {
             throw ServiceException.ofMessageKey("dealer.fulfillment.overrideReasonRequired");
         }
-        return receive(shipmentId, reason, true);
+        return receive(shipmentId, reason, true, FulfillmentAudience.ADMIN);
     }
 
-    private Boolean receive(Long shipmentId, String reason, boolean override) {
-        Shipment shipment = access.shipment(shipmentId);
+    private Boolean receive(Long shipmentId, String reason, boolean override, FulfillmentAudience audience) {
+        Shipment shipment = access.shipment(shipmentId, audience);
         if ("CONFIRMED".equals(shipment.getReceiptStatus())) return Boolean.TRUE;
         if ("DRAFT".equals(shipment.getStatus()) || "CANCELLED".equals(shipment.getStatus())) {
             throw ServiceException.ofMessageKey("dealer.fulfillment.receiptDenied");
         }
-        SalesDocument document = access.document(shipment.getSalesDocumentId());
+        SalesDocument document = access.document(shipment.getSalesDocumentId(), audience);
         boolean updated = access.ignoreTenant(() -> shipmentMapper.update(null,
             new LambdaUpdateWrapper<Shipment>().eq(Shipment::getShipmentId, shipmentId)
                 .eq(Shipment::getTenantId, shipment.getTenantId()).eq(Shipment::getDelFlag, "0")

@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import type { FormRules } from 'element-plus'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/stores/user'
+import { resolveHomeRouteTarget } from '@/stores/homeRoute'
 import { getCodeImg } from '@/api/auth'
 import type { CaptchaState, LoginFormModel } from '../types'
 
@@ -50,7 +51,7 @@ export function usePasswordLogin() {
     try {
       await userStore.login(form.username, form.password, form.code, form.uuid)
       await userStore.loadUser()
-      const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/index'
+      const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : resolveHomeRouteTarget().path
       router.push(redirect)
     } catch (error) {
       const message = String((error as Error)?.message || error || '').toLowerCase()

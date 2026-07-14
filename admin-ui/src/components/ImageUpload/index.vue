@@ -1,36 +1,40 @@
 <template>
   <div class="component-upload-image">
-    <el-upload
-      multiple
-      :action="uploadImgUrl"
-      list-type="picture-card"
-      :on-success="handleUploadSuccess"
-      :before-upload="handleBeforeUpload"
-      :limit="limit"
-      :on-error="handleUploadError"
-      :on-exceed="handleExceed"
-      ref="imageUpload"
-      :before-remove="handleDelete"
-      :show-file-list="true"
-      :http-request="uploadImage"
-      :file-list="fileList"
-      :on-preview="handlePictureCardPreview"
-      :class="{ hide: fileList.length >= limit }"
-    >
-      <el-icon class="avatar-uploader-icon"><plus /></el-icon>
-    </el-upload>
-    <!-- 上传提示 -->
-    <div class="el-upload__tip" v-if="showTip">
-      {{ t('upload.tipPrefix') }}
-      <template v-if="fileSize">
-        {{ t('upload.maxSize') }} <b style="color: #f56c6c">{{ fileSize }}MB</b>
+    <UploadDropZone :label="t('upload.dropOrClick')" :hint="t('upload.pasteHint')" :show-icon="false" @files="handleIncomingFiles">
+      <el-upload
+        ref="imageUpload"
+        multiple
+        :accept="accept"
+        :action="uploadImgUrl"
+        list-type="picture-card"
+        :on-success="handleUploadSuccess"
+        :before-upload="handleBeforeUpload"
+        :limit="limit"
+        :on-error="handleUploadError"
+        :on-exceed="handleExceed"
+        :before-remove="handleDelete"
+        :show-file-list="true"
+        :http-request="uploadImage"
+        :file-list="fileList"
+        :on-preview="handlePictureCardPreview"
+        :class="{ hide: fileList.length >= limit }"
+      >
+        <el-icon class="avatar-uploader-icon"><plus /></el-icon>
+      </el-upload>
+      <template v-if="showTip" #tip>
+        <div class="el-upload__tip">
+          {{ t('upload.tipPrefix') }}
+          <template v-if="fileSize">
+            {{ t('upload.maxSize') }} <b>{{ fileSize }}MB</b>
+          </template>
+          <span v-if="fileSize && fileType">&nbsp;</span>
+          <template v-if="fileType">
+            {{ t('upload.allowedTypes') }} <b>{{ fileType.join("/") }}</b>
+          </template>
+          {{ t('upload.fileSuffix') }}
+        </div>
       </template>
-      <span v-if="fileSize && fileType">&nbsp;</span>
-      <template v-if="fileType">
-        {{ t('upload.allowedTypes') }} <b style="color: #f56c6c">{{ fileType.join("/") }}</b>
-      </template>
-      {{ t('upload.fileSuffix') }}
-    </div>
+    </UploadDropZone>
 
     <AdminDialog
       v-model="dialogVisible"
@@ -59,6 +63,8 @@ import { OSS_UPLOAD_URL, uploadOssFile, type OssUploadResponse } from "@/api/sys
 import { getMessage } from "@/locales";
 import { useLocaleStore } from "@/stores/locale";
 import { runUiAction } from "@/utils/action";
+import UploadDropZone from "@/components/UploadDropZone/index.vue";
+import { enqueueUploadFiles, formatUploadAccept, selectUploadFiles, validateUploadFile, type UploadValidationIssue } from "@/composables/uploadIntake";
 import type { PropType } from "vue";
 import type { UploadFile, UploadInstance, UploadRawFile, UploadRequestOptions, UploadUserFile } from "element-plus";
 
@@ -97,12 +103,12 @@ const props = defineProps({
   // 大小限制(MB)
   fileSize: {
     type: Number,
-    default: 5,
+    default: 10,
   },
   // 文件类型, 例如['png', 'jpg', 'jpeg']
   fileType: {
     type: Array as PropType<string[]>,
-    default: () => ["png", "jpg", "jpeg"],
+    default: () => ["bmp", "gif", "jpg", "jpeg", "png"],
   },
   // 是否显示提示
   isShowTip: {
@@ -121,6 +127,7 @@ const dialogImageUrl = ref("");
 const dialogVisible = ref(false);
 const uploadImgUrl = ref(OSS_UPLOAD_URL); // 上传的图片服务器地址
 const fileList = ref<UploadItem[]>([]);
+const accept = computed(() => formatUploadAccept(props.fileType));
 const showTip = computed(
   () => props.isShowTip && (props.fileType || props.fileSize)
 );
@@ -159,35 +166,32 @@ watch(() => props.modelValue, async val => {
 
 // 上传前loading加载
 function handleBeforeUpload(file: UploadRawFile) {
-  let isImg = false;
-  if (props.fileType.length) {
-    let fileExtension = "";
-    if (file.name.lastIndexOf(".") > -1) {
-      fileExtension = file.name.slice(file.name.lastIndexOf(".") + 1);
-    }
-    isImg = props.fileType.some((type) => {
-      if (file.type.indexOf(type) > -1) return true;
-      if (fileExtension && fileExtension.indexOf(type) > -1) return true;
-      return false;
-    });
-  } else {
-    isImg = file.type.indexOf("image") > -1;
-  }
-  if (!isImg) {
-    proxy.$modal.msgError(
-      t('upload.invalidImageType', { types: props.fileType.join("/") })
-    );
-    return false;
-  }
-  if (props.fileSize) {
-    const isLt = file.size / 1024 / 1024 < props.fileSize;
-    if (!isLt) {
-      proxy.$modal.msgError(t('upload.imageTooLarge', { size: props.fileSize }));
-      return false;
-    }
-  }
+  const issue = validateUploadFile(file, { allowedExtensions: props.fileType, maxSizeMb: props.fileSize });
+  if (issue) return showValidationIssue(issue);
   proxy.$modal.loading(t('upload.uploadingImage'));
   number.value++;
+  return true;
+}
+
+function handleIncomingFiles(files: File[]) {
+  const result = selectUploadFiles(files, {
+    allowedExtensions: props.fileType,
+    maxSizeMb: props.fileSize,
+    limit: props.limit,
+    currentCount: fileList.value.length + number.value
+  });
+  if (result.issue) showValidationIssue(result.issue);
+  enqueueUploadFiles(proxy.$refs.imageUpload, result.files);
+}
+
+function showValidationIssue(issue: UploadValidationIssue) {
+  const message = issue === 'limit'
+    ? t('upload.limitExceeded', { limit: props.limit })
+    : issue === 'size'
+      ? t('upload.imageTooLarge', { size: props.fileSize })
+      : t('upload.invalidImageType', { types: props.fileType.join('/') });
+  proxy.$modal.msgError(message);
+  return false;
 }
 
 // 文件个数超出
@@ -218,7 +222,10 @@ async function handleDelete(file: UploadFile) {
   const findex = fileList.value.map(f => f.name).indexOf(file.name);
   if (findex > -1 && uploadList.value.length === number.value) {
     const ossId = fileList.value[findex].ossId;
-    if (ossId !== undefined) await runUiAction(() => delOss(ossId));
+    if (ossId !== undefined) {
+      const deleted = await runUiAction(() => delOss(ossId));
+      if (!deleted) return false;
+    }
     fileList.value.splice(findex, 1);
     emit("update:modelValue", listToString(fileList.value));
     return false;
@@ -264,5 +271,9 @@ function listToString(list: UploadItem[], separator = ",") {
 // .el-upload--picture-card 控制加号部分
 :deep(.hide .el-upload--picture-card) {
     display: none;
+}
+
+.el-upload__tip b {
+  color: #f56c6c;
 }
 </style>

@@ -5,6 +5,7 @@ import { request, requestPage } from '@/utils/request'
 
 export type QuickOrderStatus = 'DRAFT' | 'ORDERED'
 export type QuickOrderCalculationStatus = 'PENDING' | 'PASS' | 'FAIL'
+export type QuickOrderBusinessOrigin = 'MERCHANT' | 'INTERNAL'
 
 export interface QuickOrderItem {
   quickOrderItemId?: string
@@ -45,10 +46,18 @@ export interface QuickOrderItem {
 
 export interface QuickOrder {
   quickOrderId?: string
+  tenantId?: string
+  businessOrigin?: QuickOrderBusinessOrigin
+  salesStoreId?: string
+  deptId?: string
   quickOrderNo?: string
   customerId?: string
   customerName?: string
   companyName?: string
+  customerEmail?: string
+  customerPhone?: string
+  ownerUserId?: string
+  ownerName?: string
   customerPoNo?: string
   recipientName?: string
   recipientPhone?: string
@@ -60,6 +69,7 @@ export interface QuickOrder {
   status?: QuickOrderStatus
   salesDocumentId?: string
   orderNo?: string
+  itemTypeCount?: number
   itemCount?: number
   totalQuantity?: number
   remark?: string
@@ -81,6 +91,10 @@ export interface QuickOrderSubmitRequest {
 }
 
 export interface QuickOrderQuery extends PageQuery {
+  tenantId?: string
+  businessOrigin?: QuickOrderBusinessOrigin | ''
+  salesStoreId?: string
+  ownerUserId?: string
   quickOrderNo?: string
   customerName?: string
   status?: QuickOrderStatus | ''
@@ -109,6 +123,17 @@ export const quickOrderApi = {
     method: 'post',
     data
   })
+}
+
+export const platformQuickOrderApi = {
+  list: (params?: QuickOrderQuery) => requestPage<QuickOrder>({ url: '/platform-sales/quick-orders/list', method: 'get', params }),
+  get: (id: string | number) => request<QuickOrder>({ url: `/platform-sales/quick-orders/${id}`, method: 'get' }),
+  export: (params?: QuickOrderQuery) => request<Blob>({
+    url: '/platform-sales/quick-orders/export',
+    method: 'post',
+    params,
+    responseType: 'blob'
+  }) as unknown as Promise<Blob>
 }
 
 export const quickOrderCatalogApi = {

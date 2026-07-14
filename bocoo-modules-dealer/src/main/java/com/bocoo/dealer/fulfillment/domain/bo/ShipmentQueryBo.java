@@ -4,6 +4,11 @@ import lombok.Data;
 
 @Data
 public class ShipmentQueryBo {
+    private Long tenantId;
+    private String businessOrigin;
+    private Long salesStoreId;
+    private Long deptId;
+    private Long ownerUserId;
     private String orderNo;
     private String merchantName;
     private String customerName;

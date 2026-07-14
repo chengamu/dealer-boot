@@ -30,9 +30,11 @@ public class ShipmentQueryServiceImpl implements ShipmentQueryService {
     private final ShipmentViewAssembler shipmentAssembler;
 
     @Override
-    public TableDataInfo<ShipmentOrderVo> queryPage(ShipmentQueryBo bo, PageQuery pageQuery) {
-        access.platformOnly();
-        QueryWrapper<SalesDocument> query = query(bo).orderByDesc("production_complete_time", "sales_document_id");
+    public TableDataInfo<ShipmentOrderVo> queryPage(ShipmentQueryBo bo, PageQuery pageQuery,
+                                                     FulfillmentAudience audience) {
+        QueryWrapper<SalesDocument> query = query(bo);
+        access.applyScope(query, audience);
+        query.orderByDesc("production_complete_time", "sales_document_id");
         IPage<SalesDocument> page = access.ignoreTenant(() -> documentMapper.selectPage(pageQuery.build(), query));
         Map<ShipmentPageMetricsLoader.DocumentKey, ShipmentPageMetrics> metrics = metricsLoader.load(page.getRecords());
         TableDataInfo<ShipmentOrderVo> result = TableDataInfo.build(page.getRecords().stream()
@@ -43,21 +45,26 @@ public class ShipmentQueryServiceImpl implements ShipmentQueryService {
     }
 
     @Override
-    public List<ShipmentVo> orderShipments(Long salesDocumentId) {
-        SalesDocument document = access.document(salesDocumentId);
+    public List<ShipmentVo> orderShipments(Long salesDocumentId, FulfillmentAudience audience) {
+        SalesDocument document = access.document(salesDocumentId, audience);
         return shipmentAssembler.byDocument(salesDocumentId, document.getTenantId());
     }
 
     @Override
-    public ShipmentVo detail(Long shipmentId) {
-        return shipmentAssembler.detail(access.shipment(shipmentId));
+    public ShipmentVo detail(Long shipmentId, FulfillmentAudience audience) {
+        return shipmentAssembler.detail(access.shipment(shipmentId, audience));
     }
 
     private QueryWrapper<SalesDocument> query(ShipmentQueryBo bo) {
         QueryWrapper<SalesDocument> query = new QueryWrapper<SalesDocument>().eq("del_flag", "0")
             .eq("document_status", "SUBMITTED").eq("production_status", "COMPLETED");
         if (bo == null) return query;
-        return query.like(StringUtils.isNotBlank(bo.getOrderNo()), "order_no", bo.getOrderNo())
+        return query.eq(bo.getTenantId() != null, "tenant_id", bo.getTenantId())
+            .eq(StringUtils.isNotBlank(bo.getBusinessOrigin()), "business_origin", bo.getBusinessOrigin())
+            .eq(bo.getSalesStoreId() != null, "sales_store_id", bo.getSalesStoreId())
+            .eq(bo.getDeptId() != null, "dept_id", bo.getDeptId())
+            .eq(bo.getOwnerUserId() != null, "owner_user_id", bo.getOwnerUserId())
+            .like(StringUtils.isNotBlank(bo.getOrderNo()), "order_no", bo.getOrderNo())
             .like(StringUtils.isNotBlank(bo.getMerchantName()), "merchant_name", bo.getMerchantName())
             .like(StringUtils.isNotBlank(bo.getCustomerName()), "customer_name", bo.getCustomerName())
             .eq(StringUtils.isNotBlank(bo.getShipmentStatus()), "shipment_status", bo.getShipmentStatus())

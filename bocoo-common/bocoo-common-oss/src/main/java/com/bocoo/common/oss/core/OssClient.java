@@ -1,25 +1,19 @@
 package com.bocoo.common.oss.core;
 
 import cn.hutool.core.io.IoUtil;
-import cn.hutool.core.util.IdUtil;
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.HttpMethod;
 import com.amazonaws.Protocol;
-import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.*;
-import com.bocoo.common.core.utils.DateUtils;
 import com.bocoo.common.core.utils.StringUtils;
 import com.bocoo.common.oss.constant.OssConstant;
 import com.bocoo.common.oss.entity.UploadResult;
 import com.bocoo.common.oss.enumd.AccessPolicyType;
-import com.bocoo.common.oss.enumd.PolicyType;
 import com.bocoo.common.oss.exception.OssException;
 import com.bocoo.common.oss.properties.OssProperties;
 
@@ -35,13 +29,9 @@ import java.util.Date;
  * @author cmx
  */
 public class OssClient {
-
     private final String configKey;
-
     private final OssProperties properties;
-
     private final AmazonS3 client;
-
     /**
      * 构造一个 OssClient 实例。
      *
@@ -56,8 +46,7 @@ public class OssClient {
             AwsClientBuilder.EndpointConfiguration endpointConfig =
                 new AwsClientBuilder.EndpointConfiguration(properties.getEndpoint(), properties.getRegion());
 
-            AWSCredentials credentials = new BasicAWSCredentials(properties.getAccessKey(), properties.getSecretKey());
-            AWSCredentialsProvider credentialsProvider = new AWSStaticCredentialsProvider(credentials);
+            AWSCredentialsProvider credentialsProvider = OssCredentialsProviderFactory.create(properties);
             ClientConfiguration clientConfig = new ClientConfiguration();
             if (OssConstant.IS_HTTPS.equals(properties.getIsHttps())) {
                 clientConfig.setProtocol(Protocol.HTTPS);
@@ -74,7 +63,6 @@ public class OssClient {
                 build.enablePathStyleAccess();
             }
             this.client = build.build();
-
             createBucket();
         } catch (Exception e) {
             if (e instanceof OssException) {
@@ -90,19 +78,7 @@ public class OssClient {
      * @throws OssException 如果创建 Bucket 失败
      */
     public void createBucket() {
-        try {
-            String bucketName = properties.getBucketName();
-            if (client.doesBucketExistV2(bucketName)) {
-                return;
-            }
-            CreateBucketRequest createBucketRequest = new CreateBucketRequest(bucketName);
-            AccessPolicyType accessPolicy = getAccessPolicy();
-            createBucketRequest.setCannedAcl(accessPolicy.getAcl());
-            client.createBucket(createBucketRequest);
-            client.setBucketPolicy(bucketName, getPolicy(bucketName, accessPolicy.getPolicyType()));
-        } catch (Exception e) {
-            throw new OssException("创建Bucket失败, 请核对配置信息:[" + e.getMessage() + "]");
-        }
+        OssBucketSupport.initialize(client, properties);
     }
 
     /**
@@ -142,8 +118,7 @@ public class OssClient {
             metadata.setContentType(contentType);
             metadata.setContentLength(contentLength);
             PutObjectRequest putObjectRequest = new PutObjectRequest(properties.getBucketName(), path, processedStream, metadata);
-            // 设置上传对象的 Acl 为公共读
-            putObjectRequest.setCannedAcl(getAccessPolicy().getAcl());
+            OssBucketSupport.applyObjectAcl(putObjectRequest, properties);
             client.putObject(putObjectRequest);
         } catch (Exception e) {
             throw new OssException("上传文件失败，请检查配置信息:[" + e.getMessage() + "]");
@@ -168,8 +143,7 @@ public class OssClient {
     public UploadResult upload(File file, String path) {
         try {
             PutObjectRequest putObjectRequest = new PutObjectRequest(properties.getBucketName(), path, file);
-            // 设置上传对象的 Acl 为公共读
-            putObjectRequest.setCannedAcl(getAccessPolicy().getAcl());
+            OssBucketSupport.applyObjectAcl(putObjectRequest, properties);
             client.putObject(putObjectRequest);
         } catch (Exception e) {
             throw new OssException("上传文件失败，请检查配置信息:[" + e.getMessage() + "]");
@@ -183,7 +157,7 @@ public class OssClient {
      * @param path 文件在存储桶中的完整路径
      */
     public void delete(String path) {
-        String cleanPath = path.replace(getUrl() + "/", "");
+        String cleanPath = OssObjectPathSupport.cleanObjectKey(properties, path);
         try {
             client.deleteObject(properties.getBucketName(), cleanPath);
         } catch (Exception e) {
@@ -233,7 +207,7 @@ public class OssClient {
      * @return ObjectMetadata 文件元数据
      */
     public ObjectMetadata getObjectMetadata(String path) {
-        String cleanPath = path.replace(getUrl() + "/", "");
+        String cleanPath = OssObjectPathSupport.cleanObjectKey(properties, path);
         S3Object object = null;
         try {
             object = client.getObject(properties.getBucketName(), cleanPath);
@@ -266,21 +240,7 @@ public class OssClient {
      * @return String 访问地址
      */
     public String getUrl() {
-        String domain = properties.getDomain();
-        String endpoint = properties.getEndpoint();
-        String header = OssConstant.IS_HTTPS.equals(properties.getIsHttps()) ? "https://" : "http://";
-        // 云服务商直接返回
-        if (StringUtils.containsAny(endpoint, OssConstant.CLOUD_SERVICE)) {
-            if (StringUtils.isNotBlank(domain)) {
-                return header + domain;
-            }
-            return header + properties.getBucketName() + "." + endpoint;
-        }
-        // minio 单独处理
-        if (StringUtils.isNotBlank(domain)) {
-            return header + domain + "/" + properties.getBucketName();
-        }
-        return header + endpoint + "/" + properties.getBucketName();
+        return OssObjectPathSupport.url(properties);
     }
 
     /**
@@ -291,14 +251,7 @@ public class OssClient {
      * @return String 构建后的路径
      */
     public String getPath(String prefix, String suffix) {
-        // 生成uuid
-        String uuid = IdUtil.fastSimpleUUID();
-        // 文件路径
-        String path = DateUtils.datePath() + "/" + uuid;
-        if (StringUtils.isNotBlank(prefix)) {
-            path = prefix + "/" + path;
-        }
-        return path + suffix;
+        return OssObjectPathSupport.path(prefix, suffix);
     }
 
     /**
@@ -344,47 +297,4 @@ public class OssClient {
     public AccessPolicyType getAccessPolicy() {
         return AccessPolicyType.getByType(properties.getAccessPolicy());
     }
-
-    /**
-     * 根据指定的存储桶名称和策略类型生成对应的S3访问策略JSON字符串。
-     *
-     * @param bucketName  存储桶名称，用于构建资源ARN
-     * @param policyType  策略类型（读、写、读写），决定允许或拒绝的操作权限
-     * @return 返回符合AWS S3策略格式的JSON字符串
-     */
-    private static String getPolicy(String bucketName, PolicyType policyType) {
-        StringBuilder builder = new StringBuilder();
-        builder.append("{\n\"Statement\": [\n{\n\"Action\": [\n");
-
-        // 根据策略类型设置对存储桶的基本操作权限
-        builder.append(switch (policyType) {
-            case WRITE -> "\"s3:GetBucketLocation\",\n\"s3:ListBucketMultipartUploads\"\n";
-            case READ_WRITE -> "\"s3:GetBucketLocation\",\n\"s3:ListBucket\",\n\"s3:ListBucketMultipartUploads\"\n";
-            default -> "\"s3:GetBucketLocation\"\n";
-        });
-        builder.append("],\n\"Effect\": \"Allow\",\n\"Principal\": \"*\",\n\"Resource\": \"arn:aws:s3:::");
-        builder.append(bucketName);
-        builder.append("\"\n},\n");
-
-        // 如果是只读策略，则添加显式的拒绝写相关操作的规则
-        if (policyType == PolicyType.READ) {
-            builder.append("{\n\"Action\": [\n\"s3:ListBucket\"\n],\n\"Effect\": \"Deny\",\n\"Principal\": \"*\",\n\"Resource\": \"arn:aws:s3:::");
-            builder.append(bucketName);
-            builder.append("\"\n},\n");
-        }
-
-        // 设置针对对象的具体操作权限
-        builder.append("{\n\"Action\": ");
-        builder.append(switch (policyType) {
-            case WRITE -> "[\n\"s3:AbortMultipartUpload\",\n\"s3:DeleteObject\",\n\"s3:ListMultipartUploadParts\",\n\"s3:PutObject\"\n],\n";
-            case READ_WRITE -> "[\n\"s3:AbortMultipartUpload\",\n\"s3:DeleteObject\",\n\"s3:GetObject\",\n\"s3:ListMultipartUploadParts\",\n\"s3:PutObject\"\n],\n";
-            default -> "\"s3:GetObject\",\n";
-        });
-        builder.append("\"Effect\": \"Allow\",\n\"Principal\": \"*\",\n\"Resource\": \"arn:aws:s3:::");
-        builder.append(bucketName);
-        builder.append("/*\"\n}\n],\n\"Version\": \"2012-10-17\"\n}\n");
-
-        return builder.toString();
-    }
 }
-

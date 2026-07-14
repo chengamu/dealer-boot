@@ -19,6 +19,7 @@ export interface OssConfig {
   isHttps?: string
   accessPolicy?: string
   region?: string
+  ext1?: string
   status?: string
   remark?: string
 }

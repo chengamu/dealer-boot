@@ -149,6 +149,9 @@ CREATE INDEX IF NOT EXISTS idx_merchant_level_discount_lookup ON merchant_level_
 CREATE TABLE IF NOT EXISTS customer_profile (
     customer_id bigint PRIMARY KEY,
     tenant_id bigint NOT NULL CHECK (tenant_id <> 0),
+    business_origin varchar(20) NOT NULL CHECK (business_origin IN ('INTERNAL', 'MERCHANT')),
+    sales_store_id bigint,
+    dept_id bigint,
     merchant_id bigint,
     merchant_name varchar(100),
     customer_name varchar(120) NOT NULL,
@@ -174,12 +177,23 @@ CREATE TABLE IF NOT EXISTS customer_profile (
     remark varchar(500)
 );
 CREATE INDEX IF NOT EXISTS idx_customer_profile_tenant_email ON customer_profile (tenant_id, email);
+ALTER TABLE customer_profile ADD COLUMN IF NOT EXISTS business_origin varchar(20);
+ALTER TABLE customer_profile ADD COLUMN IF NOT EXISTS sales_store_id bigint;
+ALTER TABLE customer_profile ADD COLUMN IF NOT EXISTS dept_id bigint;
+UPDATE customer_profile SET business_origin = CASE WHEN tenant_id = 1 THEN 'INTERNAL' ELSE 'MERCHANT' END
+WHERE business_origin IS NULL;
+ALTER TABLE customer_profile ALTER COLUMN business_origin SET NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_customer_profile_tenant_owner ON customer_profile (tenant_id, owner_user_id, status);
+CREATE INDEX IF NOT EXISTS idx_customer_profile_scope ON customer_profile (tenant_id, business_origin, dept_id, owner_user_id);
+CREATE INDEX IF NOT EXISTS idx_customer_profile_store ON customer_profile (sales_store_id, status) WHERE sales_store_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_customer_profile_merchant ON customer_profile (merchant_id, status);
 
 CREATE TABLE IF NOT EXISTS customer_quote (
     quote_id bigint PRIMARY KEY,
     tenant_id bigint NOT NULL CHECK (tenant_id <> 0),
+    business_origin varchar(20) NOT NULL CHECK (business_origin IN ('INTERNAL', 'MERCHANT')),
+    sales_store_id bigint,
+    dept_id bigint,
     quote_no varchar(50) NOT NULL,
     customer_id bigint NOT NULL,
     customer_name varchar(120) NOT NULL,
@@ -218,7 +232,15 @@ CREATE TABLE IF NOT EXISTS customer_quote (
     remark varchar(500)
 );
 CREATE INDEX IF NOT EXISTS idx_customer_quote_no ON customer_quote (tenant_id, quote_no) WHERE del_flag = '0';
+ALTER TABLE customer_quote ADD COLUMN IF NOT EXISTS business_origin varchar(20);
+ALTER TABLE customer_quote ADD COLUMN IF NOT EXISTS sales_store_id bigint;
+ALTER TABLE customer_quote ADD COLUMN IF NOT EXISTS dept_id bigint;
+UPDATE customer_quote SET business_origin = CASE WHEN tenant_id = 1 THEN 'INTERNAL' ELSE 'MERCHANT' END
+WHERE business_origin IS NULL;
+ALTER TABLE customer_quote ALTER COLUMN business_origin SET NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_customer_quote_customer ON customer_quote (tenant_id, customer_id, status) WHERE del_flag = '0';
+CREATE INDEX IF NOT EXISTS idx_customer_quote_scope ON customer_quote (tenant_id, business_origin, dept_id, owner_user_id) WHERE del_flag = '0';
+CREATE INDEX IF NOT EXISTS idx_customer_quote_store ON customer_quote (sales_store_id, status) WHERE del_flag = '0' AND sales_store_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_customer_quote_updated ON customer_quote (tenant_id, update_time DESC, create_time DESC) WHERE del_flag = '0';
 
 CREATE TABLE IF NOT EXISTS customer_quote_item (
@@ -292,6 +314,35 @@ CREATE TABLE IF NOT EXISTS sys_dept (
 CREATE UNIQUE INDEX IF NOT EXISTS uk_sys_dept_tenant_parent_name_active ON sys_dept (tenant_id, parent_id, dept_name) WHERE del_flag = '0';
 CREATE INDEX IF NOT EXISTS idx_sys_dept_tenant_parent_status ON sys_dept (tenant_id, parent_id, del_flag, status, order_num);
 
+CREATE TABLE IF NOT EXISTS sales_store (
+    sales_store_id bigint PRIMARY KEY,
+    tenant_id bigint NOT NULL CHECK (tenant_id = 1),
+    store_code varchar(64) NOT NULL,
+    store_name varchar(120) NOT NULL,
+    dept_id bigint NOT NULL,
+    contact_name varchar(100),
+    contact_phone varchar(64),
+    country varchar(64),
+    state varchar(64),
+    city varchar(64),
+    address_line1 varchar(255),
+    address_line2 varchar(255),
+    postal_code varchar(32),
+    currency_code varchar(3) NOT NULL DEFAULT 'USD',
+    credit_limit numeric(18,2) NOT NULL DEFAULT 0 CHECK (credit_limit >= 0),
+    payment_term_days integer NOT NULL DEFAULT 0 CHECK (payment_term_days >= 0),
+    status char(1) NOT NULL DEFAULT '1',
+    del_flag char(1) NOT NULL DEFAULT '0',
+    create_by_id bigint,
+    create_by varchar(64),
+    create_time timestamptz NOT NULL DEFAULT now(),
+    update_by varchar(64),
+    update_time timestamptz,
+    remark varchar(500)
+);
+CREATE INDEX IF NOT EXISTS idx_sales_store_code ON sales_store (tenant_id, store_code, status) WHERE del_flag = '0';
+CREATE INDEX IF NOT EXISTS idx_sales_store_dept ON sales_store (tenant_id, dept_id, status) WHERE del_flag = '0';
+
 CREATE TABLE IF NOT EXISTS sys_user (
     user_id bigint PRIMARY KEY,
     tenant_id bigint NOT NULL CHECK (tenant_id <> 0),
@@ -339,6 +390,7 @@ CREATE TABLE IF NOT EXISTS sys_role (
     role_name varchar(30) NOT NULL,
     role_key varchar(100) NOT NULL,
     role_sort integer NOT NULL,
+    default_menu_id bigint,
     data_scope char(1) DEFAULT '1',
     menu_check_strictly boolean DEFAULT true,
     dept_check_strictly boolean DEFAULT true,
@@ -351,6 +403,7 @@ CREATE TABLE IF NOT EXISTS sys_role (
     update_time timestamptz,
     remark varchar(500)
 );
+ALTER TABLE sys_role ADD COLUMN IF NOT EXISTS default_menu_id bigint;
 
 CREATE UNIQUE INDEX IF NOT EXISTS uk_sys_role_tenant_key ON sys_role (tenant_id, role_key);
 CREATE UNIQUE INDEX IF NOT EXISTS uk_sys_role_tenant_name_active ON sys_role (tenant_id, role_name) WHERE del_flag = '0';
@@ -1141,13 +1194,9 @@ ON CONFLICT (user_id) DO NOTHING;
 UPDATE sys_user SET tenant_id = 1 WHERE user_id = 1;
 
 INSERT INTO sys_role (role_id, tenant_id, role_name, role_key, role_sort, data_scope, menu_check_strictly, dept_check_strictly, status, del_flag, create_by, create_time, remark)
-VALUES
-    (1, 1, 'Super Admin', 'admin', 1, '1', true, true, '1', '0', 'system', now(), 'Platform super admin'),
-    (2, 1, 'Merchant Admin', 'merchant_admin', 2, '1', true, true, '1', '0', 'system', now(), 'Default merchant admin role'),
-    (3, 1, 'Merchant Store', 'merchant_store', 3, '1', true, true, '1', '0', 'system', now(), 'Default merchant store user role'),
-    (4, 1, 'Merchant Employee', 'merchant_employee', 4, '1', true, true, '1', '0', 'system', now(), 'Default merchant employee role')
+VALUES (1, 1, 'Super Admin', 'admin', 1, '1', true, true, '1', '0', 'system', now(), 'Platform super admin')
 ON CONFLICT (role_id) DO NOTHING;
-UPDATE sys_role SET tenant_id = 1 WHERE role_id IN (1, 2, 3, 4);
+UPDATE sys_role SET tenant_id = 1 WHERE role_id = 1;
 
 INSERT INTO sys_user_role (user_id, role_id, tenant_id)
 VALUES (1, 1, 1)
@@ -1202,7 +1251,7 @@ ON CONFLICT (dict_code) DO NOTHING;
 
 INSERT INTO sys_menu (menu_id, tenant_id, menu_name, i18n_key, parent_id, order_num, path, component, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, remark)
 VALUES
-    (1, 1, 'System', 'sys.menu.system', 0, 100, 'system', NULL, '1', '0', 'M', '1', '1', NULL, 'system', 'system', now(), 'System menu'),
+    (1, 1, '系统管理', 'sys.menu.system', 0, 910, 'system', NULL, '1', '0', 'M', '1', '1', NULL, 'system', 'system', now(), 'System menu'),
     (100, 1, 'User', 'sys.menu.system.user', 1, 1, 'user', 'system/user/index', '1', '0', 'C', '1', '1', 'system:user:list', 'user', 'system', now(), 'User management'),
     (101, 1, 'Role', 'sys.menu.system.role', 1, 2, 'role', 'system/role/index', '1', '0', 'C', '1', '1', 'system:role:list', 'peoples', 'system', now(), 'Role management'),
     (102, 1, 'Menu', 'sys.menu.system.menu', 1, 3, 'menu', 'system/menu/index', '1', '0', 'C', '1', '1', 'system:menu:list', 'tree-table', 'system', now(), 'Menu management'),
@@ -1235,20 +1284,23 @@ UPDATE sys_menu SET menu_name = 'Tenant Application Reject', i18n_key = 'sys.men
 UPDATE sys_menu SET i18n_key = 'sys.menu.system.merchantProfile.query' WHERE menu_id = 1003 AND i18n_key IS NULL;
 UPDATE sys_menu SET i18n_key = 'sys.menu.system.merchantProfile.edit' WHERE menu_id = 20004 AND i18n_key IS NULL;
 UPDATE sys_menu SET tenant_id = 1 WHERE menu_id IN (1, 100, 101, 102, 103, 104, 105, 106, 107, 108, 1001, 1002, 1003, 1004, 20004);
+UPDATE sys_menu
+SET menu_name = '系统管理', order_num = 910, icon = 'system', update_by = 'system', update_time = now()
+WHERE menu_id = 1 AND tenant_id = 1;
 
 
 INSERT INTO sys_menu (menu_id, tenant_id, menu_name, i18n_key, parent_id, order_num, path, component, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, remark)
 VALUES
     (120, 1, 'Notice', 'sys.menu.system.notice', 1, 9, 'notice', 'system/notice/index', '1', '0', 'C', '1', '1', 'system:notice:list', 'message', 'system', now(), 'Notice management'),
     (121, 1, 'File', 'sys.menu.system.oss', 1, 10, 'oss', 'system/oss/index', '1', '0', 'C', '1', '1', 'system:oss:list', 'upload', 'system', now(), 'File management'),
-    (200, 1, 'Monitor', 'sys.menu.monitor', 0, 120, 'monitor', NULL, '1', '0', 'M', '1', '1', NULL, 'monitor', 'system', now(), 'System monitor'),
+    (200, 1, '系统监控', 'sys.menu.monitor', 0, 920, 'monitor', NULL, '1', '0', 'M', '1', '1', NULL, 'monitor', 'system', now(), 'System monitor'),
     (201, 1, 'Online Users', 'sys.menu.monitor.online', 200, 1, 'online', 'monitor/online/index', '1', '0', 'C', '1', '1', 'monitor:online:list', 'online', 'system', now(), 'Online users'),
     (202, 1, 'Cache Monitor', 'sys.menu.monitor.cache', 200, 2, 'cache', 'monitor/cache/index', '1', '0', 'C', '1', '1', 'monitor:cache:list', 'redis', 'system', now(), 'Cache monitor'),
     (205, 1, 'Server Resources', 'sys.menu.monitor.server', 200, 3, 'server', 'monitor/server/index', '1', '0', 'C', '1', '1', 'monitor:server:list', 'server', 'system', now(), 'Server resource snapshot'),
     (203, 1, 'Cache List', 'sys.menu.monitor.cacheList', 200, 4, 'cacheList', 'monitor/cache/list', '1', '0', 'C', '1', '1', 'monitor:cache:list', 'redis-list', 'system', now(), 'Cache list'),
     (204, 1, 'Clear Cache', 'sys.menu.monitor.cacheList.clear', 203, 1, '#', '', '1', '0', 'F', '1', '1', 'monitor:cache:remove', '#', 'system', now(), 'Clear cache'),
     (300, 1, 'Code Generator', 'sys.menu.tool.gen', 1, 99, 'gen', 'tool/gen/index', '1', '0', 'C', '1', '1', 'tool:gen:list', 'code', 'system', now(), 'Code generator'),
-    (400, 1, 'Logs', 'sys.menu.log', 0, 140, 'log', NULL, '1', '0', 'M', '1', '1', NULL, 'log', 'system', now(), 'Log management'),
+    (400, 1, '日志管理', 'sys.menu.log', 0, 930, 'log', NULL, '1', '0', 'M', '1', '1', NULL, 'log', 'system', now(), 'Log management'),
     (401, 1, 'Operation Logs', 'sys.menu.log.operlog', 400, 1, 'operlog', 'monitor/operlog/index', '1', '0', 'C', '1', '1', 'monitor:operlog:list', 'form', 'system', now(), 'Operation logs'),
     (402, 1, 'Login Logs', 'sys.menu.log.logininfor', 400, 2, 'logininfor', 'monitor/logininfor/index', '1', '0', 'C', '1', '1', 'monitor:logininfor:list', 'logininfor', 'system', now(), 'Login logs')
 ON CONFLICT (menu_id) DO UPDATE
@@ -1270,6 +1322,45 @@ SET menu_name = EXCLUDED.menu_name,
     update_time = now();
 UPDATE sys_menu SET tenant_id = 1 WHERE menu_id IN (120, 121, 200, 201, 202, 203, 204, 205, 300, 400, 401, 402);
 
+-- 阶段 12：角色默认首页、门店管理和角色管理按钮。
+INSERT INTO sys_menu (menu_id, tenant_id, menu_name, i18n_key, parent_id, order_num, path, component, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, remark)
+VALUES
+    (130, 1, '门店管理', 'sys.menu.system.salesStoreMenu', 1, 8, 'salesStore', 'system/sales-store/index', '1', '0', 'C', '1', '1', 'system:sales-store:list', 'store', 'system', now(), '内部销售门店管理'),
+    (131, 1, '门店查询', 'sys.menu.system.salesStore.query', 130, 1, '#', '', '1', '0', 'F', '1', '1', 'system:sales-store:query', '#', 'system', now(), ''),
+    (132, 1, '门店新增', 'sys.menu.system.salesStore.add', 130, 2, '#', '', '1', '0', 'F', '1', '1', 'system:sales-store:add', '#', 'system', now(), ''),
+    (133, 1, '门店修改', 'sys.menu.system.salesStore.edit', 130, 3, '#', '', '1', '0', 'F', '1', '1', 'system:sales-store:edit', '#', 'system', now(), ''),
+    (134, 1, '门店状态', 'sys.menu.system.salesStore.status', 130, 4, '#', '', '1', '0', 'F', '1', '1', 'system:sales-store:status', '#', 'system', now(), ''),
+    (1011, 1, '角色查询', 'sys.menu.system.role.query', 101, 1, '#', '', '1', '0', 'F', '1', '1', 'system:role:query', '#', 'system', now(), ''),
+    (1012, 1, '角色新增', 'sys.menu.system.role.add', 101, 2, '#', '', '1', '0', 'F', '1', '1', 'system:role:add', '#', 'system', now(), ''),
+    (1013, 1, '角色修改', 'sys.menu.system.role.edit', 101, 3, '#', '', '1', '0', 'F', '1', '1', 'system:role:edit', '#', 'system', now(), '包含默认首页维护'),
+    (1014, 1, '角色删除', 'sys.menu.system.role.remove', 101, 4, '#', '', '1', '0', 'F', '1', '1', 'system:role:remove', '#', 'system', now(), ''),
+    (1015, 1, '角色导出', 'sys.menu.system.role.export', 101, 5, '#', '', '1', '0', 'F', '1', '1', 'system:role:export', '#', 'system', now(), '')
+ON CONFLICT (menu_id) DO UPDATE
+SET tenant_id = EXCLUDED.tenant_id, menu_name = EXCLUDED.menu_name, i18n_key = EXCLUDED.i18n_key,
+    parent_id = EXCLUDED.parent_id, order_num = EXCLUDED.order_num, path = EXCLUDED.path,
+    component = EXCLUDED.component, menu_type = EXCLUDED.menu_type, visible = EXCLUDED.visible,
+    status = EXCLUDED.status, perms = EXCLUDED.perms, icon = EXCLUDED.icon,
+    update_by = 'system', update_time = now(), remark = EXCLUDED.remark;
+
+INSERT INTO sys_role_menu (role_id, menu_id, tenant_id)
+SELECT 1, menu_id, 1
+FROM sys_menu
+WHERE tenant_id = 1 AND menu_id IN (130, 131, 132, 133, 134, 1011, 1012, 1013, 1014, 1015)
+ON CONFLICT DO NOTHING;
+
+UPDATE sys_role r
+SET default_menu_id = m.menu_id,
+    update_by = 'system',
+    update_time = now()
+FROM sys_menu m
+WHERE r.tenant_id = 1
+  AND r.role_key = 'admin'
+  AND m.tenant_id = r.tenant_id
+  AND m.perms = 'monitor:server:list'
+  AND m.menu_type = 'C'
+  AND m.visible = '1'
+  AND m.status = '1';
+
 INSERT INTO sys_role_menu (role_id, menu_id, tenant_id)
 SELECT 1, menu_id, 1 FROM sys_menu
 WHERE tenant_id = 1
@@ -1279,7 +1370,7 @@ UPDATE sys_role_menu SET tenant_id = 1 WHERE role_id = 1;
 
 INSERT INTO sys_menu (menu_id, tenant_id, menu_name, i18n_key, parent_id, order_num, path, component, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, remark)
 VALUES
-    (19500, 1, 'Merchant Management', 'sys.menu.merchantManagement', 0, 20, 'merchantManagement', NULL, '1', '0', 'M', '1', '1', NULL, 'store', 'system', now(), 'Merchant management'),
+    (19500, 1, '商家管理', 'sys.menu.merchantManagement', 0, 400, 'merchantManagement', NULL, '1', '0', 'M', '1', '1', NULL, 'store', 'system', now(), 'Merchant management'),
     (19501, 1, 'Legal Content', 'sys.menu.system.legalDocument', 1, 11, 'legal/document', 'system/legal/document', '1', '0', 'C', '1', '1', 'system:legal:document:list', 'documentation', 'system', now(), 'Legal content'),
     (20005, 1, 'Legal Content Query', 'sys.menu.system.legalDocument.query', 19501, 1, '#', '', '1', '0', 'F', '1', '1', 'system:legal:document:query', '#', 'system', now(), ''),
     (20006, 1, 'Legal Content Add', 'sys.menu.system.legalDocument.add', 19501, 2, '#', '', '1', '0', 'F', '1', '1', 'system:legal:document:add', '#', 'system', now(), ''),
@@ -1344,13 +1435,14 @@ VALUES
     (20123, 1, '等级折扣修改', 'sys.menu.merchant.levelDiscount.edit', 20120, 3, '#', '', '1', '0', 'F', '1', '1', 'merchant:levelDiscount:edit', '#', 'system', now(), ''),
     (20124, 1, '等级折扣删除', 'sys.menu.merchant.levelDiscount.remove', 20120, 4, '#', '', '1', '0', 'F', '1', '1', 'merchant:levelDiscount:remove', '#', 'system', now(), ''),
     (20125, 1, '等级折扣导出', 'sys.menu.merchant.levelDiscount.export', 20120, 5, '#', '', '1', '0', 'F', '1', '1', 'merchant:levelDiscount:export', '#', 'system', now(), ''),
-    (20200, 1, '客户管理', 'sys.menu.customerManagement', 0, 30, 'customerManagement', NULL, '1', '0', 'M', '1', '1', NULL, 'customer', 'system', now(), '客户管理'),
+    (20200, 1, '客户管理', 'sys.menu.customerManagement', 0, 20, 'customerManagement', NULL, '1', '0', 'M', '1', '1', NULL, 'customer', 'system', now(), '客户管理'),
     (20201, 1, '客户资料', 'sys.menu.customer.profile', 20200, 1, 'customers', 'customer/profile', '1', '0', 'C', '1', '1', 'customer:profile:list', 'customer', 'system', now(), '租户客户资料'),
     (20202, 1, '客户资料查询', 'sys.menu.customer.profile.query', 20201, 1, '#', '', '1', '0', 'F', '1', '1', 'customer:profile:query', '#', 'system', now(), ''),
     (20203, 1, '客户资料新增', 'sys.menu.customer.profile.add', 20201, 2, '#', '', '1', '0', 'F', '1', '1', 'customer:profile:add', '#', 'system', now(), ''),
     (20204, 1, '客户资料修改', 'sys.menu.customer.profile.edit', 20201, 3, '#', '', '1', '0', 'F', '1', '1', 'customer:profile:edit', '#', 'system', now(), ''),
     (20205, 1, '客户资料删除', 'sys.menu.customer.profile.remove', 20201, 4, '#', '', '1', '0', 'F', '1', '1', 'customer:profile:remove', '#', 'system', now(), ''),
-    (20220, 1, '全部客户', 'sys.menu.customer.all', 20200, 2, 'allCustomers', 'customer/all', '1', '0', 'C', '1', '1', 'platform:customer:list', 'peoples', 'system', now(), '平台全部客户管理'),
+    (20240, 1, '客户监管', 'sys.menu.customerSupervision', 0, 410, 'customerSupervision', NULL, '1', '0', 'M', '1', '1', NULL, 'peoples', 'system', now(), '平台客户监管'),
+    (20220, 1, '全部客户', 'sys.menu.customer.all', 20240, 1, 'allCustomers', 'customer/all', '1', '0', 'C', '1', '1', 'platform:customer:list', 'peoples', 'system', now(), '平台全部客户管理'),
     (20221, 1, '全部客户查询', 'sys.menu.customer.all.query', 20220, 1, '#', '', '1', '0', 'F', '1', '1', 'platform:customer:query', '#', 'system', now(), '')
 ON CONFLICT (menu_id) DO UPDATE
 SET menu_name = EXCLUDED.menu_name,
@@ -1374,14 +1466,14 @@ INSERT INTO sys_role_menu (role_id, menu_id, tenant_id)
 SELECT 1, menu_id, 1 FROM sys_menu
 WHERE tenant_id = 1
   AND menu_id IN (20100, 20101, 20102, 20103, 20104, 20105, 20120, 20121, 20122, 20123, 20124, 20125,
-                  20200, 20201, 20202, 20203, 20204, 20205, 20220, 20221)
+                  20200, 20201, 20202, 20203, 20204, 20205, 20240, 20220, 20221)
 ON CONFLICT DO NOTHING;
 
 WITH RECURSIVE merchant_customer_menus AS (
     SELECT r.role_id, r.tenant_id, m.menu_id, m.parent_id
     FROM sys_role r
     JOIN sys_menu m ON m.tenant_id = r.tenant_id
-    WHERE r.role_key IN ('merchant_admin', 'merchant_store', 'merchant_employee')
+    WHERE r.role_key IN ('merchant_admin', 'merchant_employee')
       AND r.del_flag = '0'
       AND m.perms IN ('customer:profile:list', 'customer:profile:query', 'customer:profile:add', 'customer:profile:edit', 'customer:profile:remove')
     UNION
@@ -1408,9 +1500,7 @@ SET tenant_name = EXCLUDED.tenant_name,
     remark = EXCLUDED.remark;
 
 INSERT INTO sys_dept (dept_id, tenant_id, parent_id, ancestors, dept_name, order_num, leader, email, status, del_flag, create_by, create_time, remark)
-VALUES
-    (300001, 300001, 0, '0', 'Dealer', 1, 'Taylor Smith', 'demo.merchant@example.com', '1', '0', 'system', now(), 'Demo merchant root department'),
-    (300002, 300001, 300001, '0,300001', 'Store', 2, 'Jordan Lee', 'store.demo@example.com', '1', '0', 'system', now(), 'Demo merchant store department')
+VALUES (300001, 300001, 0, '0', 'Dealer', 1, 'Taylor Smith', 'demo.merchant@example.com', '1', '0', 'system', now(), 'Demo merchant default department')
 ON CONFLICT (dept_id) DO UPDATE
 SET tenant_id = EXCLUDED.tenant_id,
     parent_id = EXCLUDED.parent_id,
@@ -1427,9 +1517,8 @@ SET tenant_id = EXCLUDED.tenant_id,
 
 INSERT INTO sys_role (role_id, tenant_id, role_name, role_key, role_sort, data_scope, menu_check_strictly, dept_check_strictly, status, del_flag, create_by, create_time, remark)
 VALUES
-    (300001, 300001, 'Merchant Admin', 'merchant_admin', 1, '1', true, true, '1', '0', 'system', now(), 'Demo merchant admin role'),
-    (300002, 300001, 'Merchant Store', 'merchant_store', 2, '1', true, true, '1', '0', 'system', now(), 'Demo merchant store role'),
-    (300003, 300001, 'Merchant Employee', 'merchant_employee', 3, '1', true, true, '1', '0', 'system', now(), 'Demo merchant employee role')
+    (300001, 300001, '店主', 'merchant_admin', 1, '4', true, true, '1', '0', 'system', now(), 'Demo merchant owner role'),
+    (300003, 300001, '营业员', 'merchant_employee', 2, '5', true, true, '1', '0', 'system', now(), 'Demo merchant employee role')
 ON CONFLICT (role_id) DO UPDATE
 SET tenant_id = EXCLUDED.tenant_id,
     role_name = EXCLUDED.role_name,
@@ -1482,6 +1571,13 @@ SELECT 300001, menu_id, 300001
 FROM sys_menu
 WHERE tenant_id = 300001
   AND menu_id BETWEEN 300100 AND 300124
+ON CONFLICT DO NOTHING;
+
+INSERT INTO sys_role_menu (role_id, menu_id, tenant_id)
+SELECT 300003, menu_id, 300001
+FROM sys_menu
+WHERE tenant_id = 300001
+  AND (menu_id IN (300100, 300101, 300102) OR menu_id BETWEEN 300120 AND 300124)
 ON CONFLICT DO NOTHING;
 
 INSERT INTO sys_user (user_id, tenant_id, dept_id, user_name, nick_name, user_type, email, phonenumber, sex, password, force_password_change, status, del_flag, create_by, create_time, remark)

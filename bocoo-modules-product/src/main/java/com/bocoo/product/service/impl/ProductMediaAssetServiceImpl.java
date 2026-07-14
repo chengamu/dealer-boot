@@ -3,6 +3,7 @@ package com.bocoo.product.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.bocoo.common.core.exception.ServiceException;
+import com.bocoo.common.core.service.OssService;
 import com.bocoo.common.core.utils.MapstructUtils;
 import com.bocoo.common.core.utils.StringUtils;
 import com.bocoo.common.mybatis.core.page.PageQuery;
@@ -18,16 +19,21 @@ import com.bocoo.product.mapper.ProductMediaBindingMapper;
 import com.bocoo.product.service.ProductEntityDefaults;
 import com.bocoo.product.service.ProductMediaAssetService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Arrays;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ProductMediaAssetServiceImpl extends ProductServiceSupport implements ProductMediaAssetService {
 
     private final ProductMediaAssetMapper mediaAssetMapper;
     private final ProductMediaBindingMapper mediaBindingMapper;
+    private final OssService ossService;
 
     @Override
     public TableDataInfo<ProductMediaAssetVo> queryPageList(ProductMediaAssetBo bo, PageQuery pageQuery) {
@@ -69,7 +75,9 @@ public class ProductMediaAssetServiceImpl extends ProductServiceSupport implemen
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public Boolean deleteWithValidByIds(Long[] ids) {
+        List<ProductMediaAsset> assets = mediaAssetMapper.selectBatchIds(Arrays.asList(ids));
         for (Long id : ids) {
             ProductMediaAsset current = mediaAssetMapper.selectById(id);
             if (current != null) {
@@ -77,7 +85,9 @@ public class ProductMediaAssetServiceImpl extends ProductServiceSupport implemen
             }
             assertNoReferences(checkReferences(id));
         }
-        return remove(mediaAssetMapper, ids);
+        boolean removed = remove(mediaAssetMapper, ids);
+        if (removed) cleanupOssFiles(assets);
+        return removed;
     }
 
     @Override
@@ -125,6 +135,16 @@ public class ProductMediaAssetServiceImpl extends ProductServiceSupport implemen
             .ne(bo.getAssetId() != null, "asset_id", bo.getAssetId()));
         if (count > 0) {
             throw ServiceException.ofMessageKey("product.mediaAsset.codeExists");
+        }
+    }
+
+    private void cleanupOssFiles(List<ProductMediaAsset> assets) {
+        List<Long> ossIds = assets.stream().map(ProductMediaAsset::getOssId).filter(java.util.Objects::nonNull).distinct().toList();
+        if (ossIds.isEmpty()) return;
+        try {
+            ossService.deleteByIds(ossIds);
+        } catch (RuntimeException exception) {
+            log.warn("Failed to cleanup media asset OSS files: {}", ossIds, exception);
         }
     }
 }

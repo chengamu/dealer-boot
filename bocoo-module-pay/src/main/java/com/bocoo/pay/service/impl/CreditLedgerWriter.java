@@ -6,6 +6,7 @@ import com.bocoo.pay.domain.entity.MerchantCreditAccount;
 import com.bocoo.pay.domain.entity.MerchantCreditTransaction;
 import com.bocoo.pay.domain.entity.MerchantReceivable;
 import com.bocoo.pay.domain.entity.PayOrder;
+import com.bocoo.pay.domain.bo.CreditRepayBo;
 import com.bocoo.pay.enums.CreditTransactionType;
 import com.bocoo.pay.enums.ReceivableStatus;
 import com.bocoo.pay.mapper.MerchantCreditTransactionMapper;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.format.DateTimeFormatter;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 
 @Component
 @RequiredArgsConstructor
@@ -28,7 +30,9 @@ class CreditLedgerWriter {
                                          Long salesDocumentId, Integer creditTermDays) {
         BigDecimal amount = BigDecimal.valueOf(order.getPrice(), 2);
         MerchantReceivable row = new MerchantReceivable();
+        row.setBusinessOrigin(account.getBusinessOrigin());
         row.setTenantId(account.getTenantId());
+        row.setSalesStoreId(account.getSalesStoreId());
         row.setMerchantId(account.getMerchantId());
         row.setMerchantName(account.getMerchantName());
         row.setSalesDocumentId(salesDocumentId);
@@ -71,6 +75,49 @@ class CreditLedgerWriter {
         row.setOccurredTime(TimeUtils.utcNow());
         row.setRemark(reason);
         transactionMapper.insert(row);
+    }
+
+    void repayment(MerchantCreditAccount account, MerchantReceivable receivable, CreditRepayBo bo,
+                   BigDecimal beforeUsed, BigDecimal afterUsed) {
+        MerchantCreditTransaction row = base(account, CreditTransactionType.REPAY, receivable.getReceivableId(),
+            receivable.getReceivableNo(), bo.getAmount(), beforeUsed, afterUsed, bo.getReason());
+        row.setPaymentMethod(bo.getMethod());
+        row.setPaymentReference(bo.getReference());
+        row.setPaidTime(bo.getPaidTime());
+        row.setProofMediaId(bo.getProofMediaId());
+        row.setIdempotencyKey(bo.getIdempotencyKey());
+        transactionMapper.insert(row);
+    }
+
+    MerchantCreditTransaction findRepayment(Long receivableId, String idempotencyKey) {
+        return transactionMapper.selectOne(new LambdaQueryWrapper<MerchantCreditTransaction>()
+            .eq(MerchantCreditTransaction::getTransactionType, CreditTransactionType.REPAY.name())
+            .eq(MerchantCreditTransaction::getBusinessId, receivableId)
+            .eq(MerchantCreditTransaction::getIdempotencyKey, idempotencyKey), false);
+    }
+
+    private MerchantCreditTransaction base(MerchantCreditAccount account, CreditTransactionType type,
+                                            Long businessId, String businessNo, BigDecimal amount,
+                                            BigDecimal beforeUsed, BigDecimal afterUsed, String reason) {
+        MerchantCreditTransaction row = new MerchantCreditTransaction();
+        row.setTenantId(account.getTenantId());
+        row.setCreditAccountId(account.getCreditAccountId());
+        row.setTransactionNo(no("CT"));
+        row.setTransactionType(type.name());
+        row.setBusinessType("RECEIVABLE");
+        row.setBusinessId(businessId);
+        row.setBusinessNo(businessNo);
+        row.setAmount(amount);
+        row.setBeforeCreditLimit(account.getCreditLimit());
+        row.setAfterCreditLimit(account.getCreditLimit());
+        row.setBeforeUsedCredit(beforeUsed);
+        row.setAfterUsedCredit(afterUsed);
+        row.setCurrency(account.getCurrency());
+        row.setOperatorId(operator.userId());
+        row.setOperatorName(operator.username());
+        row.setOccurredTime(TimeUtils.utcNow());
+        row.setRemark(reason);
+        return row;
     }
 
     private String no(String prefix) {

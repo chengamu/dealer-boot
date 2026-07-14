@@ -1,11 +1,10 @@
 <template>
   <div class="fulfillment-grid">
     <el-form :model="query" inline class="fulfillment-grid__search">
+      <el-form-item :label="t('dealer.fulfillment.businessTime')"><el-date-picker v-model="dateRange" type="daterange" value-format="YYYY-MM-DD" /></el-form-item>
       <el-form-item :label="t('dealer.fulfillment.orderNo')"><el-input v-model="query.orderNo" clearable /></el-form-item>
       <el-form-item :label="t('dealer.fulfillment.merchant')"><el-input v-model="query.merchantName" clearable /></el-form-item>
-      <el-form-item :label="t('dealer.fulfillment.customer')"><el-input v-model="query.customerName" clearable /></el-form-item>
       <el-form-item :label="t('dealer.fulfillment.shipmentStatus')"><el-select v-model="query.shipmentStatus" clearable><el-option v-for="status in shipmentStatuses" :key="status" :value="status" :label="statusText(t, 'shipment', status)" /></el-select></el-form-item>
-      <el-form-item :label="t('dealer.fulfillment.carrier')"><el-input v-model="query.carrierName" clearable /></el-form-item>
       <el-form-item :label="t('dealer.fulfillment.trackingNo')"><el-input v-model="query.trackingNo" clearable /></el-form-item>
       <el-form-item><el-button type="primary" icon="Search" @click="load">{{ t('common.search') }}</el-button><el-button icon="Refresh" @click="reset">{{ t('common.reset') }}</el-button></el-form-item>
     </el-form>
@@ -31,25 +30,27 @@
 import { reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { shipmentApi, type ShipmentOrder, type ShipmentQuery, type ShipmentStatus } from '@/api/dealer-fulfillment'
-import { formatUtc } from '@/utils/datetime'
+import { withUtcDateRange } from '@/utils/datetime'
+import { currentMonthDateRange, formatMinute } from './fulfillmentGridSupport'
 import { statusText, statusType } from './fulfillmentPresentation'
 
-const emit = defineEmits<{ detail: [id: string, mode: 'shipment'] }>()
+const emit = defineEmits<{ detail: [id: string, mode: 'shipment', audience: 'factory'] }>()
 const { t } = useI18n()
 const shipmentStatuses: ShipmentStatus[] = ['UNSHIPPED', 'PARTIALLY_SHIPPED', 'SHIPPED', 'DELIVERED']
 const query = reactive<ShipmentQuery>({ pageNum: 1, pageSize: 10, shipmentStatus: '' })
+const dateRange = ref<string[]>(currentMonthDateRange())
 const rows = ref<ShipmentOrder[]>([])
 const total = ref(0)
 const loading = ref(false)
 
 async function load() {
   loading.value = true
-  try { const response = await shipmentApi.list(query); rows.value = response.rows || []; total.value = response.total || 0 }
+  try { const response = await shipmentApi.list(withUtcDateRange({ ...query }, dateRange.value)); rows.value = response.rows || []; total.value = response.total || 0 }
   finally { loading.value = false }
 }
-function reset() { Object.assign(query, { orderNo: '', merchantName: '', customerName: '', shipmentStatus: '', carrierName: '', trackingNo: '', pageNum: 1 }); void load() }
-function openDetail(row: ShipmentOrder) { emit('detail', String(row.salesDocumentId), 'shipment') }
+function reset() { Object.assign(query, { orderNo: '', merchantName: '', shipmentStatus: '', trackingNo: '', pageNum: 1 }); dateRange.value = currentMonthDateRange(); void load() }
+function openDetail(row: ShipmentOrder) { emit('detail', String(row.salesDocumentId), 'shipment', 'factory') }
 function indexMethod(index: number) { return ((query.pageNum || 1) - 1) * (query.pageSize || 10) + index + 1 }
-function minute(value?: string) { return value ? formatUtc(value, 'YYYY-MM-DD HH:mm') : '-' }
+function minute(value?: string) { return formatMinute(value) }
 void load()
 </script>

@@ -1,8 +1,8 @@
-import { shipmentApi, type Shipment, type TrackingOrder } from '@/api/dealer-fulfillment'
+import { businessFulfillmentApi, type Shipment, type TrackingOrder } from '@/api/dealer-fulfillment'
 
 export async function enrichTrackingOrders(rows: TrackingOrder[]) {
   return Promise.all(rows.map(async (row) => {
-    const response = await shipmentApi.orderShipments(row.salesDocumentId)
+    const response = await businessFulfillmentApi.orderShipments(row.salesDocumentId)
     return enrich(row, response.data || [])
   }))
 }

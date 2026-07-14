@@ -7,9 +7,11 @@ import com.bocoo.common.core.exception.ServiceException;
 import com.bocoo.dealer.domain.entity.SalesDocument;
 import com.bocoo.dealer.domain.entity.SalesDocumentItem;
 import com.bocoo.dealer.fulfillment.service.impl.FulfillmentAccessSupport;
+import com.bocoo.dealer.fulfillment.service.impl.FulfillmentAudience;
 import com.bocoo.dealer.fulfillment.service.impl.FulfillmentEventRecorder;
 import com.bocoo.dealer.fulfillment.service.impl.FulfillmentOrderAssembler;
 import com.bocoo.dealer.fulfillment.service.impl.ProductionServiceImpl;
+import com.bocoo.dealer.fulfillment.service.impl.ProductionSnapshotValidator;
 import com.bocoo.dealer.mapper.SalesDocumentMapper;
 import com.bocoo.dealer.service.TestSaTokenContext;
 import org.apache.ibatis.builder.MapperBuilderAssistant;
@@ -41,14 +43,15 @@ class ProductionServiceImplTest {
         TestSaTokenContext.setLoginUser(TenantType.PLATFORM.getCode(), 1L, 10L, "factory");
         lenient().when(access.ignoreTenant(any())).thenAnswer(invocation ->
             ((Supplier<?>) invocation.getArgument(0)).get());
-        service = new ProductionServiceImpl(documentMapper, access, assembler, events);
+        service = new ProductionServiceImpl(documentMapper, access, assembler, events,
+            new ProductionSnapshotValidator());
     }
 
     @Test
     void unpaidOrderCannotStartProduction() {
         SalesDocument row = document();
         row.setPaymentStatus("UNPAID");
-        when(access.document(1L)).thenReturn(row);
+        when(access.document(1L, FulfillmentAudience.FACTORY)).thenReturn(row);
 
         assertThatThrownBy(() -> service.start(1L)).isInstanceOf(ServiceException.class);
         verifyNoInteractions(documentMapper, events);
@@ -56,7 +59,7 @@ class ProductionServiceImplTest {
 
     @Test
     void incompleteFrozenSnapshotCannotStartProduction() {
-        when(access.document(1L)).thenReturn(document());
+        when(access.document(1L, FulfillmentAudience.FACTORY)).thenReturn(document());
         when(assembler.items(any())).thenReturn(List.of(new SalesDocumentItem()));
 
         assertThatThrownBy(() -> service.start(1L)).isInstanceOf(ServiceException.class);
@@ -70,7 +73,7 @@ class ProductionServiceImplTest {
         item.setFormulaVersionId(8L);
         item.setSelectedOptionsJson("{}");
         item.setBomSnapshotJson("[]");
-        when(access.document(1L)).thenReturn(row);
+        when(access.document(1L, FulfillmentAudience.FACTORY)).thenReturn(row);
         when(assembler.items(row)).thenReturn(List.of(item));
         when(documentMapper.update(isNull(), any())).thenReturn(1);
 

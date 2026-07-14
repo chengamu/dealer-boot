@@ -44,16 +44,14 @@ public class SysOssConfigBo extends BaseBo {
      * accessKey
      */
     @Schema(description = "accessKey")
-    @NotBlank(message = "{validation.oss.accessKey.required}", groups = {AddGroup.class, EditGroup.class})
-    @Size(min = 2, max = 100, message = "{validation.oss.accessKey.size}")
+    @Size(max = 100, message = "{validation.oss.accessKey.size}")
     private String accessKey;
 
     /**
      * 秘钥
      */
     @Schema(description = "秘钥")
-    @NotBlank(message = "{validation.oss.secretKey.required}", groups = {AddGroup.class, EditGroup.class})
-    @Size(min = 2, max = 100, message = "{validation.oss.secretKey.size}")
+    @Size(max = 100, message = "{validation.oss.secretKey.size}")
     private String secretKey;
 
     /**

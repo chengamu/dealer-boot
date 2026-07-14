@@ -18,6 +18,12 @@ public class CustomerProfile extends BaseEntity {
 
     private Long tenantId;
 
+    private String businessOrigin;
+
+    private Long salesStoreId;
+
+    private Long deptId;
+
     private Long merchantId;
 
     private String merchantName;

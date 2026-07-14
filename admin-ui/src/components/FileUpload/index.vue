@@ -1,30 +1,33 @@
 <template>
   <div class="upload-file">
-    <el-upload
-      multiple
-      :action="uploadFileUrl"
-      :before-upload="handleBeforeUpload"
-      :file-list="fileList"
-      :limit="limit"
-      :on-error="handleUploadError"
-      :on-exceed="handleExceed"
-      :on-success="handleUploadSuccess"
-      :show-file-list="false"
-      :http-request="uploadFile"
-      class="upload-file-uploader"
-      ref="fileUpload"
-    >
-      <!-- 上传按钮 -->
-      <el-button type="primary">{{ t('upload.selectFile') }}</el-button>
-    </el-upload>
-    <!-- 上传提示 -->
-    <div class="el-upload__tip" v-if="showTip">
-      {{ t('upload.tipPrefix') }}
-      <template v-if="fileSize"> {{ t('upload.maxSize') }} <b style="color: #f56c6c">{{ fileSize }}MB</b> </template>
-      <span v-if="fileSize && fileType">&nbsp;</span>
-      <template v-if="fileType"> {{ t('upload.allowedTypes') }} <b style="color: #f56c6c">{{ fileType.join("/") }}</b> </template>
-      {{ t('upload.fileSuffix') }}
-    </div>
+    <UploadDropZone :label="t('upload.dropOrClick')" :hint="t('upload.pasteHint')" @files="handleIncomingFiles">
+      <el-upload
+        ref="fileUpload"
+        multiple
+        :action="uploadFileUrl"
+        :accept="accept"
+        :before-upload="handleBeforeUpload"
+        :file-list="fileList"
+        :limit="limit"
+        :on-error="handleUploadError"
+        :on-exceed="handleExceed"
+        :on-success="handleUploadSuccess"
+        :show-file-list="false"
+        :http-request="uploadFile"
+        class="upload-file-uploader"
+      >
+        <el-button type="primary" plain icon="Upload">{{ t('upload.selectFile') }}</el-button>
+      </el-upload>
+      <template v-if="showTip" #tip>
+        <div class="el-upload__tip">
+          {{ t('upload.tipPrefix') }}
+          <template v-if="fileSize"> {{ t('upload.maxSize') }} <b>{{ fileSize }}MB</b> </template>
+          <span v-if="fileSize && fileType">&nbsp;</span>
+          <template v-if="fileType"> {{ t('upload.allowedTypes') }} <b>{{ fileType.join("/") }}</b> </template>
+          {{ t('upload.fileSuffix') }}
+        </div>
+      </template>
+    </UploadDropZone>
     <!-- 文件列表 -->
     <transition-group class="upload-file-list el-upload-list el-upload-list--text" name="el-fade-in-linear" tag="ul">
       <li :key="file.uid" class="el-upload-list__item ele-upload-list__item-content" v-for="(file, index) in fileList">
@@ -45,6 +48,8 @@ import { OSS_UPLOAD_URL, uploadOssFile, type OssUploadResponse } from "@/api/sys
 import { getMessage } from "@/locales";
 import { useLocaleStore } from "@/stores/locale";
 import { runUiAction } from "@/utils/action";
+import UploadDropZone from "@/components/UploadDropZone/index.vue";
+import { enqueueUploadFiles, formatUploadAccept, selectUploadFiles, validateUploadFile, type UploadValidationIssue } from "@/composables/uploadIntake";
 import type { PropType } from "vue";
 import type { UploadFile, UploadInstance, UploadRawFile, UploadRequestOptions, UploadUserFile } from "element-plus";
 
@@ -84,12 +89,12 @@ const props = defineProps({
   // 大小限制(MB)
   fileSize: {
     type: Number,
-    default: 5,
+    default: 10,
   },
   // 文件类型, 例如['png', 'jpg', 'jpeg']
   fileType: {
     type: Array as PropType<string[]>,
-    default: () => ["doc", "xls", "ppt", "txt", "pdf"],
+    default: () => ["bmp", "gif", "jpg", "jpeg", "png", "pdf", "doc", "docx", "xls", "xlsx"],
   },
   // 是否显示提示
   isShowTip: {
@@ -106,6 +111,7 @@ const number = ref(0);
 const uploadList = ref<UploadItem[]>([]);
 const uploadFileUrl = ref(OSS_UPLOAD_URL); // 上传文件服务器地址
 const fileList = ref<UploadItem[]>([]);
+const accept = computed(() => formatUploadAccept(props.fileType));
 const showTip = computed(
   () => props.isShowTip && (props.fileType || props.fileSize)
 );
@@ -142,27 +148,32 @@ watch(() => props.modelValue, async val => {
 
 // 上传前校检格式和大小
 function handleBeforeUpload(file: UploadRawFile) {
-  // 校检文件类型
-  if (props.fileType.length) {
-    const fileName = file.name.split('.');
-    const fileExt = fileName[fileName.length - 1];
-    const isTypeOk = props.fileType.indexOf(fileExt) >= 0;
-    if (!isTypeOk) {
-      proxy.$modal.msgError(t('upload.invalidFileType', { types: props.fileType.join("/") }));
-      return false;
-    }
-  }
-  // 校检文件大小
-  if (props.fileSize) {
-    const isLt = file.size / 1024 / 1024 < props.fileSize;
-    if (!isLt) {
-      proxy.$modal.msgError(t('upload.fileTooLarge', { size: props.fileSize }));
-      return false;
-    }
-  }
+  const issue = validateUploadFile(file, { allowedExtensions: props.fileType, maxSizeMb: props.fileSize });
+  if (issue) return showValidationIssue(issue);
   proxy.$modal.loading(t('upload.uploadingFile'));
   number.value++;
   return true;
+}
+
+function handleIncomingFiles(files: File[]) {
+  const result = selectUploadFiles(files, {
+    allowedExtensions: props.fileType,
+    maxSizeMb: props.fileSize,
+    limit: props.limit,
+    currentCount: fileList.value.length + number.value
+  });
+  if (result.issue) showValidationIssue(result.issue);
+  enqueueUploadFiles(proxy.$refs.fileUpload, result.files);
+}
+
+function showValidationIssue(issue: UploadValidationIssue) {
+  const message = issue === 'limit'
+    ? t('upload.limitExceeded', { limit: props.limit })
+    : issue === 'size'
+      ? t('upload.fileTooLarge', { size: props.fileSize })
+      : t('upload.invalidFileType', { types: props.fileType.join('/') });
+  proxy.$modal.msgError(message);
+  return false;
 }
 
 // 文件个数超出
@@ -196,7 +207,10 @@ function handleUploadSuccess(res: OssUploadResponse, file: UploadFile) {
 // 删除文件
 async function handleDelete(index: number) {
   const ossId = fileList.value[index].ossId;
-  if (ossId !== undefined) await runUiAction(() => delOss(ossId));
+  if (ossId !== undefined) {
+    const deleted = await runUiAction(() => delOss(ossId));
+    if (!deleted) return;
+  }
   fileList.value.splice(index, 1);
   emit("update:modelValue", listToString(fileList.value));
 }
@@ -236,7 +250,12 @@ function listToString(list: UploadItem[], separator = ",") {
 
 <style scoped lang="scss">
 .upload-file-uploader {
+  display: inline-flex;
   margin-bottom: 8px;
+}
+
+.el-upload__tip b {
+  color: #f56c6c;
 }
 .upload-file-list .el-upload-list__item {
   position: relative;

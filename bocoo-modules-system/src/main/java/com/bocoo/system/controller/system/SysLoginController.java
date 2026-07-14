@@ -18,9 +18,11 @@ import com.bocoo.system.domain.bo.ThirdLoginBody;
 import com.bocoo.system.domain.entity.SysMenu;
 import com.bocoo.system.domain.vo.RouterVo;
 import com.bocoo.system.domain.vo.SysUserVo;
+import com.bocoo.system.domain.vo.UserDefaultRouteVo;
 import com.bocoo.system.service.SysLoginService;
 import com.bocoo.system.service.SysMenuService;
 import com.bocoo.system.service.SysUserService;
+import com.bocoo.system.service.UserDefaultRouteService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -47,6 +49,7 @@ public class SysLoginController {
     private final SysLoginService loginService;
     private final SysMenuService menuService;
     private final SysUserService userService;
+    private final UserDefaultRouteService defaultRouteService;
 
     /**
      * 登录方法
@@ -192,6 +195,10 @@ public class SysLoginController {
             info.put("tenantType", loginUser.getTenantType());
             info.put("merchantId", loginUser.getMerchantId());
             info.put("forcePasswordChange", UserConstants.FORCE_PASSWORD_CHANGE_YES.equals(user.getForcePasswordChange()));
+            UserDefaultRouteVo defaultRoute = defaultRouteService.resolve(loginUser.getUserId());
+            info.put("defaultMenuId", defaultRoute == null ? null : defaultRoute.getDefaultMenuId());
+            info.put("defaultRoute", defaultRoute == null ? null : defaultRoute.getDefaultRoute());
+            info.put("defaultRouteTitle", defaultRoute == null ? null : defaultRoute.getDefaultRouteTitle());
             return R.ok(info);
         });
     }

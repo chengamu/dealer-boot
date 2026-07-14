@@ -10,7 +10,6 @@ import com.bocoo.common.core.utils.TimeUtils;
 import com.bocoo.common.mybatis.core.page.PageQuery;
 import com.bocoo.common.mybatis.core.page.TableDataInfo;
 import com.bocoo.dealer.domain.entity.SalesDocument;
-import com.bocoo.dealer.domain.entity.SalesDocumentItem;
 import com.bocoo.dealer.fulfillment.domain.bo.ProductionQueryBo;
 import com.bocoo.dealer.fulfillment.domain.vo.FulfillmentOrderVo;
 import com.bocoo.dealer.fulfillment.domain.vo.ProductionOrderVo;
@@ -20,8 +19,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-
 @Service
 @RequiredArgsConstructor
 public class ProductionServiceImpl implements ProductionService {
@@ -29,11 +26,13 @@ public class ProductionServiceImpl implements ProductionService {
     private final FulfillmentAccessSupport access;
     private final FulfillmentOrderAssembler assembler;
     private final FulfillmentEventRecorder events;
+    private final ProductionSnapshotValidator snapshotValidator;
 
     @Override
     public TableDataInfo<ProductionOrderVo> queryPage(ProductionQueryBo bo, PageQuery pageQuery) {
-        access.platformOnly();
-        QueryWrapper<SalesDocument> query = productionQuery(bo).orderByDesc("paid_time", "sales_document_id");
+        QueryWrapper<SalesDocument> query = productionQuery(bo);
+        access.applyScope(query, FulfillmentAudience.FACTORY);
+        query.orderByDesc("paid_time", "sales_document_id");
         IPage<SalesDocument> page = access.ignoreTenant(() -> documentMapper.selectPage(pageQuery.build(), query));
         TableDataInfo<ProductionOrderVo> result = TableDataInfo.build(page.getRecords().stream()
             .map(assembler::summary).toList());
@@ -42,8 +41,8 @@ public class ProductionServiceImpl implements ProductionService {
     }
 
     @Override
-    public FulfillmentOrderVo detail(Long salesDocumentId) {
-        SalesDocument row = access.document(salesDocumentId);
+    public FulfillmentOrderVo detail(Long salesDocumentId, FulfillmentAudience audience) {
+        SalesDocument row = access.document(salesDocumentId, audience);
         if (!"PAID".equals(row.getPaymentStatus())) {
             throw ServiceException.ofMessageKey("dealer.fulfillment.productionUnavailable");
         }
@@ -54,13 +53,12 @@ public class ProductionServiceImpl implements ProductionService {
     @Lock4j(name = "sales-document-lifecycle", keys = {"#salesDocumentId"})
     @Transactional(rollbackFor = Exception.class)
     public Boolean start(Long salesDocumentId) {
-        access.platformOnly();
-        SalesDocument row = access.document(salesDocumentId);
+        SalesDocument row = access.document(salesDocumentId, FulfillmentAudience.FACTORY);
         if (!"SUBMITTED".equals(row.getDocumentStatus()) || !"PAID".equals(row.getPaymentStatus())
             || !"PENDING".equals(row.getProductionStatus())) {
             throw ServiceException.ofMessageKey("dealer.fulfillment.productionStartDenied");
         }
-        verifySnapshots(assembler.items(row));
+        snapshotValidator.validate(assembler.items(row));
         boolean updated = access.ignoreTenant(() -> documentMapper.update(null,
             baseUpdate(row).eq(SalesDocument::getDocumentStatus, "SUBMITTED")
                 .eq(SalesDocument::getPaymentStatus, "PAID")
@@ -76,8 +74,7 @@ public class ProductionServiceImpl implements ProductionService {
     @Lock4j(name = "sales-document-lifecycle", keys = {"#salesDocumentId"})
     @Transactional(rollbackFor = Exception.class)
     public Boolean complete(Long salesDocumentId, String note) {
-        access.platformOnly();
-        SalesDocument row = access.document(salesDocumentId);
+        SalesDocument row = access.document(salesDocumentId, FulfillmentAudience.FACTORY);
         if (!"SUBMITTED".equals(row.getDocumentStatus()) || !"IN_PRODUCTION".equals(row.getProductionStatus())) {
             throw ServiceException.ofMessageKey("dealer.fulfillment.productionCompleteDenied");
         }
@@ -94,18 +91,17 @@ public class ProductionServiceImpl implements ProductionService {
         QueryWrapper<SalesDocument> query = new QueryWrapper<SalesDocument>()
             .eq("del_flag", "0").eq("document_status", "SUBMITTED").eq("payment_status", "PAID");
         if (bo == null) return query;
-        return query.like(StringUtils.isNotBlank(bo.getOrderNo()), "order_no", bo.getOrderNo())
+        return query.eq(bo.getTenantId() != null, "tenant_id", bo.getTenantId())
+            .eq(StringUtils.isNotBlank(bo.getBusinessOrigin()), "business_origin", bo.getBusinessOrigin())
+            .eq(bo.getSalesStoreId() != null, "sales_store_id", bo.getSalesStoreId())
+            .eq(bo.getDeptId() != null, "dept_id", bo.getDeptId())
+            .eq(bo.getOwnerUserId() != null, "owner_user_id", bo.getOwnerUserId())
+            .like(StringUtils.isNotBlank(bo.getOrderNo()), "order_no", bo.getOrderNo())
             .like(StringUtils.isNotBlank(bo.getSourceNo()), "source_no", bo.getSourceNo())
             .like(StringUtils.isNotBlank(bo.getMerchantName()), "merchant_name", bo.getMerchantName())
             .like(StringUtils.isNotBlank(bo.getCustomerName()), "customer_name", bo.getCustomerName())
             .eq(StringUtils.isNotBlank(bo.getProductionStatus()), "production_status", bo.getProductionStatus())
             .eq(StringUtils.isNotBlank(bo.getPaymentMethod()), "payment_method", bo.getPaymentMethod());
-    }
-
-    private void verifySnapshots(List<SalesDocumentItem> items) {
-        boolean invalid = items.isEmpty() || items.stream().anyMatch(item -> item.getFormulaVersionId() == null
-            || StringUtils.isBlank(item.getSelectedOptionsJson()) || StringUtils.isBlank(item.getBomSnapshotJson()));
-        if (invalid) throw ServiceException.ofMessageKey("dealer.fulfillment.productionSnapshotIncomplete");
     }
 
     private LambdaUpdateWrapper<SalesDocument> baseUpdate(SalesDocument row) {

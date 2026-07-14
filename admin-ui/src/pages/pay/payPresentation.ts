@@ -1,4 +1,4 @@
-import type { PayOrderStatus } from '@/api/pay'
+import type { BankTransferStatus, BusinessOrigin, PayOrderStatus, ReceivableStatus, ReconciliationSeverity, ReconciliationStatus } from '@/api/pay'
 import type { DecimalValue } from '@/types/api'
 import { formatCurrency, minorUnitsToDecimal } from '@/utils/businessNumber'
 
@@ -25,6 +25,54 @@ export function bankStatusText(t: Translate, status?: string) {
     REJECTED: 'pay.bank.status.REJECTED', SUCCESS: 'pay.bank.status.SUCCESS', CLOSED: 'pay.bank.status.CLOSED'
   }
   return status ? t(keys[status] || 'pay.bank.status.DRAFT') : '-'
+}
+
+export function businessOriginText(t: Translate, origin?: BusinessOrigin) {
+  if (origin === 'INTERNAL') return t('pay.businessOrigin.INTERNAL')
+  if (origin === 'MERCHANT') return t('pay.businessOrigin.MERCHANT')
+  return origin || '-'
+}
+
+export function receivableStatusText(t: Translate, status?: ReceivableStatus) {
+  const keys: Record<string, string> = {
+    OPEN: 'pay.receivable.status.OPEN',
+    PARTIAL: 'pay.receivable.status.PARTIAL',
+    SETTLED: 'pay.receivable.status.SETTLED',
+    OVERDUE: 'pay.receivable.status.OVERDUE'
+  }
+  if (!status) return '-'
+  return t(keys[status] || 'pay.receivable.status.OPEN')
+}
+
+export function reconciliationSeverityText(t: Translate, severity?: ReconciliationSeverity) {
+  const keys: Record<string, string> = {
+    CRITICAL: 'pay.reconciliation.severity.CRITICAL',
+    WARNING: 'pay.reconciliation.severity.WARNING'
+  }
+  if (!severity) return '-'
+  return t(keys[severity] || 'pay.reconciliation.severity.WARNING')
+}
+
+export function reconciliationStatusText(t: Translate, status?: ReconciliationStatus) {
+  const keys: Record<string, string> = {
+    OPEN: 'pay.reconciliation.status.OPEN',
+    RESOLVED: 'pay.reconciliation.status.RESOLVED',
+    IGNORED: 'pay.reconciliation.status.IGNORED'
+  }
+  if (!status) return '-'
+  return t(keys[status] || 'pay.reconciliation.status.OPEN')
+}
+
+export function reconciliationSeverityType(severity?: ReconciliationSeverity) {
+  if (severity === 'CRITICAL') return 'danger'
+  if (severity === 'WARNING') return 'warning'
+  return 'info'
+}
+
+export function bankStatusType(status?: BankTransferStatus) {
+  if (status === 'SUCCESS') return 'success'
+  if (status === 'REJECTED' || status === 'CLOSED') return 'danger'
+  return 'warning'
 }
 
 export function statusType(status?: PayOrderStatus) {

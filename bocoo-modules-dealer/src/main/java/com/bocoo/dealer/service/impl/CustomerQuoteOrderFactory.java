@@ -7,6 +7,7 @@ import com.bocoo.dealer.domain.entity.SalesDocument;
 import com.bocoo.dealer.domain.entity.SalesDocumentItem;
 import com.bocoo.merchant.domain.entity.CustomerQuote;
 import com.bocoo.merchant.domain.entity.CustomerQuoteItem;
+import com.bocoo.dealer.scope.SalesOwnership;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -19,7 +20,7 @@ class CustomerQuoteOrderFactory {
     SalesDocument header(CustomerQuote quote, CustomerQuoteOrderCalculation calculation,
                          CustomerQuoteConvertOrderBo bo) {
         SalesDocument row = new SalesDocument();
-        row.setTenantId(quote.getTenantId());
+        SalesOwnership.from(quote).applyTo(row);
         row.setMerchantId(calculation.profile() == null ? null : calculation.profile().getMerchantId());
         row.setMerchantName(calculation.profile() == null ? null : calculation.profile().getMerchantName());
         row.setSourceType("QUOTE"); row.setSourceQuoteId(quote.getQuoteId());
@@ -27,7 +28,7 @@ class CustomerQuoteOrderFactory {
         row.setOrderNo("SO-" + Seq.getId()); row.setCustomerId(quote.getCustomerId());
         row.setCustomerName(quote.getCustomerName()); row.setCompanyName(quote.getCompanyName());
         row.setCustomerEmail(quote.getCustomerEmail()); row.setCustomerPhone(quote.getCustomerPhone());
-        row.setOwnerUserId(quote.getOwnerUserId()); row.setOwnerName(quote.getOwnerName());
+        row.setOwnerName(quote.getOwnerName());
         row.setProjectName(quote.getProjectName()); row.setCustomerPoNo(bo.getCustomerPoNo());
         row.setValidUntil(quote.getValidUntil()); row.setRecipientName(bo.getRecipientName());
         row.setRecipientPhone(bo.getRecipientPhone()); row.setShippingAddress(bo.getShippingAddress());

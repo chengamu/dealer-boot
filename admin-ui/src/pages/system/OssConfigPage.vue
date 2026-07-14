@@ -69,70 +69,24 @@
       @pagination="getList"
     />
 
-    <AdminDrawer
+    <OssConfigFormDrawer
+      ref="ossConfigFormRef"
       v-model="open"
       :title="title"
-      size="760px"
-      append-to-body
-      destroy-on-close
-      :close-on-click-modal="false"
+      :form="form"
+      :button-loading="buttonLoading"
+      :https-options="sys_yes_no"
       :before-close="formCloseGuard.beforeClose"
+      @cancel="cancel"
+      @submit="submitForm"
       @closed="formCloseGuard.handleClosed"
-    >
-      <el-form ref="ossConfigRef" :model="form" :rules="rules" label-width="120px">
-        <el-form-item :label="t('legacy.configKey')" prop="configKey">
-          <el-input v-model="form.configKey" :placeholder="t('legacy.configKeyPlaceholder')" />
-        </el-form-item>
-        <el-form-item :label="t('legacy.endpoint')" prop="endpoint">
-          <el-input v-model="form.endpoint" :placeholder="t('legacy.endpointPlaceholder')" />
-        </el-form-item>
-        <el-form-item :label="t('legacy.domain')" prop="domain">
-          <el-input v-model="form.domain" :placeholder="t('legacy.domainPlaceholder')" />
-        </el-form-item>
-        <el-form-item label="accessKey" prop="accessKey">
-          <el-input v-model="form.accessKey" placeholder="accessKey" />
-        </el-form-item>
-        <el-form-item label="secretKey" prop="secretKey">
-          <el-input v-model="form.secretKey" placeholder="secretKey" show-password />
-        </el-form-item>
-        <el-form-item :label="t('legacy.bucketName')" prop="bucketName">
-          <el-input v-model="form.bucketName" :placeholder="t('legacy.bucketNamePlaceholder')" />
-        </el-form-item>
-        <el-form-item :label="t('legacy.prefix')" prop="prefix">
-          <el-input v-model="form.prefix" :placeholder="t('legacy.prefixPlaceholder')" />
-        </el-form-item>
-        <el-form-item :label="t('legacy.isHttps')">
-          <el-radio-group v-model="form.isHttps">
-            <el-radio v-for="dict in sys_yes_no" :key="dict.value" :value="dict.value">{{ dict.label }}</el-radio>
-          </el-radio-group>
-        </el-form-item>
-        <el-form-item :label="t('legacy.accessPolicy')" prop="accessPolicy">
-          <el-radio-group v-model="form.accessPolicy">
-            <el-radio value="0">private</el-radio>
-            <el-radio value="1">public</el-radio>
-            <el-radio value="2">custom</el-radio>
-          </el-radio-group>
-        </el-form-item>
-        <el-form-item :label="t('legacy.region')" prop="region">
-          <el-input v-model="form.region" :placeholder="t('legacy.regionPlaceholder')" />
-        </el-form-item>
-        <el-form-item :label="t('user.remark')" prop="remark">
-          <el-input v-model="form.remark" type="textarea" :placeholder="t('user.remarkPlaceholder')" />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <div class="dialog-footer">
-          <el-button :loading="buttonLoading" type="primary" @click="submitForm">{{ t('common.confirm') }}</el-button>
-          <el-button @click="cancel">{{ t('common.cancel') }}</el-button>
-        </div>
-      </template>
-    </AdminDrawer>
+    />
   </div>
 </template>
 
 <script setup lang="ts" name="OssConfigPage">
 import { computed, reactive, ref } from 'vue'
-import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
+import { ElMessage, ElMessageBox, type FormInstance } from 'element-plus'
 import {
   addOssConfig,
   changeOssConfigStatus,
@@ -147,6 +101,7 @@ import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 import { useDict } from '@/utils/dict'
 import { useFormCloseGuard } from '@/composables/useFormCloseGuard'
+import OssConfigFormDrawer from './OssConfigFormDrawer.vue'
 
 const localeStore = useLocaleStore()
 const t = (key: string, params?: Record<string, string | number>) => {
@@ -164,7 +119,7 @@ const showSearch = ref(true)
 const ids = ref<Array<number | string>>([])
 const total = ref(0)
 const queryRef = ref<FormInstance>()
-const ossConfigRef = ref<FormInstance>()
+const ossConfigFormRef = ref<InstanceType<typeof OssConfigFormDrawer>>()
 const form = ref<OssConfig>({})
 const queryParams = reactive<OssConfigQuery>({
   pageNum: 1,
@@ -188,26 +143,6 @@ const defaultStatusOptions = computed(() => [
 const single = computed(() => ids.value.length !== 1)
 const multiple = computed(() => ids.value.length === 0)
 const title = computed(() => (form.value.ossConfigId ? t('legacy.editOssConfig') : t('legacy.addOssConfig')))
-const rules = computed<FormRules<OssConfig>>(() => ({
-  configKey: [{ required: true, message: t('legacy.configKeyRequired'), trigger: 'blur' }],
-  accessKey: [
-    { required: true, message: t('legacy.accessKeyRequired'), trigger: 'blur' },
-    { min: 2, max: 200, message: t('legacy.accessKeyLength'), trigger: 'blur' }
-  ],
-  secretKey: [
-    { required: true, message: t('legacy.secretKeyRequired'), trigger: 'blur' },
-    { min: 2, max: 100, message: t('legacy.secretKeyLength'), trigger: 'blur' }
-  ],
-  bucketName: [
-    { required: true, message: t('legacy.bucketNameRequired'), trigger: 'blur' },
-    { min: 2, max: 100, message: t('legacy.bucketNameLength'), trigger: 'blur' }
-  ],
-  endpoint: [
-    { required: true, message: t('legacy.endpointRequired'), trigger: 'blur' },
-    { min: 2, max: 100, message: t('legacy.endpointLength'), trigger: 'blur' }
-  ],
-  accessPolicy: [{ required: true, message: t('legacy.accessPolicyRequired'), trigger: 'blur' }]
-}))
 const formCloseGuard = useFormCloseGuard({
   enabled: () => open.value,
   getSnapshot: () => JSON.stringify(form.value || {}),
@@ -230,10 +165,10 @@ function reset() {
     isHttps: 'N',
     accessPolicy: '1',
     region: undefined,
+    ext1: 'access_key',
     status: '1',
     remark: undefined
   }
-  ossConfigRef.value?.resetFields()
 }
 
 async function getList() {
@@ -278,7 +213,10 @@ async function handleUpdate(row?: OssConfig) {
   loading.value = true
   try {
     const response = await getOssConfig(ossConfigId)
-    form.value = response.data
+    form.value = {
+      ...response.data,
+      ext1: response.data.ext1 || 'access_key'
+    }
     formCloseGuard.markPristine()
     open.value = true
   } finally {
@@ -287,7 +225,7 @@ async function handleUpdate(row?: OssConfig) {
 }
 
 async function submitForm() {
-  const valid = await ossConfigRef.value?.validate().catch(() => false)
+  const valid = await ossConfigFormRef.value?.validate()
   if (!valid) return
   buttonLoading.value = true
   try {

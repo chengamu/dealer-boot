@@ -5,7 +5,7 @@
       <span>{{ item.formulaVersionLabel || t('dealer.quickOrder.formulaVersionEmpty') }}</span>
     </header>
     <div class="quick-order-current-item__sheet">
-      <el-form-item :label="t('dealer.quickOrder.product')">
+      <el-form-item :label="t('dealer.quickOrder.productLabel')">
         <el-select v-model="item.saleProductId" filterable :disabled="readonly" @change="emit('product-change')">
           <el-option
             v-for="product in saleProducts"
@@ -22,7 +22,7 @@
       <el-form-item :label="t('dealer.quickOrder.height')">
         <BusinessInchInput v-model="item.orderHeightInch" min="0.125" :disabled="readonly" @change="emit('dirty')" @validity-change="setValidity('height', $event)" />
       </el-form-item>
-      <el-form-item :label="t('dealer.quickOrder.quantity')">
+      <el-form-item :label="t('dealer.quickOrder.quantityLabel')">
         <BusinessNumberInput v-model="item.quantity" mode="COUNT" :min="1" :allow-zero="false" :disabled="readonly" @change="emit('dirty')" @validity-change="setValidity('quantity', $event)" />
       </el-form-item>
     </div>
@@ -101,17 +101,22 @@ defineExpose({ validate: () => inputValid.value })
 </script>
 
 <style scoped>
-.quick-order-current-item { padding: 12px 14px 14px; border: 1px solid #e3e9f2; border-radius: 8px; background: #fff; }
+.quick-order-current-item { padding: 14px 16px 16px; border: 1px solid #e3e9f2; border-radius: 8px; background: #fff; }
 .quick-order-current-item__header,
 .quick-order-current-item__footer,
 .quick-order-current-item__checks,
 .quick-order-current-item__actions { display: flex; align-items: center; gap: 12px; }
 .quick-order-current-item__header { justify-content: space-between; margin-bottom: 10px; }
-.quick-order-current-item__header h3 { margin: 0; font-size: 16px; }
+.quick-order-current-item__header h3 { margin: 0; color: #1d2939; font-size: 18px; font-weight: 650; }
 .quick-order-current-item__header span { color: #667085; font-size: 13px; }
-.quick-order-current-item__sheet { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr 0.8fr; gap: 8px 12px; }
-.quick-order-current-item__options { margin-top: 10px; }
-.quick-order-current-item__footer { justify-content: space-between; margin-top: 12px; }
+.quick-order-current-item__sheet { display: grid; grid-template-columns: 1.45fr 1fr 1fr 1fr 0.8fr; gap: 10px 12px; }
+.quick-order-current-item__options { margin-top: 12px; }
+.quick-order-current-item__footer {
+  justify-content: space-between;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #edf1f6;
+}
 .quick-order-current-item__checks { flex-wrap: wrap; color: #667085; font-size: 13px; }
 .quick-order-current-item__checks b { color: #1d2939; font-size: 16px; }
 .quick-order-current-item__checks .is-total b { color: #1677ff; }
@@ -119,6 +124,8 @@ defineExpose({ validate: () => inputValid.value })
 .quick-order-current-item :deep(.el-form-item) { margin-bottom: 0; }
 .quick-order-current-item :deep(.el-input-number),
 .quick-order-current-item :deep(.el-select) { width: 100%; }
+.quick-order-current-item :deep(.el-input__wrapper),
+.quick-order-current-item :deep(.el-select__wrapper) { min-height: 36px; }
 @media (max-width: 1280px) {
   .quick-order-current-item__sheet { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .quick-order-current-item__footer { align-items: flex-start; flex-direction: column; }

@@ -48,8 +48,8 @@ class ReceiptServiceImplTest {
     void finalPackageCompletesOrderOnlyOnce() {
         Shipment shipment = shipment();
         SalesDocument document = document();
-        when(access.shipment(2L)).thenReturn(shipment);
-        when(access.document(1L)).thenReturn(document);
+        when(access.shipment(2L, FulfillmentAudience.BUSINESS)).thenReturn(shipment);
+        when(access.document(1L, FulfillmentAudience.BUSINESS)).thenReturn(document);
         when(shipmentMapper.update(isNull(), any())).thenReturn(1);
         when(documentMapper.update(isNull(), any())).thenReturn(1);
         when(aggregation.aggregate(document)).thenReturn(new ShipmentAggregate("DELIVERED", 5, 5, 2, true));
@@ -67,8 +67,8 @@ class ReceiptServiceImplTest {
 
         Shipment shipment = shipment();
         SalesDocument document = document();
-        when(access.shipment(2L)).thenReturn(shipment);
-        when(access.document(1L)).thenReturn(document);
+        when(access.shipment(2L, FulfillmentAudience.ADMIN)).thenReturn(shipment);
+        when(access.document(1L, FulfillmentAudience.ADMIN)).thenReturn(document);
         when(shipmentMapper.update(isNull(), any())).thenReturn(1);
         when(aggregation.aggregate(document)).thenReturn(new ShipmentAggregate("SHIPPED", 5, 5, 2, false));
 
@@ -76,6 +76,23 @@ class ReceiptServiceImplTest {
 
         verify(events).record(1L, 300001L, "PACKAGE_RECEIPT_OVERRIDDEN", "PENDING", "CONFIRMED",
             "merchant unavailable");
+    }
+
+    @Test
+    void internalSalespersonCanConfirmOwnedTenantOneShipment() {
+        TestSaTokenContext.setLoginUser(TenantType.PLATFORM.getCode(), 1L, 9L, "sales");
+        Shipment shipment = shipment();
+        shipment.setTenantId(1L);
+        SalesDocument document = document();
+        document.setTenantId(1L);
+        when(access.shipment(2L, FulfillmentAudience.BUSINESS)).thenReturn(shipment);
+        when(access.document(1L, FulfillmentAudience.BUSINESS)).thenReturn(document);
+        when(shipmentMapper.update(isNull(), any())).thenReturn(1);
+        when(aggregation.aggregate(document)).thenReturn(new ShipmentAggregate("SHIPPED", 5, 5, 2, false));
+
+        service.confirm(2L);
+
+        verify(events).record(1L, 1L, "PACKAGE_RECEIVED", "PENDING", "CONFIRMED", null);
     }
 
     private Shipment shipment() {

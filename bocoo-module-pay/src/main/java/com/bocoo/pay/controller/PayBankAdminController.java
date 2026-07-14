@@ -21,14 +21,14 @@ import org.springframework.web.bind.annotation.RestController;
 public class PayBankAdminController {
     private final PayBankPaymentService service;
 
-    @SaCheckPermission("pay:bank:review")
+    @SaCheckPermission("platform:finance:bank:review")
     @PostMapping("/bank/{extensionId}/review")
     public R<PayAttemptVo> review(@PathVariable Long extensionId,
                                   @Valid @RequestBody PayBankReviewBo bo) {
         return R.ok(PayAttemptVo.from(service.review(extensionId, bo)));
     }
 
-    @SaCheckPermission("pay:order:supplement")
+    @SaCheckPermission("platform:finance:payment:supplement")
     @PostMapping("/order/{payOrderId}/supplement")
     public R<PayAttemptVo> supplement(@PathVariable Long payOrderId,
                                       @Valid @RequestBody PaySupplementBo bo) {

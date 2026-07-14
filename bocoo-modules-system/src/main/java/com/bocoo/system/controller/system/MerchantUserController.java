@@ -12,7 +12,6 @@ import com.bocoo.common.core.enums.UserStatus;
 import com.bocoo.common.core.enums.UserType;
 import com.bocoo.common.core.exception.ServiceException;
 import com.bocoo.common.core.utils.MessageUtils;
-import com.bocoo.common.core.utils.StreamUtils;
 import com.bocoo.common.core.utils.StringUtils;
 import com.bocoo.common.log.annotation.Log;
 import com.bocoo.common.log.enums.BusinessType;
@@ -24,7 +23,6 @@ import com.bocoo.system.domain.bo.SysUserBo;
 import com.bocoo.system.domain.entity.SysDept;
 import com.bocoo.system.domain.entity.SysRole;
 import com.bocoo.system.domain.entity.SysTenant;
-import com.bocoo.system.domain.vo.SysRoleVo;
 import com.bocoo.system.domain.vo.SysUserVo;
 import com.bocoo.system.mapper.SysTenantMapper;
 import com.bocoo.system.service.MerchantAccountDefaultsService;
@@ -36,7 +34,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
@@ -74,18 +71,18 @@ public class MerchantUserController extends BaseController {
                                           @RequestParam(value = "tenantId", required = false) Long tenantId) {
         Long targetTenantId = resolveTargetTenantId(tenantId);
         Map<String, Object> ajax = new HashMap<>();
-        ajax.put("roles", withTargetTenant(targetTenantId, this::selectMerchantRoles));
-        ajax.put("posts", List.of());
         if (ObjectUtil.isNotNull(userId)) {
             SysUserVo sysUser = withTargetTenant(targetTenantId, () -> {
                 userService.checkUserDataScope(userId);
                 return userService.selectUserById(userId);
             });
+            sysUser.setDeptId(null);
+            sysUser.setDeptName(null);
+            sysUser.setRoles(null);
+            sysUser.setRoleIds(null);
+            sysUser.setRoleId(null);
+            sysUser.setPostIds(null);
             ajax.put("user", sysUser);
-            ajax.put("postIds", List.of());
-            ajax.put("roleIds", StreamUtils.toList(sysUser.getRoles(), SysRoleVo::getRoleId));
-        } else {
-            ajax.put("roleIds", List.of(withTargetTenant(targetTenantId, () -> merchantDefaultsService.ensureEmployeeRole().getRoleId())));
         }
         return R.ok(ajax);
     }
@@ -100,10 +97,10 @@ public class MerchantUserController extends BaseController {
     }
 
     private R<Void> addInTenant(SysUserBo user, Long targetTenantId) {
-        SysDept storeDept = merchantDefaultsService.ensureStoreDept();
+        SysDept defaultDept = merchantDefaultsService.ensureDefaultDept();
         SysRole employeeRole = merchantDefaultsService.ensureEmployeeRole();
         user.setTenantId(targetTenantId);
-        user.setDeptId(storeDept.getDeptId());
+        user.setDeptId(defaultDept.getDeptId());
         user.setRoleIds(new Long[] {employeeRole.getRoleId()});
         user.setPostIds(new Long[0]);
         user.setUserType(UserType.SYS_USER.getUserType());
@@ -160,7 +157,7 @@ public class MerchantUserController extends BaseController {
         }
         for (Long userId : userIds) {
             if (userService.userHasRoleKey(userId, UserConstants.ADMIN_ROLE_KEY)
-                || userService.userHasRoleKey(userId, MerchantAccountDefaultsService.DEALER_ROLE_KEY)) {
+                || userService.userHasRoleKey(userId, MerchantAccountDefaultsService.OWNER_ROLE_KEY)) {
                 return R.fail(MessageUtils.message("merchant.user.admin.delete.denied"));
             }
         }
@@ -191,22 +188,6 @@ public class MerchantUserController extends BaseController {
             userService.checkUserDataScope(user.getUserId());
             return toAjax(userService.updateUserStatus(user.getUserId(), user.getStatus()));
         });
-    }
-
-    private List<SysRoleVo> selectMerchantRoles() {
-        MerchantAccountDefaultsService.MerchantDefaults defaults = merchantDefaultsService.ensureDefaults();
-        return List.of(toRoleVo(defaults.employeeRole()));
-    }
-
-    private SysRoleVo toRoleVo(SysRole role) {
-        SysRoleVo vo = new SysRoleVo();
-        vo.setRoleId(role.getRoleId());
-        vo.setTenantId(role.getTenantId());
-        vo.setRoleName(role.getRoleName());
-        vo.setRoleKey(role.getRoleKey());
-        vo.setRoleSort(role.getRoleSort());
-        vo.setStatus(role.getStatus());
-        return vo;
     }
 
     private Long resolveTargetTenantId(Long requestTenantId) {

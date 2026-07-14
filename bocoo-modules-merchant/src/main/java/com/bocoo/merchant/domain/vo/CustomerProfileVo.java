@@ -17,6 +17,9 @@ public class CustomerProfileVo implements Serializable {
 
     private Long customerId;
     private Long tenantId;
+    private String businessOrigin;
+    private Long salesStoreId;
+    private Long deptId;
     private Long merchantId;
     private String merchantName;
     private String customerName;

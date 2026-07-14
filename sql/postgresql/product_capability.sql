@@ -1901,8 +1901,9 @@ WHERE parent_id IN (
 
 INSERT INTO sys_menu (menu_id, tenant_id, parent_id, menu_name, i18n_key, order_num, path, component, query_param, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, update_by, update_time, remark)
 VALUES
-    (24200, 1, 0, 'Basic Information', 'productCenter.menu.masterData', 30, 'product-master', NULL, NULL, '1', '0', 'M', '1', '1', NULL, 'pc-master', 'system', now(), NULL, NULL, '产品能力-基础信息'),
-    (24300, 1, 0, 'Formula Management', 'productCenter.menu.formulaRoot', 31, 'product-formula', NULL, NULL, '1', '0', 'M', '1', '1', NULL, 'pc-formula', 'system', now(), NULL, NULL, '产品能力-配方管理')
+    (24200, 1, 0, '基础信息', 'productCenter.menu.masterData', 100, 'product-master', NULL, NULL, '1', '0', 'M', '1', '1', NULL, 'pc-master', 'system', now(), NULL, NULL, '产品能力-基础信息'),
+    (24300, 1, 0, '配方管理', 'productCenter.menu.formulaRoot', 110, 'product-formula', NULL, NULL, '1', '0', 'M', '1', '1', NULL, 'pc-formula', 'system', now(), NULL, NULL, '产品能力-配方管理'),
+    (24400, 1, 0, '产品经营', 'productCenter.menu.productOperations', 120, 'product-operations', NULL, NULL, '1', '0', 'M', '1', '1', NULL, 'product', 'system', now(), NULL, NULL, '产品经营')
 ON CONFLICT (menu_id) DO UPDATE
 SET tenant_id = EXCLUDED.tenant_id,
     parent_id = EXCLUDED.parent_id,
@@ -1930,9 +1931,9 @@ VALUES
     (24303, 1, 24300, 'Formula Materials', 'productCenter.menu.formulaMaterials', 2, 'formulas/materials', 'product-formula/formulas/materials', NULL, '1', '0', 'C', '1', '1', 'product:formula:setup', 'pc-formula-material', 'system', now(), NULL, NULL, '配方原料'),
     (24304, 1, 24300, 'Formula Options', 'productCenter.menu.formulaOptions', 3, 'formulas/options', 'product-formula/formulas/options', NULL, '1', '0', 'C', '1', '1', 'product:formula:setup', 'pc-formula-option', 'system', now(), NULL, NULL, '配方选项'),
     (24305, 1, 24300, 'Formula Simulation', 'productCenter.menu.formulaSimulation', 4, 'formulas/simulation', 'product-formula/formulas/simulation', NULL, '1', '0', 'C', '1', '1', 'product:formula:setup', 'pc-formula-simulation', 'system', now(), NULL, NULL, '配方模拟'),
-    (24401, 1, 24300, 'Sale Products', 'productCenter.menu.saleProducts', 6, 'sale-products', 'product-pricing/sale-products', NULL, '1', '0', 'C', '1', '1', 'product:sale-product:list', 'pc-sale-product', 'system', now(), NULL, NULL, '可售产品'),
-    (24403, 1, 24300, 'Shipping Templates', 'productCenter.menu.shippingTemplates', 7, 'shipping-templates', 'product-pricing/shipping-templates', NULL, '1', '0', 'C', '1', '1', 'product:shipping-template:list', 'pc-shipping-template', 'system', now(), NULL, NULL, '邮费模板'),
-    (24402, 1, 24300, 'Price Settings', 'productCenter.menu.priceSettings', 8, 'price-settings', 'product-pricing/price-settings', NULL, '1', '0', 'C', '1', '1', 'product:pricing:query', 'pc-pricing', 'system', now(), NULL, NULL, '价格设置'),
+    (24401, 1, 24400, '可售产品', 'productCenter.menu.saleProducts', 1, 'sale-products', 'product-pricing/sale-products', NULL, '1', '0', 'C', '1', '1', 'product:sale-product:list', 'pc-sale-product', 'system', now(), NULL, NULL, '可售产品'),
+    (24402, 1, 24400, '价格设置', 'productCenter.menu.priceSettings', 2, 'price-settings', 'product-pricing/price-settings', NULL, '1', '0', 'C', '1', '1', 'product:pricing:query', 'pc-pricing', 'system', now(), NULL, NULL, '价格设置'),
+    (24403, 1, 24400, '邮费模板', 'productCenter.menu.shippingTemplates', 3, 'shipping-templates', 'product-pricing/shipping-templates', NULL, '1', '0', 'C', '1', '1', 'product:shipping-template:list', 'pc-shipping-template', 'system', now(), NULL, NULL, '邮费模板'),
     (24212, 1, 24200, 'Product Categories', 'productCenter.menu.categories', 1, 'categories', 'product-center/base', NULL, '1', '0', 'C', '1', '1', 'product:base:list', 'pc-category', 'system', now(), NULL, NULL, '产品分类'),
     (24213, 1, 24200, 'Base Dictionaries', 'productCenter.menu.productDicts', 2, 'product-dicts', 'product-center/product-dicts', NULL, '1', '0', 'C', '1', '1', 'product:dict:list', 'pc-dict', 'system', now(), NULL, NULL, '基础字典'),
     (24206, 1, 24200, 'Units', 'productCenter.menu.units', 3, 'units', 'product-center/base', NULL, '1', '0', 'C', '1', '1', 'product:unit:list', 'pc-unit', 'system', now(), NULL, NULL, '单位管理'),
@@ -1941,7 +1942,7 @@ VALUES
     (24204, 1, 24200, 'Material Attributes', 'productCenter.menu.baseAttributes', 6, 'base-attributes', 'product-center/base', NULL, '1', '0', 'C', '1', '1', 'product:base-attribute:list', 'pc-attribute', 'system', now(), NULL, NULL, '物料属性'),
     (24202, 1, 24200, 'Materials', 'productCenter.menu.materials', 7, 'materials', 'product-center/base', NULL, '1', '0', 'C', '1', '1', 'product:base:list', 'pc-material', 'system', now(), NULL, NULL, '物料管理'),
     (24208, 1, 24200, 'Material Attribute Values', 'productCenter.menu.materialAttributes', 89, 'material-attributes', 'product-center/base', NULL, '1', '0', 'C', '0', '1', 'product:material-attribute:list', 'pc-attribute', 'system', now(), NULL, NULL, '物料属性值，从物料管理抽屉同步维护'),
-    (24205, 1, 24200, 'Media Assets', 'productCenter.menu.mediaAssets', 94, 'media-assets', 'product-center/assets', NULL, '1', '0', 'C', '0', '1', 'product:asset:list', 'pc-media', 'system', now(), NULL, NULL, '资料资产'),
+    (24205, 1, 24200, '资料资产', 'productCenter.menu.mediaAssets', 8, 'media-assets', 'product-center/assets', NULL, '1', '0', 'C', '1', '1', 'product:asset:list', 'pc-media', 'system', now(), NULL, NULL, '资料资产'),
     (24210, 1, 24200, 'Media Bindings', 'productCenter.menu.mediaBindings', 94, 'media-bindings', 'product-center/assets', NULL, '1', '0', 'C', '0', '1', 'product:asset:list', 'pc-media-link', 'system', now(), NULL, NULL, '资料绑定，附件关联台账，默认不在基础资料一级菜单展示')
 ON CONFLICT (menu_id) DO UPDATE
 SET tenant_id = EXCLUDED.tenant_id,
@@ -2075,6 +2076,23 @@ SELECT 1, menu_id, 1
 FROM sys_menu
 WHERE menu_id BETWEEN 24200 AND 24599
 ON CONFLICT (role_id, menu_id) DO NOTHING;
+
+INSERT INTO sys_role (role_id, tenant_id, role_name, role_key, role_sort, data_scope, menu_check_strictly, dept_check_strictly, status, del_flag, create_by, create_time, remark)
+VALUES (244901, 1, '平台产品经理', 'platform_product_manager', 30, '1', true, true, '1', '0', 'system', now(), '平台产品与配方经营')
+ON CONFLICT (role_id) DO UPDATE
+SET role_name = EXCLUDED.role_name, role_key = EXCLUDED.role_key, role_sort = EXCLUDED.role_sort,
+    data_scope = EXCLUDED.data_scope, status = EXCLUDED.status, del_flag = EXCLUDED.del_flag,
+    update_by = 'system', update_time = now(), remark = EXCLUDED.remark;
+
+INSERT INTO sys_role_menu (role_id, menu_id, tenant_id)
+SELECT r.role_id, m.menu_id, 1
+FROM sys_role r
+JOIN sys_menu m ON m.tenant_id = r.tenant_id
+WHERE r.tenant_id = 1
+  AND r.role_key = 'platform_product_manager'
+  AND (m.menu_id IN (24200, 24300, 24400) OR m.parent_id BETWEEN 24200 AND 24499
+       OR m.menu_id BETWEEN 24200 AND 24499)
+ON CONFLICT DO NOTHING;
 
 DELETE FROM sys_dict_data
 WHERE dict_type IN (
