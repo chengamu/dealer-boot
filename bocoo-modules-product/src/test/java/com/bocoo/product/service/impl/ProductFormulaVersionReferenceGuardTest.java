@@ -15,6 +15,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -63,6 +64,19 @@ class ProductFormulaVersionReferenceGuardTest {
         assertThatThrownBy(() -> guard.assertNoBusinessReference(9001L))
             .isInstanceOf(ServiceException.class);
         verify(priceSettingMapper, never()).selectCount(any());
+    }
+
+    @Test
+    void enabledSaleProductBlocksStop() {
+        when(saleProductMapper.selectCount(any())).thenReturn(1L);
+
+        assertThatThrownBy(() -> guard.assertNoEnabledSaleProductByFormula(9001L))
+            .isInstanceOf(ServiceException.class);
+        verify(priceSettingMapper, never()).selectCount(any());
+        verify(saleProductMapper).selectCount(argThat(wrapper ->
+            wrapper != null
+                && wrapper.getSqlSegment().contains("formula_id")
+                && !wrapper.getSqlSegment().contains("formula_version_id")));
     }
 
     @Test

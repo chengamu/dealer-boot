@@ -84,6 +84,24 @@ const hiddenLayoutRoutes: RouteRecordRaw[] = [
     meta: { title: 'customer.quote.workbenchTitle', activeMenu: '/sales/estimates', hidden: true }
   },
   {
+    path: '/sales/dashboard',
+    name: 'SalesDashboard',
+    component: () => import('@/pages/dashboard/DashboardPage.vue'),
+    meta: { title: 'sales.dashboard.menu', activeMenu: '/sales/dashboard', hidden: true, requiresMenuAuthorization: true }
+  },
+  {
+    path: '/sales/quickOrders',
+    name: 'QuickOrderList',
+    component: () => import('@/pages/quick-order/QuickOrderDraftListPage.vue'),
+    meta: { title: 'dealer.quickOrder.menu', activeMenu: '/sales/quickOrders', hidden: true, requiresMenuAuthorization: true }
+  },
+  {
+    path: '/salesOperations/dashboard',
+    name: 'PlatformSalesDashboard',
+    component: () => import('@/pages/platform-operations/PlatformOperationsOverviewPage.vue'),
+    meta: { title: 'platform.sales.dashboard', activeMenu: '/salesOperations/dashboard', hidden: true, requiresMenuAuthorization: true }
+  },
+  {
     path: '/sales-orders/documents/:id',
     name: 'SalesDocumentDetail',
     component: () => import('@/pages/dealer-sales/SalesDocumentDetailPage.vue'),

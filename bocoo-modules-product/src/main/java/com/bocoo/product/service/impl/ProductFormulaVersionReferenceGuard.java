@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-class ProductFormulaVersionReferenceGuard extends ProductServiceSupport {
+public class ProductFormulaVersionReferenceGuard extends ProductServiceSupport {
 
     private final ProductSaleProductMapper saleProductMapper;
     private final ProductPriceSettingMapper priceSettingMapper;
@@ -31,6 +31,15 @@ class ProductFormulaVersionReferenceGuard extends ProductServiceSupport {
         }
     }
 
+    void assertNoEnabledSaleProductByFormula(Long formulaId) {
+        if (formulaId == null) {
+            return;
+        }
+        if (countEnabledSaleProductsByFormula(formulaId) > 0) {
+            throw ServiceException.ofMessageKey("product.formula.stopSaleProductEnabled");
+        }
+    }
+
     private boolean hasReference(Long formulaVersionId) {
         return countSaleProducts(formulaVersionId) > 0
             || countPriceSettings(formulaVersionId) > 0
@@ -42,6 +51,12 @@ class ProductFormulaVersionReferenceGuard extends ProductServiceSupport {
     private long countSaleProducts(Long formulaVersionId) {
         return saleProductMapper.selectCount(activeQuery(ProductSaleProduct.class)
             .eq("formula_version_id", formulaVersionId));
+    }
+
+    private long countEnabledSaleProductsByFormula(Long formulaId) {
+        return saleProductMapper.selectCount(activeQuery(ProductSaleProduct.class)
+            .eq("formula_id", formulaId)
+            .eq("status", STATUS_ENABLED));
     }
 
     private long countPriceSettings(Long formulaVersionId) {

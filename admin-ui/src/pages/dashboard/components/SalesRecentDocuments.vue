@@ -34,6 +34,7 @@
         <el-table-column :label="t('common.operate')" width="78" align="center">
           <template #default="{ row }"><el-button link type="primary" @click="emit('open-quote', row)">{{ t('common.detail') }}</el-button></template>
         </el-table-column>
+        <template #empty><el-empty :image="salesOrdersEmpty" :image-size="200" :description="t('dashboard.sales.noData')" /></template>
       </el-table>
     </section>
 
@@ -73,6 +74,7 @@
         <el-table-column :label="t('common.operate')" width="78" align="center">
           <template #default="{ row }"><el-button link type="primary" @click="emit('open-order', row)">{{ t('common.detail') }}</el-button></template>
         </el-table-column>
+        <template #empty><el-empty :image="salesOrdersEmpty" :image-size="200" :description="t('dashboard.sales.noData')" /></template>
       </el-table>
     </section>
   </div>
@@ -81,6 +83,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import type { RecentOrder, RecentQuote, SalesDashboard } from '@/api/sales-dashboard'
+import salesOrdersEmpty from '@/assets/illustrations/sales-orders-empty.png'
 import {
   formatDashboardMoney,
   orderStatusText,
@@ -107,14 +110,16 @@ const { t } = useI18n()
 </script>
 
 <style scoped>
-.sales-recent-documents { display: grid; gap: 10px; min-width: 0; }
-.sales-dashboard-panel { overflow: hidden; border: 1px solid #e6edf7; border-radius: 8px; background: #fff; }
-.sales-dashboard-panel header { display: flex; align-items: center; justify-content: space-between; height: 42px; padding: 0 14px; border-bottom: 1px solid #eef2f8; }
-.sales-dashboard-panel h2 { margin: 0; color: #1f2a5c; font-size: 14px; }
+.sales-recent-documents { display: grid; gap: 16px; min-width: 0; }
+.sales-dashboard-panel { overflow: hidden; border: 1px solid var(--sales-border, #e6edf7); border-radius: 12px; background: #fff; box-shadow: var(--sales-shadow, 0 4px 16px rgb(33 83 197 / 5%)); }
+.sales-dashboard-panel header { display: flex; align-items: center; justify-content: space-between; height: 52px; padding: 0 18px; border-bottom: 1px solid #eef2f8; }
+.sales-dashboard-panel h2 { margin: 0; color: #1f2a44; font-size: 16px; }
 .sales-document-name { display: grid; gap: 2px; line-height: 1.35; }
 .sales-document-name span:last-child { color: #667085; }
 :deep(.el-table) { --el-table-header-bg-color: #f7f9fc; }
-:deep(.el-table th.el-table__cell) { color: #667085; font-weight: 600; }
-:deep(.el-table td.el-table__cell) { padding-top: 10px; padding-bottom: 10px; }
+:deep(.el-table th.el-table__cell) { height: 46px; color: #475467; font-weight: 600; }
+:deep(.el-table td.el-table__cell) { padding-top: 12px; padding-bottom: 12px; }
 :deep(.el-tag) { border-radius: 4px; }
+:deep(.el-empty) { min-height: 196px; padding: 22px 0 26px; }
+:deep(.el-empty__description) { margin-top: 8px; }
 </style>

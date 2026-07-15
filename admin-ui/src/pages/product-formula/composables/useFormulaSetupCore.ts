@@ -220,7 +220,9 @@ export function useFormulaSetupCore(props: { setupSection?: 'content' | 'options
     try {
       if (activeTab.value === 'options') await productFormulaApi.validateOptions(currentFormulaId.value)
       else await productFormulaApi.validateMaterials(currentFormulaId.value)
-      ElMessage.success(t('productCenter.formula.validation.pass'))
+      ElMessage.success(t(activeTab.value === 'options'
+        ? 'productCenter.formula.validation.optionPass'
+        : 'productCenter.formula.validation.materialPass'))
       await loadSetup()
     } finally {
       validating.value = false

@@ -1,5 +1,6 @@
 package com.bocoo.product.service.impl;
 
+import com.baomidou.lock.annotation.Lock4j;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.bocoo.common.core.exception.ServiceException;
 import com.bocoo.common.core.utils.StringUtils;
@@ -38,6 +39,7 @@ public class ProductFormulaReviewLifecycle extends ProductServiceSupport {
     private final ProductFormulaSetupService setupService;
     private final ProductChangeLogService changeLogService;
     private final ProductFormulaSnapshotJson snapshotJson;
+    private final ProductFormulaVersionReferenceGuard versionReferenceGuard;
 
     @Transactional(rollbackFor = Exception.class)
     public Boolean submitReview(Long id) {
@@ -152,11 +154,13 @@ public class ProductFormulaReviewLifecycle extends ProductServiceSupport {
     }
 
     @Transactional(rollbackFor = Exception.class)
+    @Lock4j(name = "product-formula-status", keys = {"#id"})
     public Boolean stop(Long id) {
         ProductFormula current = requireFormula(id);
         if (!STATUS_EFFECTIVE.equals(current.getStatus())) {
             throw ServiceException.ofMessageKey("product.formula.stopDenied");
         }
+        versionReferenceGuard.assertNoEnabledSaleProductByFormula(current.getFormulaId());
         ProductFormula after = snapshotJson.copyStatusSnapshot(current);
         after.setStatus(STATUS_STOPPED);
         boolean updated = formulaMapper.update(null, new LambdaUpdateWrapper<ProductFormula>()
@@ -238,7 +242,7 @@ public class ProductFormulaReviewLifecycle extends ProductServiceSupport {
     }
 
     private ProductFormula requireFormula(Long id) {
-        ProductFormula current = id == null ? null : formulaMapper.selectById(id);
+        ProductFormula current = id == null ? null : formulaMapper.selectActiveByIdForUpdate(id);
         if (current == null) {
             throw ServiceException.ofMessageKey("product.base.edit.notFound");
         }

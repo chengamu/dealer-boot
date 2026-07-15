@@ -27,7 +27,7 @@ public class SalesDashboardQuoteAttentionRepository {
                 .isNull("sales_document_id").between("valid_until", today, today.plusDays(7)),
                 today, today.plusDays(7)),
             group(scope, "QUOTE_UNCONVERTED", queries.quote(scope).eq("status", "CONFIRMED")
-                .isNull("sales_document_id").ge("valid_until", today), today, null)
+                .isNull("sales_document_id").gt("valid_until", today.plusDays(7)), today.plusDays(8), null)
         ));
     }
 

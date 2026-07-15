@@ -18,6 +18,7 @@ import com.bocoo.product.service.impl.ProductFormulaReviewRecordQueryService;
 import com.bocoo.product.service.impl.ProductFormulaRevisionLifecycle;
 import com.bocoo.product.service.impl.ProductFormulaServiceImpl;
 import com.bocoo.product.service.impl.ProductFormulaSnapshotJson;
+import com.bocoo.product.service.impl.ProductFormulaVersionReferenceGuard;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -56,6 +57,8 @@ class ProductFormulaServiceTest {
     private ProductChangeLogService changeLogService;
     @Mock
     private ProductFormulaRevisionLifecycle revisionLifecycle;
+    @Mock
+    private ProductFormulaVersionReferenceGuard versionReferenceGuard;
 
     private ProductFormulaServiceImpl formulaService;
 
@@ -72,7 +75,8 @@ class ProductFormulaServiceTest {
             versionMapper,
             setupService,
             changeLogService,
-            new ProductFormulaSnapshotJson()
+            new ProductFormulaSnapshotJson(),
+            versionReferenceGuard
         );
         formulaService = new ProductFormulaServiceImpl(
             formulaMapper,

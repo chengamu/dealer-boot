@@ -6,7 +6,6 @@ import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.bocoo.common.core.config.properties.TenantProperties;
 import com.bocoo.common.core.constant.CacheConstants;
 import com.bocoo.common.core.constant.Constants;
 import com.bocoo.common.core.constant.UserConstants;
@@ -67,7 +66,6 @@ public class SysLoginService {
     private final SysTenantMapper tenantMapper;
     private final SysTenantApplyMapper tenantApplyMapper;
     private final MerchantProfileService merchantProfileService;
-    private final TenantProperties tenantProperties;
     private final GoogleAuthService googleAuthService;
 
     private static final int DEFAULT_MAX_RETRY_COUNT = 5;
@@ -119,10 +117,9 @@ public class SysLoginService {
      * @return 登录成功后生成的token值
      */
     public String thirdLogin(String username, String password) {
-        return TenantContextHolder.callWithTenant(tenantProperties.getPlatformId(), () -> {
-            // 框架登录不限制从什么表查询 只要最终构建出 LoginUser 即可
-            SysUserVo user = loadUserByUsernameOrEmail(username);
-
+        // 第三方入口尚无商户上下文，仅定位用户时忽略租户。
+        SysUserVo user = TenantContextHolder.callWithIgnore(() -> loadUserByUsernameOrEmail(username));
+        return TenantContextHolder.callWithTenant(user.getTenantId(), () -> {
             // 验证用户登录信息
             checkLogin(LoginType.PASSWORD, username, () -> !BCrypt.checkpw(password, user.getPassword()));
 

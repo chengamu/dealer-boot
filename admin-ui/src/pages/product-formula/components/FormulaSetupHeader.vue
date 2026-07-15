@@ -26,7 +26,12 @@
         <span>{{ formula.formulaName || '-' }}</span>
         <el-tag size="small" type="primary">{{ formula.currentVersionLabel || draftVersionLabel }}</el-tag>
         <el-tag size="small" :type="statusTagType(formula.status)">{{ statusText(formula.status) }}</el-tag>
-        <el-tag size="small" :type="validationTagType(formula.latestValidationStatus)">{{ validationText(formula.latestValidationStatus) }}</el-tag>
+        <el-tag size="small" :type="validationTagType(sectionValidationStatus)">
+          {{ sectionValidationLabel }}：{{ validationText(sectionValidationStatus) }}
+        </el-tag>
+        <el-tag size="small" :type="validationTagType(formula.latestValidationStatus)">
+          {{ t('productCenter.formula.validation.overall') }}：{{ validationText(formula.latestValidationStatus) }}
+        </el-tag>
       </div>
       <div class="setup-header__meta">
         <span>{{ t('productCenter.formula.code') }}：{{ formula.formulaCode || '-' }}</span>
@@ -48,11 +53,12 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import { getMessage } from '@/locales'
 import { useLocaleStore } from '@/stores/locale'
 import type { ProductFormulaVO } from '@/api/product-capability/types'
 
-defineProps<{
+const props = defineProps<{
   formula: ProductFormulaVO
   draftVersionLabel: string
   saving: boolean
@@ -79,6 +85,12 @@ defineEmits<{
 
 const localeStore = useLocaleStore()
 const t = (key: string) => getMessage(key, localeStore.language)
+const sectionValidationStatus = computed(() => props.activeSection === 'options'
+  ? props.formula.optionValidationStatus
+  : props.formula.materialValidationStatus)
+const sectionValidationLabel = computed(() => props.activeSection === 'options'
+  ? t('productCenter.formula.actions.options')
+  : t('productCenter.formula.actions.materials'))
 </script>
 
 <style scoped>
@@ -90,6 +102,11 @@ const t = (key: string) => getMessage(key, localeStore.language)
   background: #fff;
   border: 1px solid #e6ebf2;
   border-radius: 8px;
+}
+
+.setup-header > :first-child {
+  min-width: 0;
+  flex: 1;
 }
 
 .setup-header__topline {
@@ -135,9 +152,10 @@ const t = (key: string) => getMessage(key, localeStore.language)
 
 .setup-header__actions {
   display: flex;
+  flex: 0 0 auto;
   align-items: flex-start;
   gap: 8px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: flex-end;
 }
 </style>

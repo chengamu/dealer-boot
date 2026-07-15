@@ -1,5 +1,6 @@
 package com.bocoo.product.service.impl;
 
+import com.baomidou.lock.annotation.Lock4j;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.bocoo.common.core.exception.ServiceException;
@@ -40,6 +41,7 @@ public class ProductSaleProductServiceImpl extends ProductServiceSupport impleme
     static final String PRICE_NOT_READY = "NOT_READY";
     static final String PRICE_READY = "READY";
     static final String STATUS_EFFECTIVE = ProductFormulaServiceImpl.STATUS_EFFECTIVE;
+    private static final String SALE_PRODUCT_STATUS_LOCK = "product-sale-product-status";
 
     private final ProductSaleProductMapper saleProductMapper;
     private final ProductPriceSettingMapper settingMapper;
@@ -49,22 +51,20 @@ public class ProductSaleProductServiceImpl extends ProductServiceSupport impleme
     private final ProductFormulaVersionMapper versionMapper;
     private final ProductChangeLogService changeLogService;
     private final ProductQuoteReferenceGuard quoteReferenceGuard;
+    private final ProductSaleProductEnableGuard enableGuard;
 
     @Override
     public TableDataInfo<ProductSaleProductVo> queryPageList(ProductSaleProductBo bo, PageQuery pageQuery) {
         return page(saleProductMapper, pageQuery, buildQueryWrapper(bo), q -> q.orderByDesc("update_time"));
     }
-
     @Override
     public List<ProductSaleProductVo> queryList(ProductSaleProductBo bo) {
         return saleProductMapper.selectVoList(applyDefaultSort(null, buildQueryWrapper(bo), q -> q.orderByDesc("update_time")));
     }
-
     @Override
     public ProductSaleProductVo queryById(Long id) {
         return saleProductMapper.selectVoById(id);
     }
-
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Boolean insertByBo(ProductSaleProductBo bo) {
@@ -80,7 +80,6 @@ public class ProductSaleProductServiceImpl extends ProductServiceSupport impleme
         }
         return inserted;
     }
-
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Boolean updateByBo(ProductSaleProductBo bo) {
@@ -101,7 +100,6 @@ public class ProductSaleProductServiceImpl extends ProductServiceSupport impleme
         }
         return updated;
     }
-
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Boolean deleteWithValidByIds(Long[] ids) {
@@ -121,13 +119,17 @@ public class ProductSaleProductServiceImpl extends ProductServiceSupport impleme
         }
         return remove(saleProductMapper, ids);
     }
-
     @Override
+    @Lock4j(name = SALE_PRODUCT_STATUS_LOCK, keys = {"#id"})
+    @Transactional(rollbackFor = Exception.class)
     public Boolean updateStatus(Long id, String status) {
         String normalizedStatus = normalizeStatus(status);
         ProductSaleProduct current = requireSaleProduct(id);
         if (STATUS_ENABLED.equals(normalizedStatus) && !PRICE_READY.equals(current.getPriceStatus())) {
             throw ServiceException.ofMessageKey("product.saleProduct.priceNotReady");
+        }
+        if (STATUS_ENABLED.equals(normalizedStatus)) {
+            enableGuard.assertCanEnable(current);
         }
         boolean updated = saleProductMapper.update(null, new LambdaUpdateWrapper<ProductSaleProduct>()
             .eq(ProductSaleProduct::getSaleProductId, id)
@@ -139,7 +141,6 @@ public class ProductSaleProductServiceImpl extends ProductServiceSupport impleme
         }
         return updated;
     }
-
     @Override
     public ReferenceCheckResultVo checkReferences(Long id) {
         List<ProductPriceSetting> settings = settingMapper.selectList(activeQuery(ProductPriceSetting.class).eq("sale_product_id", id));
@@ -158,7 +159,6 @@ public class ProductSaleProductServiceImpl extends ProductServiceSupport impleme
         }
         return referenceResult(count, "product.saleProduct.priceRuleReferenced", "Price rules: " + count);
     }
-
     private QueryWrapper<ProductSaleProduct> buildQueryWrapper(ProductSaleProductBo bo) {
         QueryWrapper<ProductSaleProduct> q = activeQuery(ProductSaleProduct.class);
         if (bo != null) {
@@ -173,7 +173,6 @@ public class ProductSaleProductServiceImpl extends ProductServiceSupport impleme
         }
         return q;
     }
-
     private ProductFormula normalizeByFormula(ProductSaleProductBo bo) {
         if (bo == null || bo.getFormulaId() == null) {
             throw ServiceException.ofMessageKey("product.saleProduct.formulaRequired");
@@ -213,7 +212,6 @@ public class ProductSaleProductServiceImpl extends ProductServiceSupport impleme
         }
         return formula;
     }
-
     private void validateUnique(ProductSaleProductBo bo) {
         long codeCount = saleProductMapper.selectCount(activeQuery(ProductSaleProduct.class)
             .eq("sale_product_code", bo.getSaleProductCode())
@@ -230,21 +228,18 @@ public class ProductSaleProductServiceImpl extends ProductServiceSupport impleme
             throw ServiceException.ofMessageKey("product.saleProduct.naturalExists");
         }
     }
-
     private ProductSaleProduct requireSaleProduct(Long id) {
-        ProductSaleProduct product = id == null ? null : saleProductMapper.selectById(id);
+        ProductSaleProduct product = id == null ? null : saleProductMapper.selectActiveByIdForUpdate(id);
         if (product == null || !"0".equals(StringUtils.blankToDefault(product.getDelFlag(), "0"))) {
             throw ServiceException.ofMessageKey("product.saleProduct.notFound");
         }
         return product;
     }
-
     private void assertEditable(ProductSaleProduct product) {
         if (STATUS_ENABLED.equals(product.getStatus())) {
             throw ServiceException.ofMessageKey("product.saleProduct.enabledEditDenied");
         }
     }
-
     private ProductPriceSetting ensurePriceSetting(ProductSaleProduct product, ProductFormula formula) {
         ProductPriceSetting setting = settingMapper.selectOne(activeQuery(ProductPriceSetting.class)
             .eq("sale_product_id", product.getSaleProductId())
@@ -271,16 +266,13 @@ public class ProductSaleProductServiceImpl extends ProductServiceSupport impleme
         }
         return setting;
     }
-
     private void deleteEmptySettings(Long saleProductId) {
         settingMapper.delete(activeQuery(ProductPriceSetting.class).eq("sale_product_id", saleProductId));
     }
-
     private void normalizeRequiredFields(ProductSaleProductBo bo) {
         bo.setSaleProductCode(requiredTrim(bo.getSaleProductCode(), "product.saleProduct.codeRequired"));
         bo.setSaleProductName(requiredTrim(bo.getSaleProductName(), "product.saleProduct.nameRequired"));
     }
-
     private String requiredTrim(String value, String messageKey) {
         String trimmed = StringUtils.isBlank(value) ? null : value.trim();
         if (StringUtils.isBlank(trimmed)) {
@@ -288,7 +280,6 @@ public class ProductSaleProductServiceImpl extends ProductServiceSupport impleme
         }
         return trimmed;
     }
-
     private String normalizeStatus(String status) {
         String normalized = StringUtils.isBlank(status) ? null : status.trim().toUpperCase(Locale.ROOT);
         if (!STATUS_ENABLED.equals(normalized) && !STATUS_DISABLED.equals(normalized)) {
@@ -296,7 +287,6 @@ public class ProductSaleProductServiceImpl extends ProductServiceSupport impleme
         }
         return normalized;
     }
-
     private void recordChange(Long id, String code, String action, Object before, Object after) {
         changeLogService.record("PRODUCT_PRICING", "SALE_PRODUCT", id, code, action, before, after, null);
     }

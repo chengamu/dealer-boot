@@ -17,7 +17,7 @@
       show-overflow
       keep-source
       :row-config="{ isCurrent: true, keyField: 'clientId' }"
-      :cell-config="{ height: 44 }"
+      :cell-config="{ height: 80 }"
       :expand-config="{ accordion: true }"
       @checkbox-change="syncSelection"
       @checkbox-all="syncSelection"
@@ -56,11 +56,13 @@
           </el-select>
         </template>
       </vxe-column>
-      <vxe-column field="orderWidthInch" :title="t('customer.quote.width')" width="190" align="right">
-        <template #default="{ row }"><BusinessVxeInchCell v-model="row.orderWidthInch" :readonly="readonly" min="0.125" @change="markDirty(row)" @validity-change="updateValidity(row, 'width', $event)" /></template>
-      </vxe-column>
-      <vxe-column field="orderHeightInch" :title="t('customer.quote.height')" width="190" align="right">
-        <template #default="{ row }"><BusinessVxeInchCell v-model="row.orderHeightInch" :readonly="readonly" min="0.125" @change="markDirty(row)" @validity-change="updateValidity(row, 'height', $event)" /></template>
+      <vxe-column :title="t('dealer.sales.size')" width="208" align="right">
+        <template #default="{ row }">
+          <div class="quote-line-grid__size">
+            <label><span>W</span><BusinessVxeInchCell v-model="row.orderWidthInch" :readonly="readonly" min="0.125" @change="markDirty(row)" @validity-change="updateValidity(row, 'width', $event)" /></label>
+            <label><span>H</span><BusinessVxeInchCell v-model="row.orderHeightInch" :readonly="readonly" min="0.125" @change="markDirty(row)" @validity-change="updateValidity(row, 'height', $event)" /></label>
+          </div>
+        </template>
       </vxe-column>
       <vxe-column field="quantity" :title="t('customer.quote.quantity')" width="82" align="center">
         <template #default="{ row }"><BusinessVxeNumberCell v-model="row.quantity" mode="COUNT" integer-value :readonly="readonly" :min="1" :allow-zero="false" @change="markDirty(row)" @validity-change="updateValidity(row, 'quantity', $event)" /></template>
@@ -73,17 +75,14 @@
           </div>
         </template>
       </vxe-column>
-      <vxe-column :title="t('common.status')" width="105" align="center">
-        <template #default="{ row }"><el-tag :type="calculationType(row.calculationStatus)">{{ calculationText(row.calculationStatus) }}</el-tag></template>
-      </vxe-column>
-      <vxe-column :title="t('customer.quote.amount.unit')" width="105" align="right">
-        <template #default="{ row }">{{ money(row.unitAmount) }}</template>
-      </vxe-column>
-      <vxe-column :title="t('customer.quote.amount.shipping')" width="105" align="right">
-        <template #default="{ row }">{{ money(row.shippingAmount) }}</template>
-      </vxe-column>
-      <vxe-column :title="t('customer.quote.amount.line')" width="115" align="right">
-        <template #default="{ row }"><strong>{{ money(row.lineAmount) }}</strong></template>
+      <vxe-column :title="t('customer.quote.amount.line')" width="154" align="right">
+        <template #default="{ row }">
+          <div class="quote-line-grid__result">
+            <el-tag :type="calculationType(row.calculationStatus)">{{ calculationText(row.calculationStatus) }}</el-tag>
+            <strong>{{ money(row.lineAmount) }}</strong>
+            <span>{{ money(row.unitAmount) }} · {{ money(row.shippingAmount) }}</span>
+          </div>
+        </template>
       </vxe-column>
       <vxe-column v-if="!readonly" :title="t('common.operate')" width="88" fixed="right" align="center">
         <template #default="{ row }">
@@ -183,6 +182,12 @@ defineExpose({ expand, validate })
   font-size: 12px;
   line-height: 18px;
 }
+.quote-line-grid__size { display: grid; gap: 5px; }
+.quote-line-grid__size label { display: grid; grid-template-columns: 14px minmax(0, 1fr); align-items: center; gap: 5px; }
+.quote-line-grid__size label > span,
+.quote-line-grid__result span { color: #667085; font-size: 12px; }
+.quote-line-grid__result { display: flex; min-width: 0; flex-direction: column; align-items: flex-end; gap: 3px; }
+.quote-line-grid__result :deep(.el-tag) { max-width: 100%; }
 .quote-line-grid :deep(.vxe-table--render-default .vxe-body--column) { color: #344054; }
 .quote-line-grid :deep(.el-select), .quote-line-grid :deep(.el-input-number) { width: 100%; }
 .quote-line-grid :deep(.el-input__wrapper), .quote-line-grid :deep(.el-select__wrapper) { min-height: 32px; box-shadow: none; }

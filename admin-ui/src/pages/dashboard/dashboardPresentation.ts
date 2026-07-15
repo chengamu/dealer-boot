@@ -1,4 +1,4 @@
-import { Box, Document, DocumentAdd, Money, ShoppingCart, UserFilled } from '@element-plus/icons-vue'
+import { Box, CirclePlus, Document, Money, ShoppingCart, UserFilled } from '@element-plus/icons-vue'
 import type { Component } from 'vue'
 import type {
   DashboardAttentionGroup as ApiAttentionGroup,
@@ -49,8 +49,7 @@ export function buildMetricCards(dashboard: SalesDashboard, t: Translate): Dashb
       label: t('dashboard.sales.summary.activeQuotes'),
       value: String(summary.activeQuoteCount),
       caption: t('dashboard.sales.summary.activeQuotesCaption', {
-        confirmed: summary.expiringQuoteCount,
-        draft: summary.activeQuoteCount
+        expiring: summary.expiringQuoteCount
       }),
       target: 'quote',
       icon: Document
@@ -130,7 +129,7 @@ export function buildQuickActions(capabilities: DashboardCapabilities, t: Transl
       key: 'quote',
       title: t('dashboard.sales.actions.quote.title'),
       description: t('dashboard.sales.actions.quote.description'),
-      icon: DocumentAdd
+      icon: CirclePlus
     })
   }
   if (capabilities.quickOrder) {
@@ -192,8 +191,9 @@ function attentionTitle(reason: ApiAttentionGroup['reasonCode'], t: Translate) {
   return t('dashboard.sales.attention.quoteUnconverted')
 }
 
-export function formatDashboardMoney(value?: string | null, currency = 'USD') {
-  return formatCurrency(value, currency, 2, formatCurrency('0', currency))
+export function formatDashboardMoney(value?: string | null, currency?: string | null) {
+  const resolvedCurrency = currency || 'USD'
+  return formatCurrency(value, resolvedCurrency, 2, formatCurrency('0', resolvedCurrency))
 }
 
 export function quoteStatusText(status: RecentQuote['status'], t: Translate) {
@@ -259,6 +259,6 @@ export function shipmentStatusTone(status: RecentOrder['shipmentStatus']) {
   return 'info'
 }
 
-function money(value?: string | null, currency = 'USD') {
+function money(value?: string | null, currency?: string | null) {
   return formatDashboardMoney(value, currency)
 }

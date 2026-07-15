@@ -13,6 +13,7 @@ import com.bocoo.product.mapper.ProductPriceMaterialMapper;
 import com.bocoo.product.mapper.ProductPriceMaterialRuleMapper;
 import com.bocoo.product.mapper.ProductPriceSettingMapper;
 import com.bocoo.product.mapper.ProductSaleProductMapper;
+import com.bocoo.product.service.impl.ProductSaleProductEnableGuard;
 import com.bocoo.product.service.impl.ProductSaleProductServiceImpl;
 import com.bocoo.product.service.impl.ProductQuoteReferenceGuard;
 import org.junit.jupiter.api.BeforeEach;
@@ -65,14 +66,15 @@ class ProductSaleProductServiceTest {
             formulaMapper,
             versionMapper,
             changeLogService,
-            new ProductQuoteReferenceGuard(List.of())
+            new ProductQuoteReferenceGuard(List.of()),
+            new ProductSaleProductEnableGuard(formulaMapper, versionMapper)
         );
     }
 
     @Test
     void priceMustBeReadyBeforeSaleProductCanEnable() {
         ProductSaleProduct product = saleProduct("NOT_READY", "DISABLED");
-        when(saleProductMapper.selectById(9001L)).thenReturn(product);
+        when(saleProductMapper.selectActiveByIdForUpdate(9001L)).thenReturn(product);
 
         assertThatThrownBy(() -> saleProductService.updateStatus(9001L, "ENABLED"))
             .isInstanceOf(ServiceException.class);
@@ -83,7 +85,9 @@ class ProductSaleProductServiceTest {
     @Test
     void readySaleProductCanEnable() {
         ProductSaleProduct product = saleProduct("READY", "DISABLED");
-        when(saleProductMapper.selectById(9001L)).thenReturn(product);
+        when(saleProductMapper.selectActiveByIdForUpdate(9001L)).thenReturn(product);
+        when(formulaMapper.selectActiveByIdForUpdate(3001L)).thenReturn(formula());
+        when(versionMapper.selectById(7001L)).thenReturn(version(7001L, "EFFECTIVE"));
         when(saleProductMapper.update(isNull(), any(LambdaUpdateWrapper.class))).thenReturn(1);
 
         assertThat(saleProductService.updateStatus(9001L, "ENABLED")).isTrue();
@@ -91,6 +95,50 @@ class ProductSaleProductServiceTest {
         verify(changeLogService).record(eq("PRODUCT_PRICING"), eq("SALE_PRODUCT"), eq(9001L),
             eq("SP-001"), eq("ENABLE"), eq(product),
             argThat(after -> after instanceof ProductSaleProduct row && "ENABLED".equals(row.getStatus())), isNull());
+    }
+
+    @Test
+    void stoppedFormulaBlocksReEnable() {
+        ProductSaleProduct product = saleProduct("READY", "DISABLED");
+        ProductFormula formula = formula();
+        formula.setStatus("STOPPED");
+        when(saleProductMapper.selectActiveByIdForUpdate(9001L)).thenReturn(product);
+        when(formulaMapper.selectActiveByIdForUpdate(3001L)).thenReturn(formula);
+
+        assertThatThrownBy(() -> saleProductService.updateStatus(9001L, "ENABLED"))
+            .isInstanceOf(ServiceException.class);
+
+        verify(versionMapper, never()).selectById(any());
+        verify(saleProductMapper, never()).update(isNull(), any(LambdaUpdateWrapper.class));
+    }
+
+    @Test
+    void stoppedVersionBlocksReEnable() {
+        ProductSaleProduct product = saleProduct("READY", "DISABLED");
+        when(saleProductMapper.selectActiveByIdForUpdate(9001L)).thenReturn(product);
+        when(formulaMapper.selectActiveByIdForUpdate(3001L)).thenReturn(formula());
+        when(versionMapper.selectById(7001L)).thenReturn(version(7001L, "STOPPED"));
+
+        assertThatThrownBy(() -> saleProductService.updateStatus(9001L, "ENABLED"))
+            .isInstanceOf(ServiceException.class);
+
+        verify(saleProductMapper, never()).update(isNull(), any(LambdaUpdateWrapper.class));
+    }
+
+    @Test
+    void oldEffectiveVersionCanReEnableWithoutCurrentVersionMatch() {
+        ProductSaleProduct product = saleProduct("READY", "DISABLED");
+        ProductFormula formula = formula();
+        formula.setCurrentVersionId(7002L);
+        when(saleProductMapper.selectActiveByIdForUpdate(9001L)).thenReturn(product);
+        when(formulaMapper.selectActiveByIdForUpdate(3001L)).thenReturn(formula);
+        when(versionMapper.selectById(7001L)).thenReturn(version(7001L, "EFFECTIVE"));
+        when(saleProductMapper.update(isNull(), any(LambdaUpdateWrapper.class))).thenReturn(1);
+
+        assertThat(saleProductService.updateStatus(9001L, "ENABLED")).isTrue();
+
+        verify(versionMapper).selectById(7001L);
+        verify(versionMapper, never()).selectById(7002L);
     }
 
     @Test
@@ -134,7 +182,7 @@ class ProductSaleProductServiceTest {
         ProductSaleProduct saved = saleProduct("NOT_READY", "DISABLED");
         saved.setFormulaVersionId(7002L);
         saved.setFormulaVersionLabel("V2");
-        when(saleProductMapper.selectById(9001L)).thenReturn(current, saved);
+        when(saleProductMapper.selectActiveByIdForUpdate(9001L)).thenReturn(current, saved);
         when(formulaMapper.selectById(3001L)).thenReturn(formula());
         when(versionMapper.selectById(7002L)).thenReturn(version());
         when(saleProductMapper.selectCount(any())).thenReturn(0L);
@@ -199,11 +247,15 @@ class ProductSaleProductServiceTest {
     }
 
     private ProductFormulaVersion version() {
+        return version(7002L, "EFFECTIVE");
+    }
+
+    private ProductFormulaVersion version(Long versionId, String status) {
         ProductFormulaVersion version = new ProductFormulaVersion();
-        version.setVersionId(7002L);
-        version.setVersionNo(2);
-        version.setVersionLabel("V2");
-        version.setVersionStatus("EFFECTIVE");
+        version.setVersionId(versionId);
+        version.setVersionNo(versionId != null && versionId.equals(7001L) ? 1 : 2);
+        version.setVersionLabel(versionId != null && versionId.equals(7001L) ? "V1" : "V2");
+        version.setVersionStatus(status);
         version.setDelFlag("0");
         return version;
     }

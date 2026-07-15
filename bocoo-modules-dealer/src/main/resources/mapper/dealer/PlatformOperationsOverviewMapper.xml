@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bocoo.dealer.operations.mapper.PlatformOperationsOverviewMapper">
+
+    <select id="selectOrderLifecycle" resultType="com.bocoo.dealer.operations.domain.vo.OperationsOrderLifecycleVo">
+        SELECT COALESCE(SUM(CASE WHEN document_status != 'CANCELLED' THEN 1 ELSE 0 END), 0) AS submitted_count,
+               COALESCE(SUM(CASE WHEN document_status != 'CANCELLED' AND payment_status = 'UNPAID' THEN 1 ELSE 0 END), 0) AS unpaid_count,
+               COALESCE(SUM(CASE WHEN document_status != 'CANCELLED' AND production_status = 'IN_PRODUCTION' THEN 1 ELSE 0 END), 0) AS production_count,
+               COALESCE(SUM(CASE WHEN document_status != 'CANCELLED' AND shipment_status IN ('SHIPPED', 'DELIVERED') THEN 1 ELSE 0 END), 0) AS shipped_count,
+               COALESCE(SUM(CASE WHEN document_status = 'COMPLETED' THEN 1 ELSE 0 END), 0) AS completed_count
+        FROM dealer_sales_document
+        WHERE del_flag = '0'
+          AND business_origin = 'MERCHANT'
+          AND create_time &gt;= #{start}
+    </select>
+
+    <select id="selectCurrencyAmounts" resultType="com.bocoo.dealer.operations.domain.vo.OperationsCurrencyAmountVo">
+        SELECT COALESCE(NULLIF(currency_code, ''), 'USD') AS currency_code,
+               COALESCE(SUM(COALESCE(total_amount, 0)), 0) AS amount
+        FROM dealer_sales_document
+        WHERE del_flag = '0'
+          AND business_origin = 'MERCHANT'
+          AND document_status != 'CANCELLED'
+          AND create_time &gt;= #{start}
+        GROUP BY COALESCE(NULLIF(currency_code, ''), 'USD')
+        ORDER BY currency_code ASC
+    </select>
+
+    <select id="selectMerchantOrderCounts" resultType="com.bocoo.dealer.operations.domain.vo.OperationsMerchantVo">
+        SELECT tenant_id,
+               COUNT(*)::bigint AS order_count
+        FROM dealer_sales_document
+        WHERE del_flag = '0'
+          AND business_origin = 'MERCHANT'
+          AND document_status != 'CANCELLED'
+          AND tenant_id IN
+          <foreach collection="tenantIds" item="tenantId" open="(" separator="," close=")">#{tenantId}</foreach>
+        GROUP BY tenant_id
+    </select>
+
+    <select id="selectMerchantLevelOptions" resultType="com.bocoo.dealer.operations.domain.vo.OperationsMerchantLevelOptionVo">
+        SELECT level_id,
+               level_code,
+               level_name
+        FROM merchant_level
+        WHERE tenant_id = 1
+          AND del_flag = '0'
+        <if test="status != null and status != ''">
+            AND status = #{status}
+        </if>
+        ORDER BY sort_order ASC, level_id ASC
+    </select>
+
+    <select id="selectPendingApplications" resultType="com.bocoo.dealer.operations.domain.vo.OperationsMerchantVo">
+        SELECT 'application' AS source,
+               apply_id AS application_id,
+               merchant_name,
+               company_name,
+               contact_name,
+               email AS primary_email,
+               office_phone,
+               mobile_phone,
+               country,
+               state,
+               city,
+               address_line1,
+               address_line2,
+               postal_code,
+               status AS audit_status,
+               audit_by,
+               audit_time,
+               reject_reason,
+               create_time
+        FROM sys_tenant_apply
+        WHERE status = 'PENDING'
+        <if test="query != null and query.keyword != null and query.keyword != ''">
+            AND (merchant_name LIKE CONCAT('%', #{query.keyword}, '%')
+                OR company_name LIKE CONCAT('%', #{query.keyword}, '%')
+                OR contact_name LIKE CONCAT('%', #{query.keyword}, '%')
+                OR email LIKE CONCAT('%', #{query.keyword}, '%'))
+        </if>
+        ORDER BY create_time DESC, apply_id DESC
+    </select>
+</mapper>

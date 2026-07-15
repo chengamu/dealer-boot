@@ -6,11 +6,14 @@ import com.bocoo.dealer.dashboard.mapper.SalesDashboardOrderMapper;
 import com.bocoo.dealer.dashboard.mapper.SalesDashboardQuoteMapper;
 import com.bocoo.dealer.dashboard.scope.SalesDashboardScope;
 import com.bocoo.dealer.domain.entity.SalesDocument;
+import com.bocoo.merchant.domain.entity.CustomerQuote;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -55,6 +58,25 @@ class SalesDashboardActiveQueryRepositoryTest {
         assertThat(queryCaptor.getValue().getSqlSegment())
             .doesNotContain("submitted_time >=")
             .contains("ORDER BY submitted_time DESC,sales_document_id DESC");
+    }
+
+    @Test
+    void quoteAttentionGroupsUseNonOverlappingValidityWindows() {
+        when(quoteMapper.selectCount(any())).thenReturn(1L);
+        when(quoteMapper.selectPage(any(), any())).thenAnswer(invocation -> invocation.getArgument(0));
+        LocalDate today = LocalDate.of(2026, 7, 14);
+
+        new SalesDashboardQuoteAttentionRepository(quoteMapper, new SalesDashboardQueries()).groups(scope(), today);
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<QueryWrapper<CustomerQuote>> captor = ArgumentCaptor.forClass(QueryWrapper.class);
+        verify(quoteMapper, times(2)).selectCount(captor.capture());
+        assertThat(captor.getAllValues().get(0).getSqlSegment()).contains("valid_until BETWEEN");
+        assertThat(captor.getAllValues().get(0).getParamNameValuePairs())
+            .containsValues(today, today.plusDays(7));
+        assertThat(captor.getAllValues().get(1).getSqlSegment()).contains("valid_until >");
+        assertThat(captor.getAllValues().get(1).getParamNameValuePairs())
+            .containsValue(today.plusDays(7));
     }
 
     private SalesDashboardScope scope() {

@@ -51,7 +51,7 @@ const migratedViewModules: Record<string, () => Promise<unknown>> = {
   'customer/quotes': () => import('@/pages/customer/CustomerQuotePage.vue'),
   'customer/quote-workbench': () => import('@/pages/customer/CustomerQuoteWorkbenchPage.vue'),
   'sales/dashboard': () => import('@/pages/dashboard/DashboardPage.vue'),
-  'platform-sales/dashboard': () => import('@/pages/dashboard/DashboardPage.vue'),
+  'platform-sales/dashboard': () => import('@/pages/platform-operations/PlatformOperationsOverviewPage.vue'),
   'platform-sales/quotes': () => import('@/pages/customer/CustomerQuotePage.vue'),
   'platform-sales/quick-orders': () => import('@/pages/quick-order/QuickOrderDraftListPage.vue'),
   'platform-sales/orders': () => import('@/pages/dealer-sales/SalesDocumentListPage.vue'),

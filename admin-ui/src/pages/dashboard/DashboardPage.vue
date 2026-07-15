@@ -103,11 +103,19 @@ onMounted(() => { void load() })
 </script>
 
 <style scoped>
-.sales-dashboard-page { display: grid; gap: 10px; padding: 10px; background: var(--admin-bg); color: #1d2129; }
-.sales-dashboard-page__toolbar { display: flex; align-items: center; justify-content: flex-end; gap: 10px; min-height: 40px; }
+.sales-dashboard-page {
+  --sales-border: #e4eaf3;
+  --sales-shadow: 0 4px 16px rgb(33 83 197 / 5%);
+  display: grid;
+  gap: 16px;
+  padding: 16px;
+  background: var(--admin-bg);
+  color: #1d2129;
+}
+.sales-dashboard-page__toolbar { display: flex; align-items: center; justify-content: flex-end; gap: 10px; min-height: 32px; }
 .sales-dashboard-page__as-of { color: #667085; font-size: 12px; line-height: 1; }
 .sales-dashboard-page__refresh { min-width: 98px; height: 36px; border-color: #d8e2f0; color: #344054; }
-.sales-dashboard-page__content { display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, 376px); gap: 10px; align-items: start; }
+.sales-dashboard-page__content { display: grid; grid-template-columns: minmax(0, 2fr) minmax(340px, 0.95fr); gap: 16px; align-items: stretch; }
 @media (max-width: 1100px) { .sales-dashboard-page__content { grid-template-columns: 1fr; } }
 @media (max-width: 720px) {
   .sales-dashboard-page__toolbar { justify-content: space-between; }

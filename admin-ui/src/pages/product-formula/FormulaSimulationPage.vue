@@ -273,7 +273,7 @@ async function validate() {
   validating.value = true
   try {
     await productFormulaApi.validateSimulation(formulaId, runPayload())
-    ElMessage.success(t('productCenter.formula.validation.pass'))
+    ElMessage.success(t('productCenter.formula.validation.simulationPass'))
     await load()
   } finally {
     validating.value = false
